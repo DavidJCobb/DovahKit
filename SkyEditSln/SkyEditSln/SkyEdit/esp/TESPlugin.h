@@ -8,7 +8,7 @@
 #include "../formstub.h"
 #include "../forms/types.h"
 
-class TESPlugin;
+class TESPluginFile;
 
 enum ESPGroupType : int32_t {
    kESPGroupType_FormsOfType = 0,
@@ -39,6 +39,8 @@ struct TESPluginGroupHeader {
          uint32_t versionControl;
       };
       uint32_t unknown;
+      //
+      bool load(TESPluginFile& stream);
 };
 struct TESPluginRecordHeader {
    public:
@@ -58,98 +60,84 @@ struct TESPluginRecordHeader {
       uint16_t version;
       uint16_t unknown;
       //
-      bool load(std::ifstream& stream);
+      bool load(TESPluginFile& stream);
 };
 
-class esp_istream : public std::ifstream {
-   private:
-      TESPlugin& owner;
-      //
-      TESPluginGroupHeader  currentGroup;
-      uint32_t currentGroupOffset  = 0;
-      //
-      TESPluginRecordHeader currentRecord;
-      uint32_t currentRecordOffset = 0;
-      uint32_t recordHeaderOffset = 0;
-      //
-      uint32_t subrecordOffset    = 0;
-      uint32_t subrecordSignature = 0;
-      uint32_t subrecordSize      = 0;
-      uint32_t lastFieldExSize    = 0; // used for XXXX fields
-      //
-      uint32_t getGroupEndPos() {
-         return this->currentGroupOffset + this->currentGroup.size;
-      }
-      uint32_t getRecordEndPos() {
-         return this->currentRecordOffset + this->currentRecord.size;
-      }
-      uint32_t getSubrecordEndPos() {
-         return this->subrecordOffset + this->subrecordSize;
-      }
-      //
-      bool isPastRecord();
-      bool isPastSubrecord();
-      //
-   public:
-      esp_istream(TESPlugin& plugin) : owner(plugin) {};
-      bool nextGroup();
-      bool nextRecord(bool notInGroup = false);
-      bool nextSubrecord();
-      //
-      void clearParseState();
-      //
-      const TESPluginGroupHeader& getGroupHeader() {
-         return this->currentGroup;
-      }
-      uint32_t getGroupType() {
-         return this->currentGroup.signature;
-      }
-      const TESPluginRecordHeader& getRecordHeader() {
-         return this->currentRecord;
-      }
-      uint32_t getRecordHeaderOffset() {
-         return this->recordHeaderOffset;
-      }
-      uint32_t getRecordBodyOffset() {
-         return this->currentRecordOffset;
-      }
-      uint32_t getRecordType() {
-         return this->currentRecord.signature;
-      }
-      uint32_t getSubrecordType() {
-         return this->subrecordSignature;
-      }
-      uint32_t getSubrecordSize() {
-         return this->subrecordSize;
-      }
-      //
-      template<typename T> void read_value(T& field) {
-         this->read((char*)&field, sizeof(field));
-      }
-      void read_string_subrecord(std::string& field) {
-         field.clear();
-         if (!this->subrecordSignature)
-            return;
-         field.resize(this->subrecordSize);
-         this->read(const_cast<char*>(field.data()), this->subrecordSize);
-      }
-};
-
-class TESPlugin {
-   friend FormStub;
-   //
+class TESPluginFile {
    public:
       enum Flags {
          kFlag_Master = 0x0001,
          kFlag_LocalizedStringTable = 0x0080,
          kFlag_Light  = 0x0200,
       };
-      TESPlugin();
-      ~TESPlugin();
-   private:
-      esp_istream file;
-      std::map<formtype_t, std::map<uint32_t, FormStub*>> formsByType;
    public:
+      TESPluginFile();
+      ~TESPluginFile();
+      //
+      bool load(const char* filepath);
+      //
+      // These next three functions are only useful during initial parsing; they rely 
+      // on state. For example, (nextRecord) fails if we are not inside of a group.
+      //
+      bool nextGroup();
+      bool nextRecord();
+      bool nextSubrecord();
+      //
+      bool loadRecordAt(uint32_t pos); // use for TES4 during load, or use to load any record on-demand after all forms are known
+      //
+      void setPos(uint32_t pos);
+      uint32_t getPos();
+      void skipBytes(uint32_t count);
+      bool isEOF();
+      bool is_good();
+      //
+      template<typename T> void read(T& field, uint32_t size) {
+         fread(&field, size, 1, this->fileHandle);
+      }
+      template<typename T> void read(T& field) {
+         fread(&field, sizeof(field), 1, this->fileHandle);
+      }
+      void readStringSubrecord(std::string& field);
+      //
+   protected:
+      //
+      // Loading state:
+      //
+      FILE* fileHandle;
+      TESPluginGroupHeader  group;  // header for last parsed/loaded group
+      TESPluginRecordHeader record; // header for last parsed/loaded record
+      uint32_t groupPos;
+      uint32_t recordHeadPos;
+      uint32_t recordBodyPos;
+      uint32_t subrecordPos;
+      uint32_t subrecordSignature = 0;
+      uint32_t subrecordSize = 0;
+      //
+      bool _loadHeader();
+      //
+      // Loaded data:
+      //
+      std::map<formtype_t, std::map<uint32_t, FormStub*>> formsByType;
+      //
+   public:
+      //
+      // Loading:
+      //
+      inline const TESPluginGroupHeader&  getGroupHeader()  { return this->group; }
+      inline const TESPluginRecordHeader& getRecordHeader() { return this->record; }
+      inline uint32_t getGroupPos() const { return this->groupPos; }
+      inline uint32_t getRecordHeadPos() const { return this->recordHeadPos; }
+      inline uint32_t getRecordBodyPos() const { return this->recordBodyPos; }
+      inline uint32_t getSubrecordPos() const { return this->subrecordPos; }
+      inline uint32_t getSubrecordType() const { return this->subrecordSignature; }
+      inline uint32_t getSubrecordSize() const { return this->subrecordSize; }
+      //
+      inline uint32_t getGroupEnd() const { return this->groupPos + this->group.size; }
+      inline uint32_t getRecordEnd() const { return this->recordBodyPos + this->record.size; }
+      inline uint32_t getSubrecordEnd() const { return this->subrecordPos + this->subrecordSize; }
+      //
+      // Loaded data:
+      //
       uint32_t flags = 0;
       float    fileVersion = 0.94F;
       uint32_t recordCount = 0;
@@ -163,8 +151,4 @@ class TESPlugin {
       //
       FormStub* getForm(formtype_t formType, uint32_t formID) const;
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
-      //
-      void load(const char* filepath);
-   private:
-      bool loadHeader(esp_istream& stream);
 };

@@ -3,7 +3,7 @@
 #include <string>
 #include "types.h"
 
-class esp_istream;
+class TESPluginFile;
 
 class TESQuest : public TESForm {
    public:
@@ -12,5 +12,5 @@ class TESQuest : public TESForm {
       std::string editorID;
       std::string name;
 
-      void load(esp_istream&);
+      void load(TESPluginFile*);
 };

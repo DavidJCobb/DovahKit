@@ -1,87 +1,112 @@
 #include "TESPlugin.h"
 #include <stdexcept>
 #include <iostream> // for testing
+#include "../output.h"
 
 void _Debug(const char* msg) {
    std::cout << msg << std::endl;
 }
 
-TESPlugin::TESPlugin() : file(*this) {
+TESPluginFile::TESPluginFile() {
    this->authorName[511]  = '\0';
    this->description[511] = '\0';
 }
-TESPlugin::~TESPlugin() {
-   if (this->file.is_open())
-      this->file.close();
+TESPluginFile::~TESPluginFile() {
+   if (this->fileHandle) {
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   }
 }
-
-bool esp_istream::isPastRecord() {
-   if (!this->currentRecord.signature)
-      return false;
-   auto offset = this->tellg();
-   return offset >= this->getRecordEndPos();
+//
+void TESPluginFile::setPos(uint32_t pos) {
+   clearerr(this->fileHandle);
+   fseek(this->fileHandle, pos, SEEK_SET);
 }
-bool esp_istream::isPastSubrecord() {
+uint32_t TESPluginFile::getPos() {
+   return ftell(this->fileHandle);
+}
+void TESPluginFile::skipBytes(uint32_t count) {
+   fseek(this->fileHandle, count, SEEK_CUR);
+}
+bool TESPluginFile::isEOF() {
+   return feof(this->fileHandle);
+}
+bool TESPluginFile::is_good() {
+   return !ferror(this->fileHandle) && !this->isEOF();
+}
+void TESPluginFile::readStringSubrecord(std::string& field) {
+   field.clear();
    if (!this->subrecordSignature)
-      return false;
-   auto offset = this->tellg();
-   return offset >= this->getSubrecordEndPos();
+      return;
+   field.resize(this->subrecordSize);
+   fread(const_cast<char*>(field.data()), sizeof(char), this->subrecordSize, this->fileHandle);
 }
-bool esp_istream::nextGroup() {
-   auto& g = this->currentGroup;
+//
+bool TESPluginFile::loadRecordAt(uint32_t pos) {
+   this->setPos(pos);
+   this->recordHeadPos = 0;
+   auto& r = this->record;
+   this->read(r);
+   r.signature = _byteswap_ulong(r.signature);
+   this->recordBodyPos = this->getPos();
+   if (!this->is_good())
+      return false;
+   return true;
+}
+bool TESPluginFile::nextGroup() {
+   auto& g = this->group;
    if (g.signature) {
-//std::cout << "Skipped group spanning from " << this->currentGroupOffset << " to " << this->getGroupEndPos() << "." << std::endl; // DEBUG
-      this->seekg(this->getGroupEndPos());
+      _DEBUGMSG("Skipped group spanning from %d to %d.", this->groupPos, this->getGroupEnd());
+      this->setPos(this->getGroupEnd());
       g.signature = 0;
       //
-      this->currentRecord.signature = 0;
+      this->record.signature = 0;
       this->subrecordSignature = 0;
    }
-   if (this->bad() || this->eof())
+   if (!this->is_good())
       return false;
-   this->currentGroupOffset = this->tellg(); // group size includes the header, so use the start of the header as the offset
-   this->read_value(g);
+   this->groupPos = this->getPos(); // group size includes the header, so use the start of the header as the offset
+   this->read(g);
    g.signature = _byteswap_ulong(g.signature);
-   if (this->bad() || this->eof())
+   if (!this->is_good())
       return false;
    return true;
 }
-bool esp_istream::nextRecord(bool notInGroup) {
-   auto& rec = this->currentRecord;
-   if (rec.signature) {
-//std::cout << "Skipped record body spanning from " << this->currentRecordOffset << " to " << this->getRecordEndPos() << "." << std::endl; // DEBUG
-      this->seekg(this->getRecordEndPos());
-      rec.signature = 0;
+bool TESPluginFile::nextRecord() {
+   auto& r = this->record;
+   if (r.signature) {
+      _DEBUGMSG("Skipped record body spanning from %d to %d.", this->recordBodyPos, this->getRecordEnd());
+      this->setPos(this->getRecordEnd());
+      r.signature = 0;
       //
       this->subrecordSignature = 0;
       //
-      if (this->bad() || this->eof())
+      if (!this->is_good())
          return false;
    }
-   if (!notInGroup)
-      if (this->tellg() >= this->getGroupEndPos())
-         return false;
-   this->recordHeaderOffset = this->tellg();
-   this->read_value(rec);
-   rec.signature = _byteswap_ulong(rec.signature);
-   this->currentRecordOffset = this->tellg(); // record size does not include the header, so use the end of the header as the offset
-   if (this->bad() || this->eof())
+   this->recordHeadPos = this->getPos();
+   if (this->recordHeadPos >= this->getGroupEnd())
+      return false;
+   this->read(r);
+   r.signature = _byteswap_ulong(r.signature);
+   this->recordBodyPos = this->getPos();
+   if (!this->is_good())
       return false;
    return true;
 }
-bool esp_istream::nextSubrecord() {
+bool TESPluginFile::nextSubrecord() {
    if (this->subrecordSignature) {
-      this->seekg(this->getSubrecordEndPos());
+      this->setPos(this->getSubrecordEnd());
       this->subrecordSignature = 0;
       //
-      if (this->bad() || this->eof())
+      if (!this->is_good())
          return false;
    }
-   if (this->tellg() >= this->getRecordEndPos())
+   if (this->getPos() >= this->getRecordEnd())
       return false;
    uint16_t size;
-   this->read_value(this->subrecordSignature);
-   this->read_value(size);
+   this->read(this->subrecordSignature);
+   this->read(size);
    this->subrecordSize = size;
    if (this->subrecordSignature == 'XXXX') {
       //
@@ -91,67 +116,35 @@ bool esp_istream::nextSubrecord() {
       if (this->subrecordSize != 4) {
          return false; // ERROR
       }
-      this->read_value(this->subrecordSize); // the contents of the XXXX subrecord are the length
+      this->read(this->subrecordSize); // the contents of the XXXX subrecord are the length
       //
       // Get the next subrecord.
       //
-      this->read_value(this->subrecordSignature);
-      this->ignore(2); // an XXXX-prefixed subrecord has no length of its own
+      this->read(this->subrecordSignature);
+      this->skipBytes(2); // an XXXX-prefixed subrecord has no length of its own
    }
    this->subrecordSignature = _byteswap_ulong(this->subrecordSignature);
-   this->subrecordOffset = this->tellg();
-   if (this->bad() || this->eof())
+   this->subrecordPos = this->getPos();
+   if (!this->is_good())
       return false;
    return true;
 }
-      //
-void esp_istream::clearParseState() {
-   this->subrecordSignature = 0;
-   this->currentRecord.signature = 0;
-   this->currentGroup.signature = 0;
-}
-
-FormStub* TESPlugin::getForm(uint8_t formType, uint32_t formID) const {
-   try {
-      auto& list = this->formsByType.at(formType);
-      return list.at(formID);
-   } catch (std::out_of_range) {}
-   return nullptr;
-}
-void TESPlugin::forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)> functor) {
-   try {
-      auto& list = this->formsByType.at(formType);
-      for (auto it = list.begin(); it != list.end(); ++it) {
-         if (functor(it->second))
-            break;
-      }
-   }
-   catch (std::out_of_range) {}
-}
-
-bool TESPluginRecordHeader::load(std::ifstream& file) {
-   file.read((char*)this, sizeof(TESPluginRecordHeader));
-   this->signature = _byteswap_ulong(this->signature);
-   if (file.bad() || file.eof())
-      return false;
-   return true;
-}
-bool TESPlugin::loadHeader(esp_istream& file) {
-   if (!file.nextRecord(true)) {
-      _Debug("Expected TES4 record; no record found.");
+//
+bool TESPluginFile::_loadHeader() {
+   if (!this->loadRecordAt(0)) {
+      _DEBUGMSG("Expected TES4 record; no record found.");
       return false;
    }
-   auto tes4 = file.getRecordHeader();
+   auto& tes4 = this->record;
    if (tes4.signature != 'TES4') {
-      _Debug("Expected TES4 record; got something else.");
+      _DEBUGMSG("Expected TES4 record; got something else.");
       return false;
    }
    this->flags = tes4.flags;
    //
-   std::string lastMaster;
-   while (file.nextSubrecord()) {
-      uint32_t signature = file.getSubrecordType();
-      uint32_t size      = file.getSubrecordSize();
+   while (this->nextSubrecord()) {
+      uint32_t signature = this->subrecordSignature;
+      uint32_t size      = this->subrecordSize;
       switch (signature) {
          case 'HEDR':
             //
@@ -159,10 +152,10 @@ bool TESPlugin::loadHeader(esp_istream& file) {
             //
             break;
          case 'CNAM': // author/creator
-            file.read(this->authorName, size);
+            this->read(this->authorName, size);
             break;
          case 'SNAM': // description
-            file.read(this->description, size);
+            this->read(this->description, size);
             break;
          case 'MAST':
             //
@@ -180,28 +173,29 @@ bool TESPlugin::loadHeader(esp_istream& file) {
             //
             break;
          case 'INTV':
-            file.read((char*)&this->subINTV, 4);
+            this->read(this->subINTV);
             break;
          case 'INCC':
-            file.read((char*)&this->subINCC, 4);
+            this->read(this->subINCC);
             break;
       }
    }
+   return true;
 }
-void TESPlugin::load(const char* filepath) {
-   file.open(filepath, std::ios_base::binary);
-   if (!file) {
-      _Debug("Unable to open file for reading.");
-      return;
+bool TESPluginFile::load(const char* filepath) {
+   this->fileHandle = _fsopen(filepath, "rb", _SH_DENYWR);
+   if (!this->fileHandle) {
+      _DEBUGMSG("Unable to open file for reading.");
+      return false;
    }
-   _Debug("Opened file.");
-   if (!this->loadHeader(file)) {
-      _Debug("Unable to read header.");
-      return;
+   _DEBUGMSG("Opened file.");
+   if (!this->_loadHeader()) {
+      _DEBUGMSG("Unable to read header.");
+      return false;
    }
-   _Debug("Read file header.");
-   while (file.nextGroup()) {
-      auto group = file.getGroupHeader();
+   _DEBUGMSG("Read file header.");
+   while (this->nextGroup()) {
+      auto& group = this->group;
       if (group.type == kESPGroupType_FormsOfType) {
          switch (_byteswap_ulong(group.label)) {
             case 'DIAL':
@@ -214,8 +208,8 @@ void TESPlugin::load(const char* filepath) {
                continue;
          }
       }
-      while (file.nextRecord()) {
-         auto& rh = file.getRecordHeader();
+      while (this->nextRecord()) {
+         auto& rh = this->record;
          //
          formtype_t formType = signatureToFormType(rh.signature);
          if (!formType)
@@ -224,9 +218,27 @@ void TESPlugin::load(const char* filepath) {
          auto& list = this->formsByType[formType];
          auto  stub = new FormStub();
          stub->file   = this;
-         stub->offset = file.getRecordHeaderOffset();
+         stub->offset = this->getRecordHeadPos();
          stub->formID = rh.formID;
          list[rh.formID] = stub;
       }
    }
+   return true;
+}
+//
+FormStub* TESPluginFile::getForm(uint8_t formType, uint32_t formID) const {
+   try {
+      auto& list = this->formsByType.at(formType);
+      return list.at(formID);
+   } catch (std::out_of_range) {}
+   return nullptr;
+}
+void TESPluginFile::forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)> functor) {
+   try {
+      auto& list = this->formsByType.at(formType);
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         if (functor(it->second))
+            break;
+      }
+   } catch (std::out_of_range) {}
 }

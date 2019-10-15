@@ -1,13 +1,13 @@
 #include "Quest.h"
 #include "../esp/TESPlugin.h"
 
-void TESQuest::load(esp_istream& file) {
-   while (file.nextSubrecord()) {
-      uint32_t signature = file.getSubrecordType();
-      uint32_t size      = file.getSubrecordSize();
+void TESQuest::load(TESPluginFile* file) {
+   while (file->nextSubrecord()) {
+      uint32_t signature = file->getSubrecordType();
+      uint32_t size      = file->getSubrecordSize();
       switch (signature) {
          case 'EDID':
-            file.read_string_subrecord(this->editorID);
+            file->readStringSubrecord(this->editorID);
             break;
          case 'FULL':
             //
@@ -19,7 +19,7 @@ void TESQuest::load(esp_istream& file) {
             // Currently, we only handle the latter case, which breaks for 
             // Skyrim.esm and friends.
             //
-            file.read_string_subrecord(this->name);
+            file->readStringSubrecord(this->name);
             break;
          //
          // TODO: others

@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-class TESPlugin;
+class TESPluginFile;
 class TESForm;
 class loaded_form_ptr;
 
@@ -10,7 +10,7 @@ struct FormStub {
    TESForm*   form = nullptr;
    uint32_t   refcount = 0;
    bool       edited = false; // if true, then keep the wrapped form in memory even if its refcount hits zero, until we save changes
-   TESPlugin* file   = nullptr;
+   TESPluginFile* file   = nullptr;
    uint32_t   offset = 0; // offset of this form's record header within its owning file
 
    loaded_form_ptr load();
