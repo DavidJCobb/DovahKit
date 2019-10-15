@@ -63,7 +63,6 @@ class FormStubHeap {
          Block*   prev = nullptr;
          Block*   next = nullptr;
          std::bitset<ce_countPerBlock> presence;
-         uint16_t firstFree = 0;
          //
          BlockInfo() {
             memset(&this->presence, 0, sizeof(this->presence));

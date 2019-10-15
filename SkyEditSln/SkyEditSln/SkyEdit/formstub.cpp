@@ -93,6 +93,20 @@ void FormStubHeap::free(void* mem) {
          assert(rem, "Cannot free; element is not aligned.");
          assert(block->info.presence.test(index), "You're freeing something that was already free!");
          block->info.presence.reset(index);
+         //
+         if (block != this->firstBlock && block->info.presence.none()) {
+            //
+            // This block is no longer in use. Delete it.
+            //
+            auto p = block->info.prev;
+            auto n = block->info.next;
+            if (p)
+               p->info.next = n;
+            if (n)
+               n->info.prev = p;
+            delete block;
+         }
+         //
          return;
       }
    } while (block = block->info.next);
