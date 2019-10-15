@@ -47,8 +47,6 @@ class PapyrusScriptData {
          uint16_t aliasID;
          uint16_t alwaysZero = 0;
          //
-         PropertyObjectValue() {};
-         //
          bool load(PapyrusScriptData& owner, TESPluginFile*);
       };
       class Property {
@@ -60,7 +58,7 @@ class PapyrusScriptData {
             void* value = nullptr;
             //
          private:
-            bool load(PapyrusScriptData& owner, TESPluginFile*); // TODO: load value
+            bool load(PapyrusScriptData& owner, TESPluginFile*);
             //
          public:
             ~Property();

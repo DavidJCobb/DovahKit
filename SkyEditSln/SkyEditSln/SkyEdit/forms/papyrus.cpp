@@ -32,9 +32,33 @@ bool PapyrusScriptData::load(TESPluginFile* file) {
          script.load(*this, file);
       }
    }
-   //
-   // TODO: load fragments
-   //
+   switch (file->getRecordHeader().signature) {
+      case 'INFO':
+         //
+         // TODO: fragment data for topic infos
+         //
+         break;
+      case 'PACK':
+         //
+         // TODO: fragment data for packages
+         //
+         break;
+      case 'PERK':
+         //
+         // TODO: fragment data for perks
+         //
+         break;
+      case 'QUST':
+         //
+         // TODO: fragment data for quests
+         //
+         break;
+      case 'SCEN':
+         //
+         // TODO: fragment data for scenes
+         //
+         break;
+   }
    return true;
 }
 bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginFile* file) {

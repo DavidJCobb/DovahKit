@@ -46,7 +46,11 @@ void TESPluginFile::readStringSubrecord(LStringRef& field) {
    field.value.clear();
    if (this->flags & kFlag_LocalizedStringTable) {
       this->read(field.index);
+      //
+      // TODO: implement reading from the string table
+      //
       field.value  = "<THE LOADING OF LSTRINGS IS NOT YET IMPLEMENTED>";
+      //
       field.exists = true;
    } else {
       this->readStringSubrecord(field.value);
