@@ -20,13 +20,13 @@ loaded_form_ptr& loaded_form_ptr::operator=(FormStub* stub) noexcept {
 
 loaded_form_ptr FormStub::load() {
    if (!this->form && this->file) {
-      _DEBUGMSG("stub is loading...");
+      //_DEBUGMSG("stub is loading...");
       auto file = this->file;
       if (this->file->loadRecordAt(this->offset)) {
          auto& header = this->file->getRecordHeader();
-         _DEBUGMSG("...header is %s...", FMT_SIGNATURE(header.signature));
+         //_DEBUGMSG("...header is %s...", FMT_SIGNATURE(header.signature));
          auto  formType = signatureToFormType(header.signature);
-         _DEBUGMSG("...form type is %d...", formType);
+         //_DEBUGMSG("...form type is %d...", formType);
          switch (formType) {
             case 77:
                {

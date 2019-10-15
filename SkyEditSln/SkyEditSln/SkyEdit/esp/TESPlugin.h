@@ -8,7 +8,8 @@
 #include "../formstub.h"
 #include "../forms/types.h"
 
-class TESPluginFile;
+class  TESPluginFile;
+struct LStringRef;
 
 enum ESPGroupType : int32_t {
    kESPGroupType_FormsOfType = 0,
@@ -98,6 +99,7 @@ class TESPluginFile {
          fread(&field, sizeof(field), 1, this->fileHandle);
       }
       void readStringSubrecord(std::string& field);
+      void readStringSubrecord(LStringRef& field); // TODO: implement string table support
       //
    protected:
       //

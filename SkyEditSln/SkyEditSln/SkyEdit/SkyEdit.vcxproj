@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="formstub.h" />
+    <ClInclude Include="forms\components.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="forms\Quest.h" />
     <ClInclude Include="forms\types.h" />

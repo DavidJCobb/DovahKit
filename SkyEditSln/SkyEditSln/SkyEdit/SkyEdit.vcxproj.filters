@@ -50,5 +50,8 @@
     <ClInclude Include="output.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="forms\components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

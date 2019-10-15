@@ -21,9 +21,36 @@ void TESQuest::load(TESPluginFile* file) {
             //
             file->readStringSubrecord(this->name);
             break;
+         case 'DNAM':
+            file->read(this->flags);
+            file->read(this->priority);
+            file->read(this->formVersion);
+            file->read(this->unknown);
+            file->read(this->questType);
+            break;
          //
          // TODO: others
          //
       }
    }
+}
+
+const char* _questTypeNames[] = {
+   "None",
+   "Main Quest",
+   "Mages Guild",
+   "Thieves Guild",
+   "Dark Brotherhood",
+   "Companions",
+   "Miscellaneous",
+   "Daedric",
+   "Sidequest",
+   "Civil War",
+   "Vampire (DLC 1)",
+   "Dragonborn (DLC 2)",
+};
+/*static*/ const char* TESQuest::QuestTypeToString(QuestType qt) {
+   if (qt >= std::extent<decltype(_questTypeNames)>::value)
+      return nullptr;
+   return _questTypeNames[qt];
 }

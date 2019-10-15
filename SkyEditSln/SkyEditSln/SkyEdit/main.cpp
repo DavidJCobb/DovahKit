@@ -11,12 +11,16 @@ int main() {
    std::cout << "Author: " << skyrim.authorName << std::endl;
    std::cout << "Description: " << skyrim.description << std::endl;
    skyrim.forEachFormOfType(77, [](FormStub* stub) {
-      printf("[QUST:%08X]\n", stub->formID);
       auto form_guard = stub->load();
       auto form = stub->form;
       if (form && form->formType == 77) {
          TESQuest* quest = (TESQuest*)form;
-         printf("[QUST:%08X]%s (%s)\n", stub->formID, quest->editorID.c_str(), quest->name.c_str());
+         const char* type = TESQuest::QuestTypeToString(quest->questType);
+         if (!type)
+            type = "<UNKNOWN>";
+         printf("[QUST:%08X]%s (%s) is a %s quest\n", stub->formID, quest->editorID.c_str(), quest->name.c_str(), type);
+      } else {
+         printf("[QUST:%08X] could not be loaded.\n", stub->formID);
       }
       return false;
    });

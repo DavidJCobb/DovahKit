@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iostream> // for testing
 #include "../output.h"
+#include "../forms/components.h"
 
 void _Debug(const char* msg) {
    std::cout << msg << std::endl;
@@ -41,6 +42,16 @@ void TESPluginFile::readStringSubrecord(std::string& field) {
    field.resize(this->subrecordSize);
    fread(const_cast<char*>(field.data()), sizeof(char), this->subrecordSize, this->fileHandle);
 }
+void TESPluginFile::readStringSubrecord(LStringRef& field) {
+   field.value.clear();
+   if (this->flags & kFlag_LocalizedStringTable) {
+      this->read(field.index);
+      field.value  = "<THE LOADING OF LSTRINGS IS NOT YET IMPLEMENTED>";
+      field.exists = true;
+   } else {
+      this->readStringSubrecord(field.value);
+   }
+}
 //
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->setPos(pos);
@@ -56,7 +67,7 @@ bool TESPluginFile::loadRecordAt(uint32_t pos) {
 bool TESPluginFile::nextGroup() {
    auto& g = this->group;
    if (g.signature) {
-      _DEBUGMSG("Skipped group spanning from %d to %d.", this->groupPos, this->getGroupEnd());
+      //_DEBUGMSG("Skipped group spanning from %d to %d.", this->groupPos, this->getGroupEnd());
       this->setPos(this->getGroupEnd());
       g.signature = 0;
       //
@@ -75,7 +86,7 @@ bool TESPluginFile::nextGroup() {
 bool TESPluginFile::nextRecord() {
    auto& r = this->record;
    if (r.signature) {
-      _DEBUGMSG("Skipped record body spanning from %d to %d.", this->recordBodyPos, this->getRecordEnd());
+      //_DEBUGMSG("Skipped record body spanning from %d to %d.", this->recordBodyPos, this->getRecordEnd());
       this->setPos(this->getRecordEnd());
       r.signature = 0;
       //
@@ -208,10 +219,16 @@ bool TESPluginFile::load(const char* filepath) {
                continue;
          }
       }
+      uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
+      formtype_t lastFormType  = 0;
       while (this->nextRecord()) {
          auto& rh = this->record;
          //
-         formtype_t formType = signatureToFormType(rh.signature);
+         if (rh.signature != lastSignature) {
+            lastSignature = rh.signature;
+            lastFormType  = signatureToFormType(lastSignature);
+         }
+         formtype_t formType = lastFormType;
          if (!formType)
             continue;
          //
