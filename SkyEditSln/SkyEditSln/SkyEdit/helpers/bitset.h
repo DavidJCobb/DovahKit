@@ -9,7 +9,8 @@ namespace cobb {
          static constexpr uint32_t all_bits_set      = std::numeric_limits<uint32_t>::max();
          static constexpr int      chunk_count       = count / bits_per_chunk + (count % bits_per_chunk ? 1 : 0);
          //
-         // To understand these next constexprs, see the comments for find_first_clear.
+         // To understand these next constexprs and any other mentions of "partial chunks," 
+         // see the comments for find_first_clear.
          //
          static constexpr int      undershoot_cc     = count / bits_per_chunk; // number of non-partial chunks
          static constexpr int      bits_in_partial   = count % bits_per_chunk;
@@ -24,6 +25,10 @@ namespace cobb {
          }
          //
          bool none() const {
+            //
+            // We don't have to worry about partial chunks here, since we memset all chunks 
+            // to zero. The unused portions of a partial chunk should always be cleared.
+            //
             for (uint32_t i = 0; i < chunk_count; i++)
                if (data[i])
                   return false;

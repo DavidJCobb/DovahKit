@@ -38,6 +38,8 @@ int main() {
    });
    //
    FormStubHeap::get().dump();
+   FormStubHeap::get().forceFreeAll();
+   FormStubHeap::get().dump();
    //
    return 0;
 }

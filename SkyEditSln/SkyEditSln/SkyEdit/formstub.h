@@ -17,6 +17,7 @@ struct FormStub {
    loaded_form_ptr load();
 
    static void* operator new(std::size_t sz);
+   static void operator delete(void* ptr, std::size_t sz);
 };
 
 class loaded_form_ptr {
@@ -97,4 +98,5 @@ class FormStubHeap {
       Block* firstBlock = nullptr;
       //
       void dump();
+      void forceFreeAll();
 };

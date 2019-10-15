@@ -86,10 +86,10 @@ void FormStubHeap::free(void* mem) {
       std::ptrdiff_t b_start = (std::ptrdiff_t)&block->buffer;
       std::ptrdiff_t b_end   = b_start + sizeof(block->buffer);
       if (m_addr >= b_start && m_addr < b_end) {
-         uint16_t index = (m_addr - b_start) / sizeof(element_type);
-         uint16_t rem   = (m_addr - b_start) % sizeof(element_type);
-         assert(rem, "Cannot free; element is not aligned.");
-         assert(block->info.presence.test(index), "You're freeing something that was already free!");
+         m_addr -= b_start;
+         uint16_t index = m_addr / sizeof(element_type);
+         assert(m_addr % sizeof(element_type) == 0, "Cannot free; element is not aligned.");
+         assert(block->info.presence.test(index),   "You're freeing something that was already free!");
          block->info.presence.reset(index);
          //
          if (block != this->firstBlock && block->info.presence.none()) {
@@ -110,11 +110,19 @@ void FormStubHeap::free(void* mem) {
    } while (block = block->info.next);
    assert(false, "Cannot free; element not found on our heap.");
 }
+
 /*static*/ void* FormStub::operator new(std::size_t sz) {
    if (sz != sizeof(FormStub))
       return ::operator new(sz);
    return FormStubHeap::get().allocate();
 }
+/*static*/ void FormStub::operator delete(void* ptr, std::size_t sz) {
+   if (sz != sizeof(FormStub))
+      return ::operator delete(ptr, sz);
+   return FormStubHeap::get().free(ptr);
+   
+}
+
 void FormStubHeap::dump() {
    _DEBUGMSG("=================================================================================");
    _DEBUGMSG("Dumping stats for the FormStubHeap...");
@@ -157,4 +165,47 @@ void FormStubHeap::dump() {
    _DEBUGMSG("All blocks listed.");
    _DEBUGMSG("=================================================================================");
 
+}
+void FormStubHeap::forceFreeAll() {
+   _DEBUGMSG("=================================================================================");
+   _DEBUGMSG("Forcibly freeing all FormStubs...");
+   auto last = this->firstBlock;
+   if (!last) {
+      _DEBUGMSG("There are none to free.");
+      _DEBUGMSG("=================================================================================");
+      return;
+   }
+   while (last->info.next)
+      last = last->info.next;
+   //
+   auto prev = last->info.prev;
+   do {
+      auto& presence = last->info.presence;
+      //
+      // Deleting an element can delete the containing Block, so we need to get all of 
+      // the pointers first -- that way, the Block doesn't get deleted out from under 
+      // us.
+      //
+      element_type* pointers[ce_countPerBlock];
+      for (uint32_t i = 0; i < ce_countPerBlock; i++) {
+         if (presence.test(i)) {
+            std::ptrdiff_t start = (std::ptrdiff_t) & last->buffer;
+            std::ptrdiff_t addr = start + (sizeof(element_type) * i);
+            //
+            pointers[i] = (element_type*)addr;
+         } else
+            pointers[i] = nullptr;
+      }
+      for (uint32_t i = 0; i < ce_countPerBlock; i++) {
+         if (pointers[i]) {
+            delete pointers[i];
+            pointers[i] = nullptr;
+         }
+      }
+      last = prev;
+      if (prev)
+         prev = prev->info.prev;
+   } while (last);
+   _DEBUGMSG("Done.");
+   _DEBUGMSG("=================================================================================");
 }
