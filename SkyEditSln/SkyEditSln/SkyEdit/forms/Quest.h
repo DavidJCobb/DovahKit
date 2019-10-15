@@ -3,6 +3,7 @@
 #include <string>
 #include "types.h"
 #include "components.h"
+#include "papyrus.h"
 
 class TESPluginFile;
 
@@ -34,11 +35,16 @@ class TESQuest : public TESForm {
 
       std::string editorID;
       LStringRef  name;
+      PapyrusScriptData scriptData; // VMAD
+      //
+      // DNAM:
+      //
       uint16_t    flags;
       uint8_t     priority;
       uint8_t     formVersion;
       uint32_t    unknown;
       QuestType   questType;
+      //
 
       void load(TESPluginFile*);
 

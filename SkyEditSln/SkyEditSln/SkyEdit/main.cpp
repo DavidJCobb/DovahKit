@@ -19,6 +19,12 @@ int main() {
          if (!type)
             type = "<UNKNOWN>";
          printf("[QUST:%08X]%s (%s) is a %s quest\n", stub->formID, quest->editorID.c_str(), quest->name.c_str(), type);
+         if (quest->scriptData.scripts.size()) {
+            quest->scriptData.forEachScript([](PapyrusScriptData::Script* script) {
+               printf(" - Script: %s with %d properties\n", script->name.c_str(), script->properties.size());
+               return false;
+            });
+         }
       } else {
          printf("[QUST:%08X] could not be loaded.\n", stub->formID);
       }

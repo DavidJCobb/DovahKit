@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="formstub.cpp" />
+    <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="forms\Quest.cpp" />
     <ClCompile Include="forms\types.cpp" />
@@ -134,6 +135,7 @@
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\components.h" />
+    <ClInclude Include="forms\papyrus.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="forms\Quest.h" />
     <ClInclude Include="forms\types.h" />

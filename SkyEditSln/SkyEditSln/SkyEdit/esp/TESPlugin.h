@@ -40,8 +40,6 @@ struct TESPluginGroupHeader {
          uint32_t versionControl;
       };
       uint32_t unknown;
-      //
-      bool load(TESPluginFile& stream);
 };
 struct TESPluginRecordHeader {
    public:
@@ -60,8 +58,6 @@ struct TESPluginRecordHeader {
       };
       uint16_t version;
       uint16_t unknown;
-      //
-      bool load(TESPluginFile& stream);
 };
 
 class TESPluginFile {
@@ -100,6 +96,7 @@ class TESPluginFile {
       }
       void readStringSubrecord(std::string& field);
       void readStringSubrecord(LStringRef& field); // TODO: implement string table support
+      void readWString(std::string& field);
       //
    protected:
       //

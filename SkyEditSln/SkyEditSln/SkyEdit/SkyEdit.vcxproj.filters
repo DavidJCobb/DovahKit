@@ -33,6 +33,9 @@
     <ClCompile Include="output.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="forms\papyrus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="formstub.h">
@@ -51,6 +54,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="forms\components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="forms\papyrus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

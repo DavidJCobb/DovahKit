@@ -21,6 +21,9 @@ void TESQuest::load(TESPluginFile* file) {
             //
             file->readStringSubrecord(this->name);
             break;
+         case 'VMAD':
+            this->scriptData.load(file);
+            break;
          case 'DNAM':
             file->read(this->flags);
             file->read(this->priority);

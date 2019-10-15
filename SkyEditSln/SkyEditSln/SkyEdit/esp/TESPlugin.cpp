@@ -52,6 +52,13 @@ void TESPluginFile::readStringSubrecord(LStringRef& field) {
       this->readStringSubrecord(field.value);
    }
 }
+void TESPluginFile::readWString(std::string& field) {
+   field.clear();
+   uint16_t length;
+   this->read(length);
+   field.resize(length);
+   fread(const_cast<char*>(field.data()), sizeof(char), length, this->fileHandle);
+}
 //
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->setPos(pos);
