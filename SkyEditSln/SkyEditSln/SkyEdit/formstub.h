@@ -55,10 +55,17 @@ class FormStubHeap {
    //
    // NOTES:
    //
-   //  - When loading only QUST forms from Skyrim.esm as a test, the load process takes 
-   //    about 30ms with default allocation. When using this allocator with my custom 
+   //  - When creating stubs only for QUST forms from Skyrim.esm as a test, the load process 
+   //    takes about 30ms with default allocation. When using this allocator with my custom 
    //    bitset class, it also takes 30ms. When using this allocator with std::bitset, it 
    //    takes 100ms.
+   //
+   //     - Further testing reveals that most of the slowdown comes from std::bitset not 
+   //       having an equivalent to cobb::bitset::find_first_clear, forcing us to use 
+   //       a for-loop to go over each individual bit. My find_first_clear function is a 
+   //       bit more optimal, checking entire uint32_t chunks of the bitmask at a time. 
+   //       When using cobb::bitset without using the find_first_clear method, the load 
+   //       process takes 80ms on average.
    //
    public:
       typedef FormStub element_type;
