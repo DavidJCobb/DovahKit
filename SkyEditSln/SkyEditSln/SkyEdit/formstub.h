@@ -1,6 +1,6 @@
 #pragma once
-#include <bitset>
 #include <cstdint>
+#include "helpers/bitset.h"
 
 class TESPluginFile;
 class TESForm;
@@ -47,6 +47,19 @@ class loaded_form_ptr {
 };
 
 class FormStubHeap {
+   //
+   // A custom allocator for FormStub which allocates in blocks (currently 100 at a time), 
+   // to reduce memory fragmentation and overhead (i.e. every heap allocation has to track 
+   // the size allocated and some other metadata; there's no point in doing that for each 
+   // individual FormStub).
+   //
+   // NOTES:
+   //
+   //  - When loading only QUST forms from Skyrim.esm as a test, the load process takes 
+   //    about 30ms with default allocation. When using this allocator with my custom 
+   //    bitset class, it also takes 30ms. When using this allocator with std::bitset, it 
+   //    takes 100ms.
+   //
    public:
       typedef FormStub element_type;
       //
@@ -62,11 +75,7 @@ class FormStubHeap {
       struct BlockInfo {
          Block*   prev = nullptr;
          Block*   next = nullptr;
-         std::bitset<ce_countPerBlock> presence;
-         //
-         BlockInfo() {
-            memset(&this->presence, 0, sizeof(this->presence));
-         };
+         cobb::bitset<ce_countPerBlock> presence;
       };
       struct Block {
          BlockInfo info;

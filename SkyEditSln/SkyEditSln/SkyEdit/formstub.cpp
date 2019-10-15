@@ -44,15 +44,13 @@ loaded_form_ptr FormStub::load() {
 }
 
 void* FormStubHeap::Block::allocate() {
-   for (uint16_t i = 0; i < ce_countPerBlock; i++) {
-      if (!this->info.presence.test(i)) {
-         std::ptrdiff_t start = (std::ptrdiff_t) & this->buffer;
-         std::ptrdiff_t addr  = start + (sizeof(element_type) * i);
-         this->info.presence.set(i);
-         return (void*)addr;
-      }
-   }
-   return nullptr;
+   auto i = this->info.presence.find_first_clear();
+   if (i < 0)
+      return nullptr;
+   std::ptrdiff_t start = (std::ptrdiff_t) &this->buffer;
+   std::ptrdiff_t addr  = start + (sizeof(element_type) * i);
+   this->info.presence.set(i);
+   return (void*)addr;
 }
 void* FormStubHeap::allocate() {
    if (!this->firstBlock) {

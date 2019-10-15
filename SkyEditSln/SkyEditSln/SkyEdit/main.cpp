@@ -1,4 +1,5 @@
 #include <iostream> // for testing
+#include <sys/timeb.h> // for benchmarks
 #include "esp/TESPlugin.h"
 #include "forms/Quest.h"
 
@@ -6,8 +7,13 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 
 int main() {
    TESPluginFile skyrim;
+   struct timeb bench_start;
+   struct timeb bench_end;
+   ftime(&bench_start);
    skyrim.load(testPath);
+   ftime(&bench_end);
    std::cout << "Loaded Skyrim.esm." << std::endl;
+   printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
    std::cout << "Author: " << skyrim.authorName << std::endl;
    std::cout << "Description: " << skyrim.description << std::endl;
    skyrim.forEachFormOfType(77, [](FormStub* stub) {

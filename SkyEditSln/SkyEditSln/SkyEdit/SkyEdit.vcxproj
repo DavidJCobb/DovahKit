@@ -136,6 +136,7 @@
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\components.h" />
     <ClInclude Include="forms\papyrus.h" />
+    <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="forms\Quest.h" />
     <ClInclude Include="forms\types.h" />
