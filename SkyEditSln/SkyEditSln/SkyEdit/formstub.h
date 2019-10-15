@@ -1,4 +1,5 @@
 #pragma once
+#include <bitset>
 #include <cstdint>
 
 class TESPluginFile;
@@ -14,6 +15,8 @@ struct FormStub {
    uint32_t   offset = 0; // offset of this form's record header within its owning file
 
    loaded_form_ptr load();
+
+   static void* operator new(std::size_t sz);
 };
 
 class loaded_form_ptr {
@@ -41,4 +44,42 @@ class loaded_form_ptr {
       TESForm* operator->() const noexcept { return this->wrapped->form; };
 
       loaded_form_ptr& operator=(FormStub* stub) noexcept;
+};
+
+class FormStubHeap {
+   public:
+      typedef FormStub element_type;
+      //
+      inline static FormStubHeap& get() {
+         static FormStubHeap instance;
+         return instance;
+      }
+      //
+   protected:
+      static constexpr uint16_t ce_countPerBlock = 100;
+      //
+      struct Block;
+      struct BlockInfo {
+         Block*   prev = nullptr;
+         Block*   next = nullptr;
+         std::bitset<ce_countPerBlock> presence;
+         uint16_t firstFree = 0;
+         //
+         BlockInfo() {
+            memset(&this->presence, 0, sizeof(this->presence));
+         };
+      };
+      struct Block {
+         BlockInfo info;
+         uint8_t   buffer[FormStubHeap::ce_countPerBlock * sizeof(FormStub)];
+         //
+         void* allocate();
+      };
+   public:
+      void* allocate();
+      void  free(void*);
+      //
+      Block* firstBlock = nullptr;
+      //
+      void dump();
 };

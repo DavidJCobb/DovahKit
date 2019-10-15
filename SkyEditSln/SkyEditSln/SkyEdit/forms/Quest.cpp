@@ -6,7 +6,7 @@ void TESQuest::load(TESPluginFile* file) {
       uint32_t signature = file->getSubrecordType();
       uint32_t size      = file->getSubrecordSize();
       switch (signature) {
-         case 'EDID':
+         case 'EDID': // required; TODO: fail if this is not present
             file->readStringSubrecord(this->editorID);
             break;
          case 'FULL':
@@ -15,15 +15,28 @@ void TESQuest::load(TESPluginFile* file) {
          case 'VMAD':
             this->scriptData.load(file);
             break;
-         case 'DNAM':
+         case 'DNAM': // required; TODO: fail if this is not present
             file->read(this->flags);
             file->read(this->priority);
             file->read(this->formVersion);
             file->read(this->unknown);
             file->read(this->questType);
             break;
+         case 'ENAM':
+            //
+            // TODO
+            //
+            break;
+         case 'QTGL':
+            //
+            // TODO
+            //
+            break;
+         case 'FLTR': // required; TODO: fail if this is not present
+            file->readStringSubrecord(this->editorCategory);
+            break;
          //
-         // TODO: others
+         // TODO: any incomplete subrecords above, CTDA, NEXT, CTDA, stages, objectives, ANAM, aliases
          //
       }
    }

@@ -30,5 +30,8 @@ int main() {
       }
       return false;
    });
+   //
+   FormStubHeap::get().dump();
+   //
    return 0;
 }

@@ -45,6 +45,7 @@ class TESQuest : public TESForm {
       uint32_t    unknown;
       QuestType   questType;
       //
+      std::string editorCategory; // FLTR // "abc/def/ghi" to nest within the CK Object Window tree
 
       void load(TESPluginFile*);
 

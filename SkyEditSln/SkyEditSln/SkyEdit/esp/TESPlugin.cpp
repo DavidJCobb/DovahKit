@@ -168,7 +168,7 @@ bool TESPluginFile::_loadHeader() {
       uint32_t signature = this->subrecordSignature;
       uint32_t size      = this->subrecordSize;
       switch (signature) {
-         case 'HEDR':
+         case 'HEDR': // required subrecord; TODO: fail if this isn't present
             //
             // TODO
             //
@@ -184,7 +184,7 @@ bool TESPluginFile::_loadHeader() {
             // TODO
             //
             break;
-         case 'DATA':
+         case 'DATA': // always follows a MAST; vestigial; doesn't appear to be used
             //
             // TODO
             //
