@@ -75,14 +75,15 @@ struct FormStub {
       ~FormStub();
       //
    private:
+      TESPluginFile* file = nullptr;
+      uint32_t offset   = 0; // offset of this form's record header within its owning file
       uint32_t refcount = 0;
       char*    editorID = nullptr;
    public:
       uint32_t       formID   = 0; // form ID (file-local)
       uint8_t        formType = 0;
+      // there will be 3 bytes of padding here
       TESForm*       form     = nullptr;
-      TESPluginFile* file     = nullptr;
-      uint32_t       offset   = 0; // offset of this form's record header within its owning file
 
       loaded_form_ptr<TESForm> load();
 
