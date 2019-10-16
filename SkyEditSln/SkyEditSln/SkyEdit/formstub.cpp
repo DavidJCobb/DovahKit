@@ -1,26 +1,12 @@
 #include "formstub.h"
 #include "esp/TESPlugin.h"
-#include "forms/Quest.h"
 #include "output.h"
 #include <cassert>
 #include <cstddef>
 
-loaded_form_ptr::loaded_form_ptr(FormStub* stub) {
-   this->wrapped = stub;
-   this->_incRef();
-}
-loaded_form_ptr::~loaded_form_ptr() {
-   this->_decRef();
-   this->wrapped = nullptr;
-}
-loaded_form_ptr& loaded_form_ptr::operator=(FormStub* stub) noexcept {
-   this->_decRef();
-   this->wrapped = stub;
-   this->_incRef();
-   return *this;
-}
+#include "forms/Quest.h"
 
-loaded_form_ptr FormStub::load() {
+loaded_form_ptr<TESForm> FormStub::load() {
    if (!this->form && this->file) {
       //_DEBUGMSG("stub is loading...");
       auto file = this->file;
@@ -30,7 +16,7 @@ loaded_form_ptr FormStub::load() {
          auto  formType = signatureToFormType(header.signature);
          //_DEBUGMSG("...form type is %d...", formType);
          switch (formType) {
-            case 77:
+            case kFormType_Quest:
                {
                   auto q = new TESQuest();
                   q->load(file);
@@ -40,7 +26,7 @@ loaded_form_ptr FormStub::load() {
       } else
          _DEBUGMSG("...stub failed.");
    }
-   return loaded_form_ptr(this);
+   return loaded_form_ptr<TESForm>(this);
 }
 
 void* FormStubHeap::Block::allocate() {

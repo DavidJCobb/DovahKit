@@ -71,6 +71,9 @@ class TESPluginFile {
       TESPluginFile();
       ~TESPluginFile();
       //
+      // NOTE: We currently filter which GRUPs we load forms from. Look for a switch-
+      // case on form signatures inside of (load).
+      //
       bool load(const char* filepath);
       //
       // These next three functions are only useful during initial parsing; they rely 

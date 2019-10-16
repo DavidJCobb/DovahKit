@@ -2,28 +2,23 @@
 #include <cstdint>
 #include "helpers/bitset.h"
 
-class TESPluginFile;
+struct FormStub;
 class TESForm;
-class loaded_form_ptr;
+class TESPluginFile;
 
-struct FormStub {
-   uint32_t   formID;
-   TESForm*   form = nullptr;
-   uint32_t   refcount = 0;
-   bool       edited = false; // if true, then keep the wrapped form in memory even if its refcount hits zero, until we save changes
-   TESPluginFile* file   = nullptr;
-   uint32_t   offset = 0; // offset of this form's record header within its owning file
-
-   loaded_form_ptr load();
-
-   static void* operator new(std::size_t sz);
-   static void operator delete(void* ptr, std::size_t sz);
-};
-
-class loaded_form_ptr {
+template<typename LoadedFormClass> class loaded_form_ptr {
    //
    // This is intended as a smart pointer not for the FormStub itself, but for the 
    // loaded form data, going THROUGH the FormStub.
+   //
+   // Suggested usage for when you have a FormStub, know the type of form it holds, 
+   // and wish to load and use the form data:
+   //
+   //    auto form  = myFormStub.load();
+   //    auto quest = form.ptr_cast<TESQuest>();
+   //    //
+   //    // ...and then you can use (quest) if it were a TESQuest*. Even without 
+   //    // casting, you can use (form) as if it were a TESForm*.
    //
    private:
       FormStub* wrapped = nullptr;
@@ -37,14 +32,46 @@ class loaded_form_ptr {
             this->wrapped->refcount--;
       }
    public:
-      loaded_form_ptr(FormStub*);
-      ~loaded_form_ptr();
+      loaded_form_ptr(FormStub* stub) : wrapped(stub) { this->_incRef(); };
+      ~loaded_form_ptr() {
+         this->_decRef();
+         this->wrapped = nullptr;
+      }
 
       operator bool() { return this->wrapped != nullptr && this->wrapped->form != nullptr; };
-      operator TESForm*() const noexcept { return this->wrapped->form; };
-      TESForm* operator->() const noexcept { return this->wrapped->form; };
+      operator LoadedFormClass* () const noexcept { return (LoadedFormClass*)this->wrapped->form; };
+      LoadedFormClass* operator->() const noexcept { return (LoadedFormClass*)this->wrapped->form; };
 
-      loaded_form_ptr& operator=(FormStub* stub) noexcept;
+      loaded_form_ptr<LoadedFormClass>& operator=(FormStub* stub) noexcept {
+         this->_decRef();
+         this->wrapped = stub;
+         this->_incRef();
+         return *this;
+      }
+      loaded_form_ptr<LoadedFormClass>& operator=(const loaded_form_ptr<LoadedFormClass>& other) noexcept {
+         this->_decRef();
+         this->wrapped = other.wrapped;
+         this->_incRef();
+         return *this;
+      }
+
+      template<typename OtherFormClass> loaded_form_ptr<OtherFormClass> ptr_cast() {
+         return loaded_form_ptr<OtherFormClass>(this->wrapped);
+      }
+};
+
+struct FormStub {
+   uint32_t   formID;
+   TESForm*   form = nullptr;
+   uint32_t   refcount = 0;
+   bool       edited = false; // if true, then keep the wrapped form in memory even if its refcount hits zero, until we save changes
+   TESPluginFile* file   = nullptr;
+   uint32_t   offset = 0; // offset of this form's record header within its owning file
+
+   loaded_form_ptr<TESForm> load();
+
+   static void* operator new(std::size_t sz);
+   static void operator delete(void* ptr, std::size_t sz);
 };
 
 class FormStubHeap {

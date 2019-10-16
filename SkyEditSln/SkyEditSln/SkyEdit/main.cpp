@@ -17,10 +17,9 @@ int main() {
    std::cout << "Author: " << skyrim.authorName << std::endl;
    std::cout << "Description: " << skyrim.description << std::endl;
    skyrim.forEachFormOfType(77, [](FormStub* stub) {
-      auto form_guard = stub->load();
-      auto form = stub->form;
-      if (form && form->formType == 77) {
-         TESQuest* quest = (TESQuest*)form;
+      auto form = stub->load();
+      if (form && form->formType == kFormType_Quest) {
+         auto quest = form.ptr_cast<TESQuest>();
          const char* type = TESQuest::QuestTypeToString(quest->questType);
          if (!type)
             type = "<UNKNOWN>";

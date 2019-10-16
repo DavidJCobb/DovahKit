@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="formstub.cpp" />
+    <ClCompile Include="forms\ActorBase.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="forms\Quest.cpp" />
@@ -134,7 +135,9 @@
   <ItemGroup>
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="formstub.h" />
+    <ClInclude Include="forms\ActorBase.h" />
     <ClInclude Include="forms\components.h" />
+    <ClInclude Include="forms\conditions.h" />
     <ClInclude Include="forms\papyrus.h" />
     <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="output.h" />

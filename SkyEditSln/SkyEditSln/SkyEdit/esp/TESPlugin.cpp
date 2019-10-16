@@ -220,8 +220,16 @@ bool TESPluginFile::load(const char* filepath) {
       auto& group = this->group;
       if (group.type == kESPGroupType_FormsOfType) {
          switch (_byteswap_ulong(group.label)) {
+            case 'ASTP':
             case 'DIAL':
+            case 'DLBR':
+            case 'FACT':
+            case 'GLOB':
+            case 'LCTN':
+            case 'NPC_':
             case 'QUST':
+            case 'RELA':
+            case 'VTYP':
                break;
             default:
                //

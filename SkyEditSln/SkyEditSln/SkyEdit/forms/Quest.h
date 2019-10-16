@@ -9,7 +9,7 @@ class TESPluginFile;
 
 class TESQuest : public TESForm {
    public:
-      TESQuest() : TESForm(77) {};
+      TESQuest() : TESForm(kFormType_Quest) {};
       //
       enum QuestFlags {
          kQuestFlag_StartGameEnabled = 1,
@@ -39,9 +39,9 @@ class TESQuest : public TESForm {
       //
       // DNAM:
       //
-      uint16_t    flags;
+      uint16_t    flags = 0;
       uint8_t     priority;
-      uint8_t     formVersion;
+      uint8_t     formVersion = 0;
       uint32_t    unknown;
       QuestType   questType;
       //
