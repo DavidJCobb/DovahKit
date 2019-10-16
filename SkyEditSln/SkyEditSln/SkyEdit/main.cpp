@@ -16,7 +16,7 @@ int main() {
    printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
    std::cout << "Author: " << skyrim.authorName << std::endl;
    std::cout << "Description: " << skyrim.description << std::endl;
-   skyrim.forEachFormOfType(77, [](FormStub* stub) {
+   skyrim.forEachFormOfType(kFormType_Quest, [](FormStub* stub) {
       auto form = stub->load();
       if (form && form->formType == kFormType_Quest) {
          auto quest = form.ptr_cast<TESQuest>();
@@ -33,6 +33,14 @@ int main() {
       } else {
          printf("[QUST:%08X] could not be loaded.\n", stub->formID);
       }
+      return false;
+   });
+   skyrim.forEachFormOfType(kFormType_ActorBase, [](FormStub* stub) {
+      auto editorID = stub->get_editor_id();
+      if (editorID)
+         printf("[NPC_:%08X]%s\n", stub->formID, editorID);
+      else
+         printf("[NPC_:%08X] has no editor ID\n", stub->formID);
       return false;
    });
    //

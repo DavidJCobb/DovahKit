@@ -1,11 +1,24 @@
 #include "formstub.h"
 #include "esp/TESPlugin.h"
+#include "helpers/miscellaneous.h"
 #include "output.h"
 #include <cassert>
 #include <cstddef>
 
 #include "forms/Quest.h"
 
+FormStub::~FormStub() {
+   if (this->editorID) {
+      free(this->editorID);
+      this->editorID = nullptr;
+   }
+}
+char* FormStub::allocate_editor_id(size_t length) {
+   if (this->editorID)
+      free(this->editorID);
+   this->editorID = (char*)malloc(length);
+   return this->editorID;
+}
 loaded_form_ptr<TESForm> FormStub::load() {
    if (!this->form && this->file) {
       //_DEBUGMSG("stub is loading...");
@@ -27,6 +40,9 @@ loaded_form_ptr<TESForm> FormStub::load() {
          _DEBUGMSG("...stub failed.");
    }
    return loaded_form_ptr<TESForm>(this);
+}
+void FormStub::set_edited(bool v) {
+   cobb::edit_bit(this->refcount, kRefcountFlag_Edited, v);
 }
 
 void* FormStubHeap::Block::allocate() {

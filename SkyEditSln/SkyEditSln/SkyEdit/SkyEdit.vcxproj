@@ -140,6 +140,7 @@
     <ClInclude Include="forms\conditions.h" />
     <ClInclude Include="forms\papyrus.h" />
     <ClInclude Include="helpers\bitset.h" />
+    <ClInclude Include="helpers\miscellaneous.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="forms\Quest.h" />
     <ClInclude Include="forms\types.h" />

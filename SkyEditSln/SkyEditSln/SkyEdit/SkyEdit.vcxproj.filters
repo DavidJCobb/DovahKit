@@ -71,5 +71,8 @@
     <ClInclude Include="forms\conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\miscellaneous.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

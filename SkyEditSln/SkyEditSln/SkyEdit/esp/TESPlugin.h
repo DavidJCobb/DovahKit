@@ -43,6 +43,10 @@ struct TESPluginGroupHeader {
 };
 struct TESPluginRecordHeader {
    public:
+      enum {
+         kFlag_Compressed = 0x00040000,
+      };
+      //
       uint32_t signature = 0;
       uint32_t size;
       uint32_t flags;
@@ -58,6 +62,8 @@ struct TESPluginRecordHeader {
       };
       uint16_t version;
       uint16_t unknown;
+      //
+      inline bool body_is_compressed() { return (bool)(this->flags & kFlag_Compressed); }
 };
 
 class TESPluginFile {
@@ -65,7 +71,7 @@ class TESPluginFile {
       enum Flags {
          kFlag_Master = 0x0001,
          kFlag_LocalizedStringTable = 0x0080,
-         kFlag_Light  = 0x0200,
+         kFlag_Light  = 0x0200, // SSE only
       };
    public:
       TESPluginFile();
@@ -91,6 +97,9 @@ class TESPluginFile {
       bool isEOF();
       bool is_good();
       //
+      void read(char* buffer, uint32_t size) {
+         fread(buffer, size, 1, this->fileHandle);
+      }
       template<typename T> void read(T& field, uint32_t size) {
          fread(&field, size, 1, this->fileHandle);
       }

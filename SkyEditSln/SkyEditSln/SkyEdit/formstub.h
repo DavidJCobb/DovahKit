@@ -61,17 +61,43 @@ template<typename LoadedFormClass> class loaded_form_ptr {
 };
 
 struct FormStub {
-   uint32_t   formID;
-   TESForm*   form = nullptr;
-   uint32_t   refcount = 0;
-   bool       edited = false; // if true, then keep the wrapped form in memory even if its refcount hits zero, until we save changes
-   TESPluginFile* file   = nullptr;
-   uint32_t   offset = 0; // offset of this form's record header within its owning file
+   template<typename LoadedFormClass> friend class loaded_form_ptr;
+   friend TESPluginFile;
+   //
+   public:
+      enum RefcountFlags {
+         kRefcountMask  = 0x7FFFFFFF,
+         kRefcountFlags = 0x80000000,
+         //
+         kRefcountFlag_Edited = 0x80000000, // if true, then keep the wrapped form in memory even if its refcount hits zero, until we save changes
+      };
+      //
+      ~FormStub();
+      //
+   private:
+      uint32_t refcount = 0;
+      char*    editorID = nullptr;
+   public:
+      uint32_t       formID   = 0; // form ID (file-local)
+      uint8_t        formType = 0;
+      TESForm*       form     = nullptr;
+      TESPluginFile* file     = nullptr;
+      uint32_t       offset   = 0; // offset of this form's record header within its owning file
 
-   loaded_form_ptr<TESForm> load();
+      loaded_form_ptr<TESForm> load();
 
-   static void* operator new(std::size_t sz);
-   static void operator delete(void* ptr, std::size_t sz);
+      inline const char* get_editor_id() { return this->editorID; };
+      inline uint32_t get_refcount() {
+         return this->refcount & kRefcountMask;
+      };
+      inline bool is_edited() { return (bool)(this->refcount & kRefcountFlag_Edited); };
+      void set_edited(bool v);
+
+      static void* operator new(std::size_t sz);
+      static void operator delete(void* ptr, std::size_t sz);
+
+   private:
+      char* allocate_editor_id(size_t length);
 };
 
 class FormStubHeap {

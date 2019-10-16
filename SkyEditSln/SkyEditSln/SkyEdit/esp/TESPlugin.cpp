@@ -65,6 +65,10 @@ void TESPluginFile::readWString(std::string& field) {
 }
 //
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
+   this->group.signature = 0;
+   this->record.signature = 0;
+   this->subrecordSignature = 0;
+   //
    this->setPos(pos);
    this->recordHeadPos = 0;
    auto& r = this->record;
@@ -216,6 +220,10 @@ bool TESPluginFile::load(const char* filepath) {
       return false;
    }
    _DEBUGMSG("Read file header.");
+   //
+   // TODO: need to define hardcoded forms so that references to them don't break, OR 
+   // special-case them in whatever code we write to handle references between forms
+   //
    while (this->nextGroup()) {
       auto& group = this->group;
       if (group.type == kESPGroupType_FormsOfType) {
@@ -256,7 +264,54 @@ bool TESPluginFile::load(const char* filepath) {
          stub->file   = this;
          stub->offset = this->getRecordHeadPos();
          stub->formID = rh.formID;
+         stub->formType = formType;
          list[rh.formID] = stub;
+         //
+         while (this->nextSubrecord()) { // TODO: If the CK or game require that EDID be the first subrecord, then make this (if) rather than (while)
+            //
+            // TODO: This breaks for NPC_ in the vanilla ESMs, since those records are compressed 
+            // (i.e. rh.is_compressed() == true).
+            //
+            // UESP doesn't have documentation on compressed records for Skyrim, but they do have 
+            // documentation for Oblivion. In Oblivion, the body of a compressed record consists 
+            // of: the size of the decompressed data (as a uint32_t); followed by the compressed 
+            // data (which extends to the end of the record) in ZLIB level 6 format. ZLIB is free 
+            // to use in any project provided the copyright notice and so on are included and the 
+            // ZLIB code is clearly delineated from my own: <https://github.com/madler/zlib>
+            //
+            // Implementing support for this will be somewhat tricky:
+            //
+            //  - nextRecord() and loadRecordAt() will need to check if the loaded record is 
+            //    compressed. If so, we'll need to load the compressed data into memory and 
+            //    decompress it.
+            //
+            //  - Whenever there is decompressed data loaded, read() will need to pull from 
+            //    that data until such time as we reach/pass its end. (This is a good opportunity 
+            //    to also alter read() so that it can't blow past the end of a subrecord, record, 
+            //    group, etc..)
+            //
+            //     - skipBytes() will also need to be altered.
+            //
+            //     - Either read() needs to know what we're inside of (record, subrecord, etc.), 
+            //       or we need to offer different methods for reading data from each place, 
+            //       OR we should have structs representing records and subrecords (rather than 
+            //       just header structs) and give them a "read" member function.
+            //
+            //        - Kinda digging that last idea because then, the (load) member functions 
+            //          for loaded form data can just take a TESRecord& or whatever, instead of 
+            //          taking a TESPluginFile*. That limits their access AND clarifies when the 
+            //          functions are meant to be called.
+            //
+            //  - The (setPos) function will need to clear all state related to (de)compressed 
+            //    data.
+            //
+            if (this->subrecordSignature == 'EDID') {
+               auto buffer = stub->allocate_editor_id(this->subrecordSize + 1);
+               this->read(buffer, this->subrecordSize);
+               buffer[this->subrecordSize] = '\0';
+               break;
+            }
+         }
       }
    }
    return true;
