@@ -1,135 +1,14 @@
 #include "TESPlugin.h"
 #include <algorithm>
+#include <cassert>
 #include <stdexcept>
 #include <iostream> // for testing
 #include "../output.h"
 #include "../forms/components.h"
+#include "../helpers/zlib.h"
 
 void _Debug(const char* msg) {
    std::cout << msg << std::endl;
-}
-
-void TESPluginRecordBuffer::setup(bool compressed, uint32_t uncompressed_size, uint32_t compressed_size, uint32_t stream_start) {
-   this->stream_start = stream_start;
-   this->excerpt_size = uncompressed_size;
-   this->stream_pos   = stream_start;
-   //
-   this->is_compressed = compressed;
-   inflateEnd(&this->zlib_stream);
-   if (compressed) {
-      auto& zs = this->zlib_stream;
-      zs.zalloc   = Z_NULL;
-      zs.zfree    = Z_NULL;
-      zs.opaque   = Z_NULL;
-      zs.avail_in = 0;
-      zs.next_in  = Z_NULL;
-      this->zlib_result = inflateInit(&zs);
-   }
-   this->advance();
-}
-void TESPluginRecordBuffer::advance() {
-   this->chunk_pos = 0;
-   if (!this->is_compressed) {
-      if (this->at_end())
-         return;
-      auto end = this->stream_start + this->excerpt_size;
-      this->chunk_size = (std::min)(end - this->stream_pos, buffer_size);
-      owner->read(this->bytes, this->chunk_size);
-      return;
-   }
-   switch (this->zlib_result) {
-      case Z_OK:
-         break;
-      case Z_STREAM_END:
-      case Z_DATA_ERROR:
-      case Z_MEM_ERROR:
-         inflateEnd(&this->zlib_stream);
-         this->chunk_size = 0;
-         return;
-   }
-   char _raw[buffer_size];
-   auto& zs = this->zlib_stream;
-   uint32_t size_to_load = (std::min)(this->compressed_size - (this->stream_pos - this->stream_start), buffer_size);
-   zs.avail_in = fread(_raw, 1, size_to_load, owner->fileHandle);
-   if (ferror(owner->fileHandle)) {
-      inflateEnd(&zs);
-      this->chunk_size = 0; // TODO: signal error?
-      return;
-   }
-   if (zs.avail_in == 0) {
-      this->chunk_size = 0;
-      return;
-   }
-   zs.next_in = (Bytef*)_raw;
-   //
-   // Run inflate() on the raw data until the output buffer has no remaining space:
-   //
-   uint32_t loaded_size = 0;
-   do {
-      zs.avail_out = buffer_size;
-      zs.next_out  = this->bytes;
-      this->zlib_result = inflate(&zs, Z_NO_FLUSH);
-      //assert(this->zlib_result != Z_STREAM_ERROR);
-      switch (this->zlib_result) {
-         case Z_NEED_DICT:
-            this->zlib_result = Z_DATA_ERROR;
-            //
-            // fall through:
-            //
-         case Z_DATA_ERROR:
-         case Z_MEM_ERROR:
-            inflateEnd(&zs);
-            return; // TODO: signal error?
-      }
-      loaded_size = buffer_size - zs.avail_out;
-   } while (zs.avail_out == 0);
-}
-void TESPluginRecordBuffer::read(char* destination, uint32_t size) {
-   uint32_t diff = this->chunk_size - this->chunk_pos;
-   if (size > diff) { // data we wish to read is larger than what's left of the current chunk
-      memcpy(destination, this->bytes + this->chunk_pos, diff);
-      if (!this->is_compressed)
-         this->stream_pos += diff;
-      destination += diff;
-      size        -= diff;
-      this->advance();
-      //
-      while (size > buffer_size) { // data left to read is larger than a chunk
-         memcpy(destination, this->bytes, buffer_size);
-         if (!this->is_compressed)
-            this->stream_pos += diff;
-         destination += buffer_size;
-         size        -= buffer_size;
-         this->advance();
-      }
-   }
-   if (size) {
-      memcpy(destination, this->bytes + this->chunk_pos, size);
-      if (!this->is_compressed)
-         this->stream_pos += diff;
-      this->chunk_pos  += size;
-   }
-}
-void TESPluginRecordBuffer::skip(uint32_t size) {
-   uint32_t diff = this->chunk_size - this->chunk_pos;
-   if (size > diff) { // data we wish to read is larger than what's left of the current chunk
-      if (!this->is_compressed)
-         this->stream_pos += diff;
-      size -= diff;
-      this->advance();
-      //
-      while (size > buffer_size) { // data left to read is larger than a chunk
-         if (!this->is_compressed)
-            this->stream_pos += diff;
-         size -= buffer_size;
-         this->advance();
-      }
-   }
-   if (size) {
-      if (!this->is_compressed)
-         this->stream_pos += diff;
-      this->chunk_pos  += size;
-   }
 }
 
 TESPluginFile::TESPluginFile() {
@@ -161,32 +40,40 @@ bool TESPluginFile::is_good() {
 }
 //
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
+   auto& r  = this->record;
+   auto& rh = r.header;
+   r.data.free();
    this->group.header.signature = 0;
    this->record.header.signature = 0;
    this->subrecord.signature = 0;
    //
    this->setPos(pos);
    this->record.headPos = pos;
-   auto& r = this->record.header;
-   this->read(r);
-   r.signature = _byteswap_ulong(r.signature);
+   this->read(rh);
+   rh.signature = _byteswap_ulong(rh.signature);
    this->record.bodyPos = this->getPos();
-   this->record.end = this->record.bodyPos + r.size;
+   this->record.end = this->record.bodyPos + rh.size;
    if (!this->is_good())
       return false;
-   if (r.body_is_compressed()) {
+   if (rh.body_is_compressed()) {
       uint32_t decompressed_size;
       this->read(decompressed_size);
-      this->recordBuffer.setup(true, decompressed_size, r.size - 4, this->record.bodyPos + 4);
+      r.data.allocate(decompressed_size);
+      //
+      // TODO: decode
+      //
+      //this->recordBuffer.setup(true, decompressed_size, r.size - 4, this->record.bodyPos + 4);
    } else {
-      this->recordBuffer.setup(false, r.size, r.size, this->record.bodyPos);
+      r.data.allocate(rh.size);
+      fread(r.data, 1, rh.size, this->fileHandle);
    }
+   r.offset = 0;
    return true;
 }
 bool TESPluginFile::nextGroup() {
    auto& g = this->group.header;
    if (g.signature) {
-      //_DEBUGMSG("Skipped group spanning from %d to %d.", this->groupPos, this->getGroupEnd());
+      //_DEBUGMSG("Skipped group spanning from %08X to %08X.", this->group.pos, this->group.end);
       this->setPos(this->group.end);
       g.signature = 0;
       //
@@ -204,54 +91,92 @@ bool TESPluginFile::nextGroup() {
    return true;
 }
 bool TESPluginFile::nextRecord() {
-   auto& r = this->record.header;
-   if (r.signature) {
-      //_DEBUGMSG("Skipped record body spanning from %d to %d.", this->recordBodyPos, this->getRecordEnd());
-      this->setPos(this->record.end);
-      r.signature = 0;
+   auto& r  = this->record;
+   auto& rh = r.header;
+   r.data.free();
+   if (rh.signature) {
+      //_DEBUGMSG("Skipped record %s with body spanning from %08X to %08X.", FMT_SIGNATURE(rh.signature), this->record.bodyPos, this->record.end);
+      this->setPos(r.end);
+      rh.signature = 0;
       //
       this->subrecord.signature = 0;
       //
       if (!this->is_good())
          return false;
    }
-   this->record.headPos = this->getPos();
-   if (this->record.headPos >= this->group.end)
+   r.headPos = this->getPos();
+   if (r.headPos >= this->group.end)
       return false;
-   this->read(r);
-   r.signature = _byteswap_ulong(r.signature);
-   this->record.bodyPos = this->getPos();
-   this->record.end = this->record.bodyPos + r.size;
+   this->read(rh);
+   rh.signature = _byteswap_ulong(rh.signature);
+   //
+   if (rh.signature == 'GRUP') { // GRUPs can be nested... *sigh*
+      this->setPos(r.headPos);
+      rh.signature = 0;
+      return false;
+   }
+   //
+   r.bodyPos = this->getPos();
+   r.end = r.bodyPos + rh.size;
    if (!this->is_good())
       return false;
-   if (r.body_is_compressed()) {
-      uint32_t decompressed_size;
-      this->read(decompressed_size);
-      this->recordBuffer.setup(true, decompressed_size, r.size - 4, this->record.bodyPos + 4);
-   } else {
-      this->recordBuffer.setup(false, r.size, r.size, this->record.bodyPos);
+   {
+      switch (rh.signature) {
+         case 'CELL':
+         case 'DIAL':
+         case 'WRLD':
+            this->lastPotentialGroupParent = rh.formID;
+            break;
+         default:
+            this->lastPotentialGroupParent = 0;
+      }
    }
+   if (rh.body_is_compressed()) {
+      uint32_t decompressed_size;
+      uint32_t compressed_size = rh.size - sizeof(decompressed_size);
+      this->read(decompressed_size);
+      r.data.allocate(decompressed_size);
+      /*//
+      printf("compressed record: %08X\n", rh.formID);
+      cobb::zlib::decompress_stream(r.data, decompressed_size, 64, [this, compressed_size](uint32_t offset, cobb::generic_buffer& buf) {
+         uint32_t count = (std::min)(uint32_t(64), compressed_size - offset);
+         auto found = fread(buf, 1, count, this->fileHandle);
+
+         for (uint32_t i = 0; i < buf.size(); i++)
+            printf("%c", ((char*)buf)[i]);
+         printf("\n");
+
+         return found;
+      });
+      //*/
+      auto input_buffer = malloc(compressed_size);
+      fread(input_buffer, 1, compressed_size, this->fileHandle);
+      uint32_t out_size = decompressed_size;
+      uncompress((Bytef*)r.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
+      free(input_buffer);
+      assert(out_size == decompressed_size);
+   } else {
+      r.data.allocate(rh.size);
+      fread(r.data, 1, rh.size, this->fileHandle);
+   }
+   r.offset = 0;
    return true;
 }
 bool TESPluginFile::nextSubrecord() {
-   auto& rb = this->recordBuffer;
+   auto& r = this->record;
    if (this->subrecord.signature) {
       //this->setPos(this->subrecord.end);
-      rb.skip(this->subrecord.end - rb.stream_pos);
+      this->skipFromRecord(this->subrecord.end - (this->record.bodyPos + this->record.offset));
       this->subrecord.signature = 0;
       //
       if (!this->is_good())
          return false;
    }
-   //if (this->getPos() >= this->record.end)
-   //   return false;
-   if (rb.stream_pos >= this->record.end)
+   if (this->record.bodyPos + this->record.offset >= this->record.end)
       return false;
    uint16_t size;
-   //this->read(this->subrecord.signature);
-   //this->read(size);
-   rb.read(this->subrecord.signature);
-   rb.read(size);
+   this->readFromRecord(this->subrecord.signature);
+   this->readFromRecord(size);
    this->subrecord.size = size;
    if (this->subrecord.signature == 'XXXX') {
       //
@@ -262,18 +187,18 @@ bool TESPluginFile::nextSubrecord() {
          return false; // ERROR
       }
       //this->read(this->subrecord.size); // the contents of the XXXX subrecord are the length
-      rb.read(this->subrecord.size);
+      this->readFromRecord(this->subrecord.size);
       //
       // Get the next subrecord.
       //
       //this->read(this->subrecord.signature);
       //this->skipBytes(2); // an XXXX-prefixed subrecord has no length of its own
-      rb.read(this->subrecord.signature);
-      rb.skip(2);
+      this->readFromRecord(this->subrecord.signature);
+      this->skipFromRecord(2);
    }
    this->subrecord.signature = _byteswap_ulong(this->subrecord.signature);
    //this->subrecord.pos = this->getPos();
-   this->subrecord.pos = rb.stream_pos;
+   this->subrecord.pos = this->record.bodyPos + this->record.offset;
    this->subrecord.end = this->subrecord.pos + size;
    if (!this->is_good())
       return false;
@@ -295,15 +220,19 @@ bool TESPluginFile::_loadHeader() {
    while (auto subrecord = r.next_subrecord()) {
       switch (subrecord.signature()) {
          case 'HEDR': // required subrecord; TODO: fail if this isn't present
-            //
-            // TODO
-            //
+            if (!subrecord.has_bytes(12))
+               return false;
+            subrecord.unchecked_read(this->fileVersion);
+            subrecord.unchecked_read(this->recordCount);
+            subrecord.unchecked_read(this->nextFormID);
             break;
          case 'CNAM': // author/creator
-            subrecord.read(this->authorName, subrecord.size());
+            if (!subrecord.read(this->authorName, subrecord.size()))
+               return false;
             break;
          case 'SNAM': // description
-            subrecord.read(this->description, subrecord.size());
+            if (!subrecord.read(this->description, subrecord.size()))
+               return false;
             break;
          case 'MAST':
             //
@@ -321,10 +250,12 @@ bool TESPluginFile::_loadHeader() {
             //
             break;
          case 'INTV':
-            subrecord.read(this->subINTV);
+            if (!subrecord.read(this->subINTV))
+               return false;
             break;
          case 'INCC':
-            subrecord.read(this->subINCC);
+            if (!subrecord.read(this->subINCC))
+               return false;
             break;
       }
    }
@@ -391,7 +322,7 @@ bool TESPluginFile::load(const char* filepath) {
          while (auto subrecord = r.next_subrecord()) {
             if (subrecord.signature() == 'EDID') {
                auto buffer = stub->allocate_editor_id(this->subrecord.size + 1);
-               this->read(buffer, this->subrecord.size);
+               this->readFromRecord(buffer, this->subrecord.size);
                buffer[this->subrecord.size] = '\0';
                break;
             }
@@ -429,7 +360,7 @@ TESPluginSubrecord TESPluginFile::getCurrentSubrecord() { return TESPluginSubrec
 bool TESPluginSubrecord::skip_bytes(uint32_t count) {
    if (!this->_check(count))
       return false;
-   this->file->recordBuffer.skip(count);
+   this->file->skipFromRecord(count);
    return true;
 }
 bool TESPluginSubrecord::read_wstring(std::string& field) {
@@ -439,7 +370,7 @@ bool TESPluginSubrecord::read_wstring(std::string& field) {
    if (!this->_check(length))
       return false;
    field.resize(length);
-   this->file->recordBuffer.read(const_cast<char*>(field.data()), length);
+   this->file->readFromRecord(const_cast<char*>(field.data()), length);
    return true;
 }
 bool TESPluginSubrecord::to_string(std::string& field) {
@@ -465,13 +396,12 @@ bool TESPluginSubrecord::to_string(LStringRef& field) {
 }
 
 uint32_t TESPluginRecord::peek_next_subrecord_type() {
-   if (this->file->subrecord.end < this->file->record.end) {
-      auto pos = this->file->getPos();
-      this->file->setPos(this->file->subrecord.end);
-      uint32_t signature;
-      this->file->read(signature);
-      this->file->setPos(pos);
-      return signature;
+   auto pos = this->file->subrecord.end;
+   if (pos < this->file->record.end) {
+      pos -= this->file->record.bodyPos;
+      auto addr = (std::ptrdiff_t)this->file->record.data;
+      addr += pos;
+      return *(uint32_t*)addr;
    }
    return 0;
 }
