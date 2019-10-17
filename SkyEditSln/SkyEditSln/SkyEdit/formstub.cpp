@@ -129,14 +129,22 @@ void FormStubHeap::dump() {
    uint32_t blockCount = 0;
    uint32_t slotCount = 0;
    uint32_t slotsUsed = 0;
+   uint32_t editorIDSizes = 0;
    for (auto block = this->firstBlock; block; block = block->info.next) {
       blockCount++;
       slotCount += ce_countPerBlock;
       //
       auto& presence = block->info.presence;
       for (uint16_t i = 0; i < ce_countPerBlock; i++) {
-         if (presence.test(i))
+         if (presence.test(i)) {
             slotsUsed++;
+            //
+            std::ptrdiff_t addr = (std::ptrdiff_t)block->buffer + sizeof(FormStub) * i;
+            FormStub* stub = (FormStub*)addr;
+            auto id = stub->get_editor_id();
+            if (id)
+               editorIDSizes += strlen(id) + 1;
+         }
       }
    }
    _DEBUGMSG("Blocks: %d", blockCount);
@@ -145,6 +153,7 @@ void FormStubHeap::dump() {
    _DEBUGMSG(" - %d bytes overhead for block metadata", (sizeof(BlockInfo) * blockCount));
    _DEBUGMSG(" - %d bytes allocated for FormStub storage", sizeof(element_type) * slotCount);
    _DEBUGMSG(" - %d bytes in use for FormStub instances", sizeof(element_type) * slotsUsed);
+   _DEBUGMSG(" - %d bytes' worth of editor ID text held elsewhere", editorIDSizes);
    //
    _DEBUGMSG("Overview by block:");
    blockCount = 0;

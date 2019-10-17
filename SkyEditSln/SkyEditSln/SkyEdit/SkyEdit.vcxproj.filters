@@ -39,9 +39,6 @@
     <ClCompile Include="forms\ActorBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\mmap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="helpers\memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -80,13 +77,7 @@
     <ClInclude Include="helpers\miscellaneous.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\mmap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\memory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helpers\zlib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

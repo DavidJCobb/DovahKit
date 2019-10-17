@@ -5,7 +5,6 @@
 #include <iostream> // for testing
 #include "../output.h"
 #include "../forms/components.h"
-#include "../helpers/zlib.h"
 
 void _Debug(const char* msg) {
    std::cout << msg << std::endl;
@@ -136,19 +135,7 @@ bool TESPluginFile::nextRecord() {
       uint32_t compressed_size = rh.size - sizeof(decompressed_size);
       this->read(decompressed_size);
       r.data.allocate(decompressed_size);
-      /*//
-      printf("compressed record: %08X\n", rh.formID);
-      cobb::zlib::decompress_stream(r.data, decompressed_size, 64, [this, compressed_size](uint32_t offset, cobb::generic_buffer& buf) {
-         uint32_t count = (std::min)(uint32_t(64), compressed_size - offset);
-         auto found = fread(buf, 1, count, this->fileHandle);
-
-         for (uint32_t i = 0; i < buf.size(); i++)
-            printf("%c", ((char*)buf)[i]);
-         printf("\n");
-
-         return found;
-      });
-      //*/
+      //
       auto input_buffer = malloc(compressed_size);
       fread(input_buffer, 1, compressed_size, this->fileHandle);
       uint32_t out_size = decompressed_size;

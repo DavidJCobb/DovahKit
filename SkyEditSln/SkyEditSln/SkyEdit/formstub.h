@@ -79,6 +79,11 @@ struct FormStub {
       uint32_t offset   = 0; // offset of this form's record header within its owning file
       uint32_t refcount = 0;
       char*    editorID = nullptr;
+      //
+      // TODO: When we begin to add the ability to edit things, we'll have to keep editor IDs consistent 
+      // between FormStubs and their loaded forms... or give every loaded form a reference to its stub, 
+      // and have them skip loading their own editor IDs since the stubs already loaded those.
+      //
    public:
       uint32_t       formID   = 0; // form ID (file-local)
       uint8_t        formType = 0;

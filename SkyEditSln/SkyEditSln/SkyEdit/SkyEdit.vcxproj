@@ -128,7 +128,6 @@
     <ClCompile Include="forms\ActorBase.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
-    <ClCompile Include="helpers\mmap.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="forms\Quest.cpp" />
     <ClCompile Include="forms\types.cpp" />
@@ -144,8 +143,6 @@
     <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="helpers\memory.h" />
     <ClInclude Include="helpers\miscellaneous.h" />
-    <ClInclude Include="helpers\mmap.h" />
-    <ClInclude Include="helpers\zlib.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="forms\Quest.h" />
     <ClInclude Include="forms\types.h" />
