@@ -8,7 +8,9 @@
 #include "../formstub.h"
 #include "../forms/types.h"
 
-class  TESPluginFile;
+class TESPluginFile;
+class TESPluginSubrecord;
+class TESPluginRecord;
 struct LStringRef;
 
 enum ESPGroupType : int32_t {
@@ -67,6 +69,8 @@ struct TESPluginRecordHeader {
 };
 
 class TESPluginFile {
+   friend TESPluginRecord;
+   friend TESPluginSubrecord;
    public:
       enum Flags {
          kFlag_Master = 0x0001,
@@ -118,9 +122,12 @@ class TESPluginFile {
       TESPluginGroupHeader  group;  // header for last parsed/loaded group
       TESPluginRecordHeader record; // header for last parsed/loaded record
       uint32_t groupPos;
+      uint32_t groupEnd;
       uint32_t recordHeadPos;
       uint32_t recordBodyPos;
-      uint32_t subrecordPos;
+      uint32_t recordEnd;
+      uint32_t subrecordPos; // position of the start of the subrecord's contents
+      uint32_t subrecordEnd;
       uint32_t subrecordSignature = 0;
       uint32_t subrecordSize = 0;
       //
@@ -147,6 +154,9 @@ class TESPluginFile {
       inline uint32_t getRecordEnd() const { return this->recordBodyPos + this->record.size; }
       inline uint32_t getSubrecordEnd() const { return this->subrecordPos + this->subrecordSize; }
       //
+      TESPluginRecord    getCurrentRecord();
+      TESPluginSubrecord getCurrentSubrecord();
+      //
       // Loaded data:
       //
       uint32_t flags = 0;
@@ -162,4 +172,105 @@ class TESPluginFile {
       //
       FormStub* getForm(formtype_t formType, uint32_t formID) const;
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
+};
+
+class TESPluginSubrecord { // interface for the currently-loaded subrecord
+   private:
+      TESPluginFile* const file;
+      //
+      bool _check() const {
+         return this->file->getPos() < this->file->subrecordEnd;
+      }
+      bool _check(uint32_t bytes) const {
+         return this->file->getPos() + bytes < this->file->subrecordEnd;
+      }
+   public:
+      TESPluginSubrecord(TESPluginFile* f) : file(f) {};
+      //
+      inline operator bool() const { return this->file != nullptr; }
+      //
+      inline uint32_t offset() const { return file->subrecordPos; }
+      inline uint32_t signature() const { return file->subrecordSignature; }
+      inline uint32_t size() const { return file->subrecordSize; }
+      //
+      inline bool is_in_bounds() { return this->_check() && this->file->is_good(); }
+      //
+      inline uint32_t containing_record_signature() const { return file->record.signature; }
+      //
+      bool to_string(std::string& field);
+      bool to_string(LStringRef& field); // TODO: implement string table support
+      //
+      bool skipBytes(uint32_t count);
+      bool read(char* buffer, uint32_t size) {
+         if (!this->_check(size))
+            return false;
+         this->file->read(buffer, size);
+         return true;
+      }
+      template<typename T> bool read(T& field, uint32_t size) {
+         if (!this->_check(size))
+            return false;
+         this->file->read(field, size);
+         return true;
+      }
+      template<typename T> bool read(T& field) {
+         if (!this->_check(sizeof(field)))
+            return false;
+         this->file->read(field);
+         return true;
+      }
+      bool read_wstring(std::string& field);
+
+      //
+      // The functions below allow you to manually manage bounds-checking: if you need to read multiple 
+      // fields in sequence, then it might be a millisecond or two faster to do a single bounds-check 
+      // at the start, and then do unchecked reads for the fields, e.g.
+      //
+      //    uint32_t foo;
+      //    uint32_t bar;
+      //    if (!subrecord.has_bytes(sizeof(foo) + sizeof(bar)))
+      //       return false;
+      //    subrecord.unchecked_read(foo);
+      //    subrecord.unchecked_read(bar);
+      //
+      // Of course, you'll have to be careful if you go copying and pasting read code. Is that risk 
+      // worth a few milliseconds per form, over thousands of forms? Sounds like it to me, but I can 
+      // always redesign if it turns out to cause too many problems to be worth it.
+      //
+
+      inline bool has_bytes(uint32_t count) const { return this->_check(count); }
+      //
+      // Use only if you've already called (has_bytes) to check that the data you want to read is in-bounds.
+      void unchecked_read(char* buffer, uint32_t size) {
+         this->file->read(buffer, size);
+      }
+      //
+      // Use only if you've already called (has_bytes) to check that the data you want to read is in-bounds.
+      template<typename T> void unchecked_read(T& field, uint32_t size) {
+         this->file->read(field, size);
+      }
+      //
+      // Use only if you've already called (has_bytes) to check that the data you want to read is in-bounds.
+      template<typename T> void unchecked_read(T& field) {
+         this->file->read(field);
+      }
+};
+class TESPluginRecord { // interface for the currently-loaded record
+   private:
+      TESPluginFile* const file;
+   public:
+      TESPluginRecord(TESPluginFile* f) : file(f) {};
+      //
+      inline operator bool() const { return this->file != nullptr; }
+      //
+      inline TESPluginSubrecord next_subrecord() {
+         if (this->file->nextSubrecord())
+            return TESPluginSubrecord(this->file);
+         return TESPluginSubrecord(nullptr);
+      }
+      //
+      inline uint32_t signature() const { return this->file->record.signature; }
+      inline uint32_t size() const { return this->file->record.size; }
+      //
+      uint32_t peek_next_subrecord_type();
 };

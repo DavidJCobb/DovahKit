@@ -5,7 +5,7 @@
 #include "components.h"
 #include "papyrus.h"
 
-class TESPluginFile;
+class TESPluginRecord;
 
 class TESQuest : public TESForm {
    public:
@@ -47,7 +47,7 @@ class TESQuest : public TESForm {
       //
       std::string editorCategory; // FLTR // "abc/def/ghi" to nest within the CK Object Window tree
 
-      void load(TESPluginFile*);
+      void load(TESPluginRecord&);
 
       static const char* QuestTypeToString(QuestType);
 };

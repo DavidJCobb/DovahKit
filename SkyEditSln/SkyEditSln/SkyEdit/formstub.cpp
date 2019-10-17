@@ -24,15 +24,13 @@ loaded_form_ptr<TESForm> FormStub::load() {
       //_DEBUGMSG("stub is loading...");
       auto file = this->file;
       if (this->file->loadRecordAt(this->offset)) {
-         auto& header = this->file->getRecordHeader();
-         //_DEBUGMSG("...header is %s...", FMT_SIGNATURE(header.signature));
-         auto  formType = signatureToFormType(header.signature);
-         //_DEBUGMSG("...form type is %d...", formType);
+         auto record = this->file->getCurrentRecord();
+         auto formType = signatureToFormType(record.signature());
          switch (formType) {
             case kFormType_Quest:
                {
                   auto q = new TESQuest();
-                  q->load(file);
+                  q->load(record);
                   this->form = q;
                }; break;
          }

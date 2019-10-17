@@ -17,22 +17,24 @@ PapyrusScriptData::Property::~Property() {
    }
 }
 
-bool PapyrusScriptData::load(TESPluginFile* file) {
+bool PapyrusScriptData::load(TESPluginSubrecord& subrecord) {
    //
    // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
    //
-   file->read(this->version);
-   file->read(this->objectFormat);
+   if (!subrecord.read(this->version) || !subrecord.read(this->objectFormat))
+      return false;
    {
       uint16_t count;
-      file->read(count);
+      if (!subrecord.read(count))
+         return false;
       this->scripts.resize(count);
       for (uint16_t i = 0; i < count; i++) {
          auto& script = this->scripts[i];
-         script.load(*this, file);
+         if (!script.load(*this, subrecord))
+            return false;
       }
    }
-   switch (file->getRecordHeader().signature) {
+   switch (subrecord.containing_record_signature()) {
       case 'INFO':
          //
          // TODO: fragment data for topic infos
@@ -59,48 +61,51 @@ bool PapyrusScriptData::load(TESPluginFile* file) {
          //
          break;
    }
-   return true;
+   return subrecord.is_in_bounds();
 }
-bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginFile* file) {
+bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
    //
    // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
    //
-   file->readWString(this->name);
-   file->read(this->status);
+   subrecord.read_wstring(this->name);
    uint16_t count;
-   file->read(count);
+   if (!subrecord.has_bytes(sizeof(this->status) + sizeof(count)))
+      return false;
+   subrecord.unchecked_read(this->status);
+   subrecord.unchecked_read(count);
    this->properties.resize(count);
    for (uint16_t i = 0; i < count; i++) {
       auto& prop = this->properties[i];
-      if (!prop.load(owner, file)) {
+      if (!prop.load(owner, subrecord)) {
          _DEBUGMSG("Problem encountered while loading script %s.", this->name.c_str());
          return false;
       }
    }
    return true;
 }
-bool PapyrusScriptData::PropertyObjectValue::load(PapyrusScriptData& owner, TESPluginFile* file) {
-   //
-   // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
-   //
+bool PapyrusScriptData::PropertyObjectValue::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
+   if (!subrecord.has_bytes(sizeof(this->alwaysZero) + sizeof(this->aliasID) + sizeof(this->formID)))
+      return false;
    if (owner.objectFormat == 2) {
-      file->read(this->alwaysZero);
-      file->read(this->aliasID);
-      file->read(this->formID);
+      subrecord.unchecked_read(this->alwaysZero);
+      subrecord.unchecked_read(this->aliasID);
+      subrecord.unchecked_read(this->formID);
    } else {
-      file->read(this->formID);
-      file->read(this->aliasID);
-      file->read(this->alwaysZero);
+      subrecord.unchecked_read(this->formID);
+      subrecord.unchecked_read(this->aliasID);
+      subrecord.unchecked_read(this->alwaysZero);
    }
    return true;
 }
-bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* file) {
+bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
    //
    // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
    //
-   file->readWString(this->name);
-   file->read(this->type);
-   file->read(this->status);
+   subrecord.read_wstring(this->name);
+   if (!subrecord.has_bytes(sizeof(this->type) + sizeof(this->status)))
+      return false;
+   subrecord.unchecked_read(this->type);
+   subrecord.unchecked_read(this->status);
    if (this->value) {
       delete this->value;
       this->value = nullptr;
@@ -111,28 +116,28 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
             {
                auto v = new PropertyObjectValue;
                this->value = v;
-               v->load(owner, file);
+               v->load(owner, subrecord);
             }
             break;
          case kPapyrusPropertyType_String:
             {
                auto v = new std::string;
                this->value = v;
-               file->readWString(*v);
+               subrecord.read_wstring(*v);
             }
             break;
          case kPapyrusPropertyType_Int:
             {
                auto v = new int32_t;
                this->value = v;
-               file->read(*v);
+               subrecord.read(*v);
             }
             break;
          case kPapyrusPropertyType_Float:
             {
                auto v = new float;
                this->value = v;
-               file->read(*v);
+               subrecord.read(*v);
             }
             break;
          case kPapyrusPropertyType_Bool:
@@ -140,7 +145,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
                static_assert(sizeof(bool) == sizeof(uint8_t), "Bools aren't one byte on your platform. They are in the VMAD data, so rewrite this code accordingly.");
                auto v = new bool;
                this->value = v;
-               file->read(*v);
+               subrecord.read(*v);
             }
             break;
          default:
@@ -149,7 +154,8 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
       }
    } else {
       uint32_t count;
-      file->read(count);
+      if (!subrecord.read(count))
+         return false;
       switch (this->type) {
          case kPapyrusPropertyType_ArrayObject:
             {
@@ -160,7 +166,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
                values.resize(count);
                for (uint32_t i = 0; i < count; i++) {
                   auto& elem = values[i];
-                  elem.load(owner, file);
+                  elem.load(owner, subrecord);
                }
             }
             break;
@@ -173,12 +179,14 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
                values.resize(count);
                for (uint32_t i = 0; i < count; i++) {
                   auto& elem = values[i];
-                  file->readWString(elem);
+                  subrecord.read_wstring(elem);
                }
             }
             break;
          case kPapyrusPropertyType_ArrayInt:
             {
+               if (!subrecord.has_bytes(sizeof(uint32_t) * count))
+                  return false;
                auto v = new std::vector<int32_t>;
                this->value = v;
                //
@@ -186,12 +194,14 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
                values.resize(count);
                for (uint32_t i = 0; i < count; i++) {
                   auto& elem = values[i];
-                  file->read(elem);
+                  subrecord.unchecked_read(elem);
                }
             }
             break;
          case kPapyrusPropertyType_ArrayFloat:
             {
+               if (!subrecord.has_bytes(sizeof(float) * count))
+                  return false;
                auto v = new std::vector<float>;
                this->value = v;
                //
@@ -199,12 +209,14 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
                values.resize(count);
                for (uint32_t i = 0; i < count; i++) {
                   auto& elem = values[i];
-                  file->read(elem);
+                  subrecord.unchecked_read(elem);
                }
             }
             break;
          case kPapyrusPropertyType_ArrayBool:
             {
+               if (!subrecord.has_bytes(sizeof(uint8_t) * count))
+                  return false;
                auto v = new std::vector<bool>;
                this->value = v;
                //
@@ -212,7 +224,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginFile* 
                values.resize(count);
                for (uint32_t i = 0; i < count; i++) {
                   uint8_t b;
-                  file->read(b);
+                  subrecord.unchecked_read(b);
                   values[i] = (bool)b;
                }
             }

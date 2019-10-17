@@ -75,6 +75,7 @@ bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->read(r);
    r.signature = _byteswap_ulong(r.signature);
    this->recordBodyPos = this->getPos();
+   this->recordEnd = this->recordBodyPos + r.size;
    if (!this->is_good())
       return false;
    return true;
@@ -93,6 +94,7 @@ bool TESPluginFile::nextGroup() {
       return false;
    this->groupPos = this->getPos(); // group size includes the header, so use the start of the header as the offset
    this->read(g);
+   this->groupEnd = this->groupPos + g.size;
    g.signature = _byteswap_ulong(g.signature);
    if (!this->is_good())
       return false;
@@ -116,6 +118,7 @@ bool TESPluginFile::nextRecord() {
    this->read(r);
    r.signature = _byteswap_ulong(r.signature);
    this->recordBodyPos = this->getPos();
+   this->recordEnd = this->recordBodyPos + r.size;
    if (!this->is_good())
       return false;
    return true;
@@ -151,6 +154,7 @@ bool TESPluginFile::nextSubrecord() {
    }
    this->subrecordSignature = _byteswap_ulong(this->subrecordSignature);
    this->subrecordPos = this->getPos();
+   this->subrecordEnd = this->subrecordPos + size;
    if (!this->is_good())
       return false;
    return true;
@@ -305,6 +309,10 @@ bool TESPluginFile::load(const char* filepath) {
             //  - The (setPos) function will need to clear all state related to (de)compressed 
             //    data.
             //
+            // TODO: ALSO, WHILE YOU'RE HERE: WE NEED A DIFFERENT NAME THAN "SkyEdit," BECAUSE 
+            // APPARENTLY THAT'S ALREADY IN USE FOR UESP'S ATTEMPT AT CLONING THE CREATION KIT 
+            // (LAST UPDATED IN 2012).
+            //
             if (this->subrecordSignature == 'EDID') {
                auto buffer = stub->allocate_editor_id(this->subrecordSize + 1);
                this->read(buffer, this->subrecordSize);
@@ -332,4 +340,43 @@ void TESPluginFile::forEachFormOfType(formtype_t formType, std::function<bool(Fo
             break;
       }
    } catch (std::out_of_range) {}
+}
+
+TESPluginRecord    TESPluginFile::getCurrentRecord() { return TESPluginRecord(this); }
+TESPluginSubrecord TESPluginFile::getCurrentSubrecord() { return TESPluginSubrecord(this); }
+
+bool TESPluginSubrecord::skipBytes(uint32_t count) {
+   if (!this->_check(count))
+      return false;
+   this->file->skipBytes(count);
+}
+bool TESPluginSubrecord::read_wstring(std::string& field) {
+   field.clear();
+   uint16_t length;
+   this->read(length);
+   if (!this->_check(length))
+      return false;
+   field.resize(length);
+   this->file->read(const_cast<char*>(field.data()), length);
+   return true;
+}
+bool TESPluginSubrecord::to_string(std::string& field) {
+   this->file->readStringSubrecord(field);
+   return this->file->is_good();
+}
+bool TESPluginSubrecord::to_string(LStringRef& field) {
+   this->file->readStringSubrecord(field);
+   return this->file->is_good();
+}
+
+uint32_t TESPluginRecord::peek_next_subrecord_type() {
+   if (this->file->subrecordEnd < this->file->recordEnd) {
+      auto pos = this->file->getPos();
+      this->file->setPos(this->file->subrecordEnd);
+      uint32_t signature;
+      this->file->read(signature);
+      this->file->setPos(pos);
+      return signature;
+   }
+   return 0;
 }

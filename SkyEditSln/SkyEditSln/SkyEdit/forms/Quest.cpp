@@ -1,26 +1,24 @@
 #include "Quest.h"
 #include "../esp/TESPlugin.h"
 
-void TESQuest::load(TESPluginFile* file) {
-   while (file->nextSubrecord()) {
-      uint32_t signature = file->getSubrecordType();
-      uint32_t size      = file->getSubrecordSize();
-      switch (signature) {
+void TESQuest::load(TESPluginRecord& record) {
+   while (TESPluginSubrecord subrecord = record.next_subrecord()) {
+      switch (subrecord.signature()) {
          case 'EDID': // required; TODO: fail if this is not present
-            file->readStringSubrecord(this->editorID);
+            subrecord.to_string(this->editorID);
             break;
          case 'FULL':
-            file->readStringSubrecord(this->name);
+            subrecord.to_string(this->name);
             break;
          case 'VMAD':
-            this->scriptData.load(file);
+            this->scriptData.load(subrecord);
             break;
          case 'DNAM': // required; TODO: fail if this is not present
-            file->read(this->flags);
-            file->read(this->priority);
-            file->read(this->formVersion);
-            file->read(this->unknown);
-            file->read(this->questType);
+            subrecord.read(this->flags);
+            subrecord.read(this->priority);
+            subrecord.read(this->formVersion);
+            subrecord.read(this->unknown);
+            subrecord.read(this->questType);
             break;
          case 'ENAM':
             //
@@ -33,7 +31,7 @@ void TESQuest::load(TESPluginFile* file) {
             //
             break;
          case 'FLTR': // required; TODO: fail if this is not present
-            file->readStringSubrecord(this->editorCategory);
+            subrecord.to_string(this->editorCategory);
             break;
          //
          // TODO: any incomplete subrecords above, CTDA, NEXT, CTDA, stages, objectives, ANAM, aliases

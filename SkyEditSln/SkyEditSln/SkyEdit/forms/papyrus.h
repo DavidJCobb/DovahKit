@@ -5,6 +5,7 @@
 #include <vector>
 
 class TESPluginFile;
+class TESPluginSubrecord;
 
 enum PapyrusPropertyType : uint8_t {
    kPapyrusPropertyType_Object = 1,
@@ -29,7 +30,7 @@ class PapyrusScriptData {
       std::vector<Script> scripts;
       // TODO: vector of fragments
       //
-      bool load(TESPluginFile*); // assumes we're at a VMAD subrecord // TODO: needs to load fragments
+      bool load(TESPluginSubrecord&); // assumes we're at a VMAD subrecord // TODO: needs to load fragments
       //
       void forEachScript(std::function<bool(Script*)>);
    public:
@@ -47,7 +48,7 @@ class PapyrusScriptData {
          uint16_t aliasID;
          uint16_t alwaysZero = 0;
          //
-         bool load(PapyrusScriptData& owner, TESPluginFile*);
+         bool load(PapyrusScriptData& owner, TESPluginSubrecord&);
       };
       class Property {
          friend Script;
@@ -58,7 +59,7 @@ class PapyrusScriptData {
             void* value = nullptr;
             //
          private:
-            bool load(PapyrusScriptData& owner, TESPluginFile*);
+            bool load(PapyrusScriptData& owner, TESPluginSubrecord&);
             //
          public:
             ~Property();
@@ -71,7 +72,7 @@ class PapyrusScriptData {
             std::vector<Property> properties;
             //
          private:
-            bool load(PapyrusScriptData& owner, TESPluginFile*);
+            bool load(PapyrusScriptData& owner, TESPluginSubrecord&);
       };
 
 };
