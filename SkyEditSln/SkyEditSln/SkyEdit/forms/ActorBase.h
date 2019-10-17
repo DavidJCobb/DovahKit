@@ -5,7 +5,7 @@
 #include "components.h"
 #include "papyrus.h"
 
-class TESPluginFile;
+class TESPluginRecord;
 
 class TESActorBase : public TESForm {
    //
@@ -17,5 +17,5 @@ class TESActorBase : public TESForm {
       std::string editorID;
       LStringRef  name;
 
-      void load(TESPluginFile*);
+      void load(TESPluginRecord&);
 };

@@ -37,10 +37,10 @@ bool TESPluginFile::is_good() {
 }
 void TESPluginFile::readStringSubrecord(std::string& field) {
    field.clear();
-   if (!this->subrecordSignature)
+   if (!this->subrecord.signature)
       return;
-   field.resize(this->subrecordSize);
-   fread(const_cast<char*>(field.data()), sizeof(char), this->subrecordSize, this->fileHandle);
+   field.resize(this->subrecord.size);
+   fread(const_cast<char*>(field.data()), sizeof(char), this->subrecord.size, this->fileHandle);
 }
 void TESPluginFile::readStringSubrecord(LStringRef& field) {
    field.value.clear();
@@ -65,96 +65,96 @@ void TESPluginFile::readWString(std::string& field) {
 }
 //
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
-   this->group.signature = 0;
-   this->record.signature = 0;
-   this->subrecordSignature = 0;
+   this->group.header.signature = 0;
+   this->record.header.signature = 0;
+   this->subrecord.signature = 0;
    //
    this->setPos(pos);
-   this->recordHeadPos = 0;
-   auto& r = this->record;
+   this->record.headPos = 0;
+   auto& r = this->record.header;
    this->read(r);
    r.signature = _byteswap_ulong(r.signature);
-   this->recordBodyPos = this->getPos();
-   this->recordEnd = this->recordBodyPos + r.size;
+   this->record.bodyPos = this->getPos();
+   this->record.end = this->record.bodyPos + r.size;
    if (!this->is_good())
       return false;
    return true;
 }
 bool TESPluginFile::nextGroup() {
-   auto& g = this->group;
+   auto& g = this->group.header;
    if (g.signature) {
       //_DEBUGMSG("Skipped group spanning from %d to %d.", this->groupPos, this->getGroupEnd());
-      this->setPos(this->getGroupEnd());
+      this->setPos(this->group.end);
       g.signature = 0;
       //
-      this->record.signature = 0;
-      this->subrecordSignature = 0;
+      this->record.header.signature = 0;
+      this->subrecord.signature = 0;
    }
    if (!this->is_good())
       return false;
-   this->groupPos = this->getPos(); // group size includes the header, so use the start of the header as the offset
+   this->group.pos = this->getPos(); // group size includes the header, so use the start of the header as the offset
    this->read(g);
-   this->groupEnd = this->groupPos + g.size;
+   this->group.end = this->group.pos + g.size;
    g.signature = _byteswap_ulong(g.signature);
    if (!this->is_good())
       return false;
    return true;
 }
 bool TESPluginFile::nextRecord() {
-   auto& r = this->record;
+   auto& r = this->record.header;
    if (r.signature) {
       //_DEBUGMSG("Skipped record body spanning from %d to %d.", this->recordBodyPos, this->getRecordEnd());
-      this->setPos(this->getRecordEnd());
+      this->setPos(this->record.end);
       r.signature = 0;
       //
-      this->subrecordSignature = 0;
+      this->subrecord.signature = 0;
       //
       if (!this->is_good())
          return false;
    }
-   this->recordHeadPos = this->getPos();
-   if (this->recordHeadPos >= this->getGroupEnd())
+   this->record.headPos = this->getPos();
+   if (this->record.headPos >= this->group.end)
       return false;
    this->read(r);
    r.signature = _byteswap_ulong(r.signature);
-   this->recordBodyPos = this->getPos();
-   this->recordEnd = this->recordBodyPos + r.size;
+   this->record.bodyPos = this->getPos();
+   this->record.end = this->record.bodyPos + r.size;
    if (!this->is_good())
       return false;
    return true;
 }
 bool TESPluginFile::nextSubrecord() {
-   if (this->subrecordSignature) {
-      this->setPos(this->getSubrecordEnd());
-      this->subrecordSignature = 0;
+   if (this->subrecord.signature) {
+      this->setPos(this->subrecord.end);
+      this->subrecord.signature = 0;
       //
       if (!this->is_good())
          return false;
    }
-   if (this->getPos() >= this->getRecordEnd())
+   if (this->getPos() >= this->record.end)
       return false;
    uint16_t size;
-   this->read(this->subrecordSignature);
+   this->read(this->subrecord.signature);
    this->read(size);
-   this->subrecordSize = size;
-   if (this->subrecordSignature == 'XXXX') {
+   this->subrecord.size = size;
+   if (this->subrecord.signature == 'XXXX') {
       //
       // An 'XXXX' subrecord is used as a prefix for a subrecord whose size is 
       // larger than what can be represented with the usual two-byte length.
       //
-      if (this->subrecordSize != 4) {
+      if (this->subrecord.size != 4) {
          return false; // ERROR
       }
-      this->read(this->subrecordSize); // the contents of the XXXX subrecord are the length
+      this->read(this->subrecord.size); // the contents of the XXXX subrecord are the length
       //
       // Get the next subrecord.
       //
-      this->read(this->subrecordSignature);
+      this->read(this->subrecord.signature);
       this->skipBytes(2); // an XXXX-prefixed subrecord has no length of its own
    }
-   this->subrecordSignature = _byteswap_ulong(this->subrecordSignature);
-   this->subrecordPos = this->getPos();
-   this->subrecordEnd = this->subrecordPos + size;
+   this->subrecord.signature = _byteswap_ulong(this->subrecord.signature);
+   this->subrecord.pos = this->getPos();
+   this->subrecord.end = this->subrecord.pos + size;
    if (!this->is_good())
       return false;
    return true;
@@ -165,7 +165,7 @@ bool TESPluginFile::_loadHeader() {
       _DEBUGMSG("Expected TES4 record; no record found.");
       return false;
    }
-   auto& tes4 = this->record;
+   auto& tes4 = this->record.header;
    if (tes4.signature != 'TES4') {
       _DEBUGMSG("Expected TES4 record; got something else.");
       return false;
@@ -173,8 +173,8 @@ bool TESPluginFile::_loadHeader() {
    this->flags = tes4.flags;
    //
    while (this->nextSubrecord()) {
-      uint32_t signature = this->subrecordSignature;
-      uint32_t size      = this->subrecordSize;
+      uint32_t signature = this->subrecord.signature;
+      uint32_t size      = this->subrecord.size;
       switch (signature) {
          case 'HEDR': // required subrecord; TODO: fail if this isn't present
             //
@@ -229,7 +229,7 @@ bool TESPluginFile::load(const char* filepath) {
    // special-case them in whatever code we write to handle references between forms
    //
    while (this->nextGroup()) {
-      auto& group = this->group;
+      auto& group = this->group.header;
       if (group.type == kESPGroupType_FormsOfType) {
          switch (_byteswap_ulong(group.label)) {
             case 'ASTP':
@@ -253,7 +253,7 @@ bool TESPluginFile::load(const char* filepath) {
       uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
       formtype_t lastFormType  = 0;
       while (this->nextRecord()) {
-         auto& rh = this->record;
+         auto& rh = this->record.header;
          //
          if (rh.signature != lastSignature) {
             lastSignature = rh.signature;
@@ -266,7 +266,7 @@ bool TESPluginFile::load(const char* filepath) {
          auto& list = this->formsByType[formType];
          auto  stub = new FormStub();
          stub->file   = this;
-         stub->offset = this->getRecordHeadPos();
+         stub->offset = this->record.headPos;
          stub->formID = rh.formID;
          stub->formType = formType;
          list[rh.formID] = stub;
@@ -313,10 +313,10 @@ bool TESPluginFile::load(const char* filepath) {
             // APPARENTLY THAT'S ALREADY IN USE FOR UESP'S ATTEMPT AT CLONING THE CREATION KIT 
             // (LAST UPDATED IN 2012).
             //
-            if (this->subrecordSignature == 'EDID') {
-               auto buffer = stub->allocate_editor_id(this->subrecordSize + 1);
-               this->read(buffer, this->subrecordSize);
-               buffer[this->subrecordSize] = '\0';
+            if (this->subrecord.signature == 'EDID') {
+               auto buffer = stub->allocate_editor_id(this->subrecord.size + 1);
+               this->read(buffer, this->subrecord.size);
+               buffer[this->subrecord.size] = '\0';
                break;
             }
          }
@@ -370,9 +370,9 @@ bool TESPluginSubrecord::to_string(LStringRef& field) {
 }
 
 uint32_t TESPluginRecord::peek_next_subrecord_type() {
-   if (this->file->subrecordEnd < this->file->recordEnd) {
+   if (this->file->subrecord.end < this->file->record.end) {
       auto pos = this->file->getPos();
-      this->file->setPos(this->file->subrecordEnd);
+      this->file->setPos(this->file->subrecord.end);
       uint32_t signature;
       this->file->read(signature);
       this->file->setPos(pos);

@@ -1,16 +1,14 @@
 #include "ActorBase.h"
 #include "../esp/TESPlugin.h"
 
-void TESActorBase::load(TESPluginFile* file) {
-   while (file->nextSubrecord()) {
-      uint32_t signature = file->getSubrecordType();
-      uint32_t size      = file->getSubrecordSize();
-      switch (signature) {
+void TESActorBase::load(TESPluginRecord& record) {
+   while (TESPluginSubrecord subrecord = record.next_subrecord()) {
+      switch (subrecord.signature()) {
          case 'EDID': // required; TODO: fail if this is not present
-            file->readStringSubrecord(this->editorID);
+            subrecord.to_string(this->editorID);
             break;
          case 'FULL':
-            file->readStringSubrecord(this->name);
+            subrecord.to_string(this->name);
             break;
       }
    }

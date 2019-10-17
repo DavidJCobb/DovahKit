@@ -95,7 +95,7 @@ class TESPluginFile {
       //
       bool loadRecordAt(uint32_t pos); // use for TES4 during load, or use to load any record on-demand after all forms are known
       //
-      void setPos(uint32_t pos);
+      void     setPos(uint32_t pos);
       uint32_t getPos();
       void skipBytes(uint32_t count);
       bool isEOF();
@@ -119,17 +119,23 @@ class TESPluginFile {
       // Loading state:
       //
       FILE* fileHandle;
-      TESPluginGroupHeader  group;  // header for last parsed/loaded group
-      TESPluginRecordHeader record; // header for last parsed/loaded record
-      uint32_t groupPos;
-      uint32_t groupEnd;
-      uint32_t recordHeadPos;
-      uint32_t recordBodyPos;
-      uint32_t recordEnd;
-      uint32_t subrecordPos; // position of the start of the subrecord's contents
-      uint32_t subrecordEnd;
-      uint32_t subrecordSignature = 0;
-      uint32_t subrecordSize = 0;
+      struct {
+         TESPluginGroupHeader header;
+         uint32_t pos;
+         uint32_t end;
+      } group;
+      struct {
+         TESPluginRecordHeader header;
+         uint32_t headPos; // position in the file
+         uint32_t bodyPos; // position in the body
+         uint32_t end;
+      } record;
+      struct {
+         uint32_t signature = 0;
+         uint32_t size = 0;
+         uint32_t pos;
+         uint32_t end;
+      } subrecord;
       //
       bool _loadHeader();
       //
@@ -141,18 +147,8 @@ class TESPluginFile {
       //
       // Loading:
       //
-      inline const TESPluginGroupHeader&  getGroupHeader()  { return this->group; }
-      inline const TESPluginRecordHeader& getRecordHeader() { return this->record; }
-      inline uint32_t getGroupPos() const { return this->groupPos; }
-      inline uint32_t getRecordHeadPos() const { return this->recordHeadPos; }
-      inline uint32_t getRecordBodyPos() const { return this->recordBodyPos; }
-      inline uint32_t getSubrecordPos() const { return this->subrecordPos; }
-      inline uint32_t getSubrecordType() const { return this->subrecordSignature; }
-      inline uint32_t getSubrecordSize() const { return this->subrecordSize; }
-      //
-      inline uint32_t getGroupEnd() const { return this->groupPos + this->group.size; }
-      inline uint32_t getRecordEnd() const { return this->recordBodyPos + this->record.size; }
-      inline uint32_t getSubrecordEnd() const { return this->subrecordPos + this->subrecordSize; }
+      inline const TESPluginGroupHeader&  getGroupHeader()  { return this->group.header; }
+      inline const TESPluginRecordHeader& getRecordHeader() { return this->record.header; }
       //
       TESPluginRecord    getCurrentRecord();
       TESPluginSubrecord getCurrentSubrecord();
@@ -179,23 +175,23 @@ class TESPluginSubrecord { // interface for the currently-loaded subrecord
       TESPluginFile* const file;
       //
       bool _check() const {
-         return this->file->getPos() < this->file->subrecordEnd;
+         return this->file->getPos() < this->file->subrecord.end;
       }
       bool _check(uint32_t bytes) const {
-         return this->file->getPos() + bytes < this->file->subrecordEnd;
+         return this->file->getPos() + bytes < this->file->subrecord.end;
       }
    public:
       TESPluginSubrecord(TESPluginFile* f) : file(f) {};
       //
       inline operator bool() const { return this->file != nullptr; }
       //
-      inline uint32_t offset() const { return file->subrecordPos; }
-      inline uint32_t signature() const { return file->subrecordSignature; }
-      inline uint32_t size() const { return file->subrecordSize; }
+      inline uint32_t offset() const { return file->subrecord.pos; }
+      inline uint32_t signature() const { return file->subrecord.signature; }
+      inline uint32_t size() const { return file->subrecord.size; }
       //
       inline bool is_in_bounds() { return this->_check() && this->file->is_good(); }
       //
-      inline uint32_t containing_record_signature() const { return file->record.signature; }
+      inline uint32_t containing_record_signature() const { return file->record.header.signature; }
       //
       bool to_string(std::string& field);
       bool to_string(LStringRef& field); // TODO: implement string table support
@@ -269,8 +265,8 @@ class TESPluginRecord { // interface for the currently-loaded record
          return TESPluginSubrecord(nullptr);
       }
       //
-      inline uint32_t signature() const { return this->file->record.signature; }
-      inline uint32_t size() const { return this->file->record.size; }
+      inline uint32_t signature() const { return this->file->record.header.signature; }
+      inline uint32_t size() const { return this->file->record.header.size; }
       //
       uint32_t peek_next_subrecord_type();
 };
