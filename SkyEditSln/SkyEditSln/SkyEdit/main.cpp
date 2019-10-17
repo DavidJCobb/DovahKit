@@ -17,6 +17,7 @@ int main() {
    std::cout << "Author: " << skyrim.authorName << std::endl;
    std::cout << "Description: " << skyrim.description << std::endl;
    skyrim.forEachFormOfType(kFormType_Quest, [](FormStub* stub) {
+return true;/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       auto form = stub->load();
       if (form && form->formType == kFormType_Quest) {
          auto quest = form.ptr_cast<TESQuest>();

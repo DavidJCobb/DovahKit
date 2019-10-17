@@ -1,6 +1,7 @@
 #include "papyrus.h"
 #include "../esp/TESPlugin.h"
 #include "../output.h"
+#include <cassert>
 
 void PapyrusScriptData::forEachScript(std::function<bool(PapyrusScriptData::Script*)> functor) {
    auto& list = this->scripts;
@@ -77,7 +78,7 @@ bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecor
    for (uint16_t i = 0; i < count; i++) {
       auto& prop = this->properties[i];
       if (!prop.load(owner, subrecord)) {
-         _DEBUGMSG("Problem encountered while loading script %s.", this->name.c_str());
+         _DEBUGMSG("Problem encountered while loading property %d for script %s.", i, this->name.c_str());
          return false;
       }
    }
@@ -150,6 +151,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
             break;
          default:
             _DEBUGMSG("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
+            assert(false, "bad property type");
             return false;
       }
    } else {

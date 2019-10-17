@@ -145,6 +145,11 @@
     <ClInclude Include="forms\Quest.h" />
     <ClInclude Include="forms\types.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\zlib\zlib.vcxproj">
+      <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

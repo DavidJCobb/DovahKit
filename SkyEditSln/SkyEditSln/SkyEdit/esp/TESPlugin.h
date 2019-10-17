@@ -7,6 +7,9 @@
 #include <vector>
 #include "../formstub.h"
 #include "../forms/types.h"
+extern "C" {
+   #include "../../zlib/zlib.h" // interproject ref
+}
 
 class TESPluginFile;
 class TESPluginSubrecord;
@@ -68,7 +71,50 @@ struct TESPluginRecordHeader {
       inline bool body_is_compressed() { return (bool)(this->flags & kFlag_Compressed); }
 };
 
+class TESPluginRecordBuffer {
+   //
+   // Record data can be compressed. This class exists to provide a 
+   // uniform interface for loading record data whether or not the 
+   // data is compressed.
+   //
+   // We load small amounts of the record's data into a buffer; if 
+   // the record is compressed, then we decompress it while loading. 
+   // This means that actually accessing the data works the same 
+   // either way: pull from the buffer; if we reach its end, load 
+   // the next chunk of data into the buffer.
+   //
+   friend TESPluginFile;
+   public:
+      TESPluginRecordBuffer(TESPluginFile* o) : owner(o) {}
+   private:
+      static constexpr uint32_t buffer_size = 256;
+      //
+      TESPluginFile* owner;
+      uint8_t  bytes[buffer_size];
+      bool     is_compressed = false;
+      z_stream zlib_stream;
+      int      zlib_result = Z_OK;
+      uint32_t compressed_size = 0;
+      //
+      uint32_t chunk_pos    = 0; // position in loaded chunk
+      uint32_t chunk_size   = 0; // size of loaded chunk (<= buffer_size)
+      uint32_t stream_pos   = 0; // current position in source stream
+      uint32_t stream_start = 0; // start position in the source stream
+      uint32_t excerpt_size = 0; // size of the portion of the stream we're looking at
+      //
+      void advance();
+   public:
+      inline bool at_end() const { return this->stream_pos > this->stream_start + this->excerpt_size; }
+      //
+      void read(char* destination, uint32_t size);
+      void skip(uint32_t size);
+      void setup(bool compressed, uint32_t uncompressed_size, uint32_t compressed_size, uint32_t stream_start);
+      //
+      template<typename T> inline void read(T& field) { this->read((char*)&field, sizeof(field)); }
+};
+
 class TESPluginFile {
+   friend TESPluginRecordBuffer;
    friend TESPluginRecord;
    friend TESPluginSubrecord;
    public:
@@ -101,24 +147,9 @@ class TESPluginFile {
       bool isEOF();
       bool is_good();
       //
-      void read(char* buffer, uint32_t size) {
-         fread(buffer, size, 1, this->fileHandle);
-      }
-      template<typename T> void read(T& field, uint32_t size) {
-         fread(&field, size, 1, this->fileHandle);
-      }
-      template<typename T> void read(T& field) {
-         fread(&field, sizeof(field), 1, this->fileHandle);
-      }
-      void readStringSubrecord(std::string& field);
-      void readStringSubrecord(LStringRef& field); // TODO: implement string table support
-      void readWString(std::string& field);
-      //
    protected:
-      //
-      // Loading state:
-      //
       FILE* fileHandle;
+      TESPluginRecordBuffer recordBuffer = TESPluginRecordBuffer(this);
       struct {
          TESPluginGroupHeader header;
          uint32_t pos;
@@ -138,6 +169,15 @@ class TESPluginFile {
       } subrecord;
       //
       bool _loadHeader();
+      void read(char* buffer, uint32_t size) {
+         fread(buffer, size, 1, this->fileHandle);
+      }
+      template<typename T> void read(T& field, uint32_t size) {
+         fread(&field, size, 1, this->fileHandle);
+      }
+      template<typename T> void read(T& field) {
+         fread(&field, sizeof(field), 1, this->fileHandle);
+      }
       //
       // Loaded data:
       //
@@ -175,10 +215,12 @@ class TESPluginSubrecord { // interface for the currently-loaded subrecord
       TESPluginFile* const file;
       //
       bool _check() const {
-         return this->file->getPos() < this->file->subrecord.end;
+         return !(this->file->recordBuffer.at_end());
+         //return this->file->getPos() < this->file->subrecord.end;
       }
       bool _check(uint32_t bytes) const {
-         return this->file->getPos() + bytes < this->file->subrecord.end;
+         return !(this->file->recordBuffer.at_end());
+         //return this->file->getPos() + bytes < this->file->subrecord.end;
       }
    public:
       TESPluginSubrecord(TESPluginFile* f) : file(f) {};
@@ -196,26 +238,26 @@ class TESPluginSubrecord { // interface for the currently-loaded subrecord
       bool to_string(std::string& field);
       bool to_string(LStringRef& field); // TODO: implement string table support
       //
-      bool skipBytes(uint32_t count);
+      bool skip_bytes(uint32_t count);
       bool read(char* buffer, uint32_t size) {
          if (!this->_check(size))
             return false;
-         this->file->read(buffer, size);
+         this->file->recordBuffer.read(buffer, size);
          return true;
       }
       template<typename T> bool read(T& field, uint32_t size) {
          if (!this->_check(size))
             return false;
-         this->file->read(field, size);
+         this->file->recordBuffer.read((char*)&field, size);
          return true;
       }
       template<typename T> bool read(T& field) {
          if (!this->_check(sizeof(field)))
             return false;
-         this->file->read(field);
+         this->file->recordBuffer.read((char*)&field, sizeof(field));
          return true;
       }
-      bool read_wstring(std::string& field);
+      bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator
 
       //
       // The functions below allow you to manually manage bounds-checking: if you need to read multiple 
@@ -238,17 +280,17 @@ class TESPluginSubrecord { // interface for the currently-loaded subrecord
       //
       // Use only if you've already called (has_bytes) to check that the data you want to read is in-bounds.
       void unchecked_read(char* buffer, uint32_t size) {
-         this->file->read(buffer, size);
+         this->file->recordBuffer.read(buffer, size);
       }
       //
       // Use only if you've already called (has_bytes) to check that the data you want to read is in-bounds.
       template<typename T> void unchecked_read(T& field, uint32_t size) {
-         this->file->read(field, size);
+         this->file->recordBuffer.read((char*)&field, size);
       }
       //
       // Use only if you've already called (has_bytes) to check that the data you want to read is in-bounds.
       template<typename T> void unchecked_read(T& field) {
-         this->file->read(field);
+         this->file->recordBuffer.read((char*)&field, sizeof(field));
       }
 };
 class TESPluginRecord { // interface for the currently-loaded record
@@ -265,8 +307,10 @@ class TESPluginRecord { // interface for the currently-loaded record
          return TESPluginSubrecord(nullptr);
       }
       //
+      inline uint32_t flags() const { return file->record.header.flags; }
+      inline uint32_t formID() const { return file->record.header.formID; }
       inline uint32_t signature() const { return this->file->record.header.signature; }
       inline uint32_t size() const { return this->file->record.header.size; }
       //
-      uint32_t peek_next_subrecord_type();
+      uint32_t peek_next_subrecord_type(); // TODO: THIS IS BROKEN FOR COMPRESSED RECORDS
 };
