@@ -16,6 +16,8 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //
 //  - See last Github commit text for more changes to make.
 //
+//  - All loaded forms should have a reference to their owning FormStub.
+//
 //  - Currently, we have no way to maintain GRUP relationships after parsing is 
 //    complete. A DIAL has no way to prompt the loading of its child INFOs, and 
 //    more importantly, an INFO being loaded has no way to know what DIAL it 
@@ -24,7 +26,7 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //
 //     - FormStub instances can have a pointer to a "Group Info" struct, which 
 //       contains information on the non-top-level GRUPs that contained the 
-//       record.
+//       record. We can block-allocate those structs if need be.
 //
 //  - At the top of the file, we should clearly explain why record and subrecord 
 //    contents have to use different "read" and "skip" functions (it's because we 

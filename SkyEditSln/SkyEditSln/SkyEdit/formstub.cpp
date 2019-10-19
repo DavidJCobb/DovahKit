@@ -51,5 +51,4 @@ void FormStub::set_edited(bool v) {
    if (sz != sizeof(FormStub))
       return ::operator delete(ptr, sz);
    return FormStubHeap::get().free(ptr);
-
 }

@@ -173,6 +173,18 @@ TESPluginFile::ObjectType TESPluginFile::nextRecordOrGroup() {
       this->setPos(record.end);
       record.reset();
    }
+   //
+   // Make sure we properly handle passing the end of a group:
+   //
+   auto pos = this->getPos();
+   for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++) {
+      auto& group = this->groups[i];
+      if (!group)
+         break;
+      if (pos <= group.pos || pos >= group.end)
+         group.reset();
+   }
+   //
    if (!this->is_good())
       return ObjectType::kObjectType_None;
    uint32_t signature;
@@ -187,10 +199,7 @@ TESPluginFile::ObjectType TESPluginFile::nextRecordOrGroup() {
          auto& group = this->groups[i];
          if (!group)
             break;
-         if (pos <= group.pos || pos >= group.end)
-            group.reset();
-         else
-            parent = i;
+         parent = i;
       }
       assert(parent + 1 < std::extent<decltype(this->groups)>::value);
       auto& group = this->groups[parent + 1];

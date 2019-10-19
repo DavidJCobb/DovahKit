@@ -2,7 +2,6 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <functional> // block_allocator::forEach
 #include "bitset.h" // block_allocator
 
 namespace cobb {
@@ -37,30 +36,46 @@ namespace cobb {
    };
 
    struct block_allocator_debug_printer {
+      //
+      // A struct that can be subclassed and then passed to block_allocator::dumpStats, to 
+      // log the full state of an allocator. The goal is to allow the display of custom 
+      // information about the allocated objects, e.g. the total size of resources they may 
+      // own that are allocated on the normal heap.
+      //
       virtual void forBlock(uint32_t index) = 0;
       virtual void forElement(void* element) = 0;
       virtual void printExtraStats() = 0;
    };
    template<typename T, uint32_t count_per_block> class block_allocator {
       //
-      // A custom allocator for FormStub which allocates in blocks (currently 100 at a time), 
-      // to reduce memory fragmentation and overhead (i.e. every heap allocation has to track 
-      // the size allocated and some other metadata; there's no point in doing that for each 
-      // individual FormStub).
+      // A custom allocator that allocates in blocks, to reduce memory fragmentation and 
+      // overhead (i.e. every heap allocation has to track the size allocated and some 
+      // other metadata; there's no point in doing that for each individual instance). 
+      // This isn't faster or slower than the normal new/delete.
       //
-      // NOTES:
+      // A typical usage example:
       //
-      //  - When creating stubs only for QUST forms from Skyrim.esm as a test, the load process 
-      //    takes about 30ms with default allocation. When using this allocator with my custom 
-      //    bitset class, it also takes 30ms. When using this allocator with std::bitset, it 
-      //    takes 100ms.
+      //    struct MyObj {
+      //       static void* operator new(std::size_t sz);
+      //       static void operator delete(void* ptr, std::size_t sz);
+      //    }
+      //    class MyObjHeap : public block_allocator<MyObj, 100> {
+      //       public:
+      //          inline static MyObjHeap& get() {
+      //             static MyObjHeap instance;
+      //             return instance;
+      //    }
       //
-      //     - Further testing reveals that most of the slowdown comes from std::bitset not 
-      //       having an equivalent to cobb::bitset::find_first_clear, forcing us to use 
-      //       a for-loop to go over each individual bit. My find_first_clear function is a 
-      //       bit more optimal, checking entire uint32_t chunks of the bitmask at a time. 
-      //       When using cobb::bitset without using the find_first_clear method, the load 
-      //       process takes 80ms on average.
+      //    void* MyObj::operator new(std::size_t sz) {
+      //       if (sz != sizeof(MyObj))
+      //          return ::operator new(sz);
+      //       return MyObjHeap::get().allocate();
+      //    }
+      //    void MyObj::operator delete(void* ptr, std::size_t sz) {
+      //       if (sz != sizeof(MyObj))
+      //          return ::operator delete(ptr, sz);
+      //       return MyObjHeap::get().free(ptr);
+      //    }
       //
       public:
          typedef T element_type;
@@ -92,9 +107,8 @@ namespace cobb {
          Block* firstBlock = nullptr;
          //
          void* allocate() {
-            if (!this->firstBlock) {
+            if (!this->firstBlock)
                this->firstBlock = new Block;
-            }
             Block* block = this->firstBlock;
             Block* last = block;
             void* out = block->allocate();

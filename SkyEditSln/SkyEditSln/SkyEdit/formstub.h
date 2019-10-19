@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <cstring>
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
 
