@@ -24,8 +24,8 @@ loaded_form_ptr<TESForm> FormStub::load() {
       //_DEBUGMSG("stub is loading...");
       auto file = this->file;
       if (this->file->loadRecordAt(this->offset)) {
-         auto record = this->file->getCurrentRecord();
-         auto formType = signatureToFormType(record.signature());
+         auto& record   = this->file->getCurrentRecord();
+         auto  formType = signatureToFormType(record.signature());
          switch (formType) {
             case kFormType_Quest:
                {

@@ -157,5 +157,5 @@ class FormStubHeap {
       Block* firstBlock = nullptr;
       //
       void dump();
-      void forceFreeAll();
+      void forceFreeAll(); // for debugging purposes ONLY; this WILL leave dangling pointers everywhere
 };

@@ -2,7 +2,7 @@
 #include "../esp/TESPlugin.h"
 
 void TESQuest::load(TESPluginRecord& record) {
-   while (TESPluginSubrecord subrecord = record.next_subrecord()) {
+   while (auto& subrecord = record.next_subrecord()) {
       switch (subrecord.signature()) {
          case 'EDID': // required; TODO: fail if this is not present
             subrecord.to_string(this->editorID);

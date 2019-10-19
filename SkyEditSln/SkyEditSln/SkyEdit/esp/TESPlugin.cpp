@@ -5,14 +5,134 @@
 #include <iostream> // for testing
 #include "../output.h"
 #include "../forms/components.h"
+#include "../helpers/strings.h"
 
 void _Debug(const char* msg) {
    std::cout << msg << std::endl;
 }
 
-TESPluginFile::TESPluginFile() {
+void TESPluginGroup::skip() {
+   assert(this->owner);
+   this->owner->setPos(this->end);
+}
+uint32_t TESPluginGroup::depth() const {
+   assert(this->owner);
+   for (uint32_t i = 0; i < std::extent<decltype(this->owner->groups)>::value; i++) {
+      auto& other = this->owner->groups[i];
+      if (&other == this)
+         return i;
+   }
+   return std::numeric_limits<uint32_t>::max();
+}
+void TESPluginGroup::to_string(std::string& output) const {
+   output.clear();
+   const char* desc = "?";
+   switch (this->header.type) {
+      case kESPGroupType_FormsOfType:
+         desc = FMT_SIGNATURE(_byteswap_ulong(this->header.label));
+         break;
+      case kESPGroupType_WorldChildren:
+         desc = "World Children";
+         break;
+      case kESPGroupType_InteriorCellBlock:
+         desc = "Interior Cell Block";
+         break;
+      case kESPGroupType_InteriorCellSubBlock:
+         desc = "Interior Cell Sub-Block";
+         break;
+      case kESPGroupType_ExteriorCellBlock:
+         desc = "Exterior Cell Block";
+         break;
+      case kESPGroupType_ExteriorCellSubBlock:
+         desc = "Exterior Cell Sub-Block";
+         break;
+      case kESPGroupType_CellChildren:
+         desc = "Cell Children";
+         break;
+      case kESPGroupType_TopicChildren:
+         desc = "Topic Children";
+         break;
+      case kESPGroupType_CellPersistentChildren:
+         desc = "Cell Persistent Children";
+         break;
+      case kESPGroupType_CellTemporaryChildren:
+         desc = "Cell Temporary Children";
+         break;
+   }
+   cobb::sprintf(output, "group of type %s at depth %d, from %08X to %08X", desc, this->depth(), this->pos, this->end);
+}
+
+void TESPluginRecord::unchecked_read(void* destination, uint32_t size) {
+   auto source = (std::ptrdiff_t)this->data + this->offset;
+   memcpy(destination, (void*)source, size);
+   this->offset += size;
+}
+bool TESPluginRecord::read(void* destination, uint32_t size) {
+   if (!this->is_in_bounds(size))
+      return false;
+   this->unchecked_read(destination, size);
+   return true;
+}
+bool TESPluginRecord::skip(uint32_t bytes) {
+   if (!this->is_in_bounds(bytes))
+      return false;
+   this->offset += bytes;
+   return true;
+}
+TESPluginSubrecord& TESPluginRecord::next_subrecord() const {
+   this->owner.nextSubrecord();
+   return this->owner.getCurrentSubrecord();
+}
+uint32_t TESPluginRecord::peek_next_subrecord_type() {
+   auto pos = this->owner.subrecord.end_pos();
+   if (pos < this->end) {
+      pos -= this->bodyPos;
+      auto addr = (std::ptrdiff_t)this->data;
+      addr += pos;
+      return *(uint32_t*)addr;
+   }
+   return 0;
+}
+
+TESPluginRecord& TESPluginSubrecord::get_containing_record() const {
+   return this->owner.record;
+}
+bool TESPluginSubrecord::read_wstring(std::string& field) {
+   field.clear();
+   uint16_t length;
+   this->read(length);
+   field.resize(length);
+   return this->read(const_cast<char*>(field.data()), length);
+}
+bool TESPluginSubrecord::to_string(std::string& field) {
+   field.clear();
+   auto length = this->size();
+   field.resize(length);
+   return this->read(const_cast<char*>(field.data()), length);
+}
+bool TESPluginSubrecord::to_string(LStringRef& field) {
+   field.value.clear();
+   if (this->owner.flags & TESPluginFile::kFlag_LocalizedStringTable) {
+      bool result = this->read(field.index);
+      //
+      // TODO: implement reading from the string table
+      //
+      field.value = "<THE LOADING OF LSTRINGS IS NOT YET IMPLEMENTED>";
+      //
+      field.exists = true;
+      return result;
+   }
+   return this->to_string(field.value);
+}
+
+
+
+TESPluginFile::TESPluginFile() : record(*this), subrecord(*this) {
    this->authorName[511]  = '\0';
    this->description[511] = '\0';
+   //
+   for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
+      this->groups[i].initialize(this);
 }
 TESPluginFile::~TESPluginFile() {
    if (this->fileHandle) {
@@ -31,6 +151,9 @@ uint32_t TESPluginFile::getPos() {
 void TESPluginFile::skipBytes(uint32_t count) {
    fseek(this->fileHandle, count, SEEK_CUR);
 }
+void TESPluginFile::rewind(uint32_t by) {
+   this->setPos(this->getPos() - by);
+}
 bool TESPluginFile::isEOF() {
    return feof(this->fileHandle);
 }
@@ -38,188 +161,183 @@ bool TESPluginFile::is_good() {
    return !ferror(this->fileHandle) && !this->isEOF();
 }
 //
-bool TESPluginFile::loadRecordAt(uint32_t pos) {
-   auto& r  = this->record;
-   auto& rh = r.header;
-   r.data.free();
-   this->group.header.signature = 0;
-   this->record.header.signature = 0;
-   this->subrecord.signature = 0;
-   //
-   this->setPos(pos);
-   this->record.headPos = pos;
-   this->read(rh);
-   rh.signature = _byteswap_ulong(rh.signature);
-   this->record.bodyPos = this->getPos();
-   this->record.end = this->record.bodyPos + rh.size;
-   if (!this->is_good())
-      return false;
-   if (rh.body_is_compressed()) {
-      uint32_t decompressed_size;
-      this->read(decompressed_size);
-      r.data.allocate(decompressed_size);
-      //
-      // TODO: decode
-      //
-      //this->recordBuffer.setup(true, decompressed_size, r.size - 4, this->record.bodyPos + 4);
-   } else {
-      r.data.allocate(rh.size);
-      fread(r.data, 1, rh.size, this->fileHandle);
-   }
-   r.offset = 0;
-   return true;
-}
-bool TESPluginFile::nextGroup() {
-   auto& g = this->group.header;
-   if (g.signature) {
-      //_DEBUGMSG("Skipped group spanning from %08X to %08X.", this->group.pos, this->group.end);
-      this->setPos(this->group.end);
-      g.signature = 0;
-      //
-      this->record.header.signature = 0;
-      this->subrecord.signature = 0;
+TESPluginFile::ObjectType TESPluginFile::nextRecordOrGroup() {
+   auto& record = this->record;
+   if (record) {
+      /*//
+      if (this->getPos() == record.end)
+         _DEBUGMSG("Reached the end of record of type %s from %08X to %08X...", FMT_SIGNATURE(record.signature()), record.headPos, record.end);
+      else
+         _DEBUGMSG("Skipping record of type %s from %08X to %08X...", FMT_SIGNATURE(record.signature()), record.headPos, record.end);
+      //*/
+      this->setPos(record.end);
+      record.reset();
    }
    if (!this->is_good())
-      return false;
-   this->group.pos = this->getPos(); // group size includes the header, so use the start of the header as the offset
-   this->read(g);
-   this->group.end = this->group.pos + g.size;
-   g.signature = _byteswap_ulong(g.signature);
-   if (!this->is_good())
-      return false;
-   return true;
-}
-bool TESPluginFile::nextRecord() {
-   auto& r  = this->record;
-   auto& rh = r.header;
-   r.data.free();
-   if (rh.signature) {
-      //_DEBUGMSG("Skipped record %s with body spanning from %08X to %08X.", FMT_SIGNATURE(rh.signature), this->record.bodyPos, this->record.end);
-      this->setPos(r.end);
-      rh.signature = 0;
+      return ObjectType::kObjectType_None;
+   uint32_t signature;
+   this->read(signature);
+   signature = _byteswap_ulong(signature);
+   if (signature == 'GRUP') {
+      this->rewind(4);
       //
-      this->subrecord.signature = 0;
-      //
-      if (!this->is_good())
-         return false;
-   }
-   r.headPos = this->getPos();
-   if (r.headPos >= this->group.end)
-      return false;
-   this->read(rh);
-   rh.signature = _byteswap_ulong(rh.signature);
-   //
-   if (rh.signature == 'GRUP') { // GRUPs can be nested... *sigh*
-      this->setPos(r.headPos);
-      rh.signature = 0;
-      return false;
+      auto pos = this->getPos();
+      int32_t parent = -1;
+      for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++) {
+         auto& group = this->groups[i];
+         if (!group)
+            break;
+         if (pos <= group.pos || pos >= group.end)
+            group.reset();
+         else
+            parent = i;
+      }
+      assert(parent + 1 < std::extent<decltype(this->groups)>::value);
+      auto& group = this->groups[parent + 1];
+      group.pos   = this->getPos();
+      this->read(group.header);
+      group.header.signature = _byteswap_ulong(group.header.signature);
+      group.end   = group.pos + group.header.size;
+      /*{
+         std::string log;
+         group.to_string(log);
+         _DEBUGMSG("Found %s.", log.c_str());
+      }*/
+      return ObjectType::kObjectType_Group;
    }
    //
-   r.bodyPos = this->getPos();
-   r.end = r.bodyPos + rh.size;
+   // else it must be a record
+   //
+   this->rewind(4);
+   //
+   record.headPos = this->getPos();
+   if (auto& group = this->getCurrentGroup())
+      if (record.headPos >= group.end)
+         return ObjectType::kObjectType_None;
+   this->read(record.header);
+   record.header.signature = _byteswap_ulong(record.header.signature);
+   record.bodyPos = this->getPos();
+   record.end = record.bodyPos + record.header.size;
    if (!this->is_good())
-      return false;
+      return ObjectType::kObjectType_None;
    {
-      switch (rh.signature) {
+      switch (record.header.signature) {
          case 'CELL':
          case 'DIAL':
          case 'WRLD':
-            this->lastPotentialGroupParent = rh.formID;
+            this->lastPotentialGroupParent = record.header.formID;
             break;
          default:
             this->lastPotentialGroupParent = 0;
       }
    }
-   if (rh.body_is_compressed()) {
+   if (record.header.body_is_compressed()) {
       uint32_t decompressed_size;
-      uint32_t compressed_size = rh.size - sizeof(decompressed_size);
+      uint32_t compressed_size = record.header.size - sizeof(decompressed_size);
       this->read(decompressed_size);
-      r.data.allocate(decompressed_size);
+      record.data.allocate(decompressed_size);
       //
       auto input_buffer = malloc(compressed_size);
       fread(input_buffer, 1, compressed_size, this->fileHandle);
       uint32_t out_size = decompressed_size;
-      uncompress((Bytef*)r.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
+      uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
       free(input_buffer);
       assert(out_size == decompressed_size);
    } else {
-      r.data.allocate(rh.size);
-      fread(r.data, 1, rh.size, this->fileHandle);
+      record.data.allocate(record.header.size);
+      fread(record.data, 1, record.header.size, this->fileHandle);
    }
-   r.offset = 0;
-   return true;
+   record.offset = 0;
+   //
+   return ObjectType::kObjectType_Record;
 }
+//
 bool TESPluginFile::nextSubrecord() {
    auto& r = this->record;
-   if (this->subrecord.signature) {
+   if (this->subrecord.header.signature) {
       //this->setPos(this->subrecord.end);
-      this->skipFromRecord(this->subrecord.end - (this->record.bodyPos + this->record.offset));
-      this->subrecord.signature = 0;
+      this->record.skip(this->subrecord.end - this->record.stream_pos());
+      this->subrecord.header.signature = 0;
       //
       if (!this->is_good())
          return false;
    }
-   if (this->record.bodyPos + this->record.offset >= this->record.end)
+   if (this->record.stream_pos() >= this->record.end)
       return false;
    uint16_t size;
-   this->readFromRecord(this->subrecord.signature);
-   this->readFromRecord(size);
-   this->subrecord.size = size;
-   if (this->subrecord.signature == 'XXXX') {
+   this->record.read(this->subrecord.header.signature);
+   this->record.read(size);
+   this->subrecord.header.size = size;
+   if (this->subrecord.header.signature == 'XXXX') {
       //
       // An 'XXXX' subrecord is used as a prefix for a subrecord whose size is 
       // larger than what can be represented with the usual two-byte length.
       //
-      if (this->subrecord.size != 4) {
+      if (this->subrecord.header.size != 4) {
          return false; // ERROR
       }
       //this->read(this->subrecord.size); // the contents of the XXXX subrecord are the length
-      this->readFromRecord(this->subrecord.size);
+      static_assert(sizeof(this->subrecord.header.size) == 4, "XXXX subrecords store a four-byte subrecord length.");
+      this->record.read(this->subrecord.header.size);
       //
       // Get the next subrecord.
       //
       //this->read(this->subrecord.signature);
       //this->skipBytes(2); // an XXXX-prefixed subrecord has no length of its own
-      this->readFromRecord(this->subrecord.signature);
-      this->skipFromRecord(2);
+      this->record.read(this->subrecord.header.signature);
+      this->record.skip(2);
    }
-   this->subrecord.signature = _byteswap_ulong(this->subrecord.signature);
+   this->subrecord.header.signature = _byteswap_ulong(this->subrecord.header.signature);
    //this->subrecord.pos = this->getPos();
    this->subrecord.pos = this->record.bodyPos + this->record.offset;
    this->subrecord.end = this->subrecord.pos + size;
-   if (!this->is_good())
+   if (!this->is_good() || !this->record.is_in_bounds())
       return false;
    return true;
 }
+bool TESPluginFile::loadRecordAt(uint32_t pos) {
+   for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
+      this->groups[i].reset();
+   this->record.reset();
+   //
+   this->setPos(pos);
+   return this->nextRecordOrGroup() == kObjectType_Record;
+}
 //
 bool TESPluginFile::_loadHeader() {
-   if (!this->loadRecordAt(0)) {
+   if (this->nextRecordOrGroup() != ObjectType::kObjectType_Record) {
       _DEBUGMSG("Expected TES4 record; no record found.");
       return false;
    }
-   auto r = this->getCurrentRecord();
+   auto& r = this->getCurrentRecord();
    if (r.signature() != 'TES4') {
       _DEBUGMSG("Expected TES4 record; got something else.");
       return false;
    }
    this->flags = r.flags();
    //
-   while (auto subrecord = r.next_subrecord()) {
+   while (auto& subrecord = r.next_subrecord()) {
       switch (subrecord.signature()) {
          case 'HEDR': // required subrecord; TODO: fail if this isn't present
-            if (!subrecord.has_bytes(12))
+            if (!subrecord.is_in_bounds(12)) {
+               _DEBUGMSG("Unable to read header HEDR.");
                return false;
+            }
             subrecord.unchecked_read(this->fileVersion);
             subrecord.unchecked_read(this->recordCount);
             subrecord.unchecked_read(this->nextFormID);
             break;
          case 'CNAM': // author/creator
-            if (!subrecord.read(this->authorName, subrecord.size()))
+            if (!subrecord.read(this->authorName, subrecord.size())) {
+               _DEBUGMSG("Unable to read header CNAM (creator name).");
                return false;
+            }
             break;
          case 'SNAM': // description
-            if (!subrecord.read(this->description, subrecord.size()))
+            if (!subrecord.read(this->description, subrecord.size())) {
+               _DEBUGMSG("Unable to read header SNAM (description).");
                return false;
+            }
             break;
          case 'MAST':
             //
@@ -237,12 +355,16 @@ bool TESPluginFile::_loadHeader() {
             //
             break;
          case 'INTV':
-            if (!subrecord.read(this->subINTV))
+            if (!subrecord.read(this->subINTV)) {
+               _DEBUGMSG("Unable to read header INTV.");
                return false;
+            }
             break;
          case 'INCC':
-            if (!subrecord.read(this->subINCC))
+            if (!subrecord.read(this->subINCC)) {
+               _DEBUGMSG("Unable to read header INCC.");
                return false;
+            }
             break;
       }
    }
@@ -264,35 +386,45 @@ bool TESPluginFile::load(const char* filepath) {
    // TODO: need to define hardcoded forms so that references to them don't break, OR 
    // special-case them in whatever code we write to handle references between forms
    //
-   while (this->nextGroup()) {
-      auto& group = this->group.header;
-      if (group.type == kESPGroupType_FormsOfType) {
-         switch (_byteswap_ulong(group.label)) {
-            case 'ASTP':
-            case 'DIAL':
-            case 'DLBR':
-            case 'FACT':
-            case 'GLOB':
-            case 'LCTN':
-            case 'NPC_':
-            case 'QUST':
-            case 'RELA':
-            case 'VTYP':
-               break;
-            default:
-               //
-               // Skip any form signatures not identified in the cases.
-               //
-               continue;
+   ObjectType ot;
+   uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
+   formtype_t lastFormType  = 0;
+   while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
+      if (ot == kObjectType_Group) { // skip top-groups that are not of interest
+         auto& group = this->getCurrentGroup();
+         if (group.header.type == kESPGroupType_FormsOfType) {
+            switch (_byteswap_ulong(group.header.label)) {
+               case 'ASTP':
+               case 'DIAL':
+               case 'DLBR':
+               case 'FACT':
+               case 'GLOB':
+               case 'LCTN':
+               case 'NPC_':
+               case 'QUST':
+               case 'RELA':
+               case 'VTYP':
+                  break;
+               default:
+                  //
+                  // Skip any form signatures not identified in the cases.
+                  //
+                  /*{
+                     std::string log;
+                     group.to_string(log);
+                     _DEBUGMSG("Skipping %s.", log.c_str());
+                  }*/
+                  group.skip();
+                  continue;
+            }
          }
+         continue;
       }
-      uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
-      formtype_t lastFormType  = 0;
-      while (this->nextRecord()) {
-         auto r = this->getCurrentRecord();
-         if (r.signature() != lastSignature) {
-            lastSignature = r.signature();
-            lastFormType = signatureToFormType(lastSignature);
+      if (ot == kObjectType_Record) {
+         auto& record = this->record;
+         if (record.signature() != lastSignature) {
+            lastSignature = record.signature();
+            lastFormType  = signatureToFormType(lastSignature);
          }
          formtype_t formType = lastFormType;
          if (!formType)
@@ -301,24 +433,20 @@ bool TESPluginFile::load(const char* filepath) {
          auto& list = this->formsByType[formType];
          auto  stub = new FormStub();
          stub->file     = this;
-         stub->offset   = this->record.headPos;
-         stub->formID   = r.formID();
+         stub->offset   = record.headPos;
+         stub->formID   = record.formID();
          stub->formType = formType;
          list[stub->formID] = stub;
          //
-         while (auto subrecord = r.next_subrecord()) {
+         while (auto& subrecord = record.next_subrecord()) {
             if (subrecord.signature() == 'EDID') {
-               auto buffer = stub->allocate_editor_id(this->subrecord.size + 1);
-               this->readFromRecord(buffer, this->subrecord.size);
-               buffer[this->subrecord.size] = '\0';
+               auto buffer = stub->allocate_editor_id(this->subrecord.header.size + 1);
+               this->record.read(buffer, this->subrecord.header.size);
+               buffer[this->subrecord.header.size] = '\0';
                break;
             }
          }
-         //
-         // TODO: ALSO, WHILE YOU'RE HERE: WE NEED A DIFFERENT NAME THAN "SkyEdit," BECAUSE 
-         // APPARENTLY THAT'S ALREADY IN USE FOR UESP'S ATTEMPT AT CLONING THE CREATION KIT 
-         // (LAST UPDATED IN 2012).
-         //
+         continue;
       }
    }
    return true;
@@ -339,56 +467,4 @@ void TESPluginFile::forEachFormOfType(formtype_t formType, std::function<bool(Fo
             break;
       }
    } catch (std::out_of_range) {}
-}
-
-TESPluginRecord    TESPluginFile::getCurrentRecord() { return TESPluginRecord(this); }
-TESPluginSubrecord TESPluginFile::getCurrentSubrecord() { return TESPluginSubrecord(this); }
-
-bool TESPluginSubrecord::skip_bytes(uint32_t count) {
-   if (!this->_check(count))
-      return false;
-   this->file->skipFromRecord(count);
-   return true;
-}
-bool TESPluginSubrecord::read_wstring(std::string& field) {
-   field.clear();
-   uint16_t length;
-   this->read(length);
-   if (!this->_check(length))
-      return false;
-   field.resize(length);
-   this->file->readFromRecord(const_cast<char*>(field.data()), length);
-   return true;
-}
-bool TESPluginSubrecord::to_string(std::string& field) {
-   field.clear();
-   auto length = this->size();
-   field.resize(length);
-   this->read(const_cast<char*>(field.data()), length);
-   return this->file->is_good();
-}
-bool TESPluginSubrecord::to_string(LStringRef& field) {
-   field.value.clear();
-   if (this->file->flags & TESPluginFile::kFlag_LocalizedStringTable) {
-      this->read(field.index);
-      //
-      // TODO: implement reading from the string table
-      //
-      field.value = "<THE LOADING OF LSTRINGS IS NOT YET IMPLEMENTED>";
-      //
-      field.exists = true;
-      return this->file->is_good();
-   }
-   return this->to_string(field.value);
-}
-
-uint32_t TESPluginRecord::peek_next_subrecord_type() {
-   auto pos = this->file->subrecord.end;
-   if (pos < this->file->record.end) {
-      pos -= this->file->record.bodyPos;
-      auto addr = (std::ptrdiff_t)this->file->record.data;
-      addr += pos;
-      return *(uint32_t*)addr;
-   }
-   return 0;
 }

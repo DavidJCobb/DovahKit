@@ -5,6 +5,80 @@
 
 const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/Skyrim.esm";
 
+//
+// TODO: UESP has already taken the name "SkyEdit"
+//
+// Possible other names:
+//    NordEdit
+//    Dovah-Edit
+//
+// TODO: REFACTOR
+//
+//  - See last Github commit text for more changes to make.
+//
+//  - Split (record), (subrecord), and (group) off from TESPluginFile into separate 
+//    structs. Essentially, take TESPluginRecord and friends and change them from 
+//    just pointers-with-methods to actual state objects, and have getCurrentXXXXX 
+//    return references to them. The structs should have a TESPluginFile& owner. 
+//    The structs will still be members of TESPluginFile and not be used anywhere 
+//    else, but this will make things more orderly. Probably.
+//
+//    We need to handle multiple levels of nesting for groups, so define a constexpr 
+//    int MAX_GROUP_DEPTH at the top of the file and then give TESPluginFile some-
+//    thing like TESPluginGroup groups[MAX_GROUP_DEPTH]. getCurrentGroup should 
+//    REQUIRE a group index; getContainingGroup should return the deepest group that 
+//    actually exists (signature != 0).
+//
+//     - ...And then TESPluginRecord::getContainingGroup can call that function.
+//
+//     = DONE: SPLITTING THE STRUCTURES OFF.
+//
+//     = NEXT: MULTIPLE GROUPS AND REWRITING nextRecord (see below)
+//
+//  - At the top of the file, we should clearly explain why record and subrecord 
+//    contents have to use different "read" and "skip" functions (it's because we 
+//    HAVE TO load record contents into a buffer in order to allow uniform access 
+//    for compressed and uncompressed record data).
+//
+//  - We'll need to change how we iterate over records. When using nextRecord(), 
+//    there's no way to tell if it returned false because we're at the end of a 
+//    group or because we've encountered a child group. The nextRecord() function 
+//    should only be used by TESPluginFile::load, though, so we can redesign it 
+//    however we like e.g. nextRecordOrGroup() which returns an enum indicating 
+//    what we hit.
+//
+//     - It'll need to peek four bytes after the end of the last record; that'll 
+//       grab the signature of the next object which, if it's 'GRUP', is a group.
+//
+//  - Create cobb::zstring as a const char* that does malloc/realloc/free for you, 
+//    with both a c_str() method and an implicit (const char*) conversion. Use that 
+//    for editor IDs on FormStub. It should (free) when destroyed (only the owner 
+//    should have the cobb::zstring; we may even want to set its copy constructor 
+//    to =deleted; other parties should take the const char*).
+//
+//  - loaded_form_ptr doesn't actually delete the loaded form data when the refcount 
+//    hits zero. We need to add code to do that (and of course it should avoid any 
+//    deletions if the "is edited" flag is set); we'll want to add debug logging to 
+//    it to ensure it works properly.
+//
+//     - I wonder if we can have its _incRef assert that the refcount is non-zero 
+//       after the increment, too, to guard against overflow. We could have _decRef 
+//       assert that the refcount is non-zero before decrementing, as well.
+//
+//  - We'll need to eventually add a way to track Use Info akin to the CK and xEdit, 
+//    so that if we delete a form at run-time, we can properly update all forms that 
+//    used it. We'll want to call uses "connections" since better words are taken 
+//    (i.e. "references" are game world objects and "links" may refer to linked refs).
+//
+//     - A FormStub will need two doubly-linked lists of connections: one outbound 
+//       and one inbound. The list items should specify the type of connection 
+//       (the subrecord signature will do); we can use this for detailed warnings 
+//       when the user asks to delete a form.
+//
+//        - Connection nodes could probably be block-allocated like we do with the 
+//          FormStubs themselves... Maybe it's time to template that allocator.
+//
+
 int main() {
    TESPluginFile skyrim;
    struct timeb bench_start;

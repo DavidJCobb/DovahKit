@@ -70,7 +70,7 @@ bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecor
    //
    subrecord.read_wstring(this->name);
    uint16_t count;
-   if (!subrecord.has_bytes(sizeof(this->status) + sizeof(count)))
+   if (!subrecord.is_in_bounds(sizeof(this->status) + sizeof(count)))
       return false;
    subrecord.unchecked_read(this->status);
    subrecord.unchecked_read(count);
@@ -85,7 +85,7 @@ bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecor
    return true;
 }
 bool PapyrusScriptData::PropertyObjectValue::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
-   if (!subrecord.has_bytes(sizeof(this->alwaysZero) + sizeof(this->aliasID) + sizeof(this->formID)))
+   if (!subrecord.is_in_bounds(sizeof(this->alwaysZero) + sizeof(this->aliasID) + sizeof(this->formID)))
       return false;
    if (owner.objectFormat == 2) {
       subrecord.unchecked_read(this->alwaysZero);
@@ -103,7 +103,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
    // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
    //
    subrecord.read_wstring(this->name);
-   if (!subrecord.has_bytes(sizeof(this->type) + sizeof(this->status)))
+   if (!subrecord.is_in_bounds(sizeof(this->type) + sizeof(this->status)))
       return false;
    subrecord.unchecked_read(this->type);
    subrecord.unchecked_read(this->status);
@@ -187,7 +187,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
             break;
          case kPapyrusPropertyType_ArrayInt:
             {
-               if (!subrecord.has_bytes(sizeof(uint32_t) * count))
+               if (!subrecord.is_in_bounds(sizeof(uint32_t) * count))
                   return false;
                auto v = new std::vector<int32_t>;
                this->value = v;
@@ -202,7 +202,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
             break;
          case kPapyrusPropertyType_ArrayFloat:
             {
-               if (!subrecord.has_bytes(sizeof(float) * count))
+               if (!subrecord.is_in_bounds(sizeof(float) * count))
                   return false;
                auto v = new std::vector<float>;
                this->value = v;
@@ -217,7 +217,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
             break;
          case kPapyrusPropertyType_ArrayBool:
             {
-               if (!subrecord.has_bytes(sizeof(uint8_t) * count))
+               if (!subrecord.is_in_bounds(sizeof(uint8_t) * count))
                   return false;
                auto v = new std::vector<bool>;
                this->value = v;

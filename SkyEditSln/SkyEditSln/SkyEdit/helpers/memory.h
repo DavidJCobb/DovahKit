@@ -14,16 +14,17 @@ namespace cobb {
          inline void* raw() { return this->_data; }
          void shrink_to_fit();
 
-         inline uint32_t size() { return this->_size; }
-         inline uint32_t capacity() { return this->_capacity; }
+         inline uint32_t size() const noexcept { return this->_size; }
+         inline uint32_t capacity() const noexcept { return this->_capacity; }
 
          inline void* operator->() { return this->_data; }
          inline void* operator*() { return this->_data; }
+         inline bool operator!() const { return !(bool)this; }
 
          inline operator char*() { return (char*)this->_data; }
          inline operator void*() { return this->_data; }
-         inline operator bool() { return this->_data != nullptr; }
-         explicit inline operator std::ptrdiff_t() { return (std::ptrdiff_t)this->_data; }
+         inline operator bool() const { return this->_data != nullptr; }
+         explicit inline operator std::ptrdiff_t() const { return (std::ptrdiff_t)this->_data; }
 
          generic_buffer() {};
          generic_buffer(uint32_t bytes) { this->allocate(bytes); }
