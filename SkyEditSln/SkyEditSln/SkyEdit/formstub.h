@@ -122,7 +122,7 @@ struct FormStubHeapPrinter : public cobb::block_allocator_debug_printer {
 
    uint32_t editorIDBytes = 0;
 };
-class FormStubHeap : public cobb::block_allocator<FormStub, 100> {
+class FormStubHeap : public cobb::block_allocator<FormStub, 400> {
    public:
       inline static FormStubHeap& get() {
          static FormStubHeap instance;
