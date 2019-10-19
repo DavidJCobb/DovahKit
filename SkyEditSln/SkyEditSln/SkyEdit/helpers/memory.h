@@ -1,6 +1,9 @@
 #pragma once
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <functional> // block_allocator::forEach
+#include "bitset.h" // block_allocator
 
 namespace cobb {
    class generic_buffer {
@@ -30,6 +33,208 @@ namespace cobb {
          generic_buffer(uint32_t bytes) { this->allocate(bytes); }
          ~generic_buffer() {
             this->free();
+         }
+   };
+
+   struct block_allocator_debug_printer {
+      virtual void forBlock(uint32_t index) = 0;
+      virtual void forElement(void* element) = 0;
+      virtual void printExtraStats() = 0;
+   };
+   template<typename T, uint32_t count_per_block> class block_allocator {
+      //
+      // A custom allocator for FormStub which allocates in blocks (currently 100 at a time), 
+      // to reduce memory fragmentation and overhead (i.e. every heap allocation has to track 
+      // the size allocated and some other metadata; there's no point in doing that for each 
+      // individual FormStub).
+      //
+      // NOTES:
+      //
+      //  - When creating stubs only for QUST forms from Skyrim.esm as a test, the load process 
+      //    takes about 30ms with default allocation. When using this allocator with my custom 
+      //    bitset class, it also takes 30ms. When using this allocator with std::bitset, it 
+      //    takes 100ms.
+      //
+      //     - Further testing reveals that most of the slowdown comes from std::bitset not 
+      //       having an equivalent to cobb::bitset::find_first_clear, forcing us to use 
+      //       a for-loop to go over each individual bit. My find_first_clear function is a 
+      //       bit more optimal, checking entire uint32_t chunks of the bitmask at a time. 
+      //       When using cobb::bitset without using the find_first_clear method, the load 
+      //       process takes 80ms on average.
+      //
+      public:
+         typedef T element_type;
+         static constexpr uint32_t element_size    = sizeof(T);
+         static constexpr uint32_t count_per_block = count_per_block;
+         //
+      protected:
+         struct Block;
+         struct BlockInfo {
+            Block* prev = nullptr;
+            Block* next = nullptr;
+            cobb::bitset<count_per_block> presence;
+         };
+         struct Block {
+            BlockInfo info;
+            uint8_t   buffer[count_per_block * element_size];
+            //
+            void* allocate() {
+               auto i = this->info.presence.find_first_clear();
+               if (i < 0)
+                  return nullptr;
+               std::ptrdiff_t start = (std::ptrdiff_t) & this->buffer;
+               std::ptrdiff_t addr = start + (element_size * i);
+               this->info.presence.set(i);
+               return (void*)addr;
+            }
+         };
+      public:
+         Block* firstBlock = nullptr;
+         //
+         void* allocate() {
+            if (!this->firstBlock) {
+               this->firstBlock = new Block;
+            }
+            Block* block = this->firstBlock;
+            Block* last = block;
+            void* out = block->allocate();
+            while (!out) {
+               block = block->info.next;
+               if (block)
+                  last = block;
+               else
+                  break;
+               out = block->allocate();
+            }
+            if (out)
+               return out;
+            if (!block) {
+               assert(last && "Couldn't figure out how to create a new block.");
+               auto next = new Block;
+               last->info.next = next;
+               next->info.prev = last;
+               out = next->allocate();
+            }
+            return out;
+         }
+         void free(void* mem) {
+            assert(this->firstBlock && "Cannot free; nothing was allocated.");
+            Block* block = this->firstBlock;
+            do {
+               std::ptrdiff_t m_addr  = (std::ptrdiff_t)mem;
+               std::ptrdiff_t b_start = (std::ptrdiff_t) & block->buffer;
+               std::ptrdiff_t b_end   = b_start + sizeof(block->buffer);
+               if (m_addr >= b_start && m_addr < b_end) {
+                  m_addr -= b_start;
+                  uint16_t index = m_addr / sizeof(element_type);
+                  assert(m_addr % element_size == 0       && "Cannot free; element is not aligned.");
+                  assert(block->info.presence.test(index) && "You're freeing something that was already free!");
+                  block->info.presence.reset(index);
+                  //
+                  if (block != this->firstBlock && block->info.presence.none()) {
+                     //
+                     // This block is no longer in use. Delete it.
+                     //
+                     auto p = block->info.prev;
+                     auto n = block->info.next;
+                     if (p)
+                        p->info.next = n;
+                     if (n)
+                        n->info.prev = p;
+                     delete block;
+                  }
+                  return;
+               }
+            } while (block = block->info.next);
+            assert(false && "Cannot free; element not found on our heap.");
+         }
+         //
+         void dumpStats(block_allocator_debug_printer& printer) {
+            printf("=================================================================================\n");
+            printf("Dumping stats for this allocator...\n");
+            uint32_t blockCount = 0;
+            uint32_t slotCount  = 0;
+            uint32_t slotsUsed  = 0;
+            uint32_t editorIDSizes = 0;
+            uint32_t i = 0;
+            for (auto block = this->firstBlock; block; block = block->info.next) {
+               printer.forBlock(blockCount);
+               blockCount++;
+               slotCount += count_per_block;
+               //
+               auto& presence = block->info.presence;
+               for (uint16_t i = 0; i < count_per_block; i++) {
+                  if (presence.test(i)) {
+                     slotsUsed++;
+                     //
+                     std::ptrdiff_t addr = (std::ptrdiff_t)block->buffer + element_size * i;
+                     T* element = (T*)addr;
+                     printer.forElement(element);
+                  }
+               }
+            }
+            printf("Blocks: %d\n", blockCount);
+            printf("Total Slots: %d used out of %d\n", slotsUsed, slotCount);
+            printf("Memory Usage:\n");
+            printf(" - %d bytes overhead for block metadata\n", (sizeof(BlockInfo) * blockCount));
+            printf(" - %d bytes allocated for FormStub storage\n", element_size * slotCount);
+            printf(" - %d bytes in use for FormStub instances\n",  element_size * slotsUsed);
+            printer.printExtraStats();
+            //
+            printf("Overview by block:");
+            blockCount = 0;
+            for (auto block = this->firstBlock; block; block = block->info.next) {
+               printf(" - Block %d:\n", blockCount);
+               blockCount++;
+               //
+               auto& presence = block->info.presence;
+               printf("    - ");
+               for (uint16_t i = 0; i < count_per_block; i++) {
+                  if (presence.test(i))
+                     printf("1");
+                  else
+                     printf("0");
+               }
+               printf("\n");
+            }
+            printf("All blocks listed.\n");
+            printf("=================================================================================\n");
+         }
+         void forceFreeAll() { // for debugging/testing purposes ONLY; this WILL leave dangling pointers everywhere
+            auto last = this->firstBlock;
+            if (!last)
+               return;
+            while (last->info.next)
+               last = last->info.next;
+            //
+            auto prev = last->info.prev;
+            do {
+               auto& presence = last->info.presence;
+               //
+               // Deleting an element can delete the containing Block, so we need to get all of 
+               // the pointers first -- that way, the Block doesn't get deleted out from under 
+               // us.
+               //
+               element_type* pointers[count_per_block];
+               for (uint32_t i = 0; i < count_per_block; i++) {
+                  if (presence.test(i)) {
+                     std::ptrdiff_t start = (std::ptrdiff_t) & last->buffer;
+                     std::ptrdiff_t addr = start + (element_size * i);
+                     //
+                     pointers[i] = (element_type*)addr;
+                  } else
+                     pointers[i] = nullptr;
+               }
+               for (uint32_t i = 0; i < count_per_block; i++) {
+                  if (pointers[i]) {
+                     delete pointers[i];
+                     pointers[i] = nullptr;
+                  }
+               }
+               last = prev;
+               if (prev)
+                  prev = prev->info.prev;
+            } while (last);
          }
    };
 }

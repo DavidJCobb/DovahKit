@@ -121,7 +121,6 @@ class TESPluginRecord {
       // Disallow copying to avoid bad memory management on the generic_buffer.
       //
       TESPluginRecord& operator=(const TESPluginRecord& other) = delete; // no copy
-      TESPluginRecord& operator=(TESPluginRecord& other) = delete; // no copy
       TESPluginRecord(TESPluginRecord& other) = delete; // no copy
       //
       operator bool() const noexcept { return this->header.signature != 0; }
@@ -170,7 +169,6 @@ class TESPluginSubrecord {
       //
    public:
       TESPluginSubrecord& operator=(const TESPluginSubrecord& other) = delete; // no copy
-      TESPluginSubrecord& operator=(TESPluginSubrecord& other) = delete; // no copy
       TESPluginSubrecord(TESPluginSubrecord& other) = delete; // no copy
    public:
       TESPluginRecord& get_containing_record() const;

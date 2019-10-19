@@ -151,7 +151,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
             break;
          default:
             _DEBUGMSG("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
-            assert(false, "bad property type");
+            assert(false && "bad property type");
             return false;
       }
    } else {

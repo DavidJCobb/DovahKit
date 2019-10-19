@@ -16,39 +16,20 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //
 //  - See last Github commit text for more changes to make.
 //
-//  - Split (record), (subrecord), and (group) off from TESPluginFile into separate 
-//    structs. Essentially, take TESPluginRecord and friends and change them from 
-//    just pointers-with-methods to actual state objects, and have getCurrentXXXXX 
-//    return references to them. The structs should have a TESPluginFile& owner. 
-//    The structs will still be members of TESPluginFile and not be used anywhere 
-//    else, but this will make things more orderly. Probably.
+//  - Currently, we have no way to maintain GRUP relationships after parsing is 
+//    complete. A DIAL has no way to prompt the loading of its child INFOs, and 
+//    more importantly, an INFO being loaded has no way to know what DIAL it 
+//    belongs to. There's only one good approach (aside from simply keeping all 
+//    forms in memory):
 //
-//    We need to handle multiple levels of nesting for groups, so define a constexpr 
-//    int MAX_GROUP_DEPTH at the top of the file and then give TESPluginFile some-
-//    thing like TESPluginGroup groups[MAX_GROUP_DEPTH]. getCurrentGroup should 
-//    REQUIRE a group index; getContainingGroup should return the deepest group that 
-//    actually exists (signature != 0).
-//
-//     - ...And then TESPluginRecord::getContainingGroup can call that function.
-//
-//     = DONE: SPLITTING THE STRUCTURES OFF.
-//
-//     = NEXT: MULTIPLE GROUPS AND REWRITING nextRecord (see below)
+//     - FormStub instances can have a pointer to a "Group Info" struct, which 
+//       contains information on the non-top-level GRUPs that contained the 
+//       record.
 //
 //  - At the top of the file, we should clearly explain why record and subrecord 
 //    contents have to use different "read" and "skip" functions (it's because we 
 //    HAVE TO load record contents into a buffer in order to allow uniform access 
 //    for compressed and uncompressed record data).
-//
-//  - We'll need to change how we iterate over records. When using nextRecord(), 
-//    there's no way to tell if it returned false because we're at the end of a 
-//    group or because we've encountered a child group. The nextRecord() function 
-//    should only be used by TESPluginFile::load, though, so we can redesign it 
-//    however we like e.g. nextRecordOrGroup() which returns an enum indicating 
-//    what we hit.
-//
-//     - It'll need to peek four bytes after the end of the last record; that'll 
-//       grab the signature of the next object which, if it's 'GRUP', is a group.
 //
 //  - Create cobb::zstring as a const char* that does malloc/realloc/free for you, 
 //    with both a c_str() method and an implicit (const char*) conversion. Use that 
@@ -118,9 +99,9 @@ int main() {
       return false;
    });
    //
-   FormStubHeap::get().dump();
-   //FormStubHeap::get().forceFreeAll();
-   //FormStubHeap::get().dump();
+   auto& fsh = FormStubHeap::get();
+   FormStubHeapPrinter fsh_printer;
+   fsh.dumpStats(fsh_printer);
    //
    return 0;
 }

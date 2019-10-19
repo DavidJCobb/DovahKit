@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "helpers/bitset.h"
+#include "helpers/memory.h"
 
 struct FormStub;
 class TESForm;
@@ -106,56 +107,24 @@ struct FormStub {
       char* allocate_editor_id(size_t length);
 };
 
-class FormStubHeap {
-   //
-   // A custom allocator for FormStub which allocates in blocks (currently 100 at a time), 
-   // to reduce memory fragmentation and overhead (i.e. every heap allocation has to track 
-   // the size allocated and some other metadata; there's no point in doing that for each 
-   // individual FormStub).
-   //
-   // NOTES:
-   //
-   //  - When creating stubs only for QUST forms from Skyrim.esm as a test, the load process 
-   //    takes about 30ms with default allocation. When using this allocator with my custom 
-   //    bitset class, it also takes 30ms. When using this allocator with std::bitset, it 
-   //    takes 100ms.
-   //
-   //     - Further testing reveals that most of the slowdown comes from std::bitset not 
-   //       having an equivalent to cobb::bitset::find_first_clear, forcing us to use 
-   //       a for-loop to go over each individual bit. My find_first_clear function is a 
-   //       bit more optimal, checking entire uint32_t chunks of the bitmask at a time. 
-   //       When using cobb::bitset without using the find_first_clear method, the load 
-   //       process takes 80ms on average.
-   //
+struct FormStubHeapPrinter : public cobb::block_allocator_debug_printer {
+   virtual void forBlock(uint32_t index) {};
+   virtual void forElement(void* element) {
+      FormStub* stub = (FormStub*)element;
+      auto id = stub->get_editor_id();
+      if (id)
+         this->editorIDBytes += strlen(id) + 1;
+   }
+   virtual void printExtraStats() {
+      printf(" - %d bytes' worth of editor ID text held elsewhere\n", this->editorIDBytes);
+   }
+
+   uint32_t editorIDBytes = 0;
+};
+class FormStubHeap : public cobb::block_allocator<FormStub, 100> {
    public:
-      typedef FormStub element_type;
-      //
       inline static FormStubHeap& get() {
          static FormStubHeap instance;
          return instance;
       }
-      //
-   protected:
-      static constexpr uint16_t ce_countPerBlock = 100;
-      //
-      struct Block;
-      struct BlockInfo {
-         Block*   prev = nullptr;
-         Block*   next = nullptr;
-         cobb::bitset<ce_countPerBlock> presence;
-      };
-      struct Block {
-         BlockInfo info;
-         uint8_t   buffer[FormStubHeap::ce_countPerBlock * sizeof(FormStub)];
-         //
-         void* allocate();
-      };
-   public:
-      void* allocate();
-      void  free(void*);
-      //
-      Block* firstBlock = nullptr;
-      //
-      void dump();
-      void forceFreeAll(); // for debugging purposes ONLY; this WILL leave dangling pointers everywhere
 };
