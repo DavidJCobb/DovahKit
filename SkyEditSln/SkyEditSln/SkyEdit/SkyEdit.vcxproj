@@ -129,6 +129,7 @@
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
+    <ClCompile Include="helpers\threading.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="forms\Quest.cpp" />
     <ClCompile Include="forms\types.cpp" />
@@ -142,9 +143,12 @@
     <ClInclude Include="forms\conditions.h" />
     <ClInclude Include="forms\papyrus.h" />
     <ClInclude Include="helpers\bitset.h" />
+    <ClInclude Include="helpers\intrusive_windows_defines.h" />
+    <ClInclude Include="helpers\locks.h" />
     <ClInclude Include="helpers\memory.h" />
     <ClInclude Include="helpers\miscellaneous.h" />
     <ClInclude Include="helpers\strings.h" />
+    <ClInclude Include="helpers\threading.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="forms\Quest.h" />
     <ClInclude Include="forms\types.h" />

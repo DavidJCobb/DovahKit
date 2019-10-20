@@ -399,36 +399,11 @@ bool TESPluginFile::load(const char* filepath) {
    uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
    formtype_t lastFormType  = 0;
    while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
-      if (ot == kObjectType_Group) { // skip top-groups that are not of interest
-         auto& group = this->getCurrentGroup();
-         if (group.header.type == kESPGroupType_FormsOfType) {
-            switch (_byteswap_ulong(group.header.label)) {
-               case 'ASTP':
-               case 'DIAL':
-               case 'DLBR':
-               case 'FACT':
-               case 'GLOB':
-               case 'LCTN':
-               case 'NPC_':
-               case 'QUST':
-               case 'RELA':
-               case 'VTYP':
-                  break;
-               default:
-                  //
-                  // Skip any form signatures not identified in the cases.
-                  //
-                  /*{
-                     std::string log;
-                     group.to_string(log);
-                     _DEBUGMSG("Skipping %s.", log.c_str());
-                  }*/
-                  group.skip();
-                  continue;
-            }
-         }
-         continue;
-      }
+      //
+      // It may be tempting to skip the loading of top-groups that aren't of interest. 
+      // However, it would be unsafe to do that: we need to know what form IDs are 
+      // taken, and the only way to do that is to actually load the forms.
+      //
       if (ot == kObjectType_Record) {
          auto& record = this->record;
          if (record.signature() != lastSignature) {

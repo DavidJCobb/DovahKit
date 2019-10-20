@@ -12,7 +12,7 @@ extern "C" {
    #include "../../zlib/zlib.h" // interproject ref
 }
 
-constexpr int MAX_ESP_FILE_GROUP_DEPTH = 5;
+constexpr int MAX_ESP_FILE_GROUP_DEPTH = 6;
 
 class TESPluginFile;
 class TESPluginSubrecord;

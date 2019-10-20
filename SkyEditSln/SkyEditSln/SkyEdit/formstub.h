@@ -122,7 +122,40 @@ struct FormStubHeapPrinter : public cobb::block_allocator_debug_printer {
 
    uint32_t editorIDBytes = 0;
 };
-class FormStubHeap : public cobb::block_allocator<FormStub, 400> {
+class FormStubHeap : public cobb::block_allocator<FormStub, 16000> {
+   /*
+   PERF STATS - OCTOBER 19 2019
+    - Skyrim.esm
+    - Loading ALL forms in ALL GRUPs including nested groups
+    - FormStubs only
+    - No group-related metadata retained; just the stub
+
+   84 seconds with a block size of 400
+   63 seconds with a block size of 800
+	     110376 bytes overhead
+	   22892800 bytes allocated
+	   22881068 bytes in use
+	     918342 editor ID bytes
+   56 seconds with a block size of 1600
+	     817181 slots used out of 817600
+	     106288 bytes overhead
+	   22892800 bytes allocated
+	   22881068 bytes in use
+	     918342 editor ID bytes
+   48 seconds with a block size of 16000
+	     817181 slots used out of 832000
+	     104416 bytes overhead
+	   23296000 bytes allocated
+	   22881068 bytes in use
+	     918342 editor ID bytes
+   
+   Bear in mind: the block size applies to ALL FormStub instances 
+   across ALL files. Increasing it will have diminishing returns; 
+   the way to get a *real* performance improvement is to use 
+   multi-threaded file loading for all top-level GRUPs with form 
+   types that can't have nested GRUPs (though we need to be 
+   careful about redundant GRUPs e.g. two ACTI groups).
+   */
    public:
       inline static FormStubHeap& get() {
          static FormStubHeap instance;

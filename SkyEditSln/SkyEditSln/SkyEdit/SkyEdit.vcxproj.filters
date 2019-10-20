@@ -45,6 +45,9 @@
     <ClCompile Include="helpers\strings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\threading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="formstub.h">
@@ -84,6 +87,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\threading.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\locks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\intrusive_windows_defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
