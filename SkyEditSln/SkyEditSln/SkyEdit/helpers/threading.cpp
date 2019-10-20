@@ -4,8 +4,7 @@
 namespace cobb {
    /*static*/ DWORD WINAPI thread::_handler(LPVOID data) {
       thread* t = (thread*)data;
-      t->alive = true;
-      t->functor(t->state);
+      t->functor(t->state, *t);
       t->alive = false;
       return 0; // Windows thread return value for "no error;" causes an implicit call to ExitThread; does not implicitly free the handle
    }

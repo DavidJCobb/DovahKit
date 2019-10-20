@@ -31,16 +31,56 @@ namespace cobb {
       //    access its cobb::thread instance.
       //
       // These requirements were influenced by my desire to create a multi-threaded 
-      // block allocator that allows a thread to take ownership of an entire block. 
-      // The thread must be able to pass "itself" to the allocator to effect this 
-      // granting of ownership, and the allocator must later be able to tell whether 
-      // the thread that owns a set of blocks is still running.
+      // block allocator that splits blocks up by thread: a thread can identify itself 
+      // to the allocator and be given a list of blocks; when the thread terminates, 
+      // the list can later be given to another thread; and unrecognized threads just 
+      // fall back to allocating on the normal heap via malloc/free. If I built that 
+      // right, then allocations happening across multiple threads block each of them 
+      // for a shorter amount of time: once the allocator has found the block list for 
+      // the thread requesting an allocation, it can unlock.
+      //
+      // This can only work if a thread identifies itself to the allocator, and later 
+      // (however directly or indirectly) notifies the allocator of its termination. 
+      // This isn't possible with std::thread or (as far as I know) with std::async 
+      // and std::future: the thread can't get a reference to the std::thread or 
+      // std::future that represents it, and so can't pass that to the allocator. If 
+      // the thread can't "pass itself" to the allocator, then the code that *created* 
+      // the thread must pass the thread instead, and that introduces a race condition: 
+      // the thread could try to allocate elements before it has been made known to the 
+      // allocator.
+      //
+      // I'm not sure how that race condition would be handled. The allocator is built 
+      // to fall back to malloc/free if an allocation takes place from an unrecognized 
+      // thread (and if more threads try to register themselves with the allocator than 
+      // the allocator can hold, then it simply ignores them, such that they're treated 
+      // the same as unrecognized threads). I suspect that if a new thread tried to
+      // allocate before being made known to the allocator, then it would just use that 
+      // fallback rather than causing things to blow up. Still, why take chances?
+      //
+      // I'm not fully decided on all this yet, though, so here's a potential alternate 
+      // approach that could utilize C++ STL stuff exclusively:
+      //
+      //  - The allocator has a member struct, thread_handle, which is created and 
+      //    returned when the thread registers itself. This is similar to a smart 
+      //    pointer or a lock guard; its destructor unregisters the containing thread. 
+      //    The thread already has to call a function, of its own volition, to identify 
+      //    itself to the allocator and be given a block list; the main difference here 
+      //    is that we are actively informing the allocator of the thread's termination 
+      //    rather than passively informing it (using a cobb::thread and marking it as 
+      //    "dead" is passive).
+      //
+      //  - Threads are identified by std::thread::id, and the allocate function checks 
+      //    std::this_thread::get_id(). We don't need to check whether a thread is alive 
+      //    because it'll specifically unreigster itself when it terminates.
+      //
+      //  - We use std::async to spawn our async code. We don't need to bother with 
+      //    std::future at all.
       //
       friend std::shared_ptr<thread> spawn_thread(thread_functor, void* state);
       public:
          HANDLE handle = INVALID_HANDLE_VALUE;
          DWORD  id     = 0;
-         bool   alive  = false;
+         bool   alive  = false; // is the thread currently running?
       protected:
          thread_functor functor = nullptr;
          void* state = nullptr;
@@ -52,7 +92,7 @@ namespace cobb {
          //
       public:
          //
-         thread_result wait(uint32_t timeout_ms = infinite_thread_timeout);
+         thread_result wait(uint32_t timeout_ms = infinite_thread_timeout); // block until this thread is complete
          //
          inline operator bool() { return this->alive; }
          inline bool operator==(const cobb::thread& other) { return this->id = other.id; }
