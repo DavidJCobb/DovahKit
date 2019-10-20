@@ -13,11 +13,8 @@ namespace cobb {
    };
    constexpr uint32_t infinite_thread_timeout = INFINITE;
 
-   typedef void(*thread_functor)(void* state, cobb::thread& thread); // void my_function(void* state, cobb::thread& thread);
    class thread;
-
-   // DO NOT TYPEDEF std::shared_ptr<thread>; doing so breaks std::swap which breaks std::shared_ptr::operator=
-   // at least in MSVC 2019. isn't the STL great?
+   typedef void(*thread_functor)(void* state, cobb::thread& thread); // void my_function(void* state, cobb::thread& thread);
 
    class thread {
       //
@@ -76,6 +73,9 @@ namespace cobb {
       //  - We use std::async to spawn our async code. We don't need to bother with 
       //    std::future at all.
       //
+      //     - Actually, std::thread may be better -- less overhead; less functionality 
+      //       that we don't need. All we need is to spawn threads and join them, no?
+      //
       friend std::shared_ptr<thread> spawn_thread(thread_functor, void* state);
       public:
          HANDLE handle = INVALID_HANDLE_VALUE;
@@ -84,11 +84,6 @@ namespace cobb {
       protected:
          thread_functor functor = nullptr;
          void* state = nullptr;
-         //
-         // Intentionally private constructor. Use (spawn_thread) to make a cobb::thread.
-         // If you need an array of them, make an array of shared_ptrs instead.
-         //
-         thread() {};
          //
       public:
          //

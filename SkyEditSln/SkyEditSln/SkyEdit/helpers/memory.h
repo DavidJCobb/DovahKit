@@ -177,7 +177,6 @@ namespace cobb {
             uint32_t slotCount  = 0;
             uint32_t slotsUsed  = 0;
             uint32_t editorIDSizes = 0;
-            uint32_t i = 0;
             for (auto block = this->firstBlock; block; block = block->info.next) {
                printer.forBlock(blockCount);
                blockCount++;
@@ -198,11 +197,11 @@ namespace cobb {
             printf("Total Slots: %d used out of %d\n", slotsUsed, slotCount);
             printf("Memory Usage:\n");
             printf(" - %d bytes overhead for block metadata\n", (sizeof(BlockInfo) * blockCount));
-            printf(" - %d bytes allocated for FormStub storage\n", element_size * slotCount);
-            printf(" - %d bytes in use for FormStub instances\n",  element_size * slotsUsed);
+            printf(" - %d bytes allocated for elements\n", element_size * slotCount);
+            printf(" - %d bytes in use for elements\n",  element_size * slotsUsed);
             printer.printExtraStats();
             //
-            printf("Overview by block:");
+            printf("Overview by block:\n");
             blockCount = 0;
             for (auto block = this->firstBlock; block; block = block->info.next) {
                printf(" - Block %d:\n", blockCount);
@@ -272,50 +271,70 @@ namespace cobb {
       // keep track of, then the allocator falls back to malloc and free for the extra 
       // threads.
       //
-      // Currently, allocation uses a shared lock, while freeing locks the entire 
-      // allocator. Adding a thread to the allocator also locks the entire allocator. 
-      // The shared lock is only needed for identifying which block list belongs to the 
-      // thread requesting an allocation; that block list shouldn't actually be accessed 
-      // by any other thread, so once we have it, we don't need any further locking. The 
-      // non-shared lock, when freeing, is needed because we must search all block lists 
-      // when freeing an element (a thread can obtain a pointer to an element that was 
-      // originally allocated by another thread).
+      // Locking:
       //
-      // The function must be given a cobb::thread in order to keep track of a thread's 
-      // state; however, when allocating elements, the function uses GetCurrentThreadId 
-      // to tell which thread is asking for the allocation (i.e. which block list to 
-      // allocate on).
+      //  - When an allocation is requested, we use a shared lock while locating the 
+      //    block list for the current thread. Once we've located the block list, we 
+      //    unlock: we only allow a thread to access its own block list, so there's no 
+      //    need for any further locking.
       //
-      // TODO:
+      //  - When threads are being registered or unregistered, we use a non-shared lock.
       //
-      //  - Consider only using the shared lock when locating which block list to use 
-      //    for an allocation, and locking the block list itself once it's found.
-      //
-      //  - Consider having the (free) process only lock the block list that it's 
-      //    looking at at any given moment.
+      //  - When a free is requested, we use a non-shared lock. A thread can potentially 
+      //    be given a pointer to an element allocated by a different thread; ergo we 
+      //    must search all block lists to see which contains the memory being freed.
       //
       // Usage example:
       //
       //    multithreaded_block_allocator<Foo, 1000, 4> allocator;
       //
-      //    void task(void* state, cobb::thread& thread) {
-      //       allocator.add_thread(thread);
+      //    void task(void* state) {
+      //       auto reg = allocator.register_thread();
       //       for(uint32_t i = 0; i < 100; i++) {
       //          new Foo;
+      //          //
+      //          // This would obviously leak, since we're not storing it anywhere 
+      //          // and therefore can't free it later. In real code, you'd store it 
+      //          // somewhere.
+      //          //
       //       }
+      //       // reg's destructor unregisters automatically, like a lock_guard
       //    }
       //
       //    void runAllTasks() {
-      //       std::shared_ptr<cobb::thread> threads;
+      //       std::thread threads[5];
       //       for (uint32_t i = 0; i < std::extent<decltype(threads)>::value; i++)
-      //          threads[i] = cobb::spawn_thread(task, nullptr);
-      //       cobb::wait_for_all_threads(std::extent<decltype(threads)>::value, threads);
+      //          threads[i] = std::thread(task);
+      //       for (uint32_t i = 0; i < std::extent<decltype(threads)>::value; i++)
+      //          threads[i].join();
       //    }
       //
       public:
+         typedef multithreaded_block_allocator<T, count_per_block, thread_count> my_type;
          typedef T element_type;
          static constexpr uint32_t element_size    = sizeof(T);
          static constexpr uint32_t count_per_block = count_per_block;
+         //
+         struct registration {
+            my_type*        allocator;
+            std::thread::id threadID;
+
+            registration(my_type* a, std::thread::id id) : allocator(a), threadID(id) {};
+            ~registration() {
+               if (this->allocator) {
+                  this->allocator->unregister_thread(this->threadID);
+                  this->allocator = nullptr;
+               }
+            };
+            registration(registration&& rhs) noexcept { // move constructor
+               this->allocator = rhs.allocator;
+               this->threadID  = rhs.threadID;
+               rhs.allocator = nullptr;
+            }
+            registration(const registration& a) = delete; // do not allow copying
+
+            inline operator bool() const noexcept { return this->allocator && this->threadID != std::thread::id(); }
+         };
          //
       protected:
          struct Block;
@@ -338,55 +357,66 @@ namespace cobb {
                return (void*)addr;
             }
          };
-         struct Thread {
-            std::shared_ptr<cobb::thread> thread;
-            Block* firstBlock;
+         struct BlockList {
+            std::thread::id thread;
+            Block* first;
             //
             bool is_alive() {
-               if (!this->thread)
-                  return false;
-               return this->thread->id && this->thread->alive;
+               return this->thread != std::thread::id();
             }
          };
          //
          std::shared_mutex lock;
-         Thread sets[thread_count];
+         BlockList lists[thread_count];
          //
-         Thread* _find_thread() {
-            auto id = GetCurrentThreadId();
+         BlockList* _find_thread() {
+            cobb::shared_lock_guard<std::shared_mutex> guard(this->lock);
+            //
+            auto id = std::this_thread::get_id();
             int32_t first_free = -1;
-            for (uint32_t i = 0; i < std::extent<decltype(this->sets)>::value; i++) {
-               if (this->sets[i].is_alive() && this->sets[i].thread->id == id)
-                  return &this->sets[i];
+            for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
+               if (this->lists[i].is_alive() && this->lists[i].thread == id)
+                  return &this->lists[i];
             }
             return nullptr;
          }
-         //
-      public:
-         //
-         void add_thread(std::shared_ptr<cobb::thread> thread) {
+         void unregister_thread(std::thread::id id) {
             std::lock_guard<std::shared_mutex> guard(this->lock);
             //
+            for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
+               auto& list = this->lists[i];
+               if (list.thread == id) {
+                  list.thread = std::thread::id();
+                  return;
+               }
+            }
+         }
+         //
+      public:
+         registration register_thread() {
+            std::lock_guard<std::shared_mutex> guard(this->lock);
+            auto id = std::this_thread::get_id();
+            //
             int32_t first_free = -1;
-            for (uint32_t i = 0; i < std::extent<decltype(this->sets)>::value; i++) {
-               if (!this->sets[i].is_alive()) {
-                  this->sets[i].thread = nullptr;
+            for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
+               if (!this->lists[i].is_alive()) {
                   first_free = i;
+                  break;
                }
             }
             if (first_free >= 0) {
-               this->sets[first_free].thread = thread;
+               this->lists[first_free].thread = id;
+               return registration(this, id);
             }
+            return registration(nullptr, std::thread::id());
          }
          void* allocate() {
-            cobb::shared_lock_guard<std::shared_mutex> guard(this->lock);
-            //
-            auto t = this->_find_thread();
+            auto t = this->_find_thread(); // shared lock
             if (!t)
                return malloc(element_size);
-            if (!t->firstBlock)
-               t->firstBlock = new Block;
-            Block* block = t->firstBlock;
+            if (!t->first)
+               t->first = new Block;
+            Block* block = t->first;
             Block* last = block;
             void* out = block->allocate();
             while (!out) {
@@ -411,9 +441,10 @@ namespace cobb {
          void free(void* mem) {
             std::lock_guard<std::shared_mutex> guard(this->lock);
             //
-            for (uint32_t i = 0; i < std::extent<decltype(this->sets)>::value; i++) {
-               auto* t = &this->sets[i];
-               Block* block = t->firstBlock;
+            for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
+               auto* t = &this->lists[i];
+               //
+               Block* block = t->first;
                do {
                   std::ptrdiff_t m_addr  = (std::ptrdiff_t)mem;
                   std::ptrdiff_t b_start = (std::ptrdiff_t) & block->buffer;
@@ -425,7 +456,7 @@ namespace cobb {
                      assert(block->info.presence.test(index) && "You're freeing something that was already free!");
                      block->info.presence.reset(index);
                      //
-                     if (block != t->firstBlock && block->info.presence.none()) {
+                     if (block != t->first && block->info.presence.none()) {
                         //
                         // This block is no longer in use. Delete it.
                         //
@@ -442,6 +473,63 @@ namespace cobb {
                } while (block = block->info.next);
             }
             free(mem);
+         }
+         //
+         void dumpStats() {
+            std::lock_guard<std::shared_mutex> guard(this->lock);
+            //
+            printf("=================================================================================\n");
+            printf("Dumping stats for this allocator...\n");
+            printf("---------------------------------------------------------------------------------\n");
+            for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
+               auto& list = this->lists[i];
+               printf("   Block list %d:\n", i);
+               printf("---------------------------------------------------------------------------------\n");
+               uint32_t blockCount = 0;
+               uint32_t slotCount = 0;
+               uint32_t slotsUsed = 0;
+               uint32_t editorIDSizes = 0;
+               for (auto block = list.first; block; block = block->info.next) {
+                  blockCount++;
+                  slotCount += count_per_block;
+                  //
+                  auto& presence = block->info.presence;
+                  for (uint16_t i = 0; i < count_per_block; i++) {
+                     if (presence.test(i)) {
+                        slotsUsed++;
+                        //
+                        std::ptrdiff_t addr = (std::ptrdiff_t)block->buffer + element_size * i;
+                        T* element = (T*)addr;
+                     }
+                  }
+               }
+               printf("Blocks: %d\n", blockCount);
+               printf("Total Slots: %d used out of %d\n", slotsUsed, slotCount);
+               printf("Memory Usage:\n");
+               printf(" - %d bytes overhead for block metadata\n", (sizeof(BlockInfo) * blockCount));
+               printf(" - %d bytes allocated for elements\n", element_size * slotCount);
+               printf(" - %d bytes in use for elements\n", element_size * slotsUsed);
+               //
+               printf("Overview by block:\n");
+               blockCount = 0;
+               for (auto block = list.first; block; block = block->info.next) {
+                  printf(" - Block %d:\n", blockCount);
+                  blockCount++;
+                  //
+                  auto& presence = block->info.presence;
+                  printf("    - ");
+                  for (uint16_t i = 0; i < count_per_block; i++) {
+                     if (presence.test(i))
+                        printf("1");
+                     else
+                        printf("0");
+                  }
+                  printf("\n");
+               }
+               printf("All blocks listed.\n");
+               printf("---------------------------------------------------------------------------------\n");
+            }
+            printf("=================================================================================\n");
          }
    };
 }

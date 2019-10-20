@@ -153,32 +153,43 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //
 
 #include "helpers/threading.h"
-//
-// TODO: Test cobb::multithreaded_block_allocator
-//
-void _thread_test_sub(void* config, cobb::thread& thread) {
-   uint32_t index = *(uint32_t*)config;
+#include "helpers/memory.h"
+
+struct _test_struct {
+   uint32_t foo;
+};
+struct _test_alloc : public cobb::multithreaded_block_allocator<_test_struct, 8, 5> {
+   public:
+      static _test_alloc& get() {
+         static _test_alloc instance;
+         return instance;
+      }
+};
+void _thread_test_sub(uint32_t index) {
+   auto& allocator = _test_alloc::get();
+   auto  reg = allocator.register_thread();
+   //
+   for (uint32_t i = 0; i < 50; i++)
+      allocator.allocate();
    //
    std::this_thread::sleep_for(std::chrono::seconds(index));
    std::cout << "Done thread ID " << std::this_thread::get_id() << " which handled index " << index << ".\n";
 }
 void _thread_test() {
-   std::shared_ptr<cobb::thread> threads[5];
-   uint32_t states[5];
+   std::thread threads[5];
    struct timeb bench_start;
    struct timeb bench_end;
    printf("Running threading test...\n");
    ftime(&bench_start);
    for (uint32_t i = 0; i < std::extent<decltype(threads)>::value; i++) {
-      states[i]  = i;
-      threads[i] = cobb::spawn_thread(_thread_test_sub, &states[i]);
+      threads[i] = std::thread(_thread_test_sub, i);
    }
-   cobb::wait_for_all_threads(std::extent<decltype(threads)>::value, threads);
+   for (uint32_t i = 0; i < std::extent<decltype(threads)>::value; i++) {
+      threads[i].join();
+   }
    ftime(&bench_end);
    printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-   for (uint32_t i = 0; i < std::extent<decltype(threads)>::value; i++) {
-      printf(" - Confirming state for thread %d; should be 0 (dead): %d\n", i, threads[i]->alive);
-   }
+   _test_alloc::get().dumpStats();
 }
 
 int main() {
