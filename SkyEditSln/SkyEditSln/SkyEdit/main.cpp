@@ -14,8 +14,6 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //
 // TODO: REFACTOR
 //
-//  - See last Github commit text for more changes to make.
-//
 //  - All loaded forms should have a reference to their owning FormStub.
 //
 //  - Currently, we have no way to maintain GRUP relationships after parsing is 
@@ -58,70 +56,17 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //    HAVE TO load record contents into a buffer in order to allow uniform access 
 //    for compressed and uncompressed record data).
 //
-//  - Look into multi-threading the loading of top-level GRUPs whose form types 
-//    cannot have nested GRUPs. I think that's gonna be the only way we get a 
-//    significant improvement in loading perf past this point.
+//  - Improvements to multi-threaded file loading:
 //
-//     - Hold up, partner! FormStubHeap isn't thread-safe, and if we fix that 
-//       by just slapping a lock on it, then we've effectively made a single-
-//       threaded program that likes to fantasize from time to time. Fortunately, 
-//       I have a plan to fix this:
+//     - Modify the std::maps for file loading to use a block allocator.
 //
-//        - The main thread should skim through all GRUPs and coordinate with 
-//          five other threads: the NESTABLE thread, which handles all top-level 
-//          GRUPs for form types that can have nested GRUPs (i.e. CELL, DIAL, 
-//          and WRLD); and four SIMPLE threads, which each handle a single top-
-//          level GRUP at a time (only the ones that can't have nested GRUPs).
+//     - Use the "simple" loader for DIAL.
 //
-//        - We need to define a multithreaded_block_allocator that has five 
-//          linked lists of Blocks -- one for each thread that will be allowed 
-//          to access the allocator -- and each linked list is paired with a 
-//          thread ID. In essence, each thread (the one NESTABLE thread and the 
-//          four SIMPLE threads) has its own heap.
+//     - Create a "complex" loader for interior CELLs, which divides load tasks 
+//       up by block or by sub-block.
 //
-//           - The multi-threaded block allocator needs to lock if it's asked 
-//             to allocate a block by an unrecognized thread ID. If there's 
-//             room for another thread, then the multi-threaded block allocator 
-//             needs to set that up; otherwise, it needs to use malloc.
-//
-//           - The multi-threaded block allocator needs to lock every time it's 
-//             asked to free a FormStub, NO MATTER WHAT THREAD IS ASKING. One 
-//             thread can ask to free a FormStub that was originally allocated 
-//             by a different thread; that's valid behavior. Moreover, if we 
-//             fall back to malloc whenever an unrecognized thread allocates, 
-//             then we need to fall back to free if the FormStub we're trying 
-//             to free isn't on any of our block lists.
-//
-//           - Threads need to tell the multi-threaded block allocator when 
-//             they close, so that it knows which block lists are available 
-//             again. Alternatively, instead of using threads directly, we 
-//             need to use std::async and "futures" i.e. <https://stackoverflow.com/questions/42418360/how-to-check-if-thread-has-finished-work-in-c11-and-above> 
-//             so that we can check whether a thread has closed after the 
-//             fact.
-//
-//              - ...or if the standard library seems like too much for our 
-//                purposes, we could write a thinner thread wrapper for 
-//                ourselves.
-//
-//              - So, our allocator would check if the allocation is coming 
-//                from a known thread ID. If it isn't, then we lock the 
-//                whole allocator and check whether we have any free slots 
-//                (thread ID 0). If not, we check whether any slots represent 
-//                threads that are known to have closed (in which case they're 
-//                free).
-//
-//     - First, we have to figure out how to read from different points in the 
-//       same file from different threads.
-//
-//     - We'll want to be careful to account for redundant GRUPs e.g. two ACTI 
-//       groups; those will have to be parsed in order.
-//
-//     - TESPluginFile::formsByType is not necessarily thread-safe. Its type is 
-//       std::map<formtype_t, std::map<uint32_t, FormStub*>>; I think what we'll 
-//       want to do is do formsByType[i] for every possible form type before load, 
-//       to force the creation of all inner maps. Then, we have each thread build 
-//       its own std::map<uint32_t, FormStub*> and when the thread is done, it can 
-//       use std::swap to overwrite formsByType[i] with the thread-local map.
+//     - Create a "complex" loader for worldspaces, which divides load tasks 
+//       up by worldspace.
 //
 //  - Create cobb::zstring as a const char* that does malloc/realloc/free for you, 
 //    with both a c_str() method and an implicit (const char*) conversion. Use that 
@@ -152,49 +97,7 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //          FormStubs themselves... Maybe it's time to template that allocator.
 //
 
-#include "helpers/threading.h"
-#include "helpers/memory.h"
-
-struct _test_struct {
-   uint32_t foo;
-};
-struct _test_alloc : public cobb::multithreaded_block_allocator<_test_struct, 8, 5> {
-   public:
-      static _test_alloc& get() {
-         static _test_alloc instance;
-         return instance;
-      }
-};
-void _thread_test_sub(uint32_t index) {
-   auto& allocator = _test_alloc::get();
-   auto  reg = allocator.register_thread();
-   //
-   for (uint32_t i = 0; i < 50; i++)
-      allocator.allocate();
-   //
-   std::this_thread::sleep_for(std::chrono::seconds(index));
-   std::cout << "Done thread ID " << std::this_thread::get_id() << " which handled index " << index << ".\n";
-}
-void _thread_test() {
-   std::thread threads[5];
-   struct timeb bench_start;
-   struct timeb bench_end;
-   printf("Running threading test...\n");
-   ftime(&bench_start);
-   for (uint32_t i = 0; i < std::extent<decltype(threads)>::value; i++) {
-      threads[i] = std::thread(_thread_test_sub, i);
-   }
-   for (uint32_t i = 0; i < std::extent<decltype(threads)>::value; i++) {
-      threads[i].join();
-   }
-   ftime(&bench_end);
-   printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-   _test_alloc::get().dumpStats();
-}
-
 int main() {
-   _thread_test();
-   //
    TESPluginFile skyrim;
    struct timeb bench_start;
    struct timeb bench_end;
@@ -234,8 +137,9 @@ int main() {
    });
    //
    auto& fsh = FormStubHeap::get();
-   FormStubHeapPrinter fsh_printer;
-   fsh.dumpStats(fsh_printer);
+   //FormStubHeapPrinter fsh_printer;
+   //fsh.dumpStats(fsh_printer);
+   fsh.dumpStats();
    //
    return 0;
 }

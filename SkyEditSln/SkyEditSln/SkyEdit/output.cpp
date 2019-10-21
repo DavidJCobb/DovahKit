@@ -21,3 +21,8 @@ const char* FMT_SIGNATURE(uint32_t signature) {
    buf[4] = '\0';
    return buf;
 }
+extern const char* FMT_SIGNATURE(uint32_t signature, char out[5]) {
+   *(uint32_t*)out = _byteswap_ulong(signature);
+   out[4] = '\0';
+   return out;
+}

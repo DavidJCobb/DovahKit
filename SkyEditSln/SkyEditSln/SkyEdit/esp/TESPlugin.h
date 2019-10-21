@@ -14,6 +14,7 @@ extern "C" {
 
 constexpr int MAX_ESP_FILE_GROUP_DEPTH = 6;
 
+class TESPluginBaseReader;
 class TESPluginFile;
 class TESPluginSubrecord;
 class TESPluginRecord;
@@ -75,16 +76,16 @@ struct TESPluginRecordHeader {
 };
 
 class TESPluginGroup {
-   friend TESPluginFile;
+   friend TESPluginBaseReader;
    protected:
-      void initialize(TESPluginFile* f) { this->owner = f; }
-      //
+      void initialize(TESPluginBaseReader* f) { this->owner = f; }
+   public:
       void reset() {
          this->header.signature = 0;
       }
       void skip();
       //
-      TESPluginFile* owner;
+      TESPluginBaseReader* owner;
       //
       TESPluginGroupHeader header;
       uint32_t pos;
@@ -96,11 +97,12 @@ class TESPluginGroup {
       void to_string(std::string&) const;
 };
 class TESPluginRecord {
-   friend TESPluginFile;
+   friend TESPluginBaseReader;
+   friend TESPluginThreadedSimpleReader;
    protected:
-      TESPluginRecord(TESPluginFile& file) : owner(file) {}
+      TESPluginRecord(TESPluginBaseReader& file) : owner(file) {}
       //
-      TESPluginFile& owner;
+      TESPluginBaseReader& owner;
       //
       TESPluginRecordHeader header;
       uint32_t headPos; // position in the file
@@ -154,11 +156,12 @@ class TESPluginRecord {
       uint32_t peek_next_subrecord_type();
 };
 class TESPluginSubrecord {
-   friend TESPluginFile;
+   friend TESPluginBaseReader;
+   friend TESPluginThreadedSimpleReader;
    protected:
-      TESPluginSubrecord(TESPluginFile& file) : owner(file) {}
+      TESPluginSubrecord(TESPluginBaseReader& file) : owner(file) {}
       //
-      TESPluginFile& owner;
+      TESPluginBaseReader& owner;
       //
       struct {
          uint32_t signature = 0;
@@ -172,6 +175,9 @@ class TESPluginSubrecord {
       TESPluginSubrecord(TESPluginSubrecord& other) = delete; // no copy
    public:
       TESPluginRecord& get_containing_record() const;
+      void reset() {
+         this->header.signature = 0;
+      }
       //
       inline uint32_t offset() const noexcept { return this->pos; }
       inline uint32_t end_pos() const noexcept { return this->end; }
@@ -223,62 +229,26 @@ class TESPluginSubrecord {
       //
 };
 
-class TESPluginFile {
+class TESPluginBaseReader {
+   friend TESPluginFile;
    friend TESPluginGroup;
    friend TESPluginRecord;
    friend TESPluginSubrecord;
    public:
-      enum Flags {
-         kFlag_Master = 0x0001,
-         kFlag_LocalizedStringTable = 0x0080,
-         kFlag_Light  = 0x0200, // SSE only
-      };
       enum ObjectType {
          kObjectType_None,
          kObjectType_Group,
          kObjectType_Record,
       };
-   public:
-      TESPluginFile();
-      ~TESPluginFile();
-      //
-      // NOTE: We currently filter which GRUPs we load forms from. Look for a switch-
-      // case on form signatures inside of (load).
-      //
-      bool load(const char* filepath);
-      //
-      ObjectType nextRecordOrGroup();
-      bool nextSubrecord();
-      bool loadRecordAt(uint32_t pos); // for FormStub
-      //
-      void     setPos(uint32_t pos);
-      uint32_t getPos();
-      void     rewind(uint32_t by);
-      void skipBytes(uint32_t count);
-      bool isEOF();
-      bool is_good();
-      //
    protected:
-      FILE* fileHandle;
-      //
-      // These next structs contain parsing state for groups, records, and subrecords; 
-      // they are also provided (through getters) to form-loading code as interfaces. 
-      // In fact, under the hood, they're just interfaces to this class.
-      //
-      // Note that their constructors require a const reference to the containing 
-      // TESPluginFile, but they don't support copying, so the constructor for 
-      // TESPluginFile must use the NAME : field(value) {} syntax at its definition 
-      // (NOT the declaration; check the CPP file, not this H file).
-      //
-      TESPluginGroup groups[MAX_ESP_FILE_GROUP_DEPTH];
+      FILE* fileHandle = nullptr;
+      TESPluginGroup     groups[MAX_ESP_FILE_GROUP_DEPTH];
       TESPluginRecord    record;
       TESPluginSubrecord subrecord;
-      //
       uint32_t lastPotentialGroupParent = 0; // form ID: CELL, WRLD, DIAL
       //
-   protected:
+      bool uses_string_table = false;
       //
-      bool _loadHeader();
       void read(char* buffer, uint32_t size) {
          fread(buffer, size, 1, this->fileHandle);
       }
@@ -288,16 +258,30 @@ class TESPluginFile {
       template<typename T> void read(T& field) {
          fread(&field, sizeof(field), 1, this->fileHandle);
       }
-      //
-      // Loaded data:
-      //
-      std::map<formtype_t, std::map<uint32_t, FormStub*>> formsByType;
+      void resetParseState() {
+         for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
+            this->groups[i].reset();
+         this->record.reset();
+         this->subrecord.reset();
+      }
       //
    public:
+      TESPluginBaseReader() : record(*this), subrecord(*this) {
+         for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
+            this->groups[i].initialize(this);
+      };
       //
-      // Loading:
+      void open(const char* path);
       //
-      inline const TESPluginRecordHeader& getRecordHeader() { return this->record.header; }
+      void     setPos(uint32_t pos);
+      uint32_t getPos();
+      void     rewind(uint32_t by);
+      void skipBytes(uint32_t count);
+      bool isEOF();
+      bool is_good();
+      //
+      ObjectType nextRecordOrGroup();
+      bool       nextSubrecord();
       //
       inline TESPluginGroup& getCurrentGroup() {
          for (signed int i = std::extent<decltype(this->groups)>::value - 1; i >= 0; i--) {
@@ -319,9 +303,61 @@ class TESPluginFile {
       }
       inline TESPluginRecord& getCurrentRecord() { return this->record; }
       inline TESPluginSubrecord& getCurrentSubrecord() { return this->subrecord; }
+};
+
+class TESPluginThreadedSimpleReader : public TESPluginBaseReader {
+   //
+   // Class for reading a top-level GRUP for a form type that cannot contain child 
+   // GRUPs.
+   //
+   protected:
+      struct QueuedGroup {
+         uint32_t signature = 0;
+         uint32_t pos = 0;
+         //
+         QueuedGroup(uint32_t s, uint32_t p) : signature(s), pos(p) {}
+      };
       //
-      // Loaded data:
+      void _load();
+      static void _thread_handler(TESPluginThreadedSimpleReader* instance);
+   public:
+      TESPluginThreadedSimpleReader(TESPluginFile& f) : owner(f) {}
       //
+      TESPluginFile& owner;
+      //
+      std::vector<QueuedGroup> queue;
+      std::thread thread;
+      std::map<formtype_t, std::map<uint32_t, FormStub*>> resultsByType;
+      //
+      void add_group(uint32_t groupSignature, uint32_t groupPos);
+      void start();
+      void wait_for();
+};
+
+class TESPluginFile : public TESPluginBaseReader {
+   friend TESPluginThreadedSimpleReader;
+   public:
+      enum Flags {
+         kFlag_Master = 0x0001,
+         kFlag_LocalizedStringTable = 0x0080,
+         kFlag_Light  = 0x0200, // SSE only
+      };
+   public:
+      TESPluginFile();
+      ~TESPluginFile();
+      //
+      bool load(const char* filepath);
+      bool loadRecordAt(uint32_t pos); // for FormStub
+      //
+   protected:
+      bool _loadHeader();
+      //
+      std::string path;
+      TESPluginThreadedSimpleReader complexReader; // see constructor for initializer
+      TESPluginThreadedSimpleReader simpleReaders[4]; // see constructor for initializer
+      std::map<formtype_t, std::map<uint32_t, FormStub*>> formsByType;
+      //
+   public:
       uint32_t flags = 0;
       float    fileVersion = 0.94F;
       uint32_t recordCount = 0;

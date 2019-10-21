@@ -112,7 +112,7 @@ bool TESPluginSubrecord::to_string(std::string& field) {
 }
 bool TESPluginSubrecord::to_string(LStringRef& field) {
    field.value.clear();
-   if (this->owner.flags & TESPluginFile::kFlag_LocalizedStringTable) {
+   if (this->owner.uses_string_table & TESPluginFile::kFlag_LocalizedStringTable) {
       bool result = this->read(field.index);
       //
       // TODO: implement reading from the string table
@@ -125,43 +125,26 @@ bool TESPluginSubrecord::to_string(LStringRef& field) {
    return this->to_string(field.value);
 }
 
-
-
-TESPluginFile::TESPluginFile() : record(*this), subrecord(*this) {
-   this->authorName[511]  = '\0';
-   this->description[511] = '\0';
-   //
-   for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
-      this->groups[i].initialize(this);
-}
-TESPluginFile::~TESPluginFile() {
-   if (this->fileHandle) {
-      fclose(this->fileHandle);
-      this->fileHandle = nullptr;
-   }
-}
-//
-void TESPluginFile::setPos(uint32_t pos) {
+void TESPluginBaseReader::setPos(uint32_t pos) {
    clearerr(this->fileHandle);
    fseek(this->fileHandle, pos, SEEK_SET);
 }
-uint32_t TESPluginFile::getPos() {
+uint32_t TESPluginBaseReader::getPos() {
    return ftell(this->fileHandle);
 }
-void TESPluginFile::skipBytes(uint32_t count) {
+void TESPluginBaseReader::skipBytes(uint32_t count) {
    fseek(this->fileHandle, count, SEEK_CUR);
 }
-void TESPluginFile::rewind(uint32_t by) {
+void TESPluginBaseReader::rewind(uint32_t by) {
    this->setPos(this->getPos() - by);
 }
-bool TESPluginFile::isEOF() {
+bool TESPluginBaseReader::isEOF() {
    return feof(this->fileHandle);
 }
-bool TESPluginFile::is_good() {
+bool TESPluginBaseReader::is_good() {
    return !ferror(this->fileHandle) && !this->isEOF();
 }
-//
-TESPluginFile::ObjectType TESPluginFile::nextRecordOrGroup() {
+TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    auto& record = this->record;
    if (record) {
       /*//
@@ -261,7 +244,7 @@ TESPluginFile::ObjectType TESPluginFile::nextRecordOrGroup() {
    return ObjectType::kObjectType_Record;
 }
 //
-bool TESPluginFile::nextSubrecord() {
+bool TESPluginBaseReader::nextSubrecord() {
    auto& r = this->record;
    if (this->subrecord.header.signature) {
       //this->setPos(this->subrecord.end);
@@ -304,11 +287,103 @@ bool TESPluginFile::nextSubrecord() {
       return false;
    return true;
 }
-bool TESPluginFile::loadRecordAt(uint32_t pos) {
-   for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
-      this->groups[i].reset();
-   this->record.reset();
+
+void TESPluginThreadedSimpleReader::_thread_handler(TESPluginThreadedSimpleReader* instance) {
+   instance->_load();
+}
+void TESPluginThreadedSimpleReader::_load() {
+   if (this->fileHandle) {
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   }
+   this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
+   assert(this->fileHandle && "Unable to open the file for reading.");
+   this->resultsByType.clear();
    //
+   auto size = this->queue.size();
+   for (uint32_t i = 0; i < size; i++) {
+      auto& desired = this->queue[i];
+      this->setPos(desired.pos);
+      this->resetParseState();
+      assert(this->nextRecordOrGroup() == kObjectType_Group);
+      ObjectType ot;
+      uint32_t   lastGroupLabel = 0; // for debug logging
+      uint32_t   lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
+      formtype_t lastFormType   = 0;
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
+         if (ot == kObjectType_Group) {
+            //
+            // Stop if we've reached the end of the group we're meant to parse.
+            //
+            auto& first = this->groups[0];
+            if (first && first.pos == desired.pos) {
+               lastGroupLabel = _byteswap_ulong(first.header.label);
+            } else {
+               char sig_buffer[5];
+               _DEBUGMSG("Thread %08X finished parse of group %s.", std::this_thread::get_id(), FMT_SIGNATURE(lastGroupLabel, sig_buffer));
+               break;
+            }
+         }
+         if (ot == kObjectType_Record) {
+            auto& record = this->record;
+            if (record.signature() != lastSignature) {
+               lastSignature = record.signature();
+               lastFormType  = signatureToFormType(lastSignature);
+            }
+            formtype_t formType = lastFormType;
+            if (!formType)
+               continue;
+            //
+            auto& list = this->resultsByType[formType];
+            auto  stub = new FormStub();
+            stub->file     = &this->owner;
+            stub->offset   = record.headPos;
+            stub->formID   = record.formID();
+            stub->formType = formType;
+            list[stub->formID] = stub;
+            //
+            while (auto& subrecord = record.next_subrecord()) {
+               if (subrecord.signature() == 'EDID') {
+                  auto buffer = stub->allocate_editor_id(this->subrecord.header.size + 1);
+                  this->record.read(buffer, this->subrecord.header.size);
+                  buffer[this->subrecord.header.size] = '\0';
+                  break;
+               }
+            }
+            continue;
+         }
+      }
+   }
+   fclose(this->fileHandle);
+   this->fileHandle = nullptr;
+   //
+   _DEBUGMSG("Thread %08X finished all of its work.");
+}
+void TESPluginThreadedSimpleReader::add_group(uint32_t signature, uint32_t pos) {
+   this->queue.emplace_back(signature, pos);
+}
+void TESPluginThreadedSimpleReader::start() {
+   this->thread = std::thread(TESPluginThreadedSimpleReader::_thread_handler, this);
+}
+void TESPluginThreadedSimpleReader::wait_for() {
+   this->thread.join();
+}
+
+TESPluginFile::TESPluginFile() :
+   simpleReaders{ *this, *this, *this, *this }, // NOT a typo; this is needed to initialize the array
+   complexReader(*this)
+{
+   this->authorName[511]  = '\0';
+   this->description[511] = '\0';
+}
+TESPluginFile::~TESPluginFile() {
+   if (this->fileHandle) {
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   }
+}
+bool TESPluginFile::loadRecordAt(uint32_t pos) {
+   this->resetParseState();
    this->setPos(pos);
    return this->nextRecordOrGroup() == kObjectType_Record;
 }
@@ -380,57 +455,88 @@ bool TESPluginFile::_loadHeader() {
    return true;
 }
 bool TESPluginFile::load(const char* filepath) {
+   this->path.clear();
    this->fileHandle = _fsopen(filepath, "rb", _SH_DENYWR);
    if (!this->fileHandle) {
       _DEBUGMSG("Unable to open file for reading.");
       return false;
    }
    _DEBUGMSG("Opened file.");
+   this->path = filepath;
    if (!this->_loadHeader()) {
       _DEBUGMSG("Unable to read header.");
       return false;
    }
    _DEBUGMSG("Read file header.");
+   this->uses_string_table = (bool)(this->flags & kFlag_LocalizedStringTable);
    //
    // TODO: need to define hardcoded forms so that references to them don't break, OR 
    // special-case them in whatever code we write to handle references between forms
    //
    ObjectType ot;
-   uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
-   formtype_t lastFormType  = 0;
+   uint32_t   which_simple = 0;
    while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
-      //
-      // It may be tempting to skip the loading of top-groups that aren't of interest. 
-      // However, it would be unsafe to do that: we need to know what form IDs are 
-      // taken, and the only way to do that is to actually load the forms.
-      //
-      if (ot == kObjectType_Record) {
-         auto& record = this->record;
-         if (record.signature() != lastSignature) {
-            lastSignature = record.signature();
-            lastFormType  = signatureToFormType(lastSignature);
-         }
-         formtype_t formType = lastFormType;
-         if (!formType)
+      if (ot == kObjectType_Group) {
+         auto& group = this->getCurrentGroup();
+         if (group.header.type != 0) {
+            group.skip();
             continue;
-         //
-         auto& list = this->formsByType[formType];
-         auto  stub = new FormStub();
-         stub->file     = this;
-         stub->offset   = record.headPos;
-         stub->formID   = record.formID();
-         stub->formType = formType;
-         list[stub->formID] = stub;
-         //
-         while (auto& subrecord = record.next_subrecord()) {
-            if (subrecord.signature() == 'EDID') {
-               auto buffer = stub->allocate_editor_id(this->subrecord.header.size + 1);
-               this->record.read(buffer, this->subrecord.header.size);
-               buffer[this->subrecord.header.size] = '\0';
-               break;
+         }
+         bool is_complex = false;
+         switch (_byteswap_ulong(group.header.label)) {
+            case 'CELL':
+            case 'DIAL':
+            case 'WRLD':
+               is_complex = true;
+         }
+         if (is_complex) {
+            //
+            // TODO: Consider splitting complex group structures up, e.g. bucketing worldspaces 
+            // into different threads
+            //
+            this->complexReader.add_group(_byteswap_ulong(group.header.label), group.pos);
+         } else {
+            auto& loader = this->simpleReaders[which_simple];
+            if (++which_simple >= std::extent<decltype(this->simpleReaders)>::value)
+               which_simple = 0;
+            loader.add_group(_byteswap_ulong(group.header.label), group.pos);
+         }
+         group.skip();
+         continue;
+      }
+   }
+   this->complexReader.start();
+   for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++)
+      this->simpleReaders[i].start();
+   for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++)
+      this->simpleReaders[i].wait_for();
+   this->complexReader.wait_for();
+   {  // Merge all of the readers' results in.
+      for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++) {
+         auto& reader = this->simpleReaders[i];
+         for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
+            auto key = it->first;
+            try {
+               auto& map = this->formsByType.at(key);
+               map.insert(it->second.begin(), it->second.end());
+            } catch (std::out_of_range) {
+               auto& map = this->formsByType[key];
+               std::swap(map, it->second);
             }
          }
-         continue;
+      }
+      {
+         auto& reader = this->complexReader;
+         for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
+            auto key = it->first;
+            try {
+               auto& map = this->formsByType.at(key);
+               map.insert(it->second.begin(), it->second.end());
+            } catch (std::out_of_range) {
+               auto& map = this->formsByType[key];
+               std::swap(map, it->second);
+            }
+         }
       }
    }
    return true;
