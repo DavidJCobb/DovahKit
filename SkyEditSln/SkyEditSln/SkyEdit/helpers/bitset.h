@@ -21,7 +21,7 @@ namespace cobb {
          //
       public:
          bitset() {
-            memset(&data, 0, sizeof(data));
+            memset(&this->data, 0, sizeof(this->data));
          }
          //
          bool none() const {
@@ -30,25 +30,29 @@ namespace cobb {
             // to zero. The unused portions of a partial chunk should always be cleared.
             //
             for (uint32_t i = 0; i < chunk_count; i++)
-               if (data[i])
+               if (this->data[i])
                   return false;
             return true;
          }
          bool test(uint32_t index) const {
             uint32_t ci  = index / bits_per_chunk;
             uint32_t bit = 1 << (index % bits_per_chunk);
-            return data[ci] & bit;
+            return this->data[ci] & bit;
          }
          //
          void set(uint32_t index) {
             uint32_t ci  = index / bits_per_chunk;
             uint32_t bit = 1 << (index % bits_per_chunk);
-            data[ci] |= bit;
+            this->data[ci] |= bit;
          }
          void reset(uint32_t index) {
             uint32_t ci  = index / bits_per_chunk;
             uint32_t bit = 1 << (index % bits_per_chunk);
-            data[ci] &= ~bit;
+            this->data[ci] &= ~bit;
+         }
+         void clear() {
+            for (uint32_t i = 0; i < chunk_count; i++)
+               this->data[i] = 0;
          }
          //
          int32_t find_first_clear() const {
@@ -58,7 +62,7 @@ namespace cobb {
             // would have to do when using std::bitset as of this writing.
             //
             for (uint32_t i = 0; i < undershoot_cc; i++) {
-               auto chunk = data[i];
+               auto chunk = this->data[i];
                if (chunk != all_bits_set) {
                   for (uint8_t j = 0; j < bits_per_chunk; j++) {
                      if ((chunk & (1 << j)) == 0) {
@@ -74,7 +78,7 @@ namespace cobb {
                // LOOK AT THE BITS THAT THAT CHUNK ACTUALLY USES, or we'll end up returning bit 
                // indices past the end of our set.
                //
-               auto chunk = data[chunk_count - 1];
+               auto chunk = this->data[chunk_count - 1];
                if (chunk != partial_chunk_max) {
                   for (uint8_t j = 0; j < bits_in_partial; j++) {
                      if ((chunk & (1 << j)) == 0) {

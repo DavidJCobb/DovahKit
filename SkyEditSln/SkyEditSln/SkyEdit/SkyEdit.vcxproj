@@ -136,6 +136,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="esp\base.h" />
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\ActorBase.h" />

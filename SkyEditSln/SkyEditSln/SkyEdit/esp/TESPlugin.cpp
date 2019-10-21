@@ -7,6 +7,11 @@
 #include "../forms/components.h"
 #include "../helpers/strings.h"
 
+#define DO_ESP_LOAD_BENCHMARKS 1
+#ifdef DO_ESP_LOAD_BENCHMARKS
+   #include <sys/timeb.h> // for benchmarks
+#endif
+
 void _Debug(const char* msg) {
    std::cout << msg << std::endl;
 }
@@ -122,7 +127,7 @@ bool TESPluginSubrecord::to_string(std::string& field) {
 }
 bool TESPluginSubrecord::to_string(LStringRef& field) {
    field.value.clear();
-   if (this->owner.uses_string_table & TESPluginFile::kFlag_LocalizedStringTable) {
+   if (this->owner.uses_string_table) {
       bool result = this->read(field.index);
       //
       // TODO: implement reading from the string table
@@ -297,8 +302,31 @@ bool TESPluginBaseReader::nextSubrecord() {
       return false;
    return true;
 }
+FormStub* TESPluginBaseReader::make_stub_for_record(TESPluginFile& file) {
+   auto& record = this->getCurrentRecord();
+   auto  stub   = new FormStub();
+   stub->file     = &file;
+   stub->offset   = record.headPos;
+   stub->formID   = record.formID();
+   stub->formType = signatureToFormType(record.signature());
+   return stub;
+}
+void TESPluginBaseReader::extract_editor_id_for_stub(FormStub* stub) {
+   if (formTypeFor(stub->formType).flags & (uint32_t)FormTypeFlags::no_editor_id)
+      return;
+   auto& record = this->getCurrentRecord();
+   while (auto& subrecord = record.next_subrecord()) {
+      if (subrecord.signature() == 'EDID') {
+         auto buffer = stub->allocate_editor_id(subrecord.size() + 1);
+         record.read(buffer, subrecord.size());
+         buffer[subrecord.size()] = '\0';
+         return;
+      }
+   }
+}
 
 void TESPluginThreadedSimpleReader::_thread_handler(TESPluginThreadedSimpleReader* instance) {
+   auto registration = FormStubHeap::get().register_thread();
    instance->_load();
 }
 void TESPluginThreadedSimpleReader::_load() {
@@ -329,13 +357,14 @@ void TESPluginThreadedSimpleReader::_load() {
             if (first && first.pos == desired.pos) {
                lastGroupLabel = _byteswap_ulong(first.header.label);
             } else {
-               char sig_buffer[5];
-               _DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished parse of group %s.", std::this_thread::get_id(), FMT_SIGNATURE(lastGroupLabel, sig_buffer));
+               //char sig_buffer[5];
+               //_DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished parse of group %s.", std::this_thread::get_id(), FMT_SIGNATURE(lastGroupLabel, sig_buffer));
                break;
             }
          }
          if (ot == kObjectType_Record) {
-            auto& record = this->record;
+            auto& record = this->getCurrentRecord();
+            auto& group  = this->getCurrentGroup();
             if (record.signature() != lastSignature) {
                lastSignature = record.signature();
                lastFormType  = signatureToFormType(lastSignature);
@@ -345,21 +374,10 @@ void TESPluginThreadedSimpleReader::_load() {
                continue;
             //
             auto& list = this->resultsByType[formType];
-            auto  stub = new FormStub();
-            stub->file     = &this->owner;
-            stub->offset   = record.headPos;
-            stub->formID   = record.formID();
-            stub->formType = formType;
+            auto  stub = this->make_stub_for_record(this->owner);
+            stub->groupInfo.groupType = group.header.type;
             list[stub->formID] = stub;
-            //
-            while (auto& subrecord = record.next_subrecord()) {
-               if (subrecord.signature() == 'EDID') {
-                  auto buffer = stub->allocate_editor_id(this->subrecord.header.size + 1);
-                  this->record.read(buffer, this->subrecord.header.size);
-                  buffer[this->subrecord.header.size] = '\0';
-                  break;
-               }
-            }
+            this->extract_editor_id_for_stub(stub);
             continue;
          }
       }
@@ -380,6 +398,7 @@ void TESPluginThreadedSimpleReader::wait_for() {
 }
 
 void TESPluginThreadedInteriorCellReader::_thread_handler(TESPluginThreadedInteriorCellReader* instance) {
+   auto registration = FormStubHeap::get().register_thread();
    instance->_load();
 }
 void TESPluginThreadedInteriorCellReader::_load() {
@@ -411,13 +430,13 @@ void TESPluginThreadedInteriorCellReader::_load() {
             if (first && first.pos == desired.pos) {
                lastBlockNumber = first.header.label;
             } else {
-               char sig_buffer[5];
-               _DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X finished parse of interior-cell block %d.", std::this_thread::get_id(), lastBlockNumber);
+               //_DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X finished parse of interior-cell block %d.", std::this_thread::get_id(), lastBlockNumber);
                break;
             }
          }
          if (ot == kObjectType_Record) {
-            auto& record = this->record;
+            auto& record = this->getCurrentRecord();
+            auto& group  = this->getCurrentGroup();
             if (record.signature() != lastSignature) {
                lastSignature = record.signature();
                lastFormType = signatureToFormType(lastSignature);
@@ -427,25 +446,14 @@ void TESPluginThreadedInteriorCellReader::_load() {
                continue;
             //
             auto& list = this->resultsByType[formType];
-            auto  stub = new FormStub();
-            stub->file     = &this->owner;
-            stub->offset   = record.headPos;
-            stub->formID   = record.formID();
-            stub->formType = formType;
+            auto  stub = this->make_stub_for_record(this->owner);
+            stub->groupInfo.groupType = group.header.type;
             if (record.signature() == 'CELL') {
                stub->groupInfo.cellBlock.interior    = this->groups[0].header.label;
                stub->groupInfo.cellSubBlock.interior = this->groups[1].header.label;
             }
             list[stub->formID] = stub;
-            //
-            while (auto& subrecord = record.next_subrecord()) {
-               if (subrecord.signature() == 'EDID') {
-                  auto buffer = stub->allocate_editor_id(subrecord.size() + 1);
-                  record.read(buffer, subrecord.size());
-                  buffer[subrecord.size()] = '\0';
-                  break;
-               }
-            }
+            this->extract_editor_id_for_stub(stub);
             continue;
          }
       }
@@ -465,9 +473,87 @@ void TESPluginThreadedInteriorCellReader::wait_for() {
    this->thread.join();
 }
 
+void TESPluginThreadedWorldspaceSubBlockReader::_thread_handler(TESPluginThreadedWorldspaceSubBlockReader* instance) {
+   auto registration = FormStubHeap::get().register_thread();
+   instance->_load();
+}
+void TESPluginThreadedWorldspaceSubBlockReader::_load() {
+   if (this->fileHandle) {
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   }
+   this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
+   assert(this->fileHandle && "[TESPluginThreadedWorldspaceSubBlockReader] Unable to open the file for reading.");
+   this->resultsByType.clear();
+   //
+   auto size = this->queue.size();
+   for (uint32_t i = 0; i < size; i++) {
+      auto& desired = this->queue[i];
+      //_DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X beginning with [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
+      this->setPos(desired.pos);
+      this->resetParseState();
+      assert(this->nextRecordOrGroup() == kObjectType_Group);
+      ObjectType ot;
+      uint32_t   lastBlockNumber = 0; // for debug logging
+      uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
+      formtype_t lastFormType = 0;
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
+         if (ot == kObjectType_Group) {
+            //
+            // Stop if we've reached the end of the group we're meant to parse.
+            //
+            auto& first = this->groups[0];
+            if (!first || first.pos != desired.pos) {
+               //_DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X finished parse of [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
+               break;
+            }
+         }
+         if (ot == kObjectType_Record) {
+            auto& record = this->getCurrentRecord();
+            auto& group  = this->getCurrentGroup();
+            if (record.signature() != lastSignature) {
+               lastSignature = record.signature();
+               lastFormType = signatureToFormType(lastSignature);
+            }
+            formtype_t formType = lastFormType;
+            if (!formType)
+               continue;
+            //
+            auto& list = this->resultsByType[formType];
+            auto  stub = this->make_stub_for_record(this->owner);
+            stub->groupInfo.groupType = group.header.type;
+            if (record.signature() == 'CELL') {
+               stub->groupInfo.parentFormID = desired.worldspaceID;
+               stub->groupInfo.cellBlock.exterior.x = desired.blockX;
+               stub->groupInfo.cellBlock.exterior.y = desired.blockY;
+               stub->groupInfo.cellSubBlock.exterior.x = desired.subBlockX;
+               stub->groupInfo.cellSubBlock.exterior.y = desired.subBlockY;
+            }
+            list[stub->formID] = stub;
+            this->extract_editor_id_for_stub(stub);
+            continue;
+         }
+      }
+   }
+   fclose(this->fileHandle);
+   this->fileHandle = nullptr;
+   //
+   _DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X finished all of its work.");
+}
+void TESPluginThreadedWorldspaceSubBlockReader::add_group(uint32_t worldID, int16_t bx, int16_t by, int16_t sbx, int16_t sby, uint32_t pos) {
+   this->queue.emplace_back(worldID, bx, by, sbx, sby, pos);
+}
+void TESPluginThreadedWorldspaceSubBlockReader::start() {
+   this->thread = std::thread(TESPluginThreadedWorldspaceSubBlockReader::_thread_handler, this);
+}
+void TESPluginThreadedWorldspaceSubBlockReader::wait_for() {
+   this->thread.join();
+}
+
 TESPluginFile::TESPluginFile() :
    simpleReaders{ *this, *this, *this, *this }, // NOT a typo; this is needed to initialize the array
-   interiorCellReaders{ *this, *this },
+   interiorCellReaders{ *this, *this, *this, *this },
+   worldspaceReaders{ *this, *this, *this, *this, *this, *this },
    complexReader(*this)
 {
    this->authorName[511]  = '\0';
@@ -478,6 +564,17 @@ TESPluginFile::~TESPluginFile() {
       fclose(this->fileHandle);
       this->fileHandle = nullptr;
    }
+   if (!(this->config & TESPluginFileConfigFlags::do_not_free_own_stubs)) {
+      for (auto it = this->formsByType.begin(); it != this->formsByType.end(); ++it) {
+         auto& list = it->second;
+         for (auto jt = list.begin(); jt != list.end(); ++jt) {
+            FormStub* stub = jt->second;
+            delete stub;
+         }
+         list.clear();
+      }
+   }
+   this->formsByType.clear();
 }
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->resetParseState();
@@ -570,73 +667,129 @@ bool TESPluginFile::load(const char* filepath) {
    // TODO: need to define hardcoded forms so that references to them don't break, OR 
    // special-case them in whatever code we write to handle references between forms
    //
-   ObjectType ot;
-   uint32_t   which_simple  = 0;
-   uint32_t   which_intcell = 0;
-   while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
-      if (ot == kObjectType_Group) {
+   {
+      // we *do* load *some* records in this function, so we need to register with the allocator
+      // use an unnamed block so we unregister before firing off the other threads
+      auto registration = FormStubHeap::get().register_thread();
+      //
+      ObjectType ot;
+      uint32_t   which_simple = 0;
+      uint32_t   which_intcell = 0;
+      uint32_t   which_world = 0;
+      uint32_t   last_worldspace_id = 0;
+      int16_t    last_ext_block_x = 0;
+      int16_t    last_ext_block_y = 0;
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
          auto& group = this->getCurrentGroup();
-         if (group.header.type != kESPGroupType_FormsOfType) {
-            if (group.header.type == kESPGroupType_InteriorCellBlock) { // Interior Cell Block
+         if (ot == kObjectType_Record) {
+            //
+            // We should only hit records when we choose not to skip a group's contents. 
+            // We use this to load worldspaces and their persistent/temporary cells.
+            //
+            auto& record = this->getCurrentRecord();
+            if (record.signature() == 'WRLD') {
+               last_worldspace_id = record.formID();
+               continue;
+            }
+            formtype_t formType = signatureToFormType(record.signature());
+            auto& list = this->formsByType[formType];
+            auto  stub = this->make_stub_for_record(*this);
+            stub->groupInfo.groupType = group.header.type;
+            switch (group.header.type) {
+               case kESPGroupType_WorldChildren:
+                  stub->groupInfo.parentFormID = last_worldspace_id;
+                  break;
+            }
+            list[stub->formID] = stub;
+         }
+         if (ot == kObjectType_Group) {
+            if (group.header.type == kESPGroupType_WorldChildren) {
+               //
+               // Parse direct children of the worldspace (i.e. the persistent cell).
+               //
+               continue;
+            } else if (group.header.type == kESPGroupType_ExteriorCellBlock) {
+               last_ext_block_y = group.header.label & 0xFFFF;
+               last_ext_block_x = group.header.label >> 0x10;
+               continue;
+            } else if (group.header.type == kESPGroupType_ExteriorCellSubBlock) {
+               assert(last_worldspace_id && "Exterior Cell Block GRUP must follow a WRLD record.");
+               auto& loader = this->worldspaceReaders[which_world];
+               if (++which_world >= std::extent<decltype(this->worldspaceReaders)>::value)
+                  which_world = 0;
+               int16_t sub_x = group.header.label >> 0x10;
+               int16_t sub_y = group.header.label & 0xFFFF;
+               loader.add_group(last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, group.pos);
+               group.skip();
+               continue;
+            } else if (group.header.type == kESPGroupType_InteriorCellBlock) { // Interior Cell Block
                {
                   auto parent = group.getParent();
                   assert(parent && "Bad interior-cell-block group nesting.");
                   assert(parent->header.type == kESPGroupType_FormsOfType && "Bad interior-cell-block group nesting.");
-                  assert(_byteswap_ulong(parent->header.label) == 'CELL'  && "Bad interior-cell-block group nesting.");
+                  assert(_byteswap_ulong(parent->header.label) == 'CELL' && "Bad interior-cell-block group nesting.");
                }
                auto& loader = this->interiorCellReaders[which_intcell];
                if (++which_intcell >= std::extent<decltype(this->interiorCellReaders)>::value)
                   which_intcell = 0;
                loader.add_group(group.header.label, group.pos);
+               group.skip();
+               continue;
+            } else if (group.header.type != kESPGroupType_FormsOfType) {
+               group.skip();
+               continue;
+            }
+            bool is_complex = false;
+            switch (_byteswap_ulong(group.header.label)) {
+               case 'CELL': // handled by the Interior Cell Block readers.
+               case 'WRLD': // handled by the Worldspace readers.
+                  //
+                  // Don't skip the group; we want to read at least some of the content inside of it.
+                  //
+                  continue;
+               case 'DIAL':
+                  is_complex = true;
+            }
+            if (is_complex) {
+               //
+               // TODO: Consider splitting complex group structures up, e.g. bucketing worldspaces 
+               // into different threads
+               //
+               this->complexReader.add_group(_byteswap_ulong(group.header.label), group.pos);
+            } else {
+               auto& loader = this->simpleReaders[which_simple];
+               if (++which_simple >= std::extent<decltype(this->simpleReaders)>::value)
+                  which_simple = 0;
+               loader.add_group(_byteswap_ulong(group.header.label), group.pos);
             }
             //
-            // Skip the group's actual content; the main thread only cares about locating the 
-            // groups themselves and setting their contents up to be parsed on multiple threads.
+            // Skip the group's actual content; the main thread only cares about locating the groups 
+            // themselves and setting their contents up to be parsed on multiple threads.
             //
             group.skip();
             continue;
          }
-         bool is_complex = false;
-         switch (_byteswap_ulong(group.header.label)) {
-            case 'CELL': // handled by the Interior Cell Block readers.
-               //
-               // Don't skip the group; we want to read its direct-child GRUPs.
-               //
-               continue;
-            case 'DIAL':
-            case 'WRLD':
-               is_complex = true;
-         }
-         if (is_complex) {
-            //
-            // TODO: Consider splitting complex group structures up, e.g. bucketing worldspaces 
-            // into different threads
-            //
-            this->complexReader.add_group(_byteswap_ulong(group.header.label), group.pos);
-         } else {
-            auto& loader = this->simpleReaders[which_simple];
-            if (++which_simple >= std::extent<decltype(this->simpleReaders)>::value)
-               which_simple = 0;
-            loader.add_group(_byteswap_ulong(group.header.label), group.pos);
-         }
-         //
-         // Skip the group's actual content; the main thread only cares about locating the groups 
-         // themselves and setting their contents up to be parsed on multiple threads.
-         //
-         group.skip();
-         continue;
       }
    }
    this->complexReader.start();
    for (uint32_t i = 0; i < std::extent<decltype(this->interiorCellReaders)>::value; i++)
       this->interiorCellReaders[i].start();
+   for (uint32_t i = 0; i < std::extent<decltype(this->worldspaceReaders)>::value; i++)
+      this->worldspaceReaders[i].start();
    for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++)
       this->simpleReaders[i].start();
    for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++)
       this->simpleReaders[i].wait_for();
    for (uint32_t i = 0; i < std::extent<decltype(this->interiorCellReaders)>::value; i++)
       this->interiorCellReaders[i].wait_for();
+   for (uint32_t i = 0; i < std::extent<decltype(this->worldspaceReaders)>::value; i++)
+      this->worldspaceReaders[i].wait_for();
    this->complexReader.wait_for();
+   #ifdef DO_ESP_LOAD_BENCHMARKS
+      struct timeb bench_start;
+      struct timeb bench_end;
+      ftime(&bench_start);
+   #endif
    {  // Merge all of the readers' results in.
       for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++) {
          auto& reader = this->simpleReaders[i];
@@ -664,6 +817,19 @@ bool TESPluginFile::load(const char* filepath) {
             }
          }
       }
+      for (uint32_t i = 0; i < std::extent<decltype(this->worldspaceReaders)>::value; i++) {
+         auto& reader = this->worldspaceReaders[i];
+         for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
+            auto key = it->first;
+            try {
+               auto& map = this->formsByType.at(key);
+               map.insert(it->second.begin(), it->second.end());
+            } catch (std::out_of_range) {
+               auto& map = this->formsByType[key];
+               std::swap(map, it->second);
+            }
+         }
+      }
       {
          auto& reader = this->complexReader;
          for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
@@ -678,6 +844,11 @@ bool TESPluginFile::load(const char* filepath) {
          }
       }
    }
+   #ifdef DO_ESP_LOAD_BENCHMARKS
+      ftime(&bench_end);
+      _DEBUGMSG("Results gathered by threads have been integrated into the TESPluginFile.");
+      _DEBUGMSG("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+   #endif
    return true;
 }
 //
@@ -696,4 +867,10 @@ void TESPluginFile::forEachFormOfType(formtype_t formType, std::function<bool(Fo
             break;
       }
    } catch (std::out_of_range) {}
+}
+void TESPluginFile::modify_config(bool set, uint32_t flags) {
+   if (set)
+      this->config |= flags;
+   else
+      this->config &= ~flags;
 }

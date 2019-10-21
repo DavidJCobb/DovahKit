@@ -220,7 +220,7 @@ namespace cobb {
             printf("All blocks listed.\n");
             printf("=================================================================================\n");
          }
-         void forceFreeAll() { // for debugging/testing purposes ONLY; this WILL leave dangling pointers everywhere
+         void force_free_all() {
             auto last = this->firstBlock;
             if (!last)
                return;
@@ -230,27 +230,28 @@ namespace cobb {
             auto prev = last->info.prev;
             do {
                auto& presence = last->info.presence;
-               //
-               // Deleting an element can delete the containing Block, so we need to get all of 
-               // the pointers first -- that way, the Block doesn't get deleted out from under 
-               // us.
-               //
-               element_type* pointers[count_per_block];
                for (uint32_t i = 0; i < count_per_block; i++) {
                   if (presence.test(i)) {
                      std::ptrdiff_t start = (std::ptrdiff_t) & last->buffer;
                      std::ptrdiff_t addr = start + (element_size * i);
                      //
-                     pointers[i] = (element_type*)addr;
-                  } else
-                     pointers[i] = nullptr;
-               }
-               for (uint32_t i = 0; i < count_per_block; i++) {
-                  if (pointers[i]) {
-                     delete pointers[i];
-                     pointers[i] = nullptr;
+                     auto element = (element_type*)addr;
+                     element->~element_type();
                   }
                }
+               presence.clear();
+               memset(last->buffer, 0, sizeof(last->buffer));
+               //
+               // This block is no longer in use. Delete it.
+               //
+               auto p = last->info.prev;
+               auto n = last->info.next;
+               if (p)
+                  p->info.next = n;
+               if (n)
+                  n->info.prev = p;
+               delete last;
+               //
                last = prev;
                if (prev)
                   prev = prev->info.prev;
@@ -359,7 +360,7 @@ namespace cobb {
          };
          struct BlockList {
             std::thread::id thread;
-            Block* first;
+            Block* first = new Block();
             //
             bool is_alive() {
                return this->thread != std::thread::id();
@@ -413,7 +414,7 @@ namespace cobb {
          void* allocate() {
             auto t = this->_find_thread(); // shared lock
             if (!t)
-               return malloc(element_size);
+               return ::malloc(element_size);
             if (!t->first)
                t->first = new Block;
             Block* block = t->first;
@@ -442,9 +443,10 @@ namespace cobb {
             std::lock_guard<std::shared_mutex> guard(this->lock);
             //
             for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
-               auto* t = &this->lists[i];
+               auto& t = this->lists[i];
                //
-               Block* block = t->first;
+               Block* block = t.first;
+               assert(block && "The block list doesn't have any blocks!");
                do {
                   std::ptrdiff_t m_addr  = (std::ptrdiff_t)mem;
                   std::ptrdiff_t b_start = (std::ptrdiff_t) & block->buffer;
@@ -456,7 +458,7 @@ namespace cobb {
                      assert(block->info.presence.test(index) && "You're freeing something that was already free!");
                      block->info.presence.reset(index);
                      //
-                     if (block != t->first && block->info.presence.none()) {
+                     if (block != t.first && block->info.presence.none()) { // never delete the first block in a list
                         //
                         // This block is no longer in use. Delete it.
                         //
@@ -472,7 +474,51 @@ namespace cobb {
                   }
                } while (block = block->info.next);
             }
-            free(mem);
+            ::free(mem);
+         }
+         void force_free_all() {
+            std::lock_guard<std::shared_mutex> guard(this->lock);
+            //
+            for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
+               auto& t = this->lists[i];
+               //
+               auto last = t.first;
+               if (!last)
+                  return;
+               while (last->info.next)
+                  last = last->info.next;
+               //
+               auto prev = last->info.prev;
+               do {
+                  auto& presence = last->info.presence;
+                  for (uint32_t i = 0; i < count_per_block; i++) {
+                     if (presence.test(i)) {
+                        std::ptrdiff_t start = (std::ptrdiff_t) & last->buffer;
+                        std::ptrdiff_t addr  = start + (element_size * i);
+                        //
+                        auto element = (element_type*)addr;
+                        element->~element_type();
+                     }
+                  }
+                  presence.clear();
+                  memset(last->buffer, 0, sizeof(last->buffer));
+                  if (last != t.first) { // never delete the first block in a list
+                     //
+                     // This block is no longer in use. Delete it.
+                     //
+                     auto p = last->info.prev;
+                     auto n = last->info.next;
+                     if (p)
+                        p->info.next = n;
+                     if (n)
+                        n->info.prev = p;
+                     delete last;
+                  }
+                  last = prev;
+                  if (prev)
+                     prev = prev->info.prev;
+               } while (last);
+            }
          }
          //
          void dumpStats() {

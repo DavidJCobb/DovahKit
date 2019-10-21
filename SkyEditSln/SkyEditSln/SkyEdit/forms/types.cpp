@@ -2,7 +2,7 @@
 #include <type_traits>
 
 FormTypeInfo formTypes[] = {
-   { 'NONE', kFormType_None, "None" },
+   { 'NONE', kFormType_None, "None", FormTypeFlags::no_editor_id },
    { 'TES4', kFormType_FileHeader, "File Header" },
    { 'GRUP', kFormType_FileRecordGroup, "File Record Group" },
    { 'GMST', kFormType_GameSetting, "GameSetting" },
@@ -20,7 +20,7 @@ FormTypeInfo formTypes[] = {
    { 'ACHR', kFormType_Character, "Actor" },
    //
    { 'WRLD', kFormType_Worldspace, "Worldspace" },
-   { 'LAND', kFormType_Land, "Landscape" },
+   { 'LAND', kFormType_Land, "Landscape", FormTypeFlags::no_editor_id },
    { 'NAVM', kFormType_Navmesh, "Navmesh" },
    //
    { 'DIAL', kFormType_Topic, "Dialogue Topic" },
@@ -38,6 +38,14 @@ FormTypeInfo formTypes[] = {
    { 'ASTP', kFormType_AssociationType, "Association Type" },
 };
 
+const FormTypeInfo& formTypeFor(formtype_t ft) {
+   for (uint8_t i = 0; i < std::extent<decltype(formTypes)>::value; i++) {
+      auto& info = formTypes[i];
+      if (info.formType == ft)
+         return info;
+   }
+   return formTypes[0];
+}
 formtype_t signatureToFormType(uint32_t signature) {
    for (uint8_t i = 0; i < std::extent<decltype(formTypes)>::value; i++) {
       auto& info = formTypes[i];

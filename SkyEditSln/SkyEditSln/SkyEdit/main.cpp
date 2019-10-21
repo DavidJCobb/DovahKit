@@ -1,9 +1,12 @@
 #include <iostream> // for testing
 #include <sys/timeb.h> // for benchmarks
+#include <thread> // for std::thread::id
 #include "esp/TESPlugin.h"
 #include "forms/Quest.h"
 
 const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/Skyrim.esm";
+
+std::thread::id main_thread_id;
 
 //
 // TODO: UESP has already taken the name "SkyEdit"
@@ -98,7 +101,10 @@ const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Dat
 //
 
 int main() {
+   main_thread_id = std::this_thread::get_id();
+   //
    TESPluginFile skyrim;
+   skyrim.modify_config(true, TESPluginFileConfigFlags::do_not_free_own_stubs); // we are responsible for force-deleting all FormStubs via the allocator
    struct timeb bench_start;
    struct timeb bench_end;
    ftime(&bench_start);
@@ -139,7 +145,9 @@ int main() {
    auto& fsh = FormStubHeap::get();
    //FormStubHeapPrinter fsh_printer;
    //fsh.dumpStats(fsh_printer);
-   fsh.dumpStats();
+   //fsh.dumpStats();
+   fsh.force_free_all();
+   //fsh.dumpStats();
    //
    return 0;
 }

@@ -1,14 +1,18 @@
 #pragma once
+#include <atomic>
 #include <cstdint>
 #include <cstring>
+#include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
 
 struct FormStub;
 class TESForm;
 class TESPluginFile;
+class TESPluginBaseReader;
 class TESPluginThreadedSimpleReader;
 class TESPluginThreadedInteriorCellReader;
+class TESPluginThreadedWorldspaceSubBlockReader;
 
 template<typename LoadedFormClass> class loaded_form_ptr {
    //
@@ -28,12 +32,25 @@ template<typename LoadedFormClass> class loaded_form_ptr {
       FormStub* wrapped = nullptr;
       //
       inline void _incRef() {
-         if (this->wrapped)
-            this->wrapped->refcount++;
+         auto fs = this->wrapped;
+         if (fs) {
+            assert((fs->refcount & FormStub::kRefcountMask) != FormStub::kRefcountMask && "FormStub refcount is already at maximum!");
+            fs->refcount++;
+         }
       }
       inline void _decRef() {
-         if (this->wrapped)
-            this->wrapped->refcount--;
+         auto fs = this->wrapped;
+         if (fs) {
+            assert((fs->refcount & FormStub::kRefcountMask) != 0 && "FormStub refcount is already zero!");
+            fs->refcount--;
+            if ((fs->refcount & FormStub::kRefcountMask) == 0) {
+               auto form = fs->form;
+               if (form) {
+                  delete form;
+                  fs->form = nullptr;
+               }
+            }
+         }
       }
    public:
       loaded_form_ptr(FormStub* stub) : wrapped(stub) { this->_incRef(); };
@@ -64,8 +81,14 @@ template<typename LoadedFormClass> class loaded_form_ptr {
       }
 };
 
+enum class GroupParentRelationship : uint8_t {
+   Default,
+   WorldDirectChild,
+   WorldIndirectChild,
+};
 struct GroupMetadata { // sizeof == 0xC
-   uint32_t parentFormID = 0; // 0 for interior cells
+   uint32_t     parentFormID = 0; // 0 for interior cells
+   ESPGroupType groupType;
    union {
       uint32_t interior = 0;
       struct {
@@ -83,10 +106,14 @@ struct GroupMetadata { // sizeof == 0xC
 };
 
 struct FormStub {
+   //
+   // A class which represents a form, whether loaded or unloaded. Every FormStub contains 
+   // information that can be used to load the form's data from a given ESP file on the fly. 
+   // The owner of a FormStub is the TESPluginFile that produced it.
+   //
    template<typename LoadedFormClass> friend class loaded_form_ptr;
    friend TESPluginFile;
-   friend TESPluginThreadedSimpleReader;
-   friend TESPluginThreadedInteriorCellReader;
+   friend TESPluginBaseReader;
    //
    public:
       enum RefcountFlags {
@@ -101,7 +128,7 @@ struct FormStub {
    private:
       TESPluginFile* file = nullptr;
       uint32_t offset   = 0; // offset of this form's record header within its owning file
-      uint32_t refcount = 0;
+      std::atomic<uint32_t> refcount = 0;
       char*    editorID = nullptr;
       //
       // TODO: When we begin to add the ability to edit things, we'll have to keep editor IDs consistent 
@@ -131,7 +158,7 @@ struct FormStub {
       char* allocate_editor_id(size_t length);
 };
 
-class FormStubHeap : public cobb::multithreaded_block_allocator<FormStub, 1600, 7> {
+class FormStubHeap : public cobb::multithreaded_block_allocator<FormStub, 1600, ESP_LOAD_TOTAL_THREADS> {
    //
    // NOTE: Keep the number of threads (third template argument) in synch with the 
    // number of threads used by TESPluginFile to load a file (or, if we decide to 

@@ -39,14 +39,22 @@ enum FormType : formtype_t {
    kFormType_Scene = 0x7A,
    kFormType_AssociationType = 0x7B,
 };
+namespace FormTypeFlags {
+   enum : uint32_t {
+      none = 0,
+      no_editor_id = 1,
+   };
+}
 struct FormTypeInfo {
    uint32_t    signature;
    uint8_t     formType;
    const char* name;
+   uint32_t    flags;
 };
 
 extern FormTypeInfo formTypes[];
 
+extern const FormTypeInfo& formTypeFor(formtype_t ft);
 extern formtype_t signatureToFormType(uint32_t signature);
 
 class TESForm {

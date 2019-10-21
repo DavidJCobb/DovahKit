@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "base.h"
 #include "../formstub.h"
 #include "../forms/types.h"
 #include "../helpers/memory.h"
@@ -13,9 +14,6 @@ extern "C" {
 }
 
 constexpr int MAX_ESP_FILE_GROUP_DEPTH = 6;
-constexpr int ESP_LOAD_SIMPLE_THREADS   = 4;
-constexpr int ESP_LOAD_INT_CELL_THREADS = 2;
-constexpr int ESP_LOAD_TOTAL_THREADS = ESP_LOAD_SIMPLE_THREADS + ESP_LOAD_INT_CELL_THREADS + 1;
 
 class TESPluginBaseReader;
 class TESPluginFile;
@@ -58,19 +56,6 @@ struct LStringRef;
    typedef std::map<uint32_t, FormStub*> map_of_forms;
 #endif
 typedef std::map<formtype_t, map_of_forms> map_of_forms_by_type;
-
-enum ESPGroupType : int32_t {
-   kESPGroupType_FormsOfType = 0,
-   kESPGroupType_WorldChildren = 1,
-   kESPGroupType_InteriorCellBlock = 2,
-   kESPGroupType_InteriorCellSubBlock = 3,
-   kESPGroupType_ExteriorCellBlock = 4,
-   kESPGroupType_ExteriorCellSubBlock = 5,
-   kESPGroupType_CellChildren = 6,
-   kESPGroupType_TopicChildren = 7, // DIAL -> INFO
-   kESPGroupType_CellPersistentChildren = 8,
-   kESPGroupType_CellTemporaryChildren = 9,
-};
 
 struct TESPluginGroupHeader {
    public:
@@ -139,8 +124,7 @@ class TESPluginGroup {
 };
 class TESPluginRecord {
    friend TESPluginBaseReader;
-   friend TESPluginThreadedSimpleReader;
-   friend TESPluginThreadedInteriorCellReader;
+   friend TESPluginFile;
    protected:
       TESPluginRecord(TESPluginBaseReader& file) : owner(file) {}
       //
@@ -199,8 +183,6 @@ class TESPluginRecord {
 };
 class TESPluginSubrecord {
    friend TESPluginBaseReader;
-   friend TESPluginThreadedSimpleReader;
-   friend TESPluginThreadedInteriorCellReader;
    protected:
       TESPluginSubrecord(TESPluginBaseReader& file) : owner(file) {}
       //
@@ -308,6 +290,9 @@ class TESPluginBaseReader {
          this->subrecord.reset();
       }
       //
+      FormStub* make_stub_for_record(TESPluginFile& file);
+      void extract_editor_id_for_stub(FormStub*); // searches (the remainder of) the current record for EDID; if found, writes its value to the form stub
+      //
    public:
       TESPluginBaseReader() : record(*this), subrecord(*this) {
          for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
@@ -400,10 +385,54 @@ class TESPluginThreadedInteriorCellReader : public TESPluginBaseReader {
       void start();
       void wait_for();
 };
+class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
+   protected:
+      struct QueuedSubBlock {
+         uint32_t worldspaceID = 0;
+         int16_t blockX = 0;
+         int16_t blockY = 0;
+         int16_t subBlockX = 0;
+         int16_t subBlockY = 0;
+         uint32_t pos = 0;
+         //
+         QueuedSubBlock(uint32_t a, int16_t b, int16_t c, int16_t d, int16_t e, uint32_t f) : worldspaceID(a), blockX(b), blockY(c), subBlockX(d), subBlockY(e), pos(f) {};
+      };
+      //
+      void _load();
+      static void _thread_handler(TESPluginThreadedWorldspaceSubBlockReader* instance);
+   public:
+      TESPluginThreadedWorldspaceSubBlockReader(TESPluginFile& f) : owner(f) {}
+      //
+      TESPluginFile& owner;
+      //
+      std::vector<QueuedSubBlock> queue;
+      std::thread thread;
+      map_of_forms_by_type resultsByType;
+      //
+      void add_group(uint32_t worldID, int16_t bx, int16_t by, int16_t sbx, int16_t sby, uint32_t pos);
+      void start();
+      void wait_for();
+};
 
+namespace TESPluginFileConfigFlags {
+   enum : uint32_t {
+      none = 0x00000000,
+      //
+      // FLAG: TESPluginFileConfigFlags::do_not_free_own_stubs
+      //
+      // If set, TESPluginFile will not delete its FormStubs when destroyed. This flag 
+      // should only be used if you can guarantee that all FormStubs are on a custom 
+      // allocator, and that you will free all FormStubs via the allocator. The flag 
+      // exists to deal with the fact that freeing *all* FormStubs for a file one by 
+      // one is incredibly slow -- well over a minute.
+      //
+      do_not_free_own_stubs = 0x00000001,
+   };
+}
 class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
+   friend TESPluginThreadedWorldspaceSubBlockReader;
    public:
       enum Flags {
          kFlag_Master = 0x0001,
@@ -424,7 +453,10 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginThreadedSimpleReader complexReader; // see constructor for initializer
       TESPluginThreadedSimpleReader simpleReaders[ESP_LOAD_SIMPLE_THREADS]; // see constructor for initializer
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
+      TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
       map_of_forms_by_type formsByType;
+      //
+      uint32_t config = 0;
       //
    public:
       uint32_t flags = 0;
@@ -440,4 +472,6 @@ class TESPluginFile : public TESPluginBaseReader {
       //
       FormStub* getForm(formtype_t formType, uint32_t formID) const;
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
+      //
+      void modify_config(bool set, uint32_t flags);
 };
