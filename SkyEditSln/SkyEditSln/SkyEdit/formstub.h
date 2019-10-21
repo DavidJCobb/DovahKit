@@ -158,7 +158,7 @@ struct FormStub {
       char* allocate_editor_id(size_t length);
 };
 
-class FormStubHeap : public cobb::multithreaded_block_allocator<FormStub, 1600, ESP_LOAD_TOTAL_THREADS> {
+class FormStubHeap : public cobb::multithreaded_block_allocator<FormStub, 16000, ESP_LOAD_TOTAL_THREADS> {
    //
    // NOTE: Keep the number of threads (third template argument) in synch with the 
    // number of threads used by TESPluginFile to load a file (or, if we decide to 

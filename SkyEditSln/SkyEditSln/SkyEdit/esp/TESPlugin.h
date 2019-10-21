@@ -21,6 +21,7 @@ class TESPluginSubrecord;
 class TESPluginRecord;
 struct LStringRef;
 
+#define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 1
 #ifdef COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS
    class FormMapHeap : public cobb::multithreaded_block_allocator<std::pair<uint32_t, FormStub*>, 3200, ESP_LOAD_TOTAL_THREADS> {
       public:

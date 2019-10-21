@@ -15,44 +15,18 @@ std::thread::id main_thread_id;
 //    NordEdit
 //    Dovah-Edit
 //
+// NOTES:
+//
+//  - xEdit takes 3 seconds to load all forms and their editor IDs. It doesn't 
+//    load full form data; it basically does a similar approach to us, I think.
+//
+//  - xEdit is capable of caching "Use Info" (i.e. reference information) after 
+//    building it once. It takes 2 seconds to load cached data for Skyrim.esm, 
+//    and 66 seconds to build it from scratch.
+//
 // TODO: REFACTOR
 //
 //  - All loaded forms should have a reference to their owning FormStub.
-//
-//  - Currently, we have no way to maintain GRUP relationships after parsing is 
-//    complete. A DIAL has no way to prompt the loading of its child INFOs, and 
-//    more importantly, an INFO being loaded has no way to know what DIAL it 
-//    belongs to. There's only one good approach (aside from simply keeping all 
-//    forms in memory)...
-//
-//     - FormStub instances can have a pointer to a "Group Info" struct, which 
-//       contains information on the non-top-level GRUPs that contained the 
-//       record. We can block-allocate those structs if need be.
-//
-//        - Maybe...
-//
-//          struct GroupMetadata { // sizeof == 0xC
-//             uint32_t parentFormID; // 0 for interior cells
-//             union {
-//                uint32_t interior;
-//                struct {
-//                   int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
-//                   int16_t y;
-//                } exterior;
-//             } cellBlock; // 0 for non-cells
-//             union {
-//                uint32_t interior;
-//                struct {
-//                   int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
-//                   int16_t y;
-//                } exterior;
-//             } cellSubBlock; // 0 for non-cells
-//          }
-//
-//        - Note that the "cell block" and "cell sub-block" GRUP types don't 
-//          store the ID of the containing cell; as such, we'll have to traverse 
-//          multiple containing GRUPs to get them. That said, all "children" 
-//          GRUPs (WRLD, CELL, DIAL) do store the form ID of the "parent."
 //
 //  - At the top of the file, we should clearly explain why record and subrecord 
 //    contents have to use different "read" and "skip" functions (it's because we 
@@ -63,28 +37,23 @@ std::thread::id main_thread_id;
 //
 //     - Modify the std::maps for file loading to use a block allocator.
 //
-//     - Use the "simple" loader for DIAL.
+//        - This produces no improvement.
 //
-//     - Create a "complex" loader for interior CELLs, which divides load tasks 
-//       up by block or by sub-block.
+//        - We lose 2.5 seconds to merging multiple std::maps together, to bring 
+//          the results produced by each thread into the central TESPluginFile. 
+//          I wonder what we can do about that.
 //
-//     - Create a "complex" loader for worldspaces, which divides load tasks 
-//       up by worldspace.
+//           - Does std::map... leave room... between elements? So that insertions 
+//             don't require reallocations?
+//
+//     - Can we divide up the loading of DIALs and their child GRUPs? They don't 
+//       use blocks/sub-blocks like worldspaces do.
 //
 //  - Create cobb::zstring as a const char* that does malloc/realloc/free for you, 
 //    with both a c_str() method and an implicit (const char*) conversion. Use that 
 //    for editor IDs on FormStub. It should (free) when destroyed (only the owner 
 //    should have the cobb::zstring; we may even want to set its copy constructor 
 //    to =deleted; other parties should take the const char*).
-//
-//  - loaded_form_ptr doesn't actually delete the loaded form data when the refcount 
-//    hits zero. We need to add code to do that (and of course it should avoid any 
-//    deletions if the "is edited" flag is set); we'll want to add debug logging to 
-//    it to ensure it works properly.
-//
-//     - I wonder if we can have its _incRef assert that the refcount is non-zero 
-//       after the increment, too, to guard against overflow. We could have _decRef 
-//       assert that the refcount is non-zero before decrementing, as well.
 //
 //  - We'll need to eventually add a way to track Use Info akin to the CK and xEdit, 
 //    so that if we delete a form at run-time, we can properly update all forms that 
