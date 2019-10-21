@@ -12,10 +12,6 @@
    #include <sys/timeb.h> // for benchmarks
 #endif
 
-void _Debug(const char* msg) {
-   std::cout << msg << std::endl;
-}
-
 void TESPluginGroup::skip() {
    assert(this->owner);
    this->owner->setPos(this->end);
@@ -141,23 +137,43 @@ bool TESPluginSubrecord::to_string(LStringRef& field) {
 }
 
 void TESPluginBaseReader::setPos(uint32_t pos) {
-   clearerr(this->fileHandle);
-   fseek(this->fileHandle, pos, SEEK_SET);
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->stream_position = pos;
+   #else
+      clearerr(this->fileHandle);
+      fseek(this->fileHandle, pos, SEEK_SET);
+   #endif
 }
 uint32_t TESPluginBaseReader::getPos() {
-   return ftell(this->fileHandle);
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      return this->stream_position;
+   #else
+      return ftell(this->fileHandle);
+   #endif
 }
 void TESPluginBaseReader::skipBytes(uint32_t count) {
-   fseek(this->fileHandle, count, SEEK_CUR);
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->stream_position += count;
+   #else
+      fseek(this->fileHandle, count, SEEK_CUR);
+   #endif
 }
 void TESPluginBaseReader::rewind(uint32_t by) {
    this->setPos(this->getPos() - by);
 }
 bool TESPluginBaseReader::isEOF() {
-   return feof(this->fileHandle);
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      return !this->file->is_in_bounds(this->stream_position, 1);
+   #else
+      return feof(this->fileHandle);
+   #endif
 }
 bool TESPluginBaseReader::is_good() {
-   return !ferror(this->fileHandle) && !this->isEOF();
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      return !this->isEOF();
+   #else
+      return !ferror(this->fileHandle) && !this->isEOF();
+   #endif
 }
 TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    auto& record = this->record;
@@ -245,14 +261,14 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
       record.data.allocate(decompressed_size);
       //
       auto input_buffer = malloc(compressed_size);
-      fread(input_buffer, 1, compressed_size, this->fileHandle);
+      this->read(input_buffer, compressed_size);
       uint32_t out_size = decompressed_size;
       uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
       free(input_buffer);
       assert(out_size == decompressed_size);
    } else {
       record.data.allocate(record.header.size);
-      fread(record.data, 1, record.header.size, this->fileHandle);
+      this->read(record.data.raw(), record.header.size);
    }
    record.offset = 0;
    //
@@ -330,12 +346,16 @@ void TESPluginThreadedSimpleReader::_thread_handler(TESPluginThreadedSimpleReade
    instance->_load();
 }
 void TESPluginThreadedSimpleReader::_load() {
-   if (this->fileHandle) {
-      fclose(this->fileHandle);
-      this->fileHandle = nullptr;
-   }
-   this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
-   assert(this->fileHandle && "[TESPluginThreadedSimpleReader] Unable to open the file for reading.");
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = this->owner.file;
+   #else
+      if (this->fileHandle) {
+         fclose(this->fileHandle);
+         this->fileHandle = nullptr;
+      }
+      this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
+      assert(this->fileHandle && "[TESPluginThreadedSimpleReader] Unable to open the file for reading.");
+   #endif
    this->resultsByType.clear();
    //
    auto size = this->queue.size();
@@ -382,8 +402,12 @@ void TESPluginThreadedSimpleReader::_load() {
          }
       }
    }
-   fclose(this->fileHandle);
-   this->fileHandle = nullptr;
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = nullptr;
+   #else
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   #endif
    //
    _DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished all of its work.");
 }
@@ -402,12 +426,16 @@ void TESPluginThreadedInteriorCellReader::_thread_handler(TESPluginThreadedInter
    instance->_load();
 }
 void TESPluginThreadedInteriorCellReader::_load() {
-   if (this->fileHandle) {
-      fclose(this->fileHandle);
-      this->fileHandle = nullptr;
-   }
-   this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
-   assert(this->fileHandle && "[TESPluginThreadedInteriorCellReader] Unable to open the file for reading.");
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = this->owner.file;
+   #else
+      if (this->fileHandle) {
+         fclose(this->fileHandle);
+         this->fileHandle = nullptr;
+      }
+      this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
+      assert(this->fileHandle && "[TESPluginThreadedInteriorCellReader] Unable to open the file for reading.");
+   #endif
    this->resultsByType.clear();
    //
    auto size = this->queue.size();
@@ -458,8 +486,12 @@ void TESPluginThreadedInteriorCellReader::_load() {
          }
       }
    }
-   fclose(this->fileHandle);
-   this->fileHandle = nullptr;
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = nullptr;
+   #else
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   #endif
    //
    _DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X finished all of its work.");
 }
@@ -478,12 +510,16 @@ void TESPluginThreadedWorldspaceSubBlockReader::_thread_handler(TESPluginThreade
    instance->_load();
 }
 void TESPluginThreadedWorldspaceSubBlockReader::_load() {
-   if (this->fileHandle) {
-      fclose(this->fileHandle);
-      this->fileHandle = nullptr;
-   }
-   this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
-   assert(this->fileHandle && "[TESPluginThreadedWorldspaceSubBlockReader] Unable to open the file for reading.");
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = this->owner.file;
+   #else
+      if (this->fileHandle) {
+         fclose(this->fileHandle);
+         this->fileHandle = nullptr;
+      }
+      this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
+      assert(this->fileHandle && "[TESPluginThreadedWorldspaceSubBlockReader] Unable to open the file for reading.");
+   #endif
    this->resultsByType.clear();
    //
    auto size = this->queue.size();
@@ -535,8 +571,12 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
          }
       }
    }
-   fclose(this->fileHandle);
-   this->fileHandle = nullptr;
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = nullptr;
+   #else
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   #endif
    //
    _DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X finished all of its work.");
 }
@@ -558,12 +598,23 @@ TESPluginFile::TESPluginFile() :
 {
    this->authorName[511]  = '\0';
    this->description[511] = '\0';
+   //
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = new cobb::mapped_file();
+   #endif
 }
 TESPluginFile::~TESPluginFile() {
-   if (this->fileHandle) {
-      fclose(this->fileHandle);
-      this->fileHandle = nullptr;
-   }
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      if (this->file) {
+         delete this->file;
+         this->file = nullptr;
+      }
+   #else
+      if (this->fileHandle) {
+         fclose(this->fileHandle);
+         this->fileHandle = nullptr;
+      }
+   #endif
    if (!(this->config & TESPluginFileConfigFlags::do_not_free_own_stubs)) {
       for (auto it = this->formsByType.begin(); it != this->formsByType.end(); ++it) {
          auto& list = it->second;
@@ -650,11 +701,15 @@ bool TESPluginFile::_loadHeader() {
 }
 bool TESPluginFile::load(const char* filepath) {
    this->path.clear();
-   this->fileHandle = _fsopen(filepath, "rb", _SH_DENYWR);
-   if (!this->fileHandle) {
-      _DEBUGMSG("Unable to open file for reading.");
-      return false;
-   }
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file->open(filepath);
+   #else
+      this->fileHandle = _fsopen(filepath, "rb", _SH_DENYWR);
+      if (!this->fileHandle) {
+         _DEBUGMSG("Unable to open file for reading.");
+         return false;
+      }
+   #endif
    _DEBUGMSG("Opened file.");
    this->path = filepath;
    if (!this->_loadHeader()) {

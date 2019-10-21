@@ -127,6 +127,7 @@
     <ClCompile Include="formstub.cpp" />
     <ClCompile Include="forms\ActorBase.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
+    <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="helpers\threading.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="forms\conditions.h" />
     <ClInclude Include="forms\papyrus.h" />
     <ClInclude Include="helpers\bitset.h" />
+    <ClInclude Include="helpers\files.h" />
     <ClInclude Include="helpers\intrusive_windows_defines.h" />
     <ClInclude Include="helpers\locks.h" />
     <ClInclude Include="helpers\memory.h" />

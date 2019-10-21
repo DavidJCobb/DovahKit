@@ -9,6 +9,10 @@
 #include "../formstub.h"
 #include "../forms/types.h"
 #include "../helpers/memory.h"
+#define COBB_ESP_USE_MAPPED_FILES 1
+#ifdef COBB_ESP_USE_MAPPED_FILES
+   #include "../helpers/files.h"
+#endif
 extern "C" {
    #include "../../zlib/zlib.h" // interproject ref
 }
@@ -267,7 +271,12 @@ class TESPluginBaseReader {
          kObjectType_Record,
       };
    protected:
-      FILE* fileHandle = nullptr;
+      #ifdef COBB_ESP_USE_MAPPED_FILES
+         cobb::mapped_file* file = nullptr;
+         uint32_t stream_position = 0;
+      #else
+         FILE* fileHandle = nullptr;
+      #endif
       TESPluginGroup     groups[MAX_ESP_FILE_GROUP_DEPTH];
       TESPluginRecord    record;
       TESPluginSubrecord subrecord;
@@ -275,14 +284,29 @@ class TESPluginBaseReader {
       //
       bool uses_string_table = false;
       //
+      void read(void* buffer, uint32_t size) {
+         #ifdef COBB_ESP_USE_MAPPED_FILES
+            this->stream_position += this->file->read_from(this->stream_position, buffer, size);
+         #else
+            fread(buffer, size, 1, this->fileHandle);
+         #endif
+      }
       void read(char* buffer, uint32_t size) {
-         fread(buffer, size, 1, this->fileHandle);
+         this->read((void*)buffer, size);
       }
       template<typename T> void read(T& field, uint32_t size) {
-         fread(&field, size, 1, this->fileHandle);
+         #ifdef COBB_ESP_USE_MAPPED_FILES
+            this->stream_position += this->file->read_from(this->stream_position, field, size);
+         #else
+            fread(&field, size, 1, this->fileHandle);
+         #endif
       }
       template<typename T> void read(T& field) {
-         fread(&field, sizeof(field), 1, this->fileHandle);
+         #ifdef COBB_ESP_USE_MAPPED_FILES
+            this->stream_position += this->file->read_from(this->stream_position, field);
+         #else
+            fread(&field, sizeof(field), 1, this->fileHandle);
+         #endif
       }
       void resetParseState() {
          for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)

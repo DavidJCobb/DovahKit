@@ -24,6 +24,12 @@ std::thread::id main_thread_id;
 //    building it once. It takes 2 seconds to load cached data for Skyrim.esm, 
 //    and 66 seconds to build it from scratch.
 //
+//  - According to zilav, xEdit uses a single-threaded loader, and relies on 
+//    file mapping (i.e. CreateFileMapping/MapViewOfFile) for its raw speed. 
+//    I should give that a try -- map the entire Skyrim.esm file into memory 
+//    and then run through it. If I just change the underlying file handle and 
+//    fread stuff, then it shouldn't even be all that difficult to test.
+//
 // TODO: REFACTOR
 //
 //  - All loaded forms should have a reference to their owning FormStub.
@@ -45,6 +51,17 @@ std::thread::id main_thread_id;
 //
 //           - Does std::map... leave room... between elements? So that insertions 
 //             don't require reallocations?
+//
+//           - std::map is typically a red-black tree. This page describes how to 
+//             implement parallel mass insertions for red-black trees without 
+//             having to use locks: <https://xuezhaokun.github.io/150-algorithm/> 
+//             It appears to be derivative of: <https://www.cs.umanitoba.ca/~hacamero/Research/RBTreesKim.pdf>
+//
+//              - If we adopt this approach, then it would entail creating a 
+//                custom red-black tree built for this task, and using that 
+//                instead of a std::map<uint32_t formID, FormStub*>. Each thread 
+//                would then have to insert into that. (Not sure how we'd enforce 
+//                thread-safety on the outer std::map<formtype_t, map>, though.)
 //
 //     - Can we divide up the loading of DIALs and their child GRUPs? They don't 
 //       use blocks/sub-blocks like worldspaces do.
