@@ -13,12 +13,51 @@ extern "C" {
 }
 
 constexpr int MAX_ESP_FILE_GROUP_DEPTH = 6;
+constexpr int ESP_LOAD_SIMPLE_THREADS   = 4;
+constexpr int ESP_LOAD_INT_CELL_THREADS = 2;
+constexpr int ESP_LOAD_TOTAL_THREADS = ESP_LOAD_SIMPLE_THREADS + ESP_LOAD_INT_CELL_THREADS + 1;
 
 class TESPluginBaseReader;
 class TESPluginFile;
 class TESPluginSubrecord;
 class TESPluginRecord;
 struct LStringRef;
+
+#ifdef COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS
+   class FormMapHeap : public cobb::multithreaded_block_allocator<std::pair<uint32_t, FormStub*>, 3200, ESP_LOAD_TOTAL_THREADS> {
+      public:
+         inline static FormMapHeap& get() {
+            static FormMapHeap instance;
+            return instance;
+         }
+   };
+   class FormMapAllocator : public std::allocator<std::pair<uint32_t, FormStub*>> {
+      //
+      // This is an interface between std::allocator and an instance of 
+      // cobb::multithreaded_block_allocator. It's stateless.
+      //
+      pointer allocate(size_type n, std::allocator<void>::const_pointer = 0) {
+         if (n > max_size())
+            throw std::invalid_argument("Cannot allocate more than max_size().");
+         return (pointer)FormMapHeap::get().allocate();
+      }
+      void deallocate(pointer p, size_type n) {
+         if (n > max_size())
+            throw std::invalid_argument("Cannot allocate more than max_size().");
+         FormMapHeap::get().free((void*)p);
+      }
+      size_type max_size() const { return 1; }
+      //
+      // stateless; therefore all instances are interchangeable
+      bool operator==(const FormMapAllocator& right) { return this == &right; }
+      bool operator!=(const FormMapAllocator& right) { return this != &right; }
+   };
+
+   typedef std::map<uint32_t, FormStub*, std::less<uint32_t>, FormMapAllocator> map_of_forms;
+#else
+   typedef std::map<uint32_t, FormStub*> map_of_forms;
+#endif
+typedef std::map<formtype_t, map_of_forms> map_of_forms_by_type;
 
 enum ESPGroupType : int32_t {
    kESPGroupType_FormsOfType = 0,
@@ -95,10 +134,13 @@ class TESPluginGroup {
       //
       uint32_t depth() const;
       void to_string(std::string&) const;
+      //
+      TESPluginGroup* getParent() const;
 };
 class TESPluginRecord {
    friend TESPluginBaseReader;
    friend TESPluginThreadedSimpleReader;
+   friend TESPluginThreadedInteriorCellReader;
    protected:
       TESPluginRecord(TESPluginBaseReader& file) : owner(file) {}
       //
@@ -158,6 +200,7 @@ class TESPluginRecord {
 class TESPluginSubrecord {
    friend TESPluginBaseReader;
    friend TESPluginThreadedSimpleReader;
+   friend TESPluginThreadedInteriorCellReader;
    protected:
       TESPluginSubrecord(TESPluginBaseReader& file) : owner(file) {}
       //
@@ -327,7 +370,31 @@ class TESPluginThreadedSimpleReader : public TESPluginBaseReader {
       //
       std::vector<QueuedGroup> queue;
       std::thread thread;
-      std::map<formtype_t, std::map<uint32_t, FormStub*>> resultsByType;
+      map_of_forms_by_type resultsByType;
+      //
+      void add_group(uint32_t groupSignature, uint32_t groupPos);
+      void start();
+      void wait_for();
+};
+class TESPluginThreadedInteriorCellReader : public TESPluginBaseReader {
+   protected:
+      struct QueuedBlock {
+         uint32_t blockNumber = 0;
+         uint32_t pos = 0;
+         //
+         QueuedBlock(uint32_t bn, uint32_t p) : blockNumber(bn), pos(p) {}
+      };
+      //
+      void _load();
+      static void _thread_handler(TESPluginThreadedInteriorCellReader* instance);
+   public:
+      TESPluginThreadedInteriorCellReader(TESPluginFile& f) : owner(f) {}
+      //
+      TESPluginFile& owner;
+      //
+      std::vector<QueuedBlock> queue;
+      std::thread thread;
+      map_of_forms_by_type resultsByType;
       //
       void add_group(uint32_t groupSignature, uint32_t groupPos);
       void start();
@@ -336,6 +403,7 @@ class TESPluginThreadedSimpleReader : public TESPluginBaseReader {
 
 class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
+   friend TESPluginThreadedInteriorCellReader;
    public:
       enum Flags {
          kFlag_Master = 0x0001,
@@ -354,8 +422,9 @@ class TESPluginFile : public TESPluginBaseReader {
       //
       std::string path;
       TESPluginThreadedSimpleReader complexReader; // see constructor for initializer
-      TESPluginThreadedSimpleReader simpleReaders[4]; // see constructor for initializer
-      std::map<formtype_t, std::map<uint32_t, FormStub*>> formsByType;
+      TESPluginThreadedSimpleReader simpleReaders[ESP_LOAD_SIMPLE_THREADS]; // see constructor for initializer
+      TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
+      map_of_forms_by_type formsByType;
       //
    public:
       uint32_t flags = 0;

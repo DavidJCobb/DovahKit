@@ -8,6 +8,7 @@ struct FormStub;
 class TESForm;
 class TESPluginFile;
 class TESPluginThreadedSimpleReader;
+class TESPluginThreadedInteriorCellReader;
 
 template<typename LoadedFormClass> class loaded_form_ptr {
    //
@@ -63,10 +64,29 @@ template<typename LoadedFormClass> class loaded_form_ptr {
       }
 };
 
+struct GroupMetadata { // sizeof == 0xC
+   uint32_t parentFormID = 0; // 0 for interior cells
+   union {
+      uint32_t interior = 0;
+      struct {
+         int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
+         int16_t y;
+      } exterior;
+   } cellBlock; // 0 for non-cells
+   union {
+      uint32_t interior = 0;
+      struct {
+         int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
+         int16_t y;
+      } exterior;
+   } cellSubBlock; // 0 for non-cells
+};
+
 struct FormStub {
    template<typename LoadedFormClass> friend class loaded_form_ptr;
    friend TESPluginFile;
    friend TESPluginThreadedSimpleReader;
+   friend TESPluginThreadedInteriorCellReader;
    //
    public:
       enum RefcountFlags {
@@ -89,10 +109,11 @@ struct FormStub {
       // and have them skip loading their own editor IDs since the stubs already loaded those.
       //
    public:
-      uint32_t       formID   = 0; // form ID (file-local)
-      uint8_t        formType = 0;
+      GroupMetadata groupInfo;
+      uint32_t      formID   = 0; // form ID (file-local)
+      uint8_t       formType = 0;
       // there will be 3 bytes of padding here
-      TESForm*       form     = nullptr;
+      TESForm*      form     = nullptr;
 
       loaded_form_ptr<TESForm> load();
 
@@ -110,22 +131,7 @@ struct FormStub {
       char* allocate_editor_id(size_t length);
 };
 
-struct FormStubHeapPrinter : public cobb::block_allocator_debug_printer {
-   virtual void forBlock(uint32_t index) {};
-   virtual void forElement(void* element) {
-      FormStub* stub = (FormStub*)element;
-      auto id = stub->get_editor_id();
-      if (id)
-         this->editorIDBytes += strlen(id) + 1;
-   }
-   virtual void printExtraStats() {
-      printf(" - %d bytes' worth of editor ID text held elsewhere\n", this->editorIDBytes);
-   }
-
-   uint32_t editorIDBytes = 0;
-};
-//class FormStubHeap : public cobb::block_allocator<FormStub, 16000> {
-class FormStubHeap : public cobb::multithreaded_block_allocator<FormStub, 1600, 5> {
+class FormStubHeap : public cobb::multithreaded_block_allocator<FormStub, 1600, 7> {
    //
    // NOTE: Keep the number of threads (third template argument) in synch with the 
    // number of threads used by TESPluginFile to load a file (or, if we decide to 
