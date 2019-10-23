@@ -439,7 +439,8 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
       void wait_for();
 };
 
-namespace TESPluginFileConfigFlags {
+struct TESPluginFileConfigFlags { // enum; a struct-wrapped enum is scoped like enum class but allows implicit casts to number types
+   TESPluginFileConfigFlags() = delete;
    enum : uint32_t {
       none = 0x00000000,
       //
@@ -453,7 +454,7 @@ namespace TESPluginFileConfigFlags {
       //
       do_not_free_own_stubs = 0x00000001,
    };
-}
+};
 class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;

@@ -32,6 +32,12 @@ std::thread::id main_thread_id;
 //
 // TODO: REFACTOR
 //
+//  - cobb::mapped_file should return a failure code when it can't open a file 
+//    (akin to the C file functions) instead of just asserting to death.
+//
+//  - Make the FormType enum an enum class, and change the names of the values 
+//    (the "kFormType_" prefix is unnecessary if it's an enum class).
+//
 //  - All loaded forms should have a reference to their owning FormStub.
 //
 //  - At the top of the file, we should clearly explain why record and subrecord 
@@ -44,6 +50,12 @@ std::thread::id main_thread_id;
 //     - Modify the std::maps for file loading to use a block allocator.
 //
 //        - This produces no improvement.
+//
+//        - Currently we use two levels of nesting for TESPluginFile::formsOfType. 
+//          Change that to a std::map<...> formsOfType[kFormType_Max], so we can 
+//          access maps directly in the threads and iterate over them when we 
+//          build form connections (see below). Plus, cutting out one layer of 
+//          maps may speed things up in and of itself.
 //
 //        - We lose 2.5 seconds to merging multiple std::maps together, to bring 
 //          the results produced by each thread into the central TESPluginFile. 
@@ -77,13 +89,64 @@ std::thread::id main_thread_id;
 //    used it. We'll want to call uses "connections" since better words are taken 
 //    (i.e. "references" are game world objects and "links" may refer to linked refs).
 //
+//     - What's written below will need adjustment for when we handle multiple 
+//       files, but we can look into handling things differently later. Basically, 
+//       when we get to multiple files, we'll need multiple FormStubs for each 
+//       form, because a form can be defined in one file and overridden in another. 
+//       As such, we'll need to handle FormStubs connecting to FormStubLists or 
+//       whatever we decide to call 'em.
+//
+//       The difference is between form definitions (file-local) and forms: 
+//       a FormStub connects to a Form. But for now, we can implement these 
+//       connections as FormStub-to-FormStub and just... tailor the data later.
+//
 //     - A FormStub will need two doubly-linked lists of connections: one outbound 
 //       and one inbound. The list items should specify the type of connection 
 //       (the subrecord signature will do); we can use this for detailed warnings 
 //       when the user asks to delete a form.
 //
-//        - Connection nodes could probably be block-allocated like we do with the 
-//          FormStubs themselves... Maybe it's time to template that allocator.
+//        - We can use multiple threads to iterate over all FormStubs and generate 
+//          the outbound connections. Then, we can use a single thread to iterate 
+//          over all FormStubs and generate the inbound connections. Multi-threading 
+//          this should give us a speed advantage over xEdit if my code turns out 
+//          as good as theirs (though it will be impossible to measure this until I 
+//          write code to load every single form type).
+//
+//           - Make sure you check FormTypeFlags::no_connections and avoid running 
+//             this process on those forms.
+//
+//           - We should define a struct form_connection, which just wraps a 
+//             uint32_t form ID. Give it "load" and "modify" methods which take the 
+//             containing form as an argument; the "load" method modifies the form 
+//             ID and creates an outbound connection on the containing form's stub, 
+//             while the "modify" method (for use when actually editing content) 
+//             modifies the form ID and alters both inbound and outbound connections 
+//             on the relevant stubs.
+//
+//              - The only way to really generate outbound connections is to have 
+//                the FormStub load its form, have the form's load function generate 
+//                the connections by calling form_connection::load, and then have 
+//                the FormStub discard the rest of the loaded form data.
+//
+//              - void FormStub::createOutboundConnection(uint32_t signature, uint32_t formID); // only makes an outbound connection
+//              - void FormStub::makeOutboundConnectionsBidirectional(); // loops over all outbounds; builds inbounds
+//              - void FormStub::replaceOutboundConnection(uint32_t signature, uint32_t formID); // modifies an outbound connection; reaches out to the previously-connected form to sever its inbound connection; and reaches out to the newly-connected form to add an inbound connection
+//              - void form_connection::load(TESForm& form, uint32_t value);
+//              - void form_connection::modify(TESForm& form, uint32_t value);
+//
+//           - Inbound connections have to be single-threaded because processing any 
+//             FormStub could lead to modifications to any other FormStub; however, 
+//             setting up outbound connections for a FormStub doesn't involve 
+//             altering data elsewhere, so we could split the FormStub list into 
+//             chunks and assign each chunk to a thread.
+//
+//              - This requires a custom red-black tree. The whole point of a tree 
+//                is that it's subdivided into halves and halves-of-halves; we can 
+//                evenly divide the list into any power-of-two number of chunks. 
+//                However, std::map doesn't give us the needed accessors for this, 
+//                in part because the STL only wants uniform interfaces and in part 
+//                because the standard doesn't require std::map to actually be a 
+//                binary tree or any other specific implementation.
 //
 
 int main() {
@@ -100,9 +163,9 @@ int main() {
    printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
    std::cout << "Author: " << skyrim.authorName << std::endl;
    std::cout << "Description: " << skyrim.description << std::endl;
-   skyrim.forEachFormOfType(kFormType_Quest, [](FormStub* stub) {
+   skyrim.forEachFormOfType(FormType::Quest, [](FormStub* stub) {
       auto form = stub->load();
-      if (form && form->formType == kFormType_Quest) {
+      if (form && form->formType == FormType::Quest) {
          auto quest = form.ptr_cast<TESQuest>();
          const char* type = TESQuest::QuestTypeToString(quest->questType);
          if (!type)
@@ -119,7 +182,7 @@ int main() {
       }
       return false;
    });
-   skyrim.forEachFormOfType(kFormType_ActorBase, [](FormStub* stub) {
+   skyrim.forEachFormOfType(FormType::ActorBase, [](FormStub* stub) {
       auto editorID = stub->get_editor_id();
       if (editorID)
          printf("[NPC_:%08X]%s\n", stub->formID, editorID);

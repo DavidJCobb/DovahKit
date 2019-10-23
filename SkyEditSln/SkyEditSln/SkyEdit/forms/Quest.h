@@ -9,7 +9,7 @@ class TESPluginRecord;
 
 class TESQuest : public TESForm {
    public:
-      TESQuest() : TESForm(kFormType_Quest) {};
+      TESQuest() : TESForm(FormType::Quest) {};
       //
       enum QuestFlags {
          kQuestFlag_StartGameEnabled = 1,

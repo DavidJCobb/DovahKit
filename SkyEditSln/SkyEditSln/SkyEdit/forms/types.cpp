@@ -2,40 +2,40 @@
 #include <type_traits>
 
 FormTypeInfo formTypes[] = {
-   { 'NONE', kFormType_None, "None", FormTypeFlags::no_editor_id },
-   { 'TES4', kFormType_FileHeader, "File Header" },
-   { 'GRUP', kFormType_FileRecordGroup, "File Record Group" },
-   { 'GMST', kFormType_GameSetting, "GameSetting" },
-   { 'KYWD', kFormType_Keyword, "Keyword" },
-   { 'LCRT', kFormType_LocationRefType, "LocRefType" },
+   { 'NONE', FormType::None, "None", FormTypeFlags::no_editor_id }, // form types not in this list are effectively 'NONE'
+   { 'TES4', FormType::FileHeader, "File Header", FormTypeFlags::no_connections },
+   { 'GRUP', FormType::FileRecordGroup, "File Record Group", FormTypeFlags::no_connections },
+   { 'GMST', FormType::GameSetting, "GameSetting", FormTypeFlags::no_connections },
+   { 'KYWD', FormType::Keyword, "Keyword" },
+   { 'LCRT', FormType::LocationRefType, "LocRefType" },
    //
-   { 'GLOB', kFormType_Global, "Global" },
+   { 'GLOB', FormType::Global, "Global" },
    //
-   { 'FACT', kFormType_Faction, "Faction" },
+   { 'FACT', FormType::Faction, "Faction" },
    //
-   { 'NPC_', kFormType_ActorBase, "ActorBase" },
+   { 'NPC_', FormType::ActorBase, "ActorBase" },
    //
-   { 'CELL', kFormType_Cell,  "Cell" },
-   { 'REFR', kFormType_Reference, "ObjectReference" },
-   { 'ACHR', kFormType_Character, "Actor" },
+   { 'CELL', FormType::Cell,  "Cell" },
+   { 'REFR', FormType::Reference, "ObjectReference" },
+   { 'ACHR', FormType::Character, "Actor" },
    //
-   { 'WRLD', kFormType_Worldspace, "Worldspace" },
-   { 'LAND', kFormType_Land, "Landscape", FormTypeFlags::no_editor_id },
-   { 'NAVM', kFormType_Navmesh, "Navmesh" },
+   { 'WRLD', FormType::Worldspace, "Worldspace" },
+   { 'LAND', FormType::Land, "Landscape", FormTypeFlags::no_editor_id },
+   { 'NAVM', FormType::Navmesh, "Navmesh" },
    //
-   { 'DIAL', kFormType_Topic, "Dialogue Topic" },
-   { 'INFO', kFormType_TopicInfo, "Dialogue Topic Info" },
-   { 'QUST', kFormType_Quest, "Quest" },
+   { 'DIAL', FormType::Topic, "Dialogue Topic" },
+   { 'INFO', FormType::TopicInfo, "Dialogue Topic Info" },
+   { 'QUST', FormType::Quest, "Quest" },
    //
-   { 'VTYP', kFormType_Voicetype, "Voicetype" },
+   { 'VTYP', FormType::Voicetype, "Voicetype" },
    //
-   { 'LCTN', kFormType_Location, "Location" },
+   { 'LCTN', FormType::Location, "Location" },
    //
-   { 'DLBR', kFormType_DialogueBranch, "Dialogue Branch" },
+   { 'DLBR', FormType::DialogueBranch, "Dialogue Branch" },
    //
-   { 'RELA', kFormType_Relationship, "Relationship" },
-   { 'SCEN', kFormType_Scene, "Scene" },
-   { 'ASTP', kFormType_AssociationType, "Association Type" },
+   { 'RELA', FormType::Relationship, "Relationship" },
+   { 'SCEN', FormType::Scene, "Scene" },
+   { 'ASTP', FormType::AssociationType, "Association Type" },
 };
 
 const FormTypeInfo& formTypeFor(formtype_t ft) {

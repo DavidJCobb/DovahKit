@@ -12,7 +12,7 @@ class TESActorBase : public TESForm {
    // Intentionally minimal for now.
    //
    public:
-      TESActorBase() : TESForm(kFormType_ActorBase) {};
+      TESActorBase() : TESForm(FormType::ActorBase) {};
 
       std::string editorID;
       LStringRef  name;
