@@ -8,7 +8,7 @@
 // the tree itself doesn't lock, preferring instead to have subtrees lock 
 // independently of one another.
 
-// based on pseudocode at <https://www.cs.umanitoba.ca/~hacamero/Research/RBTreesKim.pdf>
+// based on pseudocode at <cc>
 // but i'm struggling with it a bit rn. the pseudocode doesn't make it clear when 
 // structs are created or whatnot, doesn't contain struct definitions, and in some 
 // places it doesn't even demonstrate what to do (preferring to give vague notes 
