@@ -41,7 +41,8 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       Scene = 0x7A,
       AssociationType = 0x7B,
       //
-      Max = 0x8B,
+      Max   = 0x8B,
+      Count = Max + 1,
    };
 };
 struct FormTypeFlags { // enum; a struct-wrapped enum is scoped like enum class but allows implicit casts to number types

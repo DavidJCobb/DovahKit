@@ -470,6 +470,11 @@ class TESPluginFile : public TESPluginBaseReader {
       bool loadRecordAt(uint32_t pos); // for FormStub
       //
    protected:
+      struct _form_map {
+         std::mutex   lock;
+         map_of_forms forms;
+      };
+      //
       bool _loadHeader();
       //
       std::string path;
@@ -478,8 +483,7 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
       //
-      std::mutex formLock;
-      map_of_forms_by_type formsByType;
+      _form_map formsByType[FormType::Count];
       //
       uint32_t config = 0;
       //

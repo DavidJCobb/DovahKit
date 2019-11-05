@@ -610,8 +610,8 @@ TESPluginFile::~TESPluginFile() {
       }
    #endif
    if (!(this->config & TESPluginFileConfigFlags::do_not_free_own_stubs)) {
-      for (auto it = this->formsByType.begin(); it != this->formsByType.end(); ++it) {
-         auto& list = it->second;
+      for (formtype_t i = 0; i < FormType::Count; i++) {
+         auto& list = this->formsByType[i].forms;
          for (auto jt = list.begin(); jt != list.end(); ++jt) {
             FormStub* stub = jt->second;
             delete stub;
@@ -619,7 +619,6 @@ TESPluginFile::~TESPluginFile() {
          list.clear();
       }
    }
-   this->formsByType.clear();
 }
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->resetParseState();
@@ -694,9 +693,9 @@ bool TESPluginFile::_loadHeader() {
    return true;
 }
 void TESPluginFile::_insertForm(uint32_t formID, FormStub* stub) {
-   std::lock_guard<std::mutex> guard(this->formLock);
-   //
-   this->formsByType[stub->formType][formID] = stub;
+   auto& type = this->formsByType[stub->formType];
+   std::lock_guard<std::mutex> guard(type.lock);
+   type.forms[formID] = stub;
 }
 bool TESPluginFile::load(const char* filepath) {
    this->path.clear();
@@ -746,7 +745,7 @@ bool TESPluginFile::load(const char* filepath) {
                continue;
             }
             formtype_t formType = signatureToFormType(record.signature());
-            auto& list = this->formsByType[formType];
+            auto& list = this->formsByType[formType].forms;
             auto  stub = this->make_stub_for_record(*this);
             stub->groupInfo.groupType = group.header.type;
             switch (group.header.type) {
@@ -843,20 +842,21 @@ bool TESPluginFile::load(const char* filepath) {
 }
 //
 FormStub* TESPluginFile::getForm(uint8_t formType, uint32_t formID) const {
-   try {
-      auto& list = this->formsByType.at(formType);
-      return list.at(formID);
-   } catch (std::out_of_range) {}
+   if (formType < std::extent<decltype(this->formsByType)>::value) {
+      try {
+         return this->formsByType[formType].forms.at(formID);
+      } catch (std::out_of_range) {}
+   }
    return nullptr;
 }
 void TESPluginFile::forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)> functor) {
-   try {
-      auto& list = this->formsByType.at(formType);
+   if (formType < std::extent<decltype(this->formsByType)>::value) {
+      auto& list = this->formsByType[formType].forms;
       for (auto it = list.begin(); it != list.end(); ++it) {
          if (functor(it->second))
             break;
       }
-   } catch (std::out_of_range) {}
+   }
 }
 void TESPluginFile::modify_config(bool set, uint32_t flags) {
    if (set)
