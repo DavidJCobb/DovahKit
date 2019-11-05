@@ -146,6 +146,12 @@ namespace cobb {
                   return false;
                return true;
             }
+            int child_delta(bool left) const {
+               auto c = left ? this->left : this->right;
+               if (c)
+                  return this->rank - c->rank;
+               return this->rank - (-1);
+            }
             //
             int32_t height() const {
                int32_t l = this->left  ? this->left->height()  : -1;
@@ -180,12 +186,14 @@ namespace cobb {
             //
             // Abort early if return value is true.
             //
-            if (_for_each(n->left, functor))
-               return true;
+            if (n->left)
+               if (_for_each(n->left, functor))
+                  return true;
             if (functor(n->key, n->value))
                return true;
-            if (_for_each(n->right, functor))
-               return true;
+            if (n->right)
+               if (_for_each(n->right, functor))
+                  return true;
             return false;
          }
          node* _first() const {
@@ -335,30 +343,31 @@ namespace cobb {
             //
             // Per pages six and seven of <http://sidsen.azurewebsites.net//papers/rb-trees-talg.pdf>.
             //
-            while (x = x->parent) {
+            node* p;
+            while ((p = x->parent) && p->child_delta(true) == 0 && p->child_delta(false) == 1) {
+               x = p;
                x->rank++;
-               //
-               auto z = x->parent;
-               if (x->rank == z->rank) { // rank rule violated: a node cannot have the same rank as its parent
-                  bool left = z->left == x;
-                  auto y    = left ? x->right : x->left;
-                  if (!y || y->rank == x->rank - 2) {
-                     if (left)
-                        this->_rotate_right(x);
-                     else
-                        this->_rotate_left(x);
-                     z->rank--;
-                     return;
-                  } else if (y->rank == x->rank - 1) {
-                     if (left)
-                        this->_double_rotate_right(x);
-                     else
-                        this->_double_rotate_left(x);
-                     y->rank++;
-                     x->rank--;
-                     z->rank--;
-                     return;
-                  }
+            }
+            auto z = x->parent;
+            if (!z)
+               return;
+            if (x->rank == z->rank) { // rank rule violated: a node cannot have the same rank as its parent
+               bool left = z->left == x;
+               auto y    = left ? x->right : x->left;
+               if (!y || y->rank == x->rank - 2) {
+                  if (left)
+                     this->_rotate_right(x);
+                  else
+                     this->_rotate_left(x);
+                  z->rank--;
+               } else if (y->rank == x->rank - 1) {
+                  if (left)
+                     this->_double_rotate_right(x);
+                  else
+                     this->_double_rotate_left(x);
+                  y->rank++;
+                  x->rank--;
+                  z->rank--;
                }
             }
          }
@@ -367,12 +376,13 @@ namespace cobb {
             auto y = sibling;
             auto z = parent;
             int  deltaX = z->rank - x->rank;
-            int  deltaY = z->rank - y->rank;
-            while (deltaX == 3 && (deltaY == 2 || y->is_two_two())) {
+            int  deltaY = z->rank - (y ? y->rank : -1);
+            while (deltaX == 3 && (deltaY == 2 || (y && y->is_two_two()))) {
                if (deltaY == 2)
                   z->rank--;
                else {
-                  y->rank--;
+                  if (y)
+                     y->rank--;
                   z->rank--;
                }
                x = z;

@@ -149,11 +149,6 @@ std::thread::id main_thread_id;
 //                binary tree or any other specific implementation.
 //
 
-#include "helpers/wavl_tree.h"
-void test_wavl() {
-   cobb::unit_tests::wavl_tree();
-}
-
 int main() {
    main_thread_id = std::this_thread::get_id();
    //
