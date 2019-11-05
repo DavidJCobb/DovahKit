@@ -35,9 +35,6 @@ std::thread::id main_thread_id;
 //  - cobb::mapped_file should return a failure code when it can't open a file 
 //    (akin to the C file functions) instead of just asserting to death.
 //
-//  - Make the FormType enum an enum class, and change the names of the values 
-//    (the "kFormType_" prefix is unnecessary if it's an enum class).
-//
 //  - All loaded forms should have a reference to their owning FormStub.
 //
 //  - At the top of the file, we should clearly explain why record and subrecord 
@@ -47,33 +44,11 @@ std::thread::id main_thread_id;
 //
 //  - Improvements to multi-threaded file loading:
 //
-//     - Modify the std::maps for file loading to use a block allocator.
+//     - See if cobb::wavl_tree will produce a performance improvement.
 //
-//        - This produces no improvement.
-//
-//        - Currently we use two levels of nesting for TESPluginFile::formsOfType. 
-//          Change that to a std::map<...> formsOfType[kFormType_Max], so we can 
-//          access maps directly in the threads and iterate over them when we 
-//          build form connections (see below). Plus, cutting out one layer of 
-//          maps may speed things up in and of itself.
-//
-//        - We lose 2.5 seconds to merging multiple std::maps together, to bring 
-//          the results produced by each thread into the central TESPluginFile. 
-//          I wonder what we can do about that.
-//
-//           - Does std::map... leave room... between elements? So that insertions 
-//             don't require reallocations?
-//
-//           - std::map is typically a red-black tree. This page describes how to 
-//             implement parallel mass insertions for red-black trees without 
-//             having to use locks: <https://xuezhaokun.github.io/150-algorithm/> 
-//             It appears to be derivative of: <https://www.cs.umanitoba.ca/~hacamero/Research/RBTreesKim.pdf>
-//
-//              - If we adopt this approach, then it would entail creating a 
-//                custom red-black tree built for this task, and using that 
-//                instead of a std::map<uint32_t formID, FormStub*>. Each thread 
-//                would then have to insert into that. (Not sure how we'd enforce 
-//                thread-safety on the outer std::map<formtype_t, map>, though.)
+//        - It almost certainly won't unless we hook it up to a multi-threaded 
+//          block allocator, and altering the template to allow for that is going 
+//          to be fairly difficult.
 //
 //     - Can we divide up the loading of DIALs and their child GRUPs? They don't 
 //       use blocks/sub-blocks like worldspaces do.
@@ -84,36 +59,45 @@ std::thread::id main_thread_id;
 //    should have the cobb::zstring; we may even want to set its copy constructor 
 //    to =deleted; other parties should take the const char*).
 //
-//  - We'll need to eventually add a way to track Use Info akin to the CK and xEdit, 
-//    so that if we delete a form at run-time, we can properly update all forms that 
-//    used it. We'll want to call uses "connections" since better words are taken 
-//    (i.e. "references" are game world objects and "links" may refer to linked refs).
+//  - Implement the handling of multiple TESPluginFiles as part of a load order: 
+//    we need a singleton that represents the full load order, with a list of 
+//    TESPluginFiles. The singleton should have a method to add files for loading, 
+//    and should handle the loading of the files and all dependencies once told to 
+//    load files.
 //
-//     - What's written below will need adjustment for when we handle multiple 
-//       files, but we can look into handling things differently later. Basically, 
-//       when we get to multiple files, we'll need multiple FormStubs for each 
-//       form, because a form can be defined in one file and overridden in another. 
-//       As such, we'll need to handle FormStubs connecting to FormStubLists or 
-//       whatever we decide to call 'em.
+//    The singleton should maintain a map of "effective forms," i.e. a map of form 
+//    IDs to the FormStubs for conflict-winning (or non-conflicted) forms. The 
+//    singleton should also identify an "active file," like the Creation Kit, for 
+//    use with editing later on.
 //
-//       The difference is between form definitions (file-local) and forms: 
-//       a FormStub connects to a Form. But for now, we can implement these 
-//       connections as FormStub-to-FormStub and just... tailor the data later.
+//  - Once the singleton is ready (and not before), we will be able to track Use 
+//    Info for forms. Given how I plan on designing this editor, we only *need* 
+//    Use Info for conflict-winning and non-conflicted forms, so once we have a 
+//    full map of just those FormStubs, it will be all the simpler to construct 
+//    the Use Info.
 //
-//     - A FormStub will need two doubly-linked lists of connections: one outbound 
-//       and one inbound. The list items should specify the type of connection 
-//       (the subrecord signature will do); we can use this for detailed warnings 
-//       when the user asks to delete a form.
+//     - Alternatively, we could have a map of FormStubCollection objects, which 
+//       list all of the FormStubs for a form (including overridden ones) and 
+//       the Use Info for the final loaded form (the conflict-winning or non-
+//       conflicted form).
 //
-//        - We can use multiple threads to iterate over all FormStubs and generate 
-//          the outbound connections. Then, we can use a single thread to iterate 
-//          over all FormStubs and generate the inbound connections. Multi-threading 
-//          this should give us a speed advantage over xEdit if my code turns out 
-//          as good as theirs (though it will be impossible to measure this until I 
-//          write code to load every single form type).
+//     - I'm thinking we can load Use Info in two passes. The first pass involves 
+//       splitting the list of forms across multiple threads (this REQUIRES a 
+//       custom storage class; std::map CANNOT do this efficiently) and generating 
+//       their outbound connections; the second pass is single-threaded and uses 
+//       the existing outbound connection info to generate inbound connections.
 //
-//           - Make sure you check FormTypeFlags::no_connections and avoid running 
-//             this process on those forms.
+//        - Parent/child relationships between forms should also be tracked as 
+//          Use Info. This will require consulting GroupMetadata in addition to 
+//          reading the form's record.
+//
+//        - The inbound and outbound connection lists should be linked lists and 
+//          should be stored on the FormStubCollection.
+
+//
+//  OLD NOTES ON USE INFO:
+//
+
 //
 //           - We should define a struct form_connection, which just wraps a 
 //             uint32_t form ID. Give it "load" and "modify" methods which take the 
@@ -126,7 +110,9 @@ std::thread::id main_thread_id;
 //              - The only way to really generate outbound connections is to have 
 //                the FormStub load its form, have the form's load function generate 
 //                the connections by calling form_connection::load, and then have 
-//                the FormStub discard the rest of the loaded form data.
+//                the FormStub discard the rest of the loaded form data. ALTERNATIVELY, 
+//                we could add a special load method for each loaded form class that 
+//                skips bytes, paying attention ONLY to form IDs.
 //
 //              - void FormStub::createOutboundConnection(uint32_t signature, uint32_t formID); // only makes an outbound connection
 //              - void FormStub::makeOutboundConnectionsBidirectional(); // loops over all outbounds; builds inbounds
