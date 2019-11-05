@@ -29,7 +29,7 @@ loaded_form_ptr<TESForm> FormStub::load() {
          auto& record   = this->file->getCurrentRecord();
          auto  formType = signatureToFormType(record.signature());
          switch (formType) {
-            case kFormType_Quest:
+            case FormType::Quest:
                {
                   auto q = new TESQuest();
                   q->load(record);

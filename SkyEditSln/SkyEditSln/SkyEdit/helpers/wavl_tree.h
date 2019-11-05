@@ -15,10 +15,9 @@ namespace cobb {
          static constexpr bool _value_type_is_pointer = std::is_pointer<value_type>::value;
       public:
          // This is value_type if value_type is already a pointer, or value_type* otherwise:
-         typedef std::conditional<_value_type_is_pointer, value_type, std::add_pointer<value_type>::type>::type value_pointer_type;
-         //
+         using value_pointer_type = std::conditional_t<_value_type_is_pointer, value_type, std::add_pointer_t<value_type>>;
          // This is value_type& if value_type isn't a pointer, or else equivalent to typedef(f) given { value_type foo; auto& f = *foo; }:
-         typedef std::conditional<_value_type_is_pointer, std::add_rvalue_reference<std::remove_pointer<value_type>::type>::type, value_type&>::type value_reference_type;
+         using value_reference_type = std::conditional_t<_value_type_is_pointer, std::add_lvalue_reference_t<std::remove_pointer_t<value_type>>, value_type&>;
          //
          // BASED ON:
          //    <http://sidsen.azurewebsites.net//papers/rb-trees-talg.pdf>
@@ -344,11 +343,17 @@ namespace cobb {
                   bool left = z->left == x;
                   auto y    = left ? x->right : x->left;
                   if (!y || y->rank == x->rank - 2) {
-                     (left ? this->_rotate_right : this->_rotate_left)(x);
+                     if (left)
+                        this->_rotate_right(x);
+                     else
+                        this->_rotate_left(x);
                      z->rank--;
                      return;
                   } else if (y->rank == x->rank - 1) {
-                     (left ? this->_double_rotate_right : this->_double_rotate_left)(x);
+                     if (left)
+                        this->_double_rotate_right(x);
+                     else
+                        this->_double_rotate_left(x);
                      y->rank++;
                      x->rank--;
                      z->rank--;

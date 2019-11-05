@@ -23,12 +23,12 @@ namespace cobb {
       while (r > s) {
          va_copy(args, safe);
          s += 20;
-         delete b;
+         free(b);
          char* b = (char*)malloc(s);
          r = vsprintf_s(b, s, format, args);
       }
       out = b;
-      delete b;
+      free(b);
       va_end(safe);
       va_end(args);
    };

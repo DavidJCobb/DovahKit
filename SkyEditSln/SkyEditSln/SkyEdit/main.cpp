@@ -149,8 +149,15 @@ std::thread::id main_thread_id;
 //                binary tree or any other specific implementation.
 //
 
+#include "helpers/wavl_tree.h"
+void test_wavl() {
+   cobb::unit_tests::wavl_tree();
+}
+
 int main() {
    main_thread_id = std::this_thread::get_id();
+   //
+   test_wavl();
    //
    TESPluginFile skyrim;
    skyrim.modify_config(true, TESPluginFileConfigFlags::do_not_free_own_stubs); // we are responsible for force-deleting all FormStubs via the allocator
