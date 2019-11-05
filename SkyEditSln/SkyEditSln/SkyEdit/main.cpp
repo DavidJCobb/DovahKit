@@ -152,8 +152,6 @@ std::thread::id main_thread_id;
 int main() {
    main_thread_id = std::this_thread::get_id();
    //
-   test_wavl();
-   //
    TESPluginFile skyrim;
    skyrim.modify_config(true, TESPluginFileConfigFlags::do_not_free_own_stubs); // we are responsible for force-deleting all FormStubs via the allocator
    struct timeb bench_start;

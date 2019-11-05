@@ -356,7 +356,6 @@ void TESPluginThreadedSimpleReader::_load() {
       this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
       assert(this->fileHandle && "[TESPluginThreadedSimpleReader] Unable to open the file for reading.");
    #endif
-   this->resultsByType.clear();
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
@@ -393,10 +392,9 @@ void TESPluginThreadedSimpleReader::_load() {
             if (!formType)
                continue;
             //
-            auto& list = this->resultsByType[formType];
             auto  stub = this->make_stub_for_record(this->owner);
             stub->groupInfo.groupType = group.header.type;
-            list[stub->formID] = stub;
+            this->owner._insertForm(stub->formID, stub);
             this->extract_editor_id_for_stub(stub);
             continue;
          }
@@ -436,7 +434,6 @@ void TESPluginThreadedInteriorCellReader::_load() {
       this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
       assert(this->fileHandle && "[TESPluginThreadedInteriorCellReader] Unable to open the file for reading.");
    #endif
-   this->resultsByType.clear();
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
@@ -473,14 +470,13 @@ void TESPluginThreadedInteriorCellReader::_load() {
             if (!formType)
                continue;
             //
-            auto& list = this->resultsByType[formType];
             auto  stub = this->make_stub_for_record(this->owner);
             stub->groupInfo.groupType = group.header.type;
             if (record.signature() == 'CELL') {
                stub->groupInfo.cellBlock.interior    = this->groups[0].header.label;
                stub->groupInfo.cellSubBlock.interior = this->groups[1].header.label;
             }
-            list[stub->formID] = stub;
+            this->owner._insertForm(stub->formID, stub);
             this->extract_editor_id_for_stub(stub);
             continue;
          }
@@ -520,7 +516,6 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
       this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
       assert(this->fileHandle && "[TESPluginThreadedWorldspaceSubBlockReader] Unable to open the file for reading.");
    #endif
-   this->resultsByType.clear();
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
@@ -555,7 +550,6 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
             if (!formType)
                continue;
             //
-            auto& list = this->resultsByType[formType];
             auto  stub = this->make_stub_for_record(this->owner);
             stub->groupInfo.groupType = group.header.type;
             if (record.signature() == 'CELL') {
@@ -565,7 +559,7 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
                stub->groupInfo.cellSubBlock.exterior.x = desired.subBlockX;
                stub->groupInfo.cellSubBlock.exterior.y = desired.subBlockY;
             }
-            list[stub->formID] = stub;
+            this->owner._insertForm(stub->formID, stub);
             this->extract_editor_id_for_stub(stub);
             continue;
          }
@@ -698,6 +692,11 @@ bool TESPluginFile::_loadHeader() {
       }
    }
    return true;
+}
+void TESPluginFile::_insertForm(uint32_t formID, FormStub* stub) {
+   std::lock_guard<std::mutex> guard(this->formLock);
+   //
+   this->formsByType[stub->formType][formID] = stub;
 }
 bool TESPluginFile::load(const char* filepath) {
    this->path.clear();
@@ -840,70 +839,6 @@ bool TESPluginFile::load(const char* filepath) {
    for (uint32_t i = 0; i < std::extent<decltype(this->worldspaceReaders)>::value; i++)
       this->worldspaceReaders[i].wait_for();
    this->complexReader.wait_for();
-   #ifdef DO_ESP_LOAD_BENCHMARKS
-      struct timeb bench_start;
-      struct timeb bench_end;
-      ftime(&bench_start);
-   #endif
-   {  // Merge all of the readers' results in.
-      for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++) {
-         auto& reader = this->simpleReaders[i];
-         for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
-            auto key = it->first;
-            try {
-               auto& map = this->formsByType.at(key);
-               map.insert(it->second.begin(), it->second.end());
-            } catch (std::out_of_range) {
-               auto& map = this->formsByType[key];
-               std::swap(map, it->second);
-            }
-         }
-      }
-      for (uint32_t i = 0; i < std::extent<decltype(this->interiorCellReaders)>::value; i++) {
-         auto& reader = this->interiorCellReaders[i];
-         for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
-            auto key = it->first;
-            try {
-               auto& map = this->formsByType.at(key);
-               map.insert(it->second.begin(), it->second.end());
-            } catch (std::out_of_range) {
-               auto& map = this->formsByType[key];
-               std::swap(map, it->second);
-            }
-         }
-      }
-      for (uint32_t i = 0; i < std::extent<decltype(this->worldspaceReaders)>::value; i++) {
-         auto& reader = this->worldspaceReaders[i];
-         for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
-            auto key = it->first;
-            try {
-               auto& map = this->formsByType.at(key);
-               map.insert(it->second.begin(), it->second.end());
-            } catch (std::out_of_range) {
-               auto& map = this->formsByType[key];
-               std::swap(map, it->second);
-            }
-         }
-      }
-      {
-         auto& reader = this->complexReader;
-         for (auto it = reader.resultsByType.begin(); it != reader.resultsByType.end(); it++) {
-            auto key = it->first;
-            try {
-               auto& map = this->formsByType.at(key);
-               map.insert(it->second.begin(), it->second.end());
-            } catch (std::out_of_range) {
-               auto& map = this->formsByType[key];
-               std::swap(map, it->second);
-            }
-         }
-      }
-   }
-   #ifdef DO_ESP_LOAD_BENCHMARKS
-      ftime(&bench_end);
-      _DEBUGMSG("Results gathered by threads have been integrated into the TESPluginFile.");
-      _DEBUGMSG("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-   #endif
    return true;
 }
 //

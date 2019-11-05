@@ -380,7 +380,6 @@ class TESPluginThreadedSimpleReader : public TESPluginBaseReader {
       //
       std::vector<QueuedGroup> queue;
       std::thread thread;
-      map_of_forms_by_type resultsByType;
       //
       void add_group(uint32_t groupSignature, uint32_t groupPos);
       void start();
@@ -404,7 +403,6 @@ class TESPluginThreadedInteriorCellReader : public TESPluginBaseReader {
       //
       std::vector<QueuedBlock> queue;
       std::thread thread;
-      map_of_forms_by_type resultsByType;
       //
       void add_group(uint32_t groupSignature, uint32_t groupPos);
       void start();
@@ -432,7 +430,6 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
       //
       std::vector<QueuedSubBlock> queue;
       std::thread thread;
-      map_of_forms_by_type resultsByType;
       //
       void add_group(uint32_t worldID, int16_t bx, int16_t by, int16_t sbx, int16_t sby, uint32_t pos);
       void start();
@@ -480,9 +477,13 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginThreadedSimpleReader simpleReaders[ESP_LOAD_SIMPLE_THREADS]; // see constructor for initializer
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
+      //
+      std::mutex formLock;
       map_of_forms_by_type formsByType;
       //
       uint32_t config = 0;
+      //
+      void _insertForm(uint32_t formID, FormStub* stub);
       //
    public:
       uint32_t flags = 0;
