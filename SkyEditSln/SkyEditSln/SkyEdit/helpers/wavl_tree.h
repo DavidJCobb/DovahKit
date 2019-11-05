@@ -2,6 +2,7 @@
 #include <algorithm> // std::max
 #include <cstdint>
 #include <functional>
+#include <stdexcept>
 #include <type_traits>
 
 namespace cobb {
@@ -428,6 +429,43 @@ namespace cobb {
             }
          }
          //
+         node* _set(key_type k, value_type v) {
+            //
+            // The reason the "set" code is in a protected helper function is because 
+            // we don't want the public "set" function to give access to the created 
+            // or altered node, but we need that access to optimize operator[].
+            //
+            node* t = this->root;
+            if (t == nullptr) {
+               this->root = new node(k, v, nullptr);
+               this->size = 1;
+               return this->root;
+            }
+            comparison last;
+            node* parent = nullptr;
+            do {
+               parent = t;
+               last = _compare(k, t->key);
+               if (last == comparison::less)
+                  t = t->left;
+               else if (last == comparison::greater)
+                  t = t->right;
+               else {
+                  t->value = v;
+                  return t;
+               }
+            } while (t);
+            auto e = new node(k, v, parent);
+            if (last == comparison::less)
+               parent->left = e;
+            else
+               parent->right = e;
+            if (parent->rank == 0) // a leaf became a branch
+               _fix_insert(e);
+            this->size++;
+            return e;
+         }
+         //
       public:
          void for_each(std::function<bool(key_type, value_type)> functor) const {
             if (this->root)
@@ -508,70 +546,76 @@ namespace cobb {
             delete t;
          }
          void set(key_type k, value_type v) {
-            node* t = this->root;
-            if (t == nullptr) {
-               this->root = new node(k, v, nullptr);
-               this->size = 1;
-               return;
-            }
-            comparison last;
-            node* parent = nullptr;
-            do {
-               parent = t;
-               last   = _compare(k, t->key);
-               if (last == comparison::less)
-                  t = t->left;
-               else if (last == comparison::greater)
-                  t = t->right;
-               else {
-                  t->value = v;
-                  return;
-               }
-            } while (t);
-            auto e = new node(k, v, parent);
-            if (last == comparison::less)
-               parent->left = e;
-            else
-               parent->right = e;
-            if (parent->rank == 0) // a leaf became a branch
-               _fix_insert(e);
-            this->size++;
+            this->_set(k, v);
          }
-
+         //
+         // BELOW: Rough/partial parity with STL containers.
+         //
          struct iterator {
-            iterator(node* n) : target(n) {}
-            //
-            node* target = nullptr;
-            //
-            iterator& operator--() {
-               if (this->target)
-                  this->target = this->target->prev();
-               return *this;
-            }
-            iterator& operator++() {
-               if (this->target)
-                  this->target = this->target->next();
-               return *this;
-            }
-            template<typename std::enable_if_t<_value_type_is_pointer>* = nullptr> value_pointer_type operator->() const noexcept {
-               return this->target->value;
-            }
-            template<typename std::enable_if_t<!_value_type_is_pointer>* = nullptr> value_pointer_type operator->() const noexcept {
-               return &this->target->value;
-            }
-            template<typename std::enable_if_t<_value_type_is_pointer>* = nullptr> value_reference_type operator*() const noexcept {
-               return *this->target->value;
-            }
-            template<typename std::enable_if_t<!_value_type_is_pointer>* = nullptr> value_reference_type operator*() const noexcept {
+            friend wavl_tree;
+            protected:
+               iterator(node* n) : target(n) {}
+               //
+               node* target = nullptr;
+               //
+            public:
+               iterator& operator--() {
+                  if (this->target)
+                     this->target = this->target->prev();
+                  return *this;
+               }
+               iterator& operator++() {
+                  if (this->target)
+                     this->target = this->target->next();
+                  return *this;
+               }
+               template<typename std::enable_if_t<_value_type_is_pointer>* = nullptr> value_pointer_type operator->() const noexcept {
+                  return this->target->value;
+               }
+               template<typename std::enable_if_t<!_value_type_is_pointer>* = nullptr> value_pointer_type operator->() const noexcept {
+                  return &this->target->value;
+               }
+               template<typename std::enable_if_t<_value_type_is_pointer>* = nullptr> value_reference_type operator*() const noexcept {
+                  return *this->target->value;
+               }
+               template<typename std::enable_if_t<!_value_type_is_pointer>* = nullptr> value_reference_type operator*() const noexcept {
                return this->target->value;
             }
          };
+         struct reverse_iterator : public iterator {
+            friend wavl_tree;
+            protected:
+               reverse_iterator(node* n) : iterator(n) {}
+            public:
+               iterator& operator--() {
+                  if (this->target)
+                     this->target = this->target->next();
+                  return *this;
+               }
+               iterator& operator++() {
+                  if (this->target)
+                     this->target = this->target->prev();
+                  return *this;
+               }
+         };
          //
-         iterator begin() {
-            return iterator(this->_first());
+         iterator begin() { return iterator(this->_first()); }
+         iterator end()   { return iterator(nullptr); }
+         reverse_iterator rbegin() { return reverse_iterator(this->_last()); }
+         reverse_iterator rend()   { return reverse_iterator(nullptr); }
+         //
+         value_type& at(key_type k) {
+            auto e = this->get(k);
+            if (e)
+               return *e;
+            throw std::out_of_range("element not present");
          }
-         iterator end() {
-            return iterator(nullptr);
+         value_type& operator[](key_type k) {
+            auto e = this->get(k);
+            if (e)
+               return *e;
+            auto node = this->_set(k, value_type());
+            return node->value;
          }
    };
 
