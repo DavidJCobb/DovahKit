@@ -125,7 +125,7 @@
   <ItemGroup>
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="formstub.cpp" />
-    <ClCompile Include="forms\ActorBase.cpp" />
+    <ClCompile Include="forms\loaded\ActorBase.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
@@ -133,7 +133,7 @@
     <ClCompile Include="helpers\threading.cpp" />
     <ClCompile Include="helpers\wavl_tree.cpp" />
     <ClCompile Include="output.cpp" />
-    <ClCompile Include="forms\Quest.cpp" />
+    <ClCompile Include="forms\loaded\Quest.cpp" />
     <ClCompile Include="forms\types.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -141,9 +141,10 @@
     <ClInclude Include="esp\base.h" />
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="formstub.h" />
-    <ClInclude Include="forms\ActorBase.h" />
+    <ClInclude Include="forms\loaded\ActorBase.h" />
     <ClInclude Include="forms\components.h" />
     <ClInclude Include="forms\conditions.h" />
+    <ClInclude Include="forms\loaded\Form.h" />
     <ClInclude Include="forms\papyrus.h" />
     <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="helpers\files.h" />
@@ -155,7 +156,7 @@
     <ClInclude Include="helpers\threading.h" />
     <ClInclude Include="helpers\wavl_tree.h" />
     <ClInclude Include="output.h" />
-    <ClInclude Include="forms\Quest.h" />
+    <ClInclude Include="forms\loaded\Quest.h" />
     <ClInclude Include="forms\types.h" />
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,7 @@
 #include <sys/timeb.h> // for benchmarks
 #include <thread> // for std::thread::id
 #include "esp/TESPlugin.h"
-#include "forms/Quest.h"
+#include "forms/loaded/Quest.h"
 
 const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/Skyrim.esm";
 
@@ -46,9 +46,36 @@ std::thread::id main_thread_id;
 //
 //     - See if cobb::wavl_tree will produce a performance improvement.
 //
+//        - First, test to ensure that the methods added for STL parity work 
+//          correctly -- iterators, at, operator[], etc.. If those aren't working 
+//          properly, then we can't do a clean swap from std::map to wavl_tree.
+//
 //        - It almost certainly won't unless we hook it up to a multi-threaded 
-//          block allocator, and altering the template to allow for that is going 
-//          to be fairly difficult.
+//          block allocator. Here's how we can do that:
+//
+//           = Move cobb::wavl_tree::node to cobb::wavl_node (templated on the 
+//             key and value) and add a typedef to the tree so we don't have to 
+//             change everything from "node."
+//
+//           = Add two parameters to the wavl_tree template: non-member functions 
+//             for allocating and deallocating a node. By default, they should be 
+//             malloc and free wrapped to return the wavl_node type.
+//
+//              - Alternatively, have it take a std::allocator.
+//
+//           = Create a singleton multi-threaded block allocator templated on 
+//             cobb::wavl_node<uint32_t, FormStub*>. Create non-member functions 
+//             that get the allocator instance and call allocate and free as 
+//             required.
+//
+//           = Typedef cobb::wavl_tree<uint32_t, FormStub*, my_malloc, my_free> 
+//             as map_of_form_stubs and use that for TESPluginFile.
+//
+//           = Threads are already designed to register themselves with the block 
+//             allocator for FormStubs. They should do the same for the singleton 
+//             allocator for tree nodes.
+//
+//           - And then test it!
 //
 //     - Can we divide up the loading of DIALs and their child GRUPs? They don't 
 //       use blocks/sub-blocks like worldspaces do.
@@ -80,6 +107,19 @@ std::thread::id main_thread_id;
 //       list all of the FormStubs for a form (including overridden ones) and 
 //       the Use Info for the final loaded form (the conflict-winning or non-
 //       conflicted form).
+//
+//        - Nope! FormStubCollection would have to have a vector, which we 
+//          can't block-allocate. Just have FormStubFinal which has a FormStub 
+//          pointer and room for additional data e.g. Use Info; the name conveys 
+//          that it's for a conflict-winning or non-conflicted form.
+//
+//        - TESPluginFile::_insertForm needs to be modified to insert into the 
+//          TESPluginFile AND to insert into the load order singleton's map of 
+//          form IDs to forms. (Well, actually, it should pass the FormStub to 
+//          a member function on the singleton which normalizes the form ID and 
+//          checks if it's a new form or override and blah blah blah.) This will 
+//          be MUCH faster than having to collate results from all files at the 
+//          end of the full load process.
 //
 //     - I'm thinking we can load Use Info in two passes. The first pass involves 
 //       splitting the list of forms across multiple threads (this REQUIRES a 
@@ -135,7 +175,11 @@ std::thread::id main_thread_id;
 //                binary tree or any other specific implementation.
 //
 
+#include "helpers/wavl_tree.h"
+
 int main() {
+   cobb::unit_tests::wavl_tree();
+
    main_thread_id = std::this_thread::get_id();
    //
    TESPluginFile skyrim;
@@ -152,8 +196,8 @@ int main() {
    skyrim.forEachFormOfType(FormType::Quest, [](FormStub* stub) {
       auto form = stub->load();
       if (form && form->formType == FormType::Quest) {
-         auto quest = form.ptr_cast<TESQuest>();
-         const char* type = TESQuest::QuestTypeToString(quest->questType);
+         auto quest = form.ptr_cast<LoadedForms::Quest>();
+         const char* type = LoadedForms::Quest::QuestTypeToString(quest->questType);
          if (!type)
             type = "<UNKNOWN>";
          printf("[QUST:%08X]%s (%s) is a %s quest\n", stub->formID, quest->editorID.c_str(), quest->name.c_str(), type);

@@ -7,12 +7,14 @@
 #include "helpers/memory.h"
 
 struct FormStub;
-class TESForm;
 class TESPluginFile;
 class TESPluginBaseReader;
 class TESPluginThreadedSimpleReader;
 class TESPluginThreadedInteriorCellReader;
 class TESPluginThreadedWorldspaceSubBlockReader;
+namespace LoadedForms {
+   class Form;
+}
 
 template<typename LoadedFormClass> class loaded_form_ptr {
    //
@@ -53,6 +55,8 @@ template<typename LoadedFormClass> class loaded_form_ptr {
          }
       }
    public:
+      typedef LoadedFormClass wrapped_type;
+      //
       loaded_form_ptr(FormStub* stub) : wrapped(stub) { this->_incRef(); };
       ~loaded_form_ptr() {
          this->_decRef();
@@ -140,9 +144,9 @@ struct FormStub {
       uint32_t      formID   = 0; // form ID (file-local)
       uint8_t       formType = 0;
       // there will be 3 bytes of padding here
-      TESForm*      form     = nullptr;
+      LoadedForms::Form* form = nullptr;
 
-      loaded_form_ptr<TESForm> load();
+      loaded_form_ptr<LoadedForms::Form> load();
 
       inline const char* get_editor_id() { return this->editorID; };
       inline uint32_t get_refcount() {

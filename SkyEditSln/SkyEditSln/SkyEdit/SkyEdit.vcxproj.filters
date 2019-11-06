@@ -27,16 +27,10 @@
     <ClCompile Include="forms\types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="forms\Quest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="output.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="forms\papyrus.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="forms\ActorBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="helpers\memory.cpp">
@@ -54,6 +48,12 @@
     <ClCompile Include="helpers\wavl_tree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="forms\loaded\Quest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="forms\loaded\ActorBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="formstub.h">
@@ -63,9 +63,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="forms\types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="forms\Quest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="output.h">
@@ -78,9 +75,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitset.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="forms\ActorBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="forms\conditions.h">
@@ -111,6 +105,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\wavl_tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="forms\loaded\Quest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="forms\loaded\Form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="forms\loaded\ActorBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

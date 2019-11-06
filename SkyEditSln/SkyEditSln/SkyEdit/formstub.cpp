@@ -5,7 +5,7 @@
 #include <cassert>
 #include <cstddef>
 
-#include "forms/Quest.h"
+#include "forms/loaded/Quest.h"
 
 FormStub::~FormStub() {
    if ((this->refcount & kRefcountMask) != 0)
@@ -21,7 +21,7 @@ char* FormStub::allocate_editor_id(size_t length) {
    this->editorID = (char*)malloc(length);
    return this->editorID;
 }
-loaded_form_ptr<TESForm> FormStub::load() {
+loaded_form_ptr<LoadedForms::Form> FormStub::load() {
    if (!this->form && this->file) {
       //_DEBUGMSG("stub is loading...");
       auto file = this->file;
@@ -31,7 +31,7 @@ loaded_form_ptr<TESForm> FormStub::load() {
          switch (formType) {
             case FormType::Quest:
                {
-                  auto q = new TESQuest();
+                  auto q = new LoadedForms::Quest();
                   q->load(record);
                   this->form = q;
                }; break;
@@ -39,7 +39,7 @@ loaded_form_ptr<TESForm> FormStub::load() {
       } else
          _DEBUGMSG("...stub failed.");
    }
-   return loaded_form_ptr<TESForm>(this);
+   return loaded_form_ptr<LoadedForms::Form>(this);
 }
 void FormStub::set_edited(bool v) {
    cobb::edit_bit(this->refcount, kRefcountFlag_Edited, v);

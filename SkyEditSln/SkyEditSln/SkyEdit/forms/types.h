@@ -153,8 +153,6 @@ extern FormTypeInfo formTypes[];
 extern const FormTypeInfo& formTypeFor(formtype_t ft);
 extern formtype_t signatureToFormType(uint32_t signature);
 
-class TESForm {
-   public:
-      const formtype_t formType;
-      TESForm(formtype_t ft) : formType(ft) {};
-};
+namespace LoadedForms {
+   class Form;
+}

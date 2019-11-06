@@ -38,8 +38,7 @@ namespace cobb {
          //
       protected:
          struct node {
-            key_type   key;
-            value_type value;
+            std::pair<key_type, value_type> data;
             //
             node* left   = nullptr;
             node* right  = nullptr;
@@ -47,11 +46,14 @@ namespace cobb {
             uint8_t rank = 0;
             //
             node() {}
-            node(key_type k, value_type v, node* p) : key(k), value(v), parent(p) {}
+            node(key_type k, value_type v, node* p) : data(k, v), parent(p) {}
             //
             bool operator==(const node& other) const noexcept {
-               return this->key == other.key && this->value == other.value;
+               return this->data == other.data;
             }
+            inline key_type   key()   const noexcept { return this->data.first; }
+            inline value_type value() const noexcept { return this->data.second; }
+            inline value_type* value_pointer() noexcept { return &this->data.second; }
             //
             node* prev() const {
                if (this->left) {
@@ -70,17 +72,19 @@ namespace cobb {
                   return target;
                }
                //
-               // Traverse the parents and stop at the first left-child, i.e.
+               // Traverse the parents and stop at the parent of the first right-child, i.e.
                //
-               //     7
-               //    / \
-               //   3   10
-               //    \
-               //   <T=5>
+               //           5
+               //          / \
+               //         /   7
+               //        /   / \
+               //       3   6   7
+               //      / \       \
+               //     1  <T=4>    10
                //
                auto  target = this;
-               node* parent = target->parent;
-               while (parent && target == parent->right) {
+               node* parent = this->parent;
+               while (parent && target == parent->left) {
                   target = parent;
                   parent = parent->parent;
                }
@@ -103,17 +107,19 @@ namespace cobb {
                   return target;
                }
                //
-               // Traverse the parents and stop at the first right-child, i.e.
+               // Traverse the parents and stop at the parent of the first left-child, i.e.
                //
-               //     4
-               //    / \
-               //   1   7
-               //      / \
-               //   <T=5> 10
+               //           5
+               //          / \
+               //         3   \
+               //        / \   \
+               //       /   4   7
+               //      /       / \
+               //     1     <T=6> 10
                //
                auto  target = this;
-               node* parent = target->parent;
-               while (parent && target == parent->left) {
+               node* parent = this->parent;
+               while (parent&& target == parent->right) {
                   target = parent;
                   parent = parent->parent;
                }
@@ -190,7 +196,7 @@ namespace cobb {
             if (n->left)
                if (_for_each(n->left, functor))
                   return true;
-            if (functor(n->key, n->value))
+            if (functor(n->key(), n->value()))
                return true;
             if (n->right)
                if (_for_each(n->right, functor))
@@ -199,20 +205,16 @@ namespace cobb {
          }
          node* _first() const {
             auto n = this->root;
-            if (!n)
-               return nullptr;
-            node* p;
-            while (p = n->prev())
-               n = p;
+            if (n)
+               while (n->left)
+                  n = n->left;
             return n;
          }
          node* _last() const {
             auto n = this->root;
-            if (!n)
-               return nullptr;
-            node* p;
-            while (p = n->next())
-               n = p;
+            if (n)
+               while (n->right)
+                  n = n->right;
             return n;
          }
          //
@@ -345,30 +347,32 @@ namespace cobb {
             // Per pages six and seven of <http://sidsen.azurewebsites.net//papers/rb-trees-talg.pdf>.
             //
             node* p;
-            while ((p = x->parent) && p->child_delta(true) == 0 && p->child_delta(false) == 1) {
+            while (node* p = x->parent) {
                x = p;
                x->rank++;
-            }
-            auto z = x->parent;
-            if (!z)
-               return;
-            if (x->rank == z->rank) { // rank rule violated: a node cannot have the same rank as its parent
-               bool left = z->left == x;
-               auto y    = left ? x->right : x->left;
-               if (!y || y->rank == x->rank - 2) {
-                  if (left)
-                     this->_rotate_right(x);
-                  else
-                     this->_rotate_left(x);
-                  z->rank--;
-               } else if (y->rank == x->rank - 1) {
-                  if (left)
-                     this->_double_rotate_right(x);
-                  else
-                     this->_double_rotate_left(x);
-                  y->rank++;
-                  x->rank--;
-                  z->rank--;
+               //
+               auto z = x->parent;
+               if (!z)
+                  return;
+               if (x->rank == z->rank) { // rank rule violated: a node cannot have the same rank as its parent
+                  bool left = z->left == x;
+                  auto y = left ? x->right : x->left;
+                  if (!y || y->rank == x->rank - 2) {
+                     if (left)
+                        this->_rotate_right(x);
+                     else
+                        this->_rotate_left(x);
+                     z->rank--;
+                  } else if (y->rank == x->rank - 1) {
+                     if (left)
+                        this->_double_rotate_right(x);
+                     else
+                        this->_double_rotate_left(x);
+                     y->rank++;
+                     x->rank--;
+                     z->rank--;
+                  }
+                  return;
                }
             }
          }
@@ -445,13 +449,13 @@ namespace cobb {
             node* parent = nullptr;
             do {
                parent = t;
-               last = _compare(k, t->key);
+               last = _compare(k, t->key());
                if (last == comparison::less)
                   t = t->left;
                else if (last == comparison::greater)
                   t = t->right;
                else {
-                  t->value = v;
+                  t->data.second = v;
                   return t;
                }
             } while (t);
@@ -474,12 +478,13 @@ namespace cobb {
          value_type* get(key_type k) const {
             auto p = this->root;
             while (p) {
-               if (k < p->key)
+               auto ok = p->key();
+               if (k < ok)
                   p = p->left;
-               else if (k > p->key)
+               else if (k > ok)
                   p = p->right;
                else
-                  return &p->value;
+                  return p->value_pointer();
             }
             return nullptr;
          }
@@ -488,9 +493,10 @@ namespace cobb {
             if (!t)
                return;
             do {
-               if (k < t->key)
+               auto ok = t->key();
+               if (k < ok)
                   t = t->left;
-               else if (k > t->key)
+               else if (k > ok)
                   t = t->right;
                else
                   break;
@@ -509,8 +515,7 @@ namespace cobb {
                // Swap the deletion target with its successor, and then delete the 
                // successor instead.
                //
-               t->key   = s->key;
-               t->value = s->value;
+               t->data = s->data;
                //
                t = s;
                l = t->left;
@@ -519,7 +524,17 @@ namespace cobb {
             //
             // Now, it is guaranteed that we are deleting a leaf or unary node.
             //
-            auto p    = t->parent;
+            auto p = t->parent;
+            if (!p) {
+               //
+               // The root node is unary or a leaf, and we are removing it.
+               //
+               this->root = l ? l : r;
+               if (this->root)
+                  this->root->parent = nullptr;
+               delete t;
+               return;
+            }
             auto diff = p->rank - t->rank;
             bool left = p && p->left == t;
             if (!l && !r) { // target is a leaf
@@ -530,16 +545,10 @@ namespace cobb {
                //       /  \           /  \
                //      8    12        8    12
                //
-               if (p)
-                  (left ? p->left : p->right) = nullptr;
-               else
-                  this->root = nullptr;
+               (left ? p->left : p->right) = nullptr;
             } else { // target is unary
                auto e = l ? l : r;
-               if (p)
-                  (left ? p->left : p->right) = e;
-               else
-                  this->root = e;
+               (left ? p->left : p->right) = e;
                e->parent = p;
             }
             this->_fix_delete(p, left ? p->right : p->left, t);
@@ -548,6 +557,33 @@ namespace cobb {
          void set(key_type k, value_type v) {
             this->_set(k, v);
          }
+         //
+         /*//
+         void _debug_dump(node* n) const {
+            printf("Node <%d!%d=%d>", n->key(), n->rank, n->value());
+            if (n->left || n->right) {
+               printf(": ");
+               if (n->left) {
+                  printf("LEFT is <%d!%d=%d>", n->left->key(), n->left->rank, n->left->value());
+                  if (n->right)
+                     printf("; ");
+               }
+               if (n->right)
+                  printf("RIGHT is <%d!%d=%d>", n->right->key(), n->right->rank, n->right->value());
+            }
+            printf("\n");
+            if (n->left)
+               _debug_dump(n->left);
+            if (n->right)
+               _debug_dump(n->right);
+         }
+         void _debug_dump() const {
+            printf("Printing nodes...\n");
+            if (this->root)
+               this->_debug_dump(this->root);
+            printf("Done.\n");
+         }
+         //*/
          //
          // BELOW: Rough/partial parity with STL containers.
          //
@@ -559,42 +595,36 @@ namespace cobb {
                node* target = nullptr;
                //
             public:
-               iterator& operator--() {
+               iterator& operator--() { // prefix only i.e. --it but not it--
                   if (this->target)
                      this->target = this->target->prev();
                   return *this;
                }
-               iterator& operator++() {
+               iterator& operator++() { // prefix only i.e. ++it but not it++
                   if (this->target)
                      this->target = this->target->next();
                   return *this;
                }
-               template<typename std::enable_if_t<_value_type_is_pointer>* = nullptr> value_pointer_type operator->() const noexcept {
-                  return this->target->value;
+               std::pair<key_type, value_type>* operator->() noexcept {
+                  if (!this->target)
+                     return nullptr;
+                  return &this->target->data;
                }
-               template<typename std::enable_if_t<!_value_type_is_pointer>* = nullptr> value_pointer_type operator->() const noexcept {
-                  return &this->target->value;
-               }
-               template<typename std::enable_if_t<_value_type_is_pointer>* = nullptr> value_reference_type operator*() const noexcept {
-                  return *this->target->value;
-               }
-               template<typename std::enable_if_t<!_value_type_is_pointer>* = nullptr> value_reference_type operator*() const noexcept {
-               return this->target->value;
-            }
+               //
+               bool operator==(const iterator& other) const { return this->target == other.target; }
+               bool operator!=(const iterator& other) const { return !(*this == other); }
          };
          struct reverse_iterator : public iterator {
             friend wavl_tree;
             protected:
                reverse_iterator(node* n) : iterator(n) {}
             public:
-               iterator& operator--() {
-                  if (this->target)
-                     this->target = this->target->next();
+               reverse_iterator& operator--() {
+                  iterator::operator++();
                   return *this;
                }
-               iterator& operator++() {
-                  if (this->target)
-                     this->target = this->target->prev();
+               reverse_iterator& operator++() {
+                  iterator::operator--();
                   return *this;
                }
          };
