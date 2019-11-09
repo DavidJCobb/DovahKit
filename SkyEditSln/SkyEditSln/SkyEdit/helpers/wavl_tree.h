@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <functional>
 #include <stdexcept>
-#include <type_traits>
 
 namespace cobb {
    template<typename key_type, typename value_type>
@@ -12,13 +11,10 @@ namespace cobb {
          typedef key_type   key_type;
          typedef value_type value_type;
          //
-      protected:
-         static constexpr bool _value_type_is_pointer = std::is_pointer<value_type>::value;
       public:
-         // This is value_type if value_type is already a pointer, or value_type* otherwise:
-         using value_pointer_type = std::conditional_t<_value_type_is_pointer, value_type, std::add_pointer_t<value_type>>;
-         // This is value_type& if value_type isn't a pointer, or else equivalent to typedef(f) given { value_type foo; auto& f = *foo; }:
-         using value_reference_type = std::conditional_t<_value_type_is_pointer, std::add_lvalue_reference_t<std::remove_pointer_t<value_type>>, value_type&>;
+         //
+         // This class is a Weak AVL -- that is, a particular kind of self-
+         // balancing binary tree.
          //
          // BASED ON:
          //    <http://sidsen.azurewebsites.net//papers/rb-trees-talg.pdf>
@@ -55,7 +51,7 @@ namespace cobb {
             inline value_type value() const noexcept { return this->data.second; }
             inline value_type* value_pointer() noexcept { return &this->data.second; }
             //
-            node* prev() const {
+            node* prev() const noexcept {
                if (this->left) {
                   //
                   // Find the rightmost descendant of the left child, i.e.
@@ -90,7 +86,7 @@ namespace cobb {
                }
                return parent;
             }
-            node* next() const {
+            node* next() const noexcept {
                if (this->right) {
                   //
                   // Find the leftmost descendant of the right child, i.e.
@@ -125,7 +121,7 @@ namespace cobb {
                }
                return parent;
             }
-            node* sibling() const {
+            node* sibling() const noexcept {
                auto p = this->parent;
                if (!p)
                   return nullptr;
@@ -133,18 +129,18 @@ namespace cobb {
                   return p->right;
                return p->left;
             }
-            int   delta() const {
+            int   delta() const noexcept {
                if (this->parent)
                   return this->parent->rank - this->rank;
                return 0; // TODO: is this right?
             }
-            inline bool is_leaf() const {
+            inline bool is_leaf() const noexcept {
                return !this->left && !this->right;
             }
-            inline bool is_unary() const {
+            inline bool is_unary() const noexcept {
                return !(this->left && this->right) && (this->left || this->right);
             }
-            bool is_two_two() const {
+            bool is_two_two() const noexcept {
                if (!this->left || !this->right)
                   return false;
                if (this->rank - this->left->rank != 2)
@@ -153,7 +149,7 @@ namespace cobb {
                   return false;
                return true;
             }
-            int child_delta(bool left) const {
+            int child_delta(bool left) const noexcept {
                auto c = left ? this->left : this->right;
                if (c)
                   return this->rank - c->rank;
@@ -173,7 +169,7 @@ namespace cobb {
          };
          //
          node*    root = nullptr;
-         uint32_t size = 0;
+         uint32_t _size = 0;
          //
       protected:
          enum class comparison {
@@ -181,7 +177,7 @@ namespace cobb {
             greater,
             equal
          };
-         inline static comparison _compare(key_type a, key_type b) {
+         inline static comparison _compare(key_type a, key_type b) noexcept {
             if (a < b)
                return comparison::less;
             if (a > b)
@@ -189,7 +185,7 @@ namespace cobb {
             return comparison::equal;
          }
          //
-         bool _for_each(node* n, std::function<bool(key_type, value_type)> functor) const {
+         bool _for_each(node* n, std::function<bool(key_type, value_type)> functor) const noexcept {
             //
             // Abort early if return value is true.
             //
@@ -203,14 +199,14 @@ namespace cobb {
                   return true;
             return false;
          }
-         node* _first() const {
+         node* _first() const noexcept {
             auto n = this->root;
             if (n)
                while (n->left)
                   n = n->left;
             return n;
          }
-         node* _last() const {
+         node* _last() const noexcept {
             auto n = this->root;
             if (n)
                while (n->right)
@@ -218,7 +214,7 @@ namespace cobb {
             return n;
          }
          //
-         void _rotate_left(node* x) {
+         void _rotate_left(node* x) noexcept {
             //
             //   z                x
             //  / \              / \
@@ -245,7 +241,7 @@ namespace cobb {
                x->parent = p;
             }
          }
-         void _rotate_right(node* x) {
+         void _rotate_right(node* x) noexcept {
             //
             //     z            x
             //    / \          / \
@@ -272,7 +268,7 @@ namespace cobb {
                x->parent = p;
             }
          }
-         void _double_rotate_left(node* x) {
+         void _double_rotate_left(node* x) noexcept {
             //
             //     z                  y
             //    / \               /   \
@@ -307,7 +303,7 @@ namespace cobb {
                   p->left = y;
             }
          }
-         void _double_rotate_right(node* x) {
+         void _double_rotate_right(node* x) noexcept {
             //
             //     z                y
             //    / \             /  \
@@ -342,7 +338,7 @@ namespace cobb {
                   p->right = y;
             }
          }
-         void _fix_insert(node* x) { // x should be the newly-inserted node
+         void _fix_insert(node* x) noexcept { // x should be the newly-inserted node
             //
             // Per pages six and seven of <http://sidsen.azurewebsites.net//papers/rb-trees-talg.pdf>.
             //
@@ -376,7 +372,7 @@ namespace cobb {
                }
             }
          }
-         void _fix_delete(node* parent, node* sibling, node* target) {
+         void _fix_delete(node* parent, node* sibling, node* target) noexcept {
             auto x = target;
             auto y = sibling;
             auto z = parent;
@@ -433,7 +429,7 @@ namespace cobb {
             }
          }
          //
-         node* _set(key_type k, value_type v) {
+         node* _set(key_type k, value_type v) noexcept {
             //
             // The reason the "set" code is in a protected helper function is because 
             // we don't want the public "set" function to give access to the created 
@@ -442,7 +438,7 @@ namespace cobb {
             node* t = this->root;
             if (t == nullptr) {
                this->root = new node(k, v, nullptr);
-               this->size = 1;
+               this->_size = 1;
                return this->root;
             }
             comparison last;
@@ -466,7 +462,7 @@ namespace cobb {
                parent->right = e;
             if (parent->rank == 0) // a leaf became a branch
                _fix_insert(e);
-            this->size++;
+            this->_size++;
             return e;
          }
          //
@@ -475,7 +471,7 @@ namespace cobb {
             if (this->root)
                this->_for_each(this->root, functor);
          }
-         value_type* get(key_type k) const {
+         value_type* get(key_type k) const noexcept {
             auto p = this->root;
             while (p) {
                auto ok = p->key();
@@ -488,7 +484,7 @@ namespace cobb {
             }
             return nullptr;
          }
-         void remove(key_type k) {
+         void remove(key_type k) noexcept {
             node* t = this->root;
             if (!t)
                return;
@@ -503,7 +499,7 @@ namespace cobb {
             } while (t);
             if (!t)
                return;
-            this->size--;
+            this->_size--;
             //
             // t == the node to remove
             //
@@ -554,9 +550,12 @@ namespace cobb {
             this->_fix_delete(p, left ? p->right : p->left, t);
             delete t;
          }
-         void set(key_type k, value_type v) {
+         void set(key_type k, value_type v) noexcept {
             this->_set(k, v);
          }
+         //
+         size_t size() const noexcept { return this->_size; }
+         bool empty() const noexcept { return !this->_size; }
          //
          /*//
          void _debug_dump(node* n) const {
@@ -595,12 +594,12 @@ namespace cobb {
                node* target = nullptr;
                //
             public:
-               iterator& operator--() { // prefix only i.e. --it but not it--
+               iterator& operator--() noexcept { // prefix only i.e. --it but not it--
                   if (this->target)
                      this->target = this->target->prev();
                   return *this;
                }
-               iterator& operator++() { // prefix only i.e. ++it but not it++
+               iterator& operator++() noexcept { // prefix only i.e. ++it but not it++
                   if (this->target)
                      this->target = this->target->next();
                   return *this;
@@ -611,28 +610,28 @@ namespace cobb {
                   return &this->target->data;
                }
                //
-               bool operator==(const iterator& other) const { return this->target == other.target; }
-               bool operator!=(const iterator& other) const { return !(*this == other); }
+               bool operator==(const iterator& other) const noexcept { return this->target == other.target; }
+               bool operator!=(const iterator& other) const noexcept { return !(*this == other); }
          };
          struct reverse_iterator : public iterator {
             friend wavl_tree;
             protected:
                reverse_iterator(node* n) : iterator(n) {}
             public:
-               reverse_iterator& operator--() {
+               reverse_iterator& operator--() noexcept {
                   iterator::operator++();
                   return *this;
                }
-               reverse_iterator& operator++() {
+               reverse_iterator& operator++() noexcept {
                   iterator::operator--();
                   return *this;
                }
          };
          //
-         iterator begin() { return iterator(this->_first()); }
-         iterator end()   { return iterator(nullptr); }
-         reverse_iterator rbegin() { return reverse_iterator(this->_last()); }
-         reverse_iterator rend()   { return reverse_iterator(nullptr); }
+         iterator begin() noexcept { return iterator(this->_first()); }
+         iterator end()   noexcept { return iterator(nullptr); }
+         reverse_iterator rbegin() noexcept { return reverse_iterator(this->_last()); }
+         reverse_iterator rend()   noexcept { return reverse_iterator(nullptr); }
          //
          value_type& at(key_type k) {
             auto e = this->get(k);
@@ -640,12 +639,12 @@ namespace cobb {
                return *e;
             throw std::out_of_range("element not present");
          }
-         value_type& operator[](key_type k) {
+         value_type& operator[](key_type k) noexcept {
             auto e = this->get(k);
             if (e)
                return *e;
             auto node = this->_set(k, value_type());
-            return node->value;
+            return node->data.second;
          }
    };
 

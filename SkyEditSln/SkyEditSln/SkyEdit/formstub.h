@@ -2,11 +2,13 @@
 #include <atomic>
 #include <cstdint>
 #include <cstring>
+#include <map>
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
 
 struct FormStub;
+class LoadOrder;
 class TESPluginFile;
 class TESPluginBaseReader;
 class TESPluginThreadedSimpleReader;
@@ -15,6 +17,40 @@ class TESPluginThreadedWorldspaceSubBlockReader;
 namespace LoadedForms {
    class Form;
 }
+
+#define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 1
+#ifdef COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS
+   typedef std::pair<const uint32_t, FormStub*> FormMapPair;
+   class FormMapHeap : public cobb::multithreaded_block_allocator<FormMapPair, 3200, ESP_LOAD_TOTAL_THREADS> {
+      public:
+         inline static FormMapHeap& get() {
+            static FormMapHeap instance;
+            return instance;
+         }
+   };
+   class FormMapAllocator : public std::allocator<FormMapPair> {
+      //
+      // This is an interface between std::allocator and an instance of 
+      // cobb::multithreaded_block_allocator. It's stateless.
+      //
+      FormMapPair* allocate(size_type n, const FormMapPair* hint = nullptr) {
+         if (n > 1)
+            throw std::invalid_argument("Cannot allocate more than 1.");
+         return (FormMapPair*)FormMapHeap::get().allocate();
+      }
+      void deallocate(FormMapPair* p, size_type n) {
+         FormMapHeap::get().free((void*)p);
+      }
+      //
+      // stateless; therefore all instances are interchangeable
+      bool operator==(const FormMapAllocator& right) { return this == &right; }
+      bool operator!=(const FormMapAllocator& right) { return this != &right; }
+   };
+
+   typedef std::map<uint32_t, FormStub*, std::less<uint32_t>, FormMapAllocator> map_of_forms;
+#else
+   typedef std::map<uint32_t, FormStub*> map_of_forms;
+#endif
 
 template<typename LoadedFormClass> class loaded_form_ptr {
    //
@@ -118,6 +154,7 @@ struct FormStub {
    template<typename LoadedFormClass> friend class loaded_form_ptr;
    friend TESPluginFile;
    friend TESPluginBaseReader;
+   friend LoadOrder;
    //
    public:
       enum RefcountFlags {

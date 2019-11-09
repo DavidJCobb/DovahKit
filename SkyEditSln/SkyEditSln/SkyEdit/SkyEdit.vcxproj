@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -100,6 +101,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -123,6 +125,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="esp\LoadOrder.cpp" />
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="formstub.cpp" />
     <ClCompile Include="forms\loaded\ActorBase.cpp" />
@@ -130,7 +133,6 @@
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
-    <ClCompile Include="helpers\threading.cpp" />
     <ClCompile Include="helpers\wavl_tree.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="forms\loaded\Quest.cpp" />
@@ -139,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="esp\base.h" />
+    <ClInclude Include="esp\LoadOrder.h" />
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\loaded\ActorBase.h" />
@@ -153,7 +156,6 @@
     <ClInclude Include="helpers\memory.h" />
     <ClInclude Include="helpers\miscellaneous.h" />
     <ClInclude Include="helpers\strings.h" />
-    <ClInclude Include="helpers\threading.h" />
     <ClInclude Include="helpers\wavl_tree.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="forms\loaded\Quest.h" />

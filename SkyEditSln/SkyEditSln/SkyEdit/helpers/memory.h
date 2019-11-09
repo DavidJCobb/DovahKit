@@ -370,7 +370,7 @@ namespace cobb {
          std::shared_mutex lock;
          BlockList lists[thread_count];
          //
-         BlockList* _find_thread() {
+         BlockList* _find_thread() noexcept {
             cobb::shared_lock_guard<std::shared_mutex> guard(this->lock);
             //
             auto id = std::this_thread::get_id();
@@ -381,7 +381,7 @@ namespace cobb {
             }
             return nullptr;
          }
-         void unregister_thread(std::thread::id id) {
+         void unregister_thread(std::thread::id id) noexcept {
             std::lock_guard<std::shared_mutex> guard(this->lock);
             //
             for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
@@ -394,7 +394,7 @@ namespace cobb {
          }
          //
       public:
-         registration register_thread() {
+         registration register_thread() noexcept {
             std::lock_guard<std::shared_mutex> guard(this->lock);
             auto id = std::this_thread::get_id();
             //
@@ -476,7 +476,7 @@ namespace cobb {
             }
             ::free(mem);
          }
-         void force_free_all() {
+         void force_free_all() noexcept {
             std::lock_guard<std::shared_mutex> guard(this->lock);
             //
             for (uint32_t i = 0; i < std::extent<decltype(this->lists)>::value; i++) {
@@ -521,7 +521,7 @@ namespace cobb {
             }
          }
          //
-         void dumpStats() {
+         void dumpStats() noexcept {
             std::lock_guard<std::shared_mutex> guard(this->lock);
             //
             printf("=================================================================================\n");

@@ -25,43 +25,6 @@ class TESPluginSubrecord;
 class TESPluginRecord;
 struct LStringRef;
 
-#define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 1
-#ifdef COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS
-   class FormMapHeap : public cobb::multithreaded_block_allocator<std::pair<uint32_t, FormStub*>, 3200, ESP_LOAD_TOTAL_THREADS> {
-      public:
-         inline static FormMapHeap& get() {
-            static FormMapHeap instance;
-            return instance;
-         }
-   };
-   class FormMapAllocator : public std::allocator<std::pair<uint32_t, FormStub*>> {
-      //
-      // This is an interface between std::allocator and an instance of 
-      // cobb::multithreaded_block_allocator. It's stateless.
-      //
-      pointer allocate(size_type n, std::allocator<void>::const_pointer = 0) {
-         if (n > max_size())
-            throw std::invalid_argument("Cannot allocate more than max_size().");
-         return (pointer)FormMapHeap::get().allocate();
-      }
-      void deallocate(pointer p, size_type n) {
-         if (n > max_size())
-            throw std::invalid_argument("Cannot allocate more than max_size().");
-         FormMapHeap::get().free((void*)p);
-      }
-      size_type max_size() const { return 1; }
-      //
-      // stateless; therefore all instances are interchangeable
-      bool operator==(const FormMapAllocator& right) { return this == &right; }
-      bool operator!=(const FormMapAllocator& right) { return this != &right; }
-   };
-
-   typedef std::map<uint32_t, FormStub*, std::less<uint32_t>, FormMapAllocator> map_of_forms;
-#else
-   typedef std::map<uint32_t, FormStub*> map_of_forms;
-#endif
-typedef std::map<formtype_t, map_of_forms> map_of_forms_by_type;
-
 struct TESPluginGroupHeader {
    public:
       uint32_t signature = 0; // should always be 'GRUP'
@@ -462,6 +425,10 @@ class TESPluginFile : public TESPluginBaseReader {
          kFlag_LocalizedStringTable = 0x0080,
          kFlag_Light  = 0x0200, // SSE only
       };
+      struct MasterEntry {
+         std::string master; // MAST
+         uint64_t    data;   // DATA
+      };
    public:
       TESPluginFile();
       ~TESPluginFile();
@@ -470,20 +437,14 @@ class TESPluginFile : public TESPluginBaseReader {
       bool loadRecordAt(uint32_t pos); // for FormStub
       //
    protected:
-      struct _form_map {
-         std::mutex   lock;
-         map_of_forms forms;
-      };
-      //
       bool _loadHeader();
       //
       std::string path;
+      std::string name;
       TESPluginThreadedSimpleReader complexReader; // see constructor for initializer
       TESPluginThreadedSimpleReader simpleReaders[ESP_LOAD_SIMPLE_THREADS]; // see constructor for initializer
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
-      //
-      _form_map formsByType[FormType::Count];
       //
       uint32_t config = 0;
       //
@@ -496,13 +457,12 @@ class TESPluginFile : public TESPluginBaseReader {
       uint32_t nextFormID;
       char     authorName[512];
       char     description[512];
-      std::vector<std::string> masters;
+      std::vector<MasterEntry> masters;
       // TODO: ONAM
       uint32_t subINTV;
       uint32_t subINCC;
       //
-      FormStub* getForm(formtype_t formType, uint32_t formID) const;
-      void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
-      //
       void modify_config(bool set, uint32_t flags);
+      //
+      inline const std::string& getFilename() const noexcept { return this->name; }
 };

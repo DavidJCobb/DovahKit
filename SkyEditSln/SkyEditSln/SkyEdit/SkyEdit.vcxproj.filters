@@ -39,9 +39,6 @@
     <ClCompile Include="helpers\strings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\threading.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="helpers\files.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -52,6 +49,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="forms\loaded\ActorBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="esp\LoadOrder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -89,9 +89,6 @@
     <ClInclude Include="helpers\strings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\threading.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\locks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -114,6 +111,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="forms\loaded\ActorBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="esp\LoadOrder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

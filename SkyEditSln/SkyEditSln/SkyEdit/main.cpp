@@ -1,10 +1,12 @@
 #include <iostream> // for testing
 #include <sys/timeb.h> // for benchmarks
 #include <thread> // for std::thread::id
+#include "esp/LoadOrder.h"
 #include "esp/TESPlugin.h"
 #include "forms/loaded/Quest.h"
 
 const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/Skyrim.esm";
+const char* TEST_PLUGIN_PATH = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/";
 
 std::thread::id main_thread_id;
 
@@ -41,6 +43,150 @@ std::thread::id main_thread_id;
 //    contents have to use different "read" and "skip" functions (it's because we 
 //    HAVE TO load record contents into a buffer in order to allow uniform access 
 //    for compressed and uncompressed record data).
+//
+//  - Cleanup:
+//
+//     - Make the ESPGroupType enum a scoped implicit-castable enum.
+//
+//     - Make the PapyrusPropertyType enum a scoped implicit-castable enum.
+//
+//     - Either replace TESPluginFile::_insertForm with direct calls to the 
+//       analogous method on LoadOrder, or have TESPluginFile::_insertForm delete 
+//       the form stub and do nothing if the file has been told to abort (see 
+//       below).
+//
+//     - TESPluginFileConfigFlags::do_not_free_own_stubs is no longer used now 
+//       that all FormStubs belong to the LoadOrder singleton. As such, there 
+//       is currently no use for config flags on TESPluginFile and they should be 
+//       removed.
+//
+//  - Loading:
+//
+//     - Add a method TESPluginFile::abort. The method should set a flag on the 
+//       TESPluginFile indicating that loading needs to abort and then, if the 
+//       file is doing multi-threaded loading, wait for the threads to join. The 
+//       threaded reader classes, meanwhile, need to be modified to check that 
+//       flag on a regular basis and abort if they see that it's been set.
+//
+//     - We need to account for unexpected masters. For example, if you ask the 
+//       LoadOrder singleton to load ONLY Update.esm, then Skyrim.esm will be an 
+//       unexpected master and we must add it to the load order.
+//
+//       I think we should make a class that loads file headers (do NOT use 
+//       TESPluginFile for this -- you'll see why) and then, when we ask to load 
+//       the queued set of files, have LoadOrder go through each queued file and 
+//       work to build a "final" load order. If, when loading file headers, it 
+//       finds unexpected masters, it can just add those to the final load order 
+//       before it adds the current queued file. Once the final load order is 
+//       built, we create TESPluginFiles for everything in it.
+//
+//       With that done, we'll want to modify TESPluginFile's method for loading 
+//       the file header and have that fail with an error if it encounters any 
+//       new unexpected masters (which would indicate that the files were 
+//       tampered with during our load).
+//
+//     - We need to test load orders consisting of multiple files, so we can 
+//       verify that record overriding and form ID fixup both work.
+//
+//     - We need to figure out how to get the loading code to actually signal 
+//       errors to LoadOrder. In every place where we log a debug message and 
+//       return false, we must instead send error details to the LoadOrder 
+//       singleton.
+//
+//       I need to audit the relevant code -- make sure that any resources we 
+//       acquire are properly released in the event of failure. After that, I 
+//       need to decide on exactly how I'm going to handle load failures. We 
+//       could use C++ exceptions, but then in order to release resources we 
+//       have to catch and then rethrow the exceptions. Hmm...
+//
+//  - Constraints
+//
+//     - FOPEN_MAX, the maximum number of files we're allowed to have open 
+//       via cstdio functions, is 20 in my dev environment -- not enough for 
+//       the full load order. However, we don't open ESP files with fopen; we 
+//       use Windows's "mapped file" API. Does that have a similar limit?
+//
+
+
+
+//
+//  - Add a load order singleton.
+//
+//     - Instead of storing FormStubs per TESPluginFile, only store them on the 
+//       load order singleton; as such, we'll keep only the last-loaded record 
+//       with a given form ID. The changes involved here should be fairly minimal.
+//
+//        - We already intended to only build Use Info for last-loaded forms and 
+//          to only use load-loaded forms in the UI, so if we have TESPluginFile 
+//          keep the FormStubs, then we'll just have tons of useless stubs in 
+//          memory.
+//
+//           - The load order singleton needs to be programmed so that if we're 
+//             replacing a FormStub (i.e. the form ID we're using already has a 
+//             stub from a previous file), then the old FormStub needs to be 
+//             deleted. If we use std::map for our form list, then we can do:
+//
+//             FormStub*& value = map[formID];
+//             // 
+//             // operator[] creates the element if it doesn't exist, i.e. it's 
+//             // logically equivalent to:
+//             // FormStub*& value = map[formID] ? map[formID] : (map[formID] = nullptr);
+//             // 
+//             if (value) {
+//                delete value; // assuming this works on references to pointers
+//             }
+//             value = new_stub;
+//
+//        - Add to FormStub two linked lists of connections, one for outbound 
+//          references to other forms and the other for inbound references from 
+//          other forms.
+//
+//     - Like the Creation Kit, we will load a list of user-selected files, and 
+//       one file may optionally be designated as the "active file" to which 
+//       changes will be made.
+//
+//        - Do not allow the loading of any files that have the active file as 
+//          a dependency. If they override records in the active file, things 
+//          could get very messy -- particularly if any overrides refer to forms 
+//          that exist only in the dependent file(s).
+//
+//        - In order to be able to see file header details in advance, we should 
+//          make it so that TESPluginFile instances can be told to load just 
+//          their header, i.e. we create one TESPluginFile instance for each 
+//          file we MAY load and have it load its header so we can see its 
+//          dependencies and so on; and then if we decide we want to actually 
+//          load that file, we just reuse the same instance.
+//
+//           - NO NO NO. TESPluginFile maps files into memory; if we do it 
+//             this way, then we're mapping all of the ESP files into memory 
+//             before we even load them AND we're locking the files! Make a 
+//             separate class to read just headers; remember what dependencies 
+//             a file claimed to have; and then if we load that file with a 
+//             TESPluginFile, fail if its dependencies have changed from 
+//             what we saw earlier.
+//
+//    - Once we have it in place, test a load order of just Skyrim.esm and make 
+//      sure there are no regressions (i.e. same test: print quests and NPCs). 
+//      Then, test a load order consisting of Skyrim.esm and Update.esm and 
+//      write code to test specific overrides in Update.esm.
+//
+//  - cobb::wavl_tree
+//
+//     - We should add an analogue to std::map::clear.
+//
+//     - Can we add an analogue to std::map::swap and/or std::swap support?
+//
+//     - We should add an analogue to std::map::contains.
+//
+//     - For completeness' sake we may want an analogue to std::map::find, which 
+//       looks up a node and returns an iterator to it. We don't need, but may 
+//       want, analogues to std::map::lower_bound and std::map::upper_bound.
+//
+//     - Consider renaming (value_type) to (mapped_type) and then typedeffing 
+//       (value_type) to refer to the pair; this will be consistent with std::map.
+//
+//     - Do we want to alter iterators to satisfy LegacyBidirectionalIterator 
+//       constraints? <https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator>
 //
 //  - Improvements to multi-threaded file loading:
 //
@@ -85,6 +231,11 @@ std::thread::id main_thread_id;
 //    for editor IDs on FormStub. It should (free) when destroyed (only the owner 
 //    should have the cobb::zstring; we may even want to set its copy constructor 
 //    to =deleted; other parties should take the const char*).
+
+//
+// OLD NOTES ON LOAD ORDERS AND USE INFO BELOW:
+//
+
 //
 //  - Implement the handling of multiple TESPluginFiles as part of a load order: 
 //    we need a singleton that represents the full load order, with a list of 
@@ -175,13 +326,55 @@ std::thread::id main_thread_id;
 //                binary tree or any other specific implementation.
 //
 
-#include "helpers/wavl_tree.h"
-
 int main() {
-   cobb::unit_tests::wavl_tree();
-
    main_thread_id = std::this_thread::get_id();
    //
+   auto& lo = LoadOrder::get();
+   lo.basePath = TEST_PLUGIN_PATH;
+   lo.addFile("Skyrim.esm");
+   struct timeb bench_start;
+   struct timeb bench_end;
+   ftime(&bench_start);
+   bool result = lo.loadQueuedFiles();
+   ftime(&bench_end);
+   printf("Loaded Skyrim.esm.\n");
+   printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+   if (result) {
+      lo.forEachFormOfType(FormType::Quest, [](FormStub* stub) {
+         auto form = stub->load();
+         if (form && form->formType == FormType::Quest) {
+            auto quest = form.ptr_cast<LoadedForms::Quest>();
+            const char* type = LoadedForms::Quest::QuestTypeToString(quest->questType);
+            if (!type)
+               type = "<UNKNOWN>";
+            printf("[QUST:%08X]%s (%s) is a %s quest\n", stub->formID, quest->editorID.c_str(), quest->name.c_str(), type);
+            if (quest->scriptData.scripts.size()) {
+               quest->scriptData.forEachScript([](PapyrusScriptData::Script* script) {
+                  printf(" - Script: %s with %d properties\n", script->name.c_str(), script->properties.size());
+                  return false;
+               });
+            }
+         } else {
+            printf("[QUST:%08X] could not be loaded.\n", stub->formID);
+         }
+         return false;
+      });
+      lo.forEachFormOfType(FormType::ActorBase, [](FormStub* stub) {
+         auto editorID = stub->get_editor_id();
+         if (editorID)
+            printf("[NPC_:%08X]%s\n", stub->formID, editorID);
+         else
+            printf("[NPC_:%08X] has no editor ID\n", stub->formID);
+         return false;
+      });
+   } else {
+      printf("...But an error was encountered during load!");
+      //
+      // TODO: display error
+      //
+   }
+   //
+   /*//
    TESPluginFile skyrim;
    skyrim.modify_config(true, TESPluginFileConfigFlags::do_not_free_own_stubs); // we are responsible for force-deleting all FormStubs via the allocator
    struct timeb bench_start;
@@ -220,6 +413,7 @@ int main() {
          printf("[NPC_:%08X] has no editor ID\n", stub->formID);
       return false;
    });
+   //*/
    //
    auto& fsh = FormStubHeap::get();
    //FormStubHeapPrinter fsh_printer;

@@ -1,7 +1,12 @@
 #pragma once
 #include <cstdint>
 
-typedef uint8_t formtype_t;
+typedef uint8_t  formtype_t;
+typedef uint32_t form_id_t;
+
+extern constexpr uint32_t hardcoded_form_id_mask = 0x000007FF; // Mask for form IDs that are hardcoded forms.
+extern constexpr uint32_t plugin_form_id_mask    = 0xFFFFF800; // Mask for form IDs that are not hardcoded forms.
+extern constexpr uint32_t minimum_plugin_form_id = 0x00000800; // Minimum non-load-order-prefixed form ID for a non-hardcoded form.
 
 struct FormType { // enum; a struct-wrapped enum is scoped like enum class but allows implicit casts to number types
    FormType() = delete;

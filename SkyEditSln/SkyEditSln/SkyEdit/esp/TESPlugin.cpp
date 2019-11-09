@@ -1,11 +1,13 @@
 #include "TESPlugin.h"
 #include <algorithm>
 #include <cassert>
+#include <filesystem>
 #include <stdexcept>
 #include <iostream> // for testing
 #include "../output.h"
 #include "../forms/components.h"
 #include "../helpers/strings.h"
+#include "LoadOrder.h"
 
 #define DO_ESP_LOAD_BENCHMARKS 1
 #ifdef DO_ESP_LOAD_BENCHMARKS
@@ -609,16 +611,6 @@ TESPluginFile::~TESPluginFile() {
          this->fileHandle = nullptr;
       }
    #endif
-   if (!(this->config & TESPluginFileConfigFlags::do_not_free_own_stubs)) {
-      for (formtype_t i = 0; i < FormType::Count; i++) {
-         auto& list = this->formsByType[i].forms;
-         for (auto jt = list.begin(); jt != list.end(); ++jt) {
-            FormStub* stub = jt->second;
-            delete stub;
-         }
-         list.clear();
-      }
-   }
 }
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->resetParseState();
@@ -638,6 +630,7 @@ bool TESPluginFile::_loadHeader() {
    }
    this->flags = r.flags();
    //
+   uint32_t last_subrecord = 0;
    while (auto& subrecord = r.next_subrecord()) {
       switch (subrecord.signature()) {
          case 'HEDR': // required subrecord; TODO: fail if this isn't present
@@ -662,14 +655,52 @@ bool TESPluginFile::_loadHeader() {
             }
             break;
          case 'MAST':
-            //
-            // TODO
-            //
+            if (last_subrecord == 'MAST') { // wrong; should be separated by 'DATA'
+               _DEBUGMSG("Warning: a 'MAST' subrecord in the file header lacked a matching 'DATA' subrecord.");
+            }
+            {
+               this->masters.emplace_back();
+               MasterEntry& last = *this->masters.rbegin();
+               if (!subrecord.to_string(last.master)) {
+                  _DEBUGMSG("Failed to read a 'MAST' subrecord in the file header.");
+                  return false;
+               }
+               if (this->masters.size() > 253) {
+                  _DEBUGMSG("This file claims to have more than 253 masters.");
+                  return false;
+               }
+               //
+               // TODO: Check if the specified master is in the load order. If not, then we need 
+               // to add it to the load order just before this file. Not yet sure how we oughta 
+               // do that.
+               //
+               // Actually, it might be easier to:
+               //
+               //  - Have LoadOrder pre-load the headers of all relevant files, grab masters as 
+               //    necessary, and construct a final load order. TESPluginFile should not be 
+               //    used to get the headers.
+               //
+               //  - Have LoadOrder load that final load order using TESPluginFile, which will 
+               //    lead to this function being called.
+               //
+               //  - Have the load process fail if this function encounters any unexpected 
+               //    masters.
+               //
+            }
             break;
          case 'DATA': // always follows a MAST; vestigial; doesn't appear to be used
-            //
-            // TODO
-            //
+            if (last_subrecord != 'MAST') {
+               if (last_subrecord)
+                  _DEBUGMSG("Unexpected 'DATA' subrecord in the file header following %s.", FMT_SIGNATURE(last_subrecord));
+               else
+                  _DEBUGMSG("Unexpected 'DATA' subrecord at the start of the file header.");
+               return false;
+            } else {
+               MasterEntry& last = *this->masters.rbegin();
+               if (!subrecord.read(last.data)) {
+                  _DEBUGMSG("Warning: failed to read the 'DATA' subrecord for master: %s", last.master.c_str());
+               }
+            }
             break;
          case 'ONAM':
             //
@@ -689,13 +720,17 @@ bool TESPluginFile::_loadHeader() {
             }
             break;
       }
+      last_subrecord = subrecord.signature();
    }
    return true;
 }
 void TESPluginFile::_insertForm(uint32_t formID, FormStub* stub) {
+   LoadOrder::get().acceptFormStub(stub);
+   /*//
    auto& type = this->formsByType[stub->formType];
    std::lock_guard<std::mutex> guard(type.lock);
    type.forms[formID] = stub;
+   //*/
 }
 bool TESPluginFile::load(const char* filepath) {
    this->path.clear();
@@ -710,6 +745,7 @@ bool TESPluginFile::load(const char* filepath) {
    #endif
    _DEBUGMSG("Opened file.");
    this->path = filepath;
+   this->name = std::filesystem::path(filepath).filename().string();
    if (!this->_loadHeader()) {
       _DEBUGMSG("Unable to read header.");
       return false;
@@ -745,7 +781,6 @@ bool TESPluginFile::load(const char* filepath) {
                continue;
             }
             formtype_t formType = signatureToFormType(record.signature());
-            auto& list = this->formsByType[formType].forms;
             auto  stub = this->make_stub_for_record(*this);
             stub->groupInfo.groupType = group.header.type;
             switch (group.header.type) {
@@ -753,7 +788,7 @@ bool TESPluginFile::load(const char* filepath) {
                   stub->groupInfo.parentFormID = last_worldspace_id;
                   break;
             }
-            list[stub->formID] = stub;
+            this->_insertForm(stub->formID, stub);
          }
          if (ot == kObjectType_Group) {
             if (group.header.type == kESPGroupType_WorldChildren) {
@@ -841,23 +876,6 @@ bool TESPluginFile::load(const char* filepath) {
    return true;
 }
 //
-FormStub* TESPluginFile::getForm(uint8_t formType, uint32_t formID) const {
-   if (formType < std::extent<decltype(this->formsByType)>::value) {
-      try {
-         return this->formsByType[formType].forms.at(formID);
-      } catch (std::out_of_range) {}
-   }
-   return nullptr;
-}
-void TESPluginFile::forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)> functor) {
-   if (formType < std::extent<decltype(this->formsByType)>::value) {
-      auto& list = this->formsByType[formType].forms;
-      for (auto it = list.begin(); it != list.end(); ++it) {
-         if (functor(it->second))
-            break;
-      }
-   }
-}
 void TESPluginFile::modify_config(bool set, uint32_t flags) {
    if (set)
       this->config |= flags;
