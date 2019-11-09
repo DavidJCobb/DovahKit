@@ -342,7 +342,6 @@ namespace cobb {
             //
             // Per pages six and seven of <http://sidsen.azurewebsites.net//papers/rb-trees-talg.pdf>.
             //
-            node* p;
             while (node* p = x->parent) {
                x = p;
                x->rank++;

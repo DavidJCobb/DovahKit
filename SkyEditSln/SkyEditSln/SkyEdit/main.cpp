@@ -374,47 +374,6 @@ int main() {
       //
    }
    //
-   /*//
-   TESPluginFile skyrim;
-   skyrim.modify_config(true, TESPluginFileConfigFlags::do_not_free_own_stubs); // we are responsible for force-deleting all FormStubs via the allocator
-   struct timeb bench_start;
-   struct timeb bench_end;
-   ftime(&bench_start);
-   skyrim.load(testPath);
-   ftime(&bench_end);
-   std::cout << "Loaded Skyrim.esm." << std::endl;
-   printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-   std::cout << "Author: " << skyrim.authorName << std::endl;
-   std::cout << "Description: " << skyrim.description << std::endl;
-   skyrim.forEachFormOfType(FormType::Quest, [](FormStub* stub) {
-      auto form = stub->load();
-      if (form && form->formType == FormType::Quest) {
-         auto quest = form.ptr_cast<LoadedForms::Quest>();
-         const char* type = LoadedForms::Quest::QuestTypeToString(quest->questType);
-         if (!type)
-            type = "<UNKNOWN>";
-         printf("[QUST:%08X]%s (%s) is a %s quest\n", stub->formID, quest->editorID.c_str(), quest->name.c_str(), type);
-         if (quest->scriptData.scripts.size()) {
-            quest->scriptData.forEachScript([](PapyrusScriptData::Script* script) {
-               printf(" - Script: %s with %d properties\n", script->name.c_str(), script->properties.size());
-               return false;
-            });
-         }
-      } else {
-         printf("[QUST:%08X] could not be loaded.\n", stub->formID);
-      }
-      return false;
-   });
-   skyrim.forEachFormOfType(FormType::ActorBase, [](FormStub* stub) {
-      auto editorID = stub->get_editor_id();
-      if (editorID)
-         printf("[NPC_:%08X]%s\n", stub->formID, editorID);
-      else
-         printf("[NPC_:%08X] has no editor ID\n", stub->formID);
-      return false;
-   });
-   //*/
-   //
    auto& fsh = FormStubHeap::get();
    //FormStubHeapPrinter fsh_printer;
    //fsh.dumpStats(fsh_printer);

@@ -24,7 +24,7 @@ namespace cobb {
          va_copy(args, safe);
          s += 20;
          free(b);
-         char* b = (char*)malloc(s);
+         b = (char*)malloc(s);
          r = vsprintf_s(b, s, format, args);
       }
       out = b;
