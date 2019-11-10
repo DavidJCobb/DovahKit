@@ -5,7 +5,6 @@
 #include "esp/TESPlugin.h"
 #include "forms/loaded/Quest.h"
 
-const char* testPath = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/Skyrim.esm";
 const char* TEST_PLUGIN_PATH = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/";
 
 std::thread::id main_thread_id;
@@ -14,8 +13,8 @@ std::thread::id main_thread_id;
 // TODO: UESP has already taken the name "SkyEdit"
 //
 // Possible other names:
-//    NordEdit
 //    Dovah-Edit
+//    NordEdit
 //
 // NOTES:
 //
@@ -55,12 +54,21 @@ std::thread::id main_thread_id;
 //       the form stub and do nothing if the file has been told to abort (see 
 //       below).
 //
-//     - TESPluginFileConfigFlags::do_not_free_own_stubs is no longer used now 
-//       that all FormStubs belong to the LoadOrder singleton. As such, there 
-//       is currently no use for config flags on TESPluginFile and they should be 
-//       removed.
+//     - The std::string class does not enforce the presence or absence of a null 
+//       terminator. This is preventing us from using std::string::operator== to 
+//       compare certain strings. Specifically, a typical string (i.e. anything 
+//       from user input or a string literal in our code) is going to have a null 
+//       terminator, whereas anything from a subrecord is going to lack a null 
+//       terminator. This causes the two kinds of strings to have different lengths, 
+//       and since std::string::operator== checks the lengths first as a shortcut, 
+//       the strings in question won't compare equal even though they are equal. 
+//       The fix to this would be to have TESPluginSubrecord::to_string forcibly 
+//       add a null terminator to the output std::string.
 //
 //  - Loading:
+//
+//     - The TESPluginFile reading code should fail if we encounter a group 
+//       nested too deeply (i.e. deeper than MAX_ESP_FILE_GROUP_DEPTH).
 //
 //     - Add a method TESPluginFile::abort. The method should set a flag on the 
 //       TESPluginFile indicating that loading needs to abort and then, if the 
@@ -85,8 +93,31 @@ std::thread::id main_thread_id;
 //       new unexpected masters (which would indicate that the files were 
 //       tampered with during our load).
 //
-//     - We need to test load orders consisting of multiple files, so we can 
-//       verify that record overriding and form ID fixup both work.
+//        - Files with an ESM extension and files that are flagged as masters 
+//          (and any dependencies of such files, even ESPs) always load first. 
+//          When we're putting the load order together, we should probably 
+//          first sort all files into a "master" bucket and a "non-master" 
+//          bucket, and THEN construct the final load order based on that. 
+//          That is:
+//
+//           - Read a queued file's header.
+//
+//           - Retrieve all masters of the queued file, and their masters, 
+//             and so on, by reading their headers.
+//
+//           - If the original queued file was a master, then all found files 
+//             go into the "master" bucket. Otherwise, any masters among the 
+//             found files (and their dependencies) go into the "master" 
+//             bucket and the rest go into the "non-master" bucket.
+//
+//              - If a file already exists in the "non-master" bucket and it 
+//                needs to be in the "master" bucket, move it. If a file is 
+//                about to be added to the "non-master" bucket but it already 
+//                exists in the "master" bucket, then don't put it into the 
+//                "non-master" bucket.
+//
+//           - The final load order is just the "master" bucket and the "non-
+//             master" bucket taken together, end-to-end.
 //
 //     - We need to figure out how to get the loading code to actually signal 
 //       errors to LoadOrder. In every place where we log a debug message and 
@@ -99,7 +130,54 @@ std::thread::id main_thread_id;
 //       could use C++ exceptions, but then in order to release resources we 
 //       have to catch and then rethrow the exceptions. Hmm...
 //
-//  - Constraints
+//        - For multi-threaded loading, we also need to get the faulting 
+//          thread to call the (abort) method on its owning TESPluginFile.
+//
+//        - Once we have this in place, audit all assertions and see how many 
+//          should be converted to errors that we handle through LoadOrder.
+//
+//     - We need to be able to set an active file.
+//
+//  - Use Info:
+//
+//     - Every FormStub needs two linked lists: one for outbounds references 
+//       to other forms, and another for inbound references from other forms.
+//
+//     - We need to start adding more classes for loaded forms.
+//
+//        - Each class needs two load methods: an instance method that actually 
+//          grabs all data for the form; and a static method that just sets up 
+//          outbound references. The latter should just ignore subrecords that 
+//          don't contain references to other forms; if a subrecord contains 
+//          references to other forms as well as other data, skip bytes and pay 
+//          attention only to those outbound form IDs.
+//
+//     - Once we have code to load at least *most* form types' outbound refs, 
+//       we need to write code to actually *do* that i.e. code in LoadOrder to 
+//       loop over every loaded form and set up Use Info. There are two ways we 
+//       can do this:
+//
+//       BI-DIRECTIONAL (SINGLE-THREADED SINGLE-PASS):
+//
+//       In a single thread, loop over every FormStub. Set up both outbound and 
+//       inbound references in one go. xEdit builds Use Info on a single thread 
+//       and takes 66 seconds to do it, though I think they build Use Info for 
+//       all files in the load order and not just conflict-winning records.
+//
+//       TWO-PASS (MULTI-THREADED OUTBOUND, SINGLE-THREADED INBOUND):
+//
+//       Divide the list of all forms into multiple sublists, and assign each 
+//       sub-list to a thread. Each thread should work to build outbound refs. 
+//       Then, after this operation is complete, use a single thread to go over 
+//       the full list of forms and build inbound refs based on the outbound 
+//       ref data.
+//
+//     - Once we have code to build Use Info, we'll need to be able to cache 
+//       it for faster loading, like xEdit does. Cached use info for a file 
+//       should match the filename and should be tagged with both a hash of 
+//       the file's contents and the version of SkyEdit that generated it.
+//
+//  - Constraints:
 //
 //     - FOPEN_MAX, the maximum number of files we're allowed to have open 
 //       via cstdio functions, is 20 in my dev environment -- not enough for 
@@ -120,22 +198,6 @@ std::thread::id main_thread_id;
 //          to only use load-loaded forms in the UI, so if we have TESPluginFile 
 //          keep the FormStubs, then we'll just have tons of useless stubs in 
 //          memory.
-//
-//           - The load order singleton needs to be programmed so that if we're 
-//             replacing a FormStub (i.e. the form ID we're using already has a 
-//             stub from a previous file), then the old FormStub needs to be 
-//             deleted. If we use std::map for our form list, then we can do:
-//
-//             FormStub*& value = map[formID];
-//             // 
-//             // operator[] creates the element if it doesn't exist, i.e. it's 
-//             // logically equivalent to:
-//             // FormStub*& value = map[formID] ? map[formID] : (map[formID] = nullptr);
-//             // 
-//             if (value) {
-//                delete value; // assuming this works on references to pointers
-//             }
-//             value = new_stub;
 //
 //        - Add to FormStub two linked lists of connections, one for outbound 
 //          references to other forms and the other for inbound references from 
@@ -164,11 +226,6 @@ std::thread::id main_thread_id;
 //             a file claimed to have; and then if we load that file with a 
 //             TESPluginFile, fail if its dependencies have changed from 
 //             what we saw earlier.
-//
-//    - Once we have it in place, test a load order of just Skyrim.esm and make 
-//      sure there are no regressions (i.e. same test: print quests and NPCs). 
-//      Then, test a load order consisting of Skyrim.esm and Update.esm and 
-//      write code to test specific overrides in Update.esm.
 //
 //  - cobb::wavl_tree
 //
@@ -326,47 +383,74 @@ std::thread::id main_thread_id;
 //                binary tree or any other specific implementation.
 //
 
+void test_print_quests() {
+   auto& lo = LoadOrder::get();
+   lo.forEachFormOfType(FormType::Quest, [](FormStub* stub) {
+      auto form = stub->load();
+      if (form && form->formType == FormType::Quest) {
+         auto quest = form.ptr_cast<LoadedForms::Quest>();
+         const char* type = LoadedForms::Quest::QuestTypeToString(quest->questType);
+         if (!type)
+            type = "<UNKNOWN>";
+         printf("[QUST:%08X]%s (%s) is a %s quest\n", stub->formID, quest->editorID.c_str(), quest->name.c_str(), type);
+         if (quest->scriptData.scripts.size()) {
+            quest->scriptData.forEachScript([](PapyrusScriptData::Script* script) {
+               printf(" - Script: %s with %d properties\n", script->name.c_str(), script->properties.size());
+               return false;
+            });
+         }
+      } else {
+         printf("[QUST:%08X] could not be loaded.\n", stub->formID);
+      }
+      return false;
+   });
+}
+void test_print_actor_bases() {
+   auto& lo = LoadOrder::get();
+   lo.forEachFormOfType(FormType::ActorBase, [](FormStub* stub) {
+      auto editorID = stub->get_editor_id();
+      if (editorID)
+         printf("[NPC_:%08X]%s\n", stub->formID, editorID);
+      else
+         printf("[NPC_:%08X] has no editor ID\n", stub->formID);
+      return false;
+   });
+}
+
 int main() {
    main_thread_id = std::this_thread::get_id();
    //
    auto& lo = LoadOrder::get();
    lo.basePath = TEST_PLUGIN_PATH;
    lo.addFile("Skyrim.esm");
+   lo.addFile("Update.esm");
+   lo.addFile("HearthFires.esm");
    struct timeb bench_start;
    struct timeb bench_end;
    ftime(&bench_start);
    bool result = lo.loadQueuedFiles();
    ftime(&bench_end);
-   printf("Loaded Skyrim.esm.\n");
+   printf("Loaded Skyrim.esm and Update.esm.\n");
    printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
    if (result) {
-      lo.forEachFormOfType(FormType::Quest, [](FormStub* stub) {
-         auto form = stub->load();
-         if (form && form->formType == FormType::Quest) {
-            auto quest = form.ptr_cast<LoadedForms::Quest>();
-            const char* type = LoadedForms::Quest::QuestTypeToString(quest->questType);
-            if (!type)
-               type = "<UNKNOWN>";
-            printf("[QUST:%08X]%s (%s) is a %s quest\n", stub->formID, quest->editorID.c_str(), quest->name.c_str(), type);
-            if (quest->scriptData.scripts.size()) {
-               quest->scriptData.forEachScript([](PapyrusScriptData::Script* script) {
-                  printf(" - Script: %s with %d properties\n", script->name.c_str(), script->properties.size());
-                  return false;
-               });
-            }
-         } else {
-            printf("[QUST:%08X] could not be loaded.\n", stub->formID);
-         }
-         return false;
-      });
-      lo.forEachFormOfType(FormType::ActorBase, [](FormStub* stub) {
-         auto editorID = stub->get_editor_id();
-         if (editorID)
-            printf("[NPC_:%08X]%s\n", stub->formID, editorID);
+      //test_print_quests();
+      //test_print_actor_bases();
+      auto hf_form = lo.getForm(0x020008CE);
+      if (hf_form)
+         printf("Found HearthFires form xx0008CE.\n");
+      else
+         printf("Unable to find HearthFires form xx0008CE; expected final form ID 0x020008CE with local form ID 0x010008CE.\n");
+      //
+      auto hf_override = lo.getForm(0x0010B035);
+      if (hf_override) {
+         std::string fn;
+         hf_override->get_source_filename(fn);
+         if (fn.empty())
+            printf("Unable to identify which file form 0x0010B035 was finally loaded from.\n");
          else
-            printf("[NPC_:%08X] has no editor ID\n", stub->formID);
-         return false;
-      });
+            printf("Form 0x0010B035, known to be defined in Skyrim.esm and overridden by HearthFires.esm, registers as being from file %s.\n", fn.c_str());
+      } else
+         printf("Unable to find Skyrim.esm form 0x0010B035 known to be overridden by HearthFires.esm.\n");
    } else {
       printf("...But an error was encountered during load!");
       //

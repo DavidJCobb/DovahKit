@@ -21,6 +21,11 @@ char* FormStub::allocate_editor_id(size_t length) {
    this->editorID = (char*)malloc(length);
    return this->editorID;
 }
+void FormStub::get_source_filename(std::string& out) const noexcept {
+   out.clear();
+   if (this->file)
+      out = this->file->getFilename();
+}
 loaded_form_ptr<LoadedForms::Form> FormStub::load() {
    if (!this->form && this->file) {
       //_DEBUGMSG("stub is loading...");

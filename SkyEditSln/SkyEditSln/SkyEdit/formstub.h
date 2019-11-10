@@ -192,6 +192,8 @@ struct FormStub {
       inline bool is_edited() { return (bool)(this->refcount & kRefcountFlag_Edited); };
       void set_edited(bool v);
 
+      void get_source_filename(std::string& out) const noexcept;
+
       static void* operator new(std::size_t sz);
       static void operator delete(void* ptr, std::size_t sz);
 

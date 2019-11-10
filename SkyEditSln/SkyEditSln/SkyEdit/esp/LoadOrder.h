@@ -52,9 +52,12 @@ enum class LoadErrorCode {
    locked_file = 6,
    //
    // out_of_bounds_form_id
-   // A file contained an out-of-bounds form ID, e.g. a file with three 
-   // masters (whose local forms would therefore use load order prefix 04) 
-   // containing a form with a load order prefix above 04.
+   // A file contained a form with an out-of-bounds form ID, e.g. a file 
+   // with three masters (whose local forms would therefore use load order 
+   // prefix 04) containing a form with a load order prefix above 04. Note 
+   // that this error is NOT triggered by a form with a valid ID containing 
+   // a field that refers to an invalid form ID; although that is incorrect, 
+   // it isn't an error that prevents loading.
    //
    out_of_bounds_form_id = 7,
    //
@@ -103,10 +106,12 @@ class LoadOrder {
       //
       void addFile(const std::string& name);
       void removeFile(const std::string& name);
+      void setActiveFile(const std::string& name); // TODO
       bool loadQueuedFiles();
       //
       uint8_t indexOf(const std::string& filename) const noexcept;
       //
+      FormStub* getForm(uint32_t formID) const;
       FormStub* getForm(formtype_t formType, uint32_t formID) const;
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
       //

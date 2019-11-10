@@ -875,10 +875,3 @@ bool TESPluginFile::load(const char* filepath) {
    this->complexReader.wait_for();
    return true;
 }
-//
-void TESPluginFile::modify_config(bool set, uint32_t flags) {
-   if (set)
-      this->config |= flags;
-   else
-      this->config &= ~flags;
-}

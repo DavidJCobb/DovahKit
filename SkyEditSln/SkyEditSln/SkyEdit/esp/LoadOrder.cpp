@@ -68,12 +68,32 @@ bool LoadOrder::loadQueuedFiles() {
 
 uint8_t LoadOrder::indexOf(const std::string& filename) const noexcept {
    auto size = this->files.size();
-   for (uint8_t i = 0; i < size; i++)
-      if (this->files[i]->getFilename() == filename)
+   for (uint8_t i = 0; i < size; i++) {
+      auto  file = this->files[i];
+      auto& name = file->getFilename();
+      //
+      // We can't use std::string::operator== because that compares the 
+      // strings' sizes first, as an optimization... which breaks, because 
+      // it's possible for one of these strings to contain a trailing null 
+      // and for the other string not to. Specifically, a TESPluginFile's 
+      // listed masters won't have a trailing null because there isn't one 
+      // in the MAST subrecords in the file header.
+      //
+      if (_stricmp(name.data(), filename.data()) == 0)
          return i;
+   }
    return invalid_load_prefix;
 }
 
+FormStub* LoadOrder::getForm(uint32_t formID) const {
+   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
+      auto& list = this->formsByType[ft].forms;
+      try {
+         return list.at(formID);
+      } catch (std::out_of_range) {}
+   }
+   return nullptr;
+}
 FormStub* LoadOrder::getForm(uint8_t formType, uint32_t formID) const {
    if (formType < std::extent<decltype(this->formsByType)>::value) {
       try {

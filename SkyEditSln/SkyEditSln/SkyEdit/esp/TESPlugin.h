@@ -399,22 +399,6 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
       void wait_for();
 };
 
-struct TESPluginFileConfigFlags { // enum; a struct-wrapped enum is scoped like enum class but allows implicit casts to number types
-   TESPluginFileConfigFlags() = delete;
-   enum : uint32_t {
-      none = 0x00000000,
-      //
-      // FLAG: TESPluginFileConfigFlags::do_not_free_own_stubs
-      //
-      // If set, TESPluginFile will not delete its FormStubs when destroyed. This flag 
-      // should only be used if you can guarantee that all FormStubs are on a custom 
-      // allocator, and that you will free all FormStubs via the allocator. The flag 
-      // exists to deal with the fact that freeing *all* FormStubs for a file one by 
-      // one is incredibly slow -- well over a minute.
-      //
-      do_not_free_own_stubs = 0x00000001,
-   };
-};
 class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
@@ -446,8 +430,6 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
       //
-      uint32_t config = 0;
-      //
       void _insertForm(uint32_t formID, FormStub* stub);
       //
    public:
@@ -461,8 +443,6 @@ class TESPluginFile : public TESPluginBaseReader {
       // TODO: ONAM
       uint32_t subINTV;
       uint32_t subINCC;
-      //
-      void modify_config(bool set, uint32_t flags);
       //
       inline const std::string& getFilename() const noexcept { return this->name; }
 };
