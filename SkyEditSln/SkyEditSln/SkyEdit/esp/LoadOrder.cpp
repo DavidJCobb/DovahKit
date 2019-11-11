@@ -1,5 +1,9 @@
 #include "LoadOrder.h"
+#include <algorithm>
 #include "TESPlugin.h"
+#include "TESPluginHeader.h"
+#include "../helpers/strings.h"
+#include "../output.h"
 
 uint8_t LoadOrder::loadOrderPrefixFor(TESPluginFile* file) const noexcept {
    uint8_t size = this->files.size();
@@ -43,6 +47,89 @@ uint32_t LoadOrder::localFormIDToGlobalFormID(FormStub* stub) const {
    return stub->formID & 0x00FFFFFF | (j << 0x18);
 }
 
+bool LoadOrder::_loadOrderHasMaster(const std::string& name) const {
+   auto& list = this->loadOrderMasters;
+   for (auto it = list.begin(); it != list.end(); ++it)
+      if (cobb::strieq(name, (*it)->name))
+         return true;
+   return false;
+}
+bool LoadOrder::_loadOrderHasPlugin(const std::string& name) const {
+   auto& list = this->loadOrderPlugins;
+   for (auto it = list.begin(); it != list.end(); ++it)
+      if (cobb::strieq(name, (*it)->name))
+         return true;
+   return false;
+}
+void LoadOrder::_moveToMasters(const std::string& name) noexcept {
+   auto& list = this->loadOrderPlugins;
+   auto  it   = std::find_if(list.begin(), list.end(), [&name](TESPluginHeader* file) { return cobb::strieq(name, file->name); });
+   if (it == list.end())
+      return;
+   TESPluginHeader* header = *it;
+   list.erase(it);
+   //
+   auto& masterNames = header->masters;
+   for (auto jt = masterNames.begin(); jt != masterNames.end(); ++jt) {
+      this->_moveToMasters(*jt);
+   }
+   this->loadOrderMasters.push_back(header);
+}
+bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) {
+   //
+   // TODO: Need to handle cyclical references between files
+   //
+   auto header = new TESPluginHeader;
+   std::string path = this->basePath + name;
+   if (!header->load(path.c_str())) {
+      _DEBUGMSG("ERROR: Failed to open: %s", path.c_str());
+      delete header;
+      return false;
+   }
+   if (this->loadOrderUnderConsideration.find(header) != loadOrderUnderConsideration.end()) {
+      //
+      // ERROR: cyclical reference.
+      //
+      _DEBUGMSG("ERROR: Detected a cyclical dependency between files.");
+      delete header;
+      return false;
+   }
+   this->loadOrderUnderConsideration.insert(header);
+   bool must_be_master = isMasterOfMaster || header->is_master();
+   for (auto it = header->masters.begin(); it != header->masters.end(); ++it) {
+      if (this->_loadOrderHasMaster(*it))
+         continue;
+      if (this->_loadOrderHasPlugin(*it)) {
+         if (must_be_master)
+            this->_moveToMasters(*it);
+         continue;
+      }
+      //
+      // We have an unexpected master. Recurse on it.
+      //
+      if (!this->_addToLoadOrder(*it, must_be_master)) {
+         this->loadOrderUnderConsideration.erase(header);
+         delete header;
+         return false;
+      }
+      if (this->_loadOrderSize() > 254) {
+         //
+         // ERROR: Load order is too long.
+         //
+         _DEBUGMSG("ERROR: The effective load order is too long.");
+         this->loadOrderUnderConsideration.erase(header);
+         delete header;
+         return false;
+      }
+   }
+   if (must_be_master)
+      this->loadOrderMasters.push_back(header);
+   else
+      this->loadOrderPlugins.push_back(header);
+   this->loadOrderUnderConsideration.erase(header);
+   return true;
+}
+
 void LoadOrder::addFile(const std::string& name) {
    auto it = std::find(this->queuedFiles.begin(), this->queuedFiles.end(), name);
    if (it == this->queuedFiles.end())
@@ -56,8 +143,35 @@ void LoadOrder::removeFile(const std::string& name) {
 bool LoadOrder::loadQueuedFiles() {
    assert(this->files.size() == 0 && "Must clear loaded files before you can use a new load order!");
    //
+   /*
    for (auto it = this->queuedFiles.begin(); it != this->queuedFiles.end(); ++it) {
       std::string path = this->basePath + *it;
+      auto file = new TESPluginFile;
+      this->files.push_back(file);
+      if (!file->load(path.c_str()))
+         return false;
+   }
+   */
+   for (auto it = this->queuedFiles.begin(); it != this->queuedFiles.end(); ++it) {
+      if (!this->_addToLoadOrder(*it))
+         return false;
+   }
+   {
+      _DEBUGMSG("Final load order:");
+      for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
+         _DEBUGMSG("[M] %s", (*it)->name.c_str());
+      for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it)
+         _DEBUGMSG("[P] %s", (*it)->name.c_str());
+   }
+   for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it) {
+      std::string path = this->basePath + (*it)->name;
+      auto file = new TESPluginFile;
+      this->files.push_back(file);
+      if (!file->load(path.c_str()))
+         return false;
+   }
+   for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it) {
+      std::string path = this->basePath + (*it)->name;
       auto file = new TESPluginFile;
       this->files.push_back(file);
       if (!file->load(path.c_str()))
@@ -71,15 +185,7 @@ uint8_t LoadOrder::indexOf(const std::string& filename) const noexcept {
    for (uint8_t i = 0; i < size; i++) {
       auto  file = this->files[i];
       auto& name = file->getFilename();
-      //
-      // We can't use std::string::operator== because that compares the 
-      // strings' sizes first, as an optimization... which breaks, because 
-      // it's possible for one of these strings to contain a trailing null 
-      // and for the other string not to. Specifically, a TESPluginFile's 
-      // listed masters won't have a trailing null because there isn't one 
-      // in the MAST subrecords in the file header.
-      //
-      if (_stricmp(name.data(), filename.data()) == 0)
+      if (cobb::strieq(name, filename))
          return i;
    }
    return invalid_load_prefix;

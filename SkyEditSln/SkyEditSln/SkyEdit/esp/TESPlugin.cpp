@@ -121,7 +121,11 @@ bool TESPluginSubrecord::to_string(std::string& field) {
    field.clear();
    auto length = this->size();
    field.resize(length);
-   return this->read(const_cast<char*>(field.data()), length);
+   if (!this->read(const_cast<char*>(field.data()), length))
+      return false;
+   if (field[length - 1] == '\0') // C++ std::strings + direct reading + null terminators = horrible, horrible mess
+      field.resize(length - 1);
+   return true;
 }
 bool TESPluginSubrecord::to_string(LStringRef& field) {
    field.value.clear();
@@ -629,6 +633,11 @@ bool TESPluginFile::_loadHeader() {
       return false;
    }
    this->flags = r.flags();
+
+   //
+   // TODO: Force ESM flag if the file is *.esm.
+   //
+
    //
    uint32_t last_subrecord = 0;
    while (auto& subrecord = r.next_subrecord()) {

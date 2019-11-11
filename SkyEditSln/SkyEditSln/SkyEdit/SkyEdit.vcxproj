@@ -127,6 +127,7 @@
   <ItemGroup>
     <ClCompile Include="esp\LoadOrder.cpp" />
     <ClCompile Include="esp\TESPlugin.cpp" />
+    <ClCompile Include="esp\TESPluginHeader.cpp" />
     <ClCompile Include="formstub.cpp" />
     <ClCompile Include="forms\loaded\ActorBase.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="esp\base.h" />
     <ClInclude Include="esp\LoadOrder.h" />
     <ClInclude Include="esp\TESPlugin.h" />
+    <ClInclude Include="esp\TESPluginHeader.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\loaded\ActorBase.h" />
     <ClInclude Include="forms\components.h" />

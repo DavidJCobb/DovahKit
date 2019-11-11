@@ -32,4 +32,10 @@ namespace cobb {
       va_end(safe);
       va_end(args);
    };
+   int strieq(const std::string& a, const std::string& b) {
+      int length = a.size();
+      if (length != b.size())
+         return false;
+      return _strnicmp(a.c_str(), b.c_str(), length) == 0;
+   }
 }

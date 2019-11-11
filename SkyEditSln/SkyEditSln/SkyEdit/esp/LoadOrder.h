@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include "../formstub.h"
@@ -8,6 +9,7 @@
 
 struct FormStub;
 class TESPluginFile;
+class TESPluginHeader;
 
 enum class LoadErrorCode {
    none = 0,
@@ -83,12 +85,46 @@ class LoadOrder {
          std::mutex   lock;
          map_of_forms forms;
       };
+      //
+      // Clients can request that we load a set of files. This set of files is 
+      // not required to be complete or in the proper order; if we encounter a 
+      // file with an unexpected master, then we'll handle that properly. We 
+      // do this by constructing a "final" load order based on the queued files. 
+      // For example, if you ask us to load just Update.esm, then we'll look at 
+      // its file header and find the unexpected master "Skyrim.esm," and we'll 
+      // add that to the load order before we add Update.esm. We do this recurs-
+      // ively, and we account for ESMs and ESPs being mixed together and we 
+      // reorder things as needed.
+      //
+      // As such:
+      //
+      //  - The queued files are in (queuedFiles)
+      //
+      //  - The final load order, based on reading the headers of each file in 
+      //    that queue and accounting for unexpected masters, is broken across 
+      //    (loadOrderMasters) and (loadOrderPlugins); treat them as a single 
+      //    list.
+      //
+      //  - Once we've actually loaded the files, they'll be in (files).
+      //
+      std::set<TESPluginHeader*> loadOrderUnderConsideration; // used to detect cyclical dependencies between files
+      std::vector<TESPluginHeader*> loadOrderMasters;
+      std::vector<TESPluginHeader*> loadOrderPlugins;
+      std::vector<TESPluginFile*>   files;
+      TESPluginFile* activeFile = nullptr; // TODO
       _form_map formsByType[FormType::Count];
-      std::vector<TESPluginFile*> files;
-      TESPluginFile* activeFile = nullptr;
       //
       uint8_t  loadOrderPrefixFor(TESPluginFile*) const noexcept;
       uint32_t localFormIDToGlobalFormID(FormStub* stub) const;
+      //
+      typedef decltype(loadOrderMasters)::const_iterator _load_order_it;
+      bool _loadOrderHasMaster(const std::string& name) const;
+      bool _loadOrderHasPlugin(const std::string& name) const;
+      void _moveToMasters(const std::string& name) noexcept;
+      uint16_t _loadOrderSize() const noexcept {
+         return this->loadOrderMasters.size() + this->loadOrderPlugins.size();
+      }
+      bool _addToLoadOrder(const std::string& name, bool isMasterOfMaster = false);
       //
    public:
       std::string basePath;

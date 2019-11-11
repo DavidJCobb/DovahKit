@@ -65,6 +65,13 @@ std::thread::id main_thread_id;
 //       The fix to this would be to have TESPluginSubrecord::to_string forcibly 
 //       add a null terminator to the output std::string.
 //
+//        - Once we've fixed this, have LoadOrder::indexOf use operator== again.
+//
+//           - Actually, in our string helper file, add a std::string equivalent to 
+//             stricmp that compares lengths and then runs strnicmp against the 
+//             two strings' data. Use that for LoadOrder::indexOf, since I don't 
+//             think the game itself enforces case-sensitivity on masters.
+//
 //  - Loading:
 //
 //     - The TESPluginFile reading code should fail if we encounter a group 
@@ -422,7 +429,7 @@ int main() {
    //
    auto& lo = LoadOrder::get();
    lo.basePath = TEST_PLUGIN_PATH;
-   lo.addFile("Skyrim.esm");
+   //lo.addFile("Skyrim.esm");
    lo.addFile("Update.esm");
    lo.addFile("HearthFires.esm");
    struct timeb bench_start;
