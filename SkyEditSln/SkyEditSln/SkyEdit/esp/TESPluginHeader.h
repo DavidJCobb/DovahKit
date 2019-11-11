@@ -4,7 +4,10 @@
 
 class TESPluginHeader {
    //
-   // Class used to extract load-critical information from a file header.
+   // Class used to extract load-critical information from a file header. 
+   // It is advised that if you need to read only the file header, you 
+   // use this instead of TESPluginFile, so that you're not mapping the 
+   // entire file into memory just to unmap it a few dozen bytes later.
    //
    public:
       enum Flags {

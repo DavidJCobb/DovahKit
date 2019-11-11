@@ -26,10 +26,7 @@ std::thread::id main_thread_id;
 //    and 66 seconds to build it from scratch.
 //
 //  - According to zilav, xEdit uses a single-threaded loader, and relies on 
-//    file mapping (i.e. CreateFileMapping/MapViewOfFile) for its raw speed. 
-//    I should give that a try -- map the entire Skyrim.esm file into memory 
-//    and then run through it. If I just change the underlying file handle and 
-//    fread stuff, then it shouldn't even be all that difficult to test.
+//    file mapping (i.e. CreateFileMapping/MapViewOfFile) for its raw speed.
 //
 // TODO: REFACTOR
 //
@@ -54,24 +51,6 @@ std::thread::id main_thread_id;
 //       the form stub and do nothing if the file has been told to abort (see 
 //       below).
 //
-//     - The std::string class does not enforce the presence or absence of a null 
-//       terminator. This is preventing us from using std::string::operator== to 
-//       compare certain strings. Specifically, a typical string (i.e. anything 
-//       from user input or a string literal in our code) is going to have a null 
-//       terminator, whereas anything from a subrecord is going to lack a null 
-//       terminator. This causes the two kinds of strings to have different lengths, 
-//       and since std::string::operator== checks the lengths first as a shortcut, 
-//       the strings in question won't compare equal even though they are equal. 
-//       The fix to this would be to have TESPluginSubrecord::to_string forcibly 
-//       add a null terminator to the output std::string.
-//
-//        - Once we've fixed this, have LoadOrder::indexOf use operator== again.
-//
-//           - Actually, in our string helper file, add a std::string equivalent to 
-//             stricmp that compares lengths and then runs strnicmp against the 
-//             two strings' data. Use that for LoadOrder::indexOf, since I don't 
-//             think the game itself enforces case-sensitivity on masters.
-//
 //  - Loading:
 //
 //     - The TESPluginFile reading code should fail if we encounter a group 
@@ -82,49 +61,6 @@ std::thread::id main_thread_id;
 //       file is doing multi-threaded loading, wait for the threads to join. The 
 //       threaded reader classes, meanwhile, need to be modified to check that 
 //       flag on a regular basis and abort if they see that it's been set.
-//
-//     - We need to account for unexpected masters. For example, if you ask the 
-//       LoadOrder singleton to load ONLY Update.esm, then Skyrim.esm will be an 
-//       unexpected master and we must add it to the load order.
-//
-//       I think we should make a class that loads file headers (do NOT use 
-//       TESPluginFile for this -- you'll see why) and then, when we ask to load 
-//       the queued set of files, have LoadOrder go through each queued file and 
-//       work to build a "final" load order. If, when loading file headers, it 
-//       finds unexpected masters, it can just add those to the final load order 
-//       before it adds the current queued file. Once the final load order is 
-//       built, we create TESPluginFiles for everything in it.
-//
-//       With that done, we'll want to modify TESPluginFile's method for loading 
-//       the file header and have that fail with an error if it encounters any 
-//       new unexpected masters (which would indicate that the files were 
-//       tampered with during our load).
-//
-//        - Files with an ESM extension and files that are flagged as masters 
-//          (and any dependencies of such files, even ESPs) always load first. 
-//          When we're putting the load order together, we should probably 
-//          first sort all files into a "master" bucket and a "non-master" 
-//          bucket, and THEN construct the final load order based on that. 
-//          That is:
-//
-//           - Read a queued file's header.
-//
-//           - Retrieve all masters of the queued file, and their masters, 
-//             and so on, by reading their headers.
-//
-//           - If the original queued file was a master, then all found files 
-//             go into the "master" bucket. Otherwise, any masters among the 
-//             found files (and their dependencies) go into the "master" 
-//             bucket and the rest go into the "non-master" bucket.
-//
-//              - If a file already exists in the "non-master" bucket and it 
-//                needs to be in the "master" bucket, move it. If a file is 
-//                about to be added to the "non-master" bucket but it already 
-//                exists in the "master" bucket, then don't put it into the 
-//                "non-master" bucket.
-//
-//           - The final load order is just the "master" bucket and the "non-
-//             master" bucket taken together, end-to-end.
 //
 //     - We need to figure out how to get the loading code to actually signal 
 //       errors to LoadOrder. In every place where we log a debug message and 
@@ -197,19 +133,6 @@ std::thread::id main_thread_id;
 //
 //  - Add a load order singleton.
 //
-//     - Instead of storing FormStubs per TESPluginFile, only store them on the 
-//       load order singleton; as such, we'll keep only the last-loaded record 
-//       with a given form ID. The changes involved here should be fairly minimal.
-//
-//        - We already intended to only build Use Info for last-loaded forms and 
-//          to only use load-loaded forms in the UI, so if we have TESPluginFile 
-//          keep the FormStubs, then we'll just have tons of useless stubs in 
-//          memory.
-//
-//        - Add to FormStub two linked lists of connections, one for outbound 
-//          references to other forms and the other for inbound references from 
-//          other forms.
-//
 //     - Like the Creation Kit, we will load a list of user-selected files, and 
 //       one file may optionally be designated as the "active file" to which 
 //       changes will be made.
@@ -219,24 +142,11 @@ std::thread::id main_thread_id;
 //          could get very messy -- particularly if any overrides refer to forms 
 //          that exist only in the dependent file(s).
 //
-//        - In order to be able to see file header details in advance, we should 
-//          make it so that TESPluginFile instances can be told to load just 
-//          their header, i.e. we create one TESPluginFile instance for each 
-//          file we MAY load and have it load its header so we can see its 
-//          dependencies and so on; and then if we decide we want to actually 
-//          load that file, we just reuse the same instance.
-//
-//           - NO NO NO. TESPluginFile maps files into memory; if we do it 
-//             this way, then we're mapping all of the ESP files into memory 
-//             before we even load them AND we're locking the files! Make a 
-//             separate class to read just headers; remember what dependencies 
-//             a file claimed to have; and then if we load that file with a 
-//             TESPluginFile, fail if its dependencies have changed from 
-//             what we saw earlier.
-//
 //  - cobb::wavl_tree
 //
 //     - We should add an analogue to std::map::clear.
+//
+//        - The tree's destructor should call it, obviously.
 //
 //     - Can we add an analogue to std::map::swap and/or std::swap support?
 //
@@ -265,7 +175,8 @@ std::thread::id main_thread_id;
 //
 //           = Move cobb::wavl_tree::node to cobb::wavl_node (templated on the 
 //             key and value) and add a typedef to the tree so we don't have to 
-//             change everything from "node."
+//             change everything from "node." This is needed so that we can even 
+//             template the block allocator or anything else on the node type.
 //
 //           = Add two parameters to the wavl_tree template: non-member functions 
 //             for allocating and deallocating a node. By default, they should be 

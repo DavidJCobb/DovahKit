@@ -19,7 +19,7 @@ uint32_t LoadOrder::localFormIDToGlobalFormID(FormStub* stub) const {
       // All forms between xx000001 and xx0007FF, inclusive, are hardcoded forms and the 
       // load order prefix is ignored.
       //
-      assert(stub->formID != 0 && "Null form ID.");
+      assert(stub->formID != 0 && "Null form ID."); // TODO: Fail and abort all loading; don't assert.
       return stub->formID & hardcoded_form_id_mask;
    }
    if (stub->formType == FormType::GameSetting) {
@@ -37,7 +37,7 @@ uint32_t LoadOrder::localFormIDToGlobalFormID(FormStub* stub) const {
       return stub->formID & 0x00FFFFFF | (this->loadOrderPrefixFor(file) << 0x18);
    if (prefix > local) {
       //
-      // TODO: Invalid form ID. Fail and abort all loading.
+      // ERROR: Invalid form ID. Fail and abort all loading. TODO: Don't assert.
       //
       assert(false && "TODO: Write code to handle out-of-bounds form IDs.");
    }
@@ -76,9 +76,6 @@ void LoadOrder::_moveToMasters(const std::string& name) noexcept {
    this->loadOrderMasters.push_back(header);
 }
 bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) {
-   //
-   // TODO: Need to handle cyclical references between files
-   //
    auto header = new TESPluginHeader;
    std::string path = this->basePath + name;
    if (!header->load(path.c_str())) {
@@ -101,11 +98,17 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
          continue;
       if (this->_loadOrderHasPlugin(*it)) {
          if (must_be_master)
+            //
+            // We allow ESPs and ESMs to be mixed together. This, of course, means that we need 
+            // to handle the possibility of a list of queued files containing an ESP, followed 
+            // by an ESM that has that ESP as a master.
+            //
             this->_moveToMasters(*it);
          continue;
       }
       //
-      // We have an unexpected master. Recurse on it.
+      // If we got here, then we have an unexpected master. Recurse on it -- deal with any 
+      // unexpected masters of the unexpected master.
       //
       if (!this->_addToLoadOrder(*it, must_be_master)) {
          this->loadOrderUnderConsideration.erase(header);
@@ -122,11 +125,17 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
          return false;
       }
    }
+   //
+   // And now that we know all of (header)'s masters are in the load order, add (header) itself.
+   //
    if (must_be_master)
       this->loadOrderMasters.push_back(header);
    else
       this->loadOrderPlugins.push_back(header);
    this->loadOrderUnderConsideration.erase(header);
+   //
+   // TODO: Validate load order length here as well
+   //
    return true;
 }
 
@@ -143,15 +152,6 @@ void LoadOrder::removeFile(const std::string& name) {
 bool LoadOrder::loadQueuedFiles() {
    assert(this->files.size() == 0 && "Must clear loaded files before you can use a new load order!");
    //
-   /*
-   for (auto it = this->queuedFiles.begin(); it != this->queuedFiles.end(); ++it) {
-      std::string path = this->basePath + *it;
-      auto file = new TESPluginFile;
-      this->files.push_back(file);
-      if (!file->load(path.c_str()))
-         return false;
-   }
-   */
    for (auto it = this->queuedFiles.begin(); it != this->queuedFiles.end(); ++it) {
       if (!this->_addToLoadOrder(*it))
          return false;
@@ -169,6 +169,14 @@ bool LoadOrder::loadQueuedFiles() {
       this->files.push_back(file);
       if (!file->load(path.c_str()))
          return false;
+      //
+      // TODO: Split file loading into these steps:
+      //
+      // 1. Load the header.
+      // 2. Verify that there aren't any unexpected masters (i.e. file wasn't altered 
+      //    between constructing the load order and now). If there are, fail.
+      // 3. Load the rest of the file.
+      //
    }
    for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it) {
       std::string path = this->basePath + (*it)->name;
@@ -176,6 +184,14 @@ bool LoadOrder::loadQueuedFiles() {
       this->files.push_back(file);
       if (!file->load(path.c_str()))
          return false;
+      //
+      // TODO: Split file loading into these steps:
+      //
+      // 1. Load the header.
+      // 2. Verify that there aren't any unexpected masters (i.e. file wasn't altered 
+      //    between constructing the load order and now). If there are, fail.
+      // 3. Load the rest of the file.
+      //
    }
    return true;
 }
