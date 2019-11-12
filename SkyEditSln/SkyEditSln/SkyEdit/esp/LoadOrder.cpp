@@ -5,6 +5,31 @@
 #include "../helpers/strings.h"
 #include "../output.h"
 
+const char* _load_error_code_names[] = {
+   "no error",
+   "active file is a dependency of another file",
+   "file is malformed",
+   "ESL contains a form ID that is too high",
+   "a dependency is missing",
+   "the file is missing",
+   "the file is locked and cannot be opened",
+   "a form had a bad form ID",
+   "there are too many files in the load order",
+   "the file is part of a cyclical dependency",
+   "unknown/unhandled error",
+};
+const char* FatalLoadError::code_string() const noexcept {
+   if ((int32_t)this->code < std::extent<decltype(_load_error_code_names)>::value)
+      return _load_error_code_names[(int32_t)this->code];
+   return "<no string>";
+}
+
+void LoadOrder::logError(std::function<void(FatalLoadError&)> functor) {
+   std::lock_guard<std::mutex> guard(this->lastErrorLock);
+   if (!this->lastError.defined())
+      functor(this->lastError);
+}
+
 uint8_t LoadOrder::loadOrderPrefixFor(TESPluginFile* file) const noexcept {
    uint8_t size = this->files.size();
    for (uint8_t i = 0; i < size; i++) {
@@ -13,14 +38,14 @@ uint8_t LoadOrder::loadOrderPrefixFor(TESPluginFile* file) const noexcept {
    }
    return 0xFF;
 }
-uint32_t LoadOrder::localFormIDToGlobalFormID(FormStub* stub) const {
+form_id_status LoadOrder::localFormIDToGlobalFormID(FormStub* stub, uint32_t& out) const {
    if ((stub->formID & plugin_form_id_mask) == 0) { // Handle form IDs for hardcoded forms.
       //
       // All forms between xx000001 and xx0007FF, inclusive, are hardcoded forms and the 
       // load order prefix is ignored.
       //
-      assert(stub->formID != 0 && "Null form ID."); // TODO: Fail and abort all loading; don't assert.
-      return stub->formID & hardcoded_form_id_mask;
+      out = stub->formID & hardcoded_form_id_mask;
+      return form_id_status::valid;
    }
    if (stub->formType == FormType::GameSetting) {
       //
@@ -28,23 +53,28 @@ uint32_t LoadOrder::localFormIDToGlobalFormID(FormStub* stub) const {
       // since GMST form IDs clearly don't matter, we need to just make sure we store 
       // them consistently and otherwise not validate them in any way.
       //
-      return stub->formID & 0x00FFFFFF;
+      out = stub->formID & 0x00FFFFFF;
+      return form_id_status::valid;
    }
    auto    file   = stub->file;
    uint8_t local  = file->masters.size();
    uint8_t prefix = stub->formID >> 0x18;
-   if (prefix == local)
-      return stub->formID & 0x00FFFFFF | (this->loadOrderPrefixFor(file) << 0x18);
+   if (prefix == local) {
+      out = stub->formID & 0x00FFFFFF | (this->loadOrderPrefixFor(file) << 0x18);
+      return form_id_status::valid;
+   }
    if (prefix > local) {
-      //
-      // ERROR: Invalid form ID. Fail and abort all loading. TODO: Don't assert.
-      //
-      assert(false && "TODO: Write code to handle out-of-bounds form IDs.");
+      out = 0;
+      return form_id_status::out_of_bounds;
    }
    auto&   name = file->masters[prefix].master;
    uint8_t j    = this->indexOf(name);
-   assert(j != invalid_load_prefix && "We failed to handle a missing master somewhere.");
-   return stub->formID & 0x00FFFFFF | (j << 0x18);
+   if (j == invalid_load_prefix) {
+      out = 0;
+      return form_id_status::missing_master;
+   }
+   out = stub->formID & 0x00FFFFFF | (j << 0x18);
+   return form_id_status::valid;
 }
 
 bool LoadOrder::_loadOrderHasMaster(const std::string& name) const {
@@ -79,15 +109,20 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
    auto header = new TESPluginHeader;
    std::string path = this->basePath + name;
    if (!header->load(path.c_str())) {
-      _DEBUGMSG("ERROR: Failed to open: %s", path.c_str());
+      this->logError([&name](FatalLoadError& error) {
+         error.code = LoadErrorCode::malformed_file;
+         error.file = name;
+         error.parseError = "Failed initial read of the file header. The file ended too soon.";
+      });
       delete header;
       return false;
    }
    if (this->loadOrderUnderConsideration.find(header) != loadOrderUnderConsideration.end()) {
-      //
-      // ERROR: cyclical reference.
-      //
-      _DEBUGMSG("ERROR: Detected a cyclical dependency between files.");
+      this->logError([&name](FatalLoadError& error) {
+         error.code = LoadErrorCode::cyclical_dependency_between_files;
+         error.file = name;
+         error.parseError = "Failed initial read of the file header. This file is part of a cyclical dependency.";
+      });
       delete header;
       return false;
    }
@@ -115,15 +150,6 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
          delete header;
          return false;
       }
-      if (this->_loadOrderSize() > 254) {
-         //
-         // ERROR: Load order is too long.
-         //
-         _DEBUGMSG("ERROR: The effective load order is too long.");
-         this->loadOrderUnderConsideration.erase(header);
-         delete header;
-         return false;
-      }
    }
    //
    // And now that we know all of (header)'s masters are in the load order, add (header) itself.
@@ -134,8 +160,16 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
       this->loadOrderPlugins.push_back(header);
    this->loadOrderUnderConsideration.erase(header);
    //
-   // TODO: Validate load order length here as well
-   //
+   if (this->_loadOrderSize() > 254) {
+      this->logError([&name](FatalLoadError& error) {
+         error.code = LoadErrorCode::too_many_files;
+         error.file = name;
+         error.parseError = "The load order is too long.";
+      });
+      this->loadOrderUnderConsideration.erase(header);
+      delete header;
+      return false;
+   }
    return true;
 }
 
@@ -167,8 +201,15 @@ bool LoadOrder::loadQueuedFiles() {
       std::string path = this->basePath + (*it)->name;
       auto file = new TESPluginFile;
       this->files.push_back(file);
-      if (!file->load(path.c_str()))
+      if (!file->load(path.c_str())) {
+         auto fn = (*it)->name;
+         this->logError([&fn](FatalLoadError& error) {
+            error.code       = LoadErrorCode::unknown_error;
+            error.file       = fn;
+            error.parseError = "Failed to load a master.";
+         });
          return false;
+      }
       //
       // TODO: Split file loading into these steps:
       //
@@ -182,8 +223,15 @@ bool LoadOrder::loadQueuedFiles() {
       std::string path = this->basePath + (*it)->name;
       auto file = new TESPluginFile;
       this->files.push_back(file);
-      if (!file->load(path.c_str()))
+      if (!file->load(path.c_str())) {
+         auto fn = (*it)->name;
+         this->logError([&fn](FatalLoadError& error) {
+            error.code       = LoadErrorCode::unknown_error;
+            error.file       = fn;
+            error.parseError = "Failed to load a plugin.";
+         });
          return false;
+      }
       //
       // TODO: Split file loading into these steps:
       //
@@ -234,13 +282,22 @@ void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormSt
    }
 }
 
-void LoadOrder::acceptFormStub(FormStub* stub) noexcept {
+form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    auto& type = this->formsByType[stub->formType];
    std::lock_guard<std::mutex> guard(type.lock);
    //
-   uint32_t   formID = this->localFormIDToGlobalFormID(stub);
+   uint32_t formID;
+   auto     result = this->localFormIDToGlobalFormID(stub, formID);
+   switch (result) {
+      case form_id_status::out_of_bounds:
+      case form_id_status::missing_master:
+         return result;
+   }
+   if (formID == 0)
+      return form_id_status::null_is_not_allowed;
    FormStub*& target = type.forms[formID];
    if (target) // is this an override?
       delete target;
    target = stub;
+   return form_id_status::valid;
 }

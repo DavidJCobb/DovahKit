@@ -155,8 +155,8 @@ struct FormTypeInfo {
 
 extern FormTypeInfo formTypes[];
 
-extern const FormTypeInfo& formTypeFor(formtype_t ft);
-extern formtype_t signatureToFormType(uint32_t signature);
+extern const FormTypeInfo& formTypeFor(formtype_t ft) noexcept;
+extern formtype_t signatureToFormType(uint32_t signature) noexcept;
 
 namespace LoadedForms {
    class Form;

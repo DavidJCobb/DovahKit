@@ -430,6 +430,8 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
       //
+      bool aborted = false;
+      //
       void _insertForm(uint32_t formID, FormStub* stub);
       //
    public:
@@ -445,4 +447,5 @@ class TESPluginFile : public TESPluginBaseReader {
       uint32_t subINCC;
       //
       inline const std::string& getFilename() const noexcept { return this->name; }
+      void abort() noexcept;
 };

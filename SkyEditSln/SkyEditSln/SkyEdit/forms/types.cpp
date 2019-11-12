@@ -120,7 +120,7 @@ FormTypeInfo formTypes[] = {
    { 'CLFM', FormType::Color, "Color" },
 };
 
-const FormTypeInfo& formTypeFor(formtype_t ft) {
+const FormTypeInfo& formTypeFor(formtype_t ft) noexcept {
    for (uint8_t i = 0; i < std::extent<decltype(formTypes)>::value; i++) {
       auto& info = formTypes[i];
       if (info.formType == ft)
@@ -128,7 +128,7 @@ const FormTypeInfo& formTypeFor(formtype_t ft) {
    }
    return formTypes[0];
 }
-formtype_t signatureToFormType(uint32_t signature) {
+formtype_t signatureToFormType(uint32_t signature) noexcept {
    for (uint8_t i = 0; i < std::extent<decltype(formTypes)>::value; i++) {
       auto& info = formTypes[i];
       if (info.signature == signature)

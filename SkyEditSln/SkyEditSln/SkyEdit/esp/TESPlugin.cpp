@@ -365,10 +365,12 @@ void TESPluginThreadedSimpleReader::_load() {
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
+      if (this->owner.aborted)
+         break;
       auto& desired = this->queue[i];
       this->setPos(desired.pos);
       this->resetParseState();
-      assert(this->nextRecordOrGroup() == kObjectType_Group);
+      assert(this->nextRecordOrGroup() == kObjectType_Group); // TODO: error instead
       ObjectType ot;
       uint32_t   lastGroupLabel = 0; // for debug logging
       uint32_t   lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
@@ -386,6 +388,10 @@ void TESPluginThreadedSimpleReader::_load() {
                //_DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished parse of group %s.", std::this_thread::get_id(), FMT_SIGNATURE(lastGroupLabel, sig_buffer));
                break;
             }
+            //
+            // TODO: Throw a parse error if it's a nested group. Be sure to 
+            // call this->owner.abort() and return, as well.
+            //
          }
          if (ot == kObjectType_Record) {
             auto& record = this->getCurrentRecord();
@@ -443,6 +449,8 @@ void TESPluginThreadedInteriorCellReader::_load() {
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
+      if (this->owner.aborted)
+         break;
       auto& desired = this->queue[i];
       //_DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X beginning with interior-cell-block %d at position %08X.", std::this_thread::get_id(), desired.blockNumber, desired.pos);
       this->setPos(desired.pos);
@@ -525,6 +533,8 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
+      if (this->owner.aborted)
+         break;
       auto& desired = this->queue[i];
       //_DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X beginning with [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
       this->setPos(desired.pos);
@@ -624,12 +634,22 @@ bool TESPluginFile::loadRecordAt(uint32_t pos) {
 //
 bool TESPluginFile::_loadHeader() {
    if (this->nextRecordOrGroup() != ObjectType::kObjectType_Record) {
-      _DEBUGMSG("Expected TES4 record; no record found.");
+      LoadOrder::get().logError([this](FatalLoadError& error) {
+         error.code       = LoadErrorCode::malformed_file;
+         error.file       = this->name;
+         error.fileOffset = this->getPos();
+         error.parseError = "Expected TES4 record; no record found.";
+      });
       return false;
    }
    auto& r = this->getCurrentRecord();
    if (r.signature() != 'TES4') {
-      _DEBUGMSG("Expected TES4 record; got something else.");
+      LoadOrder::get().logError([this](FatalLoadError& error) {
+         error.code       = LoadErrorCode::malformed_file;
+         error.file       = this->name;
+         error.fileOffset = this->getPos();
+         error.parseError = "Expected TES4 record; got something else.";
+      });
       return false;
    }
    this->flags = r.flags();
@@ -675,7 +695,12 @@ bool TESPluginFile::_loadHeader() {
                   return false;
                }
                if (this->masters.size() > 253) {
-                  _DEBUGMSG("This file claims to have more than 253 masters.");
+                  LoadOrder::get().logError([this](FatalLoadError& error) {
+                     error.code       = LoadErrorCode::malformed_file;
+                     error.file       = this->name;
+                     error.fileOffset = this->getPos();
+                     error.parseError = "This file claims to have more than 253 masters.";
+                  });
                   return false;
                }
                //
@@ -699,10 +724,17 @@ bool TESPluginFile::_loadHeader() {
             break;
          case 'DATA': // always follows a MAST; vestigial; doesn't appear to be used
             if (last_subrecord != 'MAST') {
-               if (last_subrecord)
-                  _DEBUGMSG("Unexpected 'DATA' subrecord in the file header following %s.", FMT_SIGNATURE(last_subrecord));
-               else
-                  _DEBUGMSG("Unexpected 'DATA' subrecord at the start of the file header.");
+               LoadOrder::get().logError([this, last_subrecord](FatalLoadError& error) {
+                  error.code       = LoadErrorCode::malformed_file;
+                  error.file       = this->name;
+                  error.fileOffset = this->getPos();
+                  if (last_subrecord) {
+                     char sig[5];
+                     FMT_SIGNATURE(last_subrecord, sig);
+                     cobb::sprintf(error.parseError, "Unexpected 'DATA' subrecord in the file header following %s.", sig);
+                  } else
+                     error.parseError = "Unexpected 'DATA' subrecord at the start of the file header.";
+               });
                return false;
             } else {
                MasterEntry& last = *this->masters.rbegin();
@@ -734,12 +766,35 @@ bool TESPluginFile::_loadHeader() {
    return true;
 }
 void TESPluginFile::_insertForm(uint32_t formID, FormStub* stub) {
-   LoadOrder::get().acceptFormStub(stub);
-   /*//
-   auto& type = this->formsByType[stub->formType];
-   std::lock_guard<std::mutex> guard(type.lock);
-   type.forms[formID] = stub;
-   //*/
+   if (!this->aborted) {
+      form_id_status result = LoadOrder::get().acceptFormStub(stub);
+      switch (result) {
+         case form_id_status::missing_master:
+         case form_id_status::out_of_bounds:
+            LoadOrder::get().logError([this, stub, result](FatalLoadError& error) {
+               error.code       = LoadErrorCode::out_of_bounds_form_id;
+               error.file       = this->name;
+               error.fileOffset = this->getPos();
+               error.formID     = stub->formID;
+               if (result == form_id_status::missing_master)
+                  error.parseError = "This form's ID corresponds to a missing master.";
+               else
+                  error.parseError = "This form ID's load order prefix is out of bounds.";
+            });
+            this->abort();
+            return;
+         case form_id_status::null_is_not_allowed:
+            LoadOrder::get().logError([this, stub](FatalLoadError& error) {
+               error.code       = LoadErrorCode::out_of_bounds_form_id;
+               error.file       = this->name;
+               error.fileOffset = this->getPos();
+               error.formID     = stub->formID;
+               error.parseError = "A form cannot use xx000000 as its form ID.";
+            });
+            this->abort();
+            return;
+      }
+   }
 }
 bool TESPluginFile::load(const char* filepath) {
    this->path.clear();
@@ -756,7 +811,12 @@ bool TESPluginFile::load(const char* filepath) {
    this->path = filepath;
    this->name = std::filesystem::path(filepath).filename().string();
    if (!this->_loadHeader()) {
-      _DEBUGMSG("Unable to read header.");
+      LoadOrder::get().logError([this](FatalLoadError& error) {
+         error.code       = LoadErrorCode::malformed_file;
+         error.file       = this->name;
+         error.fileOffset = this->getPos();
+         error.parseError = "Failed to read the file header.";
+      });
       return false;
    }
    _DEBUGMSG("Read file header.");
@@ -822,9 +882,34 @@ bool TESPluginFile::load(const char* filepath) {
             } else if (group.header.type == kESPGroupType_InteriorCellBlock) { // Interior Cell Block
                {
                   auto parent = group.getParent();
-                  assert(parent && "Bad interior-cell-block group nesting.");
-                  assert(parent->header.type == kESPGroupType_FormsOfType && "Bad interior-cell-block group nesting.");
-                  assert(_byteswap_ulong(parent->header.label) == 'CELL' && "Bad interior-cell-block group nesting.");
+                  int  err;
+                  if (!parent)
+                     err = 1;
+                  else if (parent->header.type != kESPGroupType_FormsOfType)
+                     err = 2;
+                  else if (_byteswap_ulong(parent->header.label) != 'CELL')
+                     err = 3;
+                  if (err) {
+                     LoadOrder::get().logError([this, err](FatalLoadError& error) {
+                        error.code       = LoadErrorCode::malformed_file;
+                        error.file       = this->name;
+                        error.fileOffset = this->getPos();
+                        error.parseError = "Bad interior-cell-block group nesting. ";
+                        switch (err) {
+                           case 1:
+                              error.parseError += "(No parent group.)";
+                              break;
+                           case 2:
+                              error.parseError += "(Parent group is not a top-level group for a form type.)";
+                              break;
+                           case 3:
+                              error.parseError += "(Parent group is not a group for CELL records.)";
+                              break;
+                        }
+                     });
+                     this->abort();
+                     break;
+                  }
                }
                auto& loader = this->interiorCellReaders[which_intcell];
                if (++which_intcell >= std::extent<decltype(this->interiorCellReaders)>::value)
@@ -848,10 +933,6 @@ bool TESPluginFile::load(const char* filepath) {
                   is_complex = true;
             }
             if (is_complex) {
-               //
-               // TODO: Consider splitting complex group structures up, e.g. bucketing worldspaces 
-               // into different threads
-               //
                this->complexReader.add_group(_byteswap_ulong(group.header.label), group.pos);
             } else {
                auto& loader = this->simpleReaders[which_simple];
@@ -883,4 +964,7 @@ bool TESPluginFile::load(const char* filepath) {
       this->worldspaceReaders[i].wait_for();
    this->complexReader.wait_for();
    return true;
+}
+void TESPluginFile::abort() noexcept {
+   this->aborted = true;
 }

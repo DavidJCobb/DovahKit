@@ -53,31 +53,21 @@ std::thread::id main_thread_id;
 //
 //  - Loading:
 //
+//     - TESPluginHeader and TESPluginFile need to force the "is master" flag 
+//       if the file's extension is ESM or ESL.
+//
 //     - The TESPluginFile reading code should fail if we encounter a group 
 //       nested too deeply (i.e. deeper than MAX_ESP_FILE_GROUP_DEPTH).
 //
-//     - Add a method TESPluginFile::abort. The method should set a flag on the 
-//       TESPluginFile indicating that loading needs to abort and then, if the 
-//       file is doing multi-threaded loading, wait for the threads to join. The 
-//       threaded reader classes, meanwhile, need to be modified to check that 
-//       flag on a regular basis and abort if they see that it's been set.
+//     - Test all error messages that run through LoadOrder::logError.
 //
-//     - We need to figure out how to get the loading code to actually signal 
-//       errors to LoadOrder. In every place where we log a debug message and 
-//       return false, we must instead send error details to the LoadOrder 
-//       singleton.
+//     - Modify loading code for forms and subrecords (e.g. Papyrus): never 
+//       assert; instead, if a subrecord has invalid data, add its signature 
+//       and offset to a list on LoadedForms::Form and abort loading of the 
+//       subrecord (e.g. error anywhere in VMAD -> discard in-memory VMAD 
+//       data).
 //
-//       I need to audit the relevant code -- make sure that any resources we 
-//       acquire are properly released in the event of failure. After that, I 
-//       need to decide on exactly how I'm going to handle load failures. We 
-//       could use C++ exceptions, but then in order to release resources we 
-//       have to catch and then rethrow the exceptions. Hmm...
-//
-//        - For multi-threaded loading, we also need to get the faulting 
-//          thread to call the (abort) method on its owning TESPluginFile.
-//
-//        - Once we have this in place, audit all assertions and see how many 
-//          should be converted to errors that we handle through LoadOrder.
+//        - Audit all remaining calls to (assert) and (_DEBUGMSG).
 //
 //     - We need to be able to set an active file.
 //
@@ -370,10 +360,19 @@ int main() {
       } else
          printf("Unable to find Skyrim.esm form 0x0010B035 known to be overridden by HearthFires.esm.\n");
    } else {
-      printf("...But an error was encountered during load!");
-      //
-      // TODO: display error
-      //
+      printf("...But an error was encountered during load! Details:");
+      auto& d = LoadOrder::get().getError();
+      if (d.defined()) {
+         printf("Error type:  %s", d.code_string());
+         if (!d.parseError.empty())
+            printf("Error info:  %s", d.parseError.c_str());
+         printf("File:        %s", d.file.c_str());
+         if (!d.dependency.empty())
+            printf("Dependency:  %s", d.dependency.c_str());
+         printf("File offset: %X", d.fileOffset);
+         printf("Form ID:     %08X", d.formID);
+      } else
+         printf("No details available!");
    }
    //
    auto& fsh = FormStubHeap::get();

@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <map>
+#include <mutex>
 #include <set>
 #include <string>
 #include <vector>
@@ -56,10 +57,9 @@ enum class LoadErrorCode {
    // out_of_bounds_form_id
    // A file contained a form with an out-of-bounds form ID, e.g. a file 
    // with three masters (whose local forms would therefore use load order 
-   // prefix 04) containing a form with a load order prefix above 04. Note 
-   // that this error is NOT triggered by a form with a valid ID containing 
-   // a field that refers to an invalid form ID; although that is incorrect, 
-   // it isn't an error that prevents loading.
+   // prefix 04) containing a form with a load order prefix above 04; or a 
+   // file contained a form whose form ID corresponds to a master that, 
+   // for unknown reasons, failed to load.
    //
    out_of_bounds_form_id = 7,
    //
@@ -70,6 +70,54 @@ enum class LoadErrorCode {
    // unselected masters to load.
    //
    too_many_files = 8,
+   //
+   // cyclical_dependency_between_files
+   // The load order contains files whose lists of masters form a cyclical 
+   // dependency.
+   //
+   cyclical_dependency_between_files = 9,
+   //
+   // unknown_error
+   // An error was caught somewhere "above" where it actually happened, and 
+   // no details are available. If this error code is ever actually seen, 
+   // it indicates that I forgot to have an error check report specific error 
+   // details.
+   //
+   unknown_error = 10,
+   //
+   // filesystem_error
+   // Generic codes for filesystem errors e.g. "too many open files." These 
+   // shouldn't actually occur, I think.
+   //
+   filesystem_error = 11,
+};
+struct FatalLoadError {
+   LoadErrorCode code = LoadErrorCode::none;
+   std::string   file;
+   std::string   dependency;
+   std::string   parseError;
+   uint32_t      formID     = 0;
+   uint32_t      fileOffset = 0;
+   //
+   inline bool defined() const noexcept { return this->code != LoadErrorCode::none; }
+   void reset() noexcept {
+      this->code = LoadErrorCode::none;
+      this->file.clear();
+      this->dependency.clear();
+      this->parseError.clear();
+      this->formID     = 0;
+      this->fileOffset = 0;
+   }
+   const char* code_string() const noexcept;
+   //
+   operator bool() const noexcept { return this->defined(); }
+};
+
+enum class form_id_status {
+   valid,
+   out_of_bounds,
+   missing_master,
+   null_is_not_allowed,
 };
 
 class LoadOrder {
@@ -114,8 +162,8 @@ class LoadOrder {
       TESPluginFile* activeFile = nullptr; // TODO
       _form_map formsByType[FormType::Count];
       //
-      uint8_t  loadOrderPrefixFor(TESPluginFile*) const noexcept;
-      uint32_t localFormIDToGlobalFormID(FormStub* stub) const;
+      uint8_t loadOrderPrefixFor(TESPluginFile*) const noexcept;
+      form_id_status localFormIDToGlobalFormID(FormStub* stub, uint32_t& out) const;
       //
       typedef decltype(loadOrderMasters)::const_iterator _load_order_it;
       bool _loadOrderHasMaster(const std::string& name) const;
@@ -126,19 +174,13 @@ class LoadOrder {
       }
       bool _addToLoadOrder(const std::string& name, bool isMasterOfMaster = false);
       //
+      FatalLoadError lastError;
+      std::mutex lastErrorLock;
+      //
    public:
       std::string basePath;
       std::vector<std::string> queuedFiles; // files we plan on loading
       std::string queuedActiveFile; // name of the file that is going to be the active file.
-      //
-      struct {
-         LoadErrorCode code = LoadErrorCode::none;
-         std::string   file;
-         std::string   dependency;
-         std::string   parseError;
-         uint32_t      formID     = 0;
-         uint32_t      fileOffset = 0;
-      } lastError;
       //
       void addFile(const std::string& name);
       void removeFile(const std::string& name);
@@ -151,5 +193,44 @@ class LoadOrder {
       FormStub* getForm(formtype_t formType, uint32_t formID) const;
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
       //
-      void acceptFormStub(FormStub*) noexcept; // used during load
+      // acceptFormStub
+      // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 
+      // from an override record, then the overridden record's stub is deleted and replaced -- we 
+      // only retain the last-loaded record for any given form ID, like the game and the CK.
+      //
+      form_id_status acceptFormStub(FormStub*) noexcept;
+      //
+      // logError
+      // Calls the given lambda to log error details, but only if there isn't already another logged 
+      // error. Use like this:
+      //
+      // LoadOrder::get().logError([this, stub](FatalLoadError& error) {
+      //    error.code       = LoadErrorCode::out_of_bounds_form_id;
+      //    error.file       = this->name;
+      //    error.fileOffset = this->getPos();
+      //    error.formID     = stub->formID;
+      //    error.parseError = "A form cannot use xx000000 as its form ID.";
+      // });
+      //
+      // Only one error can be kept at a time, but this is only meant for irrecoverable errors that 
+      // occur during the load process, so that's generally not a concern. The function uses a 
+      // thread lock, so it should be good for use with multi-threaded loading code. The reason it 
+      // skips the lambda if there already is an error is so you can write code that logs different 
+      // kinds of failures at different points in the load process; e.g.
+      //
+      // // Logs an error upon seeing identifiably incorrect data in the file header; returns true if 
+      // // the whole header is loaded or false if early EOF or file error:
+      // bool loadHeader();
+      //
+      // // Calls loadHeader. If that returns false, logs a catch-all error message assuming we hit 
+      // // an early EOF. If loadHeader logged a more specific error message, then our catch-all 
+      // // doesn't get logged, and that's how we want it.
+      // bool loadWholeFile();
+      //
+      void logError(std::function<void(FatalLoadError&)>);
+      //
+      // getError
+      // NOT thread-safe; only obtain this to display an error after loading has failed.
+      //
+      inline const FatalLoadError& getError() const noexcept { return this->lastError; };
 };

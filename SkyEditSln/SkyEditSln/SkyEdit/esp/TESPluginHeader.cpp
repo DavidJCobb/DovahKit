@@ -1,17 +1,18 @@
 #include "TESPluginHeader.h"
 #include <filesystem>
+#include "LoadOrder.h"
 #include "../output.h"
 
 namespace {
-   template<typename T> bool _read(FILE* file, T& field) {
+   template<typename T> bool _read(FILE* file, T& field) noexcept {
       if (fread(&field, sizeof(T), 1, file) != 1)
          return false;
       return true;
    }
-   void _skip(FILE* file, uint32_t byteCount) {
+   void _skip(FILE* file, uint32_t byteCount) noexcept {
       fseek(file, byteCount, SEEK_CUR);
    }
-   bool _check(FILE* file) {
+   bool _check(FILE* file) noexcept {
       if (feof(file) || ferror(file))
          return false;
       return true;
@@ -25,7 +26,7 @@ namespace {
       //
       _subrecord(FILE* f) : file(f) {}
       //
-      bool open() {
+      bool open() noexcept {
          if (this->signature) {
             this->skip();
          }
@@ -36,7 +37,7 @@ namespace {
          this->pos = ftell(f);
          return this->signature && _check(f);
       }
-      void skip() {
+      void skip() noexcept {
          this->signature = 0;
          auto f   = this->file;
          auto pos = ftell(f);
@@ -45,7 +46,7 @@ namespace {
             return;
          _skip(f, this->size - offset);
       }
-      bool to_string(std::string& field) const {
+      bool to_string(std::string& field) const noexcept {
          field.clear();
          auto length = this->size;
          field.resize(length);
@@ -59,11 +60,31 @@ namespace {
    };
 }
 
-bool TESPluginHeader::load(const char* path) {
-   FILE* file;
-   fopen_s(&file, path, "rb");
+bool TESPluginHeader::load(const char* path) noexcept {
+   FILE*   file;
+   errno_t err = fopen_s(&file, path, "rb");
    if (!file) {
-      _DEBUGMSG("[TESPluginHeader] ERROR: Failed to open: %s", path);
+      LoadOrder::get().logError([&path, err](FatalLoadError& error) {
+         error.file       = std::filesystem::path(path).filename().string();
+         error.parseError = "Failed to parse the file header. ";
+         error.parseError += FILE_ERROR_CODE_TO_STRING(err);
+         switch (err) {
+            case ENFILE:
+            case EMFILE:
+            case EINVAL:
+            case ELOOP:
+            case ENAMETOOLONG:
+               error.code = LoadErrorCode::filesystem_error;
+               break;
+            case EACCES:
+            case EBUSY:
+               error.code = LoadErrorCode::locked_file;
+               break;
+            case ENOENT:
+            default:
+               error.code = LoadErrorCode::missing_file;
+         }
+      });
       return false;
    }
    this->name = std::filesystem::path(path).filename().string();
@@ -112,6 +133,15 @@ bool TESPluginHeader::load(const char* path) {
             break;
          case 'DATA':
             if (last_subrecord != 'MAST') {
+               LoadOrder::get().logError([this, &path, last_subrecord](FatalLoadError& error) {
+                  error.code = LoadErrorCode::malformed_file;
+                  error.file = std::filesystem::path(path).filename().string();
+                  if (last_subrecord) {
+                     error.parseError = "Failed initial read of the file header. Unexpected 'DATA' subrecord in the file following another master.";
+                     error.dependency = *this->masters.rbegin();
+                  } else
+                     error.parseError = "Failed initial read of the file header. Unexpected 'DATA' subrecord at the start of the file header.";
+               });
                if (last_subrecord)
                   _DEBUGMSG("[TESPluginHeader] Error: Unexpected 'DATA' subrecord in the file header following %s.", FMT_SIGNATURE(last_subrecord));
                else

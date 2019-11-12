@@ -16,7 +16,7 @@ class TESPluginHeader {
          kFlag_Light  = 0x0200, // SSE only
       };
       //
-      bool load(const char* path);
+      bool load(const char* path) noexcept;
       //
       std::string name;
       uint32_t    flags = 0;
