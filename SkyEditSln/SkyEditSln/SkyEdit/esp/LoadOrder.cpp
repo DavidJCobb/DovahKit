@@ -17,10 +17,11 @@ const char* _load_error_code_names[] = {
    "there are too many files in the load order",
    "the file is part of a cyclical dependency",
    "unknown/unhandled error",
+   "filesystem or file I/O error",
 };
 const char* FatalLoadError::code_string() const noexcept {
-   if ((int32_t)this->code < std::extent<decltype(_load_error_code_names)>::value)
-      return _load_error_code_names[(int32_t)this->code];
+   if ((uint32_t)this->code < std::extent<decltype(_load_error_code_names)>::value)
+      return _load_error_code_names[(uint32_t)this->code];
    return "<no string>";
 }
 
@@ -280,6 +281,25 @@ void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormSt
             break;
       }
    }
+}
+
+void LoadOrder::reset() {
+   this->lastError.reset();
+   this->loadOrderUnderConsideration.clear();
+   this->loadOrderMasters.clear();
+   this->loadOrderPlugins.clear();
+   //
+   for (auto it = this->files.begin(); it != this->files.end(); ++it)
+      delete (*it);
+   this->files.clear();
+   this->activeFile = nullptr;
+   //
+   this->queuedFiles.clear();
+   this->queuedActiveFile.clear();
+   //
+   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++)
+      this->formsByType[ft].forms.clear();
+   FormStubHeap::get().force_free_all();
 }
 
 form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {

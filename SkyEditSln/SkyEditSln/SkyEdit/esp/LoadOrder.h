@@ -90,6 +90,9 @@ enum class LoadErrorCode {
    // shouldn't actually occur, I think.
    //
    filesystem_error = 11,
+   //
+   // REMEMBER TO KEEP FatalLoadError::code_string SYNCHED WITH THIS ENUM!
+   //
 };
 struct FatalLoadError {
    LoadErrorCode code = LoadErrorCode::none;
@@ -192,6 +195,12 @@ class LoadOrder {
       FormStub* getForm(uint32_t formID) const;
       FormStub* getForm(formtype_t formType, uint32_t formID) const;
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
+      //
+      // reset
+      // Clears last-error details, wipes the load order, and deletes all FormStubs -- and I do mean 
+      // ALL FormStubs -- from memory.
+      //
+      void reset();
       //
       // acceptFormStub
       // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 

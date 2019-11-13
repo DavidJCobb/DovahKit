@@ -365,8 +365,10 @@ void TESPluginThreadedSimpleReader::_load() {
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
-      if (this->owner.aborted)
+      if (this->owner.aborted) {
+         _DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
          break;
+      }
       auto& desired = this->queue[i];
       this->setPos(desired.pos);
       this->resetParseState();
@@ -449,8 +451,10 @@ void TESPluginThreadedInteriorCellReader::_load() {
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
-      if (this->owner.aborted)
+      if (this->owner.aborted) {
+         _DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
          break;
+      }
       auto& desired = this->queue[i];
       //_DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X beginning with interior-cell-block %d at position %08X.", std::this_thread::get_id(), desired.blockNumber, desired.pos);
       this->setPos(desired.pos);
@@ -533,8 +537,10 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
    //
    auto size = this->queue.size();
    for (uint32_t i = 0; i < size; i++) {
-      if (this->owner.aborted)
+      if (this->owner.aborted) {
+         _DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
          break;
+      }
       auto& desired = this->queue[i];
       //_DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X beginning with [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
       this->setPos(desired.pos);
@@ -664,8 +670,7 @@ bool TESPluginFile::_loadHeader() {
       switch (subrecord.signature()) {
          case 'HEDR': // required subrecord; TODO: fail if this isn't present
             if (!subrecord.is_in_bounds(12)) {
-               _DEBUGMSG("Unable to read header HEDR.");
-               return false;
+               return false; // don't log an error here; caller should catch (return false) and log a catch-all error
             }
             subrecord.unchecked_read(this->fileVersion);
             subrecord.unchecked_read(this->recordCount);
@@ -673,14 +678,12 @@ bool TESPluginFile::_loadHeader() {
             break;
          case 'CNAM': // author/creator
             if (!subrecord.read(this->authorName, subrecord.size())) {
-               _DEBUGMSG("Unable to read header CNAM (creator name).");
-               return false;
+               return false; // don't log an error here; caller should catch (return false) and log a catch-all error
             }
             break;
          case 'SNAM': // description
             if (!subrecord.read(this->description, subrecord.size())) {
-               _DEBUGMSG("Unable to read header SNAM (description).");
-               return false;
+               return false; // don't log an error here; caller should catch (return false) and log a catch-all error
             }
             break;
          case 'MAST':
@@ -691,8 +694,7 @@ bool TESPluginFile::_loadHeader() {
                this->masters.emplace_back();
                MasterEntry& last = *this->masters.rbegin();
                if (!subrecord.to_string(last.master)) {
-                  _DEBUGMSG("Failed to read a 'MAST' subrecord in the file header.");
-                  return false;
+                  return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                if (this->masters.size() > 253) {
                   LoadOrder::get().logError([this](FatalLoadError& error) {
@@ -750,14 +752,12 @@ bool TESPluginFile::_loadHeader() {
             break;
          case 'INTV':
             if (!subrecord.read(this->subINTV)) {
-               _DEBUGMSG("Unable to read header INTV.");
-               return false;
+               return false; // don't log an error here; caller should catch (return false) and log a catch-all error
             }
             break;
          case 'INCC':
             if (!subrecord.read(this->subINCC)) {
-               _DEBUGMSG("Unable to read header INCC.");
-               return false;
+               return false; // don't log an error here; caller should catch (return false) and log a catch-all error
             }
             break;
       }
@@ -807,9 +807,9 @@ bool TESPluginFile::load(const char* filepath) {
          return false;
       }
    #endif
-   _DEBUGMSG("Opened file.");
    this->path = filepath;
    this->name = std::filesystem::path(filepath).filename().string();
+   _DEBUGMSG("Opened file: %s", this->name.c_str());
    if (!this->_loadHeader()) {
       LoadOrder::get().logError([this](FatalLoadError& error) {
          error.code       = LoadErrorCode::malformed_file;
@@ -882,7 +882,7 @@ bool TESPluginFile::load(const char* filepath) {
             } else if (group.header.type == kESPGroupType_InteriorCellBlock) { // Interior Cell Block
                {
                   auto parent = group.getParent();
-                  int  err;
+                  int  err    = 0;
                   if (!parent)
                      err = 1;
                   else if (parent->header.type != kESPGroupType_FormsOfType)
@@ -963,7 +963,7 @@ bool TESPluginFile::load(const char* filepath) {
    for (uint32_t i = 0; i < std::extent<decltype(this->worldspaceReaders)>::value; i++)
       this->worldspaceReaders[i].wait_for();
    this->complexReader.wait_for();
-   return true;
+   return !this->aborted;
 }
 void TESPluginFile::abort() noexcept {
    this->aborted = true;

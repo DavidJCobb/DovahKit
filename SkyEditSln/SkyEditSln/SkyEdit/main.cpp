@@ -61,6 +61,9 @@ std::thread::id main_thread_id;
 //
 //     - Test all error messages that run through LoadOrder::logError.
 //
+//        - Probably best if we hand-make some intentionally malformed files; 
+//          and write code to test all of them all in one go.
+//
 //     - Modify loading code for forms and subrecords (e.g. Papyrus): never 
 //       assert; instead, if a subrecord has invalid data, add its signature 
 //       and offset to a list on LoadedForms::Form and abort loading of the 
@@ -69,7 +72,30 @@ std::thread::id main_thread_id;
 //
 //        - Audit all remaining calls to (assert) and (_DEBUGMSG).
 //
+//        - TESPluginSubrecord::back_to_start has been added for the purpose 
+//          of letting a client go back to the start of the subrecord, in 
+//          order to load its full contents after having read some of it.
+//
 //     - We need to be able to set an active file.
+//
+//        - All forms and overrides loaded from the active file should be 
+//          stored both in LoadOrder::formsByType and in a separate map 
+//          just for active file forms, so that we know what forms to save 
+//          when saving the active file.
+//
+//           - If something else overrides a form that the active file 
+//             overrode -- that is, a form defined in A overridden by 
+//             active file B and then overridden again by some file C 
+//             later in the load order -- then we'll... need to do... ah, 
+//             something, I think.
+//
+//              - Wondering if we should enforce the active file being 
+//                the last file in the load order.
+//
+//        - Wondering if we should retain FormStubs for forms overridden by 
+//          the active file; it would allow us to offer a "Revert" context 
+//          menu item on all forms in the active file. Could give each 
+//          FormStub a field (FormStub* overrides = nullptr).
 //
 //  - Use Info:
 //
@@ -117,6 +143,13 @@ std::thread::id main_thread_id;
 //       the full load order. However, we don't open ESP files with fopen; we 
 //       use Windows's "mapped file" API. Does that have a similar limit?
 //
+//  - Polishing:
+//
+//     - We need a way to reset LoadOrder, so that we can load a new order.
+//
+//        - Move the call to FormStubHeap::force_free_all from main.cpp to 
+//          LoadOrder's reset method, once it HAS a reset method.
+//
 
 
 
@@ -134,17 +167,8 @@ std::thread::id main_thread_id;
 //
 //  - cobb::wavl_tree
 //
-//     - We should add an analogue to std::map::clear.
-//
-//        - The tree's destructor should call it, obviously.
-//
-//     - Can we add an analogue to std::map::swap and/or std::swap support?
-//
-//     - We should add an analogue to std::map::contains.
-//
-//     - For completeness' sake we may want an analogue to std::map::find, which 
-//       looks up a node and returns an iterator to it. We don't need, but may 
-//       want, analogues to std::map::lower_bound and std::map::upper_bound.
+//     - We don't need, but may want, analogues to std::map::lower_bound and 
+//       std::map::upper_bound.
 //
 //     - Consider renaming (value_type) to (mapped_type) and then typedeffing 
 //       (value_type) to refer to the pair; this will be consistent with std::map.
@@ -291,6 +315,21 @@ std::thread::id main_thread_id;
 //                binary tree or any other specific implementation.
 //
 
+void test_print_load_error() {
+   auto& d = LoadOrder::get().getError();
+   if (d.defined()) {
+      printf("Error type:  %s", d.code_string());
+      if (!d.parseError.empty())
+         printf("Error info:  %s", d.parseError.c_str());
+      printf("File:        %s", d.file.c_str());
+      if (!d.dependency.empty())
+         printf("Dependency:  %s", d.dependency.c_str());
+      printf("File offset: %X", d.fileOffset);
+      printf("Form ID:     %08X", d.formID);
+   } else
+      printf("No details available!");
+}
+
 void test_print_quests() {
    auto& lo = LoadOrder::get();
    lo.forEachFormOfType(FormType::Quest, [](FormStub* stub) {
@@ -325,11 +364,27 @@ void test_print_actor_bases() {
    });
 }
 
-int main() {
-   main_thread_id = std::this_thread::get_id();
-   //
+void test_skyrim() {
    auto& lo = LoadOrder::get();
-   lo.basePath = TEST_PLUGIN_PATH;
+   lo.addFile("Skyrim.esm");
+   struct timeb bench_start;
+   struct timeb bench_end;
+   ftime(&bench_start);
+   bool result = lo.loadQueuedFiles();
+   ftime(&bench_end);
+   printf("Loaded Skyrim.esm.\n");
+   printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+   if (result) {
+      test_print_quests();
+      test_print_actor_bases();
+   } else {
+      printf("...But an error was encountered during load! Details:");
+      test_print_load_error();
+   }
+   lo.reset();
+}
+void test_hearthfire() {
+   auto& lo = LoadOrder::get();
    //lo.addFile("Skyrim.esm");
    lo.addFile("Update.esm");
    lo.addFile("HearthFires.esm");
@@ -338,11 +393,9 @@ int main() {
    ftime(&bench_start);
    bool result = lo.loadQueuedFiles();
    ftime(&bench_end);
-   printf("Loaded Skyrim.esm and Update.esm.\n");
+   printf("Loaded Skyrim.esm, Update.esm, and HearthFires.esm.\n");
    printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
    if (result) {
-      //test_print_quests();
-      //test_print_actor_bases();
       auto hf_form = lo.getForm(0x020008CE);
       if (hf_form)
          printf("Found HearthFires form xx0008CE.\n");
@@ -361,26 +414,20 @@ int main() {
          printf("Unable to find Skyrim.esm form 0x0010B035 known to be overridden by HearthFires.esm.\n");
    } else {
       printf("...But an error was encountered during load! Details:");
-      auto& d = LoadOrder::get().getError();
-      if (d.defined()) {
-         printf("Error type:  %s", d.code_string());
-         if (!d.parseError.empty())
-            printf("Error info:  %s", d.parseError.c_str());
-         printf("File:        %s", d.file.c_str());
-         if (!d.dependency.empty())
-            printf("Dependency:  %s", d.dependency.c_str());
-         printf("File offset: %X", d.fileOffset);
-         printf("Form ID:     %08X", d.formID);
-      } else
-         printf("No details available!");
+      test_print_load_error();
    }
+   lo.reset();
+}
+
+int main() {
+   main_thread_id = std::this_thread::get_id();
    //
-   auto& fsh = FormStubHeap::get();
-   //FormStubHeapPrinter fsh_printer;
-   //fsh.dumpStats(fsh_printer);
-   //fsh.dumpStats();
-   fsh.force_free_all();
-   //fsh.dumpStats();
+   auto& lo = LoadOrder::get();
+   lo.basePath = TEST_PLUGIN_PATH;
+   printf("\nTEST 1:\n");
+   test_skyrim();
+   printf("\nTEST 2:\n");
+   test_hearthfire();
    //
    return 0;
 }

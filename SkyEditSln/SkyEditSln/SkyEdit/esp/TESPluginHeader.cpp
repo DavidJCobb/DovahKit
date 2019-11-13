@@ -122,7 +122,7 @@ bool TESPluginHeader::load(const char* path) noexcept {
             subrecord.to_string(this->description);
             break;
          case 'MAST':
-            if (last_subrecord && last_subrecord != 'DATA') {
+            if (last_subrecord == 'MAST') {
                _DEBUGMSG("[TESPluginHeader] Warning: a 'MAST' subrecord in the file header lacked a matching 'DATA' subrecord.");
             }
             {

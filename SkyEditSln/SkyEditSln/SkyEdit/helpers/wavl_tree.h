@@ -166,6 +166,19 @@ namespace cobb {
                uint32_t r = this->right ? this->right->size() : 0;
                return l + r + 1;
             }
+            //
+            void destroy_children() noexcept {
+               if (this->left) {
+                  this->left->destroy_children();
+                  delete this->left;
+                  this->left = nullptr;
+               }
+               if (this->right) {
+                  this->right->destroy_children();
+                  delete this->right;
+                  this->right = nullptr;
+               }
+            }
          };
          //
          node*    root = nullptr;
@@ -428,6 +441,19 @@ namespace cobb {
             }
          }
          //
+         node* _get(key_type k) const noexcept {
+            auto p = this->root;
+            while (p) {
+               auto ok = p->key();
+               if (k < ok)
+                  p = p->left;
+               else if (k > ok)
+                  p = p->right;
+               else
+                  return p;
+            }
+            return nullptr;
+         }
          node* _set(key_type k, value_type v) noexcept {
             //
             // The reason the "set" code is in a protected helper function is because 
@@ -466,21 +492,20 @@ namespace cobb {
          }
          //
       public:
+         ~wavl_tree() noexcept {
+            this->clear();
+         }
          void for_each(std::function<bool(key_type, value_type)> functor) const {
             if (this->root)
                this->_for_each(this->root, functor);
          }
+         bool contains(key_type k) const noexcept {
+            return this->_get(k) != nullptr;
+         }
          value_type* get(key_type k) const noexcept {
-            auto p = this->root;
-            while (p) {
-               auto ok = p->key();
-               if (k < ok)
-                  p = p->left;
-               else if (k > ok)
-                  p = p->right;
-               else
-                  return p->value_pointer();
-            }
+            auto node = this->_get(k);
+            if (node)
+               return node->value_pointer();
             return nullptr;
          }
          void remove(key_type k) noexcept {
@@ -555,6 +580,14 @@ namespace cobb {
          //
          size_t size() const noexcept { return this->_size; }
          bool empty() const noexcept { return !this->_size; }
+         void clear() noexcept {
+            if (this->root) {
+               this->root->destroy_children();
+               delete this->root;
+               this->root = nullptr;
+               this->_size = 0;
+            }
+         }
          //
          /*//
          void _debug_dump(node* n) const {
@@ -645,6 +678,22 @@ namespace cobb {
             auto node = this->_set(k, value_type());
             return node->data.second;
          }
+         //
+         void swap(wavl_tree& other) noexcept {
+            auto a = this->root;
+            auto b = other.root;
+            this->root = b;
+            other.root = a;
+            auto c = this->_size;
+            auto d = other._size;
+            this->_size = c;
+            other._size = d;
+         }
+         //
+         // Returns an iterator to a given key. Not part of STL; faster than using std::find since 
+         // that has to traverse the entire container (i.e. from begin to end).
+         //
+         iterator find(key_type k) noexcept { return iterator(this->_get(k)); }
    };
 
    namespace unit_tests {

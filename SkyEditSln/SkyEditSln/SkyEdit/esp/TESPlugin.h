@@ -93,23 +93,27 @@ class TESPluginGroup {
 class TESPluginRecord {
    friend TESPluginBaseReader;
    friend TESPluginFile;
+   friend TESPluginSubrecord;
    protected:
       TESPluginRecord(TESPluginBaseReader& file) : owner(file) {}
       //
       TESPluginBaseReader& owner;
       //
       TESPluginRecordHeader header;
-      uint32_t headPos; // position in the file
-      uint32_t bodyPos; // position in the body
+      uint32_t headPos; // position in the file (start of the record)
+      uint32_t bodyPos; // position in the file (start of the record body)
       uint32_t end;
       //
-      cobb::generic_buffer data;
-      uint32_t offset = 0;
+      cobb::generic_buffer data; // record body (uncompressed)
+      uint32_t offset = 0; // offset for reading, within the record body
       //
       void reset() {
          this->data.free();
          this->offset = 0;
          this->header.signature = 0;
+      }
+      void go_to_offset(uint32_t offset) {
+         this->offset = offset - this->bodyPos;
       }
       //
    public:
@@ -160,8 +164,8 @@ class TESPluginSubrecord {
          uint32_t signature = 0;
          uint32_t size = 0;
       } header;
-      uint32_t pos;
-      uint32_t end;
+      uint32_t pos; // position in the file
+      uint32_t end; // position in the file
       //
    public:
       TESPluginSubrecord& operator=(const TESPluginSubrecord& other) = delete; // no copy
@@ -203,6 +207,10 @@ class TESPluginSubrecord {
          return this->get_containing_record().unchecked_read(field);
       }
       bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator
+      //
+      void back_to_start() {
+         this->get_containing_record().go_to_offset(this->pos);
+      }
 
       //
       // The functions below allow you to manually manage bounds-checking: if you need to read multiple 
