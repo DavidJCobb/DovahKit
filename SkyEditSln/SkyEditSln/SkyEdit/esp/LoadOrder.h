@@ -86,8 +86,7 @@ enum class LoadErrorCode {
    unknown_error = 10,
    //
    // filesystem_error
-   // Generic codes for filesystem errors e.g. "too many open files." These 
-   // shouldn't actually occur, I think.
+   // Generic codes for filesystem errors e.g. "too many open files."
    //
    filesystem_error = 11,
    //
@@ -158,7 +157,7 @@ class LoadOrder {
       //
       //  - Once we've actually loaded the files, they'll be in (files).
       //
-      std::set<TESPluginHeader*> loadOrderUnderConsideration; // used to detect cyclical dependencies between files
+      std::set<std::string> loadOrderUnderConsideration; // used to detect cyclical dependencies between files
       std::vector<TESPluginHeader*> loadOrderMasters;
       std::vector<TESPluginHeader*> loadOrderPlugins;
       std::vector<TESPluginFile*>   files;

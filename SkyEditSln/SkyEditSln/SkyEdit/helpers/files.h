@@ -46,4 +46,14 @@ namespace cobb {
             return (offset + bytes) < this->size;
          }
    };
+   class file_guard {
+      protected:
+         FILE* raw = nullptr;
+      public:
+         file_guard(FILE* r) : raw(r) {};
+         ~file_guard() {
+            if (this->raw)
+               fclose(this->raw);
+         }
+   };
 }

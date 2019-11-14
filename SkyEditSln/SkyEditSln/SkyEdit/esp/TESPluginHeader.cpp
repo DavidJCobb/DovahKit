@@ -2,6 +2,7 @@
 #include <filesystem>
 #include "LoadOrder.h"
 #include "../output.h"
+#include "../helpers/files.h"
 
 namespace {
    template<typename T> bool _read(FILE* file, T& field) noexcept {
@@ -87,6 +88,8 @@ bool TESPluginHeader::load(const char* path) noexcept {
       });
       return false;
    }
+   cobb::file_guard guard(file); // calls fclose for us
+   //
    this->name = std::filesystem::path(path).filename().string();
    uint32_t recordSize;
    {
@@ -152,6 +155,5 @@ bool TESPluginHeader::load(const char* path) noexcept {
       }
       last_subrecord = subrecord.signature;
    }
-   fclose(file);
    return true;
 }

@@ -253,7 +253,8 @@ class TESPluginBaseReader {
       TESPluginSubrecord subrecord;
       uint32_t lastPotentialGroupParent = 0; // form ID: CELL, WRLD, DIAL
       //
-      bool uses_string_table = false;
+      const char* filename = ""; // needed for error reporting
+      bool        uses_string_table = false;
       //
       void read(void* buffer, uint32_t size) {
          #ifdef COBB_ESP_USE_MAPPED_FILES
@@ -294,8 +295,6 @@ class TESPluginBaseReader {
          for (uint32_t i = 0; i < std::extent<decltype(this->groups)>::value; i++)
             this->groups[i].initialize(this);
       };
-      //
-      void open(const char* path);
       //
       void     setPos(uint32_t pos);
       uint32_t getPos();

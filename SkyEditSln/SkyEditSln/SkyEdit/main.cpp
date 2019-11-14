@@ -1,6 +1,7 @@
 #include <iostream> // for testing
 #include <sys/timeb.h> // for benchmarks
 #include <thread> // for std::thread::id
+#include <filesystem>
 #include "esp/LoadOrder.h"
 #include "esp/TESPlugin.h"
 #include "forms/loaded/Quest.h"
@@ -53,6 +54,9 @@ std::thread::id main_thread_id;
 //
 //  - Loading:
 //
+//     - The form type list is still incomplete. Deal with the gaps one way or 
+//       another.
+//
 //     - TESPluginHeader and TESPluginFile need to force the "is master" flag 
 //       if the file's extension is ESM or ESL.
 //
@@ -64,9 +68,19 @@ std::thread::id main_thread_id;
 //        - Probably best if we hand-make some intentionally malformed files; 
 //          and write code to test all of them all in one go.
 //
+//        - If a file's dependency doesn't exist, then we should indicate 
+//          which file had the dependency. Currently we only log the name of 
+//          the missing file.
+//
+//     - LoadOrder::load needs to verify that the files' masters haven't 
+//       changed once we begin the final load. The only way to do that is 
+//       to split TESPluginFile's load process so that LoadOrder can load 
+//       the header, check the masters, and then proceed with loading the 
+//       file if there is no error.
+//
 //     - Modify loading code for forms and subrecords (e.g. Papyrus): never 
 //       assert; instead, if a subrecord has invalid data, add its signature 
-//       and offset to a list on LoadedForms::Form and abort loading of the 
+//       and contents to a list on LoadedForms::Form and abort loading of the 
 //       subrecord (e.g. error anywhere in VMAD -> discard in-memory VMAD 
 //       data).
 //
@@ -318,16 +332,16 @@ std::thread::id main_thread_id;
 void test_print_load_error() {
    auto& d = LoadOrder::get().getError();
    if (d.defined()) {
-      printf("Error type:  %s", d.code_string());
+      printf("Error type:  %s\n", d.code_string());
       if (!d.parseError.empty())
-         printf("Error info:  %s", d.parseError.c_str());
-      printf("File:        %s", d.file.c_str());
+         printf("Error info:  %s\n", d.parseError.c_str());
+      printf("File:        %s\n", d.file.c_str());
       if (!d.dependency.empty())
-         printf("Dependency:  %s", d.dependency.c_str());
-      printf("File offset: %X", d.fileOffset);
-      printf("Form ID:     %08X", d.formID);
+         printf("Dependency:  %s\n", d.dependency.c_str());
+      printf("File offset: %X\n", d.fileOffset);
+      printf("Form ID:     %08X\n", d.formID);
    } else
-      printf("No details available!");
+      printf("No details available!\n");
 }
 
 void test_print_quests() {
@@ -366,6 +380,7 @@ void test_print_actor_bases() {
 
 void test_skyrim() {
    auto& lo = LoadOrder::get();
+   lo.basePath = TEST_PLUGIN_PATH;
    lo.addFile("Skyrim.esm");
    struct timeb bench_start;
    struct timeb bench_end;
@@ -385,6 +400,7 @@ void test_skyrim() {
 }
 void test_hearthfire() {
    auto& lo = LoadOrder::get();
+   lo.basePath = TEST_PLUGIN_PATH;
    //lo.addFile("Skyrim.esm");
    lo.addFile("Update.esm");
    lo.addFile("HearthFires.esm");
@@ -419,11 +435,56 @@ void test_hearthfire() {
    lo.reset();
 }
 
+void test_errors() {
+   auto& lo = LoadOrder::get();
+   lo.basePath = std::filesystem::current_path().string();
+   lo.basePath += "/tests/";
+   //
+   printf("TESTING ERROR HANDLING...\n");
+   printf("Base path: %s\n", lo.basePath.c_str());
+   {
+      printf("\nLoading empty file...\n");
+      lo.addFile("empty.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading cyclical-dependency file...\n");
+      lo.addFile("Cyclical01.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading missing-dependency file...\n");
+      lo.addFile("MissingDependency.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading file truncated in the header...\n");
+      lo.addFile("TooShort.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading file with bad extended subrecord...\n");
+      lo.addFile("BadExtendedSubrecord.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   printf("\nDONE TESTING ERROR HANDLING.\n");
+}
+
 int main() {
    main_thread_id = std::this_thread::get_id();
    //
    auto& lo = LoadOrder::get();
-   lo.basePath = TEST_PLUGIN_PATH;
+   test_errors();
    printf("\nTEST 1:\n");
    test_skyrim();
    printf("\nTEST 2:\n");

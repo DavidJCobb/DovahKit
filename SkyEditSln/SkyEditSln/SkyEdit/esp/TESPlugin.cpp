@@ -284,12 +284,8 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
 bool TESPluginBaseReader::nextSubrecord() {
    auto& r = this->record;
    if (this->subrecord.header.signature) {
-      //this->setPos(this->subrecord.end);
       this->record.skip(this->subrecord.end - this->record.stream_pos());
       this->subrecord.header.signature = 0;
-      //
-      if (!this->is_good())
-         return false;
    }
    if (this->record.stream_pos() >= this->record.end)
       return false;
@@ -303,21 +299,28 @@ bool TESPluginBaseReader::nextSubrecord() {
       // larger than what can be represented with the usual two-byte length.
       //
       if (this->subrecord.header.size != 4) {
+         LoadOrder::get().logError([this](FatalLoadError& error) {
+            error.code       = LoadErrorCode::malformed_file;
+            error.file       = this->filename;
+            error.fileOffset = this->getPos();
+            error.parseError = "Extended subrecord with no length.";
+            //
+            auto& record = this->getCurrentRecord();
+            if (record)
+               error.formID = record.formID();
+         });
+         this->subrecord.header.signature = 0;
          return false; // ERROR
       }
-      //this->read(this->subrecord.size); // the contents of the XXXX subrecord are the length
-      static_assert(sizeof(this->subrecord.header.size) == 4, "XXXX subrecords store a four-byte subrecord length.");
-      this->record.read(this->subrecord.header.size);
+      static_assert(sizeof(this->subrecord.header.size) == 4, "XXXX subrecords store a four-byte subrecord length. Alter the struct definition accordingly.");
+      this->record.read(this->subrecord.header.size); // the contents of the XXXX subrecord are the length
       //
       // Get the next subrecord.
       //
-      //this->read(this->subrecord.signature);
-      //this->skipBytes(2); // an XXXX-prefixed subrecord has no length of its own
       this->record.read(this->subrecord.header.signature);
       this->record.skip(2);
    }
    this->subrecord.header.signature = _byteswap_ulong(this->subrecord.header.signature);
-   //this->subrecord.pos = this->getPos();
    this->subrecord.pos = this->record.bodyPos + this->record.offset;
    this->subrecord.end = this->subrecord.pos + size;
    if (!this->is_good() || !this->record.is_in_bounds())
@@ -352,6 +355,7 @@ void TESPluginThreadedSimpleReader::_thread_handler(TESPluginThreadedSimpleReade
    instance->_load();
 }
 void TESPluginThreadedSimpleReader::_load() {
+   this->filename = this->owner.filename; // TESPluginBaseReader member, needed for error reporting in TESPluginBaseReader::nextSubrecord
    #ifdef COBB_ESP_USE_MAPPED_FILES
       this->file = this->owner.file;
    #else
@@ -438,6 +442,7 @@ void TESPluginThreadedInteriorCellReader::_thread_handler(TESPluginThreadedInter
    instance->_load();
 }
 void TESPluginThreadedInteriorCellReader::_load() {
+   this->filename = this->owner.filename; // TESPluginBaseReader member, needed for error reporting in TESPluginBaseReader::nextSubrecord
    #ifdef COBB_ESP_USE_MAPPED_FILES
       this->file = this->owner.file;
    #else
@@ -524,6 +529,7 @@ void TESPluginThreadedWorldspaceSubBlockReader::_thread_handler(TESPluginThreade
    instance->_load();
 }
 void TESPluginThreadedWorldspaceSubBlockReader::_load() {
+   this->filename = this->owner.filename; // TESPluginBaseReader member, needed for error reporting in TESPluginBaseReader::nextSubrecord
    #ifdef COBB_ESP_USE_MAPPED_FILES
       this->file = this->owner.file;
    #else
@@ -809,6 +815,8 @@ bool TESPluginFile::load(const char* filepath) {
    #endif
    this->path = filepath;
    this->name = std::filesystem::path(filepath).filename().string();
+   this->filename = this->name.c_str(); // TESPluginBaseReader member, needed for error reporting in TESPluginBaseReader::nextSubrecord
+   //
    _DEBUGMSG("Opened file: %s", this->name.c_str());
    if (!this->_loadHeader()) {
       LoadOrder::get().logError([this](FatalLoadError& error) {

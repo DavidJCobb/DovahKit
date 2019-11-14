@@ -118,16 +118,24 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
       delete header;
       return false;
    }
-   if (this->loadOrderUnderConsideration.find(header) != loadOrderUnderConsideration.end()) {
-      this->logError([&name](FatalLoadError& error) {
+   //
+   if (this->loadOrderUnderConsideration.find(header->name) != loadOrderUnderConsideration.end()) {
+      this->logError([this, &name](FatalLoadError& error) {
          error.code = LoadErrorCode::cyclical_dependency_between_files;
          error.file = name;
          error.parseError = "Failed initial read of the file header. This file is part of a cyclical dependency.";
+         //
+         auto& list = this->loadOrderUnderConsideration;
+         if (list.size() > 1) {
+            auto last = list.rbegin();
+            error.dependency = *last;
+         }
       });
       delete header;
       return false;
    }
-   this->loadOrderUnderConsideration.insert(header);
+   this->loadOrderUnderConsideration.insert(header->name);
+   //
    bool must_be_master = isMasterOfMaster || header->is_master();
    for (auto it = header->masters.begin(); it != header->masters.end(); ++it) {
       if (this->_loadOrderHasMaster(*it))
@@ -147,7 +155,7 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
       // unexpected masters of the unexpected master.
       //
       if (!this->_addToLoadOrder(*it, must_be_master)) {
-         this->loadOrderUnderConsideration.erase(header);
+         this->loadOrderUnderConsideration.erase(header->name);
          delete header;
          return false;
       }
@@ -159,7 +167,7 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
       this->loadOrderMasters.push_back(header);
    else
       this->loadOrderPlugins.push_back(header);
-   this->loadOrderUnderConsideration.erase(header);
+   this->loadOrderUnderConsideration.erase(header->name);
    //
    if (this->_loadOrderSize() > 254) {
       this->logError([&name](FatalLoadError& error) {
@@ -167,7 +175,7 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
          error.file = name;
          error.parseError = "The load order is too long.";
       });
-      this->loadOrderUnderConsideration.erase(header);
+      this->loadOrderUnderConsideration.erase(header->name);
       delete header;
       return false;
    }
@@ -186,6 +194,11 @@ void LoadOrder::removeFile(const std::string& name) {
 }
 bool LoadOrder::loadQueuedFiles() {
    assert(this->files.size() == 0 && "Must clear loaded files before you can use a new load order!");
+   if (!this->basePath.empty()) {
+      char end = *this->basePath.rbegin();
+      if (end != '/' && end != '\\')
+         this->basePath += '/';
+   }
    //
    for (auto it = this->queuedFiles.begin(); it != this->queuedFiles.end(); ++it) {
       if (!this->_addToLoadOrder(*it))
@@ -242,7 +255,7 @@ bool LoadOrder::loadQueuedFiles() {
       // 3. Load the rest of the file.
       //
    }
-   return true;
+   return !this->lastError.defined();
 }
 
 uint8_t LoadOrder::indexOf(const std::string& filename) const noexcept {
@@ -286,7 +299,11 @@ void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormSt
 void LoadOrder::reset() {
    this->lastError.reset();
    this->loadOrderUnderConsideration.clear();
+   for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
+      delete (*it);
    this->loadOrderMasters.clear();
+   for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it)
+      delete (*it);
    this->loadOrderPlugins.clear();
    //
    for (auto it = this->files.begin(); it != this->files.end(); ++it)
