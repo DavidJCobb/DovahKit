@@ -390,6 +390,97 @@ void test_print_actor_bases() {
    });
 }
 
+void test_skyrim_quest() {
+   auto& lo = LoadOrder::get();
+   lo.basePath = TEST_PLUGIN_PATH;
+   lo.addFile("Skyrim.esm");
+   struct timeb bench_start;
+   struct timeb bench_end;
+   ftime(&bench_start);
+   bool result = lo.loadQueuedFiles();
+   ftime(&bench_end);
+   printf("Loaded Skyrim.esm.\n");
+   printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+   if (result) {
+      {  // TEST: Dialogue conditions
+         auto stub = lo.getForm(FormType::Quest, 0xE46);
+         if (stub) {
+            printf("\n[QUST:00000E46]CreatureDialogueWerewolf\n");
+            auto form = stub->load();
+            if (form) {
+               auto quest = form.ptr_cast<LoadedForms::Quest>();
+               printf(" - Dialogue conditions (%d):\n", quest->dialogueConditions.size());
+               for (auto it = quest->dialogueConditions.begin(); it != quest->dialogueConditions.end(); ++it) {
+                  std::string s;
+                  it->to_string(s);
+                  printf(s.c_str());
+                  printf("\n");
+               }
+            }
+         } else
+            printf("\nFailed to find [QUST:00000E46]CreatureDialogueWerewolf!\n");
+      }
+      {  // TEST: Event conditions
+         auto stub = lo.getForm(FormType::Quest, 0x17042);
+         if (stub) {
+            printf("\n[QUST:00017042]MQSovngardeConv2ActorDialogue\n");
+            auto form = stub->load();
+            if (form) {
+               auto quest = form.ptr_cast<LoadedForms::Quest>();
+               printf(" - Event conditions (%d):\n", quest->eventConditions.size());
+               for (auto it = quest->eventConditions.begin(); it != quest->eventConditions.end(); ++it) {
+                  std::string s;
+                  it->to_string(s);
+                  printf("    - %s\n", s.c_str());
+                  printf("\n");
+               }
+            }
+         } else
+            printf("\nFailed to find [QUST:00017042]MQSovngardeConv2ActorDialogue!\n");
+      }
+      {  // TEST: Stages and objectives
+         auto stub = lo.getForm(FormType::Quest, 0x1CEF5);
+         if (stub) {
+            printf("\n[QUST:0001CEF5]C04\n");
+            auto form = stub->load();
+            if (form) {
+               auto quest = form.ptr_cast<LoadedForms::Quest>();
+               printf(" - Stages (%d):\n", quest->stages.size());
+               for (auto it = quest->stages.begin(); it != quest->stages.end(); ++it) {
+                  printf("    - Stage %d with flags %02X\n", it->index, it->flags);
+                  for (auto jt = it->entries.begin(); jt != it->entries.end(); ++jt) {
+                     printf("       - Log entry\n");
+                     if (jt->journalText.exists)
+                        printf("          - Text: %s\n", jt->journalText.c_str());
+                     for (auto kt = jt->conditions.begin(); kt != jt->conditions.end(); kt++) {
+                        std::string s;
+                        kt->to_string(s);
+                        printf("             - %s\n", s.c_str());
+                     }
+                  }
+               }
+               printf(" - Objectives (%d):\n", quest->objectives.size());
+               for (auto it = quest->objectives.begin(); it != quest->objectives.end(); ++it) {
+                  printf("    - Objective %d with flags %02X\n", it->index, it->flags);
+                  for (auto jt = it->targets.begin(); jt != it->targets.end(); ++jt) {
+                     printf("       - Target: alias %d; flags %08X\n", jt->aliasID, jt->flags);
+                     for (auto kt = jt->conditions.begin(); kt != jt->conditions.end(); kt++) {
+                        std::string s;
+                        kt->to_string(s);
+                        printf("          - %s\n", s.c_str());
+                     }
+                  }
+               }
+            }
+         } else
+            printf("\nFailed to find [QUST:0001CEF5]C04!\n");
+      }
+   } else {
+      printf("...But an error was encountered during load! Details:\n");
+      test_print_load_error();
+   }
+   lo.reset();
+}
 void test_skyrim() {
    auto& lo = LoadOrder::get();
    lo.basePath = TEST_PLUGIN_PATH;
@@ -518,6 +609,8 @@ int main() {
    //
    auto& lo = LoadOrder::get();
    test_errors();
+   printf("\nTEST: QUEST DATA:\n");
+   test_skyrim_quest();
    printf("\nTEST 1:\n");
    test_skyrim();
    printf("\nTEST 2:\n");

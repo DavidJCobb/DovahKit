@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <string>
 
+class TESPluginRecord;
+
 namespace condition_arg_type {
    enum class advance_action {
       normal,
@@ -84,10 +86,9 @@ struct ConditionFunction {
       static constexpr dummy_indicator dummy = dummy_indicator::value;
       ConditionFunction(uint16_t id, dummy_indicator) : valid(false), id(id), name("Invalid Condition Function"), description("This condition ID is not valid.") {}
 };
+
 extern ConditionFunction conditionFunctions[];
-//
-// TODO: table of ConditionFunction instances
-//
+extern const ConditionFunction* getConditionFunction(uint16_t id);
 
 struct ConditionTypeFlags { // scoped enum with implicit casting to int
    ConditionTypeFlags() = delete;
@@ -108,6 +109,20 @@ enum class ConditionOperator {
    less_or_equal = 5,
 };
 
+struct ConditionRunOn { // scoped enum with implicit casting to int
+   ConditionRunOn() = delete;
+   enum {
+      subject       = 0,
+      target        = 1,
+      reference     = 2,
+      combat_target = 3,
+      linked_ref    = 4,
+      quest_alias   = 5,
+      package_data  = 6,
+      event_data    = 7,
+   };
+};
+
 //
 // TODO: move CTDA struct from components.h to here?
 //
@@ -116,14 +131,22 @@ struct Condition {
    float    compareToConstant;
    uint32_t compareToGlobalID;
    uint16_t function;
-   uint64_t parameter1;
-   uint64_t parameter2;
+   uint32_t parameter1;
+   uint32_t parameter2;
    uint32_t runOn;
-   uint32_t reference;
+   uint32_t reference; // only used for runOn == reference
    int32_t  parameter3;
    std::string stringParam1;
    std::string stringParam2;
    //
+   uint16_t eventFunction;
+   uint16_t eventMember;
+   uint32_t eventFormID;
+   //
    inline ConditionOperator get_operator() const noexcept { return (ConditionOperator)((this->type >> 5) & 7); }
    inline uint8_t get_flags() const noexcept { return this->type & 0x1F; }
+   //
+   bool read(TESPluginRecord&); // assumes we've already opened a CTDA subrecord
+   //
+   void to_string(std::string& out) const;
 };

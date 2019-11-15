@@ -109,7 +109,7 @@ FormTypeInfo formTypes[] = {
    { 'ARMA', FormType::ArmorAddon, "Armor Addon" },
    { 'ECZN', FormType::EncounterZone, "Encounter Zone" },
    { 'LCTN', FormType::Location, "Location" },
-   { 'MESH', FormType::Message, "Message" },
+   { 'MESG', FormType::Message, "Message" },
    { 'RGDL', FormType::Ragdoll, "Ragdoll" },
    { 'DOBJ', FormType::DefaultObjectManager, "Default Objects" },
    { 'LGTM', FormType::LightingTemplate, "Lighting Template" },

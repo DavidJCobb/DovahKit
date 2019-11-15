@@ -1,4 +1,127 @@
 #include "conditions.h"
+#include "../esp/TESPlugin.h"
+#include "../helpers/strings.h"
+
+bool Condition::read(TESPluginRecord& record) {
+   auto& subrecord = record.get_current_subrecord();
+   assert(subrecord.signature() == 'CTDA' && "Condition::read should only be called just after the CTDA subrecord is opened.");
+   if (!subrecord.is_in_bounds(0x14))
+      return false;
+   subrecord.unchecked_read(this->type);
+   subrecord.skip_bytes(3);
+   if (this->get_flags() & ConditionTypeFlags::compare_to_global)
+      subrecord.unchecked_read(this->compareToGlobalID);
+   else
+      subrecord.unchecked_read(this->compareToConstant);
+   subrecord.unchecked_read(this->function);
+   subrecord.skip_bytes(2);
+   subrecord.unchecked_read(this->parameter1);
+   subrecord.unchecked_read(this->parameter2);
+   if (false) { // TODO: for GetEventData only
+      if (!subrecord.is_in_bounds(8))
+         return false;
+      subrecord.unchecked_read(this->eventFunction);
+      subrecord.unchecked_read(this->eventMember);
+      subrecord.unchecked_read(this->eventFormID);
+   } else {
+      if (!subrecord.is_in_bounds(12))
+         return false;
+      subrecord.unchecked_read(this->runOn);
+      subrecord.unchecked_read(this->reference);
+      subrecord.unchecked_read(this->parameter3);
+   }
+   auto next = record.peek_next_subrecord_type();
+   if (next != 'CIS1' && next != 'CIS2')
+      return true;
+   if (next == 'CIS1') {
+      auto& sub = record.next_subrecord();
+      sub.to_string(this->stringParam1);
+      //
+      next = record.peek_next_subrecord_type();
+   }
+   if (next == 'CIS2') {
+      auto& sub = record.next_subrecord();
+      sub.to_string(this->stringParam2);
+   }
+   return true;
+}
+
+void Condition::to_string(std::string& out) const {
+   out.clear();
+   //
+   auto function = getConditionFunction(this->function);
+   if (!function) {
+      cobb::sprintf(out, "<BAD FUNCTION ID %04X>", this->function);
+      return;
+   }
+   switch (this->runOn) {
+      case ConditionRunOn::subject:
+         out += "Subject";
+         break;
+      case ConditionRunOn::target:
+         out += "Target";
+         break;
+      case ConditionRunOn::reference:
+         cobb::sprintf(out, "%08X", this->reference);
+         break;
+      case ConditionRunOn::combat_target:
+         out += "CombatTarget";
+         break;
+      case ConditionRunOn::event_data:
+         out += "EventData";
+         break;
+      case ConditionRunOn::quest_alias:
+         out += "QuestAlias";
+         break;
+      case ConditionRunOn::package_data:
+         out += "PackageData";
+         break;
+      default:
+         out += "?????";
+   }
+   out += '.';
+   out += function->name;
+   out += '(';
+   for (uint32_t i = 0; i < 3; i++) {
+      auto& arg = function->paramTypes[i];
+      if (arg != ConditionParamType::None) {
+         if (i > 0)
+            out += ", ";
+         out += "<TODO: FORMAT ARGS>";
+      }
+   }
+   out += ") ";
+   switch (this->get_operator()) {
+      case ConditionOperator::equal:
+         out += "==";
+         break;
+      case ConditionOperator::not_equal:
+         out += "!=";
+         break;
+      case ConditionOperator::greater:
+         out += "> ";
+         break;
+      case ConditionOperator::greater_or_equal:
+         out += ">=";
+         break;
+      case ConditionOperator::less:
+         out += "< ";
+         break;
+      case ConditionOperator::less_or_equal:
+         out += "<=";
+         break;
+      default:
+         out += "??";
+   }
+   out += ' ';
+   if (this->get_flags() & ConditionTypeFlags::compare_to_global) {
+      std::string glob;
+      cobb::sprintf(glob, "[GLOB:%08X]", this->compareToGlobalID);
+      out += glob;
+   } else {
+      out += std::to_string(this->compareToConstant);
+   }
+}
 
 ConditionFunction conditionFunctions[] = {
    ConditionFunction(  0, "GetWantBlocking",   ""),
@@ -114,3 +237,9 @@ ConditionFunction conditionFunctions[] = {
    // ...FINISH ME!!!
    //
 };
+
+const ConditionFunction* getConditionFunction(uint16_t id) {
+   if (id >= std::extent<decltype(conditionFunctions)>::value)
+      return nullptr;
+   return &conditionFunctions[id];
+}

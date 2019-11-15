@@ -75,6 +75,7 @@ void TESPluginGroup::to_string(std::string& output) const {
    cobb::sprintf(output, "group of type %s at depth %d, from %08X to %08X", desc, this->depth(), this->pos, this->end);
 }
 
+TESPluginSubrecord& TESPluginRecord::get_current_subrecord() const noexcept { return this->owner.subrecord; }
 void TESPluginRecord::unchecked_read(void* destination, uint32_t size) {
    auto source = (std::ptrdiff_t)this->data + this->offset;
    memcpy(destination, (void*)source, size);
@@ -102,7 +103,7 @@ uint32_t TESPluginRecord::peek_next_subrecord_type() {
       pos -= this->bodyPos;
       auto addr = (std::ptrdiff_t)this->data;
       addr += pos;
-      return *(uint32_t*)addr;
+      return _byteswap_ulong(*(uint32_t*)addr);
    }
    return 0;
 }
@@ -194,7 +195,7 @@ namespace {
             error.parseError = "Record with a suspicious signature. (";
          char s[5];
          FMT_SIGNATURE(sig, s);
-         error.parseError += sig;
+         error.parseError += s;
          error.parseError += ')';
       });
    }
@@ -319,7 +320,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    record.end = record.bodyPos + record.header.size;
    if (!this->is_good())
       return ObjectType::none;
-   if (!_validate_record_signature(record.header.signature, this->getPos(), this->filename)) // also logs the appropriate error
+   if (!_validate_record_signature(record.header.signature, record.headPos, this->filename)) // also logs the appropriate error
       return ObjectType::none;
    {
       switch (record.header.signature) {
@@ -338,7 +339,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
       this->read(decompressed_size);
       record.data.allocate(decompressed_size);
       if (record.data.empty()) {
-         _log_record_allocation_failure(this->filename, this->getPos(), decompressed_size, record);
+         _log_record_allocation_failure(this->filename, record.headPos, decompressed_size, record);
          //
          // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
          // to load more of the file. The error still properly gets logged, because it's the first error 
@@ -361,7 +362,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    } else {
       record.data.allocate(record.header.size);
       if (record.data.empty()) {
-         _log_record_allocation_failure(this->filename, this->getPos(), record.header.size, record);
+         _log_record_allocation_failure(this->filename, record.headPos, record.header.size, record);
          //
          // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
          // to load more of the file. The error still properly gets logged, because it's the first error 

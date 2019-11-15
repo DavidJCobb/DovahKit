@@ -9,6 +9,11 @@
 
 class TESPluginRecord;
 
+enum class quest_alias_type {
+   reference,
+   location,
+};
+
 namespace LoadedForms {
    class Quest : public Form {
       public:
@@ -36,6 +41,52 @@ namespace LoadedForms {
             kQuestType_DLC02Dragonborn = 11,
          };
 
+         struct LogEntry {
+            uint8_t flags;
+            std::vector<Condition> conditions;
+            LStringRef journalText;
+            uint32_t nextQuestID;
+            // TODO: SCHR
+            //
+            void load(TESPluginRecord&);
+         };
+         struct Stage {
+            uint16_t index;
+            uint8_t  flags;
+            uint8_t  padding;
+            std::vector<LogEntry> entries;
+            //
+            void load(TESPluginRecord&);
+         };
+
+         struct Target {
+            uint32_t aliasID;
+            uint32_t flags;
+            std::vector<Condition> conditions;
+            //
+            void load(TESPluginRecord&); // assumes QSTA subrecord has already been opened
+         };
+         struct Objective {
+            uint16_t   index;
+            uint32_t   flags;
+            LStringRef text;
+            std::vector<Target> targets;
+            //
+            void load(TESPluginRecord&); // assumes QOBJ subrecord has already been opened
+         };
+
+         struct Alias {
+            quest_alias_type type;
+            uint32_t    id;
+            std::string name;
+            uint32_t    flags;
+            bool        hasForceInto = false;
+            uint32_t    forceInto = 0;
+            //
+            // TODO: FINISH ME
+            //
+         };
+
          std::string editorID;
          LStringRef  name;
          PapyrusScriptData scriptData; // VMAD
@@ -51,6 +102,11 @@ namespace LoadedForms {
          std::string editorCategory; // FLTR // "abc/def/ghi" to nest within the CK Object Window tree
          std::vector<Condition> dialogueConditions;
          std::vector<Condition> eventConditions;
+         uint32_t event = 0;
+         int32_t  nextAliasID = 0;
+         std::vector<Stage> stages;
+         std::vector<Objective> objectives;
+         std::vector<Alias> aliases;
 
          void load(TESPluginRecord&);
 

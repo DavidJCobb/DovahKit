@@ -123,6 +123,8 @@ class TESPluginRecord {
       TESPluginRecord& operator=(const TESPluginRecord& other) = delete; // no copy
       TESPluginRecord(TESPluginRecord& other) = delete; // no copy
       //
+      TESPluginSubrecord& get_current_subrecord() const noexcept;
+      //
       operator bool() const noexcept { return this->header.signature != 0; }
       //
       bool is_in_bounds() const noexcept {

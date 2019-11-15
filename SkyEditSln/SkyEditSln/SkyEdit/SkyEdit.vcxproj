@@ -129,6 +129,7 @@
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="esp\TESPluginHeader.cpp" />
     <ClCompile Include="formstub.cpp" />
+    <ClCompile Include="forms\conditions.cpp" />
     <ClCompile Include="forms\loaded\ActorBase.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="helpers\files.cpp" />
