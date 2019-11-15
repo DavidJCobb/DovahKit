@@ -90,6 +90,8 @@ enum class LoadErrorCode {
    //
    filesystem_error = 11,
    //
+   insufficient_memory = 12,
+   //
    // REMEMBER TO KEEP FatalLoadError::code_string SYNCHED WITH THIS ENUM!
    //
 };
@@ -167,7 +169,6 @@ class LoadOrder {
       uint8_t loadOrderPrefixFor(TESPluginFile*) const noexcept;
       form_id_status localFormIDToGlobalFormID(FormStub* stub, uint32_t& out) const;
       //
-      typedef decltype(loadOrderMasters)::const_iterator _load_order_it;
       bool _loadOrderHasMaster(const std::string& name) const;
       bool _loadOrderHasPlugin(const std::string& name) const;
       void _moveToMasters(const std::string& name) noexcept;
@@ -179,15 +180,24 @@ class LoadOrder {
       FatalLoadError lastError;
       std::mutex lastErrorLock;
       //
+      bool loadingIsComplete = false; // exists so that TESPluginBaseReader::nextSubrecord can call LoadOrder::logError without having to worry about whether it's running during or after the initial load
+      //
    public:
       std::string basePath;
       std::vector<std::string> queuedFiles; // files we plan on loading
       std::string queuedActiveFile; // name of the file that is going to be the active file.
       //
+      struct {
+         bool allowUnknownRecordSignatures = false;
+         bool allowSuspiciousRecordSignatures = false;
+      } options;
+      //
       void addFile(const std::string& name);
       void removeFile(const std::string& name);
       void setActiveFile(const std::string& name); // TODO
       bool loadQueuedFiles();
+      //
+      inline bool isLoading() const noexcept { return !this->loadingIsComplete; };
       //
       uint8_t indexOf(const std::string& filename) const noexcept;
       //
@@ -234,6 +244,8 @@ class LoadOrder {
       // // an early EOF. If loadHeader logged a more specific error message, then our catch-all 
       // // doesn't get logged, and that's how we want it.
       // bool loadWholeFile();
+      //
+      // Note also that this function does nothing if called while the load process isn't running.
       //
       void logError(std::function<void(FatalLoadError&)>);
       //

@@ -64,7 +64,7 @@ struct TESPluginRecordHeader {
       uint16_t version;
       uint16_t unknown;
       //
-      inline bool body_is_compressed() { return (bool)(this->flags & kFlag_Compressed); }
+      inline bool body_is_compressed() const noexcept { return (bool)(this->flags & kFlag_Compressed); }
 };
 
 class TESPluginGroup {
@@ -149,6 +149,8 @@ class TESPluginRecord {
       template<typename T> void unchecked_read(T& field) {
          this->unchecked_read(&field, sizeof(T));
       }
+      //
+      inline bool body_is_compressed() const noexcept { return this->header.body_is_compressed(); }
       //
       TESPluginSubrecord& next_subrecord() const;
       uint32_t peek_next_subrecord_type();
@@ -236,10 +238,10 @@ class TESPluginBaseReader {
    friend TESPluginRecord;
    friend TESPluginSubrecord;
    public:
-      enum ObjectType {
-         kObjectType_None,
-         kObjectType_Group,
-         kObjectType_Record,
+      enum class ObjectType {
+         none,
+         group,
+         record,
       };
    protected:
       #ifdef COBB_ESP_USE_MAPPED_FILES

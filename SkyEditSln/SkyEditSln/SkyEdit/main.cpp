@@ -54,8 +54,14 @@ std::thread::id main_thread_id;
 //
 //  - Loading:
 //
-//     - The form type list is still incomplete. Deal with the gaps one way or 
-//       another.
+//     - The form type list is still incomplete, but the only gaps are form 
+//       types that don't appear in any official files. I assume SKSE pulled 
+//       them from TESV.EXE's map of signatures to form type enum values. Do 
+//       they even have classes? Does the game even load them?
+//
+//        - There are some form types whose names are known, but whose 
+//          layouts are not; they do not appear in any vanilla game files. 
+//          Does the game even load them?
 //
 //     - TESPluginHeader and TESPluginFile need to force the "is master" flag 
 //       if the file's extension is ESM or ESL.
@@ -393,7 +399,7 @@ void test_skyrim() {
       test_print_quests();
       test_print_actor_bases();
    } else {
-      printf("...But an error was encountered during load! Details:");
+      printf("...But an error was encountered during load! Details:\n");
       test_print_load_error();
    }
    lo.reset();
@@ -429,7 +435,7 @@ void test_hearthfire() {
       } else
          printf("Unable to find Skyrim.esm form 0x0010B035 known to be overridden by HearthFires.esm.\n");
    } else {
-      printf("...But an error was encountered during load! Details:");
+      printf("...But an error was encountered during load! Details:\n");
       test_print_load_error();
    }
    lo.reset();
@@ -473,6 +479,27 @@ void test_errors() {
    {
       printf("\nLoading file with bad extended subrecord...\n");
       lo.addFile("BadExtendedSubrecord.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading file with a byte missing (test for suspicious signatures, etc.)...\n");
+      lo.addFile("OneByteMissing.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading file with an unknown record type...\n");
+      lo.addFile("UnknownRecordSignature.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading file with a record that claims to be 4GB...\n");
+      lo.addFile("RecordClaimsToBeHuge.esp");
       bool result = lo.loadQueuedFiles();
       test_print_load_error();
       lo.reset();

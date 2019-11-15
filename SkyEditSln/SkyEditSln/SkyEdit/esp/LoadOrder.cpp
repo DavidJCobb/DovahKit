@@ -18,6 +18,7 @@ const char* _load_error_code_names[] = {
    "the file is part of a cyclical dependency",
    "unknown/unhandled error",
    "filesystem or file I/O error",
+   "insufficient memory available for this data",
 };
 const char* FatalLoadError::code_string() const noexcept {
    if ((uint32_t)this->code < std::extent<decltype(_load_error_code_names)>::value)
@@ -26,6 +27,8 @@ const char* FatalLoadError::code_string() const noexcept {
 }
 
 void LoadOrder::logError(std::function<void(FatalLoadError&)> functor) {
+   if (this->loadingIsComplete)
+      return;
    std::lock_guard<std::mutex> guard(this->lastErrorLock);
    if (!this->lastError.defined())
       functor(this->lastError);
@@ -194,6 +197,7 @@ void LoadOrder::removeFile(const std::string& name) {
 }
 bool LoadOrder::loadQueuedFiles() {
    assert(this->files.size() == 0 && "Must clear loaded files before you can use a new load order!");
+   this->loadingIsComplete = false;
    if (!this->basePath.empty()) {
       char end = *this->basePath.rbegin();
       if (end != '/' && end != '\\')
@@ -255,6 +259,7 @@ bool LoadOrder::loadQueuedFiles() {
       // 3. Load the rest of the file.
       //
    }
+   this->loadingIsComplete = true;
    return !this->lastError.defined();
 }
 
@@ -297,6 +302,7 @@ void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormSt
 }
 
 void LoadOrder::reset() {
+   this->loadingIsComplete = false;
    this->lastError.reset();
    this->loadOrderUnderConsideration.clear();
    for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)

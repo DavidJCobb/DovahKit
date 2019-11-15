@@ -181,6 +181,81 @@ bool TESPluginBaseReader::is_good() {
       return !ferror(this->fileHandle) && !this->isEOF();
    #endif
 }
+//
+namespace {
+   void _log_bad_record_signature(const char* filename, uint32_t pos, uint32_t sig, bool isUnknown) {
+      LoadOrder::get().logError([=](FatalLoadError& error) {
+         error.code = LoadErrorCode::malformed_file;
+         error.file = filename;
+         error.fileOffset = pos;
+         if (isUnknown)
+            error.parseError = "Record with an unknown signature. (";
+         else
+            error.parseError = "Record with a suspicious signature. (";
+         char s[5];
+         FMT_SIGNATURE(sig, s);
+         error.parseError += sig;
+         error.parseError += ')';
+      });
+   }
+   bool _validate_record_signature(uint32_t signature, uint32_t pos, const char* filename) {
+      auto& lo = LoadOrder::get();
+      if (lo.isLoading()) {
+         if (!lo.options.allowSuspiciousRecordSignatures) {
+            if (signatureIsSuspicious(signature)) {
+               _log_bad_record_signature(filename, pos, signature, false);
+               //
+               // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+               // to load more of the file. The error still properly gets logged, because it's the first error 
+               // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+               // the load process, but we still waste time trying to load the rest of the file and indeed 
+               // the rest of the load order.
+               //
+               // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+               // could override it to log the filename and to abort, while the threaded readers could 
+               // override it to log their owner's filename and abort their owner.
+               //
+               return false;
+            }
+         }
+         if (!lo.options.allowUnknownRecordSignatures) {
+            if (signatureToFormType(signature) == FormType::None) {
+               _log_bad_record_signature(filename, pos, signature, true);
+               //
+               // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+               // to load more of the file. The error still properly gets logged, because it's the first error 
+               // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+               // the load process, but we still waste time trying to load the rest of the file and indeed 
+               // the rest of the load order.
+               //
+               // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+               // could override it to log the filename and to abort, while the threaded readers could 
+               // override it to log their owner's filename and abort their owner.
+               //
+               return false;
+            }
+         }
+      }
+      return true;
+   }
+   void _log_record_allocation_failure(const char* filename, uint32_t pos, uint32_t size, const TESPluginRecord& record) {
+      LoadOrder::get().logError([&](FatalLoadError& error) {
+         error.code       = LoadErrorCode::insufficient_memory;
+         error.file       = filename;
+         error.fileOffset = pos;
+         error.formID     = record.formID();
+         cobb::sprintf(
+            error.parseError,
+            "Not enough memory to load the record's contents, even temporarily. A massive record size may indicate corrupted data or a parse error. The record claimed to be 0x%X bytes long",
+            size
+         );
+         if (record.body_is_compressed())
+            error.parseError += " after decompression.";
+         else
+            error.parseError += '.';
+      });
+   }
+}
 TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    auto& record = this->record;
    if (record) {
@@ -206,7 +281,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    }
    //
    if (!this->is_good())
-      return ObjectType::kObjectType_None;
+      return ObjectType::none;
    uint32_t signature;
    this->read(signature);
    signature = _byteswap_ulong(signature);
@@ -227,12 +302,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
       this->read(group.header);
       group.header.signature = _byteswap_ulong(group.header.signature);
       group.end   = group.pos + group.header.size;
-      /*{
-         std::string log;
-         group.to_string(log);
-         _DEBUGMSG("Found %s.", log.c_str());
-      }*/
-      return ObjectType::kObjectType_Group;
+      return ObjectType::group;
    }
    //
    // else it must be a record
@@ -242,13 +312,15 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    record.headPos = this->getPos();
    if (auto& group = this->getCurrentGroup())
       if (record.headPos >= group.end)
-         return ObjectType::kObjectType_None;
+         return ObjectType::none;
    this->read(record.header);
    record.header.signature = _byteswap_ulong(record.header.signature);
    record.bodyPos = this->getPos();
    record.end = record.bodyPos + record.header.size;
    if (!this->is_good())
-      return ObjectType::kObjectType_None;
+      return ObjectType::none;
+   if (!_validate_record_signature(record.header.signature, this->getPos(), this->filename)) // also logs the appropriate error
+      return ObjectType::none;
    {
       switch (record.header.signature) {
          case 'CELL':
@@ -265,20 +337,49 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
       uint32_t compressed_size = record.header.size - sizeof(decompressed_size);
       this->read(decompressed_size);
       record.data.allocate(decompressed_size);
-      //
-      auto input_buffer = malloc(compressed_size);
-      this->read(input_buffer, compressed_size);
-      uint32_t out_size = decompressed_size;
-      uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
-      free(input_buffer);
-      assert(out_size == decompressed_size);
+      if (record.data.empty()) {
+         _log_record_allocation_failure(this->filename, this->getPos(), decompressed_size, record);
+         //
+         // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+         // to load more of the file. The error still properly gets logged, because it's the first error 
+         // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+         // the load process, but we still waste time trying to load the rest of the file and indeed 
+         // the rest of the load order.
+         //
+         // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+         // could override it to log the filename and to abort, while the threaded readers could 
+         // override it to log their owner's filename and abort their owner.
+         //
+      } else {
+         auto input_buffer = malloc(compressed_size);
+         this->read(input_buffer, compressed_size);
+         uint32_t out_size = decompressed_size;
+         uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
+         free(input_buffer);
+         assert(out_size == decompressed_size);
+      }
    } else {
       record.data.allocate(record.header.size);
-      this->read(record.data.raw(), record.header.size);
+      if (record.data.empty()) {
+         _log_record_allocation_failure(this->filename, this->getPos(), record.header.size, record);
+         //
+         // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+         // to load more of the file. The error still properly gets logged, because it's the first error 
+         // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+         // the load process, but we still waste time trying to load the rest of the file and indeed 
+         // the rest of the load order.
+         //
+         // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+         // could override it to log the filename and to abort, while the threaded readers could 
+         // override it to log their owner's filename and abort their owner.
+         //
+      } else {
+         this->read(record.data.raw(), record.header.size);
+      }
    }
    record.offset = 0;
    //
-   return ObjectType::kObjectType_Record;
+   return ObjectType::record;
 }
 //
 bool TESPluginBaseReader::nextSubrecord() {
@@ -376,13 +477,13 @@ void TESPluginThreadedSimpleReader::_load() {
       auto& desired = this->queue[i];
       this->setPos(desired.pos);
       this->resetParseState();
-      assert(this->nextRecordOrGroup() == kObjectType_Group); // TODO: error instead
+      assert(this->nextRecordOrGroup() == ObjectType::group); // TODO: error instead
       ObjectType ot;
       uint32_t   lastGroupLabel = 0; // for debug logging
       uint32_t   lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
       formtype_t lastFormType   = 0;
-      while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
-         if (ot == kObjectType_Group) {
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
+         if (ot == ObjectType::group) {
             //
             // Stop if we've reached the end of the group we're meant to parse.
             //
@@ -399,7 +500,7 @@ void TESPluginThreadedSimpleReader::_load() {
             // call this->owner.abort() and return, as well.
             //
          }
-         if (ot == kObjectType_Record) {
+         if (ot == ObjectType::record) {
             auto& record = this->getCurrentRecord();
             auto& group  = this->getCurrentGroup();
             if (record.signature() != lastSignature) {
@@ -464,13 +565,13 @@ void TESPluginThreadedInteriorCellReader::_load() {
       //_DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X beginning with interior-cell-block %d at position %08X.", std::this_thread::get_id(), desired.blockNumber, desired.pos);
       this->setPos(desired.pos);
       this->resetParseState();
-      assert(this->nextRecordOrGroup() == kObjectType_Group);
+      assert(this->nextRecordOrGroup() == ObjectType::group);
       ObjectType ot;
       uint32_t   lastBlockNumber = 0; // for debug logging
       uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
       formtype_t lastFormType  = 0;
-      while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
-         if (ot == kObjectType_Group) {
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
+         if (ot == ObjectType::group) {
             //
             // Stop if we've reached the end of the group we're meant to parse.
             //
@@ -482,7 +583,7 @@ void TESPluginThreadedInteriorCellReader::_load() {
                break;
             }
          }
-         if (ot == kObjectType_Record) {
+         if (ot == ObjectType::record) {
             auto& record = this->getCurrentRecord();
             auto& group  = this->getCurrentGroup();
             if (record.signature() != lastSignature) {
@@ -551,13 +652,13 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
       //_DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X beginning with [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
       this->setPos(desired.pos);
       this->resetParseState();
-      assert(this->nextRecordOrGroup() == kObjectType_Group);
+      assert(this->nextRecordOrGroup() == ObjectType::group);
       ObjectType ot;
       uint32_t   lastBlockNumber = 0; // for debug logging
       uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
       formtype_t lastFormType = 0;
-      while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
-         if (ot == kObjectType_Group) {
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
+         if (ot == ObjectType::group) {
             //
             // Stop if we've reached the end of the group we're meant to parse.
             //
@@ -567,7 +668,7 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
                break;
             }
          }
-         if (ot == kObjectType_Record) {
+         if (ot == ObjectType::record) {
             auto& record = this->getCurrentRecord();
             auto& group  = this->getCurrentGroup();
             if (record.signature() != lastSignature) {
@@ -641,11 +742,11 @@ TESPluginFile::~TESPluginFile() {
 bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->resetParseState();
    this->setPos(pos);
-   return this->nextRecordOrGroup() == kObjectType_Record;
+   return this->nextRecordOrGroup() == ObjectType::record;
 }
 //
 bool TESPluginFile::_loadHeader() {
-   if (this->nextRecordOrGroup() != ObjectType::kObjectType_Record) {
+   if (this->nextRecordOrGroup() != ObjectType::record) {
       LoadOrder::get().logError([this](FatalLoadError& error) {
          error.code       = LoadErrorCode::malformed_file;
          error.file       = this->name;
@@ -845,9 +946,9 @@ bool TESPluginFile::load(const char* filepath) {
       uint32_t   last_worldspace_id = 0;
       int16_t    last_ext_block_x = 0;
       int16_t    last_ext_block_y = 0;
-      while (ot = this->nextRecordOrGroup(), ot != ObjectType::kObjectType_None) {
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
          auto& group = this->getCurrentGroup();
-         if (ot == kObjectType_Record) {
+         if (ot == ObjectType::record) {
             //
             // We should only hit records when we choose not to skip a group's contents. 
             // We use this to load worldspaces and their persistent/temporary cells.
@@ -867,7 +968,7 @@ bool TESPluginFile::load(const char* filepath) {
             }
             this->_insertForm(stub->formID, stub);
          }
-         if (ot == kObjectType_Group) {
+         if (ot == ObjectType::group) {
             if (group.header.type == kESPGroupType_WorldChildren) {
                //
                // Parse direct children of the worldspace (i.e. the persistent cell).

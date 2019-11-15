@@ -16,8 +16,13 @@ namespace cobb {
          ::free(this->_data);
       }
       this->_data = malloc(bytes);
-      this->_size = bytes;
-      this->_capacity = bytes;
+      if (this->_data) {
+         this->_size = bytes;
+         this->_capacity = bytes;
+      } else {
+         this->_size = 0;
+         this->_capacity = 0;
+      }
    }
    void generic_buffer::free() {
       if (this->_data) {

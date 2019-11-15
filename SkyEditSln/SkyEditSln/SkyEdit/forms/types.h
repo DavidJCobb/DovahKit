@@ -58,7 +58,7 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       LeveledCharacter = 0x2C,
       Key = 0x2D,
       Potion = 0x2E,
-      //
+      IdleMarker = 0x2F, // IDLM
       Note = 0x30,
       ConstructibleObject = 0x31,
       Projectile = 0x32,
@@ -67,18 +67,25 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       LeveledItem = 0x35,
       Weather = 0x36,
       Climate = 0x37,
-      //
+      ShaderParticleGeometry = 0x38,
+      VisualEffect = 0x39, // BGSReferenceEffect
       Region = 0x3A,
-      //
+      NavmeshInfo = 0x3B,
       Cell = 0x3C,
       Reference = 0x3D,
       Character = 0x3E,
-      //
+      PlacedMissileProjectile = 0x3F,
+      PlacedArrowProjectile = 0x40,
+      PlacedGrenadeProjectile = 0x41,
+      PlacedBeamProjectile = 0x42,
+      PlacedFlameProjectile = 0x43,
+      PlacedConeProjectile = 0x44,
+      PlacedBarrierProjectile = 0x45,
       PlacedHazard = 0x46,
       Worldspace = 0x47,
       Land = 0x48, // heightmapped terrain - TESObjectLAND
       Navmesh = 0x49,
-      //
+      // TLOD - unknown; apparently not found in any file
       Topic = 0x4B,
       TopicInfo = 0x4C,
       Quest = 0x4D,
@@ -87,10 +94,10 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       CombatStyle = 0x50,
       LoadingScreen = 0x51,
       LeveledSpell = 0x52,
-      //
+      AnimationProp = 0x53, // a.k.a. AnimObject
       WaterType = 0x54,
       EffectShader = 0x55,
-      //
+      // TOFT - unknown; apparently not found in any file
       Explosion = 0x57,
       Debris = 0x58,
       ImageSpace = 0x59,
@@ -98,7 +105,10 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       FormList = 0x5B,
       Perk = 0x5C,
       BodyPartData = 0x5D,
-      //
+      AddonNode = 0x5E,
+      ActorValueInfo = 0x5F,
+      CameraShot = 0x60,
+      CameraPath = 0x61,
       Voicetype = 0x62,
       MaterialType = 0x63,
       ImpactData = 0x64,
@@ -107,14 +117,18 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       EncounterZone = 0x67,
       Location = 0x68,
       Message = 0x69,
-      //
+      Ragdoll = 0x6A,
+      DefaultObjectManager = 0x6B,
       LightingTemplate = 0x6C,
       MusicType = 0x6D,
       Footstep = 0x6E,
       FootstepSet = 0x6F,
-      //
+      StoryManagerBranchNode = 0x70,
+      StoryManagerQuestNode = 0x71,
+      StoryManagerEventNode = 0x72,
       DialogueBranch = 0x73,
-      //
+      MusicTrack = 0x74,
+      DialogueView = 0x75, // Creation Kit only; game doesn't seem to load it
       WordOfPower = 0x76,
       Shout = 0x77,
       EquipSlot = 0x78,
@@ -122,9 +136,21 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       Scene = 0x7A,
       AssociationType = 0x7B,
       Outfit = 0x7C,
-      //
+      ArtObject = 0x7D,
+      MaterialObject = 0x7E,
+      MovementType = 0x7F,
+      SoundDescriptor = 0x80,
+      DualCastData = 0x81,
+      SoundCategory = 0x82,
+      SoundOutputModel = 0x83,
       CollisionLayer = 0x84,
       Color = 0x85,
+      ReverbParameters = 0x86,
+      // 87: Unknown
+      // 88: Alias
+      // 89: ReferenceAlias
+      // 8A: Location Alias
+      // 8B: ActiveMagicEffect
       //
       Max   = 0x8B,
       Count = Max + 1,
@@ -149,7 +175,7 @@ struct FormTypeFlags { // enum; a struct-wrapped enum is scoped like enum class 
 struct FormTypeInfo {
    uint32_t    signature;
    uint8_t     formType;
-   const char* name;
+   const char* name  = "<unknown>";
    uint32_t    flags = FormTypeFlags::none;
 };
 
@@ -157,6 +183,7 @@ extern FormTypeInfo formTypes[];
 
 extern const FormTypeInfo& formTypeFor(formtype_t ft) noexcept;
 extern formtype_t signatureToFormType(uint32_t signature) noexcept;
+extern bool signatureIsSuspicious(uint32_t signature) noexcept;
 
 namespace LoadedForms {
    class Form;
