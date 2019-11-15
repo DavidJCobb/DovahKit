@@ -78,6 +78,11 @@ std::thread::id main_thread_id;
 //          which file had the dependency. Currently we only log the name of 
 //          the missing file.
 //
+//        - Errors relating to bad records and subrecords do get logged 
+//          properly, but don't halt the load process. See code comments in 
+//          and around TESPluginBaseReader::nextRecordOrGroup and in 
+//          TESPluginBaseReader::nextSubrecord for details.
+//
 //     - LoadOrder::load needs to verify that the files' masters haven't 
 //       changed once we begin the final load. The only way to do that is 
 //       to split TESPluginFile's load process so that LoadOrder can load 
@@ -94,7 +99,8 @@ std::thread::id main_thread_id;
 //
 //        - TESPluginSubrecord::back_to_start has been added for the purpose 
 //          of letting a client go back to the start of the subrecord, in 
-//          order to load its full contents after having read some of it.
+//          order to load its full contents after having read enough of it 
+//          to know that it is malformed.
 //
 //     - We need to be able to set an active file.
 //

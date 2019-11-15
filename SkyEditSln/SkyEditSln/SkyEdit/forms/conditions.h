@@ -1,22 +1,129 @@
 #pragma once
+#include <cstdint>
+#include <string>
 
-// use enum-classes for argument enums
-// enum class keeps enum values out of the enum's containing scope
-enum class ConditionArgAxis {
-   X = 'X',
-   Y = 'Y',
-   Z = 'Z',
+namespace condition_arg_type {
+   enum class advance_action {
+      normal,
+      power_attack,
+      bash,
+      lockpick_success,
+      lockpick_broken,
+   };
+   enum class alignment { // karma
+      good,
+      neutral,
+      evil,
+      very_good,
+      very_evil,
+   };
+   enum class axis : unsigned char {
+      x = 'X',
+      y = 'Y',
+      z = 'Z',
+   };
+   enum class critical_stage {
+      none,
+      goo_start,
+      goo_end,
+      disintegrate_start,
+      disintegrate_end,
+   };
+   enum class sex : uint32_t {
+      male,
+      female,
+   };
+}
+
+enum class ConditionParamType : uint8_t {
+   None = 0,
+   Actor,      // forms of type: ACHR
+   ActorBase,  // forms of type: NPC_
+   ActorValue,
+   Alignment,  // enum; karma
+   Axis,       // char
+   BaseForm,
+   Cell,       // forms of type: CELL
+   Class,      // forms of type: CLAS
+   CriticalStage, // enum
+   EquipType,
+   Faction,    // forms of type: FACT
+   Float,
+   FormType,
+   Global,     // forms of type: GLOB
+   Integer,
+   InventoryItem, // forms of type: [todo; anything that can ever go in an inventory]
+   Keyword,    // forms of type: KYWD
+   MiscStat,
+   Quest,      // forms of type: QUST
+   QuestStage,
+   Race,       // forms of type: RACE
+   ObjectReference, // forms of type: ACHR, REFR
+   ScriptVariableIndex,
+   Sex,
+   VariableIndex, // integer
+   Voicetype, // forms of type: VTYP
 };
 
 struct ConditionFunction {
-   //
-   // TODO: struct indicating all of the information about a condition e.g. valid args
-   //
+   private:
+      typedef ConditionParamType _cpt;
+   public:
+      uint16_t    id = 0xFFFF;
+      const char* name = "";
+      const char* description = "";
+      ConditionParamType paramTypes[3] = { ConditionParamType::None, ConditionParamType::None, ConditionParamType::None };
+      bool        valid = true;
+      //
+      ConditionFunction(uint16_t id, const char* name, const char* d) : id(id), name(name), description(d) {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cpt a) : id(id), name(name), description(d), paramTypes{ a, _cpt::None, _cpt::None } {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cpt a, _cpt b) : id(id), name(name), description(d), paramTypes{ a, b, _cpt::None } {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cpt a, _cpt b, _cpt c) : id(id), name(name), description(d), paramTypes{ a, b, c } {};
+      //
+      enum class dummy_indicator { value };
+      static constexpr dummy_indicator dummy = dummy_indicator::value;
+      ConditionFunction(uint16_t id, dummy_indicator) : valid(false), id(id), name("Invalid Condition Function"), description("This condition ID is not valid.") {}
 };
+extern ConditionFunction conditionFunctions[];
 //
 // TODO: table of ConditionFunction instances
 //
 
+struct ConditionTypeFlags { // scoped enum with implicit casting to int
+   ConditionTypeFlags() = delete;
+   enum : uint8_t {
+      or_linked    = 1,
+      use_aliases  = 2,
+      compare_to_global = 4,
+      use_packdata = 8,
+      swap_subject_and_target = 0x10,
+   };
+};
+enum class ConditionOperator {
+   equal = 0,
+   not_equal = 1,
+   greater   = 2,
+   greater_or_equal = 3,
+   less      = 4,
+   less_or_equal = 5,
+};
+
 //
 // TODO: move CTDA struct from components.h to here?
 //
+struct Condition {
+   uint8_t  type; // (ConditionTypeFlags << 5) | ConditionOperator
+   float    compareToConstant;
+   uint32_t compareToGlobalID;
+   uint16_t function;
+   uint64_t parameter1;
+   uint64_t parameter2;
+   uint32_t runOn;
+   uint32_t reference;
+   int32_t  parameter3;
+   std::string stringParam1;
+   std::string stringParam2;
+   //
+   inline ConditionOperator get_operator() const noexcept { return (ConditionOperator)((this->type >> 5) & 7); }
+   inline uint8_t get_flags() const noexcept { return this->type & 0x1F; }
+};

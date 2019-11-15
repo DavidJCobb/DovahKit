@@ -1,8 +1,10 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <vector>
 #include "Form.h"
 #include "../components.h"
+#include "../conditions.h"
 #include "../papyrus.h"
 
 class TESPluginRecord;
@@ -47,6 +49,8 @@ namespace LoadedForms {
          QuestType   questType;
          //
          std::string editorCategory; // FLTR // "abc/def/ghi" to nest within the CK Object Window tree
+         std::vector<Condition> dialogueConditions;
+         std::vector<Condition> eventConditions;
 
          void load(TESPluginRecord&);
 

@@ -3,6 +3,13 @@
 
 namespace LoadedForms {
    void Quest::load(TESPluginRecord& record) {
+      enum class condition_type {
+         dialogue,
+         event,
+         log_entry,
+         objective_target,
+      };
+      condition_type current_conditions = condition_type::dialogue;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID': // required; TODO: fail if this is not present
@@ -34,8 +41,11 @@ namespace LoadedForms {
             case 'FLTR': // required; TODO: fail if this is not present
                subrecord.to_string(this->editorCategory);
                break;
+            case 'NEXT':
+               current_conditions = condition_type::event;
+               break;
             //
-            // TODO: any incomplete subrecords above, CTDA, NEXT, CTDA, stages, objectives, ANAM, aliases
+            // TODO: any incomplete subrecords above, CTDA, stages, objectives, ANAM, aliases
             //
          }
       }
