@@ -4,6 +4,8 @@
 #include "../types.h"
 #include "../components.h"
 
+#define LOAD_NAIVELY_WHEN_THE_GAME_DOES 1
+
 namespace LoadedForms {
    class Form {
       public:

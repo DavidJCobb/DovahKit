@@ -13,11 +13,49 @@ enum class quest_alias_type {
    reference,
    location,
 };
+enum class location_alias_fill_type {
+   none,
+   preset, // ALFL: a preset Location form is "forced" into this alias
+   other_alias_in_same_quest, // ALFA
+   from_event, // ALFE
+   other_alias_in_other_quest, // ALEQ
+};
 
 namespace LoadedForms {
+   class Alias {
+      public:
+         virtual void load(TESPluginRecord&) = 0;
+         //
+         uint32_t    id = 0;
+         std::string name;
+         uint32_t    flags = 0;
+         uint32_t    hiddenFlags = 0; // BNAM sets flag 0x01, ONAM sets flag 0x02
+         uint32_t    forceIntoAliasID  = 0xFFFFFFFF; // same sentinel value used by the game
+         uint32_t    fillFromEvent     = 0xFFFFFFFF; // same sentinel value used by the game
+         uint32_t    fillFromEventData = 0xFFFFFFFF; // same sentinel value used by the game
+         std::vector<Condition> conditions;
+   };
+   class LocationAlias : public Alias {
+      public:
+         typedef location_alias_fill_type fill_type;
+         //
+         virtual void load(TESPluginRecord&) override;
+         //
+         fill_type fillType = location_alias_fill_type::none;
+         uint32_t  fillFromLocationID = 0;
+         uint32_t  fillFromLocationKeywordID = 0;
+         uint32_t  fillFromAliasID = 0xFFFFFFFF; // same sentinel value used by the game
+         uint32_t  fillFromQuestID = 0;
+   };
+   class ReferenceAlias : public Alias {
+      public:
+         virtual void load(TESPluginRecord&) override;
+   };
+
    class Quest : public Form {
       public:
          Quest() : Form(FormType::Quest) {};
+         ~Quest();
          //
          enum QuestFlags : uint16_t {
             kQuestFlag_StartGameEnabled = 1,
@@ -26,7 +64,7 @@ namespace LoadedForms {
             kQuestFlag_ExcludeFromDialogueExport = 0x0200,
             kQuestFlag_WarnOnAliasFillFailure = 0x0400,
          };
-         enum QuestType : uint32_t {
+         enum QuestType : uint8_t {
             kQuestType_None = 0,
             kQuestType_Main = 1,
             kQuestType_MagesGuild = 2,
@@ -48,7 +86,7 @@ namespace LoadedForms {
             uint32_t nextQuestID;
             // TODO: SCHR
             //
-            void load(TESPluginRecord&);
+            void load(TESPluginRecord&); // assumes QSTD subrecord has already been opened
          };
          struct Stage {
             uint16_t index;
@@ -56,14 +94,15 @@ namespace LoadedForms {
             uint8_t  padding;
             std::vector<LogEntry> entries;
             //
-            void load(TESPluginRecord&);
+            void load(TESPluginSubrecord&); // assumes INDX subrecord has already been opened
          };
 
-         struct Target {
+         struct Target { // QSTA
             uint32_t aliasID;
-            uint32_t flags;
+            uint8_t  flags; // stored in the file as a uint32_t, but loaded as a uint8_t; the game doesn't BSWAP if the endianness is wrong, so it must be a single byte with three padding bytes
             std::vector<Condition> conditions;
             //
+            void load(TESPluginSubrecord&);
             void load(TESPluginRecord&); // assumes QSTA subrecord has already been opened
          };
          struct Objective {
@@ -71,20 +110,11 @@ namespace LoadedForms {
             uint32_t   flags;
             LStringRef text;
             std::vector<Target> targets;
+            bool error_isMissingFlags = false;
+            bool error_isMissingText  = false;
             //
+            void load(TESPluginSubrecord&);
             void load(TESPluginRecord&); // assumes QOBJ subrecord has already been opened
-         };
-
-         struct Alias {
-            quest_alias_type type;
-            uint32_t    id;
-            std::string name;
-            uint32_t    flags;
-            bool        hasForceInto = false;
-            uint32_t    forceInto = 0;
-            //
-            // TODO: FINISH ME
-            //
          };
 
          std::string editorID;
@@ -96,7 +126,7 @@ namespace LoadedForms {
          uint16_t    flags = 0;
          uint8_t     priority;
          uint8_t     formVersion = 0;
-         uint32_t    unknown;
+         uint32_t    unknown; // DNAM, offset 0x04
          QuestType   questType;
          //
          std::string editorCategory; // FLTR // "abc/def/ghi" to nest within the CK Object Window tree
@@ -106,7 +136,8 @@ namespace LoadedForms {
          int32_t  nextAliasID = 0;
          std::vector<Stage> stages;
          std::vector<Objective> objectives;
-         std::vector<Alias> aliases;
+         std::vector<Alias*> aliases;
+         std::vector<uint32_t> textDisplayGlobalIDs;
 
          void load(TESPluginRecord&);
 

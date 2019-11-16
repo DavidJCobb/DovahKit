@@ -54,6 +54,50 @@ std::thread::id main_thread_id;
 //
 //  - Loading:
 //
+//     = Current tasks
+//
+//        - Conditions
+//
+//           - Continue adding condition function definitions in batches of 
+//             fifty or a hundred.
+//
+//           - Write code to stringify a condition's argument given its type 
+//             and value, and update Condition::to_string to use it.
+//
+//           - Instead of using an enum for argument types, consider defining 
+//             a list of objects that describe the types, and having the 
+//             condition function definitions store references to these.
+//
+//        - Quests
+//
+//           - I'm not sure we're handling nested structs properly. Take for 
+//             example Log Entries within Stages. A Stage is an INDX subrecord, 
+//             followed by one or more QSTD subrecords; so, we've coded the 
+//             Quest::Stage struct to "peek" the subrecords ahead of it and, if 
+//             they're QSTD, handle its load. But I'm not sure that's how the 
+//             game does it.
+//
+//             I'm 90% sure that the game handles INDX and QSTD in the top-
+//             level switch-case for TESQuest::LoadForm -- that when it sees a 
+//             QSTD, it just blindly chucks that into the last stage it loaded. 
+//             And if that's true, then our current code is actually wrong, 
+//             because the game would support having QSTDs anywhere in the 
+//             record whereas we require them to immediately follow their 
+//             matching INDXs.
+//
+//              - Disassemble TESQuest::LoadForm to investigate this. If we 
+//                confirm that nested structs are handled by the top-level 
+//                switch-case, then we need to do things the same way -- and 
+//                we can generalize this to every other record type.
+//
+//           - Aliases
+//
+//              - ReferenceAlias::load
+//
+//              - LocationAlias::load: finish researching ALFD.
+//
+//        - ActorBases
+//
 //     - The form type list is still incomplete, but the only gaps are form 
 //       types that don't appear in any official files. I assume SKSE pulled 
 //       them from TESV.EXE's map of signatures to form type enum values. Do 
@@ -81,7 +125,7 @@ std::thread::id main_thread_id;
 //        - Errors relating to bad records and subrecords do get logged 
 //          properly, but don't halt the load process. See code comments in 
 //          and around TESPluginBaseReader::nextRecordOrGroup and in 
-//          TESPluginBaseReader::nextSubrecord for details.
+//          TESPluginBaseReader::nextSubrecord for details and ideas.
 //
 //     - LoadOrder::load needs to verify that the files' masters haven't 
 //       changed once we begin the final load. The only way to do that is 
@@ -124,6 +168,15 @@ std::thread::id main_thread_id;
 //          FormStub a field (FormStub* overrides = nullptr).
 //
 //  - Use Info:
+//
+//     = NOTE: Use Info is helpful for all forms, but only NEEDED in cases 
+//       where we allow you to delete a form. We only allow you to delete 
+//       from the active file, and for now, this is only intended for use 
+//       with creating dialogue -- so, QUST, DIAL, and INFO. If we need to, 
+//       we *can* just have flags somewhere to prevent the deletion of forms 
+//       of unrecognized/unimplemented/etc. types, if that's what it takes 
+//       to get a usable prototype of this whole thing ready in a reasonable 
+//       amount of time.
 //
 //     - Every FormStub needs two linked lists: one for outbounds references 
 //       to other forms, and another for inbound references from other forms.

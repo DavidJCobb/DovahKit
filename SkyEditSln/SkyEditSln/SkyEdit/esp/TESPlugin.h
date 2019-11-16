@@ -186,6 +186,7 @@ class TESPluginSubrecord {
       inline uint32_t size() const noexcept { return this->header.size; }
       //
       inline operator bool() const { return this->header.signature != 0; }
+      inline bool exists() const noexcept { return this->header.signature != 0; }
       //
       inline bool is_in_bounds() const {
          return this->get_containing_record().stream_pos() < this->end;
