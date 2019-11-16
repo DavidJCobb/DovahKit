@@ -70,25 +70,9 @@ std::thread::id main_thread_id;
 //
 //        - Quests
 //
-//           - I'm not sure we're handling nested structs properly. Take for 
-//             example Log Entries within Stages. A Stage is an INDX subrecord, 
-//             followed by one or more QSTD subrecords; so, we've coded the 
-//             Quest::Stage struct to "peek" the subrecords ahead of it and, if 
-//             they're QSTD, handle its load. But I'm not sure that's how the 
-//             game does it.
+//           - Loading CTDA records
 //
-//             I'm 90% sure that the game handles INDX and QSTD in the top-
-//             level switch-case for TESQuest::LoadForm -- that when it sees a 
-//             QSTD, it just blindly chucks that into the last stage it loaded. 
-//             And if that's true, then our current code is actually wrong, 
-//             because the game would support having QSTDs anywhere in the 
-//             record whereas we require them to immediately follow their 
-//             matching INDXs.
-//
-//              - Disassemble TESQuest::LoadForm to investigate this. If we 
-//                confirm that nested structs are handled by the top-level 
-//                switch-case, then we need to do things the same way -- and 
-//                we can generalize this to every other record type.
+//              - Base this on how it's done in TESQuest::LoadForm.
 //
 //           - Aliases
 //

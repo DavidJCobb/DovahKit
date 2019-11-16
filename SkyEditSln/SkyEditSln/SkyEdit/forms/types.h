@@ -8,9 +8,8 @@ extern constexpr uint32_t hardcoded_form_id_mask = 0x000007FF; // Mask for form 
 extern constexpr uint32_t plugin_form_id_mask    = 0xFFFFF800; // Mask for form IDs that are not hardcoded forms.
 extern constexpr uint32_t minimum_plugin_form_id = 0x00000800; // Minimum non-load-order-prefixed form ID for a non-hardcoded form.
 
-struct FormType { // enum; a struct-wrapped enum is scoped like enum class but allows implicit casts to number types
-   FormType() = delete;
-   enum : formtype_t {
+namespace _scoped_enums {
+   enum FormType : formtype_t {
       None = 0x00,
       FileHeader = 0x01, // TES4
       FileRecordGroup = 0x02, // GRUP
@@ -156,9 +155,10 @@ struct FormType { // enum; a struct-wrapped enum is scoped like enum class but a
       Count = Max + 1,
    };
 };
-struct FormTypeFlags { // enum; a struct-wrapped enum is scoped like enum class but allows implicit casts to number types
-   FormTypeFlags() = delete;
-   enum : uint32_t {
+typedef _scoped_enums::FormType FormType;
+
+namespace _scoped_enums {
+   enum FormTypeFlags : uint32_t {
       none = 0,
       //
       // (no_editor_id)
@@ -172,6 +172,8 @@ struct FormTypeFlags { // enum; a struct-wrapped enum is scoped like enum class 
       no_connections = 2,
    };
 };
+typedef _scoped_enums::FormTypeFlags FormTypeFlags;
+
 struct FormTypeInfo {
    uint32_t    signature;
    uint8_t     formType;
@@ -188,3 +190,173 @@ extern bool signatureIsSuspicious(uint32_t signature) noexcept;
 namespace LoadedForms {
    class Form;
 }
+
+namespace _scoped_enums {
+   enum ActorValueIndex {
+      Aggression,
+      Confidence,
+      Energy,
+      Morality,
+      Mood,
+      Assistance,
+      OneHanded,
+      TwoHanded,
+      Marksman,
+      Block,
+      Smithing,
+      HeavyArmor,
+      LightArmor,
+      Pickpocket,
+      Lockpicking,
+      Sneak,
+      Alchemy,
+      Speechcraft,
+      Alteration,
+      Conjuration,
+      Destruction = 20,
+      Illusion,
+      Restoration,
+      Enchanting,
+      Health,
+      Magicka,
+      Stamina,
+      HealRate,
+      MagickaRate,
+      StaminaRate,
+      SpeedMult,
+      InventoryWeight,
+      CarryWeight,
+      CritChance,
+      MeleeDamage,
+      UnarmedDamage,
+      Mass,
+      VoicePoints,
+      VoiceRate,
+      DamageResist,
+      PoisonResist = 40,
+      FireResist,
+      ElectricResist,
+      FrostResist,
+      MagicResist,
+      DiseaseResist,
+      PerceptionCondition,
+      EnduranceCondition,
+      LeftAttackCondition,
+      RightAttackCondition,
+      LeftMobilityCondition,
+      RightMobilityCondition,
+      BrainCondition,
+      Paralysis,
+      Invisibility,
+      NightEye,
+      DetectLifeRange,
+      WaterBreathing,
+      WaterWalking,
+      IgnoreCrippledLims,
+      Fame = 60,
+      Infamy,
+      JumpingBonus,
+      WardPower,
+      RightItemCharge,
+      ArmorPerks,
+      ShieldPerks,
+      WardDeflection,
+      Variable01,
+      Variable02,
+      Variable03,
+      Variable04,
+      Variable05,
+      Variable06,
+      Variable07,
+      Variable08,
+      Variable09,
+      Variable10,
+      BowSpeedBonuns,
+      FavorActive,
+      FavorsPerDay = 80,
+      FavorsPerDayTimer,
+      LeftItemCharge,
+      AbsorbChance,
+      Blindness,
+      WeaponSpeedMult,
+      ShoutRecoveryMult,
+      BowStaggerBonus,
+      Telekinesis,
+      FavorPointsBonus,
+      LastBribedIntimidated,
+      LastFlattered,
+      MovementNoiseMult,
+      BypassVendorStolenCheck,
+      BypassVendorKeywordCheck,
+      WaitingForPlayer,
+      OneHandedMod,
+      TwoHandedMod,
+      MarksmanMod,
+      BlockMod,
+      SmithingMod = 100,
+      HeavyArmorMod,
+      LightArmorMod,
+      PickPocketMod,
+      LockpickingMod,
+      SneakMod,
+      AlchemyMod,
+      SpeechcraftMod,
+      AlterationMod,
+      ConjurationMod,
+      DestructionMod,
+      IllusionMod,
+      RestorationMod,
+      EnchantingMod,
+      OneHandedSkillAdvance,
+      TwoHandedSkillAdvance,
+      MarksmanSkillAdvance,
+      BlockSkillAdvance,
+      SmithingSkillAdvance,
+      HeavyArmorSkillAdvance,
+      LightArmorSkillAdvance = 120,
+      PickPocketSkillAdvance,
+      LockpickingSkillAdvance,
+      SneakSkillAdvance,
+      AlchemySkillAdvance,
+      SpeechcraftSkillAdvance,
+      AlterationSkillAdvance,
+      ConjurationSkillAdvance,
+      DestructionSkillAdvance,
+      IllusionSkillAdvance,
+      RestorationSkillAdvance,
+      EnchantingSkillAdvance,
+      LeftWeaponSpeedMult,
+      DragonSouls,
+      CombatHealthRegenMult,
+      OneHandedPowerMod,
+      TwoHAndedPowerMod,
+      MarksmanPowerMod,
+      BlockPowerMod,
+      SmithingPowerMod,
+      HeavyArmorPowerMod = 140,
+      LightArmorPowerMod,
+      PickPocketPowerMod,
+      LockpickingPowerMod,
+      SneakPowerMod,
+      AlchemyPowerMod,
+      SpeechcraftPowerMod,
+      AlterationPowerMod,
+      ConjurationPowerMod,
+      DestructionPowerMod,
+      IllusionPowerMod,
+      RestorationPowerMod,
+      EnchantingPowerMod,
+      DragonRend,
+      AttackDamageMult,
+      HealRateMult,
+      MagickaRateMult,
+      StaimnaRateMult,
+      WerewolfPerks,
+      VampirePerks,
+      GrabActorOffset = 160,
+      Grabbed,
+      DEPRECATED05,
+      ReflectDamage,
+   };
+}
+typedef _scoped_enums::ActorValueIndex ActorValueIndex;
