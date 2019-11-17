@@ -42,16 +42,19 @@ enum class ConditionParamType : uint8_t {
    Actor,      // forms of type: ACHR
    ActorBase,  // forms of type: NPC_
    ActorValue,
+   Alias,
    Alignment,  // enum; karma
    Axis,       // char
    BaseForm,
    Cell,       // forms of type: CELL
    Class,      // forms of type: CLAS
+   CrimeType,
    CriticalStage, // enum
    EquipType,
    Faction,    // forms of type: FACT
    Float,
    FormType,
+   Furniture,  // forms of type: FURN
    Global,     // forms of type: GLOB
    Integer,
    InventoryItem, // forms of type: [todo; anything that can ever go in an inventory]
@@ -59,12 +62,14 @@ enum class ConditionParamType : uint8_t {
    MiscStat,
    Quest,      // forms of type: QUST
    QuestStage,
+   Package,    // forms of type: PACK
    Race,       // forms of type: RACE
    ObjectReference, // forms of type: ACHR, REFR
    ScriptVariableIndex,
    Sex,
    VariableIndex, // integer
    Voicetype, // forms of type: VTYP
+   Weather,   // forms of type: WTHR
 };
 
 struct ConditionFunction {

@@ -13,12 +13,45 @@ enum class quest_alias_type {
    reference,
    location,
 };
+namespace _scoped_enums {
+   enum quest_alias_flags {
+      reserves_target      = 0x00000001,
+      optional             = 0x00000002,
+      quest_object         = 0x00000004, // reference aliases only
+      allow_reuse_in_quest = 0x00000008,
+      allow_dead           = 0x00000010, // reference aliases only
+      limit_to_loaded_area = 0x00000020, // reference aliases only; used for Find Matching Reference
+      make_essential       = 0x00000040, // reference aliases only
+      allow_disabled       = 0x00000080, // reference aliases only
+      stores_text          = 0x00000100,
+      allow_reserved       = 0x00000200,
+      make_protected       = 0x00000400, // reference aliases only
+      no_fill_type         = 0x00000800, // reference aliases only
+      allow_destroyed      = 0x00001000, // reference aliases only
+      use_closest          = 0x00002000, // reference aliases only; used for Find Matching Reference; only if "limit to loaded area" is set
+      uses_stored_text     = 0x00004000, // reference aliases only
+      initially_disabled   = 0x00008000, // reference aliases only
+      allow_cleared        = 0x00010000, // location aliases only
+      clear_name_when_removed = 0x00020000, // reference aliases only
+   };
+}
+using quest_alias_flags = _scoped_enums::quest_alias_flags;
 enum class location_alias_fill_type {
    none,
    preset, // ALFL: a preset Location form is "forced" into this alias
    other_alias_in_same_quest, // ALFA
    from_event, // ALFE
    other_alias_in_other_quest, // ALEQ
+};
+enum class reference_alias_fill_type {
+   none,
+   preset_placed_reference    = 1, // ALFR: a preset Actor or ObjectReference is "forced" into this alias
+   other_alias_in_same_quest  = 2, // ALFA
+   from_event    = 3, // ALFE
+   create_object = 4, // ALCO
+   other_alias_in_other_quest = 5, // ALEQ
+   preset_unique_actor        = 6, // ALUA
+   find_matching_reference = 7, // ALNA
 };
 
 namespace LoadedForms {
@@ -28,12 +61,12 @@ namespace LoadedForms {
          //
          uint32_t    id = 0;
          std::string name;
-         uint32_t    flags = 0;
+         uint32_t    flags = 0; // enum is (quest_alias_flags)
          uint32_t    hiddenFlags = 0; // BNAM sets flag 0x01, ONAM sets flag 0x02
          uint32_t    forceIntoAliasID  = 0xFFFFFFFF; // same sentinel value used by the game
          uint32_t    fillFromEvent     = 0xFFFFFFFF; // same sentinel value used by the game
          uint32_t    fillFromEventData = 0xFFFFFFFF; // same sentinel value used by the game
-         std::vector<Condition> conditions;
+         std::vector<Condition> conditions; // for "Find Matching Reference" or "Find Matching Location"
    };
    class LocationAlias : public Alias {
       public:
@@ -49,7 +82,38 @@ namespace LoadedForms {
    };
    class ReferenceAlias : public Alias {
       public:
+         typedef reference_alias_fill_type fill_type;
+         struct InventoryModification {
+            uint32_t itemFormID;
+            uint32_t count;
+         };
+      public:
          virtual void load(TESPluginRecord&) override;
+         //
+         fill_type fillType = reference_alias_fill_type::none;
+         std::vector<uint32_t> keywordIDs; // KSIZ, KWDA
+         std::vector<uint32_t> perkIDs;    // PRKZ, PRKR
+         std::vector<uint32_t> packageIDs; // ALPC
+         std::vector<uint32_t> factionIDs; // ALFC
+         std::vector<uint32_t> spellIDs;   // ALSP
+         std::vector<InventoryModification> inventoryChanges; // COCT, CNTO
+         uint32_t spectatorOverridePackageListID = 0; // SPOR
+         uint32_t observeCorpseOverridePackageListID = 0; // OCOR
+         uint32_t guardWarnOverridePackageListID = 0; // GWOR
+         uint32_t combatOverridePackageListID = 0; // ECOR
+         uint32_t displayNameID = 0; // ALDN; should be the form ID of a MESG
+         uint32_t additionalVoiceTypeID = 0; // VTCK; xEdit says can be the ID of a VTYP; UESP says can also be the ID of a FLST?
+         //
+         uint32_t fillLocRefTypeID = 0; // ALRT; should be the form ID of an LCRT
+         uint32_t fillNearAlias = 0xFFFFFFFF; // ALNA
+         uint32_t fillNearAliasType = 0; // ALNT
+         uint32_t fillFromObjectReferenceID = 0;
+         uint32_t createObjectBaseID = 0; // ALCO
+         uint32_t createObjectAt     = 0; // ALCA; sign bit is a flag; the rest is the alias ID
+         uint32_t createObjectLevel  = 0; // ALCL
+         uint32_t fillFromAliasID = 0xFFFFFFFF; // same sentinel value used by the game
+         uint32_t fillFromQuestID = 0;
+         uint32_t fillFromUniqueActorBaseID = 0; // ALUA; should be the form ID of an NPC_ with the Unique flag set
    };
 
    class Quest : public Form {
@@ -87,6 +151,8 @@ namespace LoadedForms {
             // TODO: SCHR
             //
             void load(TESPluginRecord&); // assumes QSTD subrecord has already been opened
+            void loadText(TESPluginSubrecord& cnam);
+            void loadObScript(TESPluginRecord&);
          };
          struct Stage {
             uint16_t index;
@@ -142,5 +208,8 @@ namespace LoadedForms {
          void load(TESPluginRecord&);
 
          static const char* QuestTypeToString(QuestType);
+
+      protected:
+         Target* getLastParsedQuestTarget() const noexcept;
    };
 }

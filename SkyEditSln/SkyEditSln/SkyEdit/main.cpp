@@ -70,15 +70,9 @@ std::thread::id main_thread_id;
 //
 //        - Quests
 //
-//           - Loading CTDA records
-//
-//              - Base this on how it's done in TESQuest::LoadForm.
-//
 //           - Aliases
 //
-//              - ReferenceAlias::load
-//
-//              - LocationAlias::load: finish researching ALFD.
+//              - LocationAlias::load and ReferenceAlias::load: finish researching ALFD.
 //
 //        - ActorBases
 //

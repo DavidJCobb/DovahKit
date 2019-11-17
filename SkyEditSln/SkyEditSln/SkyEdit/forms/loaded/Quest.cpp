@@ -1,5 +1,6 @@
 #include "Quest.h"
 #include "../../esp/TESPlugin.h"
+#include "../../output.h"
 
 namespace LoadedForms {
    void LocationAlias::load(TESPluginRecord& record) {
@@ -22,7 +23,7 @@ namespace LoadedForms {
             case 'CTDA':
                {
                   auto& list = this->conditions;
-                  list.push_back(Condition());
+                  list.emplace_back();
                   auto& cnd = *list.rbegin();
                   cnd.read(subrecord.get_containing_record());
                }
@@ -74,33 +75,227 @@ namespace LoadedForms {
       else if (this->fillType == fill_type::other_alias_in_same_quest)
          this->fillFromAliasID = internalAliasID;
    }
+   void ReferenceAlias::load(TESPluginRecord& record) {
+      auto& subrecord = record.get_current_subrecord();
+      assert(subrecord.signature() == 'ALST' && "ReferenceAlias::load should only be called just after the ALST subrecord is opened.");
+      subrecord.read(this->id);
+      //
+      if (!record.next_subrecord())
+         return;
+      uint32_t keywordSize   = 0;
+      uint32_t perkListSize  = 0;
+      uint32_t inventorySize = 0;
+      for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'ALID':
+               subrecord.to_string(this->name);
+               break;
+            case 'FNAM':
+               subrecord.read(this->flags);
+               break;
+            case 'ALFI':
+               subrecord.read(this->forceIntoAliasID);
+               break;
+            case 'BNAM': // shared with BGSRefAlias
+               this->hiddenFlags |= 1;
+               break;
+            case 'ONAM': // shared with BGSRefAlias
+               this->hiddenFlags |= 2;
+               break;
+            case 'QNAM':
+               this->hiddenFlags |= 4;
+               break;
+            case 'CTDA':
+               {
+                  auto& list = this->conditions;
+                  list.emplace_back();
+                  auto& cnd = *list.rbegin();
+                  cnd.read(subrecord.get_containing_record());
+               }
+               break;
+            case 'KSIZ':
+               if (subrecord.read(keywordSize)) {
+                  auto s = this->keywordIDs.size();
+                  if (s) {
+                     _DEBUGMSG("WARNING: QUST/ALST..KSIZ found after one or more QUST/ALST..KWDA!");
+                     if (s > keywordSize)
+                        _DEBUGMSG("WARNING: QUST/ALST..KSIZ specified a keyword size smaller than the number of QUST/ALST..KWDAs already loaded!");
+                  }
+                  this->keywordIDs.reserve(keywordSize);
+               }
+               break;
+            case 'KWDA':
+               {
+                  uint32_t id;
+                  if (subrecord.read(id)) {
+                     this->keywordIDs.push_back(id);
+                     auto s = this->keywordIDs.size();
+                     if (s > keywordSize)
+                        _DEBUGMSG("WARNING: We have %d keywords in a reference alias; expected %d based on KSIZ.", s, keywordSize);
+                  }
+               }
+               break;
+            case 'COCT':
+               if (subrecord.read(inventorySize)) {
+                  auto s = this->inventoryChanges.size();
+                  if (s) {
+                     _DEBUGMSG("WARNING: QUST/ALST..COCT found after one or more QUST/ALST..CNTO!");
+                     if (s > keywordSize)
+                        _DEBUGMSG("WARNING: QUST/ALST..COCT specified an inventory change count smaller than the number of QUST/ALST..CNTOs already loaded!");
+                  }
+                  this->inventoryChanges.reserve(inventorySize);
+               }
+               break;
+            case 'CNTO':
+               if (subrecord.is_in_bounds(8)) {
+                  this->inventoryChanges.emplace_back();
+                  auto& changes = *this->inventoryChanges.rbegin();
+                  subrecord.unchecked_read(changes.itemFormID);
+                  subrecord.unchecked_read(changes.count);
+                  //
+                  auto s = this->inventoryChanges.size();
+                  if (s > inventorySize)
+                     _DEBUGMSG("WARNING: We have %d inventory changes in a reference alias; expected %d based on COCT.", s, inventorySize);
+               }
+               break;
+            case 'PRKZ':
+               if (subrecord.read(perkListSize)) {
+                  auto s = this->perkIDs.size();
+                  if (s) {
+                     _DEBUGMSG("WARNING: QUST/ALST..PRKZ found after one or more QUST/ALST..PRKR!");
+                     if (s > perkListSize)
+                        _DEBUGMSG("WARNING: QUST/ALST..PRKZ specified a perk count smaller than the number of QUST/ALST..PRKRs already loaded!");
+                  }
+                  this->perkIDs.reserve(perkListSize);
+               }
+               break;
+            case 'PRKR':
+               {
+                  uint32_t id;
+                  if (subrecord.read(id)) {
+                     this->perkIDs.push_back(id);
+                     auto s = this->perkIDs.size();
+                     if (s > perkListSize)
+                        _DEBUGMSG("WARNING: We have %d perks in a reference alias; expected %d based on PRKZ.", s, perkListSize);
+                  }
+               }
+               break;
+            case 'SCOR':
+               subrecord.read(this->spectatorOverridePackageListID);
+               break;
+            case 'OCOR':
+               subrecord.read(this->observeCorpseOverridePackageListID);
+               break;
+            case 'GWOR':
+               subrecord.read(this->guardWarnOverridePackageListID);
+               break;
+            case 'ECOR':
+               subrecord.read(this->combatOverridePackageListID);
+               break;
+            case 'ALDN':
+               subrecord.read(this->displayNameID);
+               break;
+            case 'ALCO':
+               this->fillType = fill_type::create_object;
+               subrecord.read(this->createObjectBaseID);
+               break;
+            case 'ALCA':
+               if (this->fillType == fill_type::create_object)
+                  subrecord.read(this->createObjectAt);
+               break;
+            case 'ALCL':
+               if (this->fillType == fill_type::create_object)
+                  subrecord.read(this->createObjectLevel);
+               break;
+            case 'ALEQ':
+               subrecord.read(this->fillFromQuestID);
+               this->fillType = fill_type::other_alias_in_other_quest;
+               break;
+            case 'ALEA':
+               if (this->fillType == fill_type::other_alias_in_other_quest)
+                  subrecord.read(this->fillFromAliasID);
+               break;
+            case 'ALFA':
+               this->fillType = fill_type::other_alias_in_same_quest;
+               subrecord.read(this->fillFromAliasID);
+               break;
+            case 'ALNA':
+               this->fillType = fill_type::find_matching_reference;
+               subrecord.read(this->fillNearAlias);
+               break;
+            case 'ALNT':
+               if (this->fillType == fill_type::find_matching_reference)
+                  subrecord.read(this->fillNearAliasType);
+               break;
+            case 'ALPC':
+               {
+                  uint32_t id;
+                  if (subrecord.read(id))
+                     this->packageIDs.push_back(id);
+               }
+               break;
+            case 'ALFC':
+               {
+                  uint32_t id;
+                  if (subrecord.read(id))
+                     this->factionIDs.push_back(id);
+               }
+               break;
+            case 'ALSP':
+               {
+                  uint32_t id;
+                  if (subrecord.read(id))
+                     this->spellIDs.push_back(id);
+               }
+               break;
+            case 'ALUA':
+               this->fillType = fill_type::preset_unique_actor;
+               subrecord.read(this->fillFromUniqueActorBaseID);
+               break;
+            case 'ALFE':
+               this->fillType = fill_type::from_event;
+               subrecord.read(this->fillFromEvent);
+               break;
+            case 'ALFD':
+               subrecord.read(this->fillFromEventData);
+               if (this->fillFromEvent == -1)
+                  this->fillFromEventData = -1;
+               else {
+                  //
+                  // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291. 
+                  // (That code is for loc aliases; the ref alias code is stranger-looking but probably 
+                  // does the same stuff.)
+                  //
+               }
+               break;
+            case 'ALFR':
+               this->fillType = fill_type::preset_placed_reference;
+               subrecord.read(this->fillFromObjectReferenceID);
+               break;
+            case 'VTCK':
+               subrecord.read(this->additionalVoiceTypeID);
+               break;
+            case 'ALRT':
+               subrecord.read(this->fillLocRefTypeID);
+               break;
+         }
+      }
+   }
 
    void Quest::LogEntry::load(TESPluginRecord& record) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'QSDT' && "Quest::LogEntry::load should only be called just after the QSDT subrecord is opened.");
       subrecord.read(this->flags);
-      while (true) {
-         auto next = record.peek_next_subrecord_type();
-         switch (next) {
-            case 'CNAM':
-               {
-                  auto& subrecord = record.next_subrecord();
-                  subrecord.to_string(this->journalText);
-               }
-               continue;
-            case 'NAM0':
-               {
-                  auto& subrecord = record.next_subrecord();
-                  subrecord.read(this->nextQuestID);
-               }
-               continue;
-            case 'SCHR':
-               assert(false && "Not implemented!");
-               continue;
-         }
-         break;
-      }
+      if (record.peek_next_subrecord_type() != 'NAM0')
+         return;
+      record.next_subrecord();
+      subrecord.read(this->nextQuestID);
    }
+   void Quest::LogEntry::loadText(TESPluginSubrecord& subrecord) {
+      assert(subrecord.signature() == 'CNAM' && "Quest::LogEntry::loadText should only be called just after the CNAM subrecord is opened.");
+      subrecord.to_string(this->journalText);
+   }
+
    void Quest::Stage::load(TESPluginSubrecord& subrecord) {
       assert(subrecord.signature() == 'INDX' && "Quest::Stage::load should only be called just after the INDX subrecord is opened.");
       if (subrecord.is_in_bounds(4)) {
@@ -191,8 +386,20 @@ namespace LoadedForms {
          delete (*it);
       this->aliases.clear();
    }
+   Quest::Target* Quest::getLastParsedQuestTarget() const noexcept {
+      for (auto it = this->objectives.rbegin(); it != this->objectives.rend(); ++it) {
+         auto jt = it->targets.rbegin();
+         if (jt != it->targets.rend()) {
+            auto&  target = const_cast<Quest::Target&>(*jt);
+            return &target;
+         }
+      }
+      return nullptr;
+   }
    void Quest::load(TESPluginRecord& record) {
-      bool isInEventConditions = false;
+      bool     isInEventConditions = false;
+      bool     hasLastLogEntry     = false;
+      uint32_t lastLogEntryIndices[2];
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID': // required; TODO: fail if this is not present
@@ -242,12 +449,28 @@ namespace LoadedForms {
                }
                break;
             case 'QSTD':
-               if (this->stages.size()) {
-                  auto& stage = *this->stages.rbegin();
+               if (this->stages.size()) { // the game ignores QSTD that appear when there is no stage
+                  hasLastLogEntry = true;
+                  lastLogEntryIndices[0] = this->stages.size() - 1;
+                  auto& stage = this->stages[lastLogEntryIndices[0]];
+                  lastLogEntryIndices[1] = stage.entries.size();
                   stage.entries.push_back(LogEntry());
-                  auto& entry = *stage.entries.rbegin();
+                  auto& entry = stage.entries[lastLogEntryIndices[1]];
                   entry.load(record);
                }
+               break;
+            case 'CNAM':
+               if (!hasLastLogEntry)
+                  break;
+               {
+                  auto& entry = this->stages[lastLogEntryIndices[0]].entries[lastLogEntryIndices[1]];
+                  entry.loadText(subrecord);
+               }
+               break;
+            case 'SCHR':
+               //
+               // TODO: Add ObScript data to last-loaded entry
+               //
                break;
             case 'QOBJ':
                {
@@ -270,22 +493,25 @@ namespace LoadedForms {
                   auto& target    = *objective.targets.rbegin();
                   target.load(subrecord);
                }
+               hasLastLogEntry = false; // per TESV.exe TESQuest::LoadForm
                break;
             case 'CTDA':
-               //
-               // TODO:
-               //  - if there's a relevant log entry, add it to that
-               //  - else if there's a relevant target, add it to that
-               //  - else if we're in event conditions, add it to those
-               //  - else add it to dialogue conditions
-               //
                {
+                  Condition nc;
+                  nc.read(subrecord.get_containing_record());
+                  if (hasLastLogEntry) {
+                     auto& entry = this->stages[lastLogEntryIndices[0]].entries[lastLogEntryIndices[1]];
+                     entry.conditions.push_back(nc);
+                     break;
+                  }
+                  if (auto target = this->getLastParsedQuestTarget()) {
+                     target->conditions.push_back(nc);
+                     break;
+                  }
                   auto& list = this->dialogueConditions;
                   if (isInEventConditions)
                      list = this->eventConditions;
-                  list.push_back(Condition());
-                  auto& cnd = *list.rbegin();
-                  cnd.read(subrecord.get_containing_record());
+                  list.push_back(nc);
                }
                break;
             case 'ALLS':
@@ -301,6 +527,15 @@ namespace LoadedForms {
                   this->aliases.push_back(alias);
                   alias->load(record);
                }
+               break;
+            case 'SCDA':
+            case 'SCRV':
+            case 'SLSD':
+            case 'QNAM':
+               //
+               // TODO: The game passes all of these to TESQuest::LogEntry::Load, but it just ignores them; it 
+               // returns instantly if it encounters any record other than QSDT and NAM0.
+               //
                break;
          }
       }
