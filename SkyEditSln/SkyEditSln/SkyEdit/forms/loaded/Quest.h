@@ -44,14 +44,14 @@ enum class location_alias_fill_type {
    other_alias_in_other_quest, // ALEQ
 };
 enum class reference_alias_fill_type {
-   none,
+   none                       = 0,
    preset_placed_reference    = 1, // ALFR: a preset Actor or ObjectReference is "forced" into this alias
    other_alias_in_same_quest  = 2, // ALFA
-   from_event    = 3, // ALFE
-   create_object = 4, // ALCO
+   from_event                 = 3, // ALFE
+   create_object              = 4, // ALCO
    other_alias_in_other_quest = 5, // ALEQ
    preset_unique_actor        = 6, // ALUA
-   find_matching_reference = 7, // ALNA
+   find_matching_reference    = 7, // ALNA
 };
 
 namespace LoadedForms {

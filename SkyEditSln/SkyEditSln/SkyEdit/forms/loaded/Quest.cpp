@@ -313,7 +313,7 @@ namespace LoadedForms {
       auto next = record.peek_next_subrecord_type();
       while (next == 'CTDA') {
          auto& subrecord = record.next_subrecord();
-         this->conditions.push_back(Condition());
+         this->conditions.emplace_back();
          auto& cnd = *this->conditions.rbegin();
          cnd.read(record);
          next = record.peek_next_subrecord_type();
@@ -443,7 +443,7 @@ namespace LoadedForms {
                break;
             case 'INDX': // also handles QSDT
                {
-                  this->stages.push_back(Stage());
+                  this->stages.emplace_back();
                   auto& stage = *this->stages.rbegin();
                   stage.load(subrecord);
                }
@@ -454,7 +454,7 @@ namespace LoadedForms {
                   lastLogEntryIndices[0] = this->stages.size() - 1;
                   auto& stage = this->stages[lastLogEntryIndices[0]];
                   lastLogEntryIndices[1] = stage.entries.size();
-                  stage.entries.push_back(LogEntry());
+                  stage.entries.emplace_back();
                   auto& entry = stage.entries[lastLogEntryIndices[1]];
                   entry.load(record);
                }
@@ -474,7 +474,7 @@ namespace LoadedForms {
                break;
             case 'QOBJ':
                {
-                  this->objectives.push_back(Objective());
+                  this->objectives.emplace_back();
                   auto& objective = *this->objectives.rbegin();
                   objective.load(subrecord.get_containing_record());
                }
@@ -486,10 +486,10 @@ namespace LoadedForms {
                   // encounters a QSTA, it creates a dummy objective and stuffs the target 
                   // into that.
                   //
-                  this->objectives.push_back(Objective());
+                  this->objectives.emplace_back();
                {
                   auto& objective = *this->objectives.rbegin();
-                  objective.targets.push_back(Target());
+                  objective.targets.emplace_back();
                   auto& target    = *objective.targets.rbegin();
                   target.load(subrecord);
                }

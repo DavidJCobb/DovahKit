@@ -207,7 +207,8 @@ class LoadOrder {
       //
       // reset
       // Clears last-error details, wipes the load order, and deletes all FormStubs -- and I do mean 
-      // ALL FormStubs -- from memory.
+      // ALL FormStubs -- from memory. Nothing should still have a pointer to a FormStub or a loaded 
+      // form when this is called, or you'll get undefined behavior.
       //
       void reset();
       //

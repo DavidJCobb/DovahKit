@@ -8,8 +8,8 @@
 #include "forms/loaded/Quest.h"
 
 FormStub::~FormStub() {
-   if ((this->refcount & kRefcountMask) != 0)
-      assert(this->form && "You should not be attempting to destroy a FormStub when something is still using its loaded form data!");
+   if (this->get_refcount())
+      assert(!this->form && "You should not be attempting to destroy a FormStub when something is still using its loaded form data!");
    if (this->editorID) {
       free(this->editorID);
       this->editorID = nullptr;

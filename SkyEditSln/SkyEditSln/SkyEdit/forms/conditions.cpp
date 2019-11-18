@@ -46,6 +46,52 @@ bool Condition::read(TESPluginRecord& record) {
    return true;
 }
 
+namespace {
+   void _printConditionArg(ConditionParamType type, void* value, std::string& out) {
+      std::string temp;
+      switch (type) {
+         case ConditionParamType::Float:
+            cobb::sprintf(temp, "%f", *(float*)value);
+            out += temp;
+            break;
+         case ConditionParamType::Actor:
+         case ConditionParamType::BaseForm:
+         case ConditionParamType::Cell:
+         case ConditionParamType::Class:
+         case ConditionParamType::Faction:
+         case ConditionParamType::Furniture:
+         case ConditionParamType::Global:
+         case ConditionParamType::InventoryItem:
+         case ConditionParamType::Keyword:
+         case ConditionParamType::ObjectReference:
+         case ConditionParamType::Package:
+         case ConditionParamType::Race:
+         case ConditionParamType::Quest:
+         case ConditionParamType::Voicetype:
+         case ConditionParamType::Weather:
+            cobb::sprintf(temp, "[FORM:%08X]", *(uint32_t*)value);
+            out += temp;
+            break;
+         case ConditionParamType::Sex:
+            if (*(condition_arg_type::sex*)value == condition_arg_type::sex::female) {
+               out += "Female";
+               break;
+            } else if (*(condition_arg_type::sex*)value == condition_arg_type::sex::male) {
+               out += "Male";
+               break;
+            }
+            // else fall through to integer
+         case ConditionParamType::Integer:
+         case ConditionParamType::QuestStage:
+         case ConditionParamType::ScriptVariableIndex:
+            cobb::sprintf(temp, "%d", *(int32_t*)value);
+            out += temp;
+            break;
+         default:
+            out += "<arg?>";
+      }
+   }
+}
 void Condition::to_string(std::string& out) const {
    out.clear();
    //
@@ -87,7 +133,12 @@ void Condition::to_string(std::string& out) const {
       if (arg != ConditionParamType::None) {
          if (i > 0)
             out += ", ";
-         out += "<TODO: FORMAT ARGS>";
+         if (i == 0)
+            _printConditionArg(arg, (void*)&this->parameter1, out);
+         else if (i == 1)
+            _printConditionArg(arg, (void*)&this->parameter2, out);
+         else if (i == 2)
+            _printConditionArg(arg, (void*)&this->parameter3, out);
       }
    }
    out += ") ";
