@@ -2,7 +2,6 @@
 #include <cstdint>
 
 typedef uint8_t  formtype_t;
-typedef uint32_t form_id_t;
 
 extern constexpr uint32_t hardcoded_form_id_mask = 0x000007FF; // Mask for form IDs that are hardcoded forms.
 extern constexpr uint32_t plugin_form_id_mask    = 0xFFFFF800; // Mask for form IDs that are not hardcoded forms.
@@ -186,6 +185,48 @@ extern FormTypeInfo formTypes[];
 extern const FormTypeInfo& formTypeFor(formtype_t ft) noexcept;
 extern formtype_t signatureToFormType(uint32_t signature) noexcept;
 extern bool signatureIsSuspicious(uint32_t signature) noexcept;
+
+struct form_id_t {
+   //
+   // A struct to wrap form IDs. This exists so that TESPluginSubrecord::read and similar 
+   // functions can be templated on it to normalize and resolve form IDs.
+   //
+   uint32_t value = 0;
+   //
+   form_id_t() {};
+   form_id_t(uint32_t i) : value(i) {};
+   //
+   inline operator uint32_t() { return this->value; };
+   inline form_id_t& operator=(const uint32_t& other) { this->value = other; return *this; };
+   inline form_id_t& operator=(const int& other) { this->value = other; return *this; };
+   //
+   inline bool operator>(const uint32_t& other) { return this->value > other; };
+   inline bool operator<(const uint32_t& other) { return this->value < other; };
+   inline bool operator>=(const uint32_t& other) { return this->value >= other; };
+   inline bool operator<=(const uint32_t& other) { return this->value <= other; };
+   inline bool operator==(const uint32_t& other) { return this->value == other; };
+   inline bool operator!=(const uint32_t& other) { return this->value != other; };
+   //
+   inline bool operator>(const form_id_t& other) { return this->value > other.value; };
+   inline bool operator<(const form_id_t& other) { return this->value < other.value; };
+   inline bool operator>=(const form_id_t& other) { return this->value >= other.value; };
+   inline bool operator<=(const form_id_t& other) { return this->value <= other.value; };
+   inline bool operator==(const form_id_t& other) { return this->value == other.value; };
+   inline bool operator!=(const form_id_t& other) { return this->value != other.value; };
+};
+struct struct_form_id_t : form_id_t {
+   //
+   // In some cases, the game reads entire structs from the file by blindly copying bytes. 
+   // If these structs contain form IDs, then they will differ in Skyrim Special. Skyrim 
+   // treats references from one form to another as unions of form IDs and form pointers; 
+   // loading happens in two stages, with the first stage pulling form IDs into the places 
+   // where the pointers would be, and the second stage replacing all form IDs with pointers. 
+   // Skyrim Special is 64-bit, so its pointers are eight bytes instead of four bytes; as 
+   // such, structs that are blindly copied will have their layouts change, with four 
+   // padding bytes following each four-byte form ID.
+   //
+   uint32_t padding = 0;
+};
 
 namespace LoadedForms {
    class Form;

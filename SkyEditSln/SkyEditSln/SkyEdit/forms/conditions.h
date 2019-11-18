@@ -128,9 +128,6 @@ struct ConditionRunOn { // scoped enum with implicit casting to int
    };
 };
 
-//
-// TODO: move CTDA struct from components.h to here?
-//
 struct Condition {
    uint8_t  type; // (ConditionTypeFlags << 5) | ConditionOperator
    float    compareToConstant;

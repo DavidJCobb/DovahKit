@@ -75,45 +75,45 @@ namespace LoadedForms {
          virtual void load(TESPluginRecord&) override;
          //
          fill_type fillType = location_alias_fill_type::none;
-         uint32_t  fillFromLocationID = 0;
-         uint32_t  fillFromLocationKeywordID = 0;
+         form_id_t fillFromLocationID = 0;
+         form_id_t fillFromLocationKeywordID = 0;
          uint32_t  fillFromAliasID = 0xFFFFFFFF; // same sentinel value used by the game
-         uint32_t  fillFromQuestID = 0;
+         form_id_t fillFromQuestID = 0;
    };
    class ReferenceAlias : public Alias {
       public:
          typedef reference_alias_fill_type fill_type;
          struct InventoryModification {
-            uint32_t itemFormID;
-            uint32_t count;
+            form_id_t itemFormID;
+            uint32_t  count;
          };
       public:
          virtual void load(TESPluginRecord&) override;
          //
          fill_type fillType = reference_alias_fill_type::none;
-         std::vector<uint32_t> keywordIDs; // KSIZ, KWDA
-         std::vector<uint32_t> perkIDs;    // PRKZ, PRKR
-         std::vector<uint32_t> packageIDs; // ALPC
-         std::vector<uint32_t> factionIDs; // ALFC
-         std::vector<uint32_t> spellIDs;   // ALSP
+         std::vector<form_id_t> keywordIDs; // KSIZ, KWDA
+         std::vector<form_id_t> perkIDs;    // PRKZ, PRKR
+         std::vector<form_id_t> packageIDs; // ALPC
+         std::vector<form_id_t> factionIDs; // ALFC
+         std::vector<form_id_t> spellIDs;   // ALSP
          std::vector<InventoryModification> inventoryChanges; // COCT, CNTO
-         uint32_t spectatorOverridePackageListID = 0; // SPOR
-         uint32_t observeCorpseOverridePackageListID = 0; // OCOR
-         uint32_t guardWarnOverridePackageListID = 0; // GWOR
-         uint32_t combatOverridePackageListID = 0; // ECOR
-         uint32_t displayNameID = 0; // ALDN; should be the form ID of a MESG
-         uint32_t additionalVoiceTypeID = 0; // VTCK; xEdit says can be the ID of a VTYP; UESP says can also be the ID of a FLST?
+         form_id_t spectatorOverridePackageListID = 0; // SPOR
+         form_id_t observeCorpseOverridePackageListID = 0; // OCOR
+         form_id_t guardWarnOverridePackageListID = 0; // GWOR
+         form_id_t combatOverridePackageListID = 0; // ECOR
+         form_id_t displayNameID = 0; // ALDN; should be the form ID of a MESG
+         form_id_t additionalVoiceTypeID = 0; // VTCK; xEdit says can be the ID of a VTYP; UESP says can also be the ID of a FLST?
          //
-         uint32_t fillLocRefTypeID = 0; // ALRT; should be the form ID of an LCRT
-         uint32_t fillNearAlias = 0xFFFFFFFF; // ALNA
-         uint32_t fillNearAliasType = 0; // ALNT
-         uint32_t fillFromObjectReferenceID = 0;
-         uint32_t createObjectBaseID = 0; // ALCO
-         uint32_t createObjectAt     = 0; // ALCA; sign bit is a flag; the rest is the alias ID
-         uint32_t createObjectLevel  = 0; // ALCL
-         uint32_t fillFromAliasID = 0xFFFFFFFF; // same sentinel value used by the game
-         uint32_t fillFromQuestID = 0;
-         uint32_t fillFromUniqueActorBaseID = 0; // ALUA; should be the form ID of an NPC_ with the Unique flag set
+         form_id_t fillLocRefTypeID = 0; // ALRT; should be the form ID of an LCRT
+         uint32_t  fillNearAlias = 0xFFFFFFFF; // ALNA
+         uint32_t  fillNearAliasType = 0; // ALNT
+         form_id_t fillFromObjectReferenceID = 0;
+         form_id_t createObjectBaseID = 0; // ALCO
+         uint32_t  createObjectAt     = 0; // ALCA; sign bit is a flag; the rest is the alias ID
+         uint32_t  createObjectLevel  = 0; // ALCL
+         uint32_t  fillFromAliasID = 0xFFFFFFFF; // same sentinel value used by the game
+         form_id_t fillFromQuestID = 0;
+         form_id_t fillFromUniqueActorBaseID = 0; // ALUA; should be the form ID of an NPC_ with the Unique flag set
    };
 
    class Quest : public Form {
@@ -203,7 +203,7 @@ namespace LoadedForms {
          std::vector<Stage> stages;
          std::vector<Objective> objectives;
          std::vector<Alias*> aliases;
-         std::vector<uint32_t> textDisplayGlobalIDs;
+         std::vector<uint32_t> textDisplayGlobalIDs; // TODO: does this need to be form_id_t?
 
          void load(TESPluginRecord&);
 

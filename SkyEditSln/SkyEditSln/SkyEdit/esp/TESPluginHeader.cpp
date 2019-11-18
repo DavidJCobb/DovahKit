@@ -24,13 +24,16 @@ namespace {
       uint32_t signature = 0;
       uint16_t size;
       uint32_t pos;
+      uint32_t record_end = 0;
       //
-      _subrecord(FILE* f) : file(f) {}
+      _subrecord(FILE* f, uint32_t re) : file(f), record_end(re) {}
       //
       bool open() noexcept {
          if (this->signature) {
             this->skip();
          }
+         if (ftell(this->file) >= this->record_end)
+            return false;
          auto f = this->file;
          _read(f, this->signature);
          this->signature = _byteswap_ulong(this->signature);
@@ -115,7 +118,7 @@ bool TESPluginHeader::load(const char* path) noexcept {
 
    //
    uint32_t   last_subrecord = 0;
-   _subrecord subrecord(file);
+   _subrecord subrecord(file, ftell(file) + recordSize);
    while (subrecord.open()) {
       switch (subrecord.signature) {
          case 'CNAM': // creator
@@ -136,9 +139,10 @@ bool TESPluginHeader::load(const char* path) noexcept {
             break;
          case 'DATA':
             if (last_subrecord != 'MAST') {
-               LoadOrder::get().logError([this, &path, last_subrecord](FatalLoadError& error) {
+               LoadOrder::get().logError([this, &path, file, last_subrecord](FatalLoadError& error) {
                   error.code = LoadErrorCode::malformed_file;
                   error.file = std::filesystem::path(path).filename().string();
+                  error.fileOffset = ftell(file);
                   if (last_subrecord) {
                      error.parseError = "Failed initial read of the file header. Unexpected 'DATA' subrecord in the file following another master.";
                      error.dependency = *this->masters.rbegin();

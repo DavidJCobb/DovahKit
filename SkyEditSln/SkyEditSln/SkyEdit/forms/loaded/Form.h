@@ -6,10 +6,13 @@
 
 #define LOAD_NAIVELY_WHEN_THE_GAME_DOES 1
 
+struct FormStub;
 namespace LoadedForms {
    class Form {
       public:
          const formtype_t formType;
          Form(formtype_t ft) : formType(ft) {};
+         //
+         FormStub* stub = nullptr;
    };
 }

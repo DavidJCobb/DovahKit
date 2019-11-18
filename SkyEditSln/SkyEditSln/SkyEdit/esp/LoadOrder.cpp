@@ -80,6 +80,12 @@ form_id_status LoadOrder::localFormIDToGlobalFormID(FormStub* stub, uint32_t& ou
    out = stub->formID & 0x00FFFFFF | (j << 0x18);
    return form_id_status::valid;
 }
+TESPluginFile* LoadOrder::getFileByName(const char* name) const noexcept {
+   auto i = this->indexOf(name);
+   if (i == invalid_load_prefix)
+      return nullptr;
+   return this->files[i];
+}
 
 bool LoadOrder::_loadOrderHasMaster(const std::string& name) const {
    auto& list = this->loadOrderMasters;
@@ -291,6 +297,22 @@ FormStub* LoadOrder::getForm(uint8_t formType, uint32_t formID) const {
    }
    return nullptr;
 }
+FormStub* LoadOrder::getFormOfProbableType(formtype_t formType, uint32_t formID) const {
+   if (formType < std::extent<decltype(this->formsByType)>::value) {
+      try {
+         return this->formsByType[formType].forms.at(formID);
+      } catch (std::out_of_range) {}
+   }
+   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
+      if (ft == formType)
+         continue;
+      auto& list = this->formsByType[ft].forms;
+      try {
+         return list.at(formID);
+      } catch (std::out_of_range) {}
+   }
+   return nullptr;
+}
 void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)> functor) {
    if (formType < std::extent<decltype(this->formsByType)>::value) {
       auto& list = this->formsByType[formType].forms;
@@ -299,6 +321,35 @@ void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormSt
             break;
       }
    }
+}
+form_id_status LoadOrder::localFormIDToGlobalFormID(const char* filename, uint32_t& id) const {
+   if ((id & plugin_form_id_mask) == 0) { // hardcoded
+      id = id & hardcoded_form_id_mask;
+      return form_id_status::valid;
+   }
+   auto file = this->getFileByName(filename);
+   if (!file) {
+      id = 0;
+      return form_id_status::missing_master;
+   }
+   uint8_t local  = file->masters.size();
+   uint8_t prefix = id >> 0x18;
+   if (prefix == local) {
+      id = id & 0x00FFFFFF | (this->loadOrderPrefixFor(file) << 0x18);
+      return form_id_status::valid;
+   }
+   if (prefix > local) {
+      id = 0;
+      return form_id_status::out_of_bounds;
+   }
+   auto&   name = file->masters[prefix].master;
+   uint8_t j    = this->indexOf(name);
+   if (j == invalid_load_prefix) {
+      id = 0;
+      return form_id_status::missing_master;
+   }
+   id = id & 0x00FFFFFF | (j << 0x18);
+   return form_id_status::valid;
 }
 
 void LoadOrder::reset() {

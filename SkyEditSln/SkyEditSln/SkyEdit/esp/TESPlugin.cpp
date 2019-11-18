@@ -75,6 +75,34 @@ void TESPluginGroup::to_string(std::string& output) const {
    cobb::sprintf(output, "group of type %s at depth %d, from %08X to %08X", desc, this->depth(), this->pos, this->end);
 }
 
+void TESPluginSubrecord::_fixupFormID(uint32_t& id) const noexcept {
+   LoadOrder::get().localFormIDToGlobalFormID(this->owner.filename, id);
+}
+bool TESPluginSubrecord::_read_form_id(form_id_t& field) const noexcept {
+   if (this->read(field.value)) {
+      this->_fixupFormID(field.value);
+      return true;
+   }
+   return false;
+}
+bool TESPluginSubrecord::_read_form_id(struct_form_id_t& field) const noexcept {
+   if (this->is_in_bounds(this->owner.is_skyrim_special ? 8 : 4)) {
+      this->unchecked_read(field);
+      return true;
+   }
+   return false;
+}
+void TESPluginSubrecord::_unchecked_read_form_id(form_id_t& field) const noexcept {
+   this->get_containing_record().unchecked_read(field.value);
+   this->_fixupFormID(field.value);
+}
+void TESPluginSubrecord::_unchecked_read_form_id(struct_form_id_t& field) const noexcept {
+   this->get_containing_record().unchecked_read(field.value);
+   this->_fixupFormID(field.value);
+   if (this->owner.is_skyrim_special)
+      this->get_containing_record().unchecked_read(field.padding);
+}
+//
 TESPluginSubrecord& TESPluginRecord::get_current_subrecord() const noexcept { return this->owner.subrecord; }
 void TESPluginRecord::unchecked_read(void* destination, uint32_t size) {
    auto source = (std::ptrdiff_t)this->data + this->offset;

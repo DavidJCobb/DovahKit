@@ -5,6 +5,7 @@
 #include "esp/LoadOrder.h"
 #include "esp/TESPlugin.h"
 #include "forms/loaded/Quest.h"
+#include "output.h"
 
 const char* TEST_PLUGIN_PATH = "C:/Program Files (x86)/Steam/steamapps/common/Skyrim/Data/";
 
@@ -47,11 +48,6 @@ std::thread::id main_thread_id;
 //
 //     - Make the PapyrusPropertyType enum a scoped implicit-castable enum.
 //
-//     - Either replace TESPluginFile::_insertForm with direct calls to the 
-//       analogous method on LoadOrder, or have TESPluginFile::_insertForm delete 
-//       the form stub and do nothing if the file has been told to abort (see 
-//       below).
-//
 //  - Loading:
 //
 //     = Current tasks
@@ -82,6 +78,10 @@ std::thread::id main_thread_id;
 //             condition function definitions store references to these.
 //
 //        - Quests
+//
+//           - Papyrus
+//
+//              - We still don't have code for loading fragment data.
 //
 //           - Loading ObScript data (it's on log entries IIRC)
 //
@@ -442,6 +442,9 @@ void test_skyrim_quest() {
    auto& lo = LoadOrder::get();
    lo.basePath = TEST_PLUGIN_PATH;
    lo.addFile("Skyrim.esm");
+   lo.addFile("Update.esm");
+   lo.addFile("Dawnguard.esm");
+   lo.addFile("Dragonborn.esm");
    struct timeb bench_start;
    struct timeb bench_end;
    ftime(&bench_start);
@@ -522,6 +525,132 @@ void test_skyrim_quest() {
             }
          } else
             printf("\nFailed to find [QUST:0001CEF5]C04!\n");
+      }
+      {  // TEST: Aliases and form ID normalization
+         auto stub = lo.getForm(FormType::Quest, 0x03016E1F);
+         if (stub) {
+            printf("\n[QUST:03016E1F]DLC2MQ04\n");
+            auto form = stub->load();
+            if (form) {
+               auto quest = form.ptr_cast<LoadedForms::Quest>();
+               printf(" - Aliases (%d):\n", quest->aliases.size());
+               for (auto it = quest->aliases.begin(); it != quest->aliases.end(); ++it) {
+                  LoadedForms::Alias* a = *it;
+                  auto ref = dynamic_cast<LoadedForms::ReferenceAlias*>(a);
+                  auto loc = dynamic_cast<LoadedForms::LocationAlias*>(a);
+                  if (ref) {
+                     printf("    - Alias ID %d: reference alias: %s\n", a->id, a->name.c_str());
+                     printf("       - Flags:\n");
+                     if (ref->flags) {
+                        if (ref->flags & quest_alias_flags::reserves_target)
+                           printf("          - Reserves Target\n");
+                        if (ref->flags & quest_alias_flags::optional)
+                           printf("          - Optional\n");
+                        if (ref->flags & quest_alias_flags::quest_object)
+                           printf("          - Quest Object\n");
+                        if (ref->flags & quest_alias_flags::allow_reuse_in_quest)
+                           printf("          - Allow Reuse in Quest\n");
+                        if (ref->flags & quest_alias_flags::allow_dead)
+                           printf("          - Allow Dead\n");
+                        if (ref->flags & quest_alias_flags::limit_to_loaded_area)
+                           printf("          - In Loaded Area\n");
+                        if (ref->flags & quest_alias_flags::make_essential)
+                           printf("          - Essential\n");
+                        if (ref->flags & quest_alias_flags::allow_disabled)
+                           printf("          - Allow Disabled\n");
+                        if (ref->flags & quest_alias_flags::stores_text)
+                           printf("          - Stores Text\n");
+                        if (ref->flags & quest_alias_flags::allow_reserved)
+                           printf("          - Allow Reserved\n");
+                        if (ref->flags & quest_alias_flags::make_protected)
+                           printf("          - Protected\n");
+                        if (ref->flags & quest_alias_flags::no_fill_type)
+                           printf("          - No Fill Type\n");
+                        if (ref->flags & quest_alias_flags::allow_destroyed)
+                           printf("          - Allow Destroyed\n");
+                        if (ref->flags & quest_alias_flags::use_closest)
+                           printf("          - Use Closest\n");
+                        if (ref->flags & quest_alias_flags::uses_stored_text)
+                           printf("          - Uses Stored Text\n");
+                        if (ref->flags & quest_alias_flags::initially_disabled)
+                           printf("          - Initially Disabled\n");
+                        if (ref->flags & quest_alias_flags::allow_cleared)
+                           printf("          - Allow Cleared (WARNING: Locations only)\n");
+                        if (ref->flags & quest_alias_flags::clear_name_when_removed)
+                           printf("          - Clear Name When Removed\n");
+                     } else
+                        printf("         - <none>\n");
+                     switch (ref->fillType) {
+                        case reference_alias_fill_type::none:
+                           printf("       - No fill type.\n");
+                           break;
+                        case reference_alias_fill_type::create_object:
+                           printf("       - CREATE OBJECT: ");
+                           if (ref->createObjectBaseID) {
+                              auto stub = lo.getForm(ref->createObjectBaseID);
+                              if (stub) {
+                                 printf("[");
+                                 auto sig = formTypeFor(stub->formType).signature;
+                                 printf("%s", FMT_SIGNATURE(sig));
+                                 printf("]%s", stub->get_editor_id());
+                              } else
+                                 printf("[????:%08X]", ref->createObjectBaseID);
+                           } else
+                              printf("[NONE:00000000]");
+                           printf("\n");
+                           break;
+                        case reference_alias_fill_type::find_matching_reference:
+                           printf("       - FIND MATCHING REF\n");
+                           break;
+                        case reference_alias_fill_type::from_event:
+                           printf("       - FROM EVENT\n");
+                           break;
+                        case reference_alias_fill_type::other_alias_in_other_quest:
+                           printf("       - FILL FROM ALIAS %d in quest ", ref->fillFromAliasID);
+                           if (ref->fillFromQuestID) {
+                              auto stub = lo.getFormOfProbableType(FormType::Quest, ref->fillFromQuestID);
+                              if (stub) {
+                                 printf("[");
+                                 auto sig = formTypeFor(stub->formType).signature;
+                                 printf("%s", FMT_SIGNATURE(sig));
+                                 printf("]%s", stub->get_editor_id());
+                              } else
+                                 printf("[????:%08X]", ref->fillFromQuestID);
+                           } else
+                              printf("[NONE:00000000]");
+                           printf("\n");
+                           break;
+                        case reference_alias_fill_type::other_alias_in_same_quest:
+                           printf("       - FILL FROM ALIAS %d in own containing quest\n", ref->fillFromAliasID);
+                           break;
+                        case reference_alias_fill_type::preset_placed_reference:
+                           printf("       - FILL FROM PREPLACED REFERENCE %08X\n", ref->fillFromObjectReferenceID);
+                           break;
+                        case reference_alias_fill_type::preset_unique_actor:
+                           printf("       - FILL FROM UNIQUE ACTOR ");
+                           if (ref->fillFromUniqueActorBaseID) {
+                              auto stub = lo.getFormOfProbableType(FormType::ActorBase, ref->fillFromUniqueActorBaseID);
+                              if (stub) {
+                                 printf("[");
+                                 auto sig = formTypeFor(stub->formType).signature;
+                                 printf("%s", FMT_SIGNATURE(sig));
+                                 printf("]%s", stub->get_editor_id());
+                              } else
+                                 printf("[????:%08X]", ref->fillFromUniqueActorBaseID);
+                           } else
+                              printf("[NONE:00000000]");
+                           printf("\n");
+                           break;
+                     }
+                  } else if (loc) {
+                     printf("    - Alias ID %d: location alias: %s\n", a->id, a->name.c_str());
+                  } else {
+                     printf("    - Alias ID %d: unknown/invalid alias: %s\n", a->id, a->name.c_str());
+                  }
+               }
+            }
+         } else
+            printf("\nFailed to find [QUST:03016E1F]DLC2MQ04!\n");
       }
    } else {
       printf("...But an error was encountered during load! Details:\n");

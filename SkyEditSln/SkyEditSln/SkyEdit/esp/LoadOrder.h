@@ -168,6 +168,7 @@ class LoadOrder {
       //
       uint8_t loadOrderPrefixFor(TESPluginFile*) const noexcept;
       form_id_status localFormIDToGlobalFormID(FormStub* stub, uint32_t& out) const;
+      TESPluginFile* getFileByName(const char* name) const noexcept;
       //
       bool _loadOrderHasMaster(const std::string& name) const;
       bool _loadOrderHasPlugin(const std::string& name) const;
@@ -202,8 +203,10 @@ class LoadOrder {
       uint8_t indexOf(const std::string& filename) const noexcept;
       //
       FormStub* getForm(uint32_t formID) const;
-      FormStub* getForm(formtype_t formType, uint32_t formID) const;
+      FormStub* getForm(formtype_t formType, uint32_t formID) const; // use when you KNOW the form's type
+      FormStub* getFormOfProbableType(formtype_t formType, uint32_t formID) const; // searches (formType) first, then the other types
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
+      form_id_status localFormIDToGlobalFormID(const char* file, uint32_t& id) const;
       //
       // reset
       // Clears last-error details, wipes the load order, and deletes all FormStubs -- and I do mean 

@@ -80,6 +80,7 @@ namespace cobb {
                //
                auto chunk = this->data[chunk_count - 1];
                if (chunk != partial_chunk_max) {
+                  #pragma warning(suppress: 6294) // Initial condition in for-loop does not satisfy test. Normal if a bitmask has no partial chunk.
                   for (uint8_t j = 0; j < bits_in_partial; j++) {
                      if ((chunk & (1 << j)) == 0) {
                         return (chunk_count - 1) * bits_per_chunk + j;

@@ -41,6 +41,8 @@ loaded_form_ptr<LoadedForms::Form> FormStub::load() {
                   this->form = q;
                }; break;
          }
+         if (this->form)
+            this->form->stub = this;
       } else
          _DEBUGMSG("...stub failed.");
    }

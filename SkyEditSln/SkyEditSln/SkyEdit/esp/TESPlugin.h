@@ -171,6 +171,12 @@ class TESPluginSubrecord {
       uint32_t pos; // position in the file
       uint32_t end; // position in the file
       //
+      void _fixupFormID(uint32_t& id) const noexcept; // LoadOrder includes this header, so we can't include it from this header
+      bool _read_form_id(form_id_t& field) const noexcept;
+      bool _read_form_id(struct_form_id_t& field) const noexcept;
+      void _unchecked_read_form_id(form_id_t& field) const noexcept; // this class's definition precedes the definition for TESPluginBaseReader, so we can't check if we're SSE from the header
+      void _unchecked_read_form_id(struct_form_id_t& field) const noexcept;
+      //
    public:
       TESPluginSubrecord& operator=(const TESPluginSubrecord& other) = delete; // no copy
       TESPluginSubrecord(TESPluginSubrecord& other) = delete; // no copy
@@ -201,6 +207,7 @@ class TESPluginSubrecord {
       bool to_string(LStringRef& field); // TODO: implement string table support
       //
       inline bool skip_bytes(uint32_t count) const { return this->get_containing_record().skip(count); }
+      //
       inline bool read(void* buffer, uint32_t size) const {
          return this->get_containing_record().read(buffer, size);
       }
@@ -208,9 +215,15 @@ class TESPluginSubrecord {
       template<typename T> inline bool read(T& field) const {
          return this->get_containing_record().read(field);
       }
+      template<> inline bool read(form_id_t& field) const { return this->_read_form_id(field); }
+      template<> inline bool read(struct_form_id_t& field) const { return this->_read_form_id(field); }
+      //
       template<typename T> inline void unchecked_read(T& field) const {
-         return this->get_containing_record().unchecked_read(field);
+         this->get_containing_record().unchecked_read(field);
       }
+      template<> inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }
+      template<> inline void unchecked_read(struct_form_id_t& field) const { this->_unchecked_read_form_id(field); }
+      //
       bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator
       //
       void back_to_start() {
@@ -258,7 +271,8 @@ class TESPluginBaseReader {
       TESPluginSubrecord subrecord;
       uint32_t lastPotentialGroupParent = 0; // form ID: CELL, WRLD, DIAL
       //
-      const char* filename = ""; // needed for error reporting
+      const char* filename = ""; // needed for error reporting and for form ID resolution within TESPluginSubrecord
+      bool        is_skyrim_special = false; // needed for TESPluginSubrecord::read and friends to handle SSE struct form IDs properly
       bool        uses_string_table = false;
       //
       void read(void* buffer, uint32_t size) {

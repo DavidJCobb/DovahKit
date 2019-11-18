@@ -125,5 +125,8 @@
     <ClInclude Include="esp\TESPluginHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="forms\conditions\arg_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
