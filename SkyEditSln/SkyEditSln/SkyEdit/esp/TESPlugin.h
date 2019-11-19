@@ -444,19 +444,17 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
       void wait_for();
 };
 
-namespace _scoped_enums {
-   enum TESPluginFileFlags {
-      master = 0x0001,
-      localized_string_table = 0x0080,
-      light  = 0x0200, // SSE only
-   };
-}
+SCOPE_ENUM(TESPluginFileFlags, enum TESPluginFileFlags {
+   master = 0x0001,
+   localized_string_table = 0x0080,
+   light = 0x0200, SCOPED_ENUM_COMMENT("SSE only")
+});
 class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
    friend TESPluginThreadedWorldspaceSubBlockReader;
    public:
-      using Flags = _scoped_enums::TESPluginFileFlags;
+      using Flags = TESPluginFileFlags;
       struct MasterEntry {
          std::string master; // MAST
          uint64_t    data;   // DATA

@@ -10,14 +10,14 @@ extern constexpr uint32_t minimum_plugin_form_id = 0x00000800; // Minimum non-lo
 
 SCOPE_ENUM(FormType, enum FormType : formtype_t {
    None = 0x00,
-   FileHeader = 0x01, /* TES4 */
-   FileRecordGroup = 0x02, /* GRUP */
-   GameSetting = 0x03, /* GMST */
+   FileHeader = 0x01, 
+   FileRecordGroup = 0x02, 
+   GameSetting = 0x03, 
    Keyword = 0x04,
    LocationRefType = 0x05,
-   Action = 0x06, /* AACT */
-   TextureSet = 0x07, /* TXST */
-   MenuIcon = 0x08, /* MICN */
+   Action = 0x06, 
+   TextureSet = 0x07, 
+   MenuIcon = 0x08, 
    Global = 0x09,
    Class = 0x0A,
    Faction = 0x0B,
@@ -52,11 +52,11 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    Furniture = 0x28,
    Weapon = 0x29,
    Ammo = 0x2A,
-   ActorBase = 0x2B, /* TESNPC */
+   ActorBase = 0x2B, 
    LeveledCharacter = 0x2C,
    Key = 0x2D,
    Potion = 0x2E,
-   IdleMarker = 0x2F, /* IDLM */
+   IdleMarker = 0x2F, 
    Note = 0x30,
    ConstructibleObject = 0x31,
    Projectile = 0x32,
@@ -66,7 +66,7 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    Weather = 0x36,
    Climate = 0x37,
    ShaderParticleGeometry = 0x38,
-   VisualEffect = 0x39, /* BGSReferenceEffect */
+   VisualEffect = 0x39, SCOPED_ENUM_COMMENT("BGSReferenceEffect")
    Region = 0x3A,
    NavmeshInfo = 0x3B,
    Cell = 0x3C,
@@ -81,9 +81,9 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    PlacedBarrierProjectile = 0x45,
    PlacedHazard = 0x46,
    Worldspace = 0x47,
-   Land = 0x48, /* heightmapped terrain - TESObjectLAND */
+   Land = 0x48, SCOPED_ENUM_COMMENT("heightmapped terrain; exists as a child of a cell (TESObjectLAND)")
    Navmesh = 0x49,
-   /* TLOD - unknown - apparently not found in any file */
+   SCOPED_ENUM_COMMENT("TLOD: Unknown form type; apparently not found in any file.")
    Topic = 0x4B,
    TopicInfo = 0x4C,
    Quest = 0x4D,
@@ -92,10 +92,10 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    CombatStyle = 0x50,
    LoadingScreen = 0x51,
    LeveledSpell = 0x52,
-   AnimationProp = 0x53, /* a.k.a. AnimObject */
+   AnimationProp = 0x53, SCOPED_ENUM_COMMENT("a.k.a. AnimObject")
    WaterType = 0x54,
    EffectShader = 0x55,
-   /* TOFT - unknown - apparently not found in any file */
+   SCOPED_ENUM_COMMENT("TOFT: Unknown form type; apparently not found in any file.")
    Explosion = 0x57,
    Debris = 0x58,
    ImageSpace = 0x59,
@@ -126,7 +126,7 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    StoryManagerEventNode = 0x72,
    DialogueBranch = 0x73,
    MusicTrack = 0x74,
-   DialogueView = 0x75, /* Creation Kit only - game doesn't seem to load it */
+   DialogueView = 0x75, SCOPED_ENUM_COMMENT("Creation Kit only; the game doesn't load these.")
    WordOfPower = 0x76,
    Shout = 0x77,
    EquipSlot = 0x78,
@@ -144,27 +144,20 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    CollisionLayer = 0x84,
    Color = 0x85,
    ReverbParameters = 0x86,
-   /* 87: Unknown
-      88: Alias
-      89: ReferenceAlias
-      8A: Location Alias
-      8B: ActiveMagicEffect
-   */
+   SCOPED_ENUM_COMMENT("-----------------------")
+   SCOPED_ENUM_COMMENT("0x87: Unknown")
+   SCOPED_ENUM_COMMENT("0x88: (Run-Time Only) Alias")
+   SCOPED_ENUM_COMMENT("0x89: (Run-Time Only) Reference Alias")
+   SCOPED_ENUM_COMMENT("0x8A: (Run-Time Only) Location Alias")
+   SCOPED_ENUM_COMMENT("0x8B: (Run-Time Only) ActiveMagicEffect")
+   SCOPED_ENUM_COMMENT("-----------------------")
    Max   = 0x8B,
    Count = Max + 1,
 });
 
 SCOPE_ENUM(FormTypeFlags, enum FormTypeFlags : uint32_t {
-   none = 0,
-   /*
-      (no_editor_id)
-      Forms of this type cannot have editor IDs.
-   */
-   no_editor_id = 1,
-   /*
-      (no_connections)
-      Forms of this type cannot refer to or be referred to by other forms.
-   */
+   none           = 0, SCOPED_ENUM_COMMENT("Forms of this type cannot have editor IDs.")
+   no_editor_id   = 1, SCOPED_ENUM_COMMENT("Forms of this type cannot refer to or be referred to by other forms.")
    no_connections = 2,
 });
 

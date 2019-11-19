@@ -6,7 +6,7 @@
 SCOPE_ENUM(TESPluginHeaderFlags, enum TESPluginHeaderFlags {
    master = 0x0001,
    localized_string_table = 0x0080,
-   light = 0x0200, /* SSE only */
+   light = 0x0200, SCOPED_ENUM_COMMENT("SSE only")
 });
 class TESPluginHeader {
    //

@@ -122,6 +122,17 @@ less of an issue for bitmasks and whatnot, it's more of an issue for things that
 *actual enums* but that should still be intuitively usable as array indices and so 
 on.
 
+I mean, you could do something like this, but it's hideous:
+
+   struct Flags {
+      enum type : uint8_t {
+         use_widget,
+         use_gadget,
+         use_device,
+      };
+   };
+   Flags::type myFlags = Flags::use_widget | Flags::use_device;
+
 You could potentially work around that by defining the struct itself as a wrapper 
 for the enum's underlying type, giving it all the operators and other boilerplate 
 needed. A decent compiler will optimize out all such access, such that the struct 
@@ -198,10 +209,8 @@ But we have a problem: if we import the namespace, then we also import its pollu
 our sample enum values, (a) and (b), end up in the global namespace. We can avoid 
 that if we specify the name of the enum redundantly:
 
-   #define _SCOPE_ENUM_HELPER_01(x, y) x ## y
-   #define _SCOPE_ENUM_HELPER_02(x, y, z) x ## y ## z
-   #define _SCOPE_ENUM_HELPER_03(name, c, ...) namespace _SCOPE_ENUM_HELPER_01(_scoped_enums, c) { __VA_ARGS__##; }; using _SCOPE_ENUM_HELPER_02(_scoped_enums, c, ::##name);
-   #define SCOPE_ENUM(name, ...) _SCOPE_ENUM_HELPER_03(name, __COUNTER__, __VA_ARGS__)
+   #define _SCOPE_ENUM_HELPER_01(name, c, ...) namespace _scoped_enums##c { __VA_ARGS__##; }; using _scoped_enums##c##::##name;
+   #define SCOPE_ENUM(name, ...) _SCOPE_ENUM_HELPER_01(name, __COUNTER__, __VA_ARGS__)
 
    SCOPE_ENUM(Baz, enum Baz : int {
       a = 5,
@@ -227,16 +236,22 @@ The above parses as this:
 That's an unterminated enum and containing namespace -- obviously wrong. We need to 
 use block comments instead, which is also obnoxious.
 
-Further tests with this indicate that semicolons and single-line comment tokens can 
-cause MSVC's preprocessor to choke and die even if they occur inside of a block 
-comment. IntelliSense also regularly throws up all over the floor upon encountering 
-any large or large-ish enum using these macros: even after carefully pruning an 
-enum to remove anything that might make the preprocessor choke, IntelliSense often 
-still thinks that *something* is causing the macro invocation to fail to terminate 
-properly, and it fails to show the macro's substituted content properly when you 
-hover over it for a tooltip. (The code still compiles; this is purely an issue in 
-IntelliSense.) This has not been helped by following Visual Studio's suggestion to 
-put the macros in a "hint" file.
+It gets worse. ANY comment at all will cause IntelliSense to crash and burn hard, 
+falsely painting huge swaths of the enum as errors. Moreover, this doesn't even 
+occur 100% consistently: if an enum is affected, then it'll always be affected, but 
+it's difficult to predict when the bug will occur otherwise. So, to work around that, 
+we need yet another macro -- something we can stuff a comment into, that'll "eat" the 
+comment:
+
+   #define SCOPED_ENUM_COMMENT(text)
+
+   SCOPE_ENUM(Flags, enum Flags : int {
+      master = 0x0001,
+      localized_string_table = 0x0080,
+      light = 0x0200, SCOPED_ENUM_COMMENT("SSE only")
+   });
+
+Disgusting.
 
 
 == Namespaces but we just tack a random number on every time we get an error ==
@@ -264,6 +279,8 @@ Like so:
 I hate this.
 
 
-== THE CHOSEN APPROACH ==
+= THE CHOSEN APPROACH =
 
-We went with the preprocessor macro; it's the least hideous approach.
+We went with the preprocessor macro; it's the least hideous approach, and it comes 
+the closest to retaining the benefits and syntax of C-style enums while technically 
+fixing both their flaws and the flaws of enum-classes.
