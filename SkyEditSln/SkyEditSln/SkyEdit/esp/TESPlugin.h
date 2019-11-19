@@ -9,6 +9,7 @@
 #include "../formstub.h"
 #include "../forms/types.h"
 #include "../helpers/memory.h"
+#include "../helpers/miscellaneous.h"
 #define COBB_ESP_USE_MAPPED_FILES 1
 #ifdef COBB_ESP_USE_MAPPED_FILES
    #include "../helpers/files.h"
@@ -225,6 +226,21 @@ class TESPluginSubrecord {
       template<> inline void unchecked_read(struct_form_id_t& field) const { this->_unchecked_read_form_id(field); }
       //
       bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator
+      bool read_wstring(std::wstring& field);
+      //
+      template<int length_bytes> inline bool read_length_prefixed_string(std::string& field) const {
+         //
+         // Read a string prefixed with a length, with no null terminator.
+         //
+         using int_t = cobb::bytecount_to_int_t<length_bytes>;
+         field.clear();
+         int_t length;
+         if (this->read(length)) {
+            field.resize(length);
+            return this->read((void*)field.data(), length);
+         }
+         return false;
+      }
       //
       void back_to_start() {
          this->get_containing_record().go_to_offset(this->pos);

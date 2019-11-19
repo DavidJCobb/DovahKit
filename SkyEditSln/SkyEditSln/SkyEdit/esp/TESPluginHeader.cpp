@@ -23,8 +23,8 @@ namespace {
       FILE*    file;
       uint32_t signature = 0;
       uint16_t size;
-      uint32_t pos;
-      uint32_t record_end = 0;
+      uint32_t pos; // subrecord position within the file
+      uint32_t record_end = 0; // position of containing record's end, relative to start of file
       //
       _subrecord(FILE* f, uint32_t re) : file(f), record_end(re) {}
       //

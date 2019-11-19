@@ -39,37 +39,48 @@ namespace condition_arg_type {
 
 enum class ConditionParamType : uint8_t {
    None = 0,
-   Actor,      // forms of type: ACHR
-   ActorBase,  // forms of type: NPC_
+   Actor,       // forms of type: ACHR
+   ActorBase,   // forms of type: NPC_
    ActorValue,
    Alias,
-   Alignment,  // enum; karma
-   Axis,       // char
+   Alignment,   // enum; karma
+   AssociationType, // forms of type: ASTP
+   Axis,        // char
    BaseForm,
-   Cell,       // forms of type: CELL
-   Class,      // forms of type: CLAS
+   BodyPart,    // integer: body part enum value
+   Cell,        // forms of type: CELL
+   Class,       // forms of type: CLAS
    CrimeType,
    CriticalStage, // enum
    EquipType,
-   Faction,    // forms of type: FACT
+   Faction,     // forms of type: FACT
    Float,
+   FormList,    // forms of type: FLST
    FormType,
-   Furniture,  // forms of type: FURN
-   Global,     // forms of type: GLOB
+   Furniture,   // forms of type: FURN
+   Global,      // forms of type: GLOB
    Integer,
    InventoryItem, // forms of type: [todo; anything that can ever go in an inventory]
-   Keyword,    // forms of type: KYWD
+   Keyword,     // forms of type: KYWD
+   Location,    // forms of type: LCTN
+   MagicEffect, // forms of type: MGEF
    MiscStat,
-   Quest,      // forms of type: QUST
+   Owner,       // forms of type: FACT, NPC_
+   Package,     // forms of type: PACK
+   PackageData,
+   Quest,       // forms of type: QUST
    QuestStage,
-   Package,    // forms of type: PACK
-   Race,       // forms of type: RACE
+   Race,        // forms of type: RACE
    ObjectReference, // forms of type: ACHR, REFR
+   Scene,       // forms of type: SCEN
    ScriptVariableIndex,
    Sex,
+   Shout,       // forms of type: SHOU
+   Spell,       // forms of type: SPEL
    VariableIndex, // integer
-   Voicetype, // forms of type: VTYP
-   Weather,   // forms of type: WTHR
+   Voicetype,   // forms of type: VTYP
+   Weather,     // forms of type: WTHR
+   Worldspace,  // forms of type: WRLD
 };
 
 struct ConditionFunction {

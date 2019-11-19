@@ -20,6 +20,23 @@ enum PapyrusPropertyType : uint8_t {
    kPapyrusPropertyType_ArrayBool   = 15,
 };
 
+enum class papyrus_fragment_type : uint8_t {
+   undefined,
+   info,
+   package,
+   perk,
+   quest,
+   scene,
+};
+class PapyrusFragmentData {
+   public:
+      const papyrus_fragment_type type;
+      //
+      PapyrusFragmentData(const papyrus_fragment_type t) : type(t) {};
+      //
+      virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) = 0;
+};
+
 class PapyrusScriptData {
    public:
       class Script;
@@ -28,7 +45,7 @@ class PapyrusScriptData {
       int16_t version;
       int16_t objectFormat; // format of "object" property values
       std::vector<Script> scripts;
-      // TODO: vector of fragments
+      PapyrusFragmentData* fragmentData = nullptr;
       //
       bool load(TESPluginSubrecord&); // assumes we're at a VMAD subrecord // TODO: needs to load fragments
       //
@@ -58,10 +75,8 @@ class PapyrusScriptData {
             PropertyStatus status;
             void* value = nullptr;
             //
-         private:
             bool load(PapyrusScriptData& owner, TESPluginSubrecord&);
             //
-         public:
             ~Property();
       };
       class Script {
@@ -71,8 +86,124 @@ class PapyrusScriptData {
             ScriptStatus status;
             std::vector<Property> properties;
             //
-         private:
             bool load(PapyrusScriptData& owner, TESPluginSubrecord&);
       };
 
+};
+
+struct PapyrusBasicFragmentEntry {
+   uint8_t     unknown;
+   std::string script;
+   std::string function;
+};
+namespace _scoped_enums {
+   enum papyrus_topic_info_fragment_flags {
+      has_begin_fragment = 1,
+      has_end_fragment   = 2,
+   };
+   enum papyrus_package_fragment_flags {
+      has_begin_fragment  = 1,
+      has_end_fragment    = 2,
+      has_change_fragment = 4,
+   };
+   enum papyrus_scene_fragment_flags {
+      has_begin_fragment = 1,
+      has_end_fragment   = 2,
+   };
+};
+class PapyrusTopicInfoFragmentData : PapyrusFragmentData {
+   public:
+      PapyrusTopicInfoFragmentData() : PapyrusFragmentData(papyrus_fragment_type::info) {};
+      typedef PapyrusBasicFragmentEntry fragment_type;
+      //
+      virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
+      //
+      typedef _scoped_enums::papyrus_topic_info_fragment_flags Flags;
+      //
+      uint8_t unknown = 2;
+      uint8_t flags   = 0;
+      std::string   filename;
+      fragment_type onBeginFragment;
+      fragment_type onEndFragment;
+};
+class PapyrusPackageFragmentData : PapyrusFragmentData {
+   public:
+      PapyrusPackageFragmentData() : PapyrusFragmentData(papyrus_fragment_type::package) {};
+      typedef PapyrusBasicFragmentEntry fragment_type;
+      //
+      virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
+      //
+      typedef _scoped_enums::papyrus_package_fragment_flags Flags;
+      //
+      uint8_t unknown = 2;
+      uint8_t flags = 0;
+      std::string filename;
+      fragment_type onBeginFragment;
+      fragment_type onEndFragment;
+      fragment_type onChangeFragment;
+};
+class PapyrusPerkFragmentData : PapyrusFragmentData {
+   public:
+      PapyrusPerkFragmentData() : PapyrusFragmentData(papyrus_fragment_type::perk) {};
+      struct fragment_type {
+         uint16_t index;
+         uint16_t unknown02;
+         uint8_t  unknown04;
+         std::string filename;
+         std::string function;
+      };
+      //
+      virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
+      //
+      uint8_t unknown = 2;
+      std::string filename;
+      std::vector<fragment_type> fragments;
+};
+class PapyrusQuestFragmentData : PapyrusFragmentData {
+   public:
+      PapyrusQuestFragmentData() : PapyrusFragmentData(papyrus_fragment_type::quest) {};
+      struct fragment_type {
+         uint16_t index;
+         uint16_t unknown02;
+         uint32_t logEntry;
+         uint8_t  unknown08;
+         std::string filename;
+         std::string function;
+      };
+      struct alias_type {
+         PapyrusScriptData::PropertyObjectValue alias;
+         int16_t version;
+         int16_t objFormat;
+         std::vector<PapyrusScriptData::Script> scripts;
+      };
+      //
+      virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
+      //
+      uint8_t unknown = 2;
+      std::string filename;
+      std::vector<fragment_type> fragments;
+      std::vector<alias_type>    aliasScriptData;
+};
+class PapyrusSceneFragmentData : PapyrusFragmentData {
+   public:
+      PapyrusSceneFragmentData() : PapyrusFragmentData(papyrus_fragment_type::scene) {};
+      typedef PapyrusBasicFragmentEntry fragment_type;
+      struct phase_fragment_type {
+         uint8_t  unknown00;
+         uint32_t phase; // zero-indexed internally; one-indexed in UI
+         uint8_t  unknown05;
+         std::string filename;
+         std::string function;
+      };
+      //
+      virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
+      //
+      typedef _scoped_enums::papyrus_scene_fragment_flags Flags;
+      //
+      uint8_t unknown = 2;
+      uint8_t flags = 0;
+      std::string filename;
+      fragment_type onBeginFragment;
+      fragment_type onEndFragment;
+      std::vector<phase_fragment_type> phaseFragments;
 };

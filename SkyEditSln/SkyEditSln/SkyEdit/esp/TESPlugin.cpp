@@ -9,11 +9,6 @@
 #include "../helpers/strings.h"
 #include "LoadOrder.h"
 
-#define DO_ESP_LOAD_BENCHMARKS 1
-#ifdef DO_ESP_LOAD_BENCHMARKS
-   #include <sys/timeb.h> // for benchmarks
-#endif
-
 void TESPluginGroup::skip() {
    assert(this->owner);
    this->owner->setPos(this->end);
@@ -145,6 +140,15 @@ bool TESPluginSubrecord::read_wstring(std::string& field) {
    this->read(length);
    field.resize(length);
    return this->read(const_cast<char*>(field.data()), length);
+}
+bool TESPluginSubrecord::read_wstring(std::wstring& field) {
+   field.clear();
+   uint16_t length;
+   this->read(length);
+   field.resize(length);
+   //
+   void* buffer = (void*)field.data();
+   return this->read(buffer, length);
 }
 bool TESPluginSubrecord::to_string(std::string& field) {
    field.clear();

@@ -19,9 +19,6 @@ PapyrusScriptData::Property::~Property() {
 }
 
 bool PapyrusScriptData::load(TESPluginSubrecord& subrecord) {
-   //
-   // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
-   //
    if (!subrecord.read(this->version) || !subrecord.read(this->objectFormat))
       return false;
    {
@@ -37,31 +34,23 @@ bool PapyrusScriptData::load(TESPluginSubrecord& subrecord) {
    }
    switch (subrecord.containing_record_signature()) {
       case 'INFO':
-         //
-         // TODO: fragment data for topic infos
-         //
+         this->fragmentData = (PapyrusFragmentData*) new PapyrusTopicInfoFragmentData;
          break;
       case 'PACK':
-         //
-         // TODO: fragment data for packages
-         //
+         this->fragmentData = (PapyrusFragmentData*) new PapyrusPackageFragmentData;
          break;
       case 'PERK':
-         //
-         // TODO: fragment data for perks
-         //
+         this->fragmentData = (PapyrusFragmentData*) new PapyrusPerkFragmentData;
          break;
       case 'QUST':
-         //
-         // TODO: fragment data for quests
-         //
+         this->fragmentData = (PapyrusFragmentData*) new PapyrusQuestFragmentData;
          break;
       case 'SCEN':
-         //
-         // TODO: fragment data for scenes
-         //
+         this->fragmentData = (PapyrusFragmentData*) new PapyrusSceneFragmentData;
          break;
    }
+   if (this->fragmentData)
+      this->fragmentData->load(*this, subrecord);
    return subrecord.is_in_bounds();
 }
 bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
@@ -237,4 +226,138 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
       }
    }
    return true;
+}
+
+void PapyrusTopicInfoFragmentData::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) { // virtual
+   if (subrecord.is_in_bounds(2)) {
+      subrecord.unchecked_read(this->unknown);
+      subrecord.unchecked_read(this->flags);
+   }
+   subrecord.read_length_prefixed_string<2>(this->filename);
+   if (this->flags & Flags::has_begin_fragment) {
+      auto& frag = this->onBeginFragment;
+      if (subrecord.read(frag.unknown))
+         if (subrecord.read_length_prefixed_string<2>(frag.script))
+            subrecord.read_length_prefixed_string<2>(frag.function);
+   }
+   if (this->flags & Flags::has_end_fragment) {
+      auto& frag = this->onEndFragment;
+      if (subrecord.read(frag.unknown))
+         if (subrecord.read_length_prefixed_string<2>(frag.script))
+            subrecord.read_length_prefixed_string<2>(frag.function);
+   }
+}
+void PapyrusPackageFragmentData::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) { // virtual
+   if (subrecord.is_in_bounds(2)) {
+      subrecord.unchecked_read(this->unknown);
+      subrecord.unchecked_read(this->flags);
+   }
+   subrecord.read_length_prefixed_string<2>(this->filename);
+   if (this->flags & Flags::has_begin_fragment) {
+      auto& frag = this->onBeginFragment;
+      if (subrecord.read(frag.unknown))
+         if (subrecord.read_length_prefixed_string<2>(frag.script))
+            subrecord.read_length_prefixed_string<2>(frag.function);
+   }
+   if (this->flags & Flags::has_end_fragment) {
+      auto& frag = this->onEndFragment;
+      if (subrecord.read(frag.unknown))
+         if (subrecord.read_length_prefixed_string<2>(frag.script))
+            subrecord.read_length_prefixed_string<2>(frag.function);
+   }
+   if (this->flags & Flags::has_change_fragment) {
+      auto& frag = this->onChangeFragment;
+      if (subrecord.read(frag.unknown))
+         if (subrecord.read_length_prefixed_string<2>(frag.script))
+            subrecord.read_length_prefixed_string<2>(frag.function);
+   }
+}
+void PapyrusPerkFragmentData::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) { // virtual
+   subrecord.read(this->unknown);
+   subrecord.read_length_prefixed_string<2>(this->filename);
+   uint16_t count = 0;
+   if (subrecord.read(count)) {
+      for (uint16_t i = 0; i < count; i++) {
+         this->fragments.emplace_back();
+         auto& frag = *this->fragments.rbegin();
+         if (!subrecord.is_in_bounds(5))
+            break;
+         subrecord.unchecked_read(frag.index);
+         subrecord.unchecked_read(frag.unknown02);
+         subrecord.unchecked_read(frag.unknown04);
+         if (!subrecord.read_length_prefixed_string<2>(frag.filename))
+            break;
+         if (!subrecord.read_length_prefixed_string<2>(frag.function))
+            break;
+      }
+   }
+}
+void PapyrusQuestFragmentData::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) { // virtual
+   subrecord.unchecked_read(this->unknown);
+   uint16_t fragCount;
+   subrecord.unchecked_read(fragCount);
+   subrecord.read_length_prefixed_string<2>(this->filename);
+   for (uint16_t i = 0; i < fragCount; i++) {
+      this->fragments.emplace_back();
+      auto& frag = *this->fragments.rbegin();
+      if (!subrecord.is_in_bounds(5))
+         break;
+      subrecord.unchecked_read(frag.index);
+      subrecord.unchecked_read(frag.unknown02);
+      subrecord.unchecked_read(frag.logEntry);
+      subrecord.unchecked_read(frag.unknown08);
+      if (!subrecord.read_length_prefixed_string<2>(frag.filename))
+         break;
+      if (!subrecord.read_length_prefixed_string<2>(frag.function))
+         break;
+   }
+   uint16_t aliasCount;
+   subrecord.unchecked_read(aliasCount);
+   for (uint16_t i = 0; i < aliasCount; i++) {
+      this->aliasScriptData.emplace_back();
+      auto& alias = *this->aliasScriptData.rbegin();
+      alias.alias.load(owner, subrecord);
+      subrecord.unchecked_read(alias.version);
+      subrecord.unchecked_read(alias.objFormat);
+      uint16_t scriptCount;
+      subrecord.unchecked_read(scriptCount);
+      for (uint16_t j = 0; j < scriptCount; j++) {
+         alias.scripts.emplace_back();
+         auto& script = *alias.scripts.rbegin();
+         script.load(owner, subrecord);
+      }
+   }
+}
+void PapyrusSceneFragmentData::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) { // virtual
+   if (subrecord.is_in_bounds(2)) {
+      subrecord.unchecked_read(this->unknown);
+      subrecord.unchecked_read(this->flags);
+   }
+   subrecord.read_length_prefixed_string<2>(this->filename);
+   if (this->flags & Flags::has_begin_fragment) {
+      auto& frag = this->onBeginFragment;
+      if (subrecord.read(frag.unknown))
+         if (subrecord.read_length_prefixed_string<2>(frag.script))
+            subrecord.read_length_prefixed_string<2>(frag.function);
+   }
+   if (this->flags & Flags::has_end_fragment) {
+      auto& frag = this->onEndFragment;
+      if (subrecord.read(frag.unknown))
+         if (subrecord.read_length_prefixed_string<2>(frag.script))
+            subrecord.read_length_prefixed_string<2>(frag.function);
+   }
+   uint16_t count;
+   if (subrecord.read(count)) {
+      for (uint16_t i = 0; i < count; i++) {
+         this->phaseFragments.emplace_back();
+         auto& frag = *this->phaseFragments.rbegin();
+         if (!subrecord.is_in_bounds(6))
+            break;
+         subrecord.unchecked_read(frag.unknown00);
+         subrecord.unchecked_read(frag.phase);
+         subrecord.unchecked_read(frag.unknown05);
+         subrecord.read_length_prefixed_string<2>(frag.filename);
+         subrecord.read_length_prefixed_string<2>(frag.function);
+      }
+   }
 }

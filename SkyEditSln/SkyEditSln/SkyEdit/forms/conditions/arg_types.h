@@ -21,6 +21,10 @@
       example, we can have a single type for "any form" and then have all of 
       the other form types derive from it.
 
+    - When loading form ID values, we need code to convert them from file-local 
+      IDs to global IDs (i.e. normalize the load order prefix). This will require 
+      us to know what file we're loading them from.
+
 */
 
 union ConditionArgValue {

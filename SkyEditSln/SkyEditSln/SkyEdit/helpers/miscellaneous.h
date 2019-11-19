@@ -12,4 +12,13 @@ namespace cobb {
       else
          target &= ~mask;
    }
+
+   template<int bytecount> struct bytecount_to_int {
+      using type = void;
+   };
+   template<> struct bytecount_to_int<1> { using type = uint8_t; };
+   template<> struct bytecount_to_int<2> { using type = uint16_t; };
+   template<> struct bytecount_to_int<4> { using type = uint32_t; };
+   template<> struct bytecount_to_int<8> { using type = uint64_t; };
+   template<int bytecount> using bytecount_to_int_t = bytecount_to_int<bytecount>::type;
 };

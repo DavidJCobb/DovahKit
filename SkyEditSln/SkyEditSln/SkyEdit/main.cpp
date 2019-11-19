@@ -52,22 +52,6 @@ std::thread::id main_thread_id;
 //
 //     = Current tasks
 //
-//        = IMPORTANT: WE NEED TO CORRECT THE QUEST-LOADING CODE: WE'RE NOT 
-//          NORMALIZING FORM IDS INSIDE OF THE QUEST FROM FILE-LOCAL TO GLOBAL! 
-//          Ideally this shouldn't even be something we have to do manually; 
-//          we should define a type, form_id_t, that holds a form ID; there 
-//          should be overloads to the "read" and "unchecked_read" methods on 
-//          TESPluginSubrecord so that:
-//
-//           - When you read a form_id_t, TESPluginSubrecord normalizes the 
-//             form ID.
-//
-//           - We can define a subclass, struct_form_id_t, which represents 
-//             form IDs in any struct that Skyrim memcpy's straight out of 
-//             the file. In SSE, these are all bordered by four padding bytes; 
-//             overloads to TESPluginSubrecord can grab those as well if the 
-//             containg file is of form version 44 or later.
-//
 //        - Conditions
 //
 //           - Continue adding condition function definitions in batches of 
@@ -81,7 +65,7 @@ std::thread::id main_thread_id;
 //
 //           - Papyrus
 //
-//              - We still don't have code for loading fragment data.
+//              - Test to ensure that we are loading fragment data correctly.
 //
 //           - Loading ObScript data (it's on log entries IIRC)
 //

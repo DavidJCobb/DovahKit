@@ -203,7 +203,7 @@ namespace LoadedForms {
          std::vector<Stage> stages;
          std::vector<Objective> objectives;
          std::vector<Alias*> aliases;
-         std::vector<uint32_t> textDisplayGlobalIDs; // TODO: does this need to be form_id_t?
+         std::vector<form_id_t> textDisplayGlobalIDs;
 
          void load(TESPluginRecord&);
 
