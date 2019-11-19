@@ -1,7 +1,13 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "../helpers/scoped_enum.h"
 
+SCOPE_ENUM(TESPluginHeaderFlags, enum TESPluginHeaderFlags {
+   master = 0x0001,
+   localized_string_table = 0x0080,
+   light = 0x0200, /* SSE only */
+});
 class TESPluginHeader {
    //
    // Class used to extract load-critical information from a file header. 
@@ -10,11 +16,7 @@ class TESPluginHeader {
    // entire file into memory just to unmap it a few dozen bytes later.
    //
    public:
-      enum Flags {
-         kFlag_Master = 0x0001,
-         kFlag_LocalizedStringTable = 0x0080,
-         kFlag_Light  = 0x0200, // SSE only
-      };
+      using Flags = TESPluginHeaderFlags;
       //
       bool load(const char* path) noexcept;
       //
@@ -25,7 +27,7 @@ class TESPluginHeader {
       std::vector<std::string> masters;
       //
       bool is_master() const noexcept {
-         return (this->flags & kFlag_Master) != 0;
+         return (this->flags & Flags::master) != 0;
       }
       
 };

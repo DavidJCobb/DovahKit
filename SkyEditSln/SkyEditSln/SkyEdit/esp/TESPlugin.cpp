@@ -36,34 +36,34 @@ void TESPluginGroup::to_string(std::string& output) const {
    output.clear();
    const char* desc = "?";
    switch (this->header.type) {
-      case kESPGroupType_FormsOfType:
+      case ESPGroupType::forms_of_type:
          desc = FMT_SIGNATURE(_byteswap_ulong(this->header.label));
          break;
-      case kESPGroupType_WorldChildren:
+      case ESPGroupType::world_children:
          desc = "World Children";
          break;
-      case kESPGroupType_InteriorCellBlock:
+      case ESPGroupType::interior_cell_block:
          desc = "Interior Cell Block";
          break;
-      case kESPGroupType_InteriorCellSubBlock:
+      case ESPGroupType::interior_cell_sub_block:
          desc = "Interior Cell Sub-Block";
          break;
-      case kESPGroupType_ExteriorCellBlock:
+      case ESPGroupType::exterior_cell_block:
          desc = "Exterior Cell Block";
          break;
-      case kESPGroupType_ExteriorCellSubBlock:
+      case ESPGroupType::exterior_cell_sub_block:
          desc = "Exterior Cell Sub-Block";
          break;
-      case kESPGroupType_CellChildren:
+      case ESPGroupType::cell_children:
          desc = "Cell Children";
          break;
-      case kESPGroupType_TopicChildren:
+      case ESPGroupType::topic_children:
          desc = "Topic Children";
          break;
-      case kESPGroupType_CellPersistentChildren:
+      case ESPGroupType::cell_persistent_children:
          desc = "Cell Persistent Children";
          break;
-      case kESPGroupType_CellTemporaryChildren:
+      case ESPGroupType::cell_temporary_children:
          desc = "Cell Temporary Children";
          break;
    }
@@ -137,18 +137,22 @@ TESPluginRecord& TESPluginSubrecord::get_containing_record() const {
 bool TESPluginSubrecord::read_wstring(std::string& field) {
    field.clear();
    uint16_t length;
-   this->read(length);
-   field.resize(length);
-   return this->read(const_cast<char*>(field.data()), length);
+   if (this->read(length)) {
+      field.resize(length);
+      return this->read(const_cast<char*>(field.data()), length);
+   }
+   return false;
 }
 bool TESPluginSubrecord::read_wstring(std::wstring& field) {
    field.clear();
    uint16_t length;
-   this->read(length);
-   field.resize(length);
-   //
-   void* buffer = (void*)field.data();
-   return this->read(buffer, length);
+   if (this->read(length)) {
+      field.resize(length);
+      //
+      void* buffer = (void*)field.data();
+      return this->read(buffer, length);
+   }
+   return false;
 }
 bool TESPluginSubrecord::to_string(std::string& field) {
    field.clear();
@@ -799,11 +803,14 @@ bool TESPluginFile::_loadHeader() {
       return false;
    }
    this->flags = r.flags();
-
-   //
-   // TODO: Force ESM flag if the file is *.esm.
-   //
-
+   if (this->name.size() > 4) {  // Force flags based on file extension.
+      const char* extension = this->name.data() + this->name.size() - 4;
+      if (_strnicmp(".esm", extension, 4) == 0) {
+         this->flags |= Flags::master;
+      } else if (_strnicmp(".esl", extension, 4) == 0) {
+         this->flags |= Flags::master | Flags::light;
+      }
+   }
    //
    uint32_t last_subrecord = 0;
    while (auto& subrecord = r.next_subrecord()) {
@@ -962,7 +969,7 @@ bool TESPluginFile::load(const char* filepath) {
       return false;
    }
    _DEBUGMSG("Read file header.");
-   this->uses_string_table = (bool)(this->flags & kFlag_LocalizedStringTable);
+   this->uses_string_table = (bool)(this->flags & Flags::localized_string_table);
    //
    // TODO: need to define hardcoded forms so that references to them don't break, OR 
    // special-case them in whatever code we write to handle references between forms
@@ -995,23 +1002,23 @@ bool TESPluginFile::load(const char* filepath) {
             auto  stub = this->make_stub_for_record(*this);
             stub->groupInfo.groupType = group.header.type;
             switch (group.header.type) {
-               case kESPGroupType_WorldChildren:
+               case ESPGroupType::world_children:
                   stub->groupInfo.parentFormID = last_worldspace_id;
                   break;
             }
             this->_insertForm(stub->formID, stub);
          }
          if (ot == ObjectType::group) {
-            if (group.header.type == kESPGroupType_WorldChildren) {
+            if (group.header.type == ESPGroupType::world_children) {
                //
                // Parse direct children of the worldspace (i.e. the persistent cell).
                //
                continue;
-            } else if (group.header.type == kESPGroupType_ExteriorCellBlock) {
+            } else if (group.header.type == ESPGroupType::exterior_cell_block) {
                last_ext_block_y = group.header.label & 0xFFFF;
                last_ext_block_x = group.header.label >> 0x10;
                continue;
-            } else if (group.header.type == kESPGroupType_ExteriorCellSubBlock) {
+            } else if (group.header.type == ESPGroupType::exterior_cell_sub_block) {
                assert(last_worldspace_id && "Exterior Cell Block GRUP must follow a WRLD record.");
                auto& loader = this->worldspaceReaders[which_world];
                if (++which_world >= std::extent<decltype(this->worldspaceReaders)>::value)
@@ -1021,13 +1028,13 @@ bool TESPluginFile::load(const char* filepath) {
                loader.add_group(last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, group.pos);
                group.skip();
                continue;
-            } else if (group.header.type == kESPGroupType_InteriorCellBlock) { // Interior Cell Block
+            } else if (group.header.type == ESPGroupType::interior_cell_block) { // Interior Cell Block
                {
                   auto parent = group.getParent();
                   int  err    = 0;
                   if (!parent)
                      err = 1;
-                  else if (parent->header.type != kESPGroupType_FormsOfType)
+                  else if (parent->header.type != ESPGroupType::forms_of_type)
                      err = 2;
                   else if (_byteswap_ulong(parent->header.label) != 'CELL')
                      err = 3;
@@ -1059,7 +1066,7 @@ bool TESPluginFile::load(const char* filepath) {
                loader.add_group(group.header.label, group.pos);
                group.skip();
                continue;
-            } else if (group.header.type != kESPGroupType_FormsOfType) {
+            } else if (group.header.type != ESPGroupType::forms_of_type) {
                group.skip();
                continue;
             }

@@ -32,6 +32,10 @@ bool PapyrusScriptData::load(TESPluginSubrecord& subrecord) {
             return false;
       }
    }
+   if (subrecord.is_at_end()) // fragment data is optional
+      return true;
+   if (!subrecord.is_in_bounds())
+      return false;
    switch (subrecord.containing_record_signature()) {
       case 'INFO':
          this->fragmentData = (PapyrusFragmentData*) new PapyrusTopicInfoFragmentData;

@@ -12,11 +12,8 @@ const char* TEST_PLUGIN_PATH = "C:/Program Files (x86)/Steam/steamapps/common/Sk
 std::thread::id main_thread_id;
 
 //
-// TODO: UESP has already taken the name "SkyEdit"
-//
-// Possible other names:
-//    Dovah-Edit
-//    NordEdit
+// TODO: UESP has already taken the name "SkyEdit." I think I've settled on 
+//       "DovahKit" as a replacement name.
 //
 // NOTES:
 //
@@ -44,13 +41,15 @@ std::thread::id main_thread_id;
 //
 //  - Cleanup:
 //
-//     - Make the ESPGroupType enum a scoped implicit-castable enum.
-//
 //     - Make the PapyrusPropertyType enum a scoped implicit-castable enum.
 //
 //  - Loading:
 //
 //     = Current tasks
+//
+//        - Form IDs handled by TESPluginFile and its readers directly (e.g. 
+//          form IDs in group data) are not normalized to the global load order. 
+//          This needs to be fixed.
 //
 //        - Conditions
 //
@@ -85,9 +84,6 @@ std::thread::id main_thread_id;
 //        - There are some form types whose names are known, but whose 
 //          layouts are not; they do not appear in any vanilla game files. 
 //          Does the game even load them?
-//
-//     - TESPluginHeader and TESPluginFile need to force the "is master" flag 
-//       if the file's extension is ESM or ESL.
 //
 //     - The TESPluginFile reading code should fail if we encounter a group 
 //       nested too deeply (i.e. deeper than MAX_ESP_FILE_GROUP_DEPTH).

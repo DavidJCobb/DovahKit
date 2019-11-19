@@ -195,6 +195,9 @@ class TESPluginSubrecord {
       inline operator bool() const { return this->header.signature != 0; }
       inline bool exists() const noexcept { return this->header.signature != 0; }
       //
+      inline bool is_at_end() const {
+         return this->get_containing_record().stream_pos() == this->end;
+      }
       inline bool is_in_bounds() const {
          return this->get_containing_record().stream_pos() < this->end;
       }
@@ -441,16 +444,19 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
       void wait_for();
 };
 
+namespace _scoped_enums {
+   enum TESPluginFileFlags {
+      master = 0x0001,
+      localized_string_table = 0x0080,
+      light  = 0x0200, // SSE only
+   };
+}
 class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
    friend TESPluginThreadedWorldspaceSubBlockReader;
    public:
-      enum Flags {
-         kFlag_Master = 0x0001,
-         kFlag_LocalizedStringTable = 0x0080,
-         kFlag_Light  = 0x0200, // SSE only
-      };
+      using Flags = _scoped_enums::TESPluginFileFlags;
       struct MasterEntry {
          std::string master; // MAST
          uint64_t    data;   // DATA

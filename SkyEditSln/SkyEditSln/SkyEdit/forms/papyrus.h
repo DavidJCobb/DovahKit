@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include "../helpers/scoped_enum.h"
 
 class TESPluginFile;
 class TESPluginSubrecord;
@@ -28,6 +29,7 @@ enum class papyrus_fragment_type : uint8_t {
    quest,
    scene,
 };
+class PapyrusScriptData;
 class PapyrusFragmentData {
    public:
       const papyrus_fragment_type type;
@@ -96,21 +98,19 @@ struct PapyrusBasicFragmentEntry {
    std::string script;
    std::string function;
 };
-namespace _scoped_enums {
-   enum papyrus_topic_info_fragment_flags {
+SCOPE_ENUM(papyrus_topic_info_fragment_flags, enum papyrus_topic_info_fragment_flags {
+   has_begin_fragment = 1,
+   has_end_fragment   = 2,
+});
+SCOPE_ENUM(papyrus_package_fragment_flags, enum papyrus_package_fragment_flags {
+   has_begin_fragment  = 1,
+   has_end_fragment    = 2,
+   has_change_fragment = 4,
+});
+SCOPE_ENUM(papyrus_scene_fragment_flags, enum papyrus_scene_fragment_flags {
       has_begin_fragment = 1,
       has_end_fragment   = 2,
-   };
-   enum papyrus_package_fragment_flags {
-      has_begin_fragment  = 1,
-      has_end_fragment    = 2,
-      has_change_fragment = 4,
-   };
-   enum papyrus_scene_fragment_flags {
-      has_begin_fragment = 1,
-      has_end_fragment   = 2,
-   };
-};
+});
 class PapyrusTopicInfoFragmentData : PapyrusFragmentData {
    public:
       PapyrusTopicInfoFragmentData() : PapyrusFragmentData(papyrus_fragment_type::info) {};
@@ -118,7 +118,7 @@ class PapyrusTopicInfoFragmentData : PapyrusFragmentData {
       //
       virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
       //
-      typedef _scoped_enums::papyrus_topic_info_fragment_flags Flags;
+      typedef papyrus_topic_info_fragment_flags Flags;
       //
       uint8_t unknown = 2;
       uint8_t flags   = 0;
@@ -133,7 +133,7 @@ class PapyrusPackageFragmentData : PapyrusFragmentData {
       //
       virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
       //
-      typedef _scoped_enums::papyrus_package_fragment_flags Flags;
+      typedef papyrus_package_fragment_flags Flags;
       //
       uint8_t unknown = 2;
       uint8_t flags = 0;
@@ -198,7 +198,7 @@ class PapyrusSceneFragmentData : PapyrusFragmentData {
       //
       virtual void load(PapyrusScriptData& owner, TESPluginSubrecord&) override;
       //
-      typedef _scoped_enums::papyrus_scene_fragment_flags Flags;
+      typedef papyrus_scene_fragment_flags Flags;
       //
       uint8_t unknown = 2;
       uint8_t flags = 0;

@@ -13,29 +13,26 @@ enum class quest_alias_type {
    reference,
    location,
 };
-namespace _scoped_enums {
-   enum quest_alias_flags {
-      reserves_target      = 0x00000001,
-      optional             = 0x00000002,
-      quest_object         = 0x00000004, // reference aliases only
-      allow_reuse_in_quest = 0x00000008,
-      allow_dead           = 0x00000010, // reference aliases only
-      limit_to_loaded_area = 0x00000020, // reference aliases only; used for Find Matching Reference
-      make_essential       = 0x00000040, // reference aliases only
-      allow_disabled       = 0x00000080, // reference aliases only
-      stores_text          = 0x00000100,
-      allow_reserved       = 0x00000200,
-      make_protected       = 0x00000400, // reference aliases only
-      no_fill_type         = 0x00000800, // reference aliases only
-      allow_destroyed      = 0x00001000, // reference aliases only
-      use_closest          = 0x00002000, // reference aliases only; used for Find Matching Reference; only if "limit to loaded area" is set
-      uses_stored_text     = 0x00004000, // reference aliases only
-      initially_disabled   = 0x00008000, // reference aliases only
-      allow_cleared        = 0x00010000, // location aliases only
-      clear_name_when_removed = 0x00020000, // reference aliases only
-   };
-}
-using quest_alias_flags = _scoped_enums::quest_alias_flags;
+SCOPE_ENUM(quest_alias_flags, enum quest_alias_flags : uint32_t {
+   reserves_target      = 0x00000001,
+   optional             = 0x00000002,
+   quest_object         = 0x00000004, /* reference aliases only */
+   allow_reuse_in_quest = 0x00000008,
+   allow_dead           = 0x00000010, /* reference aliases only */
+   limit_to_loaded_area = 0x00000020, /* reference aliases only - used for Find Matching Reference */
+   make_essential       = 0x00000040, /* reference aliases only */
+   allow_disabled       = 0x00000080, /* reference aliases only */
+   stores_text          = 0x00000100,
+   allow_reserved       = 0x00000200,
+   make_protected       = 0x00000400, /* reference aliases only */
+   no_fill_type         = 0x00000800, /* reference aliases only */
+   allow_destroyed      = 0x00001000, /* reference aliases only */
+   use_closest          = 0x00002000, /* reference aliases only - used for Find Matching Reference - only if In Loaded Area is set */
+   uses_stored_text     = 0x00004000, /* reference aliases only */
+   initially_disabled   = 0x00008000, /* reference aliases only */
+   allow_cleared        = 0x00010000, /* location aliases only */
+   clear_name_when_removed = 0x00020000, /* reference aliases only */
+});
 enum class location_alias_fill_type {
    none,
    preset, // ALFL: a preset Location form is "forced" into this alias

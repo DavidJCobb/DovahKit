@@ -77,6 +77,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/experimental:preprocessor %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -102,6 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/experimental:preprocessor %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,9 +158,11 @@
     <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="helpers\files.h" />
     <ClInclude Include="helpers\intrusive_windows_defines.h" />
+    <ClInclude Include="helpers\int_wrapper.h" />
     <ClInclude Include="helpers\locks.h" />
     <ClInclude Include="helpers\memory.h" />
     <ClInclude Include="helpers\miscellaneous.h" />
+    <ClInclude Include="helpers\scoped_enum.h" />
     <ClInclude Include="helpers\strings.h" />
     <ClInclude Include="helpers\wavl_tree.h" />
     <ClInclude Include="output.h" />
@@ -169,6 +173,12 @@
     <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="notes\scoped enums.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

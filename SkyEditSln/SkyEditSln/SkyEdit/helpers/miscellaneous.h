@@ -14,11 +14,11 @@ namespace cobb {
    }
 
    template<int bytecount> struct bytecount_to_int {
-      using type = void;
+      using type = struct _disabled { _disabled() { static_assert(false, "Unsupported bytecount."); } };
    };
    template<> struct bytecount_to_int<1> { using type = uint8_t; };
    template<> struct bytecount_to_int<2> { using type = uint16_t; };
    template<> struct bytecount_to_int<4> { using type = uint32_t; };
    template<> struct bytecount_to_int<8> { using type = uint64_t; };
-   template<int bytecount> using bytecount_to_int_t = bytecount_to_int<bytecount>::type;
+   template<int bytecount> using bytecount_to_int_t = typename bytecount_to_int<bytecount>::type;
 };

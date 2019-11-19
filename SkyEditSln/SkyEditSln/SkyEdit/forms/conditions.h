@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include "../helpers/scoped_enum.h"
 
 class TESPluginRecord;
 
@@ -106,16 +107,13 @@ struct ConditionFunction {
 extern ConditionFunction conditionFunctions[];
 extern const ConditionFunction* getConditionFunction(uint16_t id);
 
-struct ConditionTypeFlags { // scoped enum with implicit casting to int
-   ConditionTypeFlags() = delete;
-   enum : uint8_t {
-      or_linked    = 1,
-      use_aliases  = 2,
-      compare_to_global = 4,
-      use_packdata = 8,
-      swap_subject_and_target = 0x10,
-   };
-};
+SCOPE_ENUM(ConditionTypeFlags, enum ConditionTypeFlags : uint8_t {
+   or_linked    = 1,
+   use_aliases  = 2,
+   compare_to_global = 4,
+   use_packdata = 8,
+   swap_subject_and_target = 0x10,
+});
 enum class ConditionOperator {
    equal = 0,
    not_equal = 1,
@@ -125,19 +123,16 @@ enum class ConditionOperator {
    less_or_equal = 5,
 };
 
-struct ConditionRunOn { // scoped enum with implicit casting to int
-   ConditionRunOn() = delete;
-   enum {
-      subject       = 0,
-      target        = 1,
-      reference     = 2,
-      combat_target = 3,
-      linked_ref    = 4,
-      quest_alias   = 5,
-      package_data  = 6,
-      event_data    = 7,
-   };
-};
+SCOPE_ENUM(ConditionRunOn, enum ConditionRunOn {
+   subject       = 0,
+   target        = 1,
+   reference     = 2,
+   combat_target = 3,
+   linked_ref    = 4,
+   quest_alias   = 5,
+   package_data  = 6,
+   event_data    = 7,
+});
 
 struct Condition {
    uint8_t  type; // (ConditionTypeFlags << 5) | ConditionOperator

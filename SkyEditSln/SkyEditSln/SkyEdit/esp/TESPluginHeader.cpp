@@ -111,11 +111,14 @@ bool TESPluginHeader::load(const char* path) noexcept {
    if (!_read(file, recordVersion))
       return false;
    _skip(file, 2); // unknown field
-
-   //
-   // TODO: Force ESM flag if the file is *.esm.
-   //
-
+   if (this->name.size() > 4) {  // Force flags based on file extension.
+      const char* extension = this->name.data() + this->name.size() - 4;
+      if (_strnicmp(".esm", extension, 4) == 0) {
+         this->flags |= Flags::master;
+      } else if (_strnicmp(".esl", extension, 4) == 0) {
+         this->flags |= Flags::master | Flags::light;
+      }
+   }
    //
    uint32_t   last_subrecord = 0;
    _subrecord subrecord(file, ftell(file) + recordSize);

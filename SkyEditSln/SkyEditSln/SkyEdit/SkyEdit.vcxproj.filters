@@ -128,5 +128,17 @@
     <ClInclude Include="forms\conditions\arg_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\scoped_enum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\int_wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="notes\scoped enums.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>
