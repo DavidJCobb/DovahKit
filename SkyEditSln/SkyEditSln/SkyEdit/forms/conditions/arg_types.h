@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <initializer_list>
 #include <string>
 #include <vector>
 #include "../types.h"
@@ -39,8 +40,10 @@ union ConditionArgValue {
    ConditionArgValue() : dword(0) {}
 };
 struct ConditionEnumValue {
-   int32_t     value;
-   const char* string;
+   const int32_t     value;
+   const char* const string;
+   //
+   ConditionEnumValue(int32_t a, const char* b) : value(a), string(b) {}
 };
 enum class ConditionArgUnderlyingType {
    none,
@@ -49,23 +52,27 @@ enum class ConditionArgUnderlyingType {
    float32,
    integer32,
    string,
+   alias,
 };
 class ConditionArgType {
    public:
+      using e_underlying = ConditionArgUnderlyingType;
+      //
       virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept;
       virtual bool isValidForEnum(const ConditionArgValue& value) const noexcept;
       virtual void getEnumValues(std::vector<ConditionArgValue>& out) const noexcept;
       virtual bool loadValue(ConditionArgValue& out, TESPluginSubrecord& subrecord) const noexcept;
       //
       ConditionArgType* parent = nullptr;
-      std::string name;
-      ConditionArgUnderlyingType underlying = ConditionArgUnderlyingType::none;
+      std::string  name;
+      e_underlying underlying = e_underlying::none;
       bool isEnum   = false;
       bool isSigned = false;
       std::vector<ConditionEnumValue> enumValues;
       std::vector<formtype_t> allowedFormTypes;
       //
-      ConditionArgType(const char* n) : name(n) {}
+      ConditionArgType(const char* n, e_underlying u) : name(n), underlying(u) {}
+      ConditionArgType(const char* n, e_underlying u, std::initializer_list<ConditionEnumValue> enumValues) : name(n), underlying(u), isEnum(true), enumValues(enumValues) {}
       //
       bool allowsFormType(formtype_t ft) const noexcept {
          if (this->underlying == ConditionArgUnderlyingType::formID) {
@@ -79,45 +86,44 @@ class ConditionArgType {
          return false;
       }
 };
+class ConditionArgFormType : public ConditionArgType {
+   public:
+      ConditionArgFormType(const char* n, std::initializer_list<formtype_t> formTypes) : ConditionArgType(n, ConditionArgUnderlyingType::formID) {
+         for (auto it = formTypes.begin(); it != formTypes.end(); ++it)
+            this->allowedFormTypes.push_back(*it);
+      }
+};
 
 namespace ConditionArgTypes {
-   class None : public ConditionArgType {
-      public:
-         None() : ConditionArgType("None") {};
-   };
-   class _Form : public ConditionArgType {
-      public:
-         _Form() : ConditionArgType("Form") {
-            this->underlying = ConditionArgUnderlyingType::formID;
-         };
-   };
-   class Faction : public _Form {
-      public:
-         Faction() {
-            this->allowedFormTypes.push_back(FormType::Faction);
-         }
-   };
-   class Float : public ConditionArgType {
-      public:
-         Float() : ConditionArgType("Float") {
-            this->underlying = ConditionArgUnderlyingType::float32;
-            this->isSigned = true;
-         }
-         virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept override; // the base function already covers floats, but this will be faster
-   };
-   class Sex : public ConditionArgType {
-      public:
-         Sex() : ConditionArgType("Sex") {
-            this->underlying = ConditionArgUnderlyingType::integer32;
-            this->isEnum = true;
-         }
-         virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept override;
-         virtual bool isValidForEnum(const ConditionArgValue& value) const noexcept override;
-         virtual void getEnumValues(std::vector<ConditionArgValue>& out) const noexcept override;
-         //
-         enum Values { // intentionally unscoped
-            male   = 0,
-            female = 1,
-         };
-   };
+   extern ConditionArgType     None;
+   extern ConditionArgFormType ActorBase;
+   extern ConditionArgType     AdvanceAction;
+   extern ConditionArgType     Alignment;
+   extern ConditionArgFormType AssociationType;
+   extern ConditionArgType     Axis;
+   extern ConditionArgType     CastingSource;
+   extern ConditionArgFormType Class;
+   extern ConditionArgType     CrimeType;
+   extern ConditionArgType     CriticalStage;
+   extern ConditionArgFormType EncounterZone;
+   extern ConditionArgFormType Faction;
+   extern ConditionArgType     Float;
+   extern ConditionArgFormType FormList;
+   extern ConditionArgFormType Furniture;
+   extern ConditionArgFormType Global;
+   extern ConditionArgFormType Keyword;
+   extern ConditionArgFormType Location;
+   extern ConditionArgFormType MagicEffect;
+   extern ConditionArgFormType OwnerForm;
+   extern ConditionArgFormType Package;
+   extern ConditionArgFormType Perk;
+   extern ConditionArgFormType Quest;
+   extern ConditionArgFormType Race;
+   extern ConditionArgFormType Scene;
+   extern ConditionArgType     Sex;
+   extern ConditionArgFormType Shout;
+   extern ConditionArgFormType Spell;
+   extern ConditionArgFormType Voicetype;
+   extern ConditionArgFormType Weather;
+   extern ConditionArgFormType Worldspace;
 }

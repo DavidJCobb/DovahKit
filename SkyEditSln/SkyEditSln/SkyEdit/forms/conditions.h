@@ -13,29 +13,6 @@ namespace condition_arg_type {
       lockpick_success,
       lockpick_broken,
    };
-   enum class alignment { // karma
-      good,
-      neutral,
-      evil,
-      very_good,
-      very_evil,
-   };
-   enum class axis : unsigned char {
-      x = 'X',
-      y = 'Y',
-      z = 'Z',
-   };
-   enum class critical_stage {
-      none,
-      goo_start,
-      goo_end,
-      disintegrate_start,
-      disintegrate_end,
-   };
-   enum class sex : uint32_t {
-      male,
-      female,
-   };
 }
 
 enum class ConditionParamType : uint8_t {
@@ -75,7 +52,7 @@ enum class ConditionParamType : uint8_t {
    Location,    // forms of type: LCTN
    MagicEffect, // forms of type: MGEF
    MiscStat,
-   ObjectReference, // forms of type: ACHR, REFR
+   ObjectReference, // forms of type: ACHR, REFR, or in theory any placed projectile or hazard
    Owner,       // forms of type: FACT, NPC_
    Package,     // forms of type: PACK
    PackageData,
@@ -131,12 +108,12 @@ SCOPE_ENUM(ConditionTypeFlags, enum ConditionTypeFlags : uint8_t {
    swap_subject_and_target = 0x10,
 });
 enum class ConditionOperator {
-   equal = 0,
-   not_equal = 1,
-   greater   = 2,
+   equal            = 0,
+   not_equal        = 1,
+   greater          = 2,
    greater_or_equal = 3,
-   less      = 4,
-   less_or_equal = 5,
+   less             = 4,
+   less_or_equal    = 5,
 };
 
 SCOPE_ENUM(ConditionRunOn, enum ConditionRunOn {

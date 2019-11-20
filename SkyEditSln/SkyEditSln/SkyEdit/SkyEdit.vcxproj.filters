@@ -137,6 +137,9 @@
     <ClInclude Include="helpers\int_wrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="forms\conditions\return_values.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="notes\scoped enums.txt" />

@@ -73,10 +73,10 @@ namespace {
             out += temp;
             break;
          case ConditionParamType::Sex:
-            if (*(condition_arg_type::sex*)value == condition_arg_type::sex::female) {
+            if (*(uint32_t*)value == 1) {
                out += "Female";
                break;
-            } else if (*(condition_arg_type::sex*)value == condition_arg_type::sex::male) {
+            } else if (*(uint32_t*)value == 0) {
                out += "Male";
                break;
             }
@@ -589,7 +589,7 @@ ConditionFunction conditionFunctions[] = {
    ConditionFunction(411, ConditionFunction::dummy),
    ConditionFunction(412, ConditionFunction::dummy),
    ConditionFunction(413, ConditionFunction::dummy),
-   ConditionFunction(414, "Exists", "", ConditionParamType::ObjectReference),
+   ConditionFunction(414, "Exists", "Returns 1 if this reference is the specified reference and if the specified reference exists, or 0 otherwise.", ConditionParamType::ObjectReference),
    ConditionFunction(415, "GetGroupMemberCount", ""),
    ConditionFunction(416, "GetGroupTargetCount", ""),
    ConditionFunction(417, ConditionFunction::dummy),

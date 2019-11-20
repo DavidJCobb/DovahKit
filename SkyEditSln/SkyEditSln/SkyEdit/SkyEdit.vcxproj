@@ -149,6 +149,7 @@
     <ClInclude Include="esp\TESPluginHeader.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\conditions\arg_types.h" />
+    <ClInclude Include="forms\conditions\return_values.h" />
     <ClInclude Include="forms\loaded\ActorBase.h" />
     <ClInclude Include="forms\components.h" />
     <ClInclude Include="forms\conditions.h" />
