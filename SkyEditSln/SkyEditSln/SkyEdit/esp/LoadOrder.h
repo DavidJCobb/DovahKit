@@ -166,7 +166,8 @@ class LoadOrder {
       TESPluginFile* activeFile = nullptr; // TODO
       _form_map formsByType[FormType::Count];
       //
-      uint8_t loadOrderPrefixFor(TESPluginFile*) const noexcept;
+      uint8_t loadOrderPrefixFor(const TESPluginFile*) const noexcept;
+      uint8_t _guidedLoadOrderPrefixFor(const TESPluginFile*) const noexcept; // a version of (loadOrderPrefixFor) that's faster if called on a TESPluginFile that we're currently loading
       form_id_status localFormIDToGlobalFormID(FormStub* stub, uint32_t& out) const;
       TESPluginFile* getFileByName(const char* name) const noexcept;
       //
@@ -181,7 +182,8 @@ class LoadOrder {
       FatalLoadError lastError;
       std::mutex lastErrorLock;
       //
-      bool loadingIsComplete = false; // exists so that TESPluginBaseReader::nextSubrecord can call LoadOrder::logError without having to worry about whether it's running during or after the initial load
+      bool    loadingIsComplete = false; // exists so that TESPluginBaseReader::nextSubrecord can call LoadOrder::logError without having to worry about whether it's running during or after the initial load
+      uint8_t loadingIndex      = 0;     // which load order index we're loading, or 0 if none; set in (loadQueuedFiles); see (_guidedLoadOrderPrefixFor)
       //
    public:
       std::string basePath;
@@ -206,7 +208,7 @@ class LoadOrder {
       FormStub* getForm(formtype_t formType, uint32_t formID) const; // use when you KNOW the form's type
       FormStub* getFormOfProbableType(formtype_t formType, uint32_t formID) const; // searches (formType) first, then the other types
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
-      form_id_status localFormIDToGlobalFormID(const char* file, uint32_t& id) const;
+      form_id_status localFormIDToGlobalFormID(const TESPluginFile* file, uint32_t& id) const;
       //
       // reset
       // Clears last-error details, wipes the load order, and deletes all FormStubs -- and I do mean 

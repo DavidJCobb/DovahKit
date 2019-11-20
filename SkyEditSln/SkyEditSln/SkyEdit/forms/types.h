@@ -151,7 +151,7 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    SCOPED_ENUM_COMMENT("0x8A: (Run-Time Only) Location Alias")
    SCOPED_ENUM_COMMENT("0x8B: (Run-Time Only) ActiveMagicEffect")
    SCOPED_ENUM_COMMENT("-----------------------")
-   Max   = 0x8B,
+   Max   = 0x87,
    Count = Max + 1,
 });
 
@@ -173,6 +173,9 @@ extern FormTypeInfo formTypes[];
 extern const FormTypeInfo& formTypeFor(formtype_t ft) noexcept;
 extern formtype_t signatureToFormType(uint32_t signature) noexcept;
 extern bool signatureIsSuspicious(uint32_t signature) noexcept;
+//
+extern bool formTypeIsReference(formtype_t ft) noexcept;
+extern bool signatureIsReference(uint32_t signature) noexcept;
 
 struct form_id_t {
    //
@@ -184,7 +187,7 @@ struct form_id_t {
    form_id_t() {};
    form_id_t(uint32_t i) : value(i) {};
    //
-   inline operator uint32_t() { return this->value; };
+   inline operator uint32_t() const { return this->value; };
    inline form_id_t& operator=(const uint32_t& other) { this->value = other; return *this; };
    inline form_id_t& operator=(const int& other) { this->value = other; return *this; };
    //

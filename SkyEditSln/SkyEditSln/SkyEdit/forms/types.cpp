@@ -5,39 +5,39 @@ FormTypeInfo formTypes[] = {
    { 'NONE', FormType::None, "None/Unknown", FormTypeFlags::no_editor_id }, // form types not in this list are effectively 'NONE'
    { 'TES4', FormType::FileHeader, "File Header", FormTypeFlags::no_connections },
    { 'GRUP', FormType::FileRecordGroup, "File Record Group", FormTypeFlags::no_connections },
-   { 'GMST', FormType::GameSetting, "GameSetting", FormTypeFlags::no_connections },
+   { 'GMST', FormType::GameSetting, "GameSetting", FormTypeFlags::no_connections }, // Skyrim's loader handles this as a special case; there is no factory for this form type.
    { 'KYWD', FormType::Keyword, "Keyword" },
    { 'LCRT', FormType::LocationRefType, "LocRefType" },
    { 'AACT', FormType::Action, "Action" },
    { 'TXST', FormType::TextureSet, "TextureSet" },
-   { 'MICN', FormType::MenuIcon, "Menu Icon" },
-   { 'GLOB', FormType::Global, "Global" },
-   { 'CLAS', FormType::Class, "Class" },
-   { 'FACT', FormType::Faction, "Faction" },
+   { 'MICN', FormType::MenuIcon, "Menu Icon" }, // BGSMenuIcon
+   { 'GLOB', FormType::Global,   "Global" },
+   { 'CLAS', FormType::Class,    "Class" },
+   { 'FACT', FormType::Faction,  "Faction" },
    { 'HDPT', FormType::HeadPart, "HeadPart" },
    // HAIR - TESHair - removed in patch 1.2
-   { 'EYES', FormType::Eyes, "Eyes" },
-   { 'RACE', FormType::Race, "Race" },
-   { 'SOUN', FormType::Sound, "Sound" },
+   { 'EYES', FormType::Eyes,     "Eyes" },
+   { 'RACE', FormType::Race,     "Race" },
+   { 'SOUN', FormType::Sound,    "Sound" },
    { 'ASPC', FormType::AcousticSpace, "AcousticSpace" },
-   { 'SKIL', FormType::Skill, "Skill" },
+   { 'SKIL', FormType::Skill,       "Skill" },
    { 'MGEF', FormType::MagicEffect, "MagicEffect" },
-   { 'SCPT', FormType::Script, "Script (TES4)" },
+   { 'SCPT', FormType::Script,      "Script (TES4)" },
    { 'LTEX', FormType::LandTexture, "LandTexture" },
    { 'ENCH', FormType::Enchantment, "Enchantment" },
-   { 'SPEL', FormType::Spell, "Spell" },
-   { 'SCRL', FormType::Scroll, "Scroll" }, // as in, magic scrolls
-   { 'ACTI', FormType::Activator, "Activator" },
+   { 'SPEL', FormType::Spell,       "Spell" },
+   { 'SCRL', FormType::Scroll,      "Scroll" }, // as in, magic scrolls
+   { 'ACTI', FormType::Activator,   "Activator" },
    { 'TACT', FormType::TalkingActivator, "Talking Activator" },
-   { 'ARMO', FormType::Armor, "Armor" },
-   { 'BOOK', FormType::Book, "Book" },
-   { 'CONT', FormType::Container, "Container" },
-   { 'DOOR', FormType::Door, "Door" },
-   { 'INGR', FormType::Ingredient, "Ingredient" },
-   { 'LIGH', FormType::Light, "Light" },
-   { 'MISC', FormType::MiscItem, "Misc. Item" },
-   { 'APPA', FormType::Apparatus, "Apparatus" },
-   { 'STAT', FormType::Static, "Static" },
+   { 'ARMO', FormType::Armor,       "Armor" },
+   { 'BOOK', FormType::Book,        "Book" },
+   { 'CONT', FormType::Container,   "Container" },
+   { 'DOOR', FormType::Door,        "Door" },
+   { 'INGR', FormType::Ingredient,  "Ingredient" },
+   { 'LIGH', FormType::Light,       "Light" },
+   { 'MISC', FormType::MiscItem,    "Misc. Item" },
+   { 'APPA', FormType::Apparatus,   "Apparatus" },
+   { 'STAT', FormType::Static,      "Static" },
    { 'SCOL', FormType::StaticCollection, "Static Collection" },
    { 'MSTT', FormType::MovableStatic, "MovableStatic" },
    { 'GRAS', FormType::Grass, "Grass" },
@@ -68,17 +68,17 @@ FormTypeInfo formTypes[] = {
    { 'REFR', FormType::Reference, "ObjectReference" },
    { 'ACHR', FormType::Character, "Actor" },
    { 'PMIS', FormType::PlacedMissileProjectile, "Placed Missile Projectile" },
-   { 'PARW', FormType::PlacedArrowProjectile, "Placed Arrow Projectile" },
+   { 'PARW', FormType::PlacedArrowProjectile,   "Placed Arrow Projectile" },
    { 'PGRE', FormType::PlacedGrenadeProjectile, "Placed Grenade Projectile" },
-   { 'PBEA', FormType::PlacedBeamProjectile, "Placed Beam Projectile" },
-   { 'PFLA', FormType::PlacedFlameProjectile, "Placed Flame Projectile" },
+   { 'PBEA', FormType::PlacedBeamProjectile,    "Placed Beam Projectile" },
+   { 'PFLA', FormType::PlacedFlameProjectile,   "Placed Flame Projectile" },
    { 'PCON', FormType::PlacedBarrierProjectile, "Placed Barrier Projectile" },
-   { 'PBAR', FormType::PlacedConeProjectile, "Placed Cone Projectile" },
-   { 'PHZD', FormType::PlacedHazard, "Placed Hazard" },
+   { 'PBAR', FormType::PlacedConeProjectile,    "Placed Cone Projectile" },
+   { 'PHZD', FormType::PlacedHazard,            "Placed Hazard" },
    { 'WRLD', FormType::Worldspace, "Worldspace" },
    { 'LAND', FormType::Land, "Landscape", FormTypeFlags::no_editor_id },
    { 'NAVM', FormType::Navmesh, "Navmesh" },
-   // TLOD - unknown; apparently not found in any file
+   // TLOD: Unknown. Not found in any file, and not loaded by the game (the form factory table has a null entry for this form type).
    { 'DIAL', FormType::Topic, "Dialogue Topic" },
    { 'INFO', FormType::TopicInfo, "Dialogue Topic Info" },
    { 'QUST', FormType::Quest, "Quest" },
@@ -90,7 +90,7 @@ FormTypeInfo formTypes[] = {
    { 'ANIO', FormType::AnimationProp, "Animation Prop" }, // a.k.a. AnimObject
    { 'WATR', FormType::WaterType, "Water Type" },
    { 'EFSH', FormType::EffectShader, "EffectShader" },
-   // TOFT - unknown; apparently not found in any file
+   // TOFT: Unknown. Not found in any file, and not loaded by the game (the form factory table has a null entry for this form type).
    { 'EXPL', FormType::Explosion, "Explosion" },
    { 'DEBR', FormType::Debris, "Debris" },
    { 'IMGS', FormType::ImageSpace, "ImageSpace" },
@@ -110,8 +110,8 @@ FormTypeInfo formTypes[] = {
    { 'ECZN', FormType::EncounterZone, "Encounter Zone" },
    { 'LCTN', FormType::Location, "Location" },
    { 'MESG', FormType::Message, "Message" },
-   { 'RGDL', FormType::Ragdoll, "Ragdoll" },
-   { 'DOBJ', FormType::DefaultObjectManager, "Default Objects" },
+   { 'RGDL', FormType::Ragdoll, "Ragdoll" }, // BGSRagdoll
+   { 'DOBJ', FormType::DefaultObjectManager, "Default Objects" }, // Skyrim's loader handles this as a special case; there is no factory for this form type.
    { 'LGTM', FormType::LightingTemplate, "Lighting Template" },
    { 'MUSC', FormType::MusicType, "MusicType" },
    { 'FSTP', FormType::Footstep, "Footstep" },
@@ -121,7 +121,7 @@ FormTypeInfo formTypes[] = {
    { 'SMEN', FormType::StoryManagerEventNode, "Story Manager Event Node" },
    { 'DLBR', FormType::DialogueBranch, "Dialogue Branch" },
    { 'MUST', FormType::MusicTrack, "Music Track" },
-   { 'DLVW', FormType::DialogueView, "Dialogue View" }, // CK only; game doesn't seem to load it
+   { 'DLVW', FormType::DialogueView, "Dialogue View" }, // CK only; not loaded by the game (the form factory table has a null entry for this form type).
    { 'WOOP', FormType::WordOfPower, "Word Of Power" },
    { 'SHOU', FormType::Shout, "Shout" },
    { 'EQUP', FormType::EquipSlot, "Equip Slot" },
@@ -136,7 +136,7 @@ FormTypeInfo formTypes[] = {
    { 'DUAL', FormType::DualCastData, "Dual-Cast Data" },
    { 'SNCT', FormType::SoundCategory, "Sound Category" },
    { 'SOPM', FormType::SoundOutputModel, "Sound Output Model" },
-   { 'COLL', FormType::CollisionLayer, "Collision Layer" },
+   { 'COLL', FormType::CollisionLayer, "Collision Layer" }, // BGSCollisionLayer
    { 'CLFM', FormType::Color, "Color" },
    { 'REVB', FormType::ReverbParameters, "Reverb Parameters" },
 };
@@ -156,6 +156,38 @@ formtype_t signatureToFormType(uint32_t signature) noexcept {
          return info.formType;
    }
    return 0;
+}
+bool formTypeIsReference(formtype_t ft) noexcept {
+   switch (ft) {
+      case FormType::Character:
+      case FormType::Reference:
+      case FormType::PlacedArrowProjectile:
+      case FormType::PlacedBarrierProjectile:
+      case FormType::PlacedBeamProjectile:
+      case FormType::PlacedConeProjectile:
+      case FormType::PlacedFlameProjectile:
+      case FormType::PlacedGrenadeProjectile:
+      case FormType::PlacedHazard:
+      case FormType::PlacedMissileProjectile:
+         return true;
+   }
+   return false;
+}
+bool signatureIsReference(uint32_t signature) noexcept {
+   switch (signature) {
+      case 'ACHR':
+      case 'REFR':
+      case 'PMIS':
+      case 'PARW':
+      case 'PGRE':
+      case 'PBEA':
+      case 'PFLA':
+      case 'PCON':
+      case 'PBAR':
+      case 'PHZD':
+         return true;
+   }
+   return false;
 }
 
 namespace {

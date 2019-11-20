@@ -84,12 +84,28 @@ class TESPluginGroup {
       uint32_t pos;
       uint32_t end;
       //
-      operator bool() const noexcept { return this->header.signature != 0; }
+      inline operator bool() const noexcept { return this->header.signature != 0; }
+      inline bool exists() const noexcept { return this->header.signature != 0; }
       //
-      uint32_t depth() const;
-      void to_string(std::string&) const;
+      uint32_t depth() const noexcept;
+      void to_string(std::string&) const noexcept;
       //
-      TESPluginGroup* getParent() const;
+      TESPluginGroup* getParent() const noexcept;
+      //
+      uint32_t getRawIDOfParentCell() const noexcept {
+         switch (this->header.type) {
+            case ESPGroupType::cell_children:
+            case ESPGroupType::cell_persistent_children:
+            case ESPGroupType::cell_temporary_children:
+               return _byteswap_ulong(this->header.label);
+         }
+         return 0;
+      }
+      uint32_t getRawIDOfParentTopic() const noexcept {
+         if (this->header.type == ESPGroupType::topic_children)
+            return _byteswap_ulong(this->header.label);
+         return 0;
+      }
 };
 class TESPluginRecord {
    friend TESPluginBaseReader;
@@ -278,6 +294,9 @@ class TESPluginBaseReader {
          group,
          record,
       };
+      //
+      virtual const TESPluginFile* asFile() const noexcept = 0;
+      //
    protected:
       #ifdef COBB_ESP_USE_MAPPED_FILES
          cobb::mapped_file* file = nullptr;
@@ -290,9 +309,8 @@ class TESPluginBaseReader {
       TESPluginSubrecord subrecord;
       uint32_t lastPotentialGroupParent = 0; // form ID: CELL, WRLD, DIAL
       //
-      const char* filename = ""; // needed for error reporting and for form ID resolution within TESPluginSubrecord
-      bool        is_skyrim_special = false; // needed for TESPluginSubrecord::read and friends to handle SSE struct form IDs properly
-      bool        uses_string_table = false;
+      bool is_skyrim_special = false; // needed for TESPluginSubrecord::read and friends to handle SSE struct form IDs properly
+      bool uses_string_table = false;
       //
       void read(void* buffer, uint32_t size) {
          #ifdef COBB_ESP_USE_MAPPED_FILES
@@ -384,6 +402,8 @@ class TESPluginThreadedSimpleReader : public TESPluginBaseReader {
    public:
       TESPluginThreadedSimpleReader(TESPluginFile& f) : owner(f) {}
       //
+      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      //
       TESPluginFile& owner;
       //
       std::vector<QueuedGroup> queue;
@@ -406,6 +426,8 @@ class TESPluginThreadedInteriorCellReader : public TESPluginBaseReader {
       static void _thread_handler(TESPluginThreadedInteriorCellReader* instance);
    public:
       TESPluginThreadedInteriorCellReader(TESPluginFile& f) : owner(f) {}
+      //
+      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
       //
       TESPluginFile& owner;
       //
@@ -434,12 +456,44 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
    public:
       TESPluginThreadedWorldspaceSubBlockReader(TESPluginFile& f) : owner(f) {}
       //
+      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      //
       TESPluginFile& owner;
       //
       std::vector<QueuedSubBlock> queue;
       std::thread thread;
       //
       void add_group(uint32_t worldID, int16_t bx, int16_t by, int16_t sbx, int16_t sby, uint32_t pos);
+      void start();
+      void wait_for();
+};
+class TESPluginThreadedGenericNestableGroupReader : public TESPluginBaseReader {
+   //
+   // For now, this is exactly the same as TESPluginThreadedSimpleReader, except that 
+   // it doesn't fail with an error upon encountering nested groups. I should probably 
+   // just give the simple reader a constructor arg for that or something.
+   //
+   protected:
+      struct QueuedGroup { // a DIAL group, for now
+         uint32_t signature = 0;
+         uint32_t pos = 0;
+         //
+         QueuedGroup(uint32_t s, uint32_t p) : signature(s), pos(p) {}
+      };
+      //
+      void _load();
+      static void _thread_handler(TESPluginThreadedGenericNestableGroupReader* instance);
+   public:
+      TESPluginThreadedGenericNestableGroupReader(TESPluginFile& f) : owner(f) {}
+      //
+      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      //
+      TESPluginFile& owner;
+      //
+      std::vector<QueuedGroup> queue;
+      std::thread thread;
+      //
+      void add_group(uint32_t groupSignature, uint32_t groupPos);
       void start();
       void wait_for();
 };
@@ -453,6 +507,7 @@ class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
    friend TESPluginThreadedWorldspaceSubBlockReader;
+   friend TESPluginThreadedGenericNestableGroupReader;
    public:
       using Flags = TESPluginFileFlags;
       struct MasterEntry {
@@ -463,6 +518,8 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginFile();
       ~TESPluginFile();
       //
+      virtual const TESPluginFile* asFile() const noexcept override { return this; }
+      //
       bool load(const char* filepath);
       bool loadRecordAt(uint32_t pos); // for FormStub
       //
@@ -471,7 +528,7 @@ class TESPluginFile : public TESPluginBaseReader {
       //
       std::string path;
       std::string name;
-      TESPluginThreadedSimpleReader complexReader; // see constructor for initializer
+      TESPluginThreadedGenericNestableGroupReader complexReader; // see constructor for initializer
       TESPluginThreadedSimpleReader simpleReaders[ESP_LOAD_SIMPLE_THREADS]; // see constructor for initializer
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer

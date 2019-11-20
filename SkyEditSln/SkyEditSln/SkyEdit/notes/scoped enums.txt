@@ -122,7 +122,8 @@ less of an issue for bitmasks and whatnot, it's more of an issue for things that
 *actual enums* but that should still be intuitively usable as array indices and so 
 on.
 
-I mean, you could do something like this, but it's hideous:
+I mean, you could do something like this, but it's ugly, and that ugliness is 
+centered around every place you use the enum as a variable type:
 
    struct Flags {
       enum type : uint8_t {
@@ -181,7 +182,7 @@ Let's start with these:
 
 So the obvious problem to start with is that our enums no longer actually look 
 like enums. Is that picky? Sure. But this whole thing shouldn't even be an issue, 
-so  whatever solution we pick to address it shouldn't be unacceptably hideous.
+so whatever solution we pick to address it shouldn't be unacceptably hideous.
 
 Maybe we can do a bit better with these? We can use __COUNTER__ to guarantee a 
 unique namespace name, and we can jam the entire enum definition into the macro:
@@ -253,6 +254,16 @@ comment:
 
 Disgusting.
 
+Oh, and by the way, MSVC randomly forgets what its own predefined macros mean, so we 
+can't reliably use __COUNTER__ despite that explicitly being "supported." Sometimes 
+MSVC interprets foo##__COUNTER__ as "foo3" ; other times, "foo__COUNTER__". We can 
+work around this by making the "unique" namespace just have a name based on the enum, 
+which at least allows us to also ditch the helper macro that we needed for __COUNTER__:
+
+   #define SCOPE_ENUM(name, ...) namespace _scoped_enums { namespace _##name { __VA_ARGS__##; }; }; using _scoped_enums::_##name##::##name;
+
+Ugh.
+
 
 == Namespaces but we just tack a random number on every time we get an error ==
 
@@ -281,6 +292,6 @@ I hate this.
 
 = THE CHOSEN APPROACH =
 
-We went with the preprocessor macro; it's the least hideous approach, and it comes 
+I went with the preprocessor macro; it's the least hideous approach, and it comes 
 the closest to retaining the benefits and syntax of C-style enums while technically 
 fixing both their flaws and the flaws of enum-classes.

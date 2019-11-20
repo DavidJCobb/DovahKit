@@ -34,8 +34,28 @@ void LoadOrder::logError(std::function<void(FatalLoadError&)> functor) {
       functor(this->lastError);
 }
 
-uint8_t LoadOrder::loadOrderPrefixFor(TESPluginFile* file) const noexcept {
+uint8_t LoadOrder::loadOrderPrefixFor(const TESPluginFile* file) const noexcept {
    uint8_t size = this->files.size();
+   for (uint8_t i = 0; i < size; i++) {
+      if (file == this->files[i])
+         return i;
+   }
+   return 0xFF;
+}
+uint8_t LoadOrder::_guidedLoadOrderPrefixFor(const TESPluginFile* file) const noexcept {
+   //
+   // Intended for use during loading. If (this->loadingIndex) is non-zero, then it's the 
+   // index of the file currently being loaded; we check that index in the load order first 
+   // before searching the full load order. (If we're currently loading file 00, then we 
+   // start at zero, which is the same as searching the full load order anyway.)
+   //
+   uint8_t size = this->files.size();
+   uint8_t li   = this->loadingIndex;
+   if (li && li < size) {
+      auto f = this->files[li];
+      if (f == file)
+         return li;
+   }
    for (uint8_t i = 0; i < size; i++) {
       if (file == this->files[i])
          return i;
@@ -64,7 +84,7 @@ form_id_status LoadOrder::localFormIDToGlobalFormID(FormStub* stub, uint32_t& ou
    uint8_t local  = file->masters.size();
    uint8_t prefix = stub->formID >> 0x18;
    if (prefix == local) {
-      out = stub->formID & 0x00FFFFFF | (this->loadOrderPrefixFor(file) << 0x18);
+      out = stub->formID & 0x00FFFFFF | (this->_guidedLoadOrderPrefixFor(file) << 0x18);
       return form_id_status::valid;
    }
    if (prefix > local) {
@@ -224,6 +244,7 @@ bool LoadOrder::loadQueuedFiles() {
    for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it) {
       std::string path = this->basePath + (*it)->name;
       auto file = new TESPluginFile;
+      this->loadingIndex = this->files.size();
       this->files.push_back(file);
       if (!file->load(path.c_str())) {
          auto fn = (*it)->name;
@@ -246,6 +267,7 @@ bool LoadOrder::loadQueuedFiles() {
    for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it) {
       std::string path = this->basePath + (*it)->name;
       auto file = new TESPluginFile;
+      this->loadingIndex = this->files.size();
       this->files.push_back(file);
       if (!file->load(path.c_str())) {
          auto fn = (*it)->name;
@@ -266,6 +288,7 @@ bool LoadOrder::loadQueuedFiles() {
       //
    }
    this->loadingIsComplete = true;
+   this->loadingIndex      = 0;
    return !this->lastError.defined();
 }
 
@@ -322,12 +345,11 @@ void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormSt
       }
    }
 }
-form_id_status LoadOrder::localFormIDToGlobalFormID(const char* filename, uint32_t& id) const {
+form_id_status LoadOrder::localFormIDToGlobalFormID(const TESPluginFile* file, uint32_t& id) const {
    if ((id & plugin_form_id_mask) == 0) { // hardcoded
       id = id & hardcoded_form_id_mask;
       return form_id_status::valid;
    }
-   auto file = this->getFileByName(filename);
    if (!file) {
       id = 0;
       return form_id_status::missing_master;
@@ -335,7 +357,7 @@ form_id_status LoadOrder::localFormIDToGlobalFormID(const char* filename, uint32
    uint8_t local  = file->masters.size();
    uint8_t prefix = id >> 0x18;
    if (prefix == local) {
-      id = id & 0x00FFFFFF | (this->loadOrderPrefixFor(file) << 0x18);
+      id = id & 0x00FFFFFF | (this->_guidedLoadOrderPrefixFor(file) << 0x18);
       return form_id_status::valid;
    }
    if (prefix > local) {
@@ -354,6 +376,7 @@ form_id_status LoadOrder::localFormIDToGlobalFormID(const char* filename, uint32
 
 void LoadOrder::reset() {
    this->loadingIsComplete = false;
+   this->loadingIndex      = 0;
    this->lastError.reset();
    this->loadOrderUnderConsideration.clear();
    for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
@@ -393,5 +416,6 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    if (target) // is this an override?
       delete target;
    target = stub;
+   stub->formID = formID;
    return form_id_status::valid;
 }

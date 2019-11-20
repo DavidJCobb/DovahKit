@@ -60,6 +60,9 @@
     <ClCompile Include="forms\conditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="forms\conditions\arg_types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="formstub.h">

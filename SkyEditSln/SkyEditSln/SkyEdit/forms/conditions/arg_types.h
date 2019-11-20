@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include "../types.h"
 
 /*
 
@@ -27,10 +28,19 @@
 
 */
 
+class TESPluginSubrecord;
+
 union ConditionArgValue {
-   uint32_t dword;
-   uint8_t  byte;
-   float    float32;
+   uint32_t  dword;
+   uint8_t   byte;
+   float     float32;
+   form_id_t formID;
+   //
+   ConditionArgValue() : dword(0) {}
+};
+struct ConditionEnumValue {
+   int32_t     value;
+   const char* string;
 };
 enum class ConditionArgUnderlyingType {
    none,
@@ -42,21 +52,32 @@ enum class ConditionArgUnderlyingType {
 };
 class ConditionArgType {
    public:
-      virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept = 0;
-      virtual bool isValidForEnum(const ConditionArgValue& value) const noexcept {
-         return false;
-      }
-      virtual void getEnumValues(std::vector<ConditionArgValue>& out) const noexcept {
-         out.clear();
-      }
+      virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept;
+      virtual bool isValidForEnum(const ConditionArgValue& value) const noexcept;
+      virtual void getEnumValues(std::vector<ConditionArgValue>& out) const noexcept;
+      virtual bool loadValue(ConditionArgValue& out, TESPluginSubrecord& subrecord) const noexcept;
       //
       ConditionArgType* parent = nullptr;
       std::string name;
       ConditionArgUnderlyingType underlying = ConditionArgUnderlyingType::none;
       bool isEnum   = false;
       bool isSigned = false;
+      std::vector<ConditionEnumValue> enumValues;
+      std::vector<formtype_t> allowedFormTypes;
       //
       ConditionArgType(const char* n) : name(n) {}
+      //
+      bool allowsFormType(formtype_t ft) const noexcept {
+         if (this->underlying == ConditionArgUnderlyingType::formID) {
+            auto& list = this->allowedFormTypes;
+            if (!list.size())
+               return true;
+            for (auto it = list.begin(); it != list.end(); ++it)
+               if (*it == ft)
+                  return true;
+         }
+         return false;
+      }
 };
 
 namespace ConditionArgTypes {
@@ -69,7 +90,12 @@ namespace ConditionArgTypes {
          _Form() : ConditionArgType("Form") {
             this->underlying = ConditionArgUnderlyingType::formID;
          };
-         virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept override;
+   };
+   class Faction : public _Form {
+      public:
+         Faction() {
+            this->allowedFormTypes.push_back(FormType::Faction);
+         }
    };
    class Float : public ConditionArgType {
       public:
@@ -77,7 +103,7 @@ namespace ConditionArgTypes {
             this->underlying = ConditionArgUnderlyingType::float32;
             this->isSigned = true;
          }
-         virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept override;
+         virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept override; // the base function already covers floats, but this will be faster
    };
    class Sex : public ConditionArgType {
       public:
@@ -88,5 +114,10 @@ namespace ConditionArgTypes {
          virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept override;
          virtual bool isValidForEnum(const ConditionArgValue& value) const noexcept override;
          virtual void getEnumValues(std::vector<ConditionArgValue>& out) const noexcept override;
+         //
+         enum Values { // intentionally unscoped
+            male   = 0,
+            female = 1,
+         };
    };
 }

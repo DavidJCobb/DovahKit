@@ -41,7 +41,7 @@ std::thread::id main_thread_id;
 //
 //  - Cleanup:
 //
-//     - Make the PapyrusPropertyType enum a scoped implicit-castable enum.
+//     - Make the PapyrusPropertyType enum an enum-class.
 //
 //  - Loading:
 //
@@ -51,6 +51,8 @@ std::thread::id main_thread_id;
 //          form IDs in group data) are not normalized to the global load order. 
 //          This needs to be fixed.
 //
+//           - Should hopefully be addressed for CELL, INFO, and REFR.
+//
 //        - Conditions
 //
 //           - Continue adding condition function definitions in batches of 
@@ -59,6 +61,8 @@ std::thread::id main_thread_id;
 //           - Instead of using an enum for argument types, consider defining 
 //             a list of objects that describe the types, and having the 
 //             condition function definitions store references to these.
+//
+//           - Conditions need to normalize form ID parameters when loaded.
 //
 //        - Quests
 //
@@ -76,14 +80,12 @@ std::thread::id main_thread_id;
 //
 //        - ActorBases
 //
-//     - The form type list is still incomplete, but the only gaps are form 
-//       types that don't appear in any official files. I assume SKSE pulled 
-//       them from TESV.EXE's map of signatures to form type enum values. Do 
-//       they even have classes? Does the game even load them?
+//     - The default object manager (DOBJ) is a special case and we need to 
+//       handle it accordingly. We should not create any DOBJ forms in memory; 
+//       rather, we should remember the form ID(s) we saw the manager using in 
+//       each file, and otherwise store only the actual DOBJ values.
 //
-//        - There are some form types whose names are known, but whose 
-//          layouts are not; they do not appear in any vanilla game files. 
-//          Does the game even load them?
+//        - Ditto for GMST.
 //
 //     - The TESPluginFile reading code should fail if we encounter a group 
 //       nested too deeply (i.e. deeper than MAX_ESP_FILE_GROUP_DEPTH).
