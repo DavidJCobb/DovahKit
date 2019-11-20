@@ -49,12 +49,15 @@ enum class ConditionParamType : uint8_t {
    Axis,        // char
    BaseForm,
    BodyPart,    // integer: body part enum value
+   CastingSource,
    Cell,        // forms of type: CELL
    Class,       // forms of type: CLAS
    CrimeType,
    CriticalStage, // enum
    EncounterZone, // forms of type: ECZN
    EquipType,
+   Event,
+   EventData,
    Faction,     // forms of type: FACT
    Float,
    FormList,    // forms of type: FLST
@@ -69,6 +72,7 @@ enum class ConditionParamType : uint8_t {
    Location,    // forms of type: LCTN
    MagicEffect, // forms of type: MGEF
    MiscStat,
+   ObjectReference, // forms of type: ACHR, REFR
    Owner,       // forms of type: FACT, NPC_
    Package,     // forms of type: PACK
    PackageData,
@@ -76,7 +80,7 @@ enum class ConditionParamType : uint8_t {
    Quest,       // forms of type: QUST
    QuestStage,
    Race,        // forms of type: RACE
-   ObjectReference, // forms of type: ACHR, REFR
+   RefType,
    Scene,       // forms of type: SCEN
    ScriptVariableIndex,
    Sex,
