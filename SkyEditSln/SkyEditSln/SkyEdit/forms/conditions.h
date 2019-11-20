@@ -43,6 +43,7 @@ enum class ConditionParamType : uint8_t {
    Actor,       // forms of type: ACHR
    ActorBase,   // forms of type: NPC_
    ActorValue,
+   AdvanceAction,
    Alias,
    Alignment,   // enum; karma
    AssociationType, // forms of type: ASTP
@@ -63,6 +64,8 @@ enum class ConditionParamType : uint8_t {
    FormList,    // forms of type: FLST
    FormType,
    Furniture,   // forms of type: FURN
+   FurnitureAnimType,
+   FurnitureEntryType,
    Global,      // forms of type: GLOB
    Idle,        // form
    Integer,
@@ -87,9 +90,11 @@ enum class ConditionParamType : uint8_t {
    Shout,       // forms of type: SHOU
    Spell,       // forms of type: SPEL
    VariableIndex, // integer
+   VariableName, // ???
    VATSFunction,
    VATSValue,
    Voicetype,   // forms of type: VTYP
+   WardState,
    Weather,     // forms of type: WTHR
    Worldspace,  // forms of type: WRLD
 };
@@ -114,7 +119,8 @@ struct ConditionFunction {
       ConditionFunction(uint16_t id, dummy_indicator) : valid(false), id(id), name("Invalid Condition Function"), description("This condition ID is not valid.") {}
 };
 
-extern ConditionFunction conditionFunctions[];
+extern ConditionFunction conditionFunctions[]; // sequential array starting from 0
+extern ConditionFunction extendedConditionFunctions[]; // use this array for discontiguous functions, typically script extender additions
 extern const ConditionFunction* getConditionFunction(uint16_t id);
 
 SCOPE_ENUM(ConditionTypeFlags, enum ConditionTypeFlags : uint8_t {
