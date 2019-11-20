@@ -5,16 +5,6 @@
 
 class TESPluginRecord;
 
-namespace condition_arg_type {
-   enum class advance_action {
-      normal,
-      power_attack,
-      bash,
-      lockpick_success,
-      lockpick_broken,
-   };
-}
-
 enum class ConditionParamType : uint8_t {
    None = 0,
    Actor,       // forms of type: ACHR

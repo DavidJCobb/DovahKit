@@ -115,20 +115,38 @@ namespace ConditionArgTypes {
       ConditionEnumValue(3, "Disintegrate Start"),
       ConditionEnumValue(4, "Disintegrate End"),
    });
+   ConditionArgFormType EffectItem      = ConditionArgFormType("Effect Item", { FormType::Spell, FormType::Potion, FormType::Enchantment, FormType::Ingredient, FormType::Scroll });
    ConditionArgFormType EncounterZone   = ConditionArgFormType("Encounter Zone", { FormType::EncounterZone });
    ConditionArgFormType Faction         = ConditionArgFormType("Faction", { FormType::Faction });
    ConditionArgType     Float           = ConditionArgType("Float", ConditionArgUnderlyingType::float32);
    ConditionArgFormType FormList        = ConditionArgFormType("Form List", { FormType::FormList });
    ConditionArgFormType Furniture       = ConditionArgFormType("Furniture", { FormType::Furniture });
+   ConditionArgType     FurnitureAnim   = ConditionArgType("Furniture Anim", ConditionArgUnderlyingType::integer32, {
+      ConditionEnumValue(1, "Sit"),
+      ConditionEnumValue(2, "Sleep"),
+      ConditionEnumValue(4, "Lean"),
+   });
+   ConditionArgType     FurnitureEntry = ConditionArgType("Furniture Entry", ConditionArgUnderlyingType::integer32, {
+      ConditionEnumValue(0x01, "Front"),
+      ConditionEnumValue(0x02, "Back"),
+      ConditionEnumValue(0x04, "Left"),
+      ConditionEnumValue(0x08, "Right"),
+      ConditionEnumValue(0x10, "Up"),
+   });
    ConditionArgFormType Global          = ConditionArgFormType("Global Variable", { FormType::Global });
+   ConditionArgFormType Idle            = ConditionArgFormType("Idle", { FormType::Idle });
+   ConditionArgType     Integer         = ConditionArgType("Integer", ConditionArgUnderlyingType::integer32);
    ConditionArgFormType Keyword         = ConditionArgFormType("Keyword", { FormType::Keyword });
+   ConditionArgFormType KnowableForm    = ConditionArgFormType("Knowable Form", { FormType::MagicEffect, FormType::WordOfPower });
    ConditionArgFormType Location        = ConditionArgFormType("Location", { FormType::Location });
+   ConditionArgFormType LocRefType      = ConditionArgFormType("Location Ref Type", { FormType::LocationRefType });
    ConditionArgFormType MagicEffect     = ConditionArgFormType("Magic Effect", { FormType::MagicEffect });
    ConditionArgFormType OwnerForm       = ConditionArgFormType("Owner", { FormType::ActorBase, FormType::Faction });
    ConditionArgFormType Package         = ConditionArgFormType("Package", { FormType::Package });
    ConditionArgFormType Perk            = ConditionArgFormType("Perk", { FormType::Perk });
    ConditionArgFormType Quest           = ConditionArgFormType("Quest", { FormType::Quest });
    ConditionArgFormType Race            = ConditionArgFormType("Race", { FormType::Race });
+   ConditionArgFormType Region          = ConditionArgFormType("Region", { FormType::Region });
    ConditionArgFormType Scene           = ConditionArgFormType("Scene", { FormType::Scene });
    ConditionArgType     Sex             = ConditionArgType("Axis", ConditionArgUnderlyingType::integer32, {
       ConditionEnumValue(0, "Male"),
@@ -136,7 +154,35 @@ namespace ConditionArgTypes {
    });
    ConditionArgFormType Shout           = ConditionArgFormType("Shout", { FormType::Shout });
    ConditionArgFormType Spell           = ConditionArgFormType("Spell", { FormType::Spell });
+   ConditionArgType     VATSValueFunction = ConditionArgType("VATS Value Function", ConditionArgUnderlyingType::integer32, {
+      ConditionEnumValue( 0, "Weapon Is"),
+      ConditionEnumValue( 1, "Weapon In List"),
+      ConditionEnumValue( 2, "Target Is"),
+      ConditionEnumValue( 3, "Target In List"),
+      ConditionEnumValue( 4, "Target Distance"),
+      ConditionEnumValue( 5, "Target Part"),
+      ConditionEnumValue( 6, "VATS Action"),
+      ConditionEnumValue( 7, "Is Success"),
+      ConditionEnumValue( 8, "Is Critical"),
+      ConditionEnumValue( 9, "Critical Effect Is"),
+      ConditionEnumValue(10, "Critical Effect In List"),
+      ConditionEnumValue(11, "Is Fatal"),
+      ConditionEnumValue(12, "Explode Part"),
+      ConditionEnumValue(13, "Dismember Part"),
+      ConditionEnumValue(14, "Cripple Part"),
+      ConditionEnumValue(15, "Weapon Type Is"),
+      ConditionEnumValue(16, "Is Stranger"),
+      ConditionEnumValue(17, "Is Paralyzing Palm"),
+      ConditionEnumValue(18, "Projectile Type Is"),
+      ConditionEnumValue(19, "Delivery Type Is"),
+      ConditionEnumValue(20, "Casting Type Is"),
+   });
    ConditionArgFormType Voicetype       = ConditionArgFormType("Voicetype", { FormType::Voicetype });
+   ConditionArgType     WardState       = ConditionArgType("Ward State", ConditionArgUnderlyingType::integer32, {
+      ConditionEnumValue(0, "None"),
+      ConditionEnumValue(1, "Absorb"),
+      ConditionEnumValue(2, "Break"),
+   });
    ConditionArgFormType Weather         = ConditionArgFormType("Weather", { FormType::Weather });
    ConditionArgFormType Worldspace      = ConditionArgFormType("Worldspace", { FormType::Worldspace });
 }
