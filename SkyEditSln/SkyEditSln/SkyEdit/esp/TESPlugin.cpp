@@ -533,7 +533,7 @@ void TESPluginThreadedSimpleReader::_load() {
                //_DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished parse of group %s.", std::this_thread::get_id(), FMT_SIGNATURE(lastGroupLabel, sig_buffer));
                break;
             }
-            if (this->groups[1].exists()) {
+            if (!this->allowNestedGroups && this->groups[1].exists()) {
                LoadOrder::get().logError([this, &desired](FatalLoadError& error) {
                   error.code       = LoadErrorCode::malformed_file;
                   error.file       = this->asFile()->getFilename();
@@ -778,111 +778,11 @@ void TESPluginThreadedWorldspaceSubBlockReader::wait_for() {
    this->thread.join();
 }
 
-void TESPluginThreadedGenericNestableGroupReader::_thread_handler(TESPluginThreadedGenericNestableGroupReader* instance) {
-   auto registration = FormStubHeap::get().register_thread();
-   instance->_load();
-}
-void TESPluginThreadedGenericNestableGroupReader::_load() {
-   #ifdef COBB_ESP_USE_MAPPED_FILES
-      this->file = this->owner.file;
-   #else
-      if (this->fileHandle) {
-         fclose(this->fileHandle);
-         this->fileHandle = nullptr;
-      }
-      this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
-      assert(this->fileHandle && "[TESPluginThreadedGenericNestableGroupReader] Unable to open the file for reading.");
-   #endif
-   //
-   auto size = this->queue.size();
-   for (uint32_t i = 0; i < size; i++) {
-      if (this->owner.aborted) {
-         _DEBUGMSG("[TESPluginThreadedGenericNestableGroupReader] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
-         break;
-      }
-      auto& desired = this->queue[i];
-      this->setPos(desired.pos);
-      this->resetParseState();
-      assert(this->nextRecordOrGroup() == ObjectType::group); // TODO: error instead
-      ObjectType ot;
-      uint32_t   lastGroupLabel = 0; // for debug logging
-      uint32_t   lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
-      formtype_t lastFormType   = 0;
-      uint32_t   lastTopicID    = 0;
-      while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
-         if (ot == ObjectType::group) {
-            //
-            // Stop if we've reached the end of the group we're meant to parse.
-            //
-            auto& first = this->groups[0];
-            if (first.exists() && first.pos == desired.pos) {
-               lastGroupLabel = _byteswap_ulong(first.header.label);
-            } else {
-               break;
-            }
-            if (this->groups[2].exists()) {
-               LoadOrder::get().logError([this, &desired](FatalLoadError& error) {
-                  error.code       = LoadErrorCode::malformed_file;
-                  error.file       = this->asFile()->getFilename();
-                  error.fileOffset = this->getPos();
-                  char sig[5];
-                  cobb::sprintf(error.parseError, "Unexpected nested group within DIAL/INFO %s.", FMT_SIGNATURE(desired.signature, sig));
-               });
-               this->owner.abort();
-               break;
-            }
-         }
-         if (ot == ObjectType::record) {
-            auto& record = this->getCurrentRecord();
-            auto& group  = this->getCurrentGroup();
-            if (record.signature() != lastSignature) {
-               lastSignature = record.signature();
-               lastFormType  = signatureToFormType(lastSignature);
-            }
-            formtype_t formType = lastFormType;
-            if (!formType)
-               continue;
-            //
-            auto  stub = this->make_stub_for_record(this->owner);
-            stub->groupInfo.groupType = group.header.type;
-            if (stub->formType == FormType::TopicInfo) {
-               uint32_t topicID = group.getRawIDOfParentTopic();
-               if (topicID) {
-                  LoadOrder::get().localFormIDToGlobalFormID(this->owner.asFile(), topicID);
-                  stub->groupInfo.parentFormID = topicID;
-               } else
-                  _DEBUGMSG("[TESPluginThreadedGenericNestableGroupReader:%s] TopicInfo %08X is not in a topic?", this->owner.asFile()->getFilename(), stub->formID);
-            }
-            this->owner._insertForm(stub->formID, stub);
-            this->extract_editor_id_for_stub(stub);
-            continue;
-         }
-      }
-   }
-   #ifdef COBB_ESP_USE_MAPPED_FILES
-      this->file = nullptr;
-   #else
-      fclose(this->fileHandle);
-      this->fileHandle = nullptr;
-   #endif
-   //
-   _DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished all of its work.");
-}
-void TESPluginThreadedGenericNestableGroupReader::add_group(uint32_t signature, uint32_t pos) {
-   this->queue.emplace_back(signature, pos);
-}
-void TESPluginThreadedGenericNestableGroupReader::start() {
-   this->thread = std::thread(TESPluginThreadedGenericNestableGroupReader::_thread_handler, this);
-}
-void TESPluginThreadedGenericNestableGroupReader::wait_for() {
-   this->thread.join();
-}
-
 TESPluginFile::TESPluginFile() :
-   simpleReaders{ *this, *this, *this, *this }, // NOT a typo; this is needed to initialize the array
+   simpleReaders{ *this, *this, *this, *this }, // curly braces here are NOT a typo; this is needed to initialize the array
    interiorCellReaders{ *this, *this, *this, *this },
    worldspaceReaders{ *this, *this, *this, *this, *this, *this },
-   complexReader(*this)
+   complexReader(*this, true)
 {
    this->authorName[511]  = '\0';
    this->description[511] = '\0';

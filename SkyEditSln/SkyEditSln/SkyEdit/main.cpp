@@ -87,9 +87,6 @@ std::thread::id main_thread_id;
 //
 //        - Ditto for GMST.
 //
-//     - The TESPluginFile reading code should fail if we encounter a group 
-//       nested too deeply (i.e. deeper than MAX_ESP_FILE_GROUP_DEPTH).
-//
 //     - Test all error messages that run through LoadOrder::logError.
 //
 //        - Probably best if we hand-make some intentionally malformed files; 

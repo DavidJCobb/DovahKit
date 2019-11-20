@@ -53,6 +53,7 @@ enum class ConditionParamType : uint8_t {
    Class,       // forms of type: CLAS
    CrimeType,
    CriticalStage, // enum
+   EncounterZone, // forms of type: ECZN
    EquipType,
    Faction,     // forms of type: FACT
    Float,
@@ -60,15 +61,18 @@ enum class ConditionParamType : uint8_t {
    FormType,
    Furniture,   // forms of type: FURN
    Global,      // forms of type: GLOB
+   Idle,        // form
    Integer,
    InventoryItem, // forms of type: [todo; anything that can ever go in an inventory]
    Keyword,     // forms of type: KYWD
+   KnowableForm,
    Location,    // forms of type: LCTN
    MagicEffect, // forms of type: MGEF
    MiscStat,
    Owner,       // forms of type: FACT, NPC_
    Package,     // forms of type: PACK
    PackageData,
+   Perk,        // forms of type: PERK
    Quest,       // forms of type: QUST
    QuestStage,
    Race,        // forms of type: RACE
@@ -79,6 +83,8 @@ enum class ConditionParamType : uint8_t {
    Shout,       // forms of type: SHOU
    Spell,       // forms of type: SPEL
    VariableIndex, // integer
+   VATSFunction,
+   VATSValue,
    Voicetype,   // forms of type: VTYP
    Weather,     // forms of type: WTHR
    Worldspace,  // forms of type: WRLD

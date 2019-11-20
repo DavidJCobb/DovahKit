@@ -401,10 +401,12 @@ class TESPluginThreadedSimpleReader : public TESPluginBaseReader {
       static void _thread_handler(TESPluginThreadedSimpleReader* instance);
    public:
       TESPluginThreadedSimpleReader(TESPluginFile& f) : owner(f) {}
+      TESPluginThreadedSimpleReader(TESPluginFile& f, bool allowNestedGroups) : owner(f), allowNestedGroups(allowNestedGroups) {}
       //
       virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
       //
       TESPluginFile& owner;
+      bool allowNestedGroups = false;
       //
       std::vector<QueuedGroup> queue;
       std::thread thread;
@@ -467,36 +469,6 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
       void start();
       void wait_for();
 };
-class TESPluginThreadedGenericNestableGroupReader : public TESPluginBaseReader {
-   //
-   // For now, this is exactly the same as TESPluginThreadedSimpleReader, except that 
-   // it doesn't fail with an error upon encountering nested groups. I should probably 
-   // just give the simple reader a constructor arg for that or something.
-   //
-   protected:
-      struct QueuedGroup { // a DIAL group, for now
-         uint32_t signature = 0;
-         uint32_t pos = 0;
-         //
-         QueuedGroup(uint32_t s, uint32_t p) : signature(s), pos(p) {}
-      };
-      //
-      void _load();
-      static void _thread_handler(TESPluginThreadedGenericNestableGroupReader* instance);
-   public:
-      TESPluginThreadedGenericNestableGroupReader(TESPluginFile& f) : owner(f) {}
-      //
-      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
-      //
-      TESPluginFile& owner;
-      //
-      std::vector<QueuedGroup> queue;
-      std::thread thread;
-      //
-      void add_group(uint32_t groupSignature, uint32_t groupPos);
-      void start();
-      void wait_for();
-};
 
 SCOPE_ENUM(TESPluginFileFlags, enum TESPluginFileFlags {
    master = 0x0001,
@@ -507,7 +479,6 @@ class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
    friend TESPluginThreadedWorldspaceSubBlockReader;
-   friend TESPluginThreadedGenericNestableGroupReader;
    public:
       using Flags = TESPluginFileFlags;
       struct MasterEntry {
@@ -528,7 +499,7 @@ class TESPluginFile : public TESPluginBaseReader {
       //
       std::string path;
       std::string name;
-      TESPluginThreadedGenericNestableGroupReader complexReader; // see constructor for initializer
+      TESPluginThreadedSimpleReader complexReader; // see constructor for initializer
       TESPluginThreadedSimpleReader simpleReaders[ESP_LOAD_SIMPLE_THREADS]; // see constructor for initializer
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
