@@ -510,6 +510,7 @@ namespace ConditionArgTypes {
    });
    ConditionArgFormType Shout           = ConditionArgFormType("Shout", { FormType::Shout });
    ConditionArgFormType Spell           = ConditionArgFormType("Spell", { FormType::Spell });
+   ConditionArgType     String          = ConditionArgType("String", ConditionArgUnderlyingType::string);
    ConditionArgType     VATSValueFunction = ConditionArgType("VATS Value Function", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue( 0, "Weapon Is"),
       ConditionEnumValue( 1, "Weapon In List"),

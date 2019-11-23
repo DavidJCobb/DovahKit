@@ -47,7 +47,7 @@ enum class ConditionArgUnderlyingType {
    int_unsigned,
    package_data, // integer; index of a Package Data in the package containing the condition
    quest_stage, // integer; allowed values depend on what QUST is in the previous argument
-   string,
+   string, // the corresponding integer/dword parameter value will be an integer, but the int's value is random garbage; just use the std::string
 };
 class ConditionArgType {
    public:
@@ -63,6 +63,7 @@ class ConditionArgType {
       virtual bool isValidForEnum(const ConditionArgValue& value) const noexcept;
       virtual void getEnumValues(std::vector<ConditionArgValue>& out) const noexcept;
       virtual bool loadValue(ConditionArgValue& out, TESPluginSubrecord& subrecord) const noexcept;
+      //
       /// If the type is flagged as a union, use the next function to get its value; if it returns (nullptr), then the argument "doesn't exist."
       virtual ConditionArgType* resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept;
       //
@@ -120,12 +121,6 @@ class ConditionVATSValueUnion : public ConditionArgType {
 };
 
 namespace ConditionArgTypes {
-   //
-   // TODO:
-   //
-   //  - Anything related to script variables or animation variables as params; 
-   //    how are those handled under the hood?
-   //
    extern ConditionArgType     None;
    extern ConditionArgFormType Actor;
    extern ConditionArgFormType ActorBase;
@@ -173,6 +168,7 @@ namespace ConditionArgTypes {
    extern ConditionArgType     Sex;
    extern ConditionArgFormType Shout;
    extern ConditionArgFormType Spell;
+   extern ConditionArgType     String;
    extern ConditionVATSValueUnion VATSValue;
    extern ConditionArgType     VATSValueFunction;
    extern ConditionArgFormType Voicetype; // TODO: xEdit defs say this can also take a FLST; double-check that and implement if so
