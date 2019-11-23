@@ -126,7 +126,7 @@ struct Condition {
    uint32_t parameter2;
    uint32_t runOn;
    uint32_t reference; // only used for runOn == reference
-   int32_t  parameter3;
+   int32_t  parameter3 = -1; // if Run On == package_data, then this is the Package Data index (within the PACK containing this condition) to run on, and -1 means "NONE"
    std::string stringParam1;
    std::string stringParam2;
    //

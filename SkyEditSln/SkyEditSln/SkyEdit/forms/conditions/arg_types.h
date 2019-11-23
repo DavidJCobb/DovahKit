@@ -45,8 +45,9 @@ enum class ConditionArgUnderlyingType {
    float32,
    int_signed,
    int_unsigned,
+   package_data, // integer; index of a Package Data in the package containing the condition
+   quest_stage, // integer; allowed values depend on what QUST is in the previous argument
    string,
-   alias,
 };
 class ConditionArgType {
    public:
@@ -118,8 +119,6 @@ namespace ConditionArgTypes {
    //     - The decider should probably take as its argument the value of the 
    //       previous parameter in the Condition. This may be easier for UI stuff.
    //
-   //  - PackageData // xEdit source calls this an "index into PACK package data inputs"
-   //  - QuestStage // integer, technically, but the CK only lets you pick valid quest stages as if it were an enum
    //  - VATSValue
    //     - Any of the following; it depends on the value of the VATSFunction argument 
    //       in the containing condition:
@@ -195,8 +194,10 @@ namespace ConditionArgTypes {
    extern ConditionArgFormType ObjectReference;
    extern ConditionArgFormType OwnerForm;
    extern ConditionArgFormType Package;
+   extern ConditionArgType     PackageData;
    extern ConditionArgFormType Perk;
    extern ConditionArgFormType Quest;
+   extern ConditionArgType     QuestStage;
    extern ConditionArgFormType Race;
    extern ConditionArgFormType Region;
    extern ConditionArgFormType Scene;

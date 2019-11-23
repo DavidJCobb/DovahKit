@@ -46,6 +46,7 @@ void ConditionArgType::toString(const ConditionArgValue& value, std::string& out
          cobb::sprintf(out, "%d", value.dword);
          return;
       case ConditionArgUnderlyingType::int_unsigned:
+      case ConditionArgUnderlyingType::quest_stage:
          cobb::sprintf(out, "%u", value.dword);
          return;
    }
@@ -490,8 +491,10 @@ namespace ConditionArgTypes {
    });
    ConditionArgFormType OwnerForm       = ConditionArgFormType("Owner", { FormType::ActorBase, FormType::Faction });
    ConditionArgFormType Package         = ConditionArgFormType("Package", { FormType::Package });
+   ConditionArgType     PackageData     = ConditionArgType("Package Data", ConditionArgUnderlyingType::package_data);
    ConditionArgFormType Perk            = ConditionArgFormType("Perk", { FormType::Perk });
    ConditionArgFormType Quest           = ConditionArgFormType("Quest", { FormType::Quest });
+   ConditionArgType     QuestStage      = ConditionArgType("Quest Stage", ConditionArgUnderlyingType::quest_stage);
    ConditionArgFormType Race            = ConditionArgFormType("Race", { FormType::Race });
    ConditionArgFormType Region          = ConditionArgFormType("Region", { FormType::Region });
    ConditionArgFormType Scene           = ConditionArgFormType("Scene", { FormType::Scene });
