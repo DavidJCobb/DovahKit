@@ -13,6 +13,7 @@ bool ConditionArgType::loadValue(ConditionArgValue& out, TESPluginSubrecord& sub
    }
 }
 void ConditionArgType::toString(const ConditionArgValue& value, std::string& out) const noexcept {
+   assert(!this->isUnion && "This should never be called directly on a type that has been flagged as a union; use resolveType to get the effective type instead.");
    if (this->isEnum) {
       for (auto& ev : this->enumValues) {
          if (value.dword == ev.value) {
@@ -53,6 +54,7 @@ void ConditionArgType::toString(const ConditionArgValue& value, std::string& out
    cobb::sprintf(out, "DWORD 0x%08X", value.dword); // should only happen if there's something we haven't finished yet
 }
 bool ConditionArgType::isValidForEnum(const ConditionArgValue& value) const noexcept {
+   assert(!this->isUnion && "This should never be called directly on a type that has been flagged as a union; use resolveType to get the effective type instead.");
    if (this->isEnum)
       for (auto& ev : this->enumValues)
          if (ev.value == value.dword)
@@ -60,6 +62,7 @@ bool ConditionArgType::isValidForEnum(const ConditionArgValue& value) const noex
    return false;
 }
 void ConditionArgType::getEnumValues(std::vector<ConditionArgValue>& out) const noexcept {
+   assert(!this->isUnion && "This should never be called directly on a type that has been flagged as a union; use resolveType to get the effective type instead.");
    if (!this->isEnum) {
       out.clear();
       return;
@@ -68,6 +71,9 @@ void ConditionArgType::getEnumValues(std::vector<ConditionArgValue>& out) const 
    out.resize(count);
    for (uint32_t i = 0; i < count; i++)
       out[i].dword = this->enumValues[i].value;
+}
+ConditionArgType* ConditionArgType::resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept {
+   return nullptr;
 }
 
 namespace ConditionArgTypes {
@@ -535,4 +541,113 @@ namespace ConditionArgTypes {
    });
    ConditionArgFormType Weather         = ConditionArgFormType("Weather", { FormType::Weather });
    ConditionArgFormType Worldspace      = ConditionArgFormType("Worldspace", { FormType::Worldspace });
+   //
+   namespace _VATSValueTypes {
+      ConditionArgFormType Weapon     = ConditionArgFormType("Weapon", { FormType::Weapon });
+      ConditionArgFormType WeaponList = ConditionArgFormType("Weapon List", { FormType::FormList });
+      ConditionArgFormType Target     = ConditionArgFormType("Target", { FormType::ActorBase });
+      ConditionArgFormType TargetList = ConditionArgFormType("Target List", { FormType::FormList });
+      ConditionArgType     TargetPart = ActorValue;
+      ConditionArgType     VATSAction = ConditionArgType("VATS Action", ConditionArgUnderlyingType::int_unsigned, {
+         ConditionEnumValue(0, "Unarmed"),
+         ConditionEnumValue(1, "One-Handed Melee"),
+         ConditionEnumValue(2, "Two-Handed Melee"),
+         ConditionEnumValue(3, "Magic"),
+         ConditionEnumValue(4, "Ranged"),
+         ConditionEnumValue(5, "Reload"),
+         ConditionEnumValue(6, "Crouch"),
+         ConditionEnumValue(7, "Stand"),
+         ConditionEnumValue(8, "Switch Weapon"),
+         ConditionEnumValue(9, "Draw/Sheathe Weapon"),
+         ConditionEnumValue(10, "Heal"),
+         ConditionEnumValue(11, "Player Death"),
+      });
+      ConditionArgFormType CriticalEffect = ConditionArgFormType("Critical Effect", { FormType::Spell });
+      ConditionArgFormType CriticalEffectList = ConditionArgFormType("Critical Effect List", { FormType::FormList });
+      ConditionArgEnumType WeaponAnimType = ConditionArgEnumType("Weapon Animation Type", 0, {
+         "Hand-to-Hand",
+         "Sword (1HM)",
+         "Dagger (1HM)",
+         "War Axe (1HM)",
+         "Mace (1HM)",
+         "Greatsword (2HM)",
+         "Battleaxe (2HM)",
+         "Bow",
+         "Staff",
+         "Crossbow",
+      });
+      ConditionArgType ProjectileType = ConditionArgType("Projectile Type", ConditionArgUnderlyingType::int_unsigned, {
+         ConditionEnumValue(0, "Missile"),
+         ConditionEnumValue(1, "Lobber"),
+         ConditionEnumValue(2, "Beam"),
+         ConditionEnumValue(3, "Flame"),
+         ConditionEnumValue(4, "Cone"),
+         ConditionEnumValue(5, "Barrier"),
+         ConditionEnumValue(6, "Arrow"),
+      });
+      ConditionArgType DeliveryType = ConditionArgType("Delivery Type", ConditionArgUnderlyingType::int_unsigned, {
+         ConditionEnumValue(0, "Self"),
+         ConditionEnumValue(1, "Touch"),
+         ConditionEnumValue(2, "Aimed"),
+         ConditionEnumValue(3, "Target Actor"),
+         ConditionEnumValue(4, "Target Location"),
+      });
+      ConditionArgType CastingType = ConditionArgType("Casting Type", ConditionArgUnderlyingType::int_unsigned, {
+         ConditionEnumValue(0, "Constant Effect"),
+         ConditionEnumValue(1, "Fire and Forget"),
+         ConditionEnumValue(2, "Concentration"),
+         ConditionEnumValue(3, "Scroll"),
+      });
+   }
+}
+ConditionArgType* ConditionVATSValueUnion::resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept {
+   if (previousType != &ConditionArgTypes::VATSValueFunction)
+      return nullptr;
+   //
+   using namespace ConditionArgTypes::_VATSValueTypes;
+   //
+   switch (previousValue->dword) {
+      case 0:
+         return &Weapon;
+      case 1:
+         return &WeaponList;
+      case 2:
+         return &Target;
+      case 3:
+         return &TargetList;
+      case 4: // Target Distance; has no second argument
+         return nullptr;
+      case 5:
+         return &TargetPart;
+      case 6:
+         return &VATSAction;
+      case 7: // Is Success; has no second argument
+      case 8: // Is Critical; has no second argument
+         return nullptr;
+      case 9:
+         return &CriticalEffect;
+      case 10:
+         return &CriticalEffectList;
+      case 11: // Is Fatal; has no second argument
+         return nullptr;
+      case 12: // Explode Part; has no second argument
+      case 13: // Dismember Part; has no second argument
+      case 14: // Cripple Part; has no second argument
+         return nullptr;
+      case 15:
+         return &WeaponAnimType;
+      case 16: // Is Stranger; has no second argument
+      case 17: // Is Paralyzing Palm; has no second argument
+         return nullptr;
+      case 18:
+         return &ProjectileType;
+      case 19:
+         return &DeliveryType;
+      case 20:
+         return &CastingType;
+   }
+   return nullptr;
+}
+namespace ConditionArgTypes {
+   ConditionVATSValueUnion VATSValue = ConditionVATSValueUnion();
 }

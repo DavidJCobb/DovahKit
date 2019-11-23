@@ -51,22 +51,32 @@ enum class ConditionArgUnderlyingType {
 };
 class ConditionArgType {
    public:
+      //
+      // Dummy classes, for constructors:
+      //
+      enum class sentinel_is_union {};
+      static constexpr sentinel_is_union is_union = sentinel_is_union();
+   public:
       using e_underlying = ConditionArgUnderlyingType;
       //
       virtual void toString(const ConditionArgValue& value, std::string& out) const noexcept;
       virtual bool isValidForEnum(const ConditionArgValue& value) const noexcept;
       virtual void getEnumValues(std::vector<ConditionArgValue>& out) const noexcept;
       virtual bool loadValue(ConditionArgValue& out, TESPluginSubrecord& subrecord) const noexcept;
+      /// If the type is flagged as a union, use the next function to get its value; if it returns (nullptr), then the argument "doesn't exist."
+      virtual ConditionArgType* resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept;
       //
       ConditionArgType* parent = nullptr;
       std::string  name;
       e_underlying underlying = e_underlying::none;
-      bool isEnum   = false;
+      bool isEnum = false;
+      const bool isUnion = false;
       std::vector<ConditionEnumValue> enumValues;
       std::vector<formtype_t> allowedFormTypes;
       //
       ConditionArgType(const char* n, e_underlying u) : name(n), underlying(u) {}
       ConditionArgType(const char* n, e_underlying u, std::initializer_list<ConditionEnumValue> enumValues) : name(n), underlying(u), isEnum(true), enumValues(enumValues) {}
+      ConditionArgType(const char* n, sentinel_is_union) : name(n), isUnion(true) {}
       //
       bool allowsFormType(formtype_t ft) const noexcept {
          if (this->underlying == ConditionArgUnderlyingType::formID) {
@@ -102,57 +112,16 @@ class ConditionArgEnumType : public ConditionArgType {
       }
 };
 
+class ConditionVATSValueUnion : public ConditionArgType {
+   public:
+      ConditionVATSValueUnion() : ConditionArgType("VATS Value", ConditionArgType::is_union) {};
+      //
+      virtual ConditionArgType* resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept override;
+};
+
 namespace ConditionArgTypes {
    //
    // TODO:
-   //
-   //  - We need a way to handle when one argument's type varies depending on the 
-   //    value of the previous argument; VATSValue is an example, which changes 
-   //    type depending on the VATSValueFunction. xEdit record definitions sometimes 
-   //    have their unions refer to things called "deciders;" I haven't looked at 
-   //    that at all but I like the idea of a function or object being able to 
-   //    handle/override type handling. I think we'd want that to exist at the 
-   //    condition function level: if a "decider" function exists for a parameter, 
-   //    then attempts to get the parameter call the decider (passing a Condition 
-   //    instance OR a list of other args) and use its return value.
-   //
-   //     - The decider should probably take as its argument the value of the 
-   //       previous parameter in the Condition. This may be easier for UI stuff.
-   //
-   //  - VATSValue
-   //     - Any of the following; it depends on the value of the VATSFunction argument 
-   //       in the containing condition:
-   //        - Weapon (WEAP)
-   //        - Weapon List (FLST)
-   //        - Target (NPC_)
-   //        - Target List (FLST)
-   //        - Target Part (actor value index)
-   //        - VATS Action
-   //             0 = Unarmed
-   //             1 = One-Handed Melee
-   //             2 = Two-Handed Melee
-   //             3 = Magic
-   //             4 = Ranged
-   //             5 = Reload
-   //             6 = Crouch
-   //             7 = Stand
-   //             8 = Switch Weapon
-   //             9 = Draw/Sheathe Weapon
-   //             10 = Heal
-   //             11 = Player Death
-   //        - Critical Effect (SPEL)
-   //        - Critical Effect List (FLST)
-   //        - Weapon Type (weapon anim type)
-   //        - Projectile Type
-   //             0 = Missile
-   //             1 = Lobber (grenade)
-   //             2 = Beam
-   //             3 = Flame
-   //             4 = Cone
-   //             5 = Barrier
-   //             6 = Arrow
-   //        - Delivery Type
-   //        - Casting Type
    //
    //  - Anything related to script variables or animation variables as params; 
    //    how are those handled under the hood?
@@ -204,6 +173,7 @@ namespace ConditionArgTypes {
    extern ConditionArgType     Sex;
    extern ConditionArgFormType Shout;
    extern ConditionArgFormType Spell;
+   extern ConditionVATSValueUnion VATSValue;
    extern ConditionArgType     VATSValueFunction;
    extern ConditionArgFormType Voicetype; // TODO: xEdit defs say this can also take a FLST; double-check that and implement if so
    extern ConditionArgType     WardState;
