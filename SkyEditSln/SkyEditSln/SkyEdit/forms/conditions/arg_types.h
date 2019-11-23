@@ -118,7 +118,6 @@ namespace ConditionArgTypes {
    //     - The decider should probably take as its argument the value of the 
    //       previous parameter in the Condition. This may be easier for UI stuff.
    //
-   //  - MiscStat
    //  - PackageData // xEdit source calls this an "index into PACK package data inputs"
    //  - QuestStage // integer, technically, but the CK only lets you pick valid quest stages as if it were an enum
    //  - VATSValue
@@ -192,6 +191,7 @@ namespace ConditionArgTypes {
    extern ConditionArgFormType Location;
    extern ConditionArgFormType LocRefType;
    extern ConditionArgFormType MagicEffect;
+   extern ConditionArgType     MiscStat; // the values of this enum are CRCs of misc stat name strings
    extern ConditionArgFormType ObjectReference;
    extern ConditionArgFormType OwnerForm;
    extern ConditionArgFormType Package;
