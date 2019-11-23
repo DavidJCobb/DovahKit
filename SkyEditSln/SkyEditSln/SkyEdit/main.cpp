@@ -59,9 +59,17 @@ std::thread::id main_thread_id;
 //             a list of objects that describe the types, and having the 
 //             condition function definitions store references to these.
 //
-//              - I'm working on adding all the arg types. Once I have them all 
-//                defined, I should change the ConditionFunction struct to use 
-//                them.
+//              - Condition::to_string and its helper function, _printConditionArg, 
+//                are now out of date.
+//
+//              - It's in place, but event and string arguments will need to 
+//                be special-cased -- possibly very heavily.
+//
+//                 - I don't think any conditions actually take three args? 
+//                   I think "Parameter #3" is only ever used for Run On and 
+//                   similar uses. If that's the case, then we can just make 
+//                   the two "real" params structs containing a dword union 
+//                   followed by a std::string.
 //
 //           - Use an array for the parameters in the Condition struct.
 //

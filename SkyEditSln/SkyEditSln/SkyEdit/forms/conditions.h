@@ -2,84 +2,29 @@
 #include <cstdint>
 #include <string>
 #include "../helpers/scoped_enum.h"
+//
+#include "conditions/arg_types.h"
 
 class TESPluginRecord;
-
-enum class ConditionParamType : uint8_t {
-   None = 0,
-   Actor,       // forms of type: ACHR
-   ActorBase,   // forms of type: NPC_
-   ActorValue,
-   AdvanceAction,
-   Alias,
-   Alignment,   // enum; karma
-   AssociationType, // forms of type: ASTP
-   Axis,        // char
-   BaseForm,
-   BodyPart,    // integer: body part enum value
-   CastingSource,
-   Cell,        // forms of type: CELL
-   Class,       // forms of type: CLAS
-   CrimeType,
-   CriticalStage, // enum
-   EncounterZone, // forms of type: ECZN
-   EquipType,
-   Event,
-   EventData,
-   Faction,     // forms of type: FACT
-   Float,
-   FormList,    // forms of type: FLST
-   FormType,
-   Furniture,   // forms of type: FURN
-   FurnitureAnimType,
-   FurnitureEntryType,
-   Global,      // forms of type: GLOB
-   Idle,        // form
-   Integer,
-   InventoryItem, // forms of type: [todo; anything that can ever go in an inventory]
-   Keyword,     // forms of type: KYWD
-   KnowableForm,
-   Location,    // forms of type: LCTN
-   MagicEffect, // forms of type: MGEF
-   MiscStat,
-   ObjectReference, // forms of type: ACHR, REFR, or in theory any placed projectile or hazard
-   Owner,       // forms of type: FACT, NPC_
-   Package,     // forms of type: PACK
-   PackageData,
-   Perk,        // forms of type: PERK
-   Quest,       // forms of type: QUST
-   QuestStage,
-   Race,        // forms of type: RACE
-   RefType,
-   Scene,       // forms of type: SCEN
-   ScriptVariableIndex,
-   Sex,
-   Shout,       // forms of type: SHOU
-   Spell,       // forms of type: SPEL
-   VariableIndex, // integer
-   VariableName, // ???
-   VATSFunction,
-   VATSValue,
-   Voicetype,   // forms of type: VTYP
-   WardState,
-   Weather,     // forms of type: WTHR
-   Worldspace,  // forms of type: WRLD
-};
 
 struct ConditionFunction {
    private:
       typedef ConditionParamType _cpt;
+      typedef ConditionArgType& _cat;
+   protected:
+      ConditionArgType* argTypes[3] = { &ConditionArgTypes::None, &ConditionArgTypes::None, &ConditionArgTypes::None }; // aRrAy Of ReFeReNcE iS nOt AlLoWeD
    public:
       uint16_t    id = 0xFFFF;
       const char* name = "";
       const char* description = "";
-      ConditionParamType paramTypes[3] = { ConditionParamType::None, ConditionParamType::None, ConditionParamType::None };
       bool        valid = true;
       //
       ConditionFunction(uint16_t id, const char* name, const char* d) : id(id), name(name), description(d) {};
-      ConditionFunction(uint16_t id, const char* name, const char* d, _cpt a) : id(id), name(name), description(d), paramTypes{ a, _cpt::None, _cpt::None } {};
-      ConditionFunction(uint16_t id, const char* name, const char* d, _cpt a, _cpt b) : id(id), name(name), description(d), paramTypes{ a, b, _cpt::None } {};
-      ConditionFunction(uint16_t id, const char* name, const char* d, _cpt a, _cpt b, _cpt c) : id(id), name(name), description(d), paramTypes{ a, b, c } {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a) : id(id), name(name), description(d), argTypes{ &a, &ConditionArgTypes::None, &ConditionArgTypes::None } {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a, _cat b) : id(id), name(name), description(d), argTypes{ &a, &b, &ConditionArgTypes::None } {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a, _cat b, _cat c) : id(id), name(name), description(d), argTypes{ &a, &b, &c } {};
+      //
+      ConditionArgType* getArgumentType(uint8_t index) const noexcept;
       //
       enum class dummy_indicator { value };
       static constexpr dummy_indicator dummy = dummy_indicator::value;

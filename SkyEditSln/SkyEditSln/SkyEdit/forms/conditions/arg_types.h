@@ -18,6 +18,11 @@
     - When loading form ID values, we need code to convert them from file-local 
       IDs to global IDs (i.e. normalize the load order prefix). This will require 
       us to know what file we're loading them from.
+      
+    - This system is currently unable to handle string arguments and event arguments. 
+      Both are stored separately from normal arguments -- string arguments in their 
+      own subrecords (which we load into std::strings), and event arguments in fields 
+      that only appear when the function in question uses them.
 
 */
 
@@ -41,6 +46,8 @@ enum class ConditionArgUnderlyingType {
    none,
    aliasID, // the ID of an alias on the quest containing the condition (for conditions outside of quests, it is impossible to specify a valid value)
    character, // e.g. Axis
+   event,
+   event_data,
    formID,
    float32,
    int_signed,
@@ -139,9 +146,12 @@ namespace ConditionArgTypes {
    extern ConditionArgFormType EffectItem; // SPEL, ENCH, ALCH, etc.
    extern ConditionArgFormType EncounterZone;
    extern ConditionArgType     EquipType; // this enum was removed from the game and is only used in one condition, which is both deprecated and broken in two different ways. the CK shows an empty drop-down when trying to choose a value.
+   extern ConditionArgType     Event;
+   extern ConditionArgType     EventData;
    extern ConditionArgFormType Faction;
    extern ConditionArgType     Float;
    extern ConditionArgFormType FormList;
+   extern ConditionArgEnumType FormType;
    extern ConditionArgFormType Furniture; // TODO: xEdit defs say this can also take a FLST; double-check that and implement if so
    extern ConditionArgType     FurnitureAnim;
    extern ConditionArgType     FurnitureEntry;
