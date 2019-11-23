@@ -80,10 +80,24 @@ class ConditionArgType {
       }
 };
 class ConditionArgFormType : public ConditionArgType {
+   //
+   // Helper subclass for quickly instantiating form types.
+   //
    public:
       ConditionArgFormType(const char* n, std::initializer_list<formtype_t> formTypes) : ConditionArgType(n, ConditionArgUnderlyingType::formID) {
          for (auto it = formTypes.begin(); it != formTypes.end(); ++it)
             this->allowedFormTypes.push_back(*it);
+      }
+};
+class ConditionArgEnumType : public ConditionArgType {
+   //
+   // Helper subclass for quickly instantiating large enum types, when the values are contiguous.
+   //
+   public:
+      ConditionArgEnumType(const char* n, int32_t first, std::initializer_list<const char*> valueNames) : ConditionArgType(n, ConditionArgUnderlyingType::int_signed) {
+         int32_t i = first;
+         for (auto it = valueNames.begin(); it != valueNames.end(); ++i, ++it)
+            this->enumValues.push_back(ConditionEnumValue(i, *it));
       }
 };
 
@@ -104,7 +118,6 @@ namespace ConditionArgTypes {
    //     - The decider should probably take as its argument the value of the 
    //       previous parameter in the Condition. This may be easier for UI stuff.
    //
-   //  - ActorValue
    //  - MiscStat
    //  - PackageData // xEdit source calls this an "index into PACK package data inputs"
    //  - QuestStage // integer, technically, but the CK only lets you pick valid quest stages as if it were an enum
@@ -149,6 +162,7 @@ namespace ConditionArgTypes {
    extern ConditionArgType     None;
    extern ConditionArgFormType Actor;
    extern ConditionArgFormType ActorBase;
+   extern ConditionArgEnumType ActorValue;
    extern ConditionArgType     AdvanceAction;
    extern ConditionArgType     Alias; // though some conditions require a ref alias or a loc alias specifically, the CK makes no attempt to ensure you are providing an alias of the correct type
    extern ConditionArgType     Alignment;
