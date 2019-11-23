@@ -55,14 +55,20 @@ std::thread::id main_thread_id;
 //
 //        - Conditions
 //
-//           - Continue adding condition function definitions in batches of 
-//             fifty or a hundred.
-//
 //           - Instead of using an enum for argument types, consider defining 
 //             a list of objects that describe the types, and having the 
 //             condition function definitions store references to these.
 //
+//              - I'm working on adding all the arg types. Once I have them all 
+//                defined, I should change the ConditionFunction struct to use 
+//                them.
+//
+//           - Use an array for the parameters in the Condition struct.
+//
 //           - Conditions need to normalize form ID parameters when loaded.
+//
+//           - Allow ConditionFunction structs to specify a list of values, 
+//             when the condition function can return an enum.
 //
 //        - Quests
 //
@@ -152,8 +158,30 @@ std::thread::id main_thread_id;
 //       to get a usable prototype of this whole thing ready in a reasonable 
 //       amount of time.
 //
+//     - We don't have to write load code for every form type that we write 
+//       use info code for; each form class should have a static method (NOT 
+//       an instance method) that takes a FormStub* and a TESPluginRecord& as 
+//       arguments. This static method can go through the record data, ignoring 
+//       anything that isn't a form ID.
+//
+//        - We can even ignore substructures. For example, LoadedForms::Quest 
+//          can have a single static method that just handles every signature 
+//          that can occur in the record, including the subrecords that make 
+//          up larger structs like log entries and aliases.
+//
+//           - If we do that, then the use info may have false-positives: if 
+//             the subrecords are out of order or otherwise mangled, the game 
+//             can actually skip over subrecords -- and we replicate this 
+//             behavior for loading. But it doesn't matter if use info has 
+//             false-positives; the only thing we NEED to avoid is false-neg-
+//             atives.
+//
 //     - Every FormStub needs two linked lists: one for outbounds references 
 //       to other forms, and another for inbound references from other forms.
+//
+//        - Entries in this list should consist solely of form IDs but these 
+//          form IDs should be refcounted: a form can refer to the same other 
+//          form in multiple different ways at once.
 //
 //     - We need to start adding more classes for loaded forms.
 //

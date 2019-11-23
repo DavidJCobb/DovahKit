@@ -15,14 +15,6 @@
 
    TODO:
 
-    - Finish writing stringify, etc., functions for these (make a cpp file)
-
-    - Allow these structs to hold a list of allowed form types.
-
-    - Add an inheritance system: allow types to derive from each other so, for 
-      example, we can have a single type for "any form" and then have all of 
-      the other form types derive from it.
-
     - When loading form ID values, we need code to convert them from file-local 
       IDs to global IDs (i.e. normalize the load order prefix). This will require 
       us to know what file we're loading them from.
@@ -47,10 +39,12 @@ struct ConditionEnumValue {
 };
 enum class ConditionArgUnderlyingType {
    none,
+   aliasID, // the ID of an alias on the quest containing the condition (for conditions outside of quests, it is impossible to specify a valid value)
    character, // e.g. Axis
    formID,
    float32,
-   integer32,
+   int_signed,
+   int_unsigned,
    string,
    alias,
 };
@@ -67,7 +61,6 @@ class ConditionArgType {
       std::string  name;
       e_underlying underlying = e_underlying::none;
       bool isEnum   = false;
-      bool isSigned = false; // TODO: replace with two underlying types, "int_signed" and "int_unsigned," and get rid of "integer32"
       std::vector<ConditionEnumValue> enumValues;
       std::vector<formtype_t> allowedFormTypes;
       //
@@ -98,31 +91,26 @@ namespace ConditionArgTypes {
    //
    // TODO:
    //
-   //  - Before adding reference types (Actor, etc.), double-check whether their 
-   //    values need to be persistent.
+   //  - We need a way to handle when one argument's type varies depending on the 
+   //    value of the previous argument; VATSValue is an example, which changes 
+   //    type depending on the VATSValueFunction. xEdit record definitions sometimes 
+   //    have their unions refer to things called "deciders;" I haven't looked at 
+   //    that at all but I like the idea of a function or object being able to 
+   //    handle/override type handling. I think we'd want that to exist at the 
+   //    condition function level: if a "decider" function exists for a parameter, 
+   //    then attempts to get the parameter call the decider (passing a Condition 
+   //    instance OR a list of other args) and use its return value.
    //
-   //  - Before adding a Cell type, double-check whether exterior cells are allowed 
-   //    (and whether they're required to have editor IDs or be in the default 
-   //    worldspace, 0000003C Tamriel).
+   //     - The decider should probably take as its argument the value of the 
+   //       previous parameter in the Condition. This may be easier for UI stuff.
    //
-   //  - Actor
    //  - ActorValue
-   //  - Alias
-   //     - xEdit allows you to use an alias of any type, but some functions are 
-   //       meant only for ref aliases or only for loc aliases. Can we have a type 
-   //       for each, to show warnings in UI if the user picks a wrong alias?
-   //        - Wait, does the CK allow wrong aliases?
-   //  - BaseForm
-   //  - Cell
-   //  - EquipType
-   //  - FurnitureEntryType
-   //  - InventoryItem
    //  - MiscStat
-   //  - ObjectReference
-   //  - PackageData
-   //  - QuestStage
+   //  - PackageData // xEdit source calls this an "index into PACK package data inputs"
+   //  - QuestStage // integer, technically, but the CK only lets you pick valid quest stages as if it were an enum
    //  - VATSValue
-   //     - Any of:
+   //     - Any of the following; it depends on the value of the VATSFunction argument 
+   //       in the containing condition:
    //        - Weapon (WEAP)
    //        - Weapon List (FLST)
    //        - Target (NPC_)
@@ -159,17 +147,22 @@ namespace ConditionArgTypes {
    //    how are those handled under the hood?
    //
    extern ConditionArgType     None;
+   extern ConditionArgFormType Actor;
    extern ConditionArgFormType ActorBase;
    extern ConditionArgType     AdvanceAction;
+   extern ConditionArgType     Alias; // though some conditions require a ref alias or a loc alias specifically, the CK makes no attempt to ensure you are providing an alias of the correct type
    extern ConditionArgType     Alignment;
    extern ConditionArgFormType AssociationType;
    extern ConditionArgType     Axis;
+   extern ConditionArgFormType BaseForm; // also includes a few other form types even though GetIsID et. al could never run on them; probably a mistake on Beth's part
    extern ConditionArgType     CastingSource;
+   extern ConditionArgFormType Cell; // testing in CK indicates that only interiors are allowed; named exteriors are not
    extern ConditionArgFormType Class;
    extern ConditionArgType     CrimeType;
    extern ConditionArgType     CriticalStage;
    extern ConditionArgFormType EffectItem; // SPEL, ENCH, ALCH, etc.
    extern ConditionArgFormType EncounterZone;
+   extern ConditionArgType     EquipType; // this enum was removed from the game and is only used in one condition, which is both deprecated and broken in two different ways. the CK shows an empty drop-down when trying to choose a value.
    extern ConditionArgFormType Faction;
    extern ConditionArgType     Float;
    extern ConditionArgFormType FormList;
@@ -179,11 +172,13 @@ namespace ConditionArgTypes {
    extern ConditionArgFormType Global;
    extern ConditionArgFormType Idle;
    extern ConditionArgType     Integer;
+   extern ConditionArgFormType InventoryItem;
    extern ConditionArgFormType Keyword;
    extern ConditionArgFormType KnowableForm; // TODO: Reverse-engineer conditions that use this; if they're not strict about form type, we don't need to be either, since the "Is Known" flag is common to all form types IIRC
    extern ConditionArgFormType Location;
    extern ConditionArgFormType LocRefType;
    extern ConditionArgFormType MagicEffect;
+   extern ConditionArgFormType ObjectReference;
    extern ConditionArgFormType OwnerForm;
    extern ConditionArgFormType Package;
    extern ConditionArgFormType Perk;

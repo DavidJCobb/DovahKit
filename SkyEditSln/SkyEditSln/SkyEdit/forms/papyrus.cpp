@@ -58,10 +58,7 @@ bool PapyrusScriptData::load(TESPluginSubrecord& subrecord) {
    return subrecord.is_in_bounds();
 }
 bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
-   //
-   // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
-   //
-   subrecord.read_wstring(this->name);
+   subrecord.read_length_prefixed_string<2>(this->name);
    uint16_t count;
    if (!subrecord.is_in_bounds(sizeof(this->status) + sizeof(count)))
       return false;
@@ -95,7 +92,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
    //
    // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
    //
-   subrecord.read_wstring(this->name);
+   subrecord.read_length_prefixed_string<2>(this->name);
    if (!subrecord.is_in_bounds(sizeof(this->type) + sizeof(this->status)))
       return false;
    subrecord.unchecked_read(this->type);
@@ -117,7 +114,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
             {
                auto v = new std::string;
                this->value = v;
-               subrecord.read_wstring(*v);
+               subrecord.read_length_prefixed_string<2>(*v);
             }
             break;
          case kPapyrusPropertyType_Int:
@@ -174,7 +171,7 @@ bool PapyrusScriptData::Property::load(PapyrusScriptData& owner, TESPluginSubrec
                values.resize(count);
                for (uint32_t i = 0; i < count; i++) {
                   auto& elem = values[i];
-                  subrecord.read_wstring(elem);
+                  subrecord.read_length_prefixed_string<2>(elem);
                }
             }
             break;

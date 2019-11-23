@@ -109,11 +109,11 @@ enum class ConditionOperator {
 SCOPE_ENUM(ConditionRunOn, enum ConditionRunOn {
    subject       = 0,
    target        = 1,
-   reference     = 2,
+   reference     = 2, SCOPED_ENUM_COMMENT("i.e. Condition::reference")
    combat_target = 3,
    linked_ref    = 4,
    quest_alias   = 5,
-   package_data  = 6,
+   package_data  = 6, SCOPED_ENUM_COMMENT("where does Condition store *which* packdata we're running on? param 3?")
    event_data    = 7,
 });
 

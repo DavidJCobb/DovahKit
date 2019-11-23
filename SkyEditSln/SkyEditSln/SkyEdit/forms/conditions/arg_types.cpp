@@ -42,13 +42,14 @@ void ConditionArgType::toString(const ConditionArgValue& value, std::string& out
       case ConditionArgUnderlyingType::character:
          out = (unsigned char)value.byte;
          return;
-      default:
-         if (this->isSigned)
-            cobb::sprintf(out, "%i", value.dword);
-         else
-            cobb::sprintf(out, "%u", value.dword);
+      case ConditionArgUnderlyingType::int_signed:
+         cobb::sprintf(out, "%d", value.dword);
+         return;
+      case ConditionArgUnderlyingType::int_unsigned:
+         cobb::sprintf(out, "%u", value.dword);
          return;
    }
+   cobb::sprintf(out, "DWORD 0x%08X", value.dword); // should only happen if there's something we haven't finished yet
 }
 bool ConditionArgType::isValidForEnum(const ConditionArgValue& value) const noexcept {
    if (this->isEnum)
@@ -70,15 +71,17 @@ void ConditionArgType::getEnumValues(std::vector<ConditionArgValue>& out) const 
 
 namespace ConditionArgTypes {
    ConditionArgType     None            = ConditionArgType("None", ConditionArgUnderlyingType::none);
+   ConditionArgFormType Actor           = ConditionArgFormType("Actor", { FormType::Actor });
    ConditionArgFormType ActorBase       = ConditionArgFormType("ActorBase", { FormType::ActorBase });
-   ConditionArgType     AdvanceAction   = ConditionArgType("Advance Action", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     AdvanceAction   = ConditionArgType("Advance Action", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(0, "Normal Usage"),
       ConditionEnumValue(1, "Power Attack"),
       ConditionEnumValue(2, "Bash"),
       ConditionEnumValue(3, "Lockpick Success"),
       ConditionEnumValue(4, "Lockpick Broken"),
    });
-   ConditionArgType     Alignment       = ConditionArgType("Alignment", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     Alias           = ConditionArgType("Alias", ConditionArgUnderlyingType::aliasID);
+   ConditionArgType     Alignment       = ConditionArgType("Alignment", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(0, "Good"),
       ConditionEnumValue(1, "Neutral"),
       ConditionEnumValue(2, "Evil"),
@@ -91,14 +94,53 @@ namespace ConditionArgTypes {
       ConditionEnumValue('Y', "Y"),
       ConditionEnumValue('Z', "Z"),
    });
-   ConditionArgType     CastingSource   = ConditionArgType("Casting Source", ConditionArgUnderlyingType::integer32, {
+   ConditionArgFormType BaseForm        = ConditionArgFormType("Base Form", {
+      FormType::AcousticSpace, // Confirmed in CK. Strange, since these aren't placeable.
+      FormType::Activator,
+      FormType::ActorBase,
+      FormType::Container,
+      FormType::Door,
+      FormType::Flora,
+      FormType::Furniture,
+      FormType::Grass,
+      FormType::Hazard,
+      FormType::IdleMarker,
+      FormType::Light,
+      FormType::MovableStatic,
+      FormType::Projectile,
+      FormType::Sound,
+      FormType::Static,
+      FormType::TalkingActivator,
+      FormType::Tree,
+      // Items:
+      FormType::Ammo,
+      FormType::Armor,
+      FormType::ArmorAddon,
+      FormType::Book,
+      FormType::Key,
+      FormType::LeveledItem,
+      FormType::MiscItem,
+      FormType::Potion,
+      FormType::Scroll,
+      FormType::SoulGem,
+      FormType::Weapon,
+      // Magic:
+      FormType::Enchantment,
+      FormType::LeveledSpell,
+      FormType::Shout,
+      FormType::Spell,
+      // Other:
+      FormType::FormList,
+   });
+   ConditionArgType     CastingSource   = ConditionArgType("Casting Source", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(0, "Left"),
       ConditionEnumValue(1, "Right"),
       ConditionEnumValue(2, "Voice"),
       ConditionEnumValue(3, "Instant"),
    });
+   ConditionArgFormType Cell            = ConditionArgFormType("Cell", { FormType::Cell });
    ConditionArgFormType Class           = ConditionArgFormType("Class", { FormType::Class });
-   ConditionArgType     CrimeType       = ConditionArgType("Crime Type", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     CrimeType       = ConditionArgType("Crime Type", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(-1, "None"),
       ConditionEnumValue( 0, "Steal"),
       ConditionEnumValue( 1, "Pickpocket"),
@@ -108,7 +150,7 @@ namespace ConditionArgTypes {
       ConditionEnumValue( 5, "Escape Jail"),
       ConditionEnumValue( 6, "Werewolf Transformation"),
    });
-   ConditionArgType     CriticalStage   = ConditionArgType("Critical Stage", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     CriticalStage   = ConditionArgType("Critical Stage", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(0, "None"),
       ConditionEnumValue(1, "Goo Start"),
       ConditionEnumValue(2, "Goo End"),
@@ -117,16 +159,17 @@ namespace ConditionArgTypes {
    });
    ConditionArgFormType EffectItem      = ConditionArgFormType("Effect Item", { FormType::Spell, FormType::Potion, FormType::Enchantment, FormType::Ingredient, FormType::Scroll });
    ConditionArgFormType EncounterZone   = ConditionArgFormType("Encounter Zone", { FormType::EncounterZone });
+   ConditionArgType     EquipType       = ConditionArgType("Equip Type (Deprecated/Broken)", ConditionArgUnderlyingType::int_unsigned);
    ConditionArgFormType Faction         = ConditionArgFormType("Faction", { FormType::Faction });
    ConditionArgType     Float           = ConditionArgType("Float", ConditionArgUnderlyingType::float32);
    ConditionArgFormType FormList        = ConditionArgFormType("Form List", { FormType::FormList });
    ConditionArgFormType Furniture       = ConditionArgFormType("Furniture", { FormType::Furniture });
-   ConditionArgType     FurnitureAnim   = ConditionArgType("Furniture Anim", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     FurnitureAnim   = ConditionArgType("Furniture Anim", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(1, "Sit"),
       ConditionEnumValue(2, "Sleep"),
       ConditionEnumValue(4, "Lean"),
    });
-   ConditionArgType     FurnitureEntry = ConditionArgType("Furniture Entry", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     FurnitureEntry  = ConditionArgType("Furniture Entry", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(0x01, "Front"),
       ConditionEnumValue(0x02, "Back"),
       ConditionEnumValue(0x04, "Left"),
@@ -135,12 +178,40 @@ namespace ConditionArgTypes {
    });
    ConditionArgFormType Global          = ConditionArgFormType("Global Variable", { FormType::Global });
    ConditionArgFormType Idle            = ConditionArgFormType("Idle", { FormType::Idle });
-   ConditionArgType     Integer         = ConditionArgType("Integer", ConditionArgUnderlyingType::integer32);
+   ConditionArgType     Integer         = ConditionArgType("Integer", ConditionArgUnderlyingType::int_signed);
+   ConditionArgFormType InventoryItem   = ConditionArgFormType("Inventory Item", {
+      FormType::Ammo,
+      FormType::Armor,
+      FormType::Book,
+      FormType::ConstructibleObject,
+      FormType::FormList,
+      FormType::Ingredient,
+      FormType::Key,
+      FormType::LeveledItem,
+      FormType::Light, // light forms can be flagged as "carryable;" this is how torches work
+      FormType::MiscItem,
+      FormType::Potion,
+      FormType::Scroll,
+      FormType::SoulGem,
+      FormType::Weapon,
+   });
    ConditionArgFormType Keyword         = ConditionArgFormType("Keyword", { FormType::Keyword });
    ConditionArgFormType KnowableForm    = ConditionArgFormType("Knowable Form", { FormType::MagicEffect, FormType::WordOfPower });
    ConditionArgFormType Location        = ConditionArgFormType("Location", { FormType::Location });
    ConditionArgFormType LocRefType      = ConditionArgFormType("Location Ref Type", { FormType::LocationRefType });
    ConditionArgFormType MagicEffect     = ConditionArgFormType("Magic Effect", { FormType::MagicEffect });
+   ConditionArgFormType ObjectReference = ConditionArgFormType("ObjectReference", {
+      FormType::Character,
+      FormType::Reference,
+      FormType::PlacedArrowProjectile,
+      FormType::PlacedBarrierProjectile,
+      FormType::PlacedBeamProjectile,
+      FormType::PlacedConeProjectile,
+      FormType::PlacedFlameProjectile,
+      FormType::PlacedGrenadeProjectile,
+      FormType::PlacedMissileProjectile,
+      FormType::PlacedHazard,
+   });
    ConditionArgFormType OwnerForm       = ConditionArgFormType("Owner", { FormType::ActorBase, FormType::Faction });
    ConditionArgFormType Package         = ConditionArgFormType("Package", { FormType::Package });
    ConditionArgFormType Perk            = ConditionArgFormType("Perk", { FormType::Perk });
@@ -148,13 +219,13 @@ namespace ConditionArgTypes {
    ConditionArgFormType Race            = ConditionArgFormType("Race", { FormType::Race });
    ConditionArgFormType Region          = ConditionArgFormType("Region", { FormType::Region });
    ConditionArgFormType Scene           = ConditionArgFormType("Scene", { FormType::Scene });
-   ConditionArgType     Sex             = ConditionArgType("Axis", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     Sex             = ConditionArgType("Axis", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(0, "Male"),
       ConditionEnumValue(1, "Female"),
    });
    ConditionArgFormType Shout           = ConditionArgFormType("Shout", { FormType::Shout });
    ConditionArgFormType Spell           = ConditionArgFormType("Spell", { FormType::Spell });
-   ConditionArgType     VATSValueFunction = ConditionArgType("VATS Value Function", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     VATSValueFunction = ConditionArgType("VATS Value Function", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue( 0, "Weapon Is"),
       ConditionEnumValue( 1, "Weapon In List"),
       ConditionEnumValue( 2, "Target Is"),
@@ -178,7 +249,7 @@ namespace ConditionArgTypes {
       ConditionEnumValue(20, "Casting Type Is"),
    });
    ConditionArgFormType Voicetype       = ConditionArgFormType("Voicetype", { FormType::Voicetype });
-   ConditionArgType     WardState       = ConditionArgType("Ward State", ConditionArgUnderlyingType::integer32, {
+   ConditionArgType     WardState       = ConditionArgType("Ward State", ConditionArgUnderlyingType::int_signed, {
       ConditionEnumValue(0, "None"),
       ConditionEnumValue(1, "Absorb"),
       ConditionEnumValue(2, "Break"),

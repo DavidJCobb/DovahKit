@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "../helpers/scoped_enum.h"
 
-typedef uint8_t  formtype_t;
+typedef uint8_t formtype_t;
 
 extern constexpr uint32_t hardcoded_form_id_mask = 0x000007FF; // Mask for form IDs that are hardcoded forms.
 extern constexpr uint32_t plugin_form_id_mask    = 0xFFFFF800; // Mask for form IDs that are not hardcoded forms.
@@ -71,7 +71,7 @@ SCOPE_ENUM(FormType, enum FormType : formtype_t {
    NavmeshInfo = 0x3B,
    Cell = 0x3C,
    Reference = 0x3D,
-   Character = 0x3E,
+   Character = 0x3E, Actor = Character,
    PlacedMissileProjectile = 0x3F,
    PlacedArrowProjectile = 0x40,
    PlacedGrenadeProjectile = 0x41,
@@ -187,7 +187,7 @@ struct form_id_t {
    form_id_t() {};
    form_id_t(uint32_t i) : value(i) {};
    //
-   inline operator uint32_t() const { return this->value; };
+   inline operator uint32_t() const noexcept { return this->value; };
    inline form_id_t& operator=(const uint32_t& other) { this->value = other; return *this; };
    inline form_id_t& operator=(const int& other) { this->value = other; return *this; };
    //

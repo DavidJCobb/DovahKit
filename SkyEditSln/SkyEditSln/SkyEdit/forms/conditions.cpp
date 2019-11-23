@@ -201,7 +201,7 @@ ConditionFunction conditionFunctions[] = {
    ConditionFunction( 23, ConditionFunction::dummy), // actually StopCombat
    ConditionFunction( 24, "GetScale",          "Returns this reference's scale."),
    ConditionFunction( 25, "IsMoving",          ""),
-   ConditionFunction( 26, "IsTurning",         ""),
+   ConditionFunction( 26, "IsTurning",         "Returns 1 if this actor is turning to the left, 2 if they are turning to the right, or 0 otherwise."),
    ConditionFunction( 27, "GetLineOfSight",    "", ConditionParamType::ObjectReference),
    ConditionFunction( 28, ConditionFunction::dummy), // actually AddSpell
    ConditionFunction( 29, ConditionFunction::dummy), // actually RemoveSpell
@@ -214,7 +214,7 @@ ConditionFunction conditionFunctions[] = {
    ConditionFunction( 36, "MenuMode",          "", ConditionParamType::Integer),
    ConditionFunction( 37, ConditionFunction::dummy), // actually PlaceAtMe
    ConditionFunction( 38, ConditionFunction::dummy), // actually PlaySound
-   ConditionFunction( 39, "GetDisease",        ""),
+   ConditionFunction( 39, "GetDisease",        "Returns 1 if any of this actor's active magic effects came from a spell whose type was set to \"Disease,\" or 0 otherwise."),
    ConditionFunction( 40, ConditionFunction::dummy), // actually FailAllObjectives
    ConditionFunction( 41, "GetClothingValue",  ""),
    ConditionFunction( 42, "SameFaction",       "Returns 1 if this reference is in the same faction as the specified actor, or 0 otherwise.", ConditionParamType::Actor),
@@ -292,7 +292,7 @@ ConditionFunction conditionFunctions[] = {
    ConditionFunction(114, ConditionFunction::dummy), // actually Lock
    ConditionFunction(115, ConditionFunction::dummy), // actually Unlock
    ConditionFunction(116, "IsIntimidatedByPlayer", ""),
-   ConditionFunction(117, "IsPlayerInRegion", ""),
+   ConditionFunction(117, "IsPlayerInRegion", "Returns 1 if this reference's parent cell belongs to or overlaps the specified region, or 0 otherwise."),
    ConditionFunction(118, "GetActorAggroRadiusViolated", ""),
    ConditionFunction(119, ConditionFunction::dummy),
    ConditionFunction(120, ConditionFunction::dummy),
