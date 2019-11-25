@@ -562,9 +562,6 @@ void TESPluginThreadedSimpleReader::_load() {
                lastFormType  = signatureToFormType(lastSignature);
             }
             formtype_t formType = lastFormType;
-            #if _DEBUG
-               assert(formType && "TESPluginThreadedSimpleReader: found a form with an unrecognized type!");
-            #endif
             if (!formType)
                continue;
             //

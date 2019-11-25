@@ -88,11 +88,17 @@ std::thread::id main_thread_id;
 //
 //        - Use Info
 //
-//           = WE ARE RANDOMLY FAILING TO LOAD FORMS. WE HAVE A DEBUGBREAK SET FOR 
-//             WHEN USE INFO POINTS TO A DANGLING FORM WHEN THE PROGRAM IS COMPILED 
-//             IN DEBUG; FROM THIS, WE CAN SEE THAT RANDOM FORMS JUST AREN'T PRESENT 
-//             IN THE LIST OF LOADED FORMS. THE AFFECTED FORMS VARY EACH TIME, AND 
-//             ARE NOT OF CONSISTENT FORM TYPES EITHER.
+//           = FOR SOME REASON, LoadOrder IS RANDOMLY FAILING TO ADD FORMS TO THE 
+//             LIST OF ALL FORMS: THE AFFECTED FORMS MAKE IT INTO THE LIST FOR THEIR 
+//             FORM TYPE, BUT NOT INTO THE GLOBAL LIST. IT'S ENTIRELY RANDOM AND IT'S 
+//             POSSIBLE FOR THE PROGRAM TO RUN TO COMPLETION WITHOUT ANY FORMS BEING 
+//             AFFECTED. WHAT THE HELL?
+//
+//              - We have debug code in TESPlugin.cpp and in LoadOrder::hasForm which 
+//                work together to __debugbreak() when this happens.
+//
+//              - We only ever insert into both maps! We lock both of them before 
+//                inserting to ensure thread-safety! What the hell is going on?
 //
 //           - Write code to list all of the inbound references for a form, and 
 //             code to list all of the outbound references. We need to test that 

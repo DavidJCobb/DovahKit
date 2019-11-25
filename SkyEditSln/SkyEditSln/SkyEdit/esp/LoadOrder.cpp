@@ -402,6 +402,22 @@ bool LoadOrder::hasForm(uint32_t formID) const noexcept {
       return false;
    auto& list = this->forms.forms;
    auto  it   = list.find(formID);
+   #if _DEBUG
+      if (it == list.end()) {
+         for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
+            auto& list = this->formsByType[ft].forms;
+            auto  it   = list.find(formID);
+            if (it != list.end()) {
+               //
+               // The two lists are in inconsistent states!
+               //
+               __debugbreak();
+            }
+         }
+         return false;
+      }
+      return true;
+   #endif
    return (it != list.end());
 }
 FormStub* LoadOrder::getForm(uint32_t formID) const noexcept {
@@ -501,7 +517,8 @@ void LoadOrder::reset() {
 
 form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    auto& type = this->formsByType[stub->formType];
-   std::lock_guard<std::mutex> guard(type.lock);
+   std::lock_guard<std::mutex> guard_for_form_type(type.lock);
+   std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
    //
    uint32_t formID;
    auto     result = this->localFormIDToGlobalFormID(stub, formID);
@@ -517,14 +534,19 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    //
    FormStub*& target = type.forms[formID];
    if (target) // is this an override?
-      delete target;
+      delete target; // delete the overridden form stub
    target = stub;
    stub->formID = formID;
    //
    // update the map of all forms as well:
    //
-   std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
-   this->forms.forms[formID] = stub;
+   FormStub*& other = this->forms.forms[formID];
+   other = stub;
+   //this->forms.forms[formID] = stub;
+   #if _DEBUG
+      if (!this->forms.forms[formID])
+         __debugbreak();
+   #endif
    //
    return form_id_status::valid;
 }
