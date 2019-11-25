@@ -133,6 +133,7 @@
     <ClCompile Include="forms\conditions\arg_types.cpp" />
     <ClCompile Include="forms\factories\use_info.cpp" />
     <ClCompile Include="forms\loaded\ActorBase.cpp" />
+    <ClCompile Include="forms\loaded\Form.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\memory.cpp" />

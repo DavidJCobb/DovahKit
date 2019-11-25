@@ -347,6 +347,7 @@ namespace cobb {
          };
          struct Block {
             BlockInfo info;
+            #pragma warning(suppress: 26495) // buffer is uninitialized
             uint8_t   buffer[count_per_block * element_size];
             //
             void* allocate() {

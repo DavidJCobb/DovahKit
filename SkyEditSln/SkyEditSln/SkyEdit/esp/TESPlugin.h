@@ -247,7 +247,7 @@ class TESPluginSubrecord {
       bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator
       bool read_wstring(std::wstring& field);
       //
-      template<int length_bytes> inline bool read_length_prefixed_string(std::string& field) const {
+      template<int length_bytes> inline bool read_length_prefixed_string(std::string& field) const noexcept {
          //
          // Read a string prefixed with a length, with no null terminator.
          //
@@ -258,6 +258,16 @@ class TESPluginSubrecord {
             field.resize(length);
             return this->read((void*)field.data(), length);
          }
+         return false;
+      }
+      template<int length_bytes> inline bool skip_length_prefixed_string() const noexcept {
+         //
+         // Skip a string prefixed with a length, with no null terminator.
+         //
+         using int_t = cobb::bytecount_to_int_t<length_bytes>;
+         int_t length;
+         if (this->read(length))
+            return this->skip_bytes(length);
          return false;
       }
       //
@@ -299,10 +309,10 @@ class TESPluginBaseReader {
       //
    protected:
       #ifdef COBB_ESP_USE_MAPPED_FILES
-         cobb::mapped_file* file = nullptr;
+         cobb::mapped_file* file = nullptr; // NOTE: an instance of TESPluginBaseReader may not necessarily own the file it has a pointer to
          uint32_t stream_position = 0;
       #else
-         FILE* fileHandle = nullptr;
+         FILE* fileHandle = nullptr; // NOTE: an instance of TESPluginBaseReader may not necessarily own the file it has a pointer to
       #endif
       TESPluginGroup     groups[MAX_ESP_FILE_GROUP_DEPTH];
       TESPluginRecord    record;
@@ -469,6 +479,62 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
       void start();
       void wait_for();
 };
+class TESPluginThreadedWorldspacePersistentCellChildrenReader : public TESPluginBaseReader {
+   protected:
+      struct QueuedGroup {
+         uint32_t cellID;
+         uint32_t pos;
+         //
+         QueuedGroup(uint32_t c, uint32_t p) : cellID(c), pos(p) {};
+      };
+      //
+      void _load();
+      static void _thread_handler(TESPluginThreadedWorldspacePersistentCellChildrenReader* instance);
+   public:
+      TESPluginThreadedWorldspacePersistentCellChildrenReader(TESPluginFile& f) : owner(f) {}
+      //
+      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      //
+      TESPluginFile& owner;
+      //
+      std::vector<QueuedGroup> queue;
+      std::thread thread;
+      //
+      void add_group(uint32_t cellID, uint32_t pos);
+      void start();
+      void wait_for();
+};
+
+class TESPluginFileView : public TESPluginBaseReader {
+   //
+   // Here's an interesting problem: If you want to read the data of multiple FormStubs' 
+   // records, from multiple threads, how do you do that? For example, if you want to 
+   // build Use Info for forms in a multi-threaded manner after having loaded those 
+   // forms, how would you do that?
+   //
+   // A FormStub relies on the TESPluginFile that created it in order to access the 
+   // contents of its record (i.e. TESPluginFile::loadRecordAt(uint32_t), which means 
+   // that that access is ordinarily not thread-safe: a TESPluginFile instance only 
+   // maintains state for one record at a time.
+   // 
+   // This class was created to work around that limitation. As a subclass of the 
+   // basic TESPluginBaseReader class, it is able to hold record state and a pointer 
+   // to a plugin file. If you hold multiple sets of state, then you can give each set 
+   // of state to a different thread, yes?
+   //
+   // You can pass instances of this class to an overload of TESPluginFile::loadRecordAt 
+   // in order to access the record data at a given offset.
+   //
+   // TODO: The threaded reader classes have basically the same stuff as this one; they 
+   // use a TESPluginFile& owner instead of a TESPluginFile* owner but are otherwise the 
+   // same (i.e. they don't own the file they're being used to read); they could be made 
+   // subclasses of this class.
+   //
+   public:
+      virtual const TESPluginFile* asFile() const noexcept override { return this->owner; }
+      //
+      TESPluginFile* owner = nullptr;
+};
 
 SCOPE_ENUM(TESPluginFileFlags, enum TESPluginFileFlags {
    master = 0x0001,
@@ -479,6 +545,7 @@ class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
    friend TESPluginThreadedWorldspaceSubBlockReader;
+   friend TESPluginThreadedWorldspacePersistentCellChildrenReader;
    public:
       using Flags = TESPluginFileFlags;
       struct MasterEntry {
@@ -493,6 +560,7 @@ class TESPluginFile : public TESPluginBaseReader {
       //
       bool load(const char* filepath);
       bool loadRecordAt(uint32_t pos); // for FormStub
+      bool loadRecordAt(uint32_t pos, TESPluginFileView* reader); // for FormStub (multi-threaded building of Use Info); the reader passed in must not be the "owner" of its mapped file
       //
    protected:
       bool _loadHeader();
@@ -503,6 +571,7 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginThreadedSimpleReader simpleReaders[ESP_LOAD_SIMPLE_THREADS]; // see constructor for initializer
       TESPluginThreadedInteriorCellReader interiorCellReaders[ESP_LOAD_INT_CELL_THREADS]; // see constructor for initializer
       TESPluginThreadedWorldspaceSubBlockReader worldspaceReaders[ESP_LOAD_WORLDSPACE_THREADS]; // see constructor for initializer
+      TESPluginThreadedWorldspacePersistentCellChildrenReader worldCellReaders[ESP_LOAD_WORLD_CELL_THREADS]; // see constructor for initializer
       //
       bool aborted = false;
       //

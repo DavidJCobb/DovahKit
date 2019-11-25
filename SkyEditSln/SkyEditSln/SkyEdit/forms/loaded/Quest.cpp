@@ -2,6 +2,11 @@
 #include "../../esp/TESPlugin.h"
 #include "../../output.h"
 
+#define BENCHMARK_QUEST_USE_INFO_BUILD 1
+#if BENCHMARK_QUEST_USE_INFO_BUILD == 1
+   #include <sys/timeb.h>
+#endif
+
 namespace LoadedForms {
    void LocationAlias::load(TESPluginRecord& record) {
       auto& subrecord = record.get_current_subrecord();
@@ -527,6 +532,11 @@ namespace LoadedForms {
       }
    }
    /*static*/ void Quest::generateUseInfo(TESPluginRecord& record, FormStub* stub) {
+      #if BENCHMARK_QUEST_USE_INFO_BUILD == 1
+         struct timeb bench_start;
+         struct timeb bench_end;
+         ftime(&bench_start);
+      #endif
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -552,13 +562,15 @@ namespace LoadedForms {
             case 'ALFR': // alias fill from preplaced ref ID
             case 'VTCK': // alias additional voicetype ID
             case 'ALRT': // alias fill from LocRefType ID
+            case 'ALFL': // alias fill from location ID
+            case 'KNAM': // alias fill from location keyword ID
                if (subrecord.read(formID))
                   stub->add_outbound_reference(formID);
                break;
             case 'CTDA':
                Condition::generateUseInfo(record, stub);
                break;
-            /*//
+            #ifdef _DEBUG
             case 'EDID': // editor ID
             case 'FULL': // name
             case 'ENAM': // event
@@ -576,7 +588,7 @@ namespace LoadedForms {
             case 'NNAM': // objective text
             case 'QSTA': // target
             case 'INDX': // stage
-            case 'QSTD': // log entry
+            case 'QSDT': // log entry
             case 'ALLS': // location alias start
             case 'ALST': // reference alias start
             case 'ALID': // alias ID
@@ -586,12 +598,31 @@ namespace LoadedForms {
             case 'KSIZ': // alias keyword count
             case 'COCT': // alias item count
             case 'PRKZ': // alias perk count
+            case 'ALFA': // alias fill from internal alias ID
+            case 'ALEA': // alias fill from external alias ID
+            case 'ALFE': // alias fill from event
+            case 'ALFD': // alias fill from event data
+            case 'ALCA': // alias create object at
+            case 'ALCL': // alias create object of level
+            case 'ALNA': // alias find matching reference near alias
+            case 'ALNT': // alias find matching reference near alias type
+            case 'ALED': // alias end marker
                break;
             case 'DNAM': // quest form version?
                break;
-            //*/
+            default:
+               {
+                  char sig[5];
+                  FMT_SIGNATURE(subrecord.signature(), sig);
+                  _DEBUGMSG("Warning: [QUST:%08X]%s: Unrecognized signature %s at offset %08X.", record.formID(), stub->get_editor_id(), sig, record.stream_pos());
+               }
+            #endif
          }
       }
+      #if BENCHMARK_QUEST_USE_INFO_BUILD == 1
+         ftime(&bench_end);
+         printf("Time taken to build Use Info for quest %08X: %d ms\n", record.formID(), (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+      #endif
    }
 
    const char* _questTypeNames[] = {

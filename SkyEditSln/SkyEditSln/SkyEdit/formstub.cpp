@@ -55,10 +55,10 @@ void FormStub::set_edited(bool v) {
    cobb::edit_bit(this->refcount, kRefcountFlag_Edited, v);
 }
 
-void FormStub::build_outbound_refs() noexcept {
+void FormStub::build_outbound_refs(TESPluginFileView* reader) noexcept {
    assert(this->file && "FormStub cannot build outbound refs without a file. How did this happen?");
-   if (this->file->loadRecordAt(this->offset)) {
-      auto& record = this->file->getCurrentRecord();
+   if (this->file->loadRecordAt(this->offset, reader)) {
+      auto& record = reader->getCurrentRecord();
       auto  builder = getOutboundUsesBuilderForFormType(this->formType);
       if (builder)
          builder(record, this);
@@ -66,7 +66,8 @@ void FormStub::build_outbound_refs() noexcept {
 }
 void FormStub::send_inbound_refs() noexcept {
    for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it)
-      it->second.other->receive_inbound_ref(this);
+      if (it->second.other)
+         it->second.other->receive_inbound_ref(this);
 }
 void FormStub::receive_inbound_ref(FormStub* inbound) noexcept {
    auto& list  = this->inbound;
@@ -75,10 +76,16 @@ void FormStub::receive_inbound_ref(FormStub* inbound) noexcept {
    entry.refcount++;
 }
 void FormStub::add_outbound_reference(uint32_t toFormID) {
+   if (toFormID == 0)
+      return;
    auto& list  = this->outbound;
    auto& entry = list[toFormID];
    if (!entry.other)
       entry.other = LoadOrder::get().getForm(toFormID);
+   #ifdef _DEBUG
+      if (!entry.other && toFormID > 0x800)
+         __debugbreak();
+   #endif
    entry.refcount++;
 }
 /*static*/ void* FormStub::operator new(std::size_t sz) {

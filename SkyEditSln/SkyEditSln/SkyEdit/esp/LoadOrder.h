@@ -4,6 +4,7 @@
 #include <mutex>
 #include <set>
 #include <string>
+#include <thread>
 #include <vector>
 #include "../formstub.h"
 #include "../forms/types.h"
@@ -164,6 +165,7 @@ class LoadOrder {
       std::vector<TESPluginHeader*> loadOrderPlugins;
       std::vector<TESPluginFile*>   files;
       TESPluginFile* activeFile = nullptr; // TODO
+      _form_map forms;
       _form_map formsByType[FormType::Count];
       //
       uint8_t loadOrderPrefixFor(const TESPluginFile*) const noexcept;
@@ -206,9 +208,9 @@ class LoadOrder {
       //
       uint8_t indexOf(const std::string& filename) const noexcept;
       //
-      FormStub* getForm(uint32_t formID) const;
-      FormStub* getForm(formtype_t formType, uint32_t formID) const; // use when you KNOW the form's type
-      FormStub* getFormOfProbableType(formtype_t formType, uint32_t formID) const; // searches (formType) first, then the other types
+      FormStub* getForm(uint32_t formID) const noexcept;
+      FormStub* getForm(formtype_t formType, uint32_t formID) const noexcept; // use when you KNOW the form's type
+      FormStub* getFormOfProbableType(formtype_t formType, uint32_t formID) const noexcept; // searches (formType) first, then the other types
       void forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)>);
       form_id_status localFormIDToGlobalFormID(const TESPluginFile* file, uint32_t& id) const;
       //

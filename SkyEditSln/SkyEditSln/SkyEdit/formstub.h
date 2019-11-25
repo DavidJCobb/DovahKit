@@ -13,6 +13,7 @@ class LoadOrder;
 class ThreadedUseInfoOutboundBuilder;
 class TESPluginFile;
 class TESPluginBaseReader;
+class TESPluginFileView;
 class TESPluginThreadedSimpleReader;
 class TESPluginThreadedInteriorCellReader;
 class TESPluginThreadedWorldspaceSubBlockReader;
@@ -209,12 +210,7 @@ class FormStub {
       uint32_t offset   = 0; // offset of this form's record header within its owning file
       std::atomic<uint32_t> refcount = 0;
       char*    editorID = nullptr;
-      //
-      // TODO: When we begin to add the ability to edit things, we'll have to keep editor IDs consistent 
-      // between FormStubs and their loaded forms... or give every loaded form a reference to its stub, 
-      // and have them skip loading their own editor IDs since the stubs already loaded those.
-      //
-      void build_outbound_refs() noexcept;
+      void build_outbound_refs(TESPluginFileView*) noexcept;
       void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
       void receive_inbound_ref(FormStub* inbound) noexcept;
       //

@@ -14,5 +14,7 @@ namespace LoadedForms {
          Form(formtype_t ft) : formType(ft) {};
          //
          FormStub* stub = nullptr;
+         //
+         const char* get_editor_id() const noexcept;
    };
 }

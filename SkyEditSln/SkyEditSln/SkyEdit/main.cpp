@@ -137,6 +137,15 @@ std::thread::id main_thread_id;
 //
 //  - Use Info:
 //
+//     = Use Info Bugs
+//
+//        - Some quests take a massive amount of time to generate it, or 
+//          even seem to get stuck; I'm not clear on why
+//
+//        - Testing indicates that [LCTN:03016e2a]DLC2SolstheimLocation is 
+//          failing to load, or at least failing to be stored at that form 
+//          ID, when load order slot 03 is Dragonborn.esm.
+//
 //     = NOTE: Use Info is helpful for all forms, but only NEEDED in cases 
 //       where we allow you to delete a form. We only allow you to delete 
 //       from the active file, and for now, this is only intended for use 
@@ -145,8 +154,6 @@ std::thread::id main_thread_id;
 //       of unrecognized/unimplemented/etc. types, if that's what it takes 
 //       to get a usable prototype of this whole thing ready in a reasonable 
 //       amount of time.
-//
-//     - Condition::generateUseInfo is unfinished and will assert if called.
 //
 //     - We don't have to write load code for every form type that we write 
 //       use info code for; each form class should have a static method (NOT 

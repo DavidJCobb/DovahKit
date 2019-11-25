@@ -215,42 +215,98 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
 #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
    #include <sys/timeb.h>
 #endif
+class ThreadedUseInfoOutboundBuilder : public TESPluginFileView {
+   protected:
+      std::vector<FormStub*> queue;
+      std::thread thread;
+      //
+      static void _thread_handler(ThreadedUseInfoOutboundBuilder* instance) {
+         auto registration = UseInfoEntryHeap::get().register_thread();
+         instance->_execute();
+      }
+      void _execute() {
+         _DEBUGMSG("[ThreadedUseInfoOutboundBuilder] Thread %08X has started processing %d forms.", std::this_thread::get_id(), this->queue.size());
+         #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+            struct timeb bench_start;
+            struct timeb bench_last;
+            struct timeb bench_current;
+            ftime(&bench_last);
+            bench_start = bench_last;
+            uint32_t i = 0;
+            std::thread::id threadID = std::this_thread::get_id();
+         #endif
+         auto& list = this->queue;
+         for (auto it = list.begin(); it != list.end(); ++it) {
+            (*it)->build_outbound_refs(this);
+            #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+               ftime(&bench_current);
+               auto diff = (uint32_t)(1000.0 * (bench_current.time - bench_last.time)) + (bench_current.millitm - bench_last.millitm);
+               if (diff > 1000) {
+                  diff = (uint32_t)(1000.0 * (bench_current.time - bench_start.time)) + (bench_current.millitm - bench_start.millitm);
+                  _DEBUGMSG("[ThreadedUseInfoOutboundBuilder] Thread %08X: Time %d ms: processed %d forms.", threadID, diff, i);
+               }
+               bench_last = bench_current;
+               i++;
+            #endif
+         }
+         _DEBUGMSG("[ThreadedUseInfoOutboundBuilder] Thread %08X has finished processing %d forms.", std::this_thread::get_id(), this->queue.size());
+      }
+   public:
+      void addToQueue(FormStub* stub) noexcept {
+         this->queue.push_back(stub);
+      }
+      void start() noexcept {
+         this->thread = std::thread(ThreadedUseInfoOutboundBuilder::_thread_handler, this);
+      }
+      void wait_for() noexcept {
+         if (this->is_active())
+            this->thread.join();
+      }
+      //
+      inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
+};
+
 void LoadOrder::_buildUseInfo() noexcept {
+   #ifdef _DEBUG
+      {
+         struct timeb bench_start;
+         struct timeb bench_end;
+         printf("Testing form lookup time...\n");
+         ftime(&bench_start);
+         try {
+            auto stub = this->forms.forms.at(0x000CA210);
+         } catch (std::out_of_range) {};
+         ftime(&bench_end);
+         printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+      }
+   #endif
    #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
       struct timeb bench_start;
       struct timeb bench_end;
       printf("Building Use Info...\n");
       ftime(&bench_start);
    #endif
-   //
-   // TODO: Split the process up, and multi-thread it.
-   //
+   ThreadedUseInfoOutboundBuilder builders[8];
+   uint32_t which_thread = 0;
    // Inbound first, since we can multi-thread that
-   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
-      auto& list = this->formsByType[ft].forms;
-      #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
-         struct timeb bench_start;
-         struct timeb bench_end;
-         ftime(&bench_start);
-      #endif
-      for (auto it = list.begin(); it != list.end(); ++it)
-         it->second->build_outbound_refs();
-      #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
-         ftime(&bench_end);
-         if (bench_end.time != bench_start.time && bench_end.millitm != bench_start.millitm)
-            printf("Time taken for outbound refs from form type %d: %d ms\n", ft, (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-      #endif
+   for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
+      FormStub* stub = it->second;
+      builders[which_thread].addToQueue(stub);
+      if (++which_thread > 7)
+         which_thread = 0;
    }
+   for (int i = 0; i < std::extent<decltype(builders)>::value; i++)
+      builders[i].start();
+   for (int i = 0; i < std::extent<decltype(builders)>::value; i++)
+      builders[i].wait_for();
    #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
       ftime(&bench_end);
       printf("Time taken for outbound refs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
       ftime(&bench_start);
    #endif
    // Outbound next; has to be single-threaded
-   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
-      auto& list = this->formsByType[ft].forms;
-      for (auto it = list.begin(); it != list.end(); ++it)
-         it->second->send_inbound_refs();
+   for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
+      it->second->send_inbound_refs();
    }
    #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
       ftime(&bench_end);
@@ -353,38 +409,36 @@ uint8_t LoadOrder::indexOf(const std::string& filename) const noexcept {
    return invalid_load_prefix;
 }
 
-FormStub* LoadOrder::getForm(uint32_t formID) const {
-   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
-      auto& list = this->formsByType[ft].forms;
-      try {
-         return list.at(formID);
-      } catch (std::out_of_range) {}
+FormStub* LoadOrder::getForm(uint32_t formID) const noexcept {
+   if (formID == 0)
+      return nullptr;
+   auto& list = this->forms.forms;
+   auto  it   = list.find(formID);
+   if (it != list.end())
+      return it->second;
+   return nullptr;
+}
+FormStub* LoadOrder::getForm(uint8_t formType, uint32_t formID) const noexcept {
+   if (formID == 0)
+      return nullptr;
+   if (formType < std::extent<decltype(this->formsByType)>::value) {
+      auto& list = this->formsByType[formType].forms;
+      auto  it   = list.find(formID);
+      if (it != list.end())
+         return it->second;
    }
    return nullptr;
 }
-FormStub* LoadOrder::getForm(uint8_t formType, uint32_t formID) const {
+FormStub* LoadOrder::getFormOfProbableType(formtype_t formType, uint32_t formID) const noexcept {
+   if (formID == 0)
+      return nullptr;
    if (formType < std::extent<decltype(this->formsByType)>::value) {
-      try {
-         return this->formsByType[formType].forms.at(formID);
-      } catch (std::out_of_range) {}
+      auto& list = this->formsByType[formType].forms;
+      auto  it   = list.find(formID);
+      if (it != list.end())
+         return it->second;
    }
-   return nullptr;
-}
-FormStub* LoadOrder::getFormOfProbableType(formtype_t formType, uint32_t formID) const {
-   if (formType < std::extent<decltype(this->formsByType)>::value) {
-      try {
-         return this->formsByType[formType].forms.at(formID);
-      } catch (std::out_of_range) {}
-   }
-   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
-      if (ft == formType)
-         continue;
-      auto& list = this->formsByType[ft].forms;
-      try {
-         return list.at(formID);
-      } catch (std::out_of_range) {}
-   }
-   return nullptr;
+   return this->getForm(formID);
 }
 void LoadOrder::forEachFormOfType(formtype_t formType, std::function<bool(FormStub*)> functor) {
    if (formType < std::extent<decltype(this->formsByType)>::value) {
@@ -444,6 +498,7 @@ void LoadOrder::reset() {
    this->queuedFiles.clear();
    this->queuedActiveFile.clear();
    //
+   this->forms.forms.clear();
    for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++)
       this->formsByType[ft].forms.clear();
    FormStubHeap::get().force_free_all();
@@ -462,10 +517,18 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    }
    if (formID == 0)
       return form_id_status::null_is_not_allowed;
+   //
+   // update the map of forms by type:
+   //
    FormStub*& target = type.forms[formID];
    if (target) // is this an override?
       delete target;
    target = stub;
    stub->formID = formID;
+   //
+   // update the map of all forms as well:
+   //
+   this->forms.forms[formID] = stub;
+   //
    return form_id_status::valid;
 }

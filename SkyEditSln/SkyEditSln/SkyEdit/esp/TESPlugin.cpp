@@ -395,6 +395,9 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
          uint32_t out_size = decompressed_size;
          uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
          free(input_buffer);
+         if (out_size != decompressed_size) {
+            _DEBUGMSG("Size mismatch for decompressed record! Offset %08X, expected final size %08X, got size %08X.", record.headPos, decompressed_size, out_size);
+         }
          assert(out_size == decompressed_size);
       }
    } else {
@@ -579,7 +582,7 @@ void TESPluginThreadedSimpleReader::_load() {
       this->fileHandle = nullptr;
    #endif
    //
-   _DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished all of its work.");
+   _DEBUGMSG("[TESPluginThreadedSimpleReader] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
 }
 void TESPluginThreadedSimpleReader::add_group(uint32_t signature, uint32_t pos) {
    this->queue.emplace_back(signature, pos);
@@ -672,7 +675,7 @@ void TESPluginThreadedInteriorCellReader::_load() {
       this->fileHandle = nullptr;
    #endif
    //
-   _DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X finished all of its work.");
+   _DEBUGMSG("[TESPluginThreadedInteriorCellReader] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
 }
 void TESPluginThreadedInteriorCellReader::add_group(uint32_t blockNumber, uint32_t pos) {
    this->queue.emplace_back(blockNumber, pos);
@@ -712,7 +715,6 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
       this->resetParseState();
       assert(this->nextRecordOrGroup() == ObjectType::group);
       ObjectType ot;
-      uint32_t   lastBlockNumber = 0; // for debug logging
       uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
       formtype_t lastFormType = 0;
       while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
@@ -766,7 +768,7 @@ void TESPluginThreadedWorldspaceSubBlockReader::_load() {
       this->fileHandle = nullptr;
    #endif
    //
-   _DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X finished all of its work.");
+   _DEBUGMSG("[TESPluginThreadedWorldspaceSubBlockReader] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
 }
 void TESPluginThreadedWorldspaceSubBlockReader::add_group(uint32_t worldID, int16_t bx, int16_t by, int16_t sbx, int16_t sby, uint32_t pos) {
    this->queue.emplace_back(worldID, bx, by, sbx, sby, pos);
@@ -778,10 +780,112 @@ void TESPluginThreadedWorldspaceSubBlockReader::wait_for() {
    this->thread.join();
 }
 
+void TESPluginThreadedWorldspacePersistentCellChildrenReader::_thread_handler(TESPluginThreadedWorldspacePersistentCellChildrenReader* instance) {
+   auto registration = FormStubHeap::get().register_thread();
+   instance->_load();
+}
+void TESPluginThreadedWorldspacePersistentCellChildrenReader::_load() {
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = this->owner.file;
+   #else
+      if (this->fileHandle) {
+         fclose(this->fileHandle);
+         this->fileHandle = nullptr;
+      }
+      this->fileHandle = _fsopen(this->owner.path.c_str(), "rb", _SH_DENYWR);
+      assert(this->fileHandle && "[TESPluginThreadedWorldspaceSubBlockReader] Unable to open the file for reading.");
+   #endif
+   //
+   auto size = this->queue.size();
+   for (uint32_t i = 0; i < size; i++) {
+      if (this->owner.aborted) {
+         _DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
+         break;
+      }
+      auto& desired = this->queue[i];
+      //_DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Thread %08X beginning with [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
+      this->setPos(desired.pos);
+      this->resetParseState();
+      assert(this->nextRecordOrGroup() == ObjectType::group);
+      ObjectType ot;
+      uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
+      formtype_t lastFormType = 0;
+      while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
+         if (ot == ObjectType::group) {
+            //
+            // Stop if we've reached the end of the group we're meant to parse.
+            //
+            auto& first = this->groups[0];
+            if (!first || first.pos != desired.pos) {
+               //_DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Thread %08X finished parse of [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
+               break;
+            }
+            #ifdef _DEBUG
+               _DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Thread %08X found another group.", std::this_thread::get_id());
+               std::string dbg;
+               for (int i = 0; i < std::extent<decltype(this->groups)>::value; i++) {
+                  if (!this->groups[i].exists())
+                     continue;
+                  this->groups[i].to_string(dbg);
+                  _DEBUGMSG(" - Group %d: %s", i, dbg.c_str());
+               }
+            #endif
+         }
+         if (ot == ObjectType::record) {
+            auto& record = this->getCurrentRecord();
+            auto& group  = this->getCurrentGroup();
+            if (record.signature() != lastSignature) {
+               lastSignature = record.signature();
+               lastFormType = signatureToFormType(lastSignature);
+            }
+            formtype_t formType = lastFormType;
+            if (!formType)
+               continue;
+            //
+            auto  stub = this->make_stub_for_record(this->owner);
+            stub->groupInfo.groupType = group.header.type;
+            if (formTypeIsReference(stub->formType)) {
+               uint32_t cellID = group.getRawIDOfParentCell();
+               if (cellID) {
+                  #ifdef _DEBUG
+                     if (group.pos == 0x0D8474E2)
+                        _DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Found form %08X.", stub->formID);
+                  #endif
+                  LoadOrder::get().localFormIDToGlobalFormID(this->owner.asFile(), cellID);
+                  stub->groupInfo.parentFormID = cellID;
+               } else
+                  _DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader:%s] Reference %08X is not in a cell?", this->owner.asFile()->getFilename(), stub->formID);
+            }
+            this->owner._insertForm(stub->formID, stub);
+            this->extract_editor_id_for_stub(stub);
+            continue;
+         }
+      }
+   }
+   #ifdef COBB_ESP_USE_MAPPED_FILES
+      this->file = nullptr;
+   #else
+      fclose(this->fileHandle);
+      this->fileHandle = nullptr;
+   #endif
+   //
+   _DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
+}
+void TESPluginThreadedWorldspacePersistentCellChildrenReader::add_group(uint32_t cellID, uint32_t pos) {
+   this->queue.emplace_back(cellID, pos);
+}
+void TESPluginThreadedWorldspacePersistentCellChildrenReader::start() {
+   this->thread = std::thread(TESPluginThreadedWorldspacePersistentCellChildrenReader::_thread_handler, this);
+}
+void TESPluginThreadedWorldspacePersistentCellChildrenReader::wait_for() {
+   this->thread.join();
+}
+
 TESPluginFile::TESPluginFile() :
    simpleReaders{ *this, *this, *this, *this }, // curly braces here are NOT a typo; this is needed to initialize the array
    interiorCellReaders{ *this, *this, *this, *this },
    worldspaceReaders{ *this, *this, *this, *this, *this, *this },
+   worldCellReaders{ *this, *this },
    complexReader(*this, true)
 {
    this->authorName[511]  = '\0';
@@ -808,6 +912,13 @@ bool TESPluginFile::loadRecordAt(uint32_t pos) {
    this->resetParseState();
    this->setPos(pos);
    return this->nextRecordOrGroup() == ObjectType::record;
+}
+bool TESPluginFile::loadRecordAt(uint32_t pos, TESPluginFileView* reader) { // for FormStub (multi-threaded building of Use Info)
+   reader->owner = this;
+   reader->file  = this->file;
+   reader->resetParseState();
+   reader->setPos(pos);
+   return reader->nextRecordOrGroup() == ObjectType::record;
 }
 //
 bool TESPluginFile::_loadHeader() {
@@ -999,7 +1110,8 @@ bool TESPluginFile::load(const char* filepath) {
    this->uses_string_table = (bool)(this->flags & Flags::localized_string_table);
    //
    // TODO: need to define hardcoded forms so that references to them don't break, OR 
-   // special-case them in whatever code we write to handle references between forms
+   // special-case them in whatever code we write to handle references between forms; 
+   // should probably do this in LoadOrder
    //
    {
       // we *do* load *some* records in this function, so we need to register with the allocator
@@ -1010,100 +1122,150 @@ bool TESPluginFile::load(const char* filepath) {
       uint32_t   which_simple = 0;
       uint32_t   which_intcell = 0;
       uint32_t   which_world = 0;
+      uint32_t   which_world_cell = 0;
       uint32_t   last_worldspace_id = 0;
+      uint32_t   last_world_cell_id = 0;
       int16_t    last_ext_block_x = 0;
       int16_t    last_ext_block_y = 0;
       while (ot = this->nextRecordOrGroup(), ot != ObjectType::none) {
+         //
+         // First, let's define some terms:
+         //
+         //  - Simple form type: A form type that cannot have child forms (i.e. no 
+         //    nested GRUPs).
+         //
+         //  - Top-group: A top-level GRUP.
+         //
+         // Okay, so here's what we're doing:
+         //
+         //  - Top-groups of simple form types: Divide these across multiple threads. 
+         //    Each thread will create FormStubs for each record in its assigned top-
+         //    groups.
+         //
+         //  - Dialogue topics:
+         //
+         //     - These are handled by a single loader, which also handles their 
+         //       child GRUPs and INFOs.
+         //
+         //  - Interior cells:
+         //
+         //     - Divide the interior cell block GRUPs across multiple threads. Each 
+         //       thread will handle the CELL records themselves and any GRUPs nested 
+         //       under the block GRUPs.
+         //
+         //  - Worldspace persistent cells:
+         //
+         //     - Load the cell here.
+         //
+         //     - Divide all of the cell's child GRUPs across multiple threads. Each 
+         //       thread will handle the records nested under those GRUPs.
+         //
+         //        = BUG: THIS DOESN'T WORK; we are failing to load references inside 
+         //          of persistent cells. Test-case: [REFR:00015CC5]dunEldergleamAstaREF
+         //
+         //  - Worldspaces:
+         //
+         //     - Load the worldspace here.
+         //
+         //        = BUG: WAIT, DID WE REMEMBER TO DO THIS?
+         //
+         //     - Divide the worldspace's cell sub-block GRUPs across multiple threads. 
+         //       Each thread will handle the CELL records themselves and any GRUPs 
+         //       nested under the sub-block GRUPs.
+         //
          auto& group = this->getCurrentGroup();
-         if (ot == ObjectType::record) {
-            //
-            // We should only hit records when we choose not to skip a group's contents. 
-            // We use this to load worldspaces and their persistent/temporary cells.
-            //
-            auto& record = this->getCurrentRecord();
-            if (record.signature() == 'WRLD') {
-               last_worldspace_id = record.formID();
-               LoadOrder::get().localFormIDToGlobalFormID(this, last_worldspace_id);
-               continue;
-            }
-            formtype_t formType = signatureToFormType(record.signature());
-            auto  stub = this->make_stub_for_record(*this);
-            stub->groupInfo.groupType = group.header.type;
-            switch (group.header.type) {
-               case ESPGroupType::world_children:
-                  stub->groupInfo.parentFormID = last_worldspace_id;
-                  break;
-            }
-            this->_insertForm(stub->formID, stub);
-         }
          if (ot == ObjectType::group) {
-            if (group.header.type == ESPGroupType::world_children) {
+            switch (group.header.type) {
                //
-               // Parse direct children of the worldspace (i.e. the persistent cell).
+               // In order to skip the group's contents, call (group.skip()) and then (continue). In order 
+               // to enter the group's contents and parse them, (continue) without skipping the group.
                //
-               continue;
-            } else if (group.header.type == ESPGroupType::exterior_cell_block) {
-               last_ext_block_y = group.header.label & 0xFFFF;
-               last_ext_block_x = group.header.label >> 0x10;
-               continue;
-            } else if (group.header.type == ESPGroupType::exterior_cell_sub_block) {
-               assert(last_worldspace_id && "Exterior Cell Block GRUP must follow a WRLD record.");
-               auto& loader = this->worldspaceReaders[which_world];
-               if (++which_world >= std::extent<decltype(this->worldspaceReaders)>::value)
-                  which_world = 0;
-               int16_t sub_x = group.header.label >> 0x10;
-               int16_t sub_y = group.header.label & 0xFFFF;
-               loader.add_group(last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, group.pos);
-               group.skip();
-               continue;
-            } else if (group.header.type == ESPGroupType::interior_cell_block) { // Interior Cell Block
-               {
-                  auto parent = group.getParent();
-                  int  err    = 0;
-                  if (!parent)
-                     err = 1;
-                  else if (parent->header.type != ESPGroupType::forms_of_type)
-                     err = 2;
-                  else if (_byteswap_ulong(parent->header.label) != 'CELL')
-                     err = 3;
-                  if (err) {
-                     LoadOrder::get().logError([this, err](FatalLoadError& error) {
-                        error.code       = LoadErrorCode::malformed_file;
-                        error.file       = this->name;
-                        error.fileOffset = this->getPos();
-                        error.parseError = "Bad interior-cell-block group nesting. ";
-                        switch (err) {
-                           case 1:
-                              error.parseError += "(No parent group.)";
-                              break;
-                           case 2:
-                              error.parseError += "(Parent group is not a top-level group for a form type.)";
-                              break;
-                           case 3:
-                              error.parseError += "(Parent group is not a group for CELL records.)";
-                              break;
-                        }
-                     });
-                     this->abort();
-                     break;
+               case ESPGroupType::world_children:
+                  //
+                  // Parse direct children of the worldspace (i.e. the persistent cell).
+                  //
+                  continue;
+               case ESPGroupType::cell_children:
+               case ESPGroupType::cell_persistent_children:
+               case ESPGroupType::cell_temporary_children:
+                  assert(last_world_cell_id != 0 && "We should be ignoring these GRUPs when they don't appear after a worldspace's persistent cell!");
+                  {
+                     auto& loader = this->worldCellReaders[which_world_cell];
+                     if (++which_world_cell >= std::extent<decltype(this->worldCellReaders)>::value)
+                        which_world_cell = 0;
+                     loader.add_group(last_world_cell_id, group.pos);
                   }
-               }
-               auto& loader = this->interiorCellReaders[which_intcell];
-               if (++which_intcell >= std::extent<decltype(this->interiorCellReaders)>::value)
-                  which_intcell = 0;
-               loader.add_group(group.header.label, group.pos);
-               group.skip();
-               continue;
-            } else if (group.header.type != ESPGroupType::forms_of_type) {
-               group.skip();
-               continue;
+                  group.skip();
+                  continue;
+               case ESPGroupType::exterior_cell_block:
+                  last_ext_block_y = group.header.label & 0xFFFF;
+                  last_ext_block_x = group.header.label >> 0x10;
+                  continue;
+               case ESPGroupType::exterior_cell_sub_block:
+                  assert(last_worldspace_id && "Exterior Cell Block GRUP must follow a WRLD record.");
+                  {
+                     auto& loader = this->worldspaceReaders[which_world];
+                     if (++which_world >= std::extent<decltype(this->worldspaceReaders)>::value)
+                        which_world = 0;
+                     int16_t sub_x = group.header.label >> 0x10;
+                     int16_t sub_y = group.header.label & 0xFFFF;
+                     loader.add_group(last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, group.pos);
+                  }
+                  group.skip();
+                  continue;
+               case ESPGroupType::interior_cell_block:
+                  {
+                     {  // Error-checking.
+                        auto parent = group.getParent();
+                        int  err = 0;
+                        if (!parent)
+                           err = 1;
+                        else if (parent->header.type != ESPGroupType::forms_of_type)
+                           err = 2;
+                        else if (_byteswap_ulong(parent->header.label) != 'CELL')
+                           err = 3;
+                        if (err) {
+                           LoadOrder::get().logError([this, err](FatalLoadError& error) {
+                              error.code = LoadErrorCode::malformed_file;
+                              error.file = this->name;
+                              error.fileOffset = this->getPos();
+                              error.parseError = "Bad interior-cell-block group nesting. ";
+                              switch (err) {
+                                 case 1:
+                                    error.parseError += "(No parent group.)";
+                                    break;
+                                 case 2:
+                                    error.parseError += "(Parent group is not a top-level group for a form type.)";
+                                    break;
+                                 case 3:
+                                    error.parseError += "(Parent group is not a group for CELL records.)";
+                                    break;
+                              }
+                              });
+                           this->abort();
+                           break;
+                        }
+                     }
+                     auto& loader = this->interiorCellReaders[which_intcell];
+                     if (++which_intcell >= std::extent<decltype(this->interiorCellReaders)>::value)
+                        which_intcell = 0;
+                     loader.add_group(group.header.label, group.pos);
+                  }
+                  group.skip();
+                  continue;
+               case ESPGroupType::forms_of_type:
+                  break;
+               default:
+                  group.skip();
+                  continue;
             }
             bool is_complex = false;
             switch (_byteswap_ulong(group.header.label)) {
-               case 'CELL': // handled by the Interior Cell Block readers.
-               case 'WRLD': // handled by the Worldspace readers.
+               case 'CELL': // contents handled by the Interior Cell Block readers.
+               case 'WRLD': // forms handled here; children handled by the worldspace sub-block readers.
                   //
-                  // Don't skip the group; we want to read at least some of the content inside of it.
+                  // Don't skip the group; we want to read at least some of the content inside of it. 
+                  // However, don't assign the group to a simple-reader either.
                   //
                   continue;
                case 'DIAL':
@@ -1124,6 +1286,28 @@ bool TESPluginFile::load(const char* filepath) {
             group.skip();
             continue;
          }
+         if (ot == ObjectType::record) {
+            last_world_cell_id = 0;
+            last_ext_block_x   = 0;
+            last_ext_block_y   = 0;
+            //
+            // We should only hit records when we choose not to skip a group's contents. 
+            // We use this to load worldspaces and their persistent/temporary cells.
+            //
+            auto& record = this->getCurrentRecord();
+            formtype_t formType = signatureToFormType(record.signature());
+            auto  stub = this->make_stub_for_record(*this);
+            stub->groupInfo.groupType = group.header.type;
+            switch (group.header.type) {
+               case ESPGroupType::world_children:
+                  stub->groupInfo.parentFormID = last_worldspace_id;
+                  last_world_cell_id = stub->formID;
+                  break;
+            }
+            this->_insertForm(stub->formID, stub); // also normalizes (stub->formID)
+            if (record.signature() == 'WRLD')
+               last_worldspace_id = stub->formID;
+         }
       }
    }
    this->complexReader.start();
@@ -1133,13 +1317,19 @@ bool TESPluginFile::load(const char* filepath) {
       this->worldspaceReaders[i].start();
    for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++)
       this->simpleReaders[i].start();
+   for (uint32_t i = 0; i < std::extent<decltype(this->worldCellReaders)>::value; i++)
+      this->worldCellReaders[i].start();
+   //
    for (uint32_t i = 0; i < std::extent<decltype(this->simpleReaders)>::value; i++)
       this->simpleReaders[i].wait_for();
    for (uint32_t i = 0; i < std::extent<decltype(this->interiorCellReaders)>::value; i++)
       this->interiorCellReaders[i].wait_for();
    for (uint32_t i = 0; i < std::extent<decltype(this->worldspaceReaders)>::value; i++)
       this->worldspaceReaders[i].wait_for();
+   for (uint32_t i = 0; i < std::extent<decltype(this->worldCellReaders)>::value; i++)
+      this->worldCellReaders[i].wait_for();
    this->complexReader.wait_for();
+   //
    return !this->aborted;
 }
 void TESPluginFile::abort() noexcept {
