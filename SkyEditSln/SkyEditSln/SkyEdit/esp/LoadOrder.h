@@ -208,6 +208,7 @@ class LoadOrder {
       //
       uint8_t indexOf(const std::string& filename) const noexcept;
       //
+      bool hasForm(uint32_t formID) const noexcept;
       FormStub* getForm(uint32_t formID) const noexcept;
       FormStub* getForm(formtype_t formType, uint32_t formID) const noexcept; // use when you KNOW the form's type
       FormStub* getFormOfProbableType(formtype_t formType, uint32_t formID) const noexcept; // searches (formType) first, then the other types

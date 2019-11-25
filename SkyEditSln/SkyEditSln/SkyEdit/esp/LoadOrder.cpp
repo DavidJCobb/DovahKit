@@ -5,6 +5,11 @@
 #include "../helpers/strings.h"
 #include "../output.h"
 
+#define BENCHMARK_LOAD_ORDER_USE_INFO_BUILD 1
+#if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+   #include <sys/timeb.h>
+#endif
+
 const char* _load_error_code_names[] = {
    "no error",
    "active file is a dependency of another file",
@@ -211,10 +216,6 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
    return true;
 }
 //
-#define BENCHMARK_LOAD_ORDER_USE_INFO_BUILD 1
-#if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
-   #include <sys/timeb.h>
-#endif
 class ThreadedUseInfoOutboundBuilder : public TESPluginFileView {
    protected:
       std::vector<FormStub*> queue;
@@ -396,6 +397,13 @@ uint8_t LoadOrder::indexOf(const std::string& filename) const noexcept {
    return invalid_load_prefix;
 }
 
+bool LoadOrder::hasForm(uint32_t formID) const noexcept {
+   if (formID == 0)
+      return false;
+   auto& list = this->forms.forms;
+   auto  it   = list.find(formID);
+   return (it != list.end());
+}
 FormStub* LoadOrder::getForm(uint32_t formID) const noexcept {
    if (formID == 0)
       return nullptr;
@@ -515,6 +523,7 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    //
    // update the map of all forms as well:
    //
+   std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
    this->forms.forms[formID] = stub;
    //
    return form_id_status::valid;

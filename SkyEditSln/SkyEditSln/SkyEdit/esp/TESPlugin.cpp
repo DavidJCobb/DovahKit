@@ -298,6 +298,10 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    //
    auto& record = this->record;
    if (record) {
+      #ifdef _DEBUG
+         if (record.formID() && !(record.formID() & 0xFF000000) && !LoadOrder::get().hasForm(record.formID()))
+            __debugbreak();
+      #endif
       /*//
       if (this->getPos() == record.end)
          _DEBUGMSG("Reached the end of record of type %s from %08X to %08X...", FMT_SIGNATURE(record.signature()), record.headPos, record.end);
@@ -308,6 +312,8 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
       record.reset();
    }
    //
+   // TODO: What happens if we hit an empty GRUP? Do we properly advance past it?
+   //
    // Make sure we properly handle passing the end of a group:
    //
    auto pos = this->getPos();
@@ -315,7 +321,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
       auto& group = this->groups[i];
       if (!group)
          break;
-      if (pos <= group.pos || pos >= group.end)
+      if (pos >= group.end)
          group.reset();
    }
    //
@@ -556,6 +562,9 @@ void TESPluginThreadedSimpleReader::_load() {
                lastFormType  = signatureToFormType(lastSignature);
             }
             formtype_t formType = lastFormType;
+            #if _DEBUG
+               assert(formType && "TESPluginThreadedSimpleReader: found a form with an unrecognized type!");
+            #endif
             if (!formType)
                continue;
             //
@@ -826,13 +835,13 @@ void TESPluginThreadedWorldspacePersistentCellChildrenReader::_load() {
             auto& group  = this->getCurrentGroup();
             if (record.signature() != lastSignature) {
                lastSignature = record.signature();
-               lastFormType = signatureToFormType(lastSignature);
+               lastFormType  = signatureToFormType(lastSignature);
             }
             formtype_t formType = lastFormType;
             if (!formType)
                continue;
             //
-            auto  stub = this->make_stub_for_record(this->owner);
+            auto stub = this->make_stub_for_record(this->owner);
             stub->groupInfo.groupType = group.header.type;
             if (formTypeIsReference(stub->formType)) {
                uint32_t cellID = group.getRawIDOfParentCell();
@@ -1066,6 +1075,10 @@ void TESPluginFile::_insertForm(uint32_t formID, FormStub* stub) {
             this->abort();
             return;
       }
+      #ifdef _DEBUG
+         if (!LoadOrder::get().hasForm(stub->formID))
+            __debugbreak();
+      #endif
    }
 }
 bool TESPluginFile::load(const char* filepath) {
@@ -1141,14 +1154,9 @@ bool TESPluginFile::load(const char* filepath) {
          //     - Divide all of the cell's child GRUPs across multiple threads. Each 
          //       thread will handle the records nested under those GRUPs.
          //
-         //        = BUG: THIS DOESN'T WORK; we are failing to load references inside 
-         //          of persistent cells. Test-case: [REFR:00015CC5]dunEldergleamAstaREF
-         //
          //  - Worldspaces:
          //
          //     - Load the worldspace here.
-         //
-         //        = BUG: WAIT, DID WE REMEMBER TO DO THIS?
          //
          //     - Divide the worldspace's cell sub-block GRUPs across multiple threads. 
          //       Each thread will handle the CELL records themselves and any GRUPs 
@@ -1235,6 +1243,9 @@ bool TESPluginFile::load(const char* filepath) {
                   group.skip();
                   continue;
                case ESPGroupType::forms_of_type:
+                  last_world_cell_id = 0;
+                  last_ext_block_x   = 0;
+                  last_ext_block_y   = 0;
                   break;
                default:
                   group.skip();

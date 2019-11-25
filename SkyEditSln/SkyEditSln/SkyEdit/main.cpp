@@ -47,6 +47,9 @@ std::thread::id main_thread_id;
 //
 //     = Current tasks
 //
+//        = TEST WHETHER WE HANDLE FILES WITH EMPTY GRUPs PROPERLY. I'm NOT CERTAIN 
+//          THAT TESPluginBaseReader::nextRecordOrGroup PROPERLY ADVANCES PAST THEM.
+//
 //        - LoadOrder needs to instantiate the hardcoded forms before the load 
 //          process. They should be associated with load order slot 00 but should 
 //          not have a file; the FormStubs should have a "hardcoded" flag (but 
@@ -80,7 +83,16 @@ std::thread::id main_thread_id;
 //
 //        - ActorBases
 //
+//           - Move the Use Info code for destruction stages into a helper struct 
+//             a la Condition, since apparently that data can appear in other forms.
+//
 //        - Use Info
+//
+//           = WE ARE RANDOMLY FAILING TO LOAD FORMS. WE HAVE A DEBUGBREAK SET FOR 
+//             WHEN USE INFO POINTS TO A DANGLING FORM WHEN THE PROGRAM IS COMPILED 
+//             IN DEBUG; FROM THIS, WE CAN SEE THAT RANDOM FORMS JUST AREN'T PRESENT 
+//             IN THE LIST OF LOADED FORMS. THE AFFECTED FORMS VARY EACH TIME, AND 
+//             ARE NOT OF CONSISTENT FORM TYPES EITHER.
 //
 //           - Write code to list all of the inbound references for a form, and 
 //             code to list all of the outbound references. We need to test that 

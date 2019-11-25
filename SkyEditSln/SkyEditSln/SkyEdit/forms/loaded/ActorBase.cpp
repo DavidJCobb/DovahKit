@@ -1,4 +1,5 @@
 #include "ActorBase.h"
+#include "../../esp/LoadOrder.h"
 #include "../../esp/TESPlugin.h"
 
 namespace LoadedForms {
@@ -10,6 +11,145 @@ namespace LoadedForms {
                break;
             case 'FULL':
                subrecord.to_string(this->name);
+               break;
+         }
+      }
+   }
+   /*static*/ void ActorBase::generateUseInfo(TESPluginRecord& record, FormStub* stub) {
+      form_id_t formID;
+      uint32_t  keywordCount = 0;
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'VMAD':
+               PapyrusScriptData::generateUseInfo(subrecord, stub);
+               break;
+            case 'RNAM': // race
+            case 'TPLT': // template actor base
+            case 'VTCK': // voicetype
+            case 'INAM': // death item
+            case 'SNAM': // faction (has four more bytes, but we don't need them)
+            case 'SPLO': // spell
+            case 'WNAM': // skin
+            case 'ANAM': // far-away skin
+            case 'ATKR': // attack race
+            case 'SPOR': // spectator package override
+            case 'OCOR': // observe corpse package override
+            case 'GWOR': // guard worn package override
+            case 'ECOR': // combat package override
+            case 'PRKR': // perk
+            case 'CNTO': // item (has four more bytes, but we don't need them)
+            case 'PKID': // package
+            case 'CNAM': // class
+            case 'PNAM': // head part
+            case 'HCLF': // hair color form
+            case 'ZNAM': // combat style
+            case 'GNAM': // gift filter list
+            case 'CSDI': // sound
+            case 'CSCR': // audio template
+            case 'DOFT': // default outfit
+            case 'SOFT': // sleep outfit
+            case 'DPLT': // default package list
+            case 'CRIF': // crime faction
+            case 'FTST': // face textureset
+               if (subrecord.read(formID))
+                  stub->add_outbound_reference(formID);
+               break;
+            case 'KSIZ':
+               subrecord.read(keywordCount);
+               break;
+            case 'KWDA':
+               if (keywordCount == 0)
+                  keywordCount = subrecord.size() / 4;
+               for (uint32_t i = 0; i < keywordCount; i++)
+                  if (subrecord.read(formID))
+                     stub->add_outbound_reference(formID);
+                  else
+                     break;
+               break;
+            case 'COED': // container item ownership data; details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/COED_Field
+               //
+               // There's a formID followed by an integer/formID union whose type depends on the form 
+               // type of the formID preceding it. Fortunately, by the time we're building Use Info, 
+               // we've already identified all forms and their types.
+               //
+               if (subrecord.read(formID)) { // item owner form
+                  stub->add_outbound_reference(formID);
+                  //
+                  if (formID) {
+                     auto ownerStub = LoadOrder::get().getForm(formID);
+                     if (ownerStub && ownerStub->formType == FormType::ActorBase) {
+                        if (subrecord.read(formID)) // owner GLOB
+                           stub->add_outbound_reference(formID);
+                     }
+                  }
+               }
+               break;
+            case 'ATKD': // attack data
+               subrecord.skip_bytes(8);
+               if (subrecord.read(formID)) // attack spell
+                  stub->add_outbound_reference(formID);
+               subrecord.skip_bytes(16);
+               if (subrecord.read(formID)) // attack type
+                  stub->add_outbound_reference(formID);
+               subrecord.skip_bytes(12);
+               break;
+            //
+            // These fields are destruction stage data; move them to a helper struct a la CTDA:
+            //
+            case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
+               break;
+            case 'DSTD': // destruction stage data
+               subrecord.skip_bytes(8);
+               if (subrecord.read(formID)) // explosion
+                  stub->add_outbound_reference(formID);
+               if (subrecord.read(formID)) // debris
+                  stub->add_outbound_reference(formID);
+               // remaining four bytes don't matter
+               break;
+            case 'DMDL': // destruction stage model
+            case 'DMDT': // unknown
+               break;
+            case 'DMDS': // destruction stage model data
+               {
+                  uint32_t count;
+                  if (subrecord.read(count)) {
+                     for (uint32_t i = 0; i < count; i++) {
+                        subrecord.skip_length_prefixed_string<4>();
+                        if (subrecord.read(formID)) // textureset
+                           stub->add_outbound_reference(formID);
+                        subrecord.skip_bytes(4); // NIF block index
+                     }
+                  }
+               }
+               break;
+            case 'DSTF': // destruction stage end marker
+               break;
+            //
+            // End of destruction stage fields.
+            //
+            case 'ACBS': // character base stats
+            case 'ATKE': // attack event
+            case 'SPCT': // spell count
+            case 'PRKZ': // perk count
+            case 'COCT': // item count ("count of container")
+            case 'AIDT': // AI data
+            case 'FULL': // full name
+            case 'SHRT': // short name
+            case 'DATA': // marker for DNAM position
+            case 'DNAM': // skill/stat data
+            case 'NAM5': // unknown two-byte int
+            case 'NAM6': // height
+            case 'NAM7': // weight
+            case 'NAM8': // sound level
+            case 'CSDT': // sound type
+            case 'CSDC': // sound chance
+            case 'QNAM': // skin tone
+            case 'NAM9': // face morphs values
+            case 'NAMA': // face part integers
+            case 'TINI': // tint item
+            case 'TINC': // tint color
+            case 'TINV': // tint value
+            case 'TIAS': // unknown two-byte int
                break;
          }
       }

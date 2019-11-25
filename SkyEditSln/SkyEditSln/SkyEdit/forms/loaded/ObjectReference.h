@@ -8,15 +8,12 @@
 class TESPluginRecord;
 
 namespace LoadedForms {
-   class ActorBase : public Form {
+   class ObjectReference : public Form {
       //
       // Intentionally minimal for now.
       //
       public:
-         ActorBase() : Form(FormType::ActorBase) {};
-
-         std::string editorID;
-         LStringRef  name;
+         ObjectReference() : Form(FormType::Reference) {};
 
          void load(TESPluginRecord&); // TODO: FINISH ME
          static void generateUseInfo(TESPluginRecord&, FormStub*);

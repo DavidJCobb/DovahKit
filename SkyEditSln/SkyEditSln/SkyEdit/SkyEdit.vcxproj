@@ -134,6 +134,8 @@
     <ClCompile Include="forms\factories\use_info.cpp" />
     <ClCompile Include="forms\loaded\ActorBase.cpp" />
     <ClCompile Include="forms\loaded\Form.cpp" />
+    <ClCompile Include="forms\loaded\ObjectReference.cpp" />
+    <ClCompile Include="forms\loaded\TopicInfo.cpp" />
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
@@ -157,6 +159,8 @@
     <ClInclude Include="forms\components.h" />
     <ClInclude Include="forms\conditions.h" />
     <ClInclude Include="forms\loaded\Form.h" />
+    <ClInclude Include="forms\loaded\ObjectReference.h" />
+    <ClInclude Include="forms\loaded\TopicInfo.h" />
     <ClInclude Include="forms\papyrus.h" />
     <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="helpers\files.h" />

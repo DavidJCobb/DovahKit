@@ -63,6 +63,7 @@ void FormStub::build_outbound_refs(TESPluginFileView* reader) noexcept {
       if (builder)
          builder(record, this);
    }
+   this->add_outbound_reference(this->groupInfo.parentFormID);
 }
 void FormStub::send_inbound_refs() noexcept {
    for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it)
@@ -83,8 +84,12 @@ void FormStub::add_outbound_reference(uint32_t toFormID) {
    if (!entry.other)
       entry.other = LoadOrder::get().getForm(toFormID);
    #ifdef _DEBUG
-      if (!entry.other && toFormID > 0x800)
-         __debugbreak();
+      if (!entry.other && toFormID > 0x800 && toFormID != 0x02006718) { // exclude known dangling ref in Dawnguard.esm
+         if (LoadOrder::get().hasForm(toFormID))
+            __debugbreak();
+         else
+            __debugbreak();
+      }
    #endif
    entry.refcount++;
 }

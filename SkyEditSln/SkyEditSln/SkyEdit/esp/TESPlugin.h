@@ -97,13 +97,13 @@ class TESPluginGroup {
             case ESPGroupType::cell_children:
             case ESPGroupType::cell_persistent_children:
             case ESPGroupType::cell_temporary_children:
-               return _byteswap_ulong(this->header.label);
+               return this->header.label;
          }
          return 0;
       }
       uint32_t getRawIDOfParentTopic() const noexcept {
          if (this->header.type == ESPGroupType::topic_children)
-            return _byteswap_ulong(this->header.label);
+            return this->header.label;
          return 0;
       }
 };
