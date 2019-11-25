@@ -2,11 +2,6 @@
 #include "../../esp/TESPlugin.h"
 #include "../../output.h"
 
-#define BENCHMARK_QUEST_USE_INFO_BUILD 1
-#if BENCHMARK_QUEST_USE_INFO_BUILD == 1
-   #include <sys/timeb.h>
-#endif
-
 namespace LoadedForms {
    void LocationAlias::load(TESPluginRecord& record) {
       auto& subrecord = record.get_current_subrecord();
@@ -532,11 +527,6 @@ namespace LoadedForms {
       }
    }
    /*static*/ void Quest::generateUseInfo(TESPluginRecord& record, FormStub* stub) {
-      #if BENCHMARK_QUEST_USE_INFO_BUILD == 1
-         struct timeb bench_start;
-         struct timeb bench_end;
-         ftime(&bench_start);
-      #endif
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -578,11 +568,6 @@ namespace LoadedForms {
             case 'NEXT': // separates dialogue and event conditions
             case 'ANAM': // next alias ID
             case 'CNAM': // text of last log entry
-            case 'SCHR': // ObScript data. game doesn't load this
-            case 'SCDA': // ObScript data? game doesn't load this
-            case 'SCRV': // ObScript data? game doesn't load this
-            case 'SLSD': // ObScript data? game doesn't load this
-            case 'QNAM': // ObScript data? game doesn't load this / alias hidden flag
             case 'QOBJ': // objective
             case 'FNAM': // objective flags / alias flags
             case 'NNAM': // objective text
@@ -607,6 +592,13 @@ namespace LoadedForms {
             case 'ALNA': // alias find matching reference near alias
             case 'ALNT': // alias find matching reference near alias type
             case 'ALED': // alias end marker
+            case 'SCHR': // DEPRECATED: ObScript header
+            case 'SCDA': // DEPRECATED: ObScript compiled code
+            case 'SCTX': // DEPRECATED: ObScript source code
+            case 'SCRO': // DEPRECATED: ObScript ObjectReference
+            case 'SCRV': // DEPRECATED: ObScript ObjectReference variable
+            case 'SLSD': // ObScript data? game doesn't load this
+            case 'QNAM': // ObScript data? game doesn't load this / alias hidden flag
                break;
             case 'DNAM': // quest form version?
                break;
@@ -619,10 +611,6 @@ namespace LoadedForms {
             #endif
          }
       }
-      #if BENCHMARK_QUEST_USE_INFO_BUILD == 1
-         ftime(&bench_end);
-         printf("Time taken to build Use Info for quest %08X: %d ms\n", record.formID(), (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-      #endif
    }
 
    const char* _questTypeNames[] = {

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <forward_list>
 #include <map>
+#include <vector>
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
@@ -75,14 +76,14 @@ template<typename LoadedFormClass> class loaded_form_ptr {
       inline void _incRef() {
          auto fs = this->wrapped;
          if (fs) {
-            assert((fs->refcount & FormStub::kRefcountMask) != FormStub::kRefcountMask && "FormStub refcount is already at maximum!");
+            assert(!fs->refcount_is_maxed_out() && "FormStub refcount is already at maximum!");
             fs->refcount++;
          }
       }
       inline void _decRef() {
          auto fs = this->wrapped;
          if (fs) {
-            assert((fs->refcount & FormStub::kRefcountMask) != 0 && "FormStub refcount is already zero!");
+            assert(fs->get_refcount() != 0 && "FormStub refcount is already zero!");
             fs->refcount--;
             if ((fs->refcount & FormStub::kRefcountMask) == 0) {
                auto form = fs->form;
@@ -149,7 +150,7 @@ struct GroupMetadata { // sizeof == 0xC
 };
 
 struct UseInfoEntry {
-   FormStub* other    = nullptr;
+   FormStub* other    = nullptr; // this can be nullptr, as in the case of dangling references between forms in a hand-edited user file
    uint32_t  refcount = 0;
    //
    UseInfoEntry() {}
@@ -206,10 +207,10 @@ class FormStub {
       ~FormStub();
       //
    protected:
-      TESPluginFile* file = nullptr;
-      uint32_t offset   = 0; // offset of this form's record header within its owning file
+      TESPluginFile* file   = nullptr;
+      uint32_t       offset = 0; // offset of this form's record header within its owning file
       std::atomic<uint32_t> refcount = 0;
-      char*    editorID = nullptr;
+      char*          editorID = nullptr;
       void build_outbound_refs(TESPluginFileView*) noexcept;
       void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
       void receive_inbound_ref(FormStub* inbound) noexcept;
@@ -225,11 +226,10 @@ class FormStub {
       //
       loaded_form_ptr<LoadedForms::Form> load();
       //
-      inline const char* get_editor_id() { return this->editorID; };
-      inline uint32_t get_refcount() {
-         return this->refcount & kRefcountMask;
-      };
-      inline bool is_edited() { return (bool)(this->refcount & kRefcountFlag_Edited); };
+      inline const char* get_editor_id() const noexcept { return this->editorID; };
+      inline uint32_t    get_refcount()  const noexcept { return this->refcount & kRefcountMask; };
+      inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == kRefcountMask; }
+      inline bool        is_edited() const noexcept { return (bool)(this->refcount & kRefcountFlag_Edited); };
       void set_edited(bool v);
       //
       void get_source_filename(std::string& out) const noexcept;

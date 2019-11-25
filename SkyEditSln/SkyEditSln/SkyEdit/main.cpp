@@ -47,6 +47,12 @@ std::thread::id main_thread_id;
 //
 //     = Current tasks
 //
+//        - LoadOrder needs to instantiate the hardcoded forms before the load 
+//          process. They should be associated with load order slot 00 but should 
+//          not have a file; the FormStubs should have a "hardcoded" flag (but 
+//          overrides should not); we must make sure that slot 00 in the load 
+//          order overrides hardcoded stubs.
+//
 //        - Form IDs handled by TESPluginFile and its readers directly (e.g. 
 //          form IDs in group data) are not normalized to the global load order. 
 //          This needs to be fixed.
@@ -73,6 +79,21 @@ std::thread::id main_thread_id;
 //              - LocationAlias::load and ReferenceAlias::load: finish researching ALFD.
 //
 //        - ActorBases
+//
+//        - Use Info
+//
+//           - Write code to list all of the inbound references for a form, and 
+//             code to list all of the outbound references. We need to test that 
+//             we're actually generating and retaining the data correctly.
+//
+//           - We need to be able to handle the possibility of user plugins 
+//             containing dangling references between forms (i.e. a form that 
+//             has a field referring to a valid, but unused, form ID). We allow 
+//             FormStubs to contain outbound references to missing forms; however, 
+//             LoadOrder needs to remember which missing IDs are referred to (so 
+//             that we don't create forms with those IDs and thereby end up with 
+//             malformed references) and it needs to remember which FormStubs 
+//             refer to each missing ID.
 //
 //     - The default object manager (DOBJ) is a special case and we need to 
 //       handle it accordingly. We should not create any DOBJ forms in memory; 
@@ -136,15 +157,6 @@ std::thread::id main_thread_id;
 //          FormStub a field (FormStub* overrides = nullptr).
 //
 //  - Use Info:
-//
-//     = Use Info Bugs
-//
-//        - Some quests take a massive amount of time to generate it, or 
-//          even seem to get stuck; I'm not clear on why
-//
-//        - Testing indicates that [LCTN:03016e2a]DLC2SolstheimLocation is 
-//          failing to load, or at least failing to be stored at that form 
-//          ID, when load order slot 03 is Dragonborn.esm.
 //
 //     = NOTE: Use Info is helpful for all forms, but only NEEDED in cases 
 //       where we allow you to delete a form. We only allow you to delete 

@@ -267,19 +267,6 @@ class ThreadedUseInfoOutboundBuilder : public TESPluginFileView {
 };
 
 void LoadOrder::_buildUseInfo() noexcept {
-   #ifdef _DEBUG
-      {
-         struct timeb bench_start;
-         struct timeb bench_end;
-         printf("Testing form lookup time...\n");
-         ftime(&bench_start);
-         try {
-            auto stub = this->forms.forms.at(0x000CA210);
-         } catch (std::out_of_range) {};
-         ftime(&bench_end);
-         printf("Time taken: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-      }
-   #endif
    #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
       struct timeb bench_start;
       struct timeb bench_end;

@@ -3,11 +3,6 @@
 #include "../output.h"
 #include <cassert>
 
-#define BENCHMARK_PAPYRUS_USE_INFO_BUILD 1
-#if BENCHMARK_PAPYRUS_USE_INFO_BUILD == 1
-   #include <sys/timeb.h>
-#endif
-
 void PapyrusScriptData::forEachScript(std::function<bool(PapyrusScriptData::Script*)> functor) {
    auto& list = this->scripts;
    for (auto it = list.begin(); it != list.end(); ++it) {
@@ -134,11 +129,6 @@ namespace {
    }
 }
 /*static*/ void PapyrusScriptData::generateUseInfo(TESPluginSubrecord& subrecord, FormStub* stub) {
-   #if BENCHMARK_PAPYRUS_USE_INFO_BUILD == 1
-      struct timeb bench_start;
-      struct timeb bench_end;
-      ftime(&bench_start);
-   #endif
    form_id_t formID;
    //
    int16_t  objFormat;
@@ -278,10 +268,6 @@ namespace {
          #endif
          break;
    }
-   #if BENCHMARK_PAPYRUS_USE_INFO_BUILD == 1
-      ftime(&bench_end);
-      printf("Time taken to build VMAD Use Info for form %08X: %d ms\n", subrecord.get_containing_record().formID(), (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-   #endif
 }
 bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
    subrecord.read_length_prefixed_string<2>(this->name);

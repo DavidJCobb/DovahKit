@@ -820,16 +820,6 @@ void TESPluginThreadedWorldspacePersistentCellChildrenReader::_load() {
                //_DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Thread %08X finished parse of [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
                break;
             }
-            #ifdef _DEBUG
-               _DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Thread %08X found another group.", std::this_thread::get_id());
-               std::string dbg;
-               for (int i = 0; i < std::extent<decltype(this->groups)>::value; i++) {
-                  if (!this->groups[i].exists())
-                     continue;
-                  this->groups[i].to_string(dbg);
-                  _DEBUGMSG(" - Group %d: %s", i, dbg.c_str());
-               }
-            #endif
          }
          if (ot == ObjectType::record) {
             auto& record = this->getCurrentRecord();
@@ -847,10 +837,6 @@ void TESPluginThreadedWorldspacePersistentCellChildrenReader::_load() {
             if (formTypeIsReference(stub->formType)) {
                uint32_t cellID = group.getRawIDOfParentCell();
                if (cellID) {
-                  #ifdef _DEBUG
-                     if (group.pos == 0x0D8474E2)
-                        _DEBUGMSG("[TESPluginThreadedWorldspacePersistentCellChildrenReader] Found form %08X.", stub->formID);
-                  #endif
                   LoadOrder::get().localFormIDToGlobalFormID(this->owner.asFile(), cellID);
                   stub->groupInfo.parentFormID = cellID;
                } else
@@ -1108,11 +1094,6 @@ bool TESPluginFile::load(const char* filepath) {
    }
    _DEBUGMSG("Read file header.");
    this->uses_string_table = (bool)(this->flags & Flags::localized_string_table);
-   //
-   // TODO: need to define hardcoded forms so that references to them don't break, OR 
-   // special-case them in whatever code we write to handle references between forms; 
-   // should probably do this in LoadOrder
-   //
    {
       // we *do* load *some* records in this function, so we need to register with the allocator
       // use an unnamed block so we unregister before firing off the other threads
