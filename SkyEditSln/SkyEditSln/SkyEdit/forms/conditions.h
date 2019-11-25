@@ -88,7 +88,7 @@ struct Condition {
    inline uint8_t get_flags() const noexcept { return this->type & 0x1F; }
    //
    bool read(TESPluginRecord&); // assumes we've already opened a CTDA subrecord
-   static void generateUseInfo(TESPluginRecord&, FormStub*); // TODO: FINISH ME
+   static void generateUseInfo(TESPluginRecord&, FormStub*);
    //
    void to_string(std::string& out) const;
 };

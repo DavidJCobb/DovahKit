@@ -165,8 +165,7 @@ namespace LoadedForms {
             uint8_t  flags; // stored in the file as a uint32_t, but loaded as a uint8_t; the game doesn't BSWAP if the endianness is wrong, so it must be a single byte with three padding bytes
             std::vector<Condition> conditions;
             //
-            void load(TESPluginSubrecord&);
-            void load(TESPluginRecord&); // assumes QSTA subrecord has already been opened
+            void load(TESPluginSubrecord&); // assumes QSTA subrecord has already been opened
          };
          struct Objective {
             uint16_t   index;
@@ -203,6 +202,7 @@ namespace LoadedForms {
          std::vector<form_id_t> textDisplayGlobalIDs;
 
          void load(TESPluginRecord&);
+         static void generateUseInfo(TESPluginRecord&, FormStub*);
 
          static const char* QuestTypeToString(QuestType);
 

@@ -8,7 +8,7 @@
 #include "../formstub.h"
 #include "../forms/types.h"
 
-struct FormStub;
+class FormStub;
 class TESPluginFile;
 class TESPluginHeader;
 
@@ -178,6 +178,8 @@ class LoadOrder {
          return this->loadOrderMasters.size() + this->loadOrderPlugins.size();
       }
       bool _addToLoadOrder(const std::string& name, bool isMasterOfMaster = false);
+      //
+      void _buildUseInfo() noexcept;
       //
       FatalLoadError lastError;
       std::mutex lastErrorLock;

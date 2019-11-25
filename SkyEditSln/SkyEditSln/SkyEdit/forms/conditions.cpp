@@ -85,7 +85,7 @@ bool Condition::read(TESPluginRecord& record) {
    subrecord.skip_bytes(3);
    if (type & ConditionTypeFlags::compare_to_global) {
       subrecord.unchecked_read(formID);
-      assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+      stub->add_outbound_reference(formID);
    } else
       subrecord.skip_bytes(4);
    subrecord.unchecked_read(function);
@@ -97,15 +97,17 @@ bool Condition::read(TESPluginRecord& record) {
       uint32_t firstValue; // needed for when the second arg is a union
       if (arg0 && arg0->underlying == ConditionArgUnderlyingType::formID) {
          subrecord.unchecked_read(formID);
-         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+         stub->add_outbound_reference(formID);
       } else
          subrecord.unchecked_read(firstValue);
-      if (arg1 && arg1->isUnion) {
-         assert(false && "TODO: FINISH ME: Resolve the union based on (firstValue). Currently we need a \"real\" condition value to do that.");
+      if (arg1 && arg1->isUnion) { // resolve the union
+         ConditionArgValue value;
+         value.dword = firstValue;
+         arg1 = arg1->resolveUnion(arg0, &value);
       }
       if (arg1 && arg1->underlying == ConditionArgUnderlyingType::formID) {
          subrecord.unchecked_read(formID);
-         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+         stub->add_outbound_reference(formID);
       } else
          subrecord.skip_bytes(4);
       if (func && func->usesEventData) {
@@ -113,13 +115,13 @@ bool Condition::read(TESPluginRecord& record) {
             return;
          subrecord.skip_bytes(4);
          subrecord.unchecked_read(formID);
-         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+         stub->add_outbound_reference(formID);
       } else {
          if (!subrecord.is_in_bounds(12))
             return;
          subrecord.skip_bytes(4);
          subrecord.unchecked_read(formID);
-         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+         stub->add_outbound_reference(formID);
          subrecord.skip_bytes(4);
       }
    }

@@ -4,9 +4,18 @@
 #include <string>
 #include <vector>
 #include "../helpers/scoped_enum.h"
+#include "types.h"
 
+class FormStub;
 class TESPluginFile;
 class TESPluginSubrecord;
+
+// Macro used to optimize the building of Use Info for VMAD subrecords. Some Papyrus fragment data 
+// types don't contain any form IDs, so if we know that the fragment data is always the last thing 
+// in the VMAD subrecord, then we can just early-out for these types. If Skyrim Special is ever 
+// updated to put additional data after the fragment data, you'll want to set this macro to 0 to 
+// re-enable the code for skipping fragment data types that lack form IDs "by hand."
+#define PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD 1
 
 enum PapyrusPropertyType : uint8_t {
    kPapyrusPropertyType_Object = 1,
@@ -50,6 +59,7 @@ class PapyrusScriptData {
       PapyrusFragmentData* fragmentData = nullptr;
       //
       bool load(TESPluginSubrecord&); // assumes we're at a VMAD subrecord // TODO: needs to load fragments
+      static void generateUseInfo(TESPluginSubrecord&, FormStub*);
       //
       void forEachScript(std::function<bool(Script*)>);
    public:
@@ -63,9 +73,9 @@ class PapyrusScriptData {
          kPropertyStatus_Removed = 3,
       };
       struct PropertyObjectValue { // if objectFormat == 2, then the order of fields is reversed in the file
-         uint32_t formID;
-         uint16_t aliasID;
-         uint16_t alwaysZero = 0;
+         form_id_t formID;
+         uint16_t  aliasID;
+         uint16_t  alwaysZero = 0;
          //
          bool load(PapyrusScriptData& owner, TESPluginSubrecord&);
       };

@@ -6,7 +6,7 @@
 
 #define LOAD_NAIVELY_WHEN_THE_GAME_DOES 1
 
-struct FormStub;
+class FormStub;
 namespace LoadedForms {
    class Form {
       public:

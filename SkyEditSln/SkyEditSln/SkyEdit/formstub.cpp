@@ -1,10 +1,13 @@
 #include "formstub.h"
+#include "esp/LoadOrder.h"
 #include "esp/TESPlugin.h"
 #include "helpers/miscellaneous.h"
 #include "output.h"
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 
+#include "forms/factories/use_info.h"
 #include "forms/loaded/Quest.h"
 
 FormStub::~FormStub() {
@@ -50,6 +53,33 @@ loaded_form_ptr<LoadedForms::Form> FormStub::load() {
 }
 void FormStub::set_edited(bool v) {
    cobb::edit_bit(this->refcount, kRefcountFlag_Edited, v);
+}
+
+void FormStub::build_outbound_refs() noexcept {
+   assert(this->file && "FormStub cannot build outbound refs without a file. How did this happen?");
+   if (this->file->loadRecordAt(this->offset)) {
+      auto& record = this->file->getCurrentRecord();
+      auto  builder = getOutboundUsesBuilderForFormType(this->formType);
+      if (builder)
+         builder(record, this);
+   }
+}
+void FormStub::send_inbound_refs() noexcept {
+   for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it)
+      it->second.other->receive_inbound_ref(this);
+}
+void FormStub::receive_inbound_ref(FormStub* inbound) noexcept {
+   auto& list  = this->inbound;
+   auto& entry = list[inbound->formID];
+   entry.other = inbound;
+   entry.refcount++;
+}
+void FormStub::add_outbound_reference(uint32_t toFormID) {
+   auto& list  = this->outbound;
+   auto& entry = list[toFormID];
+   if (!entry.other)
+      entry.other = LoadOrder::get().getForm(toFormID);
+   entry.refcount++;
 }
 /*static*/ void* FormStub::operator new(std::size_t sz) {
    if (sz != sizeof(FormStub))

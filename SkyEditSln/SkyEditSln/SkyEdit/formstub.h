@@ -2,13 +2,15 @@
 #include <atomic>
 #include <cstdint>
 #include <cstring>
+#include <forward_list>
 #include <map>
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
 
-struct FormStub;
+class FormStub;
 class LoadOrder;
+class ThreadedUseInfoOutboundBuilder;
 class TESPluginFile;
 class TESPluginBaseReader;
 class TESPluginThreadedSimpleReader;
@@ -21,7 +23,7 @@ namespace LoadedForms {
 #define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 1
 #ifdef COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS
    typedef std::pair<const uint32_t, FormStub*> FormMapPair;
-   class FormMapHeap : public cobb::multithreaded_block_allocator<FormMapPair, 3200, ESP_LOAD_TOTAL_THREADS> {
+   class FormMapHeap : public cobb::multithreaded_block_allocator<FormMapPair, 3200, 8> {
       public:
          inline static FormMapHeap& get() {
             static FormMapHeap instance;
@@ -145,7 +147,42 @@ struct GroupMetadata { // sizeof == 0xC
    } cellSubBlock; // 0 for non-cells
 };
 
-struct FormStub {
+struct UseInfoEntry {
+   FormStub* other    = nullptr;
+   uint32_t  refcount = 0;
+   //
+   UseInfoEntry() {}
+   UseInfoEntry(FormStub* s) : other(s) {}
+};
+typedef std::pair<const uint32_t, UseInfoEntry> UseInfoEntryPair;
+class UseInfoEntryHeap : public cobb::multithreaded_block_allocator<UseInfoEntryPair, 3200, ESP_LOAD_TOTAL_THREADS> {
+   public:
+      inline static UseInfoEntryHeap& get() {
+         static UseInfoEntryHeap instance;
+         return instance;
+   }
+};
+class UseInfoEntryAllocator : public std::allocator<UseInfoEntryPair> {
+   //
+   // This is an interface between std::allocator and an instance of 
+   // cobb::multithreaded_block_allocator. It's stateless.
+   //
+   UseInfoEntryPair* allocate(size_type n, const UseInfoEntryPair* hint = nullptr) {
+      if (n > 1)
+         throw std::invalid_argument("Cannot allocate more than 1.");
+      return (UseInfoEntryPair*)UseInfoEntryHeap::get().allocate();
+   }
+   void deallocate(UseInfoEntryPair* p, size_type n) {
+      UseInfoEntryHeap::get().free((void*)p);
+   }
+   //
+   // stateless; therefore all instances are interchangeable
+   bool operator==(const UseInfoEntryAllocator& right) { return this == &right; }
+   bool operator!=(const UseInfoEntryAllocator& right) { return this != &right; }
+};
+typedef std::map<uint32_t, UseInfoEntry, std::less<uint32_t>, UseInfoEntryAllocator> UseInfoList; // <formID, entry>
+
+class FormStub {
    //
    // A class which represents a form, whether loaded or unloaded. Every FormStub contains 
    // information that can be used to load the form's data from a given ESP file on the fly. 
@@ -155,6 +192,7 @@ struct FormStub {
    friend TESPluginFile;
    friend TESPluginBaseReader;
    friend LoadOrder;
+   friend ThreadedUseInfoOutboundBuilder;
    //
    public:
       enum RefcountFlags {
@@ -166,7 +204,7 @@ struct FormStub {
       //
       ~FormStub();
       //
-   private:
+   protected:
       TESPluginFile* file = nullptr;
       uint32_t offset   = 0; // offset of this form's record header within its owning file
       std::atomic<uint32_t> refcount = 0;
@@ -176,27 +214,35 @@ struct FormStub {
       // between FormStubs and their loaded forms... or give every loaded form a reference to its stub, 
       // and have them skip loading their own editor IDs since the stubs already loaded those.
       //
+      void build_outbound_refs() noexcept;
+      void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
+      void receive_inbound_ref(FormStub* inbound) noexcept;
+      //
    public:
       GroupMetadata groupInfo;
       uint32_t      formID   = 0; // form ID (file-local)
       uint8_t       formType = 0;
       // there will be 3 bytes of padding here
       LoadedForms::Form* form = nullptr;
-
+      UseInfoList   outbound; // other forms that this one refers to
+      UseInfoList   inbound;  // other forms that refer to this one
+      //
       loaded_form_ptr<LoadedForms::Form> load();
-
+      //
       inline const char* get_editor_id() { return this->editorID; };
       inline uint32_t get_refcount() {
          return this->refcount & kRefcountMask;
       };
       inline bool is_edited() { return (bool)(this->refcount & kRefcountFlag_Edited); };
       void set_edited(bool v);
-
+      //
       void get_source_filename(std::string& out) const noexcept;
-
+      //
+      void add_outbound_reference(uint32_t toFormID);
+      //
       static void* operator new(std::size_t sz);
       static void operator delete(void* ptr, std::size_t sz);
-
+      //
    private:
       char* allocate_editor_id(size_t length);
 };

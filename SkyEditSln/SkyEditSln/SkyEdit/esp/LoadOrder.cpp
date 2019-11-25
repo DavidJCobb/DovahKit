@@ -210,6 +210,53 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
    }
    return true;
 }
+//
+#define BENCHMARK_LOAD_ORDER_USE_INFO_BUILD 1
+#if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+   #include <sys/timeb.h>
+#endif
+void LoadOrder::_buildUseInfo() noexcept {
+   #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+      struct timeb bench_start;
+      struct timeb bench_end;
+      printf("Building Use Info...\n");
+      ftime(&bench_start);
+   #endif
+   //
+   // TODO: Split the process up, and multi-thread it.
+   //
+   // Inbound first, since we can multi-thread that
+   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
+      auto& list = this->formsByType[ft].forms;
+      #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+         struct timeb bench_start;
+         struct timeb bench_end;
+         ftime(&bench_start);
+      #endif
+      for (auto it = list.begin(); it != list.end(); ++it)
+         it->second->build_outbound_refs();
+      #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+         ftime(&bench_end);
+         if (bench_end.time != bench_start.time && bench_end.millitm != bench_start.millitm)
+            printf("Time taken for outbound refs from form type %d: %d ms\n", ft, (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+      #endif
+   }
+   #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+      ftime(&bench_end);
+      printf("Time taken for outbound refs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+      ftime(&bench_start);
+   #endif
+   // Outbound next; has to be single-threaded
+   for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
+      auto& list = this->formsByType[ft].forms;
+      for (auto it = list.begin(); it != list.end(); ++it)
+         it->second->send_inbound_refs();
+   }
+   #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+      ftime(&bench_end);
+      printf("Time taken for inbound refs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+   #endif
+}
 
 void LoadOrder::addFile(const std::string& name) {
    auto it = std::find(this->queuedFiles.begin(), this->queuedFiles.end(), name);
@@ -289,6 +336,9 @@ bool LoadOrder::loadQueuedFiles() {
    }
    this->loadingIsComplete = true;
    this->loadingIndex      = 0;
+   //
+   this->_buildUseInfo();
+   //
    return !this->lastError.defined();
 }
 

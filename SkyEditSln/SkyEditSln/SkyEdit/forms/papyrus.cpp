@@ -57,6 +57,247 @@ bool PapyrusScriptData::load(TESPluginSubrecord& subrecord) {
       this->fragmentData->load(*this, subrecord);
    return subrecord.is_in_bounds();
 }
+
+namespace {
+   void _generateUseInfoForScript(int16_t objFormat, TESPluginSubrecord& subrecord, FormStub* stub) {
+      uint16_t  str_length;
+      form_id_t formID;
+      //
+      subrecord.read(str_length);
+      subrecord.skip_bytes(str_length);
+      //
+      subrecord.skip_bytes(1); // script status
+      uint16_t prop_count;
+      if (!subrecord.read(prop_count))
+         return;
+      for (uint16_t j = 0; j < prop_count; j++) { // scrippt properties
+         subrecord.read(str_length);
+         subrecord.skip_bytes(str_length);
+         //
+         PapyrusPropertyType type;
+         subrecord.read(type);
+         subrecord.skip_bytes(1); // property status
+         uint32_t value_count = 1;
+         if (type >= 11) {
+            if (!subrecord.read(value_count))
+               return;
+         }
+         switch (type) {
+            case kPapyrusPropertyType_Object:
+               if (objFormat == 2) {
+                  subrecord.skip_bytes(4);
+                  subrecord.read(formID);
+                  stub->add_outbound_reference(formID);
+               } else {
+                  subrecord.read(formID);
+                  stub->add_outbound_reference(formID);
+                  subrecord.skip_bytes(4);
+               }
+               break;
+            case kPapyrusPropertyType_String:
+               subrecord.read(str_length);
+               subrecord.skip_bytes(str_length);
+               break;
+            case kPapyrusPropertyType_Int:
+            case kPapyrusPropertyType_Float:
+               subrecord.skip_bytes(4);
+               break;
+            case kPapyrusPropertyType_Bool:
+               subrecord.skip_bytes(1);
+               break;
+            case kPapyrusPropertyType_ArrayObject:
+               for (uint32_t k = 0; k < value_count; k++) {
+                  if (objFormat == 2) {
+                     subrecord.skip_bytes(4);
+                     subrecord.read(formID);
+                     stub->add_outbound_reference(formID);
+                  } else {
+                     subrecord.read(formID);
+                     stub->add_outbound_reference(formID);
+                     subrecord.skip_bytes(4);
+                  }
+               }
+               break;
+            case kPapyrusPropertyType_ArrayString:
+               for (uint32_t k = 0; k < value_count; k++) {
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+               break;
+            case kPapyrusPropertyType_ArrayInt:
+            case kPapyrusPropertyType_ArrayFloat:
+               subrecord.skip_bytes(4 * value_count);
+               break;
+            case kPapyrusPropertyType_ArrayBool:
+               subrecord.skip_bytes(value_count);
+               break;
+         }
+      }
+   }
+}
+/*static*/ void PapyrusScriptData::generateUseInfo(TESPluginSubrecord& subrecord, FormStub* stub) {
+   form_id_t formID;
+   //
+   uint16_t str_length;
+   int16_t  objFormat;
+   uint16_t count;
+   subrecord.skip_bytes(2); // script version
+   if (!subrecord.read(objFormat) || !subrecord.read(count))
+      return;
+   for (uint16_t i = 0; i < count; i++) // scripts
+      _generateUseInfoForScript(objFormat, subrecord, stub);
+   if (subrecord.is_at_end() || !subrecord.is_in_bounds()) // fragment data is optional
+      return;
+   #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
+      uint8_t flags;
+   #endif
+   switch (subrecord.containing_record_signature()) {
+      case 'INFO': // should match PapyrusTopicInfoFragmentData::load
+         #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
+            {
+               using Flags = PapyrusTopicInfoFragmentData::Flags;
+               //
+               subrecord.skip_bytes(1);
+               subrecord.unchecked_read(flags);
+               subrecord.read(str_length);
+               subrecord.skip_bytes(str_length);
+               if (flags & Flags::has_begin_fragment) {
+                  subrecord.skip_bytes(1);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+               if (flags & Flags::has_end_fragment) {
+                  subrecord.skip_bytes(1);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+            }
+         #endif
+         break;
+      case 'PACK': // should match PapyrusPackageFragmentData::load
+         #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
+            {
+               using Flags = PapyrusPackageFragmentData::Flags;
+               //
+               subrecord.skip_bytes(1);
+               subrecord.unchecked_read(flags);
+               subrecord.read(str_length);
+               subrecord.skip_bytes(str_length);
+               if (flags & Flags::has_begin_fragment) {
+                  subrecord.skip_bytes(1);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+               if (flags & Flags::has_end_fragment) {
+                  subrecord.skip_bytes(1);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+               if (flags & Flags::has_change_fragment) {
+                  subrecord.skip_bytes(1);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+            }
+         #endif
+         break;
+      case 'PERK': // should match PapyrusPerkFragmentData::load
+         #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
+            {
+               subrecord.skip_bytes(1);
+               subrecord.read(str_length);
+               subrecord.skip_bytes(str_length);
+               if (subrecord.read(count)) {
+                  for (uint16_t i = 0; i < count; i++) {
+                     subrecord.skip_bytes(5);
+                     subrecord.read(str_length);
+                     subrecord.skip_bytes(str_length);
+                     subrecord.read(str_length);
+                     subrecord.skip_bytes(str_length);
+                  }
+               }
+            }
+         #endif
+         break;
+      case 'QUST': // should match PapyrusQuestFragmentData::load
+         {
+            subrecord.skip_bytes(1);
+            if (subrecord.read(count)) { // fragments
+               subrecord.skip_bytes(5);
+               subrecord.read(str_length);
+               subrecord.skip_bytes(str_length);
+               subrecord.read(str_length);
+               subrecord.skip_bytes(str_length);
+            }
+            if (subrecord.read(count)) { // alias scripts
+               for (uint16_t i = 0; i < count; i++) {
+                  if (objFormat == 2) {
+                     subrecord.skip_bytes(4);
+                     subrecord.read(formID);
+                     stub->add_outbound_reference(formID);
+                  } else {
+                     subrecord.read(formID);
+                     stub->add_outbound_reference(formID);
+                     subrecord.skip_bytes(4);
+                  }
+                  subrecord.skip_bytes(2); // alias script version
+                  uint16_t aliasObjFormat;
+                  uint16_t aliasScriptCount;
+                  if (!subrecord.read(aliasObjFormat) || !subrecord.read(aliasScriptCount))
+                     return;
+                  for(uint16_t j = 0; j < aliasScriptCount; j++)
+                     _generateUseInfoForScript(aliasObjFormat, subrecord, stub);
+               }
+            }
+         }
+         break;
+      case 'SCEN': // should match PapyrusSceneFragmentData::load
+         #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
+            {
+               using Flags = PapyrusSceneFragmentData::Flags;
+               //
+               subrecord.skip_bytes(1);
+               subrecord.unchecked_read(flags);
+               subrecord.read(str_length);
+               subrecord.skip_bytes(str_length);
+               if (flags & Flags::has_begin_fragment) {
+                  subrecord.skip_bytes(1);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+               if (flags & Flags::has_end_fragment) {
+                  subrecord.skip_bytes(1);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+                  subrecord.read(str_length);
+                  subrecord.skip_bytes(str_length);
+               }
+               if (subrecord.read(count)) {
+                  for (uint16_t i = 0; i < count; i++) {
+                     subrecord.skip_bytes(6);
+                     subrecord.read(str_length);
+                     subrecord.skip_bytes(str_length);
+                     subrecord.read(str_length);
+                     subrecord.skip_bytes(str_length);
+                  }
+               }
+            }
+         #endif
+         break;
+   }
+}
 bool PapyrusScriptData::Script::load(PapyrusScriptData& owner, TESPluginSubrecord& subrecord) {
    subrecord.read_length_prefixed_string<2>(this->name);
    uint16_t count;

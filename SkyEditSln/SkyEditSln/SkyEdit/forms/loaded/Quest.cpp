@@ -305,20 +305,6 @@ namespace LoadedForms {
       }
    }
 
-   void Quest::Target::load(TESPluginRecord& record) {
-      auto& subrecord = record.get_current_subrecord();
-      assert(subrecord.signature() == 'QSTA' && "Quest::Target::load should only be called just after the QSTA subrecord is opened.");
-      subrecord.read(this->aliasID);
-      subrecord.read(this->flags);
-      auto next = record.peek_next_subrecord_type();
-      while (next == 'CTDA') {
-         auto& subrecord = record.next_subrecord();
-         this->conditions.emplace_back();
-         auto& cnd = *this->conditions.rbegin();
-         cnd.read(record);
-         next = record.peek_next_subrecord_type();
-      }
-   }
    void Quest::Target::load(TESPluginSubrecord& subrecord) {
       assert(subrecord.signature() == 'QSTA' && "Quest::Target::load should only be called just after the QSTA subrecord is opened.");
       subrecord.read(this->aliasID);
@@ -537,6 +523,73 @@ namespace LoadedForms {
                // returns instantly if it encounters any record other than QSDT and NAM0.
                //
                break;
+         }
+      }
+   }
+   /*static*/ void Quest::generateUseInfo(TESPluginRecord& record, FormStub* stub) {
+      form_id_t formID;
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'VMAD':
+               PapyrusScriptData::generateUseInfo(subrecord, stub);
+               break;
+            case 'QTGL': // text global (there can be multiple)
+            case 'NAM0': // log entry next quest
+            case 'KWDA': // alias keyword
+            case 'CNTO': // alias item
+            case 'PRKR': // alias perk
+            case 'SCOR': // alias spectator override package list ID
+            case 'OCOR': // alias override corpse override package list ID
+            case 'GWOR': // alias guard warn override package list ID
+            case 'ECOR': // alias combat override package list ID
+            case 'ALDN': // alias display name form ID
+            case 'ALCO': // alias create object base form ID
+            case 'ALEQ': // alias fill-from-quest ID
+            case 'ALPC': // alias package
+            case 'ALFC': // alias faction
+            case 'ALSP': // alias spell
+            case 'ALUA': // alias fill from unique actor base ID
+            case 'ALFR': // alias fill from preplaced ref ID
+            case 'VTCK': // alias additional voicetype ID
+            case 'ALRT': // alias fill from LocRefType ID
+               if (subrecord.read(formID))
+                  stub->add_outbound_reference(formID);
+               break;
+            case 'CTDA':
+               Condition::generateUseInfo(record, stub);
+               break;
+            /*//
+            case 'EDID': // editor ID
+            case 'FULL': // name
+            case 'ENAM': // event
+            case 'FLTR': // Object Window categorization
+            case 'NEXT': // separates dialogue and event conditions
+            case 'ANAM': // next alias ID
+            case 'CNAM': // text of last log entry
+            case 'SCHR': // ObScript data. game doesn't load this
+            case 'SCDA': // ObScript data? game doesn't load this
+            case 'SCRV': // ObScript data? game doesn't load this
+            case 'SLSD': // ObScript data? game doesn't load this
+            case 'QNAM': // ObScript data? game doesn't load this / alias hidden flag
+            case 'QOBJ': // objective
+            case 'FNAM': // objective flags / alias flags
+            case 'NNAM': // objective text
+            case 'QSTA': // target
+            case 'INDX': // stage
+            case 'QSTD': // log entry
+            case 'ALLS': // location alias start
+            case 'ALST': // reference alias start
+            case 'ALID': // alias ID
+            case 'ALFI': // alias force-into-alias ID
+            case 'BNAM': // alias hidden flag
+            case 'ONAM': // alias hidden flag
+            case 'KSIZ': // alias keyword count
+            case 'COCT': // alias item count
+            case 'PRKZ': // alias perk count
+               break;
+            case 'DNAM': // quest form version?
+               break;
+            //*/
          }
       }
    }

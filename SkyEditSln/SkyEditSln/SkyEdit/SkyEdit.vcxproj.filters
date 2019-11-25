@@ -63,6 +63,9 @@
     <ClCompile Include="forms\conditions\arg_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="forms\factories\use_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="formstub.h">
@@ -138,6 +141,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="forms\conditions\return_values.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="forms\factories\use_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
