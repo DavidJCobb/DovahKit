@@ -41,7 +41,7 @@ void ConditionArgType::toString(const ConditionArgValue& value, std::string& out
          cobb::sprintf(out, "%f", value.float32);
          return;
       case ConditionArgUnderlyingType::character:
-         out = (unsigned char)value.byte;
+         out = (unsigned char)value.dword;
          return;
       case ConditionArgUnderlyingType::int_signed:
          cobb::sprintf(out, "%d", value.dword);
@@ -49,6 +49,9 @@ void ConditionArgType::toString(const ConditionArgValue& value, std::string& out
       case ConditionArgUnderlyingType::int_unsigned:
       case ConditionArgUnderlyingType::quest_stage:
          cobb::sprintf(out, "%u", value.dword);
+         return;
+      case ConditionArgUnderlyingType::string:
+         out = value.string;
          return;
    }
    cobb::sprintf(out, "DWORD 0x%08X", value.dword); // should only happen if there's something we haven't finished yet
@@ -72,7 +75,7 @@ void ConditionArgType::getEnumValues(std::vector<ConditionArgValue>& out) const 
    for (uint32_t i = 0; i < count; i++)
       out[i].dword = this->enumValues[i].value;
 }
-ConditionArgType* ConditionArgType::resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept {
+ConditionArgType* ConditionArgType::resolveUnion(ConditionArgType* previousType, const ConditionArgValue* previousValue) const noexcept {
    return nullptr;
 }
 
@@ -706,7 +709,7 @@ namespace ConditionArgTypes {
       });
    }
 }
-ConditionArgType* ConditionVATSValueUnion::resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept {
+ConditionArgType* ConditionVATSValueUnion::resolveUnion(ConditionArgType* previousType, const ConditionArgValue* previousValue) const noexcept {
    if (previousType != &ConditionArgTypes::VATSValueFunction)
       return nullptr;
    //

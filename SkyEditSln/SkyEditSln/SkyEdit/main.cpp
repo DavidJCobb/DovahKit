@@ -55,25 +55,9 @@ std::thread::id main_thread_id;
 //
 //        - Conditions
 //
-//           - Instead of using an enum for argument types, consider defining 
-//             a list of objects that describe the types, and having the 
-//             condition function definitions store references to these.
-//
-//              - Condition::to_string and its helper function, _printConditionArg, 
-//                are now out of date.
-//
-//              - It's in place, but event and string arguments will need to 
-//                be special-cased -- possibly very heavily.
-//
-//                 - I don't think any conditions actually take three args? 
-//                   I think "Parameter #3" is only ever used for Run On and 
-//                   similar uses. If that's the case, then we can just make 
-//                   the two "real" params structs containing a dword union 
-//                   followed by a std::string.
-//
-//           - Use an array for the parameters in the Condition struct.
-//
-//           - Conditions need to normalize form ID parameters when loaded.
+//           - We normalize conditions' contained form IDs during load, but none 
+//             of the current test-cases verify that this is done correctly (i.e. 
+//             the conditions in our current tests reference forms in Skyrim.esm).
 //
 //           - Allow ConditionFunction structs to specify a list of values, 
 //             when the condition function can return an enum.
@@ -165,6 +149,8 @@ std::thread::id main_thread_id;
 //       of unrecognized/unimplemented/etc. types, if that's what it takes 
 //       to get a usable prototype of this whole thing ready in a reasonable 
 //       amount of time.
+//
+//     - Condition::generateUseInfo is unfinished and will assert if called.
 //
 //     - We don't have to write load code for every form type that we write 
 //       use info code for; each form class should have a static method (NOT 

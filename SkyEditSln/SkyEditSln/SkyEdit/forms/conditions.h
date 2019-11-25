@@ -5,26 +5,31 @@
 //
 #include "conditions/arg_types.h"
 
+class FormStub;
 class TESPluginRecord;
 
 struct ConditionFunction {
+   public:
+      //
+      // Dummy classes, for constructors:
+      //
+      enum class sentinel_is_event {};
+      static constexpr sentinel_is_event uses_event_data = sentinel_is_event();
    private:
-      typedef ConditionParamType _cpt;
       typedef ConditionArgType& _cat;
-   protected:
-      ConditionArgType* argTypes[3] = { &ConditionArgTypes::None, &ConditionArgTypes::None, &ConditionArgTypes::None }; // aRrAy Of ReFeReNcE iS nOt AlLoWeD
    public:
       uint16_t    id = 0xFFFF;
       const char* name = "";
       const char* description = "";
-      bool        valid = true;
+      const bool  valid = true;
+      const bool  usesEventData = false;
+      ConditionArgType* const argTypes[2] = { &ConditionArgTypes::None, &ConditionArgTypes::None }; // aRrAy Of ReFeReNcE iS nOt AlLoWeD
       //
       ConditionFunction(uint16_t id, const char* name, const char* d) : id(id), name(name), description(d) {};
-      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a) : id(id), name(name), description(d), argTypes{ &a, &ConditionArgTypes::None, &ConditionArgTypes::None } {};
-      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a, _cat b) : id(id), name(name), description(d), argTypes{ &a, &b, &ConditionArgTypes::None } {};
-      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a, _cat b, _cat c) : id(id), name(name), description(d), argTypes{ &a, &b, &c } {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a) : id(id), name(name), description(d), argTypes{ &a, &ConditionArgTypes::None } {};
+      ConditionFunction(uint16_t id, const char* name, const char* d, _cat a, _cat b) : id(id), name(name), description(d), argTypes{ &a, &b } {};
       //
-      ConditionArgType* getArgumentType(uint8_t index) const noexcept;
+      ConditionFunction(uint16_t id, const char* name, const char* d, sentinel_is_event) : id(id), name(name), description(d), usesEventData(true) {};
       //
       enum class dummy_indicator { value };
       static constexpr dummy_indicator dummy = dummy_indicator::value;
@@ -51,7 +56,7 @@ enum class ConditionOperator {
    less_or_equal    = 5,
 };
 
-SCOPE_ENUM(ConditionRunOn, enum ConditionRunOn {
+SCOPE_ENUM(ConditionRunOn, enum ConditionRunOn : uint32_t {
    subject       = 0,
    target        = 1,
    reference     = 2, SCOPED_ENUM_COMMENT("i.e. Condition::reference")
@@ -63,26 +68,27 @@ SCOPE_ENUM(ConditionRunOn, enum ConditionRunOn {
 });
 
 struct Condition {
-   uint8_t  type; // (ConditionTypeFlags << 5) | ConditionOperator
-   float    compareToConstant;
-   uint32_t compareToGlobalID;
-   uint16_t function;
-   uint32_t parameter1;
-   uint32_t parameter2;
-   uint32_t runOn;
-   uint32_t reference; // only used for runOn == reference
-   int32_t  parameter3 = -1; // if Run On == package_data, then this is the Package Data index (within the PACK containing this condition) to run on, and -1 means "NONE"
-   std::string stringParam1;
-   std::string stringParam2;
+   uint8_t   type; // (ConditionTypeFlags << 5) | ConditionOperator
+   float     compareToConstant;
+   form_id_t compareToGlobalID;
+   uint16_t  function;
+   ConditionArgValue parameters[2];
+   ConditionRunOn runOn;
+   form_id_t      runOnRef; // only used for runOn == reference
+   int32_t        runOnIndex = -1; // xEdit calls this "Parameter 3" // if Run On == package_data, then this is the Package Data index (within the PACK containing this condition) to run on, and -1 means "NONE"
    //
    uint16_t eventFunction;
    uint16_t eventMember;
    uint32_t eventFormID;
    //
+   ConditionArgType* getArgumentType(uint8_t index) const noexcept;
+   ConditionArgUnderlyingType getArgumentUnderlyingType(uint8_t index) const noexcept;
+   //
    inline ConditionOperator get_operator() const noexcept { return (ConditionOperator)((this->type >> 5) & 7); }
    inline uint8_t get_flags() const noexcept { return this->type & 0x1F; }
    //
    bool read(TESPluginRecord&); // assumes we've already opened a CTDA subrecord
+   static void generateUseInfo(TESPluginRecord&, FormStub*); // TODO: FINISH ME
    //
    void to_string(std::string& out) const;
 };

@@ -28,14 +28,17 @@
 
 class TESPluginSubrecord;
 
-union ConditionArgValue {
-   uint32_t  dword;
-   uint8_t   byte;
-   float     float32;
-   form_id_t formID;
+struct ConditionArgValue {
+   union {
+      uint32_t  dword = 0;
+      float     float32;
+      form_id_t formID;
+   };
+   std::string string;
    //
-   ConditionArgValue() : dword(0) {}
+   ConditionArgValue() : dword(0) {};
 };
+
 struct ConditionEnumValue {
    const int32_t     value;
    const char* const string;
@@ -72,7 +75,7 @@ class ConditionArgType {
       virtual bool loadValue(ConditionArgValue& out, TESPluginSubrecord& subrecord) const noexcept;
       //
       /// If the type is flagged as a union, use the next function to get its value; if it returns (nullptr), then the argument "doesn't exist."
-      virtual ConditionArgType* resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept;
+      virtual ConditionArgType* resolveUnion(ConditionArgType* previousType, const ConditionArgValue* previousValue) const noexcept;
       //
       ConditionArgType* parent = nullptr;
       std::string  name;
@@ -97,6 +100,7 @@ class ConditionArgType {
          }
          return false;
       }
+      bool isNone() const noexcept { return this->underlying == e_underlying::none; }
 };
 class ConditionArgFormType : public ConditionArgType {
    //
@@ -124,7 +128,7 @@ class ConditionVATSValueUnion : public ConditionArgType {
    public:
       ConditionVATSValueUnion() : ConditionArgType("VATS Value", ConditionArgType::is_union) {};
       //
-      virtual ConditionArgType* resolveUnion(ConditionArgType* previousType, ConditionArgValue* previousValue) const noexcept override;
+      virtual ConditionArgType* resolveUnion(ConditionArgType* previousType, const ConditionArgValue* previousValue) const noexcept override;
 };
 
 namespace ConditionArgTypes {

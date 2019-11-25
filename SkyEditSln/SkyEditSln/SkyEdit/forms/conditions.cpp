@@ -2,6 +2,27 @@
 #include "../esp/TESPlugin.h"
 #include "../helpers/strings.h"
 
+
+ConditionArgType* Condition::getArgumentType(uint8_t index) const noexcept {
+   if (index >= 2)
+      return nullptr;
+   auto func = getConditionFunction(this->function);
+   if (!func)
+      return nullptr;
+   auto a = func->argTypes[index];
+   if (a->isUnion) {
+      assert(index != 0 && "No behavior defined for a condition function whose first argument type is a union!");
+      return a->resolveUnion(func->argTypes[index - 1], &this->parameters[index - 1]);
+   }
+   return a;
+}
+ConditionArgUnderlyingType Condition::getArgumentUnderlyingType(uint8_t index) const noexcept {
+   auto a = this->getArgumentType(index);
+   if (a)
+      return a->underlying;
+   return ConditionArgUnderlyingType::none;
+}
+
 bool Condition::read(TESPluginRecord& record) {
    auto& subrecord = record.get_current_subrecord();
    assert(subrecord.signature() == 'CTDA' && "Condition::read should only be called just after the CTDA subrecord is opened.");
@@ -15,83 +36,104 @@ bool Condition::read(TESPluginRecord& record) {
       subrecord.unchecked_read(this->compareToConstant);
    subrecord.unchecked_read(this->function);
    subrecord.skip_bytes(2);
-   subrecord.unchecked_read(this->parameter1);
-   subrecord.unchecked_read(this->parameter2);
-   if (false) { // TODO: for GetEventData only
-      if (!subrecord.is_in_bounds(8))
-         return false;
-      subrecord.unchecked_read(this->eventFunction);
-      subrecord.unchecked_read(this->eventMember);
-      subrecord.unchecked_read(this->eventFormID);
-   } else {
-      if (!subrecord.is_in_bounds(12))
-         return false;
-      subrecord.unchecked_read(this->runOn);
-      subrecord.unchecked_read(this->reference);
-      subrecord.unchecked_read(this->parameter3);
+   {
+      auto func = getConditionFunction(this->function);
+      for (int i = 0; i < 2; i++) {
+         if (func && this->getArgumentUnderlyingType(i) == ConditionArgUnderlyingType::formID)
+            subrecord.unchecked_read(this->parameters[i].formID);
+         else
+            subrecord.unchecked_read(this->parameters[i].dword);
+      }
+      if (func && func->usesEventData) {
+         if (!subrecord.is_in_bounds(8))
+            return false;
+         subrecord.unchecked_read(this->eventFunction);
+         subrecord.unchecked_read(this->eventMember);
+         subrecord.unchecked_read(this->eventFormID);
+      } else {
+         if (!subrecord.is_in_bounds(12))
+            return false;
+         subrecord.unchecked_read(this->runOn);
+         subrecord.unchecked_read(this->runOnRef);
+         subrecord.unchecked_read(this->runOnIndex);
+      }
    }
    auto next = record.peek_next_subrecord_type();
    if (next != 'CIS1' && next != 'CIS2')
       return true;
    if (next == 'CIS1') {
       auto& sub = record.next_subrecord();
-      sub.to_string(this->stringParam1);
+      sub.to_string(this->parameters[0].string);
       //
       next = record.peek_next_subrecord_type();
    }
    if (next == 'CIS2') {
       auto& sub = record.next_subrecord();
-      sub.to_string(this->stringParam2);
+      sub.to_string(this->parameters[1].string);
    }
    return true;
 }
-
-namespace {
-   void _printConditionArg(ConditionParamType type, void* value, std::string& out) {
-      std::string temp;
-      switch (type) {
-         case ConditionParamType::Float:
-            cobb::sprintf(temp, "%f", *(float*)value);
-            out += temp;
-            break;
-         case ConditionParamType::Actor:
-         case ConditionParamType::BaseForm:
-         case ConditionParamType::Cell:
-         case ConditionParamType::Class:
-         case ConditionParamType::Faction:
-         case ConditionParamType::Furniture:
-         case ConditionParamType::Global:
-         case ConditionParamType::InventoryItem:
-         case ConditionParamType::Keyword:
-         case ConditionParamType::ObjectReference:
-         case ConditionParamType::Package:
-         case ConditionParamType::Race:
-         case ConditionParamType::Quest:
-         case ConditionParamType::Voicetype:
-         case ConditionParamType::Weather:
-            cobb::sprintf(temp, "[FORM:%08X]", *(uint32_t*)value);
-            out += temp;
-            break;
-         case ConditionParamType::Sex:
-            if (*(uint32_t*)value == 1) {
-               out += "Female";
-               break;
-            } else if (*(uint32_t*)value == 0) {
-               out += "Male";
-               break;
-            }
-            // else fall through to integer
-         case ConditionParamType::Integer:
-         case ConditionParamType::QuestStage:
-         case ConditionParamType::ScriptVariableIndex:
-            cobb::sprintf(temp, "%d", *(int32_t*)value);
-            out += temp;
-            break;
-         default:
-            out += "<arg?>";
+/*static*/ void Condition::generateUseInfo(TESPluginRecord& record, FormStub* stub) {
+   auto& subrecord = record.get_current_subrecord();
+   assert(subrecord.signature() == 'CTDA' && "Condition::read should only be called just after the CTDA subrecord is opened.");
+   if (!subrecord.is_in_bounds(0x14))
+      return;
+   uint8_t   type;
+   uint16_t  function;
+   form_id_t formID;
+   subrecord.unchecked_read(type);
+   subrecord.skip_bytes(3);
+   if (type & ConditionTypeFlags::compare_to_global) {
+      subrecord.unchecked_read(formID);
+      assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+   } else
+      subrecord.skip_bytes(4);
+   subrecord.unchecked_read(function);
+   subrecord.skip_bytes(2);
+   {
+      auto func = getConditionFunction(function);
+      auto arg0 = func->argTypes[0];
+      auto arg1 = func->argTypes[1];
+      uint32_t firstValue; // needed for when the second arg is a union
+      if (arg0 && arg0->underlying == ConditionArgUnderlyingType::formID) {
+         subrecord.unchecked_read(formID);
+         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+      } else
+         subrecord.unchecked_read(firstValue);
+      if (arg1 && arg1->isUnion) {
+         assert(false && "TODO: FINISH ME: Resolve the union based on (firstValue). Currently we need a \"real\" condition value to do that.");
+      }
+      if (arg1 && arg1->underlying == ConditionArgUnderlyingType::formID) {
+         subrecord.unchecked_read(formID);
+         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+      } else
+         subrecord.skip_bytes(4);
+      if (func && func->usesEventData) {
+         if (!subrecord.is_in_bounds(8))
+            return;
+         subrecord.skip_bytes(4);
+         subrecord.unchecked_read(formID);
+         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+      } else {
+         if (!subrecord.is_in_bounds(12))
+            return;
+         subrecord.skip_bytes(4);
+         subrecord.unchecked_read(formID);
+         assert(false && "TODO: FINISH ME: Add outbound connection to the stub.");
+         subrecord.skip_bytes(4);
       }
    }
+   auto next = record.peek_next_subrecord_type();
+   if (next != 'CIS1' && next != 'CIS2')
+      return;
+   if (next == 'CIS1') {
+      record.next_subrecord();
+      next = record.peek_next_subrecord_type();
+   }
+   if (next == 'CIS2')
+      record.next_subrecord();
 }
+
 void Condition::to_string(std::string& out) const {
    out.clear();
    //
@@ -108,19 +150,19 @@ void Condition::to_string(std::string& out) const {
          out += "Target";
          break;
       case ConditionRunOn::reference:
-         cobb::sprintf(out, "%08X", this->reference);
+         cobb::sprintf(out, "[REFR:%08X]", this->runOnRef);
          break;
       case ConditionRunOn::combat_target:
          out += "CombatTarget";
          break;
       case ConditionRunOn::event_data:
-         out += "EventData";
+         out += "EventData"; // TODO: how does this work?
          break;
       case ConditionRunOn::quest_alias:
-         out += "QuestAlias";
+         cobb::sprintf(out, "QuestAlias[%d]", this->runOnIndex); // can't show more meaningful information without access to the condition's containing form
          break;
       case ConditionRunOn::package_data:
-         out += "PackageData";
+         cobb::sprintf(out, "PackageData[%d]", this->runOnIndex); // can't show more meaningful information without access to the condition's containing form
          break;
       default:
          out += "?????";
@@ -129,16 +171,14 @@ void Condition::to_string(std::string& out) const {
    out += function->name;
    out += '(';
    for (uint32_t i = 0; i < 3; i++) {
-      auto& arg = function->paramTypes[i];
-      if (arg != ConditionParamType::None) {
+      auto type = this->getArgumentType(i);
+      if (type && !type->isNone()) {
          if (i > 0)
             out += ", ";
-         if (i == 0)
-            _printConditionArg(arg, (void*)&this->parameter1, out);
-         else if (i == 1)
-            _printConditionArg(arg, (void*)&this->parameter2, out);
-         else if (i == 2)
-            _printConditionArg(arg, (void*)&this->parameter3, out);
+         auto& param = this->parameters[i];
+         std::string temp;
+         type->toString(param, temp);
+         out += temp;
       }
    }
    out += ") ";
@@ -751,7 +791,7 @@ ConditionFunction conditionFunctions[] = {
    ConditionFunction(573, ConditionFunction::dummy),
    ConditionFunction(574, "GetAttackState", ""),
    ConditionFunction(575, ConditionFunction::dummy),
-   ConditionFunction(576, "GetEventData", "", ConditionArgTypes::Event, ConditionArgTypes::EventData),
+   ConditionFunction(576, "GetEventData", "", ConditionFunction::uses_event_data),
    ConditionFunction(577, "IsCloserToAThanB", "Returns 1 if this reference is closer to the first argument than it is to the second argument, or 0 otherwise.", ConditionArgTypes::ObjectReference, ConditionArgTypes::ObjectReference),
    ConditionFunction(578, ConditionFunction::dummy),
    ConditionFunction(579, "GetEquippedShout", "", ConditionArgTypes::Shout),
