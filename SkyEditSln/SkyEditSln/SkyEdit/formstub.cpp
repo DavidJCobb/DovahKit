@@ -7,8 +7,9 @@
 #include <cassert>
 #include <cstddef>
 
+#include "forms/factories/construct.h"
 #include "forms/factories/use_info.h"
-#include "forms/loaded/Quest.h"
+#include "forms/loaded/Form.h"
 
 FormStub::~FormStub() {
    if (this->get_refcount())
@@ -36,16 +37,11 @@ loaded_form_ptr<LoadedForms::Form> FormStub::load() {
       if (this->file->loadRecordAt(this->offset)) {
          auto& record   = this->file->getCurrentRecord();
          auto  formType = signatureToFormType(record.signature());
-         switch (formType) {
-            case FormType::Quest:
-               {
-                  auto q = new LoadedForms::Quest();
-                  q->load(record);
-                  this->form = q;
-               }; break;
-         }
-         if (this->form)
+         auto  factory  = getLoadedFormFactoryForFormType(formType);
+         if (factory) {
+            this->form = factory(record);
             this->form->stub = this;
+         }
       } else
          _DEBUGMSG("...stub failed.");
    }

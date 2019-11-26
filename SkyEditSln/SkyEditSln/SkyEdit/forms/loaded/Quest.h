@@ -5,6 +5,7 @@
 #include "Form.h"
 #include "../components.h"
 #include "../conditions.h"
+#include "../container.h"
 #include "../papyrus.h"
 
 class TESPluginRecord;
@@ -80,10 +81,6 @@ namespace LoadedForms {
    class ReferenceAlias : public Alias {
       public:
          typedef reference_alias_fill_type fill_type;
-         struct InventoryModification {
-            form_id_t itemFormID;
-            uint32_t  count;
-         };
       public:
          virtual void load(TESPluginRecord&) override;
          //
@@ -93,7 +90,7 @@ namespace LoadedForms {
          std::vector<form_id_t> packageIDs; // ALPC
          std::vector<form_id_t> factionIDs; // ALFC
          std::vector<form_id_t> spellIDs;   // ALSP
-         std::vector<InventoryModification> inventoryChanges; // COCT, CNTO
+         ContainerData inventoryChanges;
          form_id_t spectatorOverridePackageListID = 0; // SPOR
          form_id_t observeCorpseOverridePackageListID = 0; // OCOR
          form_id_t guardWarnOverridePackageListID = 0; // GWOR

@@ -56,6 +56,15 @@ std::thread::id main_thread_id;
 //          overrides should not); we must make sure that slot 00 in the load 
 //          order overrides hardcoded stubs.
 //
+//        - KSIZ/KWDA uses a single KWDA subrecord whose length varies to hold the 
+//          number of keyword form IDs needed. Investigate...
+//
+//           - Is KSIZ the required size of the KWDA (i.e. the game won't read more 
+//             than that many forms), or is it just used to allocate the right array 
+//             size in advance (like TIFC) and otherwise optional?
+//
+//           - Do PRKZ/PRKR work the same way? I've seen them in ReferenceAlias.
+//
 //        - Form IDs handled by TESPluginFile and its readers directly (e.g. 
 //          form IDs in group data) are not normalized to the global load order. 
 //          This needs to be fixed.
@@ -88,18 +97,6 @@ std::thread::id main_thread_id;
 //
 //        - Use Info
 //
-//           = FOR SOME REASON, LoadOrder IS RANDOMLY FAILING TO ADD FORMS TO THE 
-//             LIST OF ALL FORMS: THE AFFECTED FORMS MAKE IT INTO THE LIST FOR THEIR 
-//             FORM TYPE, BUT NOT INTO THE GLOBAL LIST. IT'S ENTIRELY RANDOM AND IT'S 
-//             POSSIBLE FOR THE PROGRAM TO RUN TO COMPLETION WITHOUT ANY FORMS BEING 
-//             AFFECTED. WHAT THE HELL?
-//
-//              - We have debug code in TESPlugin.cpp and in LoadOrder::hasForm which 
-//                work together to __debugbreak() when this happens.
-//
-//              - We only ever insert into both maps! We lock both of them before 
-//                inserting to ensure thread-safety! What the hell is going on?
-//
 //           - Write code to list all of the inbound references for a form, and 
 //             code to list all of the outbound references. We need to test that 
 //             we're actually generating and retaining the data correctly.
@@ -112,6 +109,14 @@ std::thread::id main_thread_id;
 //             that we don't create forms with those IDs and thereby end up with 
 //             malformed references) and it needs to remember which FormStubs 
 //             refer to each missing ID.
+//
+//              - Dawnguard.esm has a dangling reference, actually.
+//
+//              - We should hold off on handling these until we're sure our form 
+//                loading code is good -- Use Info is the perfect way to catch 
+//                missing forms, so long as we compile in Debug (we have a 
+//                __debugbreak() call where it needs to be) and so long as we 
+//                add known vanilla invalid IDs to be ignored.
 //
 //     - The default object manager (DOBJ) is a special case and we need to 
 //       handle it accordingly. We should not create any DOBJ forms in memory; 

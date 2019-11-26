@@ -1,24 +1,21 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <vector>
 #include "Form.h"
 #include "../components.h"
-#include "../container.h"
 #include "../papyrus.h"
 
 class TESPluginRecord;
 
 namespace LoadedForms {
-   class ActorBase : public Form {
-      //
-      // Intentionally minimal for now.
-      //
+   class FormList : public Form {
       public:
-         ActorBase() : Form(FormType::ActorBase) {};
+         FormList() : Form(FormType::FormList) {};
 
-         LStringRef  name;
+         std::vector<form_id_t> contents;
 
-         void load(TESPluginRecord&); // TODO: FINISH ME
+         void load(TESPluginRecord&);
          static void generateUseInfo(TESPluginRecord&, FormStub*);
    };
 }

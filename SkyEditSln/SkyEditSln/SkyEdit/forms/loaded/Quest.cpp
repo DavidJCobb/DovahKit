@@ -82,9 +82,10 @@ namespace LoadedForms {
       //
       if (!record.next_subrecord())
          return;
-      uint32_t keywordSize   = 0;
-      uint32_t perkListSize  = 0;
-      uint32_t inventorySize = 0;
+      uint32_t  keywordSize   = 0;
+      uint32_t  perkListSize  = 0;
+      uint32_t  inventorySize = 0;
+      form_id_t formID;
       for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'ALID':
@@ -114,71 +115,28 @@ namespace LoadedForms {
                }
                break;
             case 'KSIZ':
-               if (subrecord.read(keywordSize)) {
-                  auto s = this->keywordIDs.size();
-                  if (s) {
-                     _DEBUGMSG("WARNING: QUST/ALST..KSIZ found after one or more QUST/ALST..KWDA!");
-                     if (s > keywordSize)
-                        _DEBUGMSG("WARNING: QUST/ALST..KSIZ specified a keyword size smaller than the number of QUST/ALST..KWDAs already loaded!");
-                  }
+               if (subrecord.read(keywordSize))
                   this->keywordIDs.reserve(keywordSize);
-               }
                break;
             case 'KWDA':
-               {
-                  uint32_t id;
-                  if (subrecord.read(id)) {
-                     this->keywordIDs.push_back(id);
-                     auto s = this->keywordIDs.size();
-                     if (s > keywordSize)
-                        _DEBUGMSG("WARNING: We have %d keywords in a reference alias; expected %d based on KSIZ.", s, keywordSize);
-                  }
-               }
+               if (!keywordSize)
+                  keywordSize = subrecord.size() / 4;
+               for (uint32_t i = 0; i < keywordSize; i++)
+                  if (subrecord.read(formID))
+                     this->keywordIDs.push_back(formID);
                break;
             case 'COCT':
-               if (subrecord.read(inventorySize)) {
-                  auto s = this->inventoryChanges.size();
-                  if (s) {
-                     _DEBUGMSG("WARNING: QUST/ALST..COCT found after one or more QUST/ALST..CNTO!");
-                     if (s > keywordSize)
-                        _DEBUGMSG("WARNING: QUST/ALST..COCT specified an inventory change count smaller than the number of QUST/ALST..CNTOs already loaded!");
-                  }
-                  this->inventoryChanges.reserve(inventorySize);
-               }
-               break;
             case 'CNTO':
-               if (subrecord.is_in_bounds(8)) {
-                  this->inventoryChanges.emplace_back();
-                  auto& changes = *this->inventoryChanges.rbegin();
-                  subrecord.unchecked_read(changes.itemFormID);
-                  subrecord.unchecked_read(changes.count);
-                  //
-                  auto s = this->inventoryChanges.size();
-                  if (s > inventorySize)
-                     _DEBUGMSG("WARNING: We have %d inventory changes in a reference alias; expected %d based on COCT.", s, inventorySize);
-               }
+            case 'COED':
+               this->inventoryChanges.load(subrecord);
                break;
             case 'PRKZ':
-               if (subrecord.read(perkListSize)) {
-                  auto s = this->perkIDs.size();
-                  if (s) {
-                     _DEBUGMSG("WARNING: QUST/ALST..PRKZ found after one or more QUST/ALST..PRKR!");
-                     if (s > perkListSize)
-                        _DEBUGMSG("WARNING: QUST/ALST..PRKZ specified a perk count smaller than the number of QUST/ALST..PRKRs already loaded!");
-                  }
+               if (subrecord.read(perkListSize))
                   this->perkIDs.reserve(perkListSize);
-               }
                break;
             case 'PRKR':
-               {
-                  uint32_t id;
-                  if (subrecord.read(id)) {
-                     this->perkIDs.push_back(id);
-                     auto s = this->perkIDs.size();
-                     if (s > perkListSize)
-                        _DEBUGMSG("WARNING: We have %d perks in a reference alias; expected %d based on PRKZ.", s, perkListSize);
-                  }
-               }
+               if (subrecord.read(formID))
+                  this->perkIDs.push_back(formID);
                break;
             case 'SCOR':
                subrecord.read(this->spectatorOverridePackageListID);
@@ -228,25 +186,16 @@ namespace LoadedForms {
                   subrecord.read(this->fillNearAliasType);
                break;
             case 'ALPC':
-               {
-                  uint32_t id;
-                  if (subrecord.read(id))
-                     this->packageIDs.push_back(id);
-               }
+               if (subrecord.read(formID))
+                  this->packageIDs.push_back(formID);
                break;
             case 'ALFC':
-               {
-                  uint32_t id;
-                  if (subrecord.read(id))
-                     this->factionIDs.push_back(id);
-               }
+               if (subrecord.read(formID))
+                  this->factionIDs.push_back(formID);
                break;
             case 'ALSP':
-               {
-                  uint32_t id;
-                  if (subrecord.read(id))
-                     this->spellIDs.push_back(id);
-               }
+               if (subrecord.read(formID))
+                  this->spellIDs.push_back(formID);
                break;
             case 'ALUA':
                this->fillType = fill_type::preset_unique_actor;
@@ -536,7 +485,6 @@ namespace LoadedForms {
             case 'QTGL': // text global (there can be multiple)
             case 'NAM0': // log entry next quest
             case 'KWDA': // alias keyword
-            case 'CNTO': // alias item
             case 'PRKR': // alias perk
             case 'SCOR': // alias spectator override package list ID
             case 'OCOR': // alias override corpse override package list ID
@@ -560,6 +508,11 @@ namespace LoadedForms {
             case 'CTDA':
                Condition::generateUseInfo(record, stub);
                break;
+            case 'COCT':
+            case 'CNTO':
+            case 'COED':
+               ContainerData::generateUseInfo(subrecord, stub);
+               break;
             #ifdef _DEBUG
             case 'EDID': // editor ID
             case 'FULL': // name
@@ -581,7 +534,6 @@ namespace LoadedForms {
             case 'BNAM': // alias hidden flag
             case 'ONAM': // alias hidden flag
             case 'KSIZ': // alias keyword count
-            case 'COCT': // alias item count
             case 'PRKZ': // alias perk count
             case 'ALFA': // alias fill from internal alias ID
             case 'ALEA': // alias fill from external alias ID

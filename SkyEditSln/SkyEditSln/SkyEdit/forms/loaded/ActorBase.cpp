@@ -6,9 +6,6 @@ namespace LoadedForms {
    void ActorBase::load(TESPluginRecord& record) {
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
-            case 'EDID': // required; TODO: fail if this is not present
-               subrecord.to_string(this->editorID);
-               break;
             case 'FULL':
                subrecord.to_string(this->name);
                break;
@@ -37,7 +34,6 @@ namespace LoadedForms {
             case 'GWOR': // guard worn package override
             case 'ECOR': // combat package override
             case 'PRKR': // perk
-            case 'CNTO': // item (has four more bytes, but we don't need them)
             case 'PKID': // package
             case 'CNAM': // class
             case 'PNAM': // head part
@@ -66,23 +62,9 @@ namespace LoadedForms {
                   else
                      break;
                break;
-            case 'COED': // container item ownership data; details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/COED_Field
-               //
-               // There's a formID followed by an integer/formID union whose type depends on the form 
-               // type of the formID preceding it. Fortunately, by the time we're building Use Info, 
-               // we've already identified all forms and their types.
-               //
-               if (subrecord.read(formID)) { // item owner form
-                  stub->add_outbound_reference(formID);
-                  //
-                  if (formID) {
-                     auto ownerStub = LoadOrder::get().getForm(formID);
-                     if (ownerStub && ownerStub->formType == FormType::ActorBase) {
-                        if (subrecord.read(formID)) // owner GLOB
-                           stub->add_outbound_reference(formID);
-                     }
-                  }
-               }
+            case 'CNTO':
+            case 'COED':
+               ContainerData::generateUseInfo(subrecord, stub);
                break;
             case 'ATKD': // attack data
                subrecord.skip_bytes(8);
