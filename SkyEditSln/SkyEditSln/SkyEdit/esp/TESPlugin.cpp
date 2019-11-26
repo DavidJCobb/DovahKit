@@ -495,8 +495,23 @@ void TESPluginBaseReader::extract_editor_id_for_stub(FormStub* stub) {
    }
 }
 
+namespace {
+   struct _ThreadedReaderFormStubRelevantHeapRegistrations {
+      FormStubHeap::registration stubHeap;
+      FormMapHeap::registration  pairHeap;
+      //
+      _ThreadedReaderFormStubRelevantHeapRegistrations() :
+         stubHeap(FormStubHeap::get().register_thread()),
+         pairHeap(FormMapHeap::get().register_thread())
+      {}
+   };
+   _ThreadedReaderFormStubRelevantHeapRegistrations _register_for_form_stub_heaps() {
+      return _ThreadedReaderFormStubRelevantHeapRegistrations();
+   }
+}
+
 void TESPluginThreadedSimpleReader::_thread_handler(TESPluginThreadedSimpleReader* instance) {
-   auto registration = FormStubHeap::get().register_thread();
+   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedSimpleReader::_load() {
@@ -597,7 +612,7 @@ void TESPluginThreadedSimpleReader::wait_for() {
 }
 
 void TESPluginThreadedInteriorCellReader::_thread_handler(TESPluginThreadedInteriorCellReader* instance) {
-   auto registration = FormStubHeap::get().register_thread();
+   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedInteriorCellReader::_load() {
@@ -690,7 +705,7 @@ void TESPluginThreadedInteriorCellReader::wait_for() {
 }
 
 void TESPluginThreadedWorldspaceSubBlockReader::_thread_handler(TESPluginThreadedWorldspaceSubBlockReader* instance) {
-   auto registration = FormStubHeap::get().register_thread();
+   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedWorldspaceSubBlockReader::_load() {
@@ -783,7 +798,7 @@ void TESPluginThreadedWorldspaceSubBlockReader::wait_for() {
 }
 
 void TESPluginThreadedWorldspacePersistentCellChildrenReader::_thread_handler(TESPluginThreadedWorldspacePersistentCellChildrenReader* instance) {
-   auto registration = FormStubHeap::get().register_thread();
+   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedWorldspacePersistentCellChildrenReader::_load() {

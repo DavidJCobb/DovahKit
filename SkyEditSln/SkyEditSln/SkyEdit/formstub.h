@@ -8,6 +8,7 @@
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
+#include "helpers/wavl_tree.h"
 
 class FormStub;
 class LoadOrder;
@@ -24,8 +25,8 @@ namespace LoadedForms {
 
 #define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 1
 #ifdef COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS
-   typedef std::pair<const uint32_t, FormStub*> FormMapPair;
-   class FormMapHeap : public cobb::multithreaded_block_allocator<FormMapPair, 3200, 8> {
+   typedef cobb::wavl_node<uint32_t, FormStub*> FormMapPair;
+   class FormMapHeap : public cobb::multithreaded_block_allocator<FormMapPair, 16000, 8> {
       public:
          inline static FormMapHeap& get() {
             static FormMapHeap instance;
@@ -33,25 +34,21 @@ namespace LoadedForms {
          }
    };
    class FormMapAllocator : public std::allocator<FormMapPair> {
-      //
-      // This is an interface between std::allocator and an instance of 
-      // cobb::multithreaded_block_allocator. It's stateless.
-      //
-      FormMapPair* allocate(size_type n, const FormMapPair* hint = nullptr) {
-         if (n > 1)
-            throw std::invalid_argument("Cannot allocate more than 1.");
-         return (FormMapPair*)FormMapHeap::get().allocate();
-      }
-      void deallocate(FormMapPair* p, size_type n) {
-         FormMapHeap::get().free((void*)p);
-      }
-      //
-      // stateless; therefore all instances are interchangeable
-      bool operator==(const FormMapAllocator& right) { return this == &right; }
-      bool operator!=(const FormMapAllocator& right) { return this != &right; }
+      public:
+         FormMapPair* allocate(size_type n, const FormMapPair* hint = nullptr) {
+            if (n > 1)
+               throw std::invalid_argument("Cannot allocate more than 1.");
+            return (FormMapPair*)FormMapHeap::get().allocate();
+         }
+         void deallocate(FormMapPair* p, size_type n) {
+            FormMapHeap::get().free((void*)p);
+         }
+         //
+         bool operator==(const FormMapAllocator& right) { return this == &right; }
+         bool operator!=(const FormMapAllocator& right) { return this != &right; }
    };
 
-   typedef std::map<uint32_t, FormStub*, std::less<uint32_t>, FormMapAllocator> map_of_forms;
+   typedef cobb::wavl_tree<uint32_t, FormStub*, FormMapAllocator> map_of_forms;
 #else
    typedef std::map<uint32_t, FormStub*> map_of_forms;
 #endif
@@ -156,7 +153,7 @@ struct UseInfoEntry {
    UseInfoEntry() {}
    UseInfoEntry(FormStub* s) : other(s) {}
 };
-typedef std::pair<const uint32_t, UseInfoEntry> UseInfoEntryPair;
+typedef cobb::wavl_node<uint32_t, UseInfoEntry> UseInfoEntryPair;
 class UseInfoEntryHeap : public cobb::multithreaded_block_allocator<UseInfoEntryPair, 3200, ESP_LOAD_TOTAL_THREADS> {
    public:
       inline static UseInfoEntryHeap& get() {
@@ -165,24 +162,20 @@ class UseInfoEntryHeap : public cobb::multithreaded_block_allocator<UseInfoEntry
    }
 };
 class UseInfoEntryAllocator : public std::allocator<UseInfoEntryPair> {
-   //
-   // This is an interface between std::allocator and an instance of 
-   // cobb::multithreaded_block_allocator. It's stateless.
-   //
-   UseInfoEntryPair* allocate(size_type n, const UseInfoEntryPair* hint = nullptr) {
-      if (n > 1)
-         throw std::invalid_argument("Cannot allocate more than 1.");
-      return (UseInfoEntryPair*)UseInfoEntryHeap::get().allocate();
-   }
-   void deallocate(UseInfoEntryPair* p, size_type n) {
-      UseInfoEntryHeap::get().free((void*)p);
-   }
-   //
-   // stateless; therefore all instances are interchangeable
-   bool operator==(const UseInfoEntryAllocator& right) { return this == &right; }
-   bool operator!=(const UseInfoEntryAllocator& right) { return this != &right; }
+   public:
+      UseInfoEntryPair* allocate(size_type n, const UseInfoEntryPair* hint = nullptr) {
+         if (n > 1)
+            throw std::invalid_argument("Cannot allocate more than 1.");
+         return (UseInfoEntryPair*)UseInfoEntryHeap::get().allocate();
+      }
+      void deallocate(UseInfoEntryPair* p, size_type n) {
+         UseInfoEntryHeap::get().free((void*)p);
+      }
+      //
+      bool operator==(const UseInfoEntryAllocator& right) { return this == &right; }
+      bool operator!=(const UseInfoEntryAllocator& right) { return this != &right; }
 };
-typedef std::map<uint32_t, UseInfoEntry, std::less<uint32_t>, UseInfoEntryAllocator> UseInfoList; // <formID, entry>
+typedef cobb::wavl_tree<uint32_t, UseInfoEntry, UseInfoEntryAllocator> UseInfoList; // <formID, entry>
 
 class FormStub {
    //

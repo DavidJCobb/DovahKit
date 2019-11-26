@@ -2,19 +2,172 @@
 #include <algorithm> // std::max
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <stdexcept>
 
 namespace cobb {
    template<typename key_type, typename value_type>
+   struct wavl_node {
+      std::pair<key_type, value_type> data;
+      //
+      wavl_node* left   = nullptr;
+      wavl_node* right  = nullptr;
+      wavl_node* parent = nullptr;
+      uint8_t    rank   = 0;
+      //
+      wavl_node() {}
+      wavl_node(key_type k, value_type v, wavl_node* p) : data(k, v), parent(p) {}
+      //
+      bool operator==(const wavl_node& other) const noexcept {
+         return this->data == other.data;
+      }
+      inline key_type   key()   const noexcept { return this->data.first; }
+      inline value_type value() const noexcept { return this->data.second; }
+      inline value_type* value_pointer() noexcept { return &this->data.second; }
+      //
+      wavl_node* prev() const noexcept {
+         if (this->left) {
+            //
+            // Find the rightmost descendant of the left child, i.e.
+            //
+            //         <T=5>
+            //        /     \
+            //       3       7
+            //      / \     / \
+            //     1   4   6   10
+            //
+            wavl_node* target = this->left;
+            while (target->right)
+               target = target->right;
+            return target;
+         }
+         //
+         // Traverse the parents and stop at the parent of the first right-child, i.e.
+         //
+         //           5
+         //          / \
+         //         /   7
+         //        /   / \
+         //       3   6   7
+         //      / \       \
+         //     1  <T=4>    10
+         //
+         auto  target = this;
+         wavl_node* parent = this->parent;
+         while (parent && target == parent->left) {
+            target = parent;
+            parent = parent->parent;
+         }
+         return parent;
+      }
+      wavl_node* next() const noexcept {
+         if (this->right) {
+            //
+            // Find the leftmost descendant of the right child, i.e.
+            //
+            //         <T=5>
+            //        /     \
+            //       3       7
+            //      / \     / \
+            //     1   4   6   10
+            //
+            wavl_node* target = this->right;
+            while (target->left)
+               target = target->left;
+            return target;
+         }
+         //
+         // Traverse the parents and stop at the parent of the first left-child, i.e.
+         //
+         //           5
+         //          / \
+         //         3   \
+         //        / \   \
+         //       /   4   7
+         //      /       / \
+         //     1     <T=6> 10
+         //
+         auto  target = this;
+         wavl_node* parent = this->parent;
+         while (parent&& target == parent->right) {
+            target = parent;
+            parent = parent->parent;
+         }
+         return parent;
+      }
+      wavl_node* sibling() const noexcept {
+         auto p = this->parent;
+         if (!p)
+            return nullptr;
+         if (p->left == this)
+            return p->right;
+         return p->left;
+      }
+      int delta() const noexcept {
+         if (this->parent)
+            return this->parent->rank - this->rank;
+         return 0; // TODO: is this right?
+      }
+      inline bool is_leaf() const noexcept {
+         return !this->left && !this->right;
+      }
+      inline bool is_unary() const noexcept {
+         return !(this->left && this->right) && (this->left || this->right);
+      }
+      bool is_two_two() const noexcept {
+         if (!this->left || !this->right)
+            return false;
+         if (this->rank - this->left->rank != 2)
+            return false;
+         if (this->rank - this->right->rank != 2)
+            return false;
+         return true;
+      }
+      int child_delta(bool left) const noexcept {
+         auto c = left ? this->left : this->right;
+         if (c)
+            return this->rank - c->rank;
+         return this->rank - (-1);
+      }
+      //
+      int32_t height() const {
+         int32_t l = this->left  ? this->left->height()  : -1;
+         int32_t r = this->right ? this->right->height() : -1;
+         return std::max(l, r) + 1;
+      }
+      uint32_t size() const {
+         uint32_t l = this->left  ? this->left->size()  : 0;
+         uint32_t r = this->right ? this->right->size() : 0;
+         return l + r + 1;
+      }
+      //
+      void _debugbreak_if_invalid() {
+         #if _DEBUG
+            if (this == this->left || this == this->right || this == this->parent)               __debugbreak();
+         #endif
+      }
+   };
+
+   template<typename key_type, typename value_type, typename allocator_type = std::allocator<wavl_node<key_type, value_type>>>
    class wavl_tree {
       public:
          typedef key_type   key_type;
          typedef value_type value_type;
+         using node = wavl_node<key_type, value_type>;
+         //
+         static_assert(std::is_same_v<node, typename allocator_type::value_type>, "cobb::wavl_tree<key_type, value_type> was instantiated with an allocator templated on the wrong type. The allocator must be templated on cobb::wavl_node<key_type, value_type>; it must match exactly, including const specifiers and the like.");
          //
       public:
          //
          // This class is a Weak AVL -- that is, a particular kind of self-
          // balancing binary tree.
+         //
+         // Unlike MSVC/GCC std::map, this class actually uses the allocator you 
+         // supply to it (if any), instead of silently converting that allocator 
+         // to a different type via std::allocator::rebind. This means that if 
+         // you template your allocator on the correct wavl_node type, you can 
+         // use an allocator to wrap a custom heap singleton -- something that 
+         // would be a tremendous pain with std::map.
          //
          // BASED ON:
          //    <http://sidsen.azurewebsites.net//papers/rb-trees-talg.pdf>
@@ -33,154 +186,6 @@ namespace cobb {
          //    i less, and whose right-child has a rank that is j less.
          //
       protected:
-         struct node {
-            std::pair<key_type, value_type> data;
-            //
-            node* left   = nullptr;
-            node* right  = nullptr;
-            node* parent = nullptr;
-            uint8_t rank = 0;
-            //
-            node() {}
-            node(key_type k, value_type v, node* p) : data(k, v), parent(p) {}
-            //
-            bool operator==(const node& other) const noexcept {
-               return this->data == other.data;
-            }
-            inline key_type   key()   const noexcept { return this->data.first; }
-            inline value_type value() const noexcept { return this->data.second; }
-            inline value_type* value_pointer() noexcept { return &this->data.second; }
-            //
-            node* prev() const noexcept {
-               if (this->left) {
-                  //
-                  // Find the rightmost descendant of the left child, i.e.
-                  //
-                  //         <T=5>
-                  //        /     \
-                  //       3       7
-                  //      / \     / \
-                  //     1   4   6   10
-                  //
-                  node* target = this->left;
-                  while (target->right)
-                     target = target->right;
-                  return target;
-               }
-               //
-               // Traverse the parents and stop at the parent of the first right-child, i.e.
-               //
-               //           5
-               //          / \
-               //         /   7
-               //        /   / \
-               //       3   6   7
-               //      / \       \
-               //     1  <T=4>    10
-               //
-               auto  target = this;
-               node* parent = this->parent;
-               while (parent && target == parent->left) {
-                  target = parent;
-                  parent = parent->parent;
-               }
-               return parent;
-            }
-            node* next() const noexcept {
-               if (this->right) {
-                  //
-                  // Find the leftmost descendant of the right child, i.e.
-                  //
-                  //         <T=5>
-                  //        /     \
-                  //       3       7
-                  //      / \     / \
-                  //     1   4   6   10
-                  //
-                  node* target = this->right;
-                  while (target->left)
-                     target = target->left;
-                  return target;
-               }
-               //
-               // Traverse the parents and stop at the parent of the first left-child, i.e.
-               //
-               //           5
-               //          / \
-               //         3   \
-               //        / \   \
-               //       /   4   7
-               //      /       / \
-               //     1     <T=6> 10
-               //
-               auto  target = this;
-               node* parent = this->parent;
-               while (parent&& target == parent->right) {
-                  target = parent;
-                  parent = parent->parent;
-               }
-               return parent;
-            }
-            node* sibling() const noexcept {
-               auto p = this->parent;
-               if (!p)
-                  return nullptr;
-               if (p->left == this)
-                  return p->right;
-               return p->left;
-            }
-            int   delta() const noexcept {
-               if (this->parent)
-                  return this->parent->rank - this->rank;
-               return 0; // TODO: is this right?
-            }
-            inline bool is_leaf() const noexcept {
-               return !this->left && !this->right;
-            }
-            inline bool is_unary() const noexcept {
-               return !(this->left && this->right) && (this->left || this->right);
-            }
-            bool is_two_two() const noexcept {
-               if (!this->left || !this->right)
-                  return false;
-               if (this->rank - this->left->rank != 2)
-                  return false;
-               if (this->rank - this->right->rank != 2)
-                  return false;
-               return true;
-            }
-            int child_delta(bool left) const noexcept {
-               auto c = left ? this->left : this->right;
-               if (c)
-                  return this->rank - c->rank;
-               return this->rank - (-1);
-            }
-            //
-            int32_t height() const {
-               int32_t l = this->left  ? this->left->height()  : -1;
-               int32_t r = this->right ? this->right->height() : -1;
-               return std::max(l, r) + 1;
-            }
-            uint32_t size() const {
-               uint32_t l = this->left  ? this->left->size()  : 0;
-               uint32_t r = this->right ? this->right->size() : 0;
-               return l + r + 1;
-            }
-            //
-            void destroy_children() noexcept {
-               if (this->left) {
-                  this->left->destroy_children();
-                  delete this->left;
-                  this->left = nullptr;
-               }
-               if (this->right) {
-                  this->right->destroy_children();
-                  delete this->right;
-                  this->right = nullptr;
-               }
-            }
-         };
-         //
          node*    root = nullptr;
          uint32_t _size = 0;
          //
@@ -237,6 +242,7 @@ namespace cobb {
             //
             auto z = x->parent;
             auto y = x->left;
+            auto p = z->parent;
             x->left   = z;
             z->parent = x;
             z->right  = y;
@@ -246,13 +252,19 @@ namespace cobb {
                this->root = x;
                x->parent = nullptr;
             } else {
-               auto p = z->parent;
                if (p->right == z)
                   p->right = x;
                else
                   p->left = x;
                x->parent = p;
+               #if _DEBUG
+                  p->_debugbreak_if_invalid();
+               #endif
             }
+            #if _DEBUG
+               x->_debugbreak_if_invalid();
+               if (y) y->_debugbreak_if_invalid();
+            #endif
          }
          void _rotate_right(node* x) noexcept {
             //
@@ -264,6 +276,7 @@ namespace cobb {
             //
             auto z = x->parent;
             auto y = x->right;
+            auto p = z->parent;
             x->right  = z;
             z->parent = x;
             z->left   = y;
@@ -273,13 +286,19 @@ namespace cobb {
                this->root = x;
                x->parent = nullptr;
             } else {
-               auto p = z->parent;
                if (p->left == z)
                   p->left = x;
                else
                   p->right = x;
                x->parent = p;
+               #if _DEBUG
+                  p->_debugbreak_if_invalid();
+               #endif
             }
+            #if _DEBUG
+               x->_debugbreak_if_invalid();
+               if (y) y->_debugbreak_if_invalid();
+            #endif
          }
          void _double_rotate_left(node* x) noexcept {
             //
@@ -441,6 +460,27 @@ namespace cobb {
             }
          }
          //
+         static node* _make_node(key_type k, value_type v, node* parent) {
+            auto uninitialized = allocator_type().allocate(1);
+            return new (uninitialized) node(k, v, parent);
+         }
+         static void _free_node(node* target) {
+            target->~node();
+            allocator_type().deallocate(target, 1);
+         }
+         static void _destroy_node_descendants(node* target) {
+            if (target->left) {
+               _destroy_node_descendants(target->left);
+               _free_node(target->left);
+               target->left = nullptr;
+            }
+            if (target->right) {
+               _destroy_node_descendants(target->right);
+               _free_node(target->right);
+               target->right = nullptr;
+            }
+         }
+         //
          node* _get(key_type k) const noexcept {
             auto p = this->root;
             while (p) {
@@ -462,7 +502,7 @@ namespace cobb {
             //
             node* t = this->root;
             if (t == nullptr) {
-               this->root = new node(k, v, nullptr);
+               this->root = _make_node(k, v, nullptr);
                this->_size = 1;
                return this->root;
             }
@@ -480,7 +520,7 @@ namespace cobb {
                   return t;
                }
             } while (t);
-            auto e = new node(k, v, parent);
+            auto e = _make_node(k, v, parent);
             if (last == comparison::less)
                parent->left = e;
             else
@@ -552,7 +592,7 @@ namespace cobb {
                this->root = l ? l : r;
                if (this->root)
                   this->root->parent = nullptr;
-               delete t;
+               _free_node(t);
                return;
             }
             auto diff = p->rank - t->rank;
@@ -572,7 +612,7 @@ namespace cobb {
                e->parent = p;
             }
             this->_fix_delete(p, left ? p->right : p->left, t);
-            delete t;
+            _free_node(t);
          }
          void set(key_type k, value_type v) noexcept {
             this->_set(k, v);
@@ -582,8 +622,8 @@ namespace cobb {
          bool empty() const noexcept { return !this->_size; }
          void clear() noexcept {
             if (this->root) {
-               this->root->destroy_children();
-               delete this->root;
+               _destroy_node_descendants(this->root);
+               _free_node(this->root);
                this->root = nullptr;
                this->_size = 0;
             }
@@ -662,8 +702,12 @@ namespace cobb {
          //
          iterator begin() noexcept { return iterator(this->_first()); }
          iterator end()   noexcept { return iterator(nullptr); }
+         const iterator begin() const noexcept { return iterator(this->_first()); }
+         const iterator end()   const noexcept { return iterator(nullptr); }
          reverse_iterator rbegin() noexcept { return reverse_iterator(this->_last()); }
          reverse_iterator rend()   noexcept { return reverse_iterator(nullptr); }
+         const reverse_iterator rbegin() const noexcept { return reverse_iterator(this->_last()); }
+         const reverse_iterator rend()   const noexcept { return reverse_iterator(nullptr); }
          //
          value_type& at(key_type k) {
             auto e = this->get(k);
@@ -690,10 +734,9 @@ namespace cobb {
             other._size = d;
          }
          //
-         // Returns an iterator to a given key. Not part of STL; faster than using std::find since 
-         // that has to traverse the entire container (i.e. from begin to end).
-         //
+         // Faster than using std::find since that has to traverse the entire container (i.e. from begin to end).
          iterator find(key_type k) noexcept { return iterator(this->_get(k)); }
+         const iterator find(key_type k) const noexcept { return iterator(this->_get(k)); }
    };
 
    namespace unit_tests {

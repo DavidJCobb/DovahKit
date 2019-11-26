@@ -763,8 +763,21 @@ void test_skyrim() {
    }
    printf("\n\n======================================================\n   FORM STUB HEAP\n======================================================\n");
    FormStubHeap::get().dumpStats();
+   printf("\n\n======================================================\n   FORM MAP PAIR HEAP\n======================================================\n");
+   FormMapHeap::get().dumpStats();
    printf("\n\n======================================================\n   USE INFO HEAP\n======================================================\n");
    UseInfoEntryHeap::get().dumpStats();
+   printf("\n\n");
+   {  // Form lookup time test
+      ftime(&bench_start);
+      auto stub = lo.getForm(0xF);
+      ftime(&bench_end);
+      printf("Lookup time for [0x0000000F]: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+      ftime(&bench_start);
+      stub = lo.getForm(0xEC375);
+      ftime(&bench_end);
+      printf("Lookup time for [SPEL:000EC375]WerewolfFeed: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+   }
    printf("\n\n");
    lo.reset();
 }
@@ -871,13 +884,21 @@ void test_errors() {
    printf("\nDONE TESTING ERROR HANDLING.\n");
 }
 
+
+#include "helpers/wavl_tree.h"
+
 int main() {
    main_thread_id = std::this_thread::get_id();
    //
+
+   cobb::unit_tests::wavl_tree();
+
    auto& lo = LoadOrder::get();
    test_errors();
+   /*//
    printf("\nTEST: QUEST DATA:\n");
    test_skyrim_quest();
+   //*/
    printf("\nTEST 1:\n");
    test_skyrim();
    printf("\nTEST 2:\n");

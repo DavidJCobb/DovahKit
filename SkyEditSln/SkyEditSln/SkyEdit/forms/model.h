@@ -8,6 +8,12 @@ class FormStub;
 
 struct FormModelTextureHash { // MODT
    std::vector<uint8_t> data; // bytes
+   //
+   // Skyrim still loads this data, but we don't necessarily know how. We'd need 
+   // to reverse-engineer {void LoadMODTSubrecord(TESModel*, BGSLoadFormBuffer*) 
+   // at 0x00454AF0 in Skyrim Classic to learn more. I do know for certain, how-
+   // ever, that the loading behavior changes depending on the form version.
+   //
 };
 struct FormModelTextureSwap { // MODS
    std::string nifBlockName;
