@@ -398,6 +398,7 @@ uint8_t LoadOrder::indexOf(const std::string& filename) const noexcept {
 }
 
 bool LoadOrder::hasForm(uint32_t formID) const noexcept {
+   //std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
    if (formID == 0)
       return false;
    auto& list = this->forms.forms;
@@ -421,6 +422,7 @@ bool LoadOrder::hasForm(uint32_t formID) const noexcept {
    return (it != list.end());
 }
 FormStub* LoadOrder::getForm(uint32_t formID) const noexcept {
+   //std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
    if (formID == 0)
       return nullptr;
    auto& list = this->forms.forms;
@@ -536,13 +538,12 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    if (target) // is this an override?
       delete target; // delete the overridden form stub
    target = stub;
-   stub->formID = formID;
    //
    // update the map of all forms as well:
    //
-   FormStub*& other = this->forms.forms[formID];
-   other = stub;
-   //this->forms.forms[formID] = stub;
+   this->forms.forms[formID] = stub;
+   //
+   stub->formID = formID;
    #if _DEBUG
       if (!this->forms.forms[formID])
          __debugbreak();

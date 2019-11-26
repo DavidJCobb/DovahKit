@@ -1072,10 +1072,17 @@ void TESPluginFile::_insertForm(uint32_t formID, FormStub* stub) {
             this->abort();
             return;
       }
+      /*//
+      //
+      // This does not work as a means of verifying that form insertion worked properly, 
+      // because if another thread is inserting at the moment, it can interfere with our 
+      // attempt to read the list.
+      //
       #ifdef _DEBUG
          if (!LoadOrder::get().hasForm(stub->formID))
             __debugbreak();
       #endif
+      //*/
    }
 }
 bool TESPluginFile::load(const char* filepath) {

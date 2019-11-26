@@ -135,7 +135,7 @@ class LoadOrder {
       //
    protected:
       struct _form_map {
-         std::mutex   lock;
+         mutable std::mutex lock;
          map_of_forms forms;
       };
       //
