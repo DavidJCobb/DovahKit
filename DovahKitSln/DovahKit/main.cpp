@@ -50,19 +50,6 @@ std::thread::id main_thread_id;
 //        = TEST WHETHER WE HANDLE FILES WITH EMPTY GRUPs PROPERLY. I'm NOT CERTAIN 
 //          THAT TESPluginBaseReader::nextRecordOrGroup PROPERLY ADVANCES PAST THEM.
 //
-//        - Debug logging in test_skyrim() indicates that Use Info entries may not 
-//          actually be being created on the UseInfoEntryHeap despite our giving an 
-//          appropriate allocator to the STL container we use to hold the entries. 
-//          I haven't checked whether FormMapPair is affected similarly. Why are STL 
-//          containers apparently refusing to use the allocators we're giving them?
-//
-//           - UseInfoEntries technically shouldn't leak -- I'd expect FormStub's 
-//             destructor to implicitly destroy them -- but still.
-//
-//           - If FormMapPair is affected, that may be due to a different problem: 
-//             I don't think the threaded readers register for its heap when they 
-//             register for the FormStubHeap, and they would probably need to.
-//
 //        - LoadOrder needs to instantiate the hardcoded forms before the load 
 //          process. They should be associated with load order slot 00 but should 
 //          not have a file; the FormStubs should have a "hardcoded" flag (but 
@@ -877,21 +864,13 @@ void test_errors() {
    printf("\nDONE TESTING ERROR HANDLING.\n");
 }
 
-
-#include "helpers/wavl_tree.h"
-
 int main() {
    main_thread_id = std::this_thread::get_id();
    //
-
-   cobb::unit_tests::wavl_tree();
-
    auto& lo = LoadOrder::get();
    test_errors();
-   /*//
    printf("\nTEST: QUEST DATA:\n");
    test_skyrim_quest();
-   //*/
    printf("\nTEST 1:\n");
    test_skyrim();
    printf("\nTEST 2:\n");
