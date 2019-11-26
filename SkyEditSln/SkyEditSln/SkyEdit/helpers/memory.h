@@ -202,23 +202,25 @@ namespace cobb {
             printf(" - %d bytes in use for elements\n",  element_size * slotsUsed);
             printer.printExtraStats();
             //
-            printf("Overview by block:\n");
-            blockCount = 0;
-            for (auto block = this->firstBlock; block; block = block->info.next) {
-               printf(" - Block %d:\n", blockCount);
-               blockCount++;
-               //
-               auto& presence = block->info.presence;
-               printf("    - ");
-               for (uint16_t i = 0; i < count_per_block; i++) {
-                  if (presence.test(i))
-                     printf("1");
-                  else
-                     printf("0");
+            if (count_per_block < 150) {
+               printf("Overview by block:\n");
+               blockCount = 0;
+               for (auto block = this->firstBlock; block; block = block->info.next) {
+                  printf(" - Block %d:\n", blockCount);
+                  blockCount++;
+                  //
+                  auto& presence = block->info.presence;
+                  printf("    - ");
+                  for (uint16_t i = 0; i < count_per_block; i++) {
+                     if (presence.test(i))
+                        printf("1");
+                     else
+                        printf("0");
+                  }
+                  printf("\n");
                }
-               printf("\n");
+               printf("All blocks listed.\n");
             }
-            printf("All blocks listed.\n");
             printf("=================================================================================\n");
          }
          void force_free_all() {
@@ -558,23 +560,25 @@ namespace cobb {
                printf(" - %d bytes allocated for elements\n", element_size * slotCount);
                printf(" - %d bytes in use for elements\n", element_size * slotsUsed);
                //
-               printf("Overview by block:\n");
-               blockCount = 0;
-               for (auto block = list.first; block; block = block->info.next) {
-                  printf(" - Block %d:\n", blockCount);
-                  blockCount++;
-                  //
-                  auto& presence = block->info.presence;
-                  printf("    - ");
-                  for (uint16_t i = 0; i < count_per_block; i++) {
-                     if (presence.test(i))
-                        printf("1");
-                     else
-                        printf("0");
+               if (count_per_block < 150) {
+                  printf("Overview by block:\n");
+                  blockCount = 0;
+                  for (auto block = list.first; block; block = block->info.next) {
+                     printf(" - Block %d:\n", blockCount);
+                     blockCount++;
+                     //
+                     auto& presence = block->info.presence;
+                     printf("    - ");
+                     for (uint16_t i = 0; i < count_per_block; i++) {
+                        if (presence.test(i))
+                           printf("1");
+                        else
+                           printf("0");
+                     }
+                     printf("\n");
                   }
-                  printf("\n");
+                  printf("All blocks listed.\n");
                }
-               printf("All blocks listed.\n");
                printf("---------------------------------------------------------------------------------\n");
             }
             printf("=================================================================================\n");

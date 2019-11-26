@@ -50,6 +50,12 @@ std::thread::id main_thread_id;
 //        = TEST WHETHER WE HANDLE FILES WITH EMPTY GRUPs PROPERLY. I'm NOT CERTAIN 
 //          THAT TESPluginBaseReader::nextRecordOrGroup PROPERLY ADVANCES PAST THEM.
 //
+//        - Debug logging in test_skyrim() indicates that Use Info entries may not 
+//          actually be being created on the UseInfoEntryHeap despite our giving an 
+//          appropriate allocator to the STL container we use to hold the entries. 
+//          I haven't checked whether FormMapPair is affected similarly. Why are STL 
+//          containers apparently refusing to use the allocators we're giving them?
+//
 //        - LoadOrder needs to instantiate the hardcoded forms before the load 
 //          process. They should be associated with load order slot 00 but should 
 //          not have a file; the FormStubs should have a "hardcoded" flag (but 
@@ -748,6 +754,11 @@ void test_skyrim() {
       printf("...But an error was encountered during load! Details:\n");
       test_print_load_error();
    }
+   printf("\n\n======================================================\n   FORM STUB HEAP\n======================================================\n");
+   FormStubHeap::get().dumpStats();
+   printf("\n\n======================================================\n   USE INFO HEAP\n======================================================\n");
+   UseInfoEntryHeap::get().dumpStats();
+   printf("\n\n");
    lo.reset();
 }
 void test_hearthfire() {

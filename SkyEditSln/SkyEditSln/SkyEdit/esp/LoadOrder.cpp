@@ -497,6 +497,7 @@ void LoadOrder::reset() {
    for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++)
       this->formsByType[ft].forms.clear();
    FormStubHeap::get().force_free_all();
+   UseInfoEntryHeap::get().force_free_all();
 }
 
 form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
