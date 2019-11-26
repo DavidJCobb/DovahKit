@@ -56,6 +56,13 @@ std::thread::id main_thread_id;
 //          I haven't checked whether FormMapPair is affected similarly. Why are STL 
 //          containers apparently refusing to use the allocators we're giving them?
 //
+//           - UseInfoEntries technically shouldn't leak -- I'd expect FormStub's 
+//             destructor to implicitly destroy them -- but still.
+//
+//           - If FormMapPair is affected, that may be due to a different problem: 
+//             I don't think the threaded readers register for its heap when they 
+//             register for the FormStubHeap, and they would probably need to.
+//
 //        - LoadOrder needs to instantiate the hardcoded forms before the load 
 //          process. They should be associated with load order slot 00 but should 
 //          not have a file; the FormStubs should have a "hardcoded" flag (but 
