@@ -298,10 +298,6 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    //
    auto& record = this->record;
    if (record) {
-      #ifdef _DEBUG
-         if (record.formID() && !(record.formID() & 0xFF000000) && !LoadOrder::get().hasForm(record.formID()))
-            __debugbreak();
-      #endif
       /*//
       if (this->getPos() == record.end)
          _DEBUGMSG("Reached the end of record of type %s from %08X to %08X...", FMT_SIGNATURE(record.signature()), record.headPos, record.end);
@@ -1072,17 +1068,6 @@ void TESPluginFile::_insertForm(uint32_t formID, FormStub* stub) {
             this->abort();
             return;
       }
-      /*//
-      //
-      // This does not work as a means of verifying that form insertion worked properly, 
-      // because if another thread is inserting at the moment, it can interfere with our 
-      // attempt to read the list.
-      //
-      #ifdef _DEBUG
-         if (!LoadOrder::get().hasForm(stub->formID))
-            __debugbreak();
-      #endif
-      //*/
    }
 }
 bool TESPluginFile::load(const char* filepath) {

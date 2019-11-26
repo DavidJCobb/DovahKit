@@ -398,31 +398,13 @@ uint8_t LoadOrder::indexOf(const std::string& filename) const noexcept {
 }
 
 bool LoadOrder::hasForm(uint32_t formID) const noexcept {
-   //std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
    if (formID == 0)
       return false;
    auto& list = this->forms.forms;
    auto  it   = list.find(formID);
-   #if _DEBUG
-      if (it == list.end()) {
-         for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++) {
-            auto& list = this->formsByType[ft].forms;
-            auto  it   = list.find(formID);
-            if (it != list.end()) {
-               //
-               // The two lists are in inconsistent states!
-               //
-               __debugbreak();
-            }
-         }
-         return false;
-      }
-      return true;
-   #endif
    return (it != list.end());
 }
 FormStub* LoadOrder::getForm(uint32_t formID) const noexcept {
-   //std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
    if (formID == 0)
       return nullptr;
    auto& list = this->forms.forms;
@@ -544,10 +526,6 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    this->forms.forms[formID] = stub;
    //
    stub->formID = formID;
-   #if _DEBUG
-      if (!this->forms.forms[formID])
-         __debugbreak();
-   #endif
    //
    return form_id_status::valid;
 }
