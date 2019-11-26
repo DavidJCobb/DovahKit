@@ -90,5 +90,44 @@ namespace cobb {
             }
             return -1;
          }
+         int32_t find_first_clear_from(uint32_t index) const {
+            //
+            // Finds the first zero bit in the set. This function performs significantly 
+            // better than looping from 0 to (count) and testing each individual bit, as you 
+            // would have to do when using std::bitset as of this writing.
+            //
+            uint32_t ci = index / bits_per_chunk; // chunks to skip
+            uint32_t bi = index % bits_per_chunk; // bits   to skip
+            for (uint32_t i = ci; i < undershoot_cc; i++) {
+               auto chunk = this->data[i];
+               if (chunk != all_bits_set) {
+                  for (uint8_t j = bi; j < bits_per_chunk; j++) {
+                     if ((chunk & (1 << j)) == 0) {
+                        return i * bits_per_chunk + j;
+                     }
+                  }
+               }
+               bi = 0; // only skip bits in the first chunk we look at
+            }
+            if (has_partial_chunk) {
+               index -= chunk_count * undershoot_cc;
+               //
+               // If the number of bits in the set isn't cleanly divisible by 32, then we're 
+               // going to have a final chunk that only uses some of its bits. We need to ONLY 
+               // LOOK AT THE BITS THAT THAT CHUNK ACTUALLY USES, or we'll end up returning bit 
+               // indices past the end of our set.
+               //
+               auto chunk = this->data[chunk_count - 1];
+               if (chunk != partial_chunk_max) {
+                  #pragma warning(suppress: 6294) // Initial condition in for-loop does not satisfy test. Normal if a bitmask has no partial chunk.
+                  for (uint8_t j = index; j < bits_in_partial; j++) {
+                     if ((chunk & (1 << j)) == 0) {
+                        return (chunk_count - 1) * bits_per_chunk + j;
+                     }
+                  }
+               }
+            }
+            return -1;
+         }
    };
 };

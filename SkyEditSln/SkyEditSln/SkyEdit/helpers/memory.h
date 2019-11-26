@@ -345,20 +345,42 @@ namespace cobb {
          struct BlockInfo {
             Block* prev = nullptr;
             Block* next = nullptr;
+            uint32_t remaining = count_per_block; // optimization for large block sizes
+            uint32_t startFrom = 0; // optimization for large block sizes
             cobb::bitset<count_per_block> presence;
+            //
+            inline void on_allocate(uint32_t index) noexcept {
+               this->presence.set(index);
+               this->remaining--;
+               this->startFrom = index;
+            }
+            inline void on_free(uint32_t index) noexcept {
+               this->presence.reset(index);
+               this->remaining++;
+               if (this->startFrom > index)
+                  this->startFrom = index;
+            }
          };
          struct Block {
             BlockInfo info;
-            #pragma warning(suppress: 26495) // buffer is uninitialized
             uint8_t   buffer[count_per_block * element_size];
             //
+            inline bool has_free_slots() const noexcept {
+               return this->info.remaining;
+            };
+            inline bool has_any_slots_used() const noexcept {
+               //return !this->info.presence.none();
+               return this->info.remaining < count_per_block;
+            }
             void* allocate() {
-               auto i = this->info.presence.find_first_clear();
+               if (!this->has_free_slots())
+                  return nullptr;
+               auto i = this->info.presence.find_first_clear_from(this->info.startFrom);
                if (i < 0)
                   return nullptr;
                std::ptrdiff_t start = (std::ptrdiff_t) & this->buffer;
                std::ptrdiff_t addr = start + (element_size * i);
-               this->info.presence.set(i);
+               this->info.on_allocate(i);
                return (void*)addr;
             }
          };
@@ -460,9 +482,9 @@ namespace cobb {
                      uint16_t index = m_addr / sizeof(element_type);
                      assert(m_addr % element_size == 0       && "Cannot free; element is not aligned.");
                      assert(block->info.presence.test(index) && "You're freeing something that was already free!");
-                     block->info.presence.reset(index);
+                     block->info.on_free(index);
                      //
-                     if (block != t.first && block->info.presence.none()) { // never delete the first block in a list
+                     if (block != t.first && !block->has_any_slots_used()) { // never delete the first block in a list
                         //
                         // This block is no longer in use. Delete it.
                         //
@@ -505,6 +527,7 @@ namespace cobb {
                      }
                   }
                   presence.clear();
+                  last->info.remaining = count_per_block;
                   memset(last->buffer, 0, sizeof(last->buffer));
                   if (last != t.first) { // never delete the first block in a list
                      //

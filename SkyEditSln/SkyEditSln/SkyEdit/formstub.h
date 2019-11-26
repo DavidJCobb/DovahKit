@@ -23,8 +23,10 @@ namespace LoadedForms {
    class Form;
 }
 
-#define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 1
-#ifdef COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS
+#define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 0
+#define COBB_ESP_BLOCK_ALLOCATE_USE_INFO 0
+
+#if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS == 1
    typedef cobb::wavl_node<uint32_t, FormStub*> FormMapPair;
    class FormMapHeap : public cobb::multithreaded_block_allocator<FormMapPair, 16000, 8> {
       public:
@@ -153,16 +155,17 @@ struct UseInfoEntry {
    UseInfoEntry() {}
    UseInfoEntry(FormStub* s) : other(s) {}
 };
-typedef cobb::wavl_node<uint32_t, UseInfoEntry> UseInfoEntryPair;
-class UseInfoEntryHeap : public cobb::multithreaded_block_allocator<UseInfoEntryPair, 3200, ESP_LOAD_TOTAL_THREADS> {
-   public:
+#if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
+   typedef cobb::wavl_node<uint32_t, UseInfoEntry> UseInfoEntryPair;
+   class UseInfoEntryHeap : public cobb::multithreaded_block_allocator<UseInfoEntryPair, 3200, ESP_LOAD_TOTAL_THREADS> {
+      public:
       inline static UseInfoEntryHeap& get() {
          static UseInfoEntryHeap instance;
          return instance;
-   }
-};
-class UseInfoEntryAllocator : public std::allocator<UseInfoEntryPair> {
-   public:
+      }
+   };
+   class UseInfoEntryAllocator : public std::allocator<UseInfoEntryPair> {
+      public:
       UseInfoEntryPair* allocate(size_type n, const UseInfoEntryPair* hint = nullptr) {
          if (n > 1)
             throw std::invalid_argument("Cannot allocate more than 1.");
@@ -174,8 +177,11 @@ class UseInfoEntryAllocator : public std::allocator<UseInfoEntryPair> {
       //
       bool operator==(const UseInfoEntryAllocator& right) { return this == &right; }
       bool operator!=(const UseInfoEntryAllocator& right) { return this != &right; }
-};
-typedef cobb::wavl_tree<uint32_t, UseInfoEntry, UseInfoEntryAllocator> UseInfoList; // <formID, entry>
+   };
+   typedef cobb::wavl_tree<uint32_t, UseInfoEntry, UseInfoEntryAllocator> UseInfoList; // <formID, entry>
+#else
+   typedef std::map<uint32_t, UseInfoEntry> UseInfoList; // <formID, entry>
+#endif
 
 class FormStub {
    //

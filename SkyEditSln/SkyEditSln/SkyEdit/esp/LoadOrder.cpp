@@ -222,7 +222,9 @@ class ThreadedUseInfoOutboundBuilder : public TESPluginFileView {
       std::thread thread;
       //
       static void _thread_handler(ThreadedUseInfoOutboundBuilder* instance) {
-         auto registration = UseInfoEntryHeap::get().register_thread();
+         #if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
+            auto registration = UseInfoEntryHeap::get().register_thread();
+         #endif
          instance->_execute();
       }
       void _execute() {
@@ -497,7 +499,6 @@ void LoadOrder::reset() {
    for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++)
       this->formsByType[ft].forms.clear();
    FormStubHeap::get().force_free_all();
-   UseInfoEntryHeap::get().force_free_all();
 }
 
 form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {

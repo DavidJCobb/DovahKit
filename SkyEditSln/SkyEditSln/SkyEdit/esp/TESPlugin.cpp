@@ -498,11 +498,16 @@ void TESPluginBaseReader::extract_editor_id_for_stub(FormStub* stub) {
 namespace {
    struct _ThreadedReaderFormStubRelevantHeapRegistrations {
       FormStubHeap::registration stubHeap;
-      FormMapHeap::registration  pairHeap;
+      #if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS == 1
+         FormMapHeap::registration pairHeap;
+      #endif
       //
       _ThreadedReaderFormStubRelevantHeapRegistrations() :
-         stubHeap(FormStubHeap::get().register_thread()),
-         pairHeap(FormMapHeap::get().register_thread())
+         stubHeap(FormStubHeap::get().register_thread())
+         #if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS == 1
+            ,
+            pairHeap(FormMapHeap::get().register_thread())
+         #endif
       {}
    };
    _ThreadedReaderFormStubRelevantHeapRegistrations _register_for_form_stub_heaps() {
