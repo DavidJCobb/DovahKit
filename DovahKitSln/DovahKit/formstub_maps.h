@@ -4,7 +4,7 @@ class FormStub;
 
 //
 // Block-allocating elements in a std::map is significantly slower than using a std::unordered_map 
-// with no custom allocator. Still, I'm glad I have this working.
+// with no custom allocator. Still, I'm retaining this in case it comes in handy in the future.
 //
 #define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 0
 

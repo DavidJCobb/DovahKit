@@ -2,12 +2,9 @@
 #include <atomic>
 #include <cstdint>
 #include <cstring>
-#include <forward_list>
 #include <map>
-#include <vector>
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
-#include "helpers/memory.h"
 #include "helpers/multiheap.h"
 
 class FormStub;
@@ -23,11 +20,12 @@ namespace LoadedForms {
    class Form;
 }
 
+//
+// Turns out, using a block allocator for Use Info is slower than using the 
+// default allocation. Still, I'm retaining this in case it comes in handy 
+// in the future.
+//
 #define COBB_ESP_BLOCK_ALLOCATE_USE_INFO 0
-#if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
-   #include "helpers/multiheap.h"
-   #include "helpers/wavl_tree.h"
-#endif
 
 template<typename LoadedFormClass> class loaded_form_ptr {
    //
@@ -130,29 +128,9 @@ struct UseInfoEntry {
    UseInfoEntry(FormStub* s) : other(s) {}
 };
 #if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
-   typedef cobb::wavl_node<uint32_t, UseInfoEntry> UseInfoEntryPair;
-   class UseInfoEntryHeap : public cobb::multithreaded_block_allocator<UseInfoEntryPair, 3200, ESP_LOAD_TOTAL_THREADS> {
-      public:
-      inline static UseInfoEntryHeap& get() {
-         static UseInfoEntryHeap instance;
-         return instance;
-      }
-   };
-   class UseInfoEntryAllocator : public std::allocator<UseInfoEntryPair> {
-      public:
-      UseInfoEntryPair* allocate(size_type n, const UseInfoEntryPair* hint = nullptr) {
-         if (n > 1)
-            throw std::invalid_argument("Cannot allocate more than 1.");
-         return (UseInfoEntryPair*)UseInfoEntryHeap::get().allocate();
-      }
-      void deallocate(UseInfoEntryPair* p, size_type n) {
-         UseInfoEntryHeap::get().free((void*)p);
-      }
-      //
-      bool operator==(const UseInfoEntryAllocator& right) { return this == &right; }
-      bool operator!=(const UseInfoEntryAllocator& right) { return this != &right; }
-   };
-   typedef cobb::wavl_tree<uint32_t, UseInfoEntry, UseInfoEntryAllocator> UseInfoList; // <formID, entry>
+   typedef std::pair<const uint32_t, UseInfoEntry> UseInfoEntryPair;
+   typedef cobb::multiheap_allocator<UseInfoEntryPair, 3200> UseInfoEntryAllocator;
+   typedef std::map<uint32_t, UseInfoEntry, std::less<uint32_t>, UseInfoEntryAllocator> UseInfoList; // <formID, entry>
 #else
    typedef std::map<uint32_t, UseInfoEntry> UseInfoList; // <formID, entry>
 #endif

@@ -44,24 +44,10 @@ std::thread::id main_thread_id;
 //
 //     = Current tasks
 //
-//        = POSSIBLE OPTIMIZATION TO FORM STORAGE: APPARENTLY unordered_map IS 
-//          SIGNIFICANTLY FASTER THAN map SO LONG AS IT DOESN'T HAVE TO REALLOCATE. 
-//          (IT SPLITS ITS STORAGE INTO BUCKETS AND MUCH LIKE vector, THESE BUCKETS 
-//          CAN FILL. YOU CAN ALSO RESERVE ENOUGH SPACE VIA unordered_map::reserve.) 
-//          If we switch LoadOrder::forms::forms from a map to an unordered_map, we 
-//          may see significant performance gains if and only if we allocate enough 
-//          storage in advance. Over on the RE discord, arha suggested reading the 
-//          file headers (which contain a count of all forms in the file) and summing 
-//          their file counts to know how much space to reserve.
-//
-//           - Happily, we already read the headers before fully loading the files 
-//             anyway, so we can construct a valid load order. We can just have the 
-//             TESPluginHeader class also catch and store the form count.
-//
-//           - Reallocation would be pretty devastating -- imagine reallocating a 
-//             vector with a literal million or more elements -- but if we reserve a 
-//             hefty amount of space rather than just enough for the total forms, 
-//             then we oughta be good.
+//        - Check whether editor IDs can ever be stored as wide strings -- that 
+//          is, whether any of the text locales seen in Skyrim can contain nulls 
+//          before the end of the string. I doubt that very much, but if it's 
+//          possible, then FormStub needs to use a std::string for its editor ID.
 //
 //        - LoadOrder needs to instantiate the hardcoded forms before the load 
 //          process. They should be associated with load order slot 00 but should 
@@ -758,10 +744,6 @@ void test_skyrim() {
    }
    printf("\n\n======================================================\n   FORM STUB HEAP\n======================================================\n");
    FormStubHeap::dump_stats();
-   #if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
-      printf("\n\n======================================================\n   USE INFO HEAP\n======================================================\n");
-      UseInfoEntryHeap::get().dumpStats();
-   #endif
    printf("\n\n");
    lo.reset();
 }

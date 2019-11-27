@@ -223,9 +223,6 @@ class ThreadedUseInfoOutboundBuilder : public TESPluginFileView {
       std::thread thread;
       //
       static void _thread_handler(ThreadedUseInfoOutboundBuilder* instance) {
-         #if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
-            auto registration = UseInfoEntryHeap::get().register_thread();
-         #endif
          instance->_execute();
       }
       void _execute() {
