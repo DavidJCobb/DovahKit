@@ -96,7 +96,7 @@
     <ClCompile Include="forms\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="experiments\multiheap.cpp">
+    <ClCompile Include="helpers\multiheap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -206,7 +206,10 @@
     <ClInclude Include="forms\model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="experiments\multiheap.h">
+    <ClInclude Include="helpers\multiheap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="formstub_maps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

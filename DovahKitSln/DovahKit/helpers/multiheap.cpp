@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include <map>
 
-namespace cobb_ex {
+namespace cobb {
    namespace unit_tests {
       namespace multiheap {
-         using test_struct_heap_type = cobb_ex::multiheap< test_struct, 20>;
+         using test_struct_heap_type = cobb::multiheap< test_struct, 20>;
          /*static*/ void* test_struct::operator new(std::size_t sz) {
             if (sz != sizeof(test_struct))
                return ::operator new(sz);
@@ -21,7 +21,7 @@ namespace cobb_ex {
             std::mutex lock;
             std::vector<test_struct*> contents;
             //
-            std::map<uint32_t, uint32_t, std::less<uint32_t>, cobb_ex::multiheap_allocator<std::pair<const uint32_t, uint32_t>, 20>> contentsMap;
+            std::map<uint32_t, uint32_t, std::less<uint32_t>, cobb::multiheap_allocator<std::pair<const uint32_t, uint32_t>, 20>> contentsMap;
          };
          void _test_struct_thread(_total* total) {
             printf("Thread %08X: Starting...", std::this_thread::get_id());

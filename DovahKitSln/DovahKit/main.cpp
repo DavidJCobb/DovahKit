@@ -757,10 +757,6 @@ void test_skyrim() {
    }
    printf("\n\n======================================================\n   FORM STUB HEAP\n======================================================\n");
    FormStubHeap::get().dumpStats();
-   #if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS == 1
-      printf("\n\n======================================================\n   FORM MAP PAIR HEAP\n======================================================\n");
-      FormMapHeap::get().dumpStats();
-   #endif
    #if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
       printf("\n\n======================================================\n   USE INFO HEAP\n======================================================\n");
       UseInfoEntryHeap::get().dumpStats();
@@ -878,12 +874,8 @@ void test_errors() {
    printf("\nDONE TESTING ERROR HANDLING.\n");
 }
 
-#include "experiments/multiheap.h"
-
 int main() {
    main_thread_id = std::this_thread::get_id();
-   //
-   cobb_ex::unit_tests::multiheap::test();
    //
    auto& lo = LoadOrder::get();
    //test_errors();

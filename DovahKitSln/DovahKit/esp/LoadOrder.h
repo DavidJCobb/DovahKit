@@ -7,6 +7,7 @@
 #include <thread>
 #include <vector>
 #include "../formstub.h"
+#include "../formstub_maps.h"
 #include "../forms/types.h"
 
 class FormStub;

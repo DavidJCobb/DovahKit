@@ -7,6 +7,17 @@
 #include "../helpers/bitset.h"
 
 //
+// If this macro is enabled and you compile in debug, each multi-heap will log the first 
+// time something is allocated on it; this can be a good way to verify that your allocator 
+// is being used as expected (since Allocator::rebind may be silently failing or falling 
+// back to the default std::allocator).
+//
+#define CONFIRM_ALLOCATOR_USAGE 0
+#if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+   #include <atomic>
+#endif
+
+//
 // An attempt at reimplementing cobb::multithreaded_block_allocator, inspired by a Qt 
 // blog post that used a thread_local unique_ptr instead of manually registering threads; 
 // if we can get such a thing working, then our heap can be strictly internal, which 
@@ -14,7 +25,7 @@
 // the heap with STL containers that take Allocators and rebind them.
 //
 
-namespace cobb_ex {
+namespace cobb {
    template<typename T, uint32_t count_per_block> class multiheap {
       public:
          using mapped_type = T;
@@ -65,7 +76,7 @@ namespace cobb_ex {
             bool  try_free(void* mem) noexcept {
                auto block = this;
                #if _DEBUG
-                  Block* previous = nullptr;
+                  Block* previous = nullptr; // useless variable; when debugging, allows us to better understand where we were if something goes wrong and (block) goes bad
                #endif
                do {
                   std::ptrdiff_t m_addr  = (std::ptrdiff_t)mem;
@@ -138,6 +149,9 @@ namespace cobb_ex {
             std::mutex subheapsLock;
             Block*     unowned     = nullptr;
             std::mutex unownedLock;
+            #if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+               std::atomic<bool> hasLoggedUsage = false;
+            #endif
             //
             void register_subheap(Subheap* sub) noexcept {
                std::lock_guard<std::mutex> guard(this->subheapsLock);
@@ -155,12 +169,17 @@ namespace cobb_ex {
                auto block = sub->first;
                block->prune();
                if (!sub->first->has_any_slots_used()) {
-                  block = block->info.next;
-                  delete sub->first;
+                  auto p = block->info.prev;
+                  auto n = block->info.next;
+                  if (p)
+                     p->info.next = n;
+                  if (n)
+                     n->info.prev = p;
+                  delete block;
                   sub->first = nullptr;
+                  block = n;
                   if (!block)
                      return;
-                  block->info.prev = nullptr;
                }
                std::lock_guard<std::mutex> guard(this->unownedLock);
                if (!this->unowned) {
@@ -188,6 +207,15 @@ namespace cobb_ex {
                }
                assert(false && "This heap cannot free memory that it isn't responsible for.");
             }
+            //
+            #if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+               void _log_usage() {
+                  if (this->hasLoggedUsage)
+                     return;
+                  this->hasLoggedUsage = true;
+                  printf("\nNOTE: Confirming that allocator class %s is in use.\n", typeid(*this).name());
+               }
+            #endif
          };
          static State& _get_state() {
             static State instance;
@@ -232,6 +260,9 @@ namespace cobb_ex {
          //
       public:
          static void* allocate() noexcept {
+            #if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+               multiheap::_get_state()._log_usage();
+            #endif
             auto t = multiheap::_get_subheap();
             assert(t && "Failed to get/create subheap?");
             assert(t->first && "The subheap has no block?");

@@ -8,7 +8,6 @@
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
-#include "helpers/wavl_tree.h"
 
 class FormStub;
 class LoadOrder;
@@ -23,40 +22,10 @@ namespace LoadedForms {
    class Form;
 }
 
-//
-// Options to enable a multi-threaded block allocator for maps of FormStubs and for 
-// Use Info. In tests, these cause slowdown.
-//
-#define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 0
 #define COBB_ESP_BLOCK_ALLOCATE_USE_INFO 0
-
-#if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS == 1
-   typedef cobb::wavl_node<uint32_t, FormStub*> FormMapPair;
-   class FormMapHeap : public cobb::multithreaded_block_allocator<FormMapPair, 16000, 8> {
-      public:
-         inline static FormMapHeap& get() {
-            static FormMapHeap instance;
-            return instance;
-         }
-   };
-   class FormMapAllocator : public std::allocator<FormMapPair> {
-      public:
-         FormMapPair* allocate(size_type n, const FormMapPair* hint = nullptr) {
-            if (n > 1)
-               throw std::invalid_argument("Cannot allocate more than 1.");
-            return (FormMapPair*)FormMapHeap::get().allocate();
-         }
-         void deallocate(FormMapPair* p, size_type n) {
-            FormMapHeap::get().free((void*)p);
-         }
-         //
-         bool operator==(const FormMapAllocator& right) { return this == &right; }
-         bool operator!=(const FormMapAllocator& right) { return this != &right; }
-   };
-
-   typedef cobb::wavl_tree<uint32_t, FormStub*, FormMapAllocator> map_of_forms;
-#else
-   typedef std::unordered_map<uint32_t, FormStub*> map_of_forms;
+#if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
+   #include "helpers/multiheap.h"
+   #include "helpers/wavl_tree.h"
 #endif
 
 template<typename LoadedFormClass> class loaded_form_ptr {

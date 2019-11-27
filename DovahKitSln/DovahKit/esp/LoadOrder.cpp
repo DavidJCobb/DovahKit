@@ -334,7 +334,9 @@ bool LoadOrder::loadQueuedFiles() {
          total += (*it)->recordAndGroupCount;
       for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it)
          total += (*it)->recordAndGroupCount;
-      this->forms.forms.reserve(total * 1.1);
+      #if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS != 1
+         this->forms.forms.reserve(total * 1.1);
+      #endif
    }//*/
    {
       _DEBUGMSG("Final load order:");

@@ -131,7 +131,6 @@
     <ClCompile Include="esp\LoadOrder.cpp" />
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="esp\TESPluginHeader.cpp" />
-    <ClCompile Include="experiments\multiheap.cpp" />
     <ClCompile Include="formstub.cpp" />
     <ClCompile Include="forms\conditions.cpp" />
     <ClCompile Include="forms\conditions\arg_types.cpp" />
@@ -150,6 +149,7 @@
     <ClCompile Include="forms\papyrus.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
+    <ClCompile Include="helpers\multiheap.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="helpers\wavl_tree.cpp" />
     <ClCompile Include="output.cpp" />
@@ -162,7 +162,7 @@
     <ClInclude Include="esp\LoadOrder.h" />
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="esp\TESPluginHeader.h" />
-    <ClInclude Include="experiments\multiheap.h" />
+    <ClInclude Include="formstub_maps.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\conditions\arg_types.h" />
     <ClInclude Include="forms\conditions\return_values.h" />
@@ -188,6 +188,7 @@
     <ClInclude Include="helpers\locks.h" />
     <ClInclude Include="helpers\memory.h" />
     <ClInclude Include="helpers\miscellaneous.h" />
+    <ClInclude Include="helpers\multiheap.h" />
     <ClInclude Include="helpers\scoped_enum.h" />
     <ClInclude Include="helpers\strings.h" />
     <ClInclude Include="helpers\wavl_tree.h" />
