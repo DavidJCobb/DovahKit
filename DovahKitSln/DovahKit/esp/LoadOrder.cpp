@@ -335,7 +335,7 @@ bool LoadOrder::loadQueuedFiles() {
       for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it)
          total += (*it)->recordAndGroupCount;
       this->forms.forms.reserve(total * 1.1);
-   }
+   }//*/
    {
       _DEBUGMSG("Final load order:");
       for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)

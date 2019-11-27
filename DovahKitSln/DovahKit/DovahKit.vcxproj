@@ -131,6 +131,7 @@
     <ClCompile Include="esp\LoadOrder.cpp" />
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="esp\TESPluginHeader.cpp" />
+    <ClCompile Include="experiments\multiheap.cpp" />
     <ClCompile Include="formstub.cpp" />
     <ClCompile Include="forms\conditions.cpp" />
     <ClCompile Include="forms\conditions\arg_types.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="esp\LoadOrder.h" />
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="esp\TESPluginHeader.h" />
+    <ClInclude Include="experiments\multiheap.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\conditions\arg_types.h" />
     <ClInclude Include="forms\conditions\return_values.h" />

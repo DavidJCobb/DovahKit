@@ -644,9 +644,10 @@ void test_print_quest_aliases(LoadedForms::Quest* quest) {
          }
       } else if (loc) {
          printf("    - Alias ID %d: location alias: %s\n", a->id, a->name.c_str());
-      } else {
+      } else if (a) {
          printf("    - Alias ID %d: unknown/invalid alias: %s\n", a->id, a->name.c_str());
-      }
+      } else
+         printf("    - nullptr alias (this should never happen)");
    }
 }
 
@@ -877,13 +878,17 @@ void test_errors() {
    printf("\nDONE TESTING ERROR HANDLING.\n");
 }
 
+#include "experiments/multiheap.h"
+
 int main() {
    main_thread_id = std::this_thread::get_id();
    //
+   cobb_ex::unit_tests::multiheap::test();
+   //
    auto& lo = LoadOrder::get();
-   test_errors();
-   printf("\nTEST: QUEST DATA:\n");
-   test_skyrim_quest();
+   //test_errors();
+   //printf("\nTEST: QUEST DATA:\n");
+   //test_skyrim_quest();
    printf("\nTEST 1:\n");
    test_skyrim();
    printf("\nTEST 2:\n");
