@@ -2,6 +2,7 @@
 #include <sys/timeb.h> // for benchmarks
 #include <thread> // for std::thread::id
 #include <filesystem>
+#include "formstub.h"
 #include "esp/LoadOrder.h"
 #include "esp/TESPlugin.h"
 #include "forms/loaded/Quest.h"
@@ -756,7 +757,7 @@ void test_skyrim() {
       test_print_load_error();
    }
    printf("\n\n======================================================\n   FORM STUB HEAP\n======================================================\n");
-   FormStubHeap::get().dumpStats();
+   FormStubHeap::dump_stats();
    #if COBB_ESP_BLOCK_ALLOCATE_USE_INFO == 1
       printf("\n\n======================================================\n   USE INFO HEAP\n======================================================\n");
       UseInfoEntryHeap::get().dumpStats();

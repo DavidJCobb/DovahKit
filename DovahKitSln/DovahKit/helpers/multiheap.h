@@ -12,21 +12,43 @@
 // is being used as expected (since Allocator::rebind may be silently failing or falling 
 // back to the default std::allocator).
 //
-#define CONFIRM_ALLOCATOR_USAGE 0
-#if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+#define COBB_CONFIRM_MULTIHEAP_USAGE 0
+#if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
    #include <atomic>
 #endif
 
-//
-// An attempt at reimplementing cobb::multithreaded_block_allocator, inspired by a Qt 
-// blog post that used a thread_local unique_ptr instead of manually registering threads; 
-// if we can get such a thing working, then our heap can be strictly internal, which 
-// eliminates the need for an externally-accessible singleton and thereby allows use of 
-// the heap with STL containers that take Allocators and rebind them.
-//
-
 namespace cobb {
    template<typename T, uint32_t count_per_block> class multiheap {
+      //
+      // MULTIHEAP
+      //
+      // This is a multi-threaded block heap, allocating instances of a class in batches 
+      // and then parcelling out the memory, instead of letting them be malloc'd one at 
+      // a time.
+      //
+      // Internally, this heap is split into multiple sub-heaps. When a thread attempts 
+      // to allocate memory, a new sub-heap is created for it; when the thread dies, the 
+      // sub-heap is automatically destroyed and its blocks are moved to a list of unowned 
+      // blocks. (This is accomplished using a thread_local struct that leverages RAII, 
+      // like a smart pointer or lock guard.) The effect of this is that allocations don't 
+      // cause the entire heap to lock; locking is only necessary when adding or removing 
+      // threads, or when freeing any element.
+      //
+      // To help prevent memory fragmentation, if a sub-heap is created while there are 
+      // unowned blocks, those blocks are assigned to the new sub-heap.
+      //
+      // The thread management happens entirely within this class, which means that it 
+      // is safe to use with AllocatorAwareContainer classes like std::map. Those classes 
+      // will use std::allocator::rebind to effectively discard the allocator you actually 
+      // give them and create a new one (inaccessible to the outside) templated on their 
+      // internal node types; however, because you never actually need to access this 
+      // heap from the outside (i.e. you don't need your threads to manually register 
+      // with it or any such), this isn't a problem. (Allocator rebinding does mean, 
+      // however, that methods like (force_free_all) and (dump_stats) are unusable when 
+      // working with STL containers.)
+      //
+      // To that end, an interface is already available: multiheap_allocator, below.
+      //
       public:
          using mapped_type = T;
          static constexpr uint32_t element_size = sizeof(T);
@@ -139,9 +161,59 @@ namespace cobb {
                   }
                }
             }
+            void destroy_and_prune_elements() noexcept {
+               auto& presence = this->info.presence;
+               for (uint32_t i = 0; i < count_per_block; i++) {
+                  if (presence.test(i)) {
+                     std::ptrdiff_t start = (std::ptrdiff_t) & this->buffer;
+                     std::ptrdiff_t addr  = start + (element_size * i);
+                     //
+                     auto element = (mapped_type*)addr;
+                     element->~mapped_type();
+                  }
+               }
+               presence.clear();
+               this->info.remaining = count_per_block;
+               //
+               memset(this->buffer, 0, sizeof(this->buffer));
+            }
+            void destroy_and_prune_list() noexcept {
+               auto last = this;
+               while (last->info.next)
+                  last = last->info.next;
+               auto prev = last->info.prev;
+               do {
+                  last->destroy_and_prune_elements();
+                  //
+                  if (last != this) { // never delete the first block in a list
+                     auto p = last->info.prev;
+                     auto n = last->info.next;
+                     if (p)
+                        p->info.next = n;
+                     if (n)
+                        n->info.prev = p;
+                     delete last;
+                  }
+                  last = prev;
+                  if (prev)
+                     prev = prev->info.prev;
+               } while (last);
+            }
+            //
+            bool list_has_any() const noexcept {
+               auto block = this;
+               do {
+                  if (block->has_any_slots_used())
+                     return true;
+               } while (block = block->info.next);
+               return false;
+            }
          };
          struct Subheap {
             Block* first = new Block();
+            #if _DEBUG
+               std::thread::id threadID; // just so you can see the thread that owns this Subheap in a debugger
+            #endif
          };
 
          struct State {
@@ -149,7 +221,7 @@ namespace cobb {
             std::mutex subheapsLock;
             Block*     unowned     = nullptr;
             std::mutex unownedLock;
-            #if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+            #if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
                std::atomic<bool> hasLoggedUsage = false;
             #endif
             //
@@ -207,8 +279,45 @@ namespace cobb {
                }
                assert(false && "This heap cannot free memory that it isn't responsible for.");
             }
+            void force_destroy_all() noexcept {
+               {
+                  std::lock_guard<std::mutex> guard(this->subheapsLock);
+                  #if _DEBUG
+                     uint32_t found_count = 0;
+                  #endif
+                  for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
+                     auto last = (*it)->first;
+                     if (last) {
+                        #if _DEBUG
+                           if (found_count < 2) {
+                              if (last->list_has_any()) {
+                                 if (++found_count > 1) { // the main thread counts, so we want to test for more than one thread
+                                    //
+                                    // This would imply that you're force-freeing the heap while multiple threads are using it. Sounds risky!
+                                    //
+                                    __debugbreak();
+                                 }
+                              }
+                           }
+                        #endif
+                        last->destroy_and_prune_list();
+                        //
+                        // Note: Don't destroy the subheap's first block; otherwise crashes will occur, as you delete the main thread's 
+                        // subheap out from under it.
+                     }
+                  }
+               }
+               {
+                  std::lock_guard<std::mutex> guard(this->unownedLock);
+                  if (this->unowned) {
+                     this->unowned->destroy_and_prune_list();
+                     delete this->unowned;
+                     this->unowned = nullptr;
+                  }
+               }
+            }
             //
-            #if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+            #if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
                void _log_usage() {
                   if (this->hasLoggedUsage)
                      return;
@@ -227,6 +336,9 @@ namespace cobb {
             //
             SubheapHandle() {
                this->data = new Subheap;
+               #if _DEBUG
+                  this->data->threadID = std::this_thread::get_id();
+               #endif
                auto& state = multiheap::_get_state();
                state.register_subheap(this->data);
                //
@@ -243,6 +355,9 @@ namespace cobb {
             }
             ~SubheapHandle() {
                if (this->data) {
+                  #if _DEBUG
+                     this->data->threadID = std::thread::id();
+                  #endif
                   multiheap::_get_state().take_over_subheap(this->data);
                   this->data = nullptr;
                   //
@@ -260,7 +375,7 @@ namespace cobb {
          //
       public:
          static void* allocate() noexcept {
-            #if _DEBUG && CONFIRM_ALLOCATOR_USAGE
+            #if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
                multiheap::_get_state()._log_usage();
             #endif
             auto t = multiheap::_get_subheap();
@@ -291,6 +406,12 @@ namespace cobb {
          }
          static void free(void* mem) noexcept {
             multiheap::_get_state().free(mem);
+         }
+         //
+         // Call destructors on every element in the heap, and then free them all. Obviously you should 
+         // only use this when you're sure that nothing is using those elements anymore.
+         static void force_destroy_all() noexcept {
+            multiheap::_get_state().force_destroy_all();
          }
          //
          static void dump_stats() noexcept {
@@ -356,7 +477,7 @@ namespace cobb {
    };
    template<typename T, uint32_t count_per_block> class multiheap_allocator {
       //
-      // An interface to multiheap that meets the requirements of Allocator.
+      // An interface to multiheap that meets the Allocator named requirement.
       //
       public:
          using heap_type  = multiheap<T, count_per_block>;
@@ -382,12 +503,13 @@ namespace cobb {
             get_heap().free(mem);
          }
          //
-         // DISABLED; DO NOT USE
+         // COMMENTED OUT; DISABLED; DO NOT USE
          // This allocator can only allocate one element at a time, which is what (max_size) is supposed to indicate. 
          // However, MSVC's internal std::_Tree class (used to power std::map and friends) misuses Allocator::max_size, 
          // comparing it to the tree's own size (i.e. treating it as the maximum number of elements that the allocator 
-         // can *store* rather than the maximum that can be allocated at one time). Just another example of the STL 
-         // Allocator interface being a nightmare.
+         // can *store* rather than the maximum that can be allocated at one time). As such, if we actually accurately 
+         // indicate the maximum number of elements that we can allocate at one time, we will cause guaranteed crashes 
+         // within Microsoft's Common Runtime DLL that are fiendishly difficult to debug.
          // std::size_t max_size() const noexcept { return 1; }
          //
          bool operator==(const multiheap_allocator& other) { return true; }

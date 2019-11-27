@@ -2,6 +2,7 @@
 #include "esp/LoadOrder.h"
 #include "esp/TESPlugin.h"
 #include "helpers/miscellaneous.h"
+#include "helpers/multiheap.h"
 #include "output.h"
 #include <algorithm>
 #include <cassert>
@@ -92,10 +93,10 @@ void FormStub::add_outbound_reference(uint32_t toFormID) {
 /*static*/ void* FormStub::operator new(std::size_t sz) {
    if (sz != sizeof(FormStub))
       return ::operator new(sz);
-   return FormStubHeap::get().allocate();
+   return FormStubHeap::allocate();
 }
 /*static*/ void FormStub::operator delete(void* ptr, std::size_t sz) {
    if (sz != sizeof(FormStub))
       return ::operator delete(ptr, sz);
-   return FormStubHeap::get().free(ptr);
+   return FormStubHeap::free(ptr);
 }

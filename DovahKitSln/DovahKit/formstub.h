@@ -8,6 +8,7 @@
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/memory.h"
+#include "helpers/multiheap.h"
 
 class FormStub;
 class LoadOrder;
@@ -215,16 +216,4 @@ class FormStub {
       char* allocate_editor_id(size_t length);
 };
 
-class FormStubHeap : public cobb::multithreaded_block_allocator<FormStub, 16000, ESP_LOAD_TOTAL_THREADS> {
-   //
-   // NOTE: Keep the number of threads (third template argument) in synch with the 
-   // number of threads used by TESPluginFile to load a file (or, if we decide to 
-   // multi-thread the loading of multiple files, the total number of threads 
-   // across all files being loaded concurrently).
-   //
-   public:
-      inline static FormStubHeap& get() {
-         static FormStubHeap instance;
-         return instance;
-      }
-};
+typedef cobb::multiheap<FormStub, 16000> FormStubHeap;

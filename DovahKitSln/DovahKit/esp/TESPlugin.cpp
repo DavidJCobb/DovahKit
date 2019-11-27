@@ -495,21 +495,7 @@ void TESPluginBaseReader::extract_editor_id_for_stub(FormStub* stub) {
    }
 }
 
-namespace {
-   struct _ThreadedReaderFormStubRelevantHeapRegistrations {
-      FormStubHeap::registration stubHeap;
-      //
-      _ThreadedReaderFormStubRelevantHeapRegistrations() :
-         stubHeap(FormStubHeap::get().register_thread())
-      {}
-   };
-   _ThreadedReaderFormStubRelevantHeapRegistrations _register_for_form_stub_heaps() {
-      return _ThreadedReaderFormStubRelevantHeapRegistrations();
-   }
-}
-
 void TESPluginThreadedSimpleReader::_thread_handler(TESPluginThreadedSimpleReader* instance) {
-   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedSimpleReader::_load() {
@@ -610,7 +596,6 @@ void TESPluginThreadedSimpleReader::wait_for() {
 }
 
 void TESPluginThreadedInteriorCellReader::_thread_handler(TESPluginThreadedInteriorCellReader* instance) {
-   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedInteriorCellReader::_load() {
@@ -703,7 +688,6 @@ void TESPluginThreadedInteriorCellReader::wait_for() {
 }
 
 void TESPluginThreadedWorldspaceSubBlockReader::_thread_handler(TESPluginThreadedWorldspaceSubBlockReader* instance) {
-   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedWorldspaceSubBlockReader::_load() {
@@ -796,7 +780,6 @@ void TESPluginThreadedWorldspaceSubBlockReader::wait_for() {
 }
 
 void TESPluginThreadedWorldspacePersistentCellChildrenReader::_thread_handler(TESPluginThreadedWorldspacePersistentCellChildrenReader* instance) {
-   auto registration = _register_for_form_stub_heaps();
    instance->_load();
 }
 void TESPluginThreadedWorldspacePersistentCellChildrenReader::_load() {
@@ -1110,10 +1093,6 @@ bool TESPluginFile::load(const char* filepath) {
    _DEBUGMSG("Read file header.");
    this->uses_string_table = (bool)(this->flags & Flags::localized_string_table);
    {
-      // we *do* load *some* records in this function, so we need to register with the allocator
-      // use an unnamed block so we unregister before firing off the other threads
-      auto registration = FormStubHeap::get().register_thread();
-      //
       ObjectType ot;
       uint32_t   which_simple = 0;
       uint32_t   which_intcell = 0;
