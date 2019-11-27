@@ -23,6 +23,10 @@ namespace LoadedForms {
    class Form;
 }
 
+//
+// Options to enable a multi-threaded block allocator for maps of FormStubs and for 
+// Use Info. In tests, these cause slowdown.
+//
 #define COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS 0
 #define COBB_ESP_BLOCK_ALLOCATE_USE_INFO 0
 
@@ -52,7 +56,7 @@ namespace LoadedForms {
 
    typedef cobb::wavl_tree<uint32_t, FormStub*, FormMapAllocator> map_of_forms;
 #else
-   typedef std::map<uint32_t, FormStub*> map_of_forms;
+   typedef std::unordered_map<uint32_t, FormStub*> map_of_forms;
 #endif
 
 template<typename LoadedFormClass> class loaded_form_ptr {

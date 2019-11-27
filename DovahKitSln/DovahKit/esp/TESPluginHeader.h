@@ -22,6 +22,7 @@ class TESPluginHeader {
       //
       std::string name;
       uint32_t    flags = 0;
+      uint32_t    recordAndGroupCount = 0;
       std::string authorName;
       std::string description;
       std::vector<std::string> masters;

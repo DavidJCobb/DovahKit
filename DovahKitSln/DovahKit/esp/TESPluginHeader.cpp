@@ -57,9 +57,24 @@ namespace {
          auto target = const_cast<char*>(field.data());
          if (field[length - 1] == '\0') // C++ std::strings + direct reading + null terminators = horrible, horrible mess
             field.resize(length - 1);
-         if (fread(target, length, 1, file) != 1)
+         if (fread(target, length, 1, this->file) != 1)
             return false;
          return true;
+      }
+      //
+      template<typename T> bool read(T& out) const noexcept {
+         uint32_t offset = ftell(this->file) - this->pos;
+         if (this->size - offset < sizeof(T))
+            return false;
+         if (fread(&out, sizeof(T), 1, this->file) != 1)
+            return false;
+         return true;
+      }
+      void skip_bytes(uint32_t count) noexcept {
+         uint32_t offset = ftell(this->file) - this->pos;
+         if (this->size - offset < count)
+            return;
+         fseek(this->file, count, SEEK_CUR);
       }
    };
 }
@@ -124,6 +139,10 @@ bool TESPluginHeader::load(const char* path) noexcept {
    _subrecord subrecord(file, ftell(file) + recordSize);
    while (subrecord.open()) {
       switch (subrecord.signature) {
+         case 'HEDR':
+            subrecord.skip_bytes(4);
+            subrecord.read(this->recordAndGroupCount);
+            break;
          case 'CNAM': // creator
             subrecord.to_string(this->authorName);
             break;

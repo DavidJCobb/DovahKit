@@ -11,10 +11,6 @@ const char* TEST_PLUGIN_PATH = "C:/Program Files (x86)/Steam/steamapps/common/Sk
 
 std::thread::id main_thread_id;
 
-//
-// TODO: UESP has already taken the name "SkyEdit." I think I've settled on 
-//       "DovahKit" as a replacement name.
-//
 // NOTES:
 //
 //  - xEdit takes 3 seconds to load all forms and their editor IDs. It doesn't 
@@ -47,8 +43,24 @@ std::thread::id main_thread_id;
 //
 //     = Current tasks
 //
-//        = TEST WHETHER WE HANDLE FILES WITH EMPTY GRUPs PROPERLY. I'm NOT CERTAIN 
-//          THAT TESPluginBaseReader::nextRecordOrGroup PROPERLY ADVANCES PAST THEM.
+//        = POSSIBLE OPTIMIZATION TO FORM STORAGE: APPARENTLY unordered_map IS 
+//          SIGNIFICANTLY FASTER THAN map SO LONG AS IT DOESN'T HAVE TO REALLOCATE. 
+//          (IT SPLITS ITS STORAGE INTO BUCKETS AND MUCH LIKE vector, THESE BUCKETS 
+//          CAN FILL. YOU CAN ALSO RESERVE ENOUGH SPACE VIA unordered_map::reserve.) 
+//          If we switch LoadOrder::forms::forms from a map to an unordered_map, we 
+//          may see significant performance gains if and only if we allocate enough 
+//          storage in advance. Over on the RE discord, arha suggested reading the 
+//          file headers (which contain a count of all forms in the file) and summing 
+//          their file counts to know how much space to reserve.
+//
+//           - Happily, we already read the headers before fully loading the files 
+//             anyway, so we can construct a valid load order. We can just have the 
+//             TESPluginHeader class also catch and store the form count.
+//
+//           - Reallocation would be pretty devastating -- imagine reallocating a 
+//             vector with a literal million or more elements -- but if we reserve a 
+//             hefty amount of space rather than just enough for the total forms, 
+//             then we oughta be good.
 //
 //        - LoadOrder needs to instantiate the hardcoded forms before the load 
 //          process. They should be associated with load order slot 00 but should 
@@ -64,12 +76,6 @@ std::thread::id main_thread_id;
 //             size in advance (like TIFC) and otherwise optional?
 //
 //           - Do PRKZ/PRKR work the same way? I've seen them in ReferenceAlias.
-//
-//        - Form IDs handled by TESPluginFile and its readers directly (e.g. 
-//          form IDs in group data) are not normalized to the global load order. 
-//          This needs to be fixed.
-//
-//           - Should hopefully be addressed for CELL, INFO, and REFR.
 //
 //        - Conditions
 //
@@ -857,6 +863,13 @@ void test_errors() {
    {
       printf("\nLoading file with a record that claims to be 4GB...\n");
       lo.addFile("RecordClaimsToBeHuge.esp");
+      bool result = lo.loadQueuedFiles();
+      test_print_load_error();
+      lo.reset();
+   }
+   {
+      printf("\nLoading file with an empty GRUP...\n");
+      lo.addFile("EmptyGRUP.esp");
       bool result = lo.loadQueuedFiles();
       test_print_load_error();
       lo.reset();

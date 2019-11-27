@@ -5,8 +5,9 @@
 #include "../helpers/strings.h"
 #include "../output.h"
 
+#define BENCHMARK_FORM_STUB_BUILD 1
 #define BENCHMARK_LOAD_ORDER_USE_INFO_BUILD 1
-#if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
+#if BENCHMARK_FORM_STUB_BUILD == 1 || BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
    #include <sys/timeb.h>
 #endif
 
@@ -327,6 +328,14 @@ bool LoadOrder::loadQueuedFiles() {
       if (!this->_addToLoadOrder(*it))
          return false;
    }
+   {  // Ensure enough space to store all forms without reallocating
+      uint32_t total = 0;
+      for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
+         total += (*it)->recordAndGroupCount;
+      for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it)
+         total += (*it)->recordAndGroupCount;
+      this->forms.forms.reserve(total * 1.1);
+   }
    {
       _DEBUGMSG("Final load order:");
       for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
@@ -334,6 +343,12 @@ bool LoadOrder::loadQueuedFiles() {
       for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it)
          _DEBUGMSG("[P] %s", (*it)->name.c_str());
    }
+   #if BENCHMARK_FORM_STUB_BUILD == 1
+      struct timeb bench_start;
+      struct timeb bench_end;
+      printf("Building FormStubs...\n");
+      ftime(&bench_start);
+   #endif
    for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it) {
       std::string path = this->basePath + (*it)->name;
       auto file = new TESPluginFile;
@@ -380,6 +395,10 @@ bool LoadOrder::loadQueuedFiles() {
       // 3. Load the rest of the file.
       //
    }
+   #if BENCHMARK_FORM_STUB_BUILD == 1
+      ftime(&bench_end);
+      printf("Time taken to build all FormStubs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+   #endif
    this->loadingIsComplete = true;
    this->loadingIndex      = 0;
    //
