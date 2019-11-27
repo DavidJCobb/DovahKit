@@ -6,7 +6,7 @@
 
 /// Given a name and an enum definition, this macro makes the enum scoped while retaining the ability to implicitly cast it: the macro defines the enum in a unique namespace, to avoid any possible conflicts stemming from enums' scope pollution; and then it uses a using declaration to pull the enum into the namespace containing the macro. The name given to the macro must match the name of the enum.
 ///
-/// Note that you CANNOT use any comments in the enum definition. Single-line comments cause a syntax error due to how macros work; comments of any other kind confuse IntelliSense. You can use the SCOPED_ENUM_COMMENT("Text") macro as a jury-rigged one-line comment instead.
+/// Note that you CANNOT use any comments in the enum definition. Single-line comments cause a syntax error due to how macros work; comments of any other kind confuse IntelliSense. You can use the SCOPED_ENUM_COMMENT("Text") macro as a jury-rigged one-line comment instead. You also must not have a trailing comma after the last enum value, lest you confuse MSVC's preprocessor.
 ///
 /// See </notes/scoped enums.txt> for more information.
 //

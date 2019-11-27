@@ -36,10 +36,10 @@ template<typename LoadedFormClass> class loaded_form_ptr {
    // and wish to load and use the form data:
    //
    //    auto form  = myFormStub.load();
-   //    auto quest = form.ptr_cast<TESQuest>();
+   //    auto quest = form.ptr_cast<LoadedForms::Quest>();
    //    //
-   //    // ...and then you can use (quest) if it were a TESQuest*. Even without 
-   //    // casting, you can use (form) as if it were a TESForm*.
+   //    // ...and then you can use (quest) if it were a LoadedForms::Quest*. Even 
+   //    // without casting, you can use (form) as if it were a LoadedForms::Form*.
    //
    private:
       FormStub* wrapped = nullptr;

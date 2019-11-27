@@ -1,10 +1,10 @@
 
 = SCOPED ENUMS AND WHAT WE'RE DOING ABOUT THEM =
 
-In C++, you have a few options for enumerations, but they're all terrible and they 
-suck. Obviously we need some sort of solution, so read through for all the angles 
-I've covered or just scroll to the bottom to see what we're going with for this 
-project.
+In C++, you have a few options for enumerations, but they're all kinda bad? 
+Obviously we need some sort of solution, so read through for all the angles 
+I've covered or just scroll to the bottom to see what we're going with for 
+this project.
 
 
 == Normal enumerations ==
@@ -54,10 +54,10 @@ below is a parse error:
 Because these enums have values with the same names in the same scope, the program 
 won't compile, even though we will never actually refer to any of those values without 
 also qualifying them with the name of the enum (via the using declarations). This 
-literally shouldn't even be an issue. If enums were designed even a little bit sensibly, 
-the language would only consider ambiguous references to enum values an error, as 
-opposed to choking to death the second it sees two same-named values from different 
-enums in the same containing scope.
+literally shouldn't even be an issue. If the language were a bit better, it would only 
+only consider ambiguous references to enum values an error, as opposed to choking to 
+death the second it sees two same-named values from different enums in the same 
+containing scope.
 
 
 == Enum classes ==
@@ -99,7 +99,7 @@ This language doesn't have a way to scope an enum while still retaining the abil
 to implicitly cast it. The construction (enum struct) has explicitly been defined by 
 the standard to be the exact same as (enum class), intentionally locking out the 
 possibility of using it for implicitly-castable scoped enums in a future version of 
-the language, which is an... incredible... decision.
+the language.
 
 
 == Struct wrappers ==
@@ -122,8 +122,8 @@ less of an issue for bitmasks and whatnot, it's more of an issue for things that
 *actual enums* but that should still be intuitively usable as array indices and so 
 on.
 
-I mean, you could do something like this, but it's ugly, and that ugliness is 
-centered around every place you use the enum as a variable type:
+I mean, you could do something like this, but it's ugly, and that ugliness appears 
+at every place you use the enum as a variable type:
 
    struct Flags {
       enum type : uint8_t {
@@ -143,12 +143,12 @@ MSVC 2019, e.g. constexpr definitions and so on. Apparently, the following
 
    constexpr cobb::int_wrapper<int> test = 5;
 
-is somehow not a constant expression. Moreover, you can't subclass these damn 
-things and still keep *all* of the constructors and conversions and whatnot (yes, 
-I tried using a using declaration on the constructor), which means that if you try 
-to go this route, you have to include all of the relevant boilerplate *in each 
-enum.* Copying and pasting twenty operators into every enum is obviously not a 
-tenable solution.
+is somehow not a constant expression. Moreover, you can't subclass these things 
+and still keep *all* of the constructors and conversions and whatnot (yes, I tried 
+using a using declaration on the constructor), which means that if you try to go 
+this route, you have to include all of the relevant boilerplate *in each enum.* 
+Copying and pasting twenty operators into every enum is obviously not a tenable 
+solution.
 
 
 == Prefixed enum value names ==
@@ -161,9 +161,9 @@ Like so:
       kFlags_UseDevice,
    };
 
-This is ugly and the compiler whines at me whenever I do it -- being sure to 
-recommend (enum class) to me every time, as if I haven't considered that and 
-consciously ruled it out.
+The old-style way. This is ugly and the compiler whines at me whenever I do it, 
+being sure to recommend (enum class) to me every time, as if I haven't considered 
+that and consciously ruled it out.
 
 
 == Preprocessor macros wrapping an enum ==
@@ -182,7 +182,7 @@ Let's start with these:
 
 So the obvious problem to start with is that our enums no longer actually look 
 like enums. Is that picky? Sure. But this whole thing shouldn't even be an issue, 
-so whatever solution we pick to address it shouldn't be unacceptably hideous.
+so whatever solution we pick to address it shouldn't be that ugly.
 
 Maybe we can do a bit better with these? We can use __COUNTER__ to guarantee a 
 unique namespace name, and we can jam the entire enum definition into the macro:
@@ -218,7 +218,7 @@ that if we specify the name of the enum redundantly:
       b = 3,
    });
 
-But that's obnoxious.
+Kinda obnoxious, but okay.
 
 There's also another hidden issue waiting to bite us: we can't use single-line 
 comments within the enum definition. Macro invocations get collapsed into one line, 
@@ -254,6 +254,9 @@ comment:
 
 Disgusting.
 
+We also can't have a trailing comma after the last enum value, because that can 
+confuse MSVC's preprocessor.
+
 Oh, and by the way, MSVC randomly forgets what its own predefined macros mean, so we 
 can't reliably use __COUNTER__ despite that explicitly being "supported." Sometimes 
 MSVC interprets foo##__COUNTER__ as "foo3" ; other times, "foo__COUNTER__". We can 
@@ -262,7 +265,7 @@ which at least allows us to also ditch the helper macro that we needed for __COU
 
    #define SCOPE_ENUM(name, ...) namespace _scoped_enums { namespace _##name { __VA_ARGS__##; }; }; using _scoped_enums::_##name##::##name;
 
-Ugh.
+The macro itself is better that way, but what a dumb bug.
 
 
 == Namespaces but we just tack a random number on every time we get an error ==

@@ -861,9 +861,9 @@ int main() {
    main_thread_id = std::this_thread::get_id();
    //
    auto& lo = LoadOrder::get();
-   //test_errors();
-   //printf("\nTEST: QUEST DATA:\n");
-   //test_skyrim_quest();
+   test_errors();
+   printf("\nTEST: QUEST DATA:\n");
+   test_skyrim_quest();
    printf("\nTEST 1:\n");
    test_skyrim();
    printf("\nTEST 2:\n");
