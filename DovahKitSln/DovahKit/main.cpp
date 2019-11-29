@@ -29,9 +29,7 @@ std::thread::id main_thread_id;
 //  - cobb::mapped_file should return a failure code when it can't open a file 
 //    (akin to the C file functions) instead of just asserting to death.
 //
-//  - All loaded forms should have a reference to their owning FormStub.
-//
-//  - At the top of the file, we should clearly explain why record and subrecord 
+//  - At the top of TESPlugin.h, we should clearly explain why record and subrecord 
 //    contents have to use different "read" and "skip" functions (it's because we 
 //    HAVE TO load record contents into a buffer in order to allow uniform access 
 //    for compressed and uncompressed record data).
@@ -42,12 +40,62 @@ std::thread::id main_thread_id;
 //
 //  - Loading:
 //
+//     = NEAR PLANS
+//
+//        - Verify that Use Info is correct.
+//
+//        - Add the "active file" feature, including failing to load if any file 
+//          has the active file as a dependency. See further below for more notes.
+//
+//        - Implement saving:
+//
+//           - First, start by just saving GRUPs in order. Don't write code for 
+//             saving forms; just copy the records wholesale from the original 
+//             file. The goal is both to come up with a process for GRUPs and 
+//             to ensure that we're saving GRUPs and records in a consistent 
+//             order with Bethesda.
+//
+//              - Even if records are sorted by form ID in the file, we should 
+//                still use an unordered_map to hold forms and then just build 
+//                a sorted vector of form IDs to save when it's time to save. 
+//                Saving shouldn't occur *too* often so it's fine for that to 
+//                be slow.
+//
+//           - After that, give each loaded form class a virtual save method, 
+//             and test that that works properly.
+//
+//           - When we save the active file, we need to update offsets for every 
+//             FormStub in memory to match where we wrote it to in the file. 
+//             This will be needed so that we can have the TESPluginFile instance 
+//             for the active file remain accurate: we write a temporary file; 
+//             TESPluginFile closes its handle to the old file; we delete the 
+//             old file and swap it with the temporary; TESPluginFile opens a 
+//             handle on the new file; and then the FormStubs need to be accurate 
+//             to that new file. What's especially critical is that we handle the 
+//             case of not being able to swap the files properly: if the swap is 
+//             successful, then we clear the "edited" flag from all forms, since 
+//             we can now load them from the plug-in file; but if the swap failed, 
+//             then we *don't* update the FormStubs' offsets or file, we reset 
+//             TESPluginFile's handle to the original file, and we don't clear 
+//             the "edited" flag from any forms.
+//
+//        - Implement stuff needed for UI.
+//
+//           - See below: "Wondering if we should retain FormStubs"
+//
+//           - Given a DIAL, it needs to be easy to see the full list of INFOs, 
+//             but currently that requires loading each INFO: they're a linked 
+//             list.
+//
 //     = Current tasks
 //
 //        - Check whether editor IDs can ever be stored as wide strings -- that 
 //          is, whether any of the text locales seen in Skyrim can contain nulls 
 //          before the end of the string. I doubt that very much, but if it's 
 //          possible, then FormStub needs to use a std::string for its editor ID.
+//
+//           - Maybe use std::string either way; it's not *that* much overhead 
+//             compared to char*.
 //
 //        - LoadOrder needs to instantiate the hardcoded forms before the load 
 //          process. They should be associated with load order slot 00 but should 
@@ -167,6 +215,11 @@ std::thread::id main_thread_id;
 //              - Wondering if we should enforce the active file being 
 //                the last file in the load order.
 //
+//                 - Probably. Otherwise, the user can create references 
+//                   between active-file forms and forms from files after 
+//                   it in the load order, and then adding those other 
+//                   files as masters *could* be tricky? Maybe?
+//
 //        - Wondering if we should retain FormStubs for forms overridden by 
 //          the active file; it would allow us to offer a "Revert" context 
 //          menu item on all forms in the active file. Could give each 
@@ -201,22 +254,6 @@ std::thread::id main_thread_id;
 //             false-positives; the only thing we NEED to avoid is false-neg-
 //             atives.
 //
-//     - Every FormStub needs two linked lists: one for outbounds references 
-//       to other forms, and another for inbound references from other forms.
-//
-//        - Entries in this list should consist solely of form IDs but these 
-//          form IDs should be refcounted: a form can refer to the same other 
-//          form in multiple different ways at once.
-//
-//     - We need to start adding more classes for loaded forms.
-//
-//        - Each class needs two load methods: an instance method that actually 
-//          grabs all data for the form; and a static method that just sets up 
-//          outbound references. The latter should just ignore subrecords that 
-//          don't contain references to other forms; if a subrecord contains 
-//          references to other forms as well as other data, skip bytes and pay 
-//          attention only to those outbound form IDs.
-//
 //     - Once we have code to load at least *most* form types' outbound refs, 
 //       we need to write code to actually *do* that i.e. code in LoadOrder to 
 //       loop over every loaded form and set up Use Info. There are two ways we 
@@ -249,27 +286,9 @@ std::thread::id main_thread_id;
 //       the full load order. However, we don't open ESP files with fopen; we 
 //       use Windows's "mapped file" API. Does that have a similar limit?
 //
-//  - Polishing:
-//
-//     - We need a way to reset LoadOrder, so that we can load a new order.
-//
-//        - Move the call to FormStubHeap::force_free_all from main.cpp to 
-//          LoadOrder's reset method, once it HAS a reset method.
-//
 
 
 
-//
-//  - Add a load order singleton.
-//
-//     - Like the Creation Kit, we will load a list of user-selected files, and 
-//       one file may optionally be designated as the "active file" to which 
-//       changes will be made.
-//
-//        - Do not allow the loading of any files that have the active file as 
-//          a dependency. If they override records in the active file, things 
-//          could get very messy -- particularly if any overrides refer to forms 
-//          that exist only in the dependent file(s).
 //
 //  - cobb::wavl_tree
 //
@@ -282,103 +301,8 @@ std::thread::id main_thread_id;
 //     - Do we want to alter iterators to satisfy LegacyBidirectionalIterator 
 //       constraints? <https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator>
 //
-//  - Improvements to multi-threaded file loading:
-//
-//     - See if cobb::wavl_tree will produce a performance improvement.
-//
-//        - First, test to ensure that the methods added for STL parity work 
-//          correctly -- iterators, at, operator[], etc.. If those aren't working 
-//          properly, then we can't do a clean swap from std::map to wavl_tree.
-//
-//        - It almost certainly won't unless we hook it up to a multi-threaded 
-//          block allocator. Here's how we can do that:
-//
-//           = Move cobb::wavl_tree::node to cobb::wavl_node (templated on the 
-//             key and value) and add a typedef to the tree so we don't have to 
-//             change everything from "node." This is needed so that we can even 
-//             template the block allocator or anything else on the node type.
-//
-//           = Add two parameters to the wavl_tree template: non-member functions 
-//             for allocating and deallocating a node. By default, they should be 
-//             malloc and free wrapped to return the wavl_node type.
-//
-//              - Alternatively, have it take a std::allocator.
-//
-//           = Create a singleton multi-threaded block allocator templated on 
-//             cobb::wavl_node<uint32_t, FormStub*>. Create non-member functions 
-//             that get the allocator instance and call allocate and free as 
-//             required.
-//
-//           = Typedef cobb::wavl_tree<uint32_t, FormStub*, my_malloc, my_free> 
-//             as map_of_form_stubs and use that for TESPluginFile.
-//
-//           = Threads are already designed to register themselves with the block 
-//             allocator for FormStubs. They should do the same for the singleton 
-//             allocator for tree nodes.
-//
-//           - And then test it!
-//
 //     - Can we divide up the loading of DIALs and their child GRUPs? They don't 
 //       use blocks/sub-blocks like worldspaces do.
-//
-//  - Create cobb::zstring as a const char* that does malloc/realloc/free for you, 
-//    with both a c_str() method and an implicit (const char*) conversion. Use that 
-//    for editor IDs on FormStub. It should (free) when destroyed (only the owner 
-//    should have the cobb::zstring; we may even want to set its copy constructor 
-//    to =deleted; other parties should take the const char*).
-
-//
-// OLD NOTES ON LOAD ORDERS AND USE INFO BELOW:
-//
-
-//
-//  - Implement the handling of multiple TESPluginFiles as part of a load order: 
-//    we need a singleton that represents the full load order, with a list of 
-//    TESPluginFiles. The singleton should have a method to add files for loading, 
-//    and should handle the loading of the files and all dependencies once told to 
-//    load files.
-//
-//    The singleton should maintain a map of "effective forms," i.e. a map of form 
-//    IDs to the FormStubs for conflict-winning (or non-conflicted) forms. The 
-//    singleton should also identify an "active file," like the Creation Kit, for 
-//    use with editing later on.
-//
-//  - Once the singleton is ready (and not before), we will be able to track Use 
-//    Info for forms. Given how I plan on designing this editor, we only *need* 
-//    Use Info for conflict-winning and non-conflicted forms, so once we have a 
-//    full map of just those FormStubs, it will be all the simpler to construct 
-//    the Use Info.
-//
-//     - Alternatively, we could have a map of FormStubCollection objects, which 
-//       list all of the FormStubs for a form (including overridden ones) and 
-//       the Use Info for the final loaded form (the conflict-winning or non-
-//       conflicted form).
-//
-//        - Nope! FormStubCollection would have to have a vector, which we 
-//          can't block-allocate. Just have FormStubFinal which has a FormStub 
-//          pointer and room for additional data e.g. Use Info; the name conveys 
-//          that it's for a conflict-winning or non-conflicted form.
-//
-//        - TESPluginFile::_insertForm needs to be modified to insert into the 
-//          TESPluginFile AND to insert into the load order singleton's map of 
-//          form IDs to forms. (Well, actually, it should pass the FormStub to 
-//          a member function on the singleton which normalizes the form ID and 
-//          checks if it's a new form or override and blah blah blah.) This will 
-//          be MUCH faster than having to collate results from all files at the 
-//          end of the full load process.
-//
-//     - I'm thinking we can load Use Info in two passes. The first pass involves 
-//       splitting the list of forms across multiple threads (this REQUIRES a 
-//       custom storage class; std::map CANNOT do this efficiently) and generating 
-//       their outbound connections; the second pass is single-threaded and uses 
-//       the existing outbound connection info to generate inbound connections.
-//
-//        - Parent/child relationships between forms should also be tracked as 
-//          Use Info. This will require consulting GroupMetadata in addition to 
-//          reading the form's record.
-//
-//        - The inbound and outbound connection lists should be linked lists and 
-//          should be stored on the FormStubCollection.
 
 //
 //  OLD NOTES ON USE INFO:
@@ -405,20 +329,6 @@ std::thread::id main_thread_id;
 //              - void FormStub::replaceOutboundConnection(uint32_t signature, uint32_t formID); // modifies an outbound connection; reaches out to the previously-connected form to sever its inbound connection; and reaches out to the newly-connected form to add an inbound connection
 //              - void form_connection::load(TESForm& form, uint32_t value);
 //              - void form_connection::modify(TESForm& form, uint32_t value);
-//
-//           - Inbound connections have to be single-threaded because processing any 
-//             FormStub could lead to modifications to any other FormStub; however, 
-//             setting up outbound connections for a FormStub doesn't involve 
-//             altering data elsewhere, so we could split the FormStub list into 
-//             chunks and assign each chunk to a thread.
-//
-//              - This requires a custom red-black tree. The whole point of a tree 
-//                is that it's subdivided into halves and halves-of-halves; we can 
-//                evenly divide the list into any power-of-two number of chunks. 
-//                However, std::map doesn't give us the needed accessors for this, 
-//                in part because the STL only wants uniform interfaces and in part 
-//                because the standard doesn't require std::map to actually be a 
-//                binary tree or any other specific implementation.
 //
 
 void test_print_load_error() {
@@ -638,6 +548,51 @@ void test_print_quest_aliases(LoadedForms::Quest* quest) {
    }
 }
 
+void test_print_form_code(FormStub* stub) {
+   if (stub) {
+      auto& info = formTypeFor(stub->formType);
+      char sig[5];
+      FMT_SIGNATURE(info.signature, sig);
+      printf("[%s:%08X]%s", sig, stub->formID, stub->get_editor_id());
+   } else
+      printf("[NONE:00000000]");
+}
+void test_print_use_info(FormStub* stub) {
+   printf("Use Info for ");
+   test_print_form_code(stub);
+   printf(":\n");
+   auto& outbound = stub->outbound;
+   auto& inbound  = stub->inbound;
+   if (outbound.empty())
+      printf(" - No outbound connections\n");
+   else {
+      printf(" - Outbound:\n");
+      for (auto it = outbound.begin(); it != outbound.end(); ++it) {
+         auto other = it->second.other;
+         printf("    - ");
+         if (other)
+            test_print_form_code(other);
+         else
+            printf("[????:%08X]", it->first);
+         printf(" x%d\n", it->second.refcount);
+      }
+   }
+   if (inbound.empty())
+      printf(" - No inbound connections\n");
+   else {
+      printf(" - Inbound:\n");
+      for (auto it = inbound.begin(); it != inbound.end(); ++it) {
+         auto other = it->second.other;
+         printf("    - ");
+         if (other)
+            test_print_form_code(other);
+         else
+            printf("[????:%08X]", it->first);
+         printf(" x%d\n", it->second.refcount);
+      }
+   }
+}
+
 void test_skyrim_quest() {
    auto& lo = LoadOrder::get();
    lo.basePath = TEST_PLUGIN_PATH;
@@ -741,6 +696,35 @@ void test_skyrim() {
    } else {
       printf("...But an error was encountered during load! Details:\n");
       test_print_load_error();
+   }
+   {  // Use Info
+      {  // [WRLD:000C350D]KatariahWorld
+         auto stub = lo.getForm(0x000C350D);
+         if (stub) {
+            printf("[WRLD:000C350D]KatariahWorld\n");
+            test_print_use_info(stub);
+         } else
+            printf("Failed to find [WRLD:000C350D]KatariahWorld\n");
+      }
+      printf("\n");
+      {  // [SPEL:00013F3A]VoiceUnrelentingForce3
+         auto stub = lo.getForm(0x00013F3A);
+         if (stub) {
+            printf("[SPEL:00013F3A]VoiceUnrelentingForce3\n");
+            test_print_use_info(stub);
+         } else
+            printf("Failed to find [SPEL:00013F3A]VoiceUnrelentingForce3\n");
+      }
+      printf("\n");
+      {  // [STAT:00000846]Farmhouse02
+         auto stub = lo.getForm(0x00000846);
+         if (stub) {
+            printf("[STAT:00000846]Farmhouse02\n");
+            test_print_use_info(stub);
+         } else
+            printf("Failed to find [STAT:00000846]Farmhouse02\n");
+      }
+      printf("\n");
    }
    printf("\n\n======================================================\n   FORM STUB HEAP\n======================================================\n");
    FormStubHeap::dump_stats();

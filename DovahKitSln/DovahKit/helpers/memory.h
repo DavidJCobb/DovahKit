@@ -2,10 +2,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <shared_mutex>
 #include "bitset.h" // block_allocator
-#include "locks.h"
-#include "threading.h"
 
 namespace cobb {
    class generic_buffer {

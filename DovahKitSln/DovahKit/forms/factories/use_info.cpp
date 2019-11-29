@@ -1,10 +1,13 @@
 #include "use_info.h"
+#include "../loaded/Activator.h"
 #include "../loaded/ActorBase.h"
 #include "../loaded/Container.h"
 #include "../loaded/FormList.h"
+#include "../loaded/Location.h"
 #include "../loaded/MagicEffect.h"
 #include "../loaded/ObjectReference.h"
 #include "../loaded/Quest.h"
+#include "../loaded/Shout.h"
 #include "../loaded/TopicInfo.h"
 #include "../loaded/Voicetype.h"
 
@@ -17,6 +20,7 @@ namespace {
    };
    _Builder _builders[] = {
       { FormType::MagicEffect, LoadedForms::MagicEffect::generateUseInfo },
+      { FormType::Activator,   LoadedForms::Activator::generateUseInfo },
       { FormType::Container,   LoadedForms::Container::generateUseInfo },
       { FormType::ActorBase,   LoadedForms::ActorBase::generateUseInfo },
       { FormType::Reference,   LoadedForms::ObjectReference::generateUseInfo },
@@ -24,6 +28,8 @@ namespace {
       { FormType::Quest,       LoadedForms::Quest::generateUseInfo },
       { FormType::FormList,    LoadedForms::FormList::generateUseInfo },
       { FormType::Voicetype,   LoadedForms::Voicetype::generateUseInfo },
+      { FormType::Location,    LoadedForms::Location::generateUseInfo },
+      { FormType::Shout,       LoadedForms::Shout::generateUseInfo },
    };
 }
 FormOutboundUsesBuilder getOutboundUsesBuilderForFormType(formtype_t ft) noexcept {

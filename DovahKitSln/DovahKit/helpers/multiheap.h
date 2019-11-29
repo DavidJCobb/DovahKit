@@ -149,10 +149,11 @@ namespace cobb {
             }
             //
             void prune() noexcept {
-               for (auto block = this->info.next; block; block = block->info.next) {
+               auto n = this->info.next;
+               for (auto block = n; block; block = n) {
+                  n = block->info.next;
                   if (!block->has_any_slots_used()) {
                      auto p = block->info.prev;
-                     auto n = block->info.next;
                      if (p)
                         p->info.next = n;
                      if (n)

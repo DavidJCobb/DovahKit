@@ -1,6 +1,8 @@
 #include "construct.h"
 #include "../loaded/FormList.h"
+#include "../loaded/Location.h"
 #include "../loaded/Quest.h"
+#include "../loaded/Shout.h"
 #include "../loaded/Voicetype.h"
 
 namespace {
@@ -20,6 +22,8 @@ namespace {
       { FormType::Quest,     _constructAndLoad<LoadedForms::Quest> },
       { FormType::FormList,  _constructAndLoad<LoadedForms::FormList> },
       { FormType::Voicetype, _constructAndLoad<LoadedForms::Voicetype> },
+      { FormType::Location,  _constructAndLoad<LoadedForms::Location> },
+      { FormType::Shout,     _constructAndLoad<LoadedForms::Shout> },
    };
 }
 LoadedFormFactory getLoadedFormFactoryForFormType(formtype_t ft) noexcept {
