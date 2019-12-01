@@ -25,6 +25,7 @@ const char* _load_error_code_names[] = {
    "unknown/unhandled error",
    "filesystem or file I/O error",
    "insufficient memory available for this data",
+   "active file is a master but there are plug-ins",
 };
 const char* FatalLoadError::code_string() const noexcept {
    if ((uint32_t)this->code < std::extent<decltype(_load_error_code_names)>::value)
@@ -173,6 +174,18 @@ bool LoadOrder::_addToLoadOrder(const std::string& name, bool isMasterOfMaster) 
    //
    bool must_be_master = isMasterOfMaster || header->is_master();
    for (auto it = header->masters.begin(); it != header->masters.end(); ++it) {
+      if (!this->queuedActiveFile.empty() && cobb::strieq(*it, this->queuedActiveFile)) {
+         auto& name = *it;
+         this->logError([this, &name](FatalLoadError& error) {
+            error.code = LoadErrorCode::active_file_is_dependency;
+            error.file = name;
+            error.dependency = this->queuedActiveFile;
+            error.parseError = "The active file cannot be the master to another file in the load order.";
+         });
+         this->loadOrderUnderConsideration.erase(header->name);
+         delete header;
+         return false;
+      }
       if (this->_loadOrderHasMaster(*it))
          continue;
       if (this->_loadOrderHasPlugin(*it)) {
@@ -268,6 +281,16 @@ class ThreadedUseInfoOutboundBuilder : public TESPluginFileView {
 };
 
 void LoadOrder::_buildUseInfo() noexcept {
+   //
+   // We generate Use Info using two passes. First, we divide all forms across multiple 
+   // threads; each thread generates outbound Use Info for the forms. Then, a single 
+   // thread scans the outbound Use Info and uses that to generate inbound Use Info.
+   //
+   // If we want to generate outbound Use Info for a given form, then we only need to 
+   // update that form. However, if we want to generate *inbound* Use Info *from* a 
+   // given form, we must update each form it refers to. As such, we can't multi-thread 
+   // the generation of inbound Use Info unless we put a lock on each individual form.
+   //
    #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
       struct timeb bench_start;
       struct timeb bench_end;
@@ -325,6 +348,27 @@ bool LoadOrder::loadQueuedFiles() {
       if (!this->_addToLoadOrder(*it))
          return false;
    }
+   if (!this->queuedActiveFile.empty()) {  // Force the active file to the end of the load order
+      auto& name = this->queuedActiveFile;
+      bool isMaster = this->_loadOrderHasMaster(this->queuedActiveFile);
+      if (isMaster && !this->loadOrderPlugins.empty()) {
+         this->logError([this](FatalLoadError& error) {
+            error.code = LoadErrorCode::active_file_is_master_and_there_are_plugins;
+            error.file = this->queuedActiveFile;
+            error.parseError = "The active file must be at the end of the load order. However, it is impossible to move it there, because it is ESM-flagged and there are non-ESM-flagged files in the load order.";
+         });
+         return false;
+      }
+      auto& list = this->loadOrderPlugins;
+      if (isMaster)
+         list = this->loadOrderMasters;
+      //
+      auto it = std::find_if(list.begin(), list.end(), [&name](TESPluginHeader* file) { return cobb::strieq(name, file->name); });
+      assert(it != list.end() && "How is it not in the list?!");
+      TESPluginHeader* header = *it;
+      list.erase(it);
+      list.push_back(header);
+   }
    {  // Ensure enough space to store all forms without reallocating
       uint32_t total = 0;
       for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
@@ -353,6 +397,10 @@ bool LoadOrder::loadQueuedFiles() {
       auto file = new TESPluginFile;
       this->loadingIndex = this->files.size();
       this->files.push_back(file);
+      if (!this->queuedActiveFile.empty() && cobb::strieq(this->queuedActiveFile, (*it)->name)) {
+         this->activeFile = file;
+         this->activeFileIndex = this->loadingIndex;
+      }
       if (!file->load(path.c_str())) {
          auto fn = (*it)->name;
          this->logError([&fn](FatalLoadError& error) {
@@ -376,6 +424,10 @@ bool LoadOrder::loadQueuedFiles() {
       auto file = new TESPluginFile;
       this->loadingIndex = this->files.size();
       this->files.push_back(file);
+      if (!this->queuedActiveFile.empty() && cobb::strieq(this->queuedActiveFile, (*it)->name)) {
+         this->activeFile = file;
+         this->activeFileIndex = this->loadingIndex;
+      }
       if (!file->load(path.c_str())) {
          auto fn = (*it)->name;
          this->logError([&fn](FatalLoadError& error) {
@@ -496,6 +548,7 @@ form_id_status LoadOrder::localFormIDToGlobalFormID(const TESPluginFile* file, u
 void LoadOrder::reset() {
    this->loadingIsComplete = false;
    this->loadingIndex      = 0;
+   this->activeFileIndex   = invalid_load_prefix;
    this->lastError.reset();
    this->loadOrderUnderConsideration.clear();
    for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
@@ -516,6 +569,9 @@ void LoadOrder::reset() {
    this->forms.forms.clear();
    for (formtype_t ft = 0; ft < std::extent<decltype(this->formsByType)>::value; ft++)
       this->formsByType[ft].forms.clear();
+   this->activeFileForms.forms.clear();
+   for (formtype_t ft = 0; ft < std::extent<decltype(this->activeFileFormsByType)>::value; ft++)
+      this->activeFileFormsByType[ft].forms.clear();
    FormStubHeap::force_destroy_all();
 }
 
@@ -546,6 +602,19 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    this->forms.forms[formID] = stub;
    //
    stub->formID = formID;
+   //
+   if (this->activeFile && formID >> 0x18 == this->activeFileIndex) {
+      //
+      // TODO: This breaks if we don't force the active file to the end of the load order. 
+      // We already prevent the active file from being the dependency to another file, but 
+      // if the active file overrides some record in Foo.esp and another file, which loads 
+      // after the active file, overrides that same record in Foo.esp, then the active file 
+      // form map will end up having a pointer to a deleted FormStub.
+      //
+      this->activeFileForms.forms[formID] = stub;
+      auto& at = this->activeFileFormsByType[stub->formType];
+      at.forms[formID] = stub;
+   }
    //
    return form_id_status::valid;
 }

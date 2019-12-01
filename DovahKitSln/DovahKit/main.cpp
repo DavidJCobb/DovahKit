@@ -42,11 +42,6 @@ std::thread::id main_thread_id;
 //
 //     = NEAR PLANS
 //
-//        - Verify that Use Info is correct.
-//
-//        - Add the "active file" feature, including failing to load if any file 
-//          has the active file as a dependency. See further below for more notes.
-//
 //        - Implement saving:
 //
 //           - First, start by just saving GRUPs in order. Don't write code for 
@@ -103,19 +98,16 @@ std::thread::id main_thread_id;
 //          overrides should not); we must make sure that slot 00 in the load 
 //          order overrides hardcoded stubs.
 //
-//        - KSIZ/KWDA uses a single KWDA subrecord whose length varies to hold the 
-//          number of keyword form IDs needed. Investigate...
-//
-//           - Is KSIZ the required size of the KWDA (i.e. the game won't read more 
-//             than that many forms), or is it just used to allocate the right array 
-//             size in advance (like TIFC) and otherwise optional?
-//
-//           - Do PRKZ/PRKR work the same way? I've seen them in ReferenceAlias.
+//        - Do PRKZ/PRKR work the same way as KSIZ+KWDA[]?
 //
 //        - Conditions
 //
 //           - Allow ConditionFunction structs to specify a list of values, 
 //             when the condition function can return an enum.
+//
+//        - Location
+//
+//           - Verify that we're loading this correctly.
 //
 //        - Quests
 //
@@ -179,6 +171,12 @@ std::thread::id main_thread_id;
 //          properly, but don't halt the load process. See code comments in 
 //          and around TESPluginBaseReader::nextRecordOrGroup and in 
 //          TESPluginBaseReader::nextSubrecord for details and ideas.
+//
+//           - We'd need to pass the TESPluginBaseReader* instance to the 
+//             helper functions we use to check for errors; then we can call 
+//             the virtual method to get a TESPluginFile and call its abort 
+//             method. Of course, we should only call abort during load 
+//             (relevant concern for nextSubrecord).
 //
 //     - LoadOrder::load needs to verify that the files' masters haven't 
 //       changed once we begin the final load. The only way to do that is 
@@ -253,26 +251,6 @@ std::thread::id main_thread_id;
 //             behavior for loading. But it doesn't matter if use info has 
 //             false-positives; the only thing we NEED to avoid is false-neg-
 //             atives.
-//
-//     - Once we have code to load at least *most* form types' outbound refs, 
-//       we need to write code to actually *do* that i.e. code in LoadOrder to 
-//       loop over every loaded form and set up Use Info. There are two ways we 
-//       can do this:
-//
-//       BI-DIRECTIONAL (SINGLE-THREADED SINGLE-PASS):
-//
-//       In a single thread, loop over every FormStub. Set up both outbound and 
-//       inbound references in one go. xEdit builds Use Info on a single thread 
-//       and takes 66 seconds to do it, though I think they build Use Info for 
-//       all files in the load order and not just conflict-winning records.
-//
-//       TWO-PASS (MULTI-THREADED OUTBOUND, SINGLE-THREADED INBOUND):
-//
-//       Divide the list of all forms into multiple sublists, and assign each 
-//       sub-list to a thread. Each thread should work to build outbound refs. 
-//       Then, after this operation is complete, use a single thread to go over 
-//       the full list of forms and build inbound refs based on the outbound 
-//       ref data.
 //
 //     - Once we have code to build Use Info, we'll need to be able to cache 
 //       it for faster loading, like xEdit does. Cached use info for a file 

@@ -92,7 +92,20 @@ enum class LoadErrorCode {
    //
    filesystem_error = 11,
    //
+   // insufficient_memory
+   // The file contains a record that is impossible to load or parse due to 
+   // its massive size. When this occurs, it may be a sign that something 
+   // went wrong during parsing, and that we're misreading unrelated data 
+   // as a record length.
+   //
    insufficient_memory = 12,
+   //
+   // active_file_is_master_and_there_are_plugins
+   // The active file must be at the end of the load order. However, it is 
+   // impossible to ensure this, because the active file is ESM-flagged 
+   // and there are non-ESMs in the load order.
+   //
+   active_file_is_master_and_there_are_plugins = 13,
    //
    // REMEMBER TO KEEP FatalLoadError::code_string SYNCHED WITH THIS ENUM!
    //
@@ -168,6 +181,8 @@ class LoadOrder {
       TESPluginFile* activeFile = nullptr; // TODO
       _form_map forms;
       _form_map formsByType[FormType::Count];
+      _form_map activeFileForms;
+      _form_map activeFileFormsByType[FormType::Count];
       //
       uint8_t loadOrderPrefixFor(const TESPluginFile*) const noexcept;
       uint8_t _guidedLoadOrderPrefixFor(const TESPluginFile*) const noexcept; // a version of (loadOrderPrefixFor) that's faster if called on a TESPluginFile that we're currently loading
@@ -189,6 +204,7 @@ class LoadOrder {
       //
       bool    loadingIsComplete = false; // exists so that TESPluginBaseReader::nextSubrecord can call LoadOrder::logError without having to worry about whether it's running during or after the initial load
       uint8_t loadingIndex      = 0;     // which load order index we're loading, or 0 if none; set in (loadQueuedFiles); see (_guidedLoadOrderPrefixFor)
+      uint8_t activeFileIndex   = invalid_load_prefix;
       //
    public:
       std::string basePath;

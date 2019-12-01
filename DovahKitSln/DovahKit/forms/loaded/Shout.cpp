@@ -1,5 +1,4 @@
 #include "Shout.h"
-#include "../../esp/LoadOrder.h"
 #include "../../esp/TESPlugin.h"
 
 namespace LoadedForms {

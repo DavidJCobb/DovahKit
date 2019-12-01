@@ -18,6 +18,11 @@ namespace LoadedForms {
                if (subrecord.read(formID))
                   stub->add_outbound_reference(formID);
                break;
+            case 'MODL':
+            case 'MODT':
+            case 'MODS':
+               FormModel::generateUseInfo(subrecord, stub);
+               break;
             case 'KSIZ':
                subrecord.read(keywordCount);
                break;

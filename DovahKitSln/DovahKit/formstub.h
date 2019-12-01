@@ -120,6 +120,22 @@ struct GroupMetadata { // sizeof == 0xC
    } cellSubBlock; // 0 for non-cells
 };
 
+//
+// USE INFO
+//
+// Use Info serves two purposes: it is a useful thing to be able to display in the UI; and 
+// it is needed in order to safely delete a form. If Form A refers to Form B, and we delete 
+// Form B, then we must clear B's form ID from Form A; if we don't, and if we create a new 
+// form using the former Form B's form ID, then Form A will now have a reference to a form 
+// that it doesn't expect. As such, Form B must be aware of all inbound connections, incl-
+// uding from Form A.
+//
+// Yet Form A must also have a list of all outbound connections, including to Form B. If 
+// we delete Form A, then we must be able to tell Form B that Form A no longer refers to 
+// it; otherwise, if we then delete Form B, it will try to update the non-existent Form A.
+//
+// So we must keep track of all connections between forms, bidirectionally.
+//
 struct UseInfoEntry {
    FormStub* other    = nullptr; // this can be nullptr, as in the case of dangling references between forms in a hand-edited user file
    uint32_t  refcount = 0;

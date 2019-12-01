@@ -1,5 +1,4 @@
 #include "MagicEffect.h"
-#include "../../esp/LoadOrder.h"
 #include "../../esp/TESPlugin.h"
 #include "../conditions.h"
 
