@@ -349,6 +349,21 @@ bool LoadOrder::loadQueuedFiles() {
          return false;
    }
    if (!this->queuedActiveFile.empty()) {  // Force the active file to the end of the load order
+      //
+      // The active file must be at the end of the load order, and cannot be the master of any 
+      // other file. Both of these limitations stem from the fact that we only keep the last-
+      // loaded version of any record in memory. If the active file is the master to another 
+      // file, then that file can override forms defined in the active file; if we save those 
+      // overrides into the active file, then we can end up with dangling references between 
+      // forms (if the overrides referred to other forms in the overriding file) or with a 
+      // cyclical reference (if we try to make the overriding file a master of the active file).
+      //
+      // If the active file A and another file B both override the same form in some common 
+      // master C, and if B loads after A, then we'll have a problem: because we only retain 
+      // the last override to load, when we encounter B's override, we will delete A's override 
+      // from memory, leaving a dangling pointer in the active file form maps. We could solve 
+      // this by testing every form against those maps, but that's not performant.
+      //
       auto& name = this->queuedActiveFile;
       bool isMaster = this->_loadOrderHasMaster(this->queuedActiveFile);
       if (isMaster && !this->loadOrderPlugins.empty()) {
@@ -604,13 +619,6 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    stub->formID = formID;
    //
    if (this->activeFile && formID >> 0x18 == this->activeFileIndex) {
-      //
-      // TODO: This breaks if we don't force the active file to the end of the load order. 
-      // We already prevent the active file from being the dependency to another file, but 
-      // if the active file overrides some record in Foo.esp and another file, which loads 
-      // after the active file, overrides that same record in Foo.esp, then the active file 
-      // form map will end up having a pointer to a deleted FormStub.
-      //
       this->activeFileForms.forms[formID] = stub;
       auto& at = this->activeFileFormsByType[stub->formType];
       at.forms[formID] = stub;

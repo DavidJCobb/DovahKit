@@ -199,25 +199,6 @@ std::thread::id main_thread_id;
 //
 //     - We need to be able to set an active file.
 //
-//        - All forms and overrides loaded from the active file should be 
-//          stored both in LoadOrder::formsByType and in a separate map 
-//          just for active file forms, so that we know what forms to save 
-//          when saving the active file.
-//
-//           - If something else overrides a form that the active file 
-//             overrode -- that is, a form defined in A overridden by 
-//             active file B and then overridden again by some file C 
-//             later in the load order -- then we'll... need to do... ah, 
-//             something, I think.
-//
-//              - Wondering if we should enforce the active file being 
-//                the last file in the load order.
-//
-//                 - Probably. Otherwise, the user can create references 
-//                   between active-file forms and forms from files after 
-//                   it in the load order, and then adding those other 
-//                   files as masters *could* be tricky? Maybe?
-//
 //        - Wondering if we should retain FormStubs for forms overridden by 
 //          the active file; it would allow us to offer a "Revert" context 
 //          menu item on all forms in the active file. Could give each 

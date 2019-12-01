@@ -305,7 +305,7 @@ class TESPluginBaseReader {
          record,
       };
       //
-      virtual const TESPluginFile* asFile() const noexcept = 0;
+      virtual TESPluginFile* asFile() const noexcept = 0;
       //
    protected:
       #ifdef COBB_ESP_USE_MAPPED_FILES
@@ -413,7 +413,7 @@ class TESPluginThreadedSimpleReader : public TESPluginBaseReader {
       TESPluginThreadedSimpleReader(TESPluginFile& f) : owner(f) {}
       TESPluginThreadedSimpleReader(TESPluginFile& f, bool allowNestedGroups) : owner(f), allowNestedGroups(allowNestedGroups) {}
       //
-      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      virtual TESPluginFile* asFile() const noexcept override { return &this->owner; }
       //
       TESPluginFile& owner;
       bool allowNestedGroups = false;
@@ -439,7 +439,7 @@ class TESPluginThreadedInteriorCellReader : public TESPluginBaseReader {
    public:
       TESPluginThreadedInteriorCellReader(TESPluginFile& f) : owner(f) {}
       //
-      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      virtual TESPluginFile* asFile() const noexcept override { return &this->owner; }
       //
       TESPluginFile& owner;
       //
@@ -468,7 +468,7 @@ class TESPluginThreadedWorldspaceSubBlockReader : public TESPluginBaseReader {
    public:
       TESPluginThreadedWorldspaceSubBlockReader(TESPluginFile& f) : owner(f) {}
       //
-      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      virtual TESPluginFile* asFile() const noexcept override { return &this->owner; }
       //
       TESPluginFile& owner;
       //
@@ -493,7 +493,7 @@ class TESPluginThreadedWorldspacePersistentCellChildrenReader : public TESPlugin
    public:
       TESPluginThreadedWorldspacePersistentCellChildrenReader(TESPluginFile& f) : owner(f) {}
       //
-      virtual const TESPluginFile* asFile() const noexcept override { return &this->owner; }
+      virtual TESPluginFile* asFile() const noexcept override { return &this->owner; }
       //
       TESPluginFile& owner;
       //
@@ -531,7 +531,7 @@ class TESPluginFileView : public TESPluginBaseReader {
    // subclasses of this class.
    //
    public:
-      virtual const TESPluginFile* asFile() const noexcept override { return this->owner; }
+      virtual TESPluginFile* asFile() const noexcept override { return this->owner; }
       //
       TESPluginFile* owner = nullptr;
 };
@@ -556,7 +556,7 @@ class TESPluginFile : public TESPluginBaseReader {
       TESPluginFile();
       ~TESPluginFile();
       //
-      virtual const TESPluginFile* asFile() const noexcept override { return this; }
+      virtual TESPluginFile* asFile() const noexcept override { return const_cast<TESPluginFile*>(this); }
       //
       bool load(const char* filepath);
       bool loadRecordAt(uint32_t pos); // for FormStub

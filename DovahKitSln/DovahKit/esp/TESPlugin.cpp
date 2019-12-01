@@ -220,7 +220,10 @@ bool TESPluginBaseReader::is_good() {
 }
 //
 namespace {
-   void _log_bad_record_signature(const char* filename, uint32_t pos, uint32_t sig, bool isUnknown) {
+   void _log_bad_record_signature(TESPluginBaseReader* reader, uint32_t pos, uint32_t sig, bool isUnknown) {
+      auto  file = reader->asFile();
+      assert(file && "TESPluginBaseReader should be or have an owning file.");
+      auto& filename = file->getFilename();
       LoadOrder::get().logError([=](FatalLoadError& error) {
          error.code = LoadErrorCode::malformed_file;
          error.file = filename;
@@ -234,13 +237,14 @@ namespace {
          error.parseError += s;
          error.parseError += ')';
       });
+      file->abort();
    }
-   bool _validate_record_signature(uint32_t signature, uint32_t pos, const char* filename) {
+   bool _validate_record_signature(TESPluginBaseReader* reader, uint32_t signature, uint32_t pos) {
       auto& lo = LoadOrder::get();
       if (lo.isLoading()) {
          if (!lo.options.allowSuspiciousRecordSignatures) {
             if (signatureIsSuspicious(signature)) {
-               _log_bad_record_signature(filename, pos, signature, false);
+               _log_bad_record_signature(reader, pos, signature, false);
                //
                // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
                // to load more of the file. The error still properly gets logged, because it's the first error 
@@ -257,7 +261,7 @@ namespace {
          }
          if (!lo.options.allowUnknownRecordSignatures) {
             if (signatureToFormType(signature) == FormType::None) {
-               _log_bad_record_signature(filename, pos, signature, true);
+               _log_bad_record_signature(reader, pos, signature, true);
                //
                // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
                // to load more of the file. The error still properly gets logged, because it's the first error 
@@ -275,7 +279,10 @@ namespace {
       }
       return true;
    }
-   void _log_record_allocation_failure(const char* filename, uint32_t pos, uint32_t size, const TESPluginRecord& record) {
+   void _log_record_allocation_failure(TESPluginBaseReader* reader, uint32_t pos, uint32_t size, const TESPluginRecord& record) {
+      auto  file = reader->asFile();
+      assert(file && "TESPluginBaseReader should be or have an owning file.");
+      auto& filename = file->getFilename();
       LoadOrder::get().logError([&](FatalLoadError& error) {
          error.code       = LoadErrorCode::insufficient_memory;
          error.file       = filename;
@@ -291,6 +298,7 @@ namespace {
          else
             error.parseError += '.';
       });
+      file->abort();
    }
 }
 TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
@@ -360,7 +368,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    record.end = record.bodyPos + record.header.size;
    if (!this->is_good())
       return ObjectType::none;
-   if (!_validate_record_signature(record.header.signature, record.headPos, filename)) // also logs the appropriate error
+   if (!_validate_record_signature(this, record.header.signature, record.headPos)) // also logs the appropriate error
       return ObjectType::none;
    {
       switch (record.header.signature) {
@@ -379,7 +387,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
       this->read(decompressed_size);
       record.data.allocate(decompressed_size);
       if (record.data.empty()) {
-         _log_record_allocation_failure(filename, record.headPos, decompressed_size, record);
+         _log_record_allocation_failure(this, record.headPos, decompressed_size, record);
          //
          // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
          // to load more of the file. The error still properly gets logged, because it's the first error 
@@ -405,7 +413,7 @@ TESPluginBaseReader::ObjectType TESPluginBaseReader::nextRecordOrGroup() {
    } else {
       record.data.allocate(record.header.size);
       if (record.data.empty()) {
-         _log_record_allocation_failure(filename, record.headPos, record.header.size, record);
+         _log_record_allocation_failure(this, record.headPos, record.header.size, record);
          //
          // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
          // to load more of the file. The error still properly gets logged, because it's the first error 
