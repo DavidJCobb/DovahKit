@@ -79,7 +79,7 @@ void FormStub::add_outbound_reference(uint32_t toFormID, flags_type flags) {
    if (!entry.other)
       entry.other = LoadOrder::get().getForm(toFormID);
    #ifdef _DEBUG
-      if (!entry.other && toFormID > 0x800 && toFormID != 0x02006718) { // exclude known dangling ref in Dawnguard.esm
+      if (!entry.other && /*toFormID >= 0x800 &&*/ toFormID != 0x02006718) { // exclude known dangling ref in Dawnguard.esm
          if (LoadOrder::get().hasForm(toFormID))
             __debugbreak();
          else

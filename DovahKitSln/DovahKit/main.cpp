@@ -92,7 +92,8 @@ std::thread::id main_thread_id;
 //          base forms; it does not include:
 //
 //           - [ACHR:014]PlayerRef
-//           - [WRLD:03C]Tamriel
+//           - Actor Value Infos (in progress)
+//           - See hardcoded_forms.cpp for more
 //
 //           - We currently create loaded-forms in-memory for hardcoded forms 
 //             when we have classes defined for their form types; however, won't 
