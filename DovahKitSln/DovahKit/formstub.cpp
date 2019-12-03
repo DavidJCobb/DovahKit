@@ -15,16 +15,6 @@
 FormStub::~FormStub() {
    if (this->get_refcount())
       assert(!this->form && "You should not be attempting to destroy a FormStub when something is still using its loaded form data!");
-   if (this->editorID) {
-      free(this->editorID);
-      this->editorID = nullptr;
-   }
-}
-char* FormStub::allocate_editor_id(size_t length) {
-   if (this->editorID)
-      free(this->editorID);
-   this->editorID = (char*)malloc(length);
-   return this->editorID;
 }
 void FormStub::get_source_filename(std::string& out) const noexcept {
    out.clear();
@@ -49,10 +39,17 @@ loaded_form_ptr<LoadedForms::Form> FormStub::load() {
    return loaded_form_ptr<LoadedForms::Form>(this);
 }
 void FormStub::set_edited(bool v) {
-   cobb::edit_bit(this->refcount, kRefcountFlag_Edited, v);
+   cobb::edit_bit(this->flags, FormStubFlags::is_edited, v);
 }
 
 void FormStub::build_outbound_refs(TESPluginFileView* reader) noexcept {
+   if (this->is_hardcoded()) { // hardcoded forms only have hardcoded outbound refs
+      //
+      // TODO: [ACHR:00000014]PlayerRef is a hardcoded form and should be given a 
+      // ref to its ActorBase, no?
+      //
+      return;
+   }
    assert(this->file && "FormStub cannot build outbound refs without a file. How did this happen?");
    if (this->file->loadRecordAt(this->offset, reader)) {
       auto& record = reader->getCurrentRecord();
@@ -67,13 +64,14 @@ void FormStub::send_inbound_refs() noexcept {
       if (it->second.other)
          it->second.other->receive_inbound_ref(this);
 }
-void FormStub::receive_inbound_ref(FormStub* inbound) noexcept {
+void FormStub::receive_inbound_ref(FormStub* inbound, flags_type flags) noexcept {
    auto& list  = this->inbound;
    auto& entry = list[inbound->formID];
    entry.other = inbound;
    entry.refcount++;
+   entry.flags = flags;
 }
-void FormStub::add_outbound_reference(uint32_t toFormID) {
+void FormStub::add_outbound_reference(uint32_t toFormID, flags_type flags) {
    if (toFormID == 0)
       return;
    auto& list  = this->outbound;
@@ -89,6 +87,13 @@ void FormStub::add_outbound_reference(uint32_t toFormID) {
       }
    #endif
    entry.refcount++;
+   //
+   if (flags) {
+      if (flags & UseInfoFlags::i_am_child_of)
+         entry.flags |= UseInfoFlags::i_am_parent_of;
+      else if (flags & UseInfoFlags::i_am_parent_of)
+         entry.flags |= UseInfoFlags::i_am_child_of;
+   }
 }
 /*static*/ void* FormStub::operator new(std::size_t sz) {
    if (sz != sizeof(FormStub))

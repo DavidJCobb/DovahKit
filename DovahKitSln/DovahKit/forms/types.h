@@ -5,7 +5,7 @@
 typedef uint8_t formtype_t;
 
 extern constexpr uint32_t hardcoded_form_id_mask = 0x000007FF; // Mask for form IDs that are hardcoded forms.
-extern constexpr uint32_t plugin_form_id_mask    = 0xFFFFF800; // Mask for form IDs that are not hardcoded forms.
+extern constexpr uint32_t plugin_form_id_mask    = 0x00FFF800; // Mask for form IDs that are not hardcoded forms.
 extern constexpr uint32_t minimum_plugin_form_id = 0x00000800; // Minimum non-load-order-prefixed form ID for a non-hardcoded form.
 
 SCOPE_ENUM(FormType, enum FormType : formtype_t {
@@ -167,8 +167,17 @@ struct FormTypeInfo {
    const char* name  = "<unknown>";
    uint32_t    flags = FormTypeFlags::none;
 };
+struct GroupSequenceList {
+   uint32_t* signatures = nullptr;
+   uint32_t  count;
+   //
+   GroupSequenceList();
+   ~GroupSequenceList();
+   uint32_t operator[](int i) const noexcept;
+};
 
 extern FormTypeInfo formTypes[];
+extern GroupSequenceList groupSequence;
 
 extern const FormTypeInfo& formTypeFor(formtype_t ft) noexcept;
 extern formtype_t signatureToFormType(uint32_t signature) noexcept;

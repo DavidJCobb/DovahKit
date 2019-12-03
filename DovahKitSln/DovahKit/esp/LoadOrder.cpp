@@ -4,6 +4,7 @@
 #include "TESPluginHeader.h"
 #include "../helpers/strings.h"
 #include "../output.h"
+#include "factories/hardcoded_forms.h"
 
 #define BENCHMARK_FORM_STUB_BUILD 1
 #define BENCHMARK_LOAD_ORDER_USE_INFO_BUILD 1
@@ -280,6 +281,21 @@ class ThreadedUseInfoOutboundBuilder : public TESPluginFileView {
       inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
 };
 
+void LoadOrder::_acceptHardcodedForm(FormStub* stub) noexcept {
+   auto& type = this->formsByType[stub->formType];
+   std::lock_guard<std::mutex> guard_for_form_type(type.lock);
+   std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+   //
+   stub->flags |= FormStubFlags::is_hardcoded;
+   //
+   uint32_t formID = stub->formID;
+   type.forms[formID] = stub;
+   this->forms.forms[formID] = stub;
+}
+void LoadOrder::_makeHardcodedForms() noexcept {
+   _addHardcodedFormsToLoadOrder();
+}
+
 void LoadOrder::_buildUseInfo() noexcept {
    //
    // We generate Use Info using two passes. First, we divide all forms across multiple 
@@ -384,6 +400,7 @@ bool LoadOrder::loadQueuedFiles() {
       list.erase(it);
       list.push_back(header);
    }
+   this->_makeHardcodedForms();
    {  // Ensure enough space to store all forms without reallocating
       uint32_t total = 0;
       for (auto it = this->loadOrderMasters.begin(); it != this->loadOrderMasters.end(); ++it)
@@ -391,7 +408,7 @@ bool LoadOrder::loadQueuedFiles() {
       for (auto it = this->loadOrderPlugins.begin(); it != this->loadOrderPlugins.end(); ++it)
          total += (*it)->recordAndGroupCount;
       #if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS != 1
-         this->forms.forms.reserve(total * 1.1);
+         this->forms.forms.reserve((size_t)(total * 1.1) + 0x800);
       #endif
    }//*/
    {
@@ -604,6 +621,8 @@ form_id_status LoadOrder::acceptFormStub(FormStub* stub) noexcept {
    }
    if (formID == 0)
       return form_id_status::null_is_not_allowed;
+   if ((formID & plugin_form_id_mask) == 0)
+      stub->flags |= FormStubFlags::is_hardcoded; // This FormStub overrides a hardcoded form.
    //
    // update the map of forms by type:
    //

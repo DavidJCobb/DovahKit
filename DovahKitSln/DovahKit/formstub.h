@@ -6,6 +6,7 @@
 #include "esp/base.h" // ESPGroupType
 #include "helpers/bitset.h"
 #include "helpers/multiheap.h"
+#include "helpers/scoped_enum.h"
 
 class FormStub;
 class LoadOrder;
@@ -56,7 +57,7 @@ template<typename LoadedFormClass> class loaded_form_ptr {
          if (fs) {
             assert(fs->get_refcount() != 0 && "FormStub refcount is already zero!");
             fs->refcount--;
-            if ((fs->refcount & FormStub::kRefcountMask) == 0) {
+            if (fs->refcount == 0 && fs->can_unload_form()) {
                auto form = fs->form;
                if (form) {
                   delete form;
@@ -136,9 +137,14 @@ struct GroupMetadata { // sizeof == 0xC
 //
 // So we must keep track of all connections between forms, bidirectionally.
 //
+SCOPE_ENUM(UseInfoFlags, enum UseInfoFlags : uint8_t {
+   i_am_child_of  = 1,
+   i_am_parent_of = 2,
+});
 struct UseInfoEntry {
    FormStub* other    = nullptr; // this can be nullptr, as in the case of dangling references between forms in a hand-edited user file
    uint32_t  refcount = 0;
+   uint8_t   flags    = 0; // UseInfoFlags
    //
    UseInfoEntry() {}
    UseInfoEntry(FormStub* s) : other(s) {}
@@ -151,6 +157,10 @@ struct UseInfoEntry {
    typedef std::map<uint32_t, UseInfoEntry> UseInfoList; // <formID, entry>
 #endif
 
+SCOPE_ENUM(FormStubFlags, enum FormStubFlags : uint8_t {
+   is_edited    = 0x00000001,
+   is_hardcoded = 0x00000002,
+});
 class FormStub {
    //
    // A class which represents a form, whether loaded or unloaded. Every FormStub contains 
@@ -163,51 +173,52 @@ class FormStub {
    friend LoadOrder;
    friend ThreadedUseInfoOutboundBuilder;
    //
+   using flags_type = std::underlying_type_t<FormStubFlags>;
+   //
    public:
-      enum RefcountFlags {
-         kRefcountMask  = 0x7FFFFFFF,
-         kRefcountFlags = 0x80000000,
-         //
-         kRefcountFlag_Edited = 0x80000000, // if true, then keep the wrapped form in memory even if its refcount hits zero, until we save changes
-      };
-      //
       ~FormStub();
       //
    protected:
       TESPluginFile* file   = nullptr;
       uint32_t       offset = 0; // offset of this form's record header within its owning file
       std::atomic<uint32_t> refcount = 0;
-      char*          editorID = nullptr;
       void build_outbound_refs(TESPluginFileView*) noexcept;
       void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
-      void receive_inbound_ref(FormStub* inbound) noexcept;
+      void receive_inbound_ref(FormStub* inbound, flags_type flags = 0) noexcept;
       //
    public:
       GroupMetadata groupInfo;
       uint32_t      formID   = 0; // form ID (file-local)
       uint8_t       formType = 0;
-      // there will be 3 bytes of padding here
-      LoadedForms::Form* form = nullptr;
+      flags_type    flags = 0;
+      // there will be 2 bytes of padding here
+      std::string   editorID;
+      LoadedForms::Form* form = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
       UseInfoList   outbound; // other forms that this one refers to
       UseInfoList   inbound;  // other forms that refer to this one
       //
       loaded_form_ptr<LoadedForms::Form> load();
       //
-      inline const char* get_editor_id() const noexcept { return this->editorID; };
-      inline uint32_t    get_refcount()  const noexcept { return this->refcount & kRefcountMask; };
-      inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == kRefcountMask; }
-      inline bool        is_edited() const noexcept { return (bool)(this->refcount & kRefcountFlag_Edited); };
+      inline bool can_unload_form() const noexcept {
+         if (this->is_edited())
+            return false;
+         if (this->is_hardcoded() && !this->file) // form is hardcoded and this FormStub is not an override
+            return false;
+         return true;
+      }
+      inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
+      inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
+      inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
+      inline bool        is_edited()    const noexcept { return (bool)(this->flags & FormStubFlags::is_edited); };
+      inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & FormStubFlags::is_hardcoded); };
       void set_edited(bool v);
       //
       void get_source_filename(std::string& out) const noexcept;
       //
-      void add_outbound_reference(uint32_t toFormID);
+      void add_outbound_reference(uint32_t toFormID, flags_type flags = 0);
       //
       static void* operator new(std::size_t sz);
       static void operator delete(void* ptr, std::size_t sz);
-      //
-   private:
-      char* allocate_editor_id(size_t length);
 };
 
 typedef cobb::multiheap<FormStub, 16000> FormStubHeap;

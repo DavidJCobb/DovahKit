@@ -140,6 +140,7 @@ enum class form_id_status {
 };
 
 class LoadOrder {
+   friend void _addHardcodedFormsToLoadOrder();
    public:
       static LoadOrder& get() {
          static LoadOrder instance;
@@ -197,6 +198,8 @@ class LoadOrder {
       }
       bool _addToLoadOrder(const std::string& name, bool isMasterOfMaster = false);
       //
+      void _acceptHardcodedForm(FormStub* stub) noexcept;
+      void _makeHardcodedForms() noexcept;
       void _buildUseInfo() noexcept;
       //
       FatalLoadError lastError;

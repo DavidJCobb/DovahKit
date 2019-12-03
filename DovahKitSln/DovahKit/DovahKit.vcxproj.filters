@@ -108,6 +108,12 @@
     <ClCompile Include="forms\loaded\Location.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="esp\TESPluginSaver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="esp\factories\hardcoded_forms.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="formstub.h">
@@ -228,6 +234,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="forms\loaded\Location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="esp\TESPluginSaver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="esp\factories\hardcoded_forms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -128,9 +128,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="esp\factories\hardcoded_forms.cpp" />
     <ClCompile Include="esp\LoadOrder.cpp" />
     <ClCompile Include="esp\TESPlugin.cpp" />
     <ClCompile Include="esp\TESPluginHeader.cpp" />
+    <ClCompile Include="esp\TESPluginSaver.cpp" />
     <ClCompile Include="formstub.cpp" />
     <ClCompile Include="forms\conditions.cpp" />
     <ClCompile Include="forms\conditions\arg_types.cpp" />
@@ -162,9 +164,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="esp\base.h" />
+    <ClInclude Include="esp\factories\hardcoded_forms.h" />
     <ClInclude Include="esp\LoadOrder.h" />
     <ClInclude Include="esp\TESPlugin.h" />
     <ClInclude Include="esp\TESPluginHeader.h" />
+    <ClInclude Include="esp\TESPluginSaver.h" />
     <ClInclude Include="formstub_maps.h" />
     <ClInclude Include="formstub.h" />
     <ClInclude Include="forms\conditions\arg_types.h" />

@@ -56,6 +56,9 @@ std::thread::id main_thread_id;
 //                Saving shouldn't occur *too* often so it's fine for that to 
 //                be slow.
 //
+//              - xEdit's source code has the vanilla GRUP order; search the 
+//                TES5 definitions file for "wbAddGroupOrder".
+//
 //           - After that, give each loaded form class a virtual save method, 
 //             and test that that works properly.
 //
@@ -84,19 +87,25 @@ std::thread::id main_thread_id;
 //
 //     = Current tasks
 //
-//        - Check whether editor IDs can ever be stored as wide strings -- that 
-//          is, whether any of the text locales seen in Skyrim can contain nulls 
-//          before the end of the string. I doubt that very much, but if it's 
-//          possible, then FormStub needs to use a std::string for its editor ID.
+//        - LoadOrder has code to initialize the hardcoded forms, using a list 
+//          helpfully provided by Ryan. However, this list seems to only include 
+//          base forms; it does not include:
 //
-//           - Maybe use std::string either way; it's not *that* much overhead 
-//             compared to char*.
+//           - [ACHR:014]PlayerRef
+//           - [WRLD:03C]Tamriel
 //
-//        - LoadOrder needs to instantiate the hardcoded forms before the load 
-//          process. They should be associated with load order slot 00 but should 
-//          not have a file; the FormStubs should have a "hardcoded" flag (but 
-//          overrides should not); we must make sure that slot 00 in the load 
-//          order overrides hardcoded stubs.
+//           - We currently create loaded-forms in-memory for hardcoded forms 
+//             when we have classes defined for their form types; however, won't 
+//             doing this prevent us from loading overrides? Hm...
+//
+//              - We should retain a store of hardcoded loaded-form data with 
+//                no FormStub pointer, and add a virtual method to LoadedForm::Form 
+//                that clones the instance; then, if a hardcoded FormStub is asked 
+//                to load, it has no form, and it has no file, it should create a 
+//                clone of the presupplied hardcoded data.
+//
+//                 - If we program it like that, then we should allow hardcoded 
+//                   forms to unload (modify FormStub::can_unload).
 //
 //        - Do PRKZ/PRKR work the same way as KSIZ+KWDA[]?
 //
@@ -160,23 +169,9 @@ std::thread::id main_thread_id;
 //
 //     - Test all error messages that run through LoadOrder::logError.
 //
-//        - Probably best if we hand-make some intentionally malformed files; 
-//          and write code to test all of them all in one go.
-//
 //        - If a file's dependency doesn't exist, then we should indicate 
 //          which file had the dependency. Currently we only log the name of 
 //          the missing file.
-//
-//        - Errors relating to bad records and subrecords do get logged 
-//          properly, but don't halt the load process. See code comments in 
-//          and around TESPluginBaseReader::nextRecordOrGroup and in 
-//          TESPluginBaseReader::nextSubrecord for details and ideas.
-//
-//           - We'd need to pass the TESPluginBaseReader* instance to the 
-//             helper functions we use to check for errors; then we can call 
-//             the virtual method to get a TESPluginFile and call its abort 
-//             method. Of course, we should only call abort during load 
-//             (relevant concern for nextSubrecord).
 //
 //     - LoadOrder::load needs to verify that the files' masters haven't 
 //       changed once we begin the final load. The only way to do that is 

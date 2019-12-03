@@ -495,9 +495,7 @@ void TESPluginBaseReader::extract_editor_id_for_stub(FormStub* stub) {
    auto& record = this->getCurrentRecord();
    while (auto& subrecord = record.next_subrecord()) {
       if (subrecord.signature() == 'EDID') {
-         auto buffer = stub->allocate_editor_id(subrecord.size() + 1);
-         record.read(buffer, subrecord.size());
-         buffer[subrecord.size()] = '\0';
+         subrecord.to_string(stub->editorID);
          return;
       }
    }
