@@ -1025,16 +1025,19 @@ bool TESPluginFile::_loadHeader() {
             //
             // TODO
             //
+            this->details |= TESPluginFileDetailFlags::has_onam;
             break;
          case 'INTV':
             if (!subrecord.read(this->subINTV)) {
                return false; // don't log an error here; caller should catch (return false) and log a catch-all error
             }
+            this->details |= TESPluginFileDetailFlags::has_intv;
             break;
          case 'INCC':
             if (!subrecord.read(this->subINCC)) {
                return false; // don't log an error here; caller should catch (return false) and log a catch-all error
             }
+            this->details |= TESPluginFileDetailFlags::has_incc;
             break;
       }
       last_subrecord = subrecord.signature();

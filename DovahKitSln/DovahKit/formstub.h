@@ -20,6 +20,7 @@ class TESPluginThreadedWorldspaceSubBlockReader;
 namespace LoadedForms {
    class Form;
 }
+class TESPluginSaver;
 
 //
 // Turns out, using a block allocator for Use Info is slower than using the 
@@ -172,6 +173,7 @@ class FormStub {
    friend TESPluginBaseReader;
    friend LoadOrder;
    friend ThreadedUseInfoOutboundBuilder;
+   friend TESPluginSaver;
    //
    using flags_type = std::underlying_type_t<FormStubFlags>;
    //

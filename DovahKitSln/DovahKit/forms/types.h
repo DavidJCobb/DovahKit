@@ -173,7 +173,9 @@ struct GroupSequenceList {
    //
    GroupSequenceList();
    ~GroupSequenceList();
-   uint32_t operator[](int i) const noexcept;
+   inline uint32_t operator[](int i) const noexcept {
+      return this->signatures[i];
+   }
 };
 
 extern FormTypeInfo formTypes[];

@@ -541,6 +541,11 @@ SCOPE_ENUM(TESPluginFileFlags, enum TESPluginFileFlags {
    localized_string_table = 0x0080,
    light = 0x0200, SCOPED_ENUM_COMMENT("SSE only")
 });
+SCOPE_ENUM(TESPluginFileDetailFlags, enum TESPluginFileDetailFlags {
+   has_intv = 0x0001,
+   has_incc = 0x0002,
+   has_onam = 0x0004,
+});
 class TESPluginFile : public TESPluginBaseReader {
    friend TESPluginThreadedSimpleReader;
    friend TESPluginThreadedInteriorCellReader;
@@ -579,6 +584,7 @@ class TESPluginFile : public TESPluginBaseReader {
       //
    public:
       uint32_t flags = 0;
+      std::underlying_type_t<TESPluginFileDetailFlags> details = 0;
       float    fileVersion = 0.94F;
       uint32_t recordCount = 0;
       uint32_t nextFormID;

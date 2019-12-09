@@ -14,6 +14,8 @@ struct FormModelTextureHash { // MODT
    // at 0x00454AF0 in Skyrim Classic to learn more. I do know for certain, how-
    // ever, that the loading behavior changes depending on the form version.
    //
+   // xEdit has this decoded.
+   //
 };
 struct FormModelTextureSwap { // MODS
    std::string nifBlockName;

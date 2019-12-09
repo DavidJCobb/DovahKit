@@ -66,6 +66,9 @@ class TESPluginSubrecordSaver {
       template<typename T> void write(const T& field) noexcept {
          this->write(&field, sizeof(T));
       }
+      template<> void write(const std::string& field) noexcept {
+         this->write((void*)field.data(), field.size());
+      }
       template<int length_bytes> inline bool write_length_prefixed_string(std::string& field) noexcept {
          using int_t = cobb::bytecount_to_int_t<length_bytes>;
          auto size = field.size();
@@ -81,6 +84,11 @@ class TESPluginSubrecordSaver {
       inline uint32_t get_signature() const noexcept { return this->header.signature; }
 };
 
+struct TESPluginSaverFileHeader {
+   std::string author;
+   std::string description;
+};
+
 class TESPluginSaver {
    friend TESPluginRecordSaver;
    friend TESPluginSubrecordSaver;
@@ -88,12 +96,28 @@ class TESPluginSaver {
       uint32_t groupStartPos[7];
       TESPluginRecordSaver    record;
       TESPluginSubrecordSaver subrecord;
+      //
+      FILE* file = nullptr;
+      //
+      static bool _sortStubsForSave(const FormStub* a, const FormStub* b) noexcept;
+      //
    public:
+      TESPluginSaverFileHeader header;
+      TESPluginFile* source = nullptr;
+      //
       void openRecord(uint32_t signature, uint32_t formID);
-      void openSubrecord();
-
+      void openSubrecord(uint32_t signature);
+      //
+      template<typename T> void write_single_field_subrecord(uint32_t signature, const T& field) noexcept {
+         this->openSubrecord(signature);
+         this->subrecord.write(field);
+         this->subrecord.close();
+      }
+      //
       void write(void* source, uint32_t size) {
          assert(false && "IMPLEMENT ME!");
       }
       void write_to(uint32_t pos, void* source, uint32_t size);
+      //
+      void save() noexcept;
 };

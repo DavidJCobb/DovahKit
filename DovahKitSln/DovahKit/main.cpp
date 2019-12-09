@@ -42,6 +42,15 @@ std::thread::id main_thread_id;
 //
 //     = NEAR PLANS
 //
+//        - If the user starts up without an active file, we should try to create 
+//          an invisible active file at the end of the load order, with no name 
+//          and not shown in the UI; when the user goes to save, we should name 
+//          it (so, saving code should special-case on a nameless active file).
+//
+//           - If there isn't room at the end of the load order for another file 
+//             (i.e. a 254-mod load order), then don't create an active file. The 
+//             UI should detect this and show all elements as read-only.
+//
 //        - Implement saving:
 //
 //           - First, start by just saving GRUPs in order. Don't write code for 
@@ -50,14 +59,21 @@ std::thread::id main_thread_id;
 //             to ensure that we're saving GRUPs and records in a consistent 
 //             order with Bethesda.
 //
-//              - Even if records are sorted by form ID in the file, we should 
-//                still use an unordered_map to hold forms and then just build 
-//                a sorted vector of form IDs to save when it's time to save. 
-//                Saving shouldn't occur *too* often so it's fine for that to 
-//                be slow.
+//              - According to ElminsterAU, Bethesda's files sometimes have 
+//                duplicate top-groups and other errors. Between that and my 
+//                struggling to plan out how to rebuild the GRUPs given only 
+//                form data, it'd probably be best for me to just retain GRUP 
+//                information in memory.
 //
-//              - xEdit's source code has the vanilla GRUP order; search the 
-//                TES5 definitions file for "wbAddGroupOrder".
+//              - According to ElminsterAU and zilav, WRLD/OFST subrecords are 
+//                the only subrecords that contain absolute file offsets (they 
+//                seem to exist as a debugging aid) and they WILL break if they 
+//                are blindly resaved in a file that has otherwise changed. 
+//                Their contents have not been decoded; we must delete them 
+//                when saving.
+//
+//                 - TES4/OFST has the offsets of all worlds; WRLD/OFFSET has 
+//                   the offsets of all of a world's cells.
 //
 //           - After that, give each loaded form class a virtual save method, 
 //             and test that that works properly.

@@ -1,6 +1,7 @@
 #include "hardcoded_forms.h"
 #include "../LoadOrder.h"
 
+#include "../../forms/actor_values.h"
 #include "../../forms/loaded/Activator.h"
 #include "../../forms/loaded/ActorBase.h"
 #include "../../forms/loaded/Container.h"
@@ -11,13 +12,28 @@
 void _addHardcodedFormsToLoadOrder() {
    auto& lo = LoadOrder::get();
    //
-   // TODO: ActorValueInfos (see DovahKit/forms/actor_values.cpp)
    // TODO: [ACHR:00000014]PlayerRef
+   //
    // TODO: The CK lists DefaultWorld as having one exterior cell; is that hardcoded or is its existence 
    //       just kinda implied (i.e. is it generated at run-time after DefaultWorld is created)?
+   //
+   //        - It's [CELL:00000800]Wilderness, which is outside of the hardcoded range.
+   //
    // TODO: Consider hooking TESForm::SetFormID and having it log on any hardcoded ID, so we can try to 
    //       catch anything we've missed.
    //
+   {  // Actor values
+      auto& list = ActorValueInfoList::get();
+      for (uint16_t i = 0; i < list.count; i++) {
+         auto& entry = list.list[i];
+         //
+         auto stub = new FormStub();
+         stub->formID   = entry.formID;
+         stub->formType = signatureToFormType('AVIF');
+         stub->editorID = entry.name;
+         lo._acceptHardcodedForm(stub);
+      }
+   }
    {  // [STAT:001]"DoorMarker"
       auto stub = new FormStub();
       stub->formID   = 0x001;
