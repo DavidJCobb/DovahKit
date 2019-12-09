@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 #include "Form.h"
-#include "../components.h"
-#include "../papyrus.h"
 
 class TESPluginRecord;
 

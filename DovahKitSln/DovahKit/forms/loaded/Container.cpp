@@ -24,8 +24,10 @@ namespace LoadedForms {
             case 'COED':
                ContainerData::generateUseInfo(subrecord, stub);
                break;
-            case 'EDID': // editor ID
             case 'OBND': // bounds
+               ObjectBounds::generateUseInfo(subrecord, stub);
+               break;
+            case 'EDID': // editor ID
             case 'FULL': // name
             case 'DATA': // flags and weight
                break;

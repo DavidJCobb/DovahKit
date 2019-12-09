@@ -3,7 +3,7 @@
 #include <string>
 #include "Form.h"
 #include "../components.h"
-#include "../papyrus.h"
+#include "../components/papyrus.h"
 
 class TESPluginRecord;
 

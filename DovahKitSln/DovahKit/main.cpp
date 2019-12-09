@@ -65,6 +65,15 @@ std::thread::id main_thread_id;
 //                form data, it'd probably be best for me to just retain GRUP 
 //                information in memory.
 //
+//                 - Remodel LoadOrder::_form_map to have:
+//
+//                    - Up to five top-groups. There should never be THAT many 
+//                      duplicates of a single top-group; I'm pretty comfortable 
+//                      with having the editor fail on any such files.
+//
+//                    - A map of forms, for if it's a form type that doesn't 
+//                      appear in top-groups (e.g. REFR).
+//
 //              - According to ElminsterAU and zilav, WRLD/OFST subrecords are 
 //                the only subrecords that contain absolute file offsets (they 
 //                seem to exist as a debugging aid) and they WILL break if they 
@@ -149,16 +158,7 @@ std::thread::id main_thread_id;
 //
 //              - LocationAlias::load and ReferenceAlias::load: finish researching ALFD.
 //
-//        - ActorBases
-//
-//           - Move the Use Info code for destruction stages into a helper struct 
-//             a la Condition, since apparently that data can appear in other forms.
-//
 //        - Use Info
-//
-//           - Write code to list all of the inbound references for a form, and 
-//             code to list all of the outbound references. We need to test that 
-//             we're actually generating and retaining the data correctly.
 //
 //           - We need to be able to handle the possibility of user plugins 
 //             containing dangling references between forms (i.e. a form that 

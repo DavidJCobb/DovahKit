@@ -79,32 +79,12 @@ namespace LoadedForms {
             // These fields are destruction stage data; move them to a helper struct a la CTDA:
             //
             case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
-               break;
             case 'DSTD': // destruction stage data
-               subrecord.skip_bytes(8);
-               if (subrecord.read(formID)) // explosion
-                  stub->add_outbound_reference(formID);
-               if (subrecord.read(formID)) // debris
-                  stub->add_outbound_reference(formID);
-               // remaining four bytes don't matter
-               break;
             case 'DMDL': // destruction stage model
-            case 'DMDT': // unknown
-               break;
-            case 'DMDS': // destruction stage model data
-               {
-                  uint32_t count;
-                  if (subrecord.read(count)) {
-                     for (uint32_t i = 0; i < count; i++) {
-                        subrecord.skip_length_prefixed_string<4>();
-                        if (subrecord.read(formID)) // textureset
-                           stub->add_outbound_reference(formID);
-                        subrecord.skip_bytes(4); // NIF block index
-                     }
-                  }
-               }
-               break;
+            case 'DMDT': // destruction stage model texture hashes
+            case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
+               DestructionStageData::generateUseInfo(subrecord, stub);
                break;
             //
             // End of destruction stage fields.

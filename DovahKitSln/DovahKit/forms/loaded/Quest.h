@@ -5,8 +5,8 @@
 #include "Form.h"
 #include "../components.h"
 #include "../conditions.h"
-#include "../container.h"
-#include "../papyrus.h"
+#include "../components/container.h"
+#include "../components/papyrus.h"
 
 class TESPluginRecord;
 

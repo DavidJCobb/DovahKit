@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "../helpers/vector3.h"
 
 class TESPluginFile;
 

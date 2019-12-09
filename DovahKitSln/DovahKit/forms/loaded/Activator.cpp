@@ -33,8 +33,10 @@ namespace LoadedForms {
                   if (subrecord.read(formID))
                      stub->add_outbound_reference(formID);
                break;
+            case 'OBND': // bounds
+               ObjectBounds::generateUseInfo(subrecord, stub);
+               break;
             case 'EDID': // editor ID
-            case 'OBND': // object bounds
             case 'FULL': // displayed name
             case 'PNAM': // marker color
             case 'RNAM': // override activation prompt text

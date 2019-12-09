@@ -3,8 +3,9 @@
 #include <string>
 #include "Form.h"
 #include "../components.h"
-#include "../container.h"
-#include "../papyrus.h"
+#include "../components/container.h"
+#include "../components/destruction.h"
+#include "../components/papyrus.h"
 
 class TESPluginRecord;
 
