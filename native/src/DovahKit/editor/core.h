@@ -39,6 +39,7 @@ class DovahKitCore : public QObject {
 
       const dovah::file_read_error& get_last_read_error() const noexcept;
 
+      uint32_t count_forms_of_type(form_type_t) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;
       dovah::form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
       dovah::form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types

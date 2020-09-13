@@ -94,6 +94,7 @@ namespace dovah {
          #pragma endregion
          
          #pragma region Content related to already-loaded data
+         uint32_t count_forms_of_type(form_type_t) const noexcept;
          bool has_form(uint32_t formID) const noexcept;
          uint8_t index_of_loaded_file(const std::string& filename) const noexcept;
          form_stub* get_form(uint32_t formID) const noexcept;

@@ -316,6 +316,13 @@ namespace dovah {
    }
    #pragma endregion
 
+   uint32_t file_load_order::count_forms_of_type(form_type_t ft) const noexcept {
+      if (ft < this->forms_by_type.size()) {
+         auto& list = this->forms_by_type[ft].forms;
+         return list.size();
+      }
+      return 0;
+   }
    bool file_load_order::has_form(uint32_t formID) const noexcept {
       if (formID == 0)
          return false;

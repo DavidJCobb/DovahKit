@@ -34,6 +34,9 @@ const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept
    return this->load_order->load_error;
 }
 
+uint32_t DovahKitCore::count_forms_of_type(form_type_t ft) const noexcept {
+   return this->load_order->count_forms_of_type(ft);
+}
 dovah::form_stub* DovahKitCore::get_form(bare_form_id_t formID) const noexcept {
    return this->load_order->get_form(formID);
 }

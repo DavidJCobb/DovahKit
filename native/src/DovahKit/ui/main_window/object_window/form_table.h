@@ -3,8 +3,10 @@
 #include <set>
 #include <vector>
 #include <QAbstractItemModel>
+#include <QSortFilterProxyModel>
 #include <QString>
 #include <QTableView>
+#include <QTimer>
 #include "../../../dovah/core.h"
 
 namespace dovah {
@@ -54,10 +56,9 @@ class FormTableModel : public QAbstractTableModel {
       using item_type = FormTableModelItem;
       using root_type = FormTableModelRoot;
       using form_id_t = item_type::form_id_t;
+      using form_type_set = std::set<dovah::form_type_t>;
    protected:
-      root_type*    root = nullptr;
-      Qt::SortOrder last_sort_order;
-      int           last_sort_column = -1;
+      root_type* root = nullptr;
       //
    public:
       FormTableModel() {
@@ -76,13 +77,24 @@ class FormTableModel : public QAbstractTableModel {
       QVariant data(const QModelIndex& index, int role) const override;
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-      void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
-      inline Qt::SortOrder lastSortOrder() const noexcept { return this->last_sort_order; }
-      inline int lastSortColumn() const noexcept { return this->last_sort_column; }
       //
       void insertItem(dovah::form_stub*);
       //
       void clear();
+      //
+      void rebuild(const form_type_set&);
+};
+
+class FormTableModelProxy : public QSortFilterProxyModel {
+   Q_OBJECT
+   public:
+      FormTableModelProxy(QObject* parent = nullptr) : QSortFilterProxyModel(parent) {
+         this->setFilterCaseSensitivity(Qt::CaseInsensitive);
+         this->setFilterRole(Qt::UserRole + 1);
+         this->setFilterKeyColumn(-1);
+         this->setSortCaseSensitivity(Qt::CaseInsensitive);
+         this->setSortRole(Qt::UserRole);
+      }
 };
 
 class FormTable : public QTableView {
@@ -93,15 +105,25 @@ class FormTable : public QTableView {
       using model_item_type = model_type::item_type;
       using form_type_set   = std::set<dovah::form_type_t>;
       //
+      inline model_type* unwrappedModel() const noexcept {
+         auto wrapper = (QSortFilterProxyModel*)this->model();
+         return wrapper ? (model_type*)wrapper->sourceModel() : nullptr;
+      }
+      //
+      void setFilter(QLineEdit*);
       void setSource(BasicFormTypeTree*);
       //
    public slots:
       void recheckFormTypes();
       void rebuildModel();
+      void refilterModel(const QString&);
+      //
+      void filterChanged();
+      void filterFinished();
       //
    protected:
       BasicFormTypeTree* _source = nullptr;
+      QLineEdit* _filter         = nullptr;
+      QTimer*    _filterThrottle = new QTimer(this);
       form_type_set _currentFormTypes;
-      //
-      void _adaptSourceSelectionChange(const QItemSelection& selected, const QItemSelection& deselected); // QItemSelectionModel's selection events all fire BEFORE the widget's selection is updated UGHHHHH
 };
