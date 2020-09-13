@@ -113,4 +113,12 @@ namespace dovah {
       }
       return true;
    }
+   void file_load_order_normalizer::delete_contents() {
+      for (auto* header : this->masters)
+         delete header;
+      this->masters.clear();
+      for (auto* header : this->plugins)
+         delete header;
+      this->plugins.clear();
+   }
 }

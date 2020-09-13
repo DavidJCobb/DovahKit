@@ -63,6 +63,8 @@ namespace dovah {
          uint8_t guided_load_order_prefix_for(const loaded_file*) const noexcept; // a version of (load_order_prefix_for) that's faster when called while loading the specified file
          //
       public:
+         ~file_load_order();
+         //
          #pragma region Content related to loading
          struct {
             std::string base_path;
