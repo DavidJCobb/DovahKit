@@ -162,6 +162,9 @@
     <ClCompile Include="ui\generic\QLinedTreeView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\object_window\form_table.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -343,6 +346,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\QLinedTreeView.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\object_window\form_table.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

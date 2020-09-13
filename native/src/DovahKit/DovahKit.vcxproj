@@ -144,6 +144,7 @@
     <ClCompile Include="ui\main_window.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
+    <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\core.h" />
@@ -187,6 +188,7 @@
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="ui\main_window\object_window\form_table.h" />
     <QtMoc Include="ui\generic\QLinedTreeView.h" />
     <QtMoc Include="ui\main_window\object_window\basic_form_type_treeview.h" />
     <QtMoc Include="ui\main_window\object_window.h" />

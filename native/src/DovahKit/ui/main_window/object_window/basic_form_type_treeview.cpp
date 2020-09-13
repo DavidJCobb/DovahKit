@@ -256,14 +256,19 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
 void BasicFormTypeTree::getSelectedFormTypes(std::set<dovah::form_type_t>& out) const noexcept {
    out.clear();
    //
-   auto sel   = this->selectionModel();
-   auto rows  = sel->selectedRows();
-   auto model = dynamic_cast<model_type*>(this->model());
-   for (const auto& row : rows) {
-      const auto* item = static_cast<model_item_type*>(row.internalPointer());
+   auto sel = this->selectionModel();
+   auto a   = sel->selection(); // using (sel->selectedRows()) will cause you to act on the previous selection, not the current one. naturally, this isn't bloody documented anywhere
+   for (const auto& idx : a.indexes()) {
+      const auto* item = (model_item_type*)idx.internalPointer();
       if (!item)
          continue;
       item->addToSet(out);
+   }
+   if (out.empty()) {
+      auto model = (model_type*)this->model();
+      auto root  = model->invisibleRootItem();
+      for (auto child : root->children())
+         child->addToSet(out);
    }
 }
 #pragma endregion

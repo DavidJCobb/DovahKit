@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       //
       QString base_path = QFileDialog::getExistingDirectory(this, tr("Set base path"));
       #if !_DEBUG
-         static_assert(false, "Finish me");
+        // static_assert(false, "Finish me");
       #endif
    });
    QObject::connect(this->ui.actionDebugLoadSkyrim, &QAction::triggered, this, [this]() {

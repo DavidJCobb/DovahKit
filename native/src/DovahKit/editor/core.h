@@ -19,7 +19,9 @@ class DovahKitCore : public QObject {
       }
       ~DovahKitCore();
       //
+   protected:
       dovah::file_load_order* load_order = new dovah::file_load_order;
+      bool loaded = false;
       //
    signals:
       void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption
@@ -29,6 +31,7 @@ class DovahKitCore : public QObject {
       //
    public:
       void abandon_data();
+      inline bool has_data() const noexcept { return this->loaded; }
       void set_load_order_folder(const std::filesystem::path&);
       void queue_load_order_file(const std::filesystem::path&);
       void unqueue_load_order_file(const std::filesystem::path&);
@@ -39,5 +42,6 @@ class DovahKitCore : public QObject {
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;
       dovah::form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
       dovah::form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
-      void for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
+      bool for_each_form(std::function<bool(dovah::form_stub*)>);
+      bool for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
 };

@@ -3,7 +3,6 @@
 #include <set>
 #include <vector>
 #include <QAbstractItemModel>
-#include <QAction>
 #include <QString>
 #include <QTreeView>
 #include "../../../dovah/core.h"
@@ -75,5 +74,5 @@ class BasicFormTypeTree : public QLinedTreeView {
       using model_type      = BasicFormTypeTreeModel;
       using model_item_type = model_type::item_type;
       //
-      void getSelectedFormTypes(std::set<dovah::form_type_t>& out) const noexcept; // if (out) is empty, then show all form types
+      void getSelectedFormTypes(std::set<dovah::form_type_t>& out) const noexcept;
 };

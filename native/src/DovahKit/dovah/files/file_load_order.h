@@ -99,7 +99,7 @@ namespace dovah {
          form_stub* get_form(uint32_t formID) const noexcept;
          form_stub* get_form(form_type_t, uint32_t formID) const noexcept; // use when you KNOW the form's type
          form_stub* get_form_of_probable_type(form_type_t, uint32_t formID) const noexcept; // searches (formType) first, then the other types
-         void for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)>);
+         bool for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)>); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
          #pragma endregion

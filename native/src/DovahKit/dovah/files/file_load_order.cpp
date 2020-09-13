@@ -363,14 +363,15 @@ namespace dovah {
       }
       return this->get_form(formID);
    }
-   void file_load_order::for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor) {
+   bool file_load_order::for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor) {
       if (formType < this->forms_by_type.size()) {
          auto& list = this->forms_by_type[formType].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             if (functor(it->second))
-               break;
+               return true;
          }
       }
+      return false;
    }
    file_load_order::form_id_status file_load_order::local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const {
       if ((id & plugin_form_id_mask) == 0) { // hardcoded
