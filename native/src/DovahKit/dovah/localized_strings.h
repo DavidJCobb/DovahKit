@@ -20,5 +20,7 @@ namespace dovah {
 
       inline const char* c_str() { return this->value.c_str(); }
       inline size_t size() { return this->value.size(); }
+
+      localized_string& operator=(const std::string&) noexcept;
    };
 }

@@ -11,7 +11,8 @@ namespace dovah::loaded_forms {
       // Intentionally minimal for now.
       //
       public:
-         MagicEffect() : Form(form_type::magic_effect) {};
+         static constexpr form_type_t form_type = form_type::magic_effect;
+         MagicEffect() : Form(form_type) {};
 
          void load(tes_record_reader&); // TODO: FINISH ME
          static void generateUseInfo(tes_record_reader&, form_stub*);

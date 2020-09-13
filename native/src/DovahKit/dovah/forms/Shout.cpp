@@ -3,7 +3,7 @@
 
 namespace dovah::loaded_forms {
    void Shout::load(tes_record_reader& record) {
-      this->treatAsPower = (record.flags() & 0x00000080) != 0;
+      Form::load(record);
       //
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -28,7 +28,6 @@ namespace dovah::loaded_forms {
       }
    }
    /*static*/ void Shout::generateUseInfo(tes_record_reader& record, form_stub* stub) {
-      uint32_t keywordCount = 0;
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {

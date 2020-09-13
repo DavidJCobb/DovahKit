@@ -10,7 +10,8 @@ class TESPluginRecord;
 namespace dovah::loaded_forms {
    class Location : public Form {
       public:
-         Location() : Form(form_type::location) {};
+         static constexpr form_type_t form_type = form_type::location;
+         Location() : Form(form_type) {};
 
          struct subrecord_flag {
             subrecord_flag() = delete;

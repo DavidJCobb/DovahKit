@@ -11,7 +11,8 @@ namespace dovah::loaded_forms {
       // Intentionally minimal for now.
       //
       public:
-         ObjectReference() : Form(form_type::reference) {};
+         static constexpr form_type_t form_type = form_type::reference;
+         ObjectReference() : Form(form_type) {};
 
          void load(tes_record_reader&); // TODO: FINISH ME
          static void generateUseInfo(tes_record_reader&, form_stub*);

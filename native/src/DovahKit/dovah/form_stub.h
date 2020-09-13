@@ -60,6 +60,7 @@ namespace dovah {
       public:
          using wrapped_type = loaded_form_t;
          //
+         loaded_form_ptr() {}
          loaded_form_ptr(form_stub* stub) : wrapped(stub) { this->_inc(); };
          ~loaded_form_ptr() {
             this->_dec();

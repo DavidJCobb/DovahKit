@@ -116,6 +116,7 @@
     <ClCompile Include="dovah\forms\components\conditions\arg_types.cpp" />
     <ClCompile Include="dovah\forms\components\container.cpp" />
     <ClCompile Include="dovah\forms\components\destruction.cpp" />
+    <ClCompile Include="dovah\forms\components\keyword_list.cpp" />
     <ClCompile Include="dovah\forms\components\model.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus.cpp" />
     <ClCompile Include="dovah\forms\Container.cpp" />
@@ -132,14 +133,19 @@
     <ClCompile Include="dovah\forms\TopicInfo.cpp" />
     <ClCompile Include="dovah\forms\Voicetype.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
+    <ClCompile Include="dovah\localized_strings.cpp" />
     <ClCompile Include="dovah\logging.cpp" />
     <ClCompile Include="editor\core.cpp" />
+    <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\multiheap.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
+    <ClCompile Include="ui\form_windows\shout.cpp" />
+    <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
@@ -163,6 +169,7 @@
     <ClInclude Include="dovah\forms\components\conditions.h" />
     <ClInclude Include="dovah\forms\components\conditions\arg_types.h" />
     <ClInclude Include="dovah\forms\components\conditions\arg_value.h" />
+    <ClInclude Include="dovah\forms\components\keyword_list.h" />
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\_common_cpp.h" />
@@ -187,7 +194,11 @@
     <ClInclude Include="dovah\form_stub_heap.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="editor\open_window_for_form.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="ui\generic\FormsOfTypeCombobox.h" />
+    <QtMoc Include="ui\form_windows\shout.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\shout_word.h" />
     <QtMoc Include="ui\main_window\object_window\form_table.h" />
     <QtMoc Include="ui\generic\QLinedTreeView.h" />
     <QtMoc Include="ui\main_window\object_window\basic_form_type_treeview.h" />
@@ -207,6 +218,8 @@
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
+    <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />
   </ItemGroup>

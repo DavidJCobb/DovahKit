@@ -18,7 +18,8 @@ namespace dovah::loaded_forms {
          using flags_t = std::underlying_type_t<flag::type>;
          //
       public:
-         Voicetype() : Form(form_type::voicetype) {};
+         static constexpr form_type_t form_type = form_type::voicetype;
+         Voicetype() : Form(form_type) {};
 
          flags_t flags = 0;
 

@@ -8,7 +8,8 @@
 namespace dovah::loaded_forms {
    class FormList : public Form {
       public:
-         FormList() : Form(form_type::formlist) {};
+         static constexpr form_type_t form_type = form_type::formlist;
+         FormList() : Form(form_type) {};
 
          std::vector<form_id_t> contents;
 

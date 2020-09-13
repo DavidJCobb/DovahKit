@@ -3,6 +3,8 @@
 
 namespace dovah::loaded_forms {
    void ActorBase::load(tes_record_reader& record) {
+      Form::load(record);
+      //
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'FULL':
@@ -74,9 +76,6 @@ namespace dovah::loaded_forms {
                   stub->add_outbound_reference(formID);
                subrecord.skip_bytes(12);
                break;
-            //
-            // These fields are destruction stage data; move them to a helper struct a la CTDA:
-            //
             case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
             case 'DSTD': // destruction stage data
             case 'DMDL': // destruction stage model

@@ -3,6 +3,8 @@
 
 namespace dovah::loaded_forms {
    void FormList::load(tes_record_reader& record) {
+      Form::load(record);
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {

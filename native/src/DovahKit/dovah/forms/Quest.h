@@ -6,6 +6,7 @@
 #include "_common.h"
 #include "components/conditions.h"
 #include "components/container.h"
+#include "components/keyword_list.h"
 #include "components/papyrus.h"
 
 enum class quest_alias_type {
@@ -96,7 +97,7 @@ namespace dovah::loaded_forms {
          virtual void load(tes_record_reader&) override;
          //
          fill_type_t fillType = fill_type_t::none;
-         std::vector<form_id_t> keywordIDs; // KSIZ, KWDA
+         components::keyword_list keywords; // KSIZ, KWDA
          std::vector<form_id_t> perkIDs;    // PRKZ, PRKR
          std::vector<form_id_t> packageIDs; // ALPC
          std::vector<form_id_t> factionIDs; // ALFC
@@ -123,7 +124,8 @@ namespace dovah::loaded_forms {
 
    class Quest : public Form {
       public:
-         Quest() : Form(form_type::quest) {};
+         static constexpr form_type_t form_type = form_type::quest;
+         Quest() : Form(form_type) {};
          ~Quest();
          //
          enum QuestFlags : uint16_t {

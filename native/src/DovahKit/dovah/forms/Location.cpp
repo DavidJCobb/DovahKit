@@ -3,6 +3,8 @@
 
 namespace dovah::loaded_forms {
    void Location::load(tes_record_reader& record) {
+      Form::load(record);
+      //
       this->subrecordFlags = 0;
       form_id_t formID;
       uint32_t  keywordCount = 0;

@@ -7,6 +7,7 @@
 
 #pragma region FormTableModel
 FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
+   this->stub      = stub;
    this->editorID  = QString::fromUtf8(stub->get_editor_id());
    this->formID    = stub->formID;
    this->userCount = stub->inbound.size();

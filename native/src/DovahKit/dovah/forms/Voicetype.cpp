@@ -3,6 +3,8 @@
 
 namespace dovah::loaded_forms {
    void Voicetype::load(tes_record_reader& record) {
+      Form::load(record);
+      //
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'DNAM': // flags

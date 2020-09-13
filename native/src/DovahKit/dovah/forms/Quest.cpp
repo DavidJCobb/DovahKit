@@ -82,7 +82,6 @@ namespace dovah::loaded_forms {
       //
       if (!record.next_subrecord())
          return;
-      uint32_t  keywordSize   = 0;
       uint32_t  perkListSize  = 0;
       uint32_t  inventorySize = 0;
       form_id_t formID;
@@ -115,15 +114,8 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'KSIZ':
-               if (subrecord.read(keywordSize))
-                  this->keywordIDs.reserve(keywordSize);
-               break;
             case 'KWDA':
-               if (!keywordSize)
-                  keywordSize = subrecord.size() / 4;
-               for (uint32_t i = 0; i < keywordSize; i++)
-                  if (subrecord.read(formID))
-                     this->keywordIDs.push_back(formID);
+               this->keywords.load(subrecord);
                break;
             case 'COCT':
             case 'CNTO':
@@ -332,6 +324,8 @@ namespace dovah::loaded_forms {
       return nullptr;
    }
    void Quest::load(tes_record_reader& record) {
+      Form::load(record);
+      //
       bool     isInEventConditions = false;
       bool     hasLastLogEntry     = false;
       uint32_t lastLogEntryIndices[2];
@@ -484,7 +478,6 @@ namespace dovah::loaded_forms {
                break;
             case 'QTGL': // text global (there can be multiple)
             case 'NAM0': // log entry next quest
-            case 'KWDA': // alias keyword
             case 'PRKR': // alias perk
             case 'SCOR': // alias spectator override package list ID
             case 'OCOR': // alias override corpse override package list ID
@@ -504,6 +497,10 @@ namespace dovah::loaded_forms {
             case 'KNAM': // alias fill from location keyword ID
                if (subrecord.read(formID))
                   stub->add_outbound_reference(formID);
+               break;
+            case 'KSIZ': // alias keywords
+            case 'KWDA':
+               components::keyword_list::generateUseInfo(subrecord, stub);
                break;
             case 'CTDA':
                components::condition::generateUseInfo(record, stub);
@@ -533,7 +530,6 @@ namespace dovah::loaded_forms {
             case 'ALFI': // alias force-into-alias ID
             case 'BNAM': // alias hidden flag
             case 'ONAM': // alias hidden flag
-            case 'KSIZ': // alias keyword count
             case 'PRKZ': // alias perk count
             case 'ALFA': // alias fill from internal alias ID
             case 'ALEA': // alias fill from external alias ID

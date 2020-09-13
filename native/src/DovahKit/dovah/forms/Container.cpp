@@ -2,6 +2,45 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
+   void Container::load(tes_record_reader& record) {
+      Form::load(record);
+      //
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'EDID': // already read by the FormStub
+               break;
+            case 'VMAD':
+               this->papyrus.load(subrecord);
+               break;
+            case 'OBND':
+               this->bounds.load(subrecord);
+               break;
+            case 'FULL':
+               subrecord.to_string(this->name);
+               break;
+            case 'MODL':
+            case 'MODT':
+            case 'MODS':
+               this->model.load(subrecord);
+               break;
+            case 'COCT':
+            case 'CNTO':
+            case 'COED':
+               this->inventory.load(subrecord);
+               break;
+            case 'DATA':
+               subrecord.read(this->container_flags);
+               subrecord.read(this->weight);
+               break;
+            case 'SNAM': // open sound
+               subrecord.read(this->open_sound);
+               break;
+            case 'QNAM': // close sound
+               subrecord.read(this->close_sound);
+               break;
+         }
+      }
+   }
    /*static*/ void Container::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
