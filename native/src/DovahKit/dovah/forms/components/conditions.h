@@ -21,6 +21,7 @@ namespace dovah::loaded_forms::components {
             const bool  uses_event_data = false;
             arg_type* const argument_types[2] = { &arg_types::None, &arg_types::None }; // aRrAy Of ReFeReNcE iS nOt AlLoWeD
             //
+            function() {}; // needed for std::array, apparently
             function(uint16_t id, const char* name, const char* d) : id(id), name(name), description(d) {};
             function(uint16_t id, const char* name, const char* d, arg_type& a) : id(id), name(name), description(d), argument_types{ &a, &arg_types::None } {};
             function(uint16_t id, const char* name, const char* d, arg_type& a, arg_type& b) : id(id), name(name), description(d), argument_types{ &a, &b } {};
@@ -32,8 +33,8 @@ namespace dovah::loaded_forms::components {
             static const function* lookup_by_id(uint16_t) noexcept;
       };
 
-      std::array<function, 736> function_list;
-      std::array<function, 5>   extended_function_list; // SKSE additions
+      extern std::array<function, 736> function_list;
+      extern std::array<function, 5>   extended_function_list; // SKSE additions
    }
 
    struct condition {

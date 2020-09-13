@@ -3,7 +3,9 @@
 #include "../../../helpers/strings.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
-#include "../../../zlib/zlib.h"
+extern "C" {
+   #include "../../../zlib/zlib.h"
+}
 
 namespace dovah::tes_file_reading {
    void basic_reader::setPos(uint32_t pos) {
@@ -30,25 +32,27 @@ namespace dovah::tes_file_reading {
          auto  file = reader->as_file();
          assert(file && "TESPluginBaseReader should be or have an owning file.");
          auto& filename = file->get_filename();
-         file->load_order.logError([=](FatalLoadError& error) {
-            error.code = LoadErrorCode::malformed_file;
-            error.file = filename;
-            error.fileOffset = pos;
-            if (isUnknown)
-               error.parseError = "Record with an unknown signature. (";
-            else
-               error.parseError = "Record with a suspicious signature. (";
-            char s[5];
-            dovah::logging::format_signature(sig, s);
-            error.parseError += s;
-            error.parseError += ')';
-         });
+         auto& error    = file->error;
+         //
+         error.code = file_read_error::error_code::malformed_file;
+         error.file = filename;
+         error.fileOffset = pos;
+         if (isUnknown)
+            error.message = "Record with an unknown signature. (";
+         else
+            error.message = "Record with a suspicious signature. (";
+         char s[5];
+         dovah::logging::format_signature(sig, s);
+         error.message += s;
+         error.message += ')';
+         //
          file->abort();
       }
       bool _validate_record_signature(basic_reader* reader, uint32_t signature, uint32_t pos) {
-         auto& lo = LoadOrder::get();
-         if (lo.isLoading()) {
-            if (!lo.options.allowSuspiciousRecordSignatures) {
+         auto  file = reader->as_file();
+         auto& lo   = file->load_order;
+         if (lo.is_loading()) {
+            if (!lo.queued_load.options.allow_suspicious_record_signatures) {
                if (form_type_info::signature_is_suspicious(signature)) {
                   _log_bad_record_signature(reader, pos, signature, false);
                   //
@@ -65,7 +69,7 @@ namespace dovah::tes_file_reading {
                   return false;
                }
             }
-            if (!lo.options.allowUnknownRecordSignatures) {
+            if (!lo.queued_load.options.allow_unknown_record_signatures) {
                if (form_type_info::signature_to_form_type(signature) == form_type::none) {
                   _log_bad_record_signature(reader, pos, signature, true);
                   //
@@ -89,21 +93,22 @@ namespace dovah::tes_file_reading {
          auto  file = reader->as_file();
          assert(file && "TESPluginBaseReader should be or have an owning file.");
          auto& filename = file->get_filename();
-         LoadOrder::get().logError([&](FatalLoadError& error) {
-            error.code       = LoadErrorCode::insufficient_memory;
-            error.file       = filename;
-            error.fileOffset = pos;
-            error.formID     = record.formID();
-            cobb::sprintf(
-               error.parseError,
-               "Not enough memory to load the record's contents, even temporarily. A massive record size may indicate corrupted data or a parse error. The record claimed to be 0x%X bytes long",
-               size
-            );
-            if (record.body_is_compressed())
-               error.parseError += " after decompression.";
-            else
-               error.parseError += '.';
-         });
+         auto& error    = file->error;
+         //
+         error.code       = file_read_error::error_code::insufficient_memory;
+         error.file       = filename;
+         error.fileOffset = pos;
+         error.formID     = record.formID();
+         cobb::sprintf(
+            error.message,
+            "Not enough memory to load the record's contents, even temporarily. A massive record size may indicate corrupted data or a parse error. The record claimed to be 0x%X bytes long",
+            size
+         );
+         if (record.body_is_compressed())
+            error.message += " after decompression.";
+         else
+            error.message += '.';
+         //
          file->abort();
       }
    }
@@ -194,6 +199,7 @@ namespace dovah::tes_file_reading {
          record.data.allocate(decompressed_size);
          if (record.data.empty()) {
             _log_record_allocation_failure(this, record.head_pos, decompressed_size, record);
+            return object_type::none;
             //
             // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
             // to load more of the file. The error still properly gets logged, because it's the first error 
@@ -240,7 +246,7 @@ namespace dovah::tes_file_reading {
       return object_type::record;
    }
    //
-   bool basic_reader::next_subrecord() {
+   bool basic_reader::next_subrecord(file_read_error* error) {
       auto& r = this->_record;
       if (this->_subrecord.header.signature) {
          this->_record.skip(this->_subrecord.end - this->_record.stream_pos());
@@ -258,16 +264,16 @@ namespace dovah::tes_file_reading {
          // larger than what can be represented with the usual two-byte length.
          //
          if (this->_subrecord.header.size != 4) {
-            LoadOrder::get().logError([this](FatalLoadError& error) {
-               error.code       = LoadErrorCode::malformed_file;
-               error.file       = this->as_file()->get_filename().c_str();
-               error.fileOffset = this->getPos();
-               error.parseError = "Extended subrecord with no length.";
+            if (error) {
+               error->code       = file_read_error::error_code::malformed_file;
+               error->file       = this->as_file()->get_filename().c_str();
+               error->fileOffset = this->getPos();
+               error->message    = "Extended subrecord with no length.";
                //
                auto& record = this->get_current_record();
                if (record)
-                  error.formID = record.formID();
-            });
+                  error->formID = record.formID();
+            }
             this->_subrecord.header.signature = 0;
             return false; // ERROR
          }

@@ -3,7 +3,8 @@
 #include "elements.h"
 
 namespace dovah {
-   class  form_stub;
+   class form_stub;
+   class file_read_error;
 
    namespace tes_file_reading {
       class file_reader;
@@ -24,7 +25,7 @@ namespace dovah {
                record,
             };
             //
-            virtual file_reader* as_file() const noexcept {
+            file_reader* as_file() const noexcept {
                if (this->owner)
                   return this->owner;
                return (file_reader*)this;
@@ -79,8 +80,8 @@ namespace dovah {
             bool isEOF();
             bool is_good();
             //
-            object_type next_record_or_group();
-            bool        next_subrecord();
+            object_type next_record_or_group(); // only called during the initial file read
+            bool        next_subrecord(file_read_error* out = nullptr); // called after the initial file read, when loading a form_stub's full content
             //
             inline group& get_current_group() {
                for (signed int i = this->_groups.size() - 1; i >= 0; i--) {

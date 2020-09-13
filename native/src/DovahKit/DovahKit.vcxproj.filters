@@ -36,6 +36,120 @@
     <ClCompile Include="helpers\memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\file_read_error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\logging.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\file_header.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading\elements.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\strings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading\basic_reader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading\threads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading\file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_stub.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\multiheap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\file_load_order.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\file_load_order_normalizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\factories\construct.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Activator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\ActorBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Container.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\FormList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Location.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\MagicEffect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\ObjectReference.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Quest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Shout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\TopicInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Voicetype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\container.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\destruction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\papyrus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\factories\use_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\conditions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\conditions\arg_types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\factories\hardcoded.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\threaded_load_order_use_info_builder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\data\actor_values.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -51,6 +165,144 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\type_traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\file_load_order.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\file_read_error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\file_header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading\elements.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading\basic_reader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading\threads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading\file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\multiheap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stub_heap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\file_load_order_normalizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\factories\construct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Activator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\ActorBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Container.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\FormList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\MagicEffect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\ObjectReference.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Quest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Shout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\TopicInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Voicetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\container.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\destruction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\papyrus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\vector3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\_common_cpp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\factories\use_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\localized_strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\arg_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\arg_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitwise.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\bitset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\miscellaneous.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\factories\hardcoded.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\threaded_load_order_use_info_builder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\actor_values.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

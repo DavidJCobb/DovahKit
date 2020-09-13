@@ -21,17 +21,17 @@ namespace {
       _Builder(form_type_t f, outbound_uses_builder_t b) : form_type(f), builder(b) {}
    };
    _Builder _builders[] = {
-      { form_type::magic_effect, LoadedForms::MagicEffect::generateUseInfo },
-      { form_type::activator,    LoadedForms::Activator::generateUseInfo },
-      { form_type::container,    LoadedForms::Container::generateUseInfo },
-      { form_type::actor_base,   LoadedForms::ActorBase::generateUseInfo },
-      { form_type::reference,    LoadedForms::ObjectReference::generateUseInfo },
-      { form_type::topic_info,   LoadedForms::TopicInfo::generateUseInfo },
-      { form_type::quest,        LoadedForms::Quest::generateUseInfo },
-      { form_type::formlist,     LoadedForms::FormList::generateUseInfo },
-      { form_type::voicetype,    LoadedForms::Voicetype::generateUseInfo },
-      { form_type::location,     LoadedForms::Location::generateUseInfo },
-      { form_type::shout,        LoadedForms::Shout::generateUseInfo },
+      { form_type::magic_effect, dovah::loaded_forms::MagicEffect::generateUseInfo },
+      { form_type::activator,    dovah::loaded_forms::Activator::generateUseInfo },
+      { form_type::container,    dovah::loaded_forms::Container::generateUseInfo },
+      { form_type::actor_base,   dovah::loaded_forms::ActorBase::generateUseInfo },
+      { form_type::reference,    dovah::loaded_forms::ObjectReference::generateUseInfo },
+      { form_type::topic_info,   dovah::loaded_forms::TopicInfo::generateUseInfo },
+      { form_type::quest,        dovah::loaded_forms::Quest::generateUseInfo },
+      { form_type::formlist,     dovah::loaded_forms::FormList::generateUseInfo },
+      { form_type::voicetype,    dovah::loaded_forms::Voicetype::generateUseInfo },
+      { form_type::location,     dovah::loaded_forms::Location::generateUseInfo },
+      { form_type::shout,        dovah::loaded_forms::Shout::generateUseInfo },
    };
 }
 namespace dovah {

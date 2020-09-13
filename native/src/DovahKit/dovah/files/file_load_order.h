@@ -24,6 +24,7 @@ namespace dovah {
       //
       // TODO: Bring everything over from the old DovahKit project.
       //
+      friend void add_hardcoded_forms_to_load_order(file_load_order&);
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
          using loaded_file = tes_file_reading::file_reader;
@@ -53,6 +54,10 @@ namespace dovah {
          bool    loading_is_complete = false; // exists so that TESPluginBaseReader::nextSubrecord can call LoadOrder::logError without having to worry about whether it's running during or after the initial load
          uint8_t loading_index       = 0;     // which load order index we're loading, or 0 if none; set in (load_queued_files); see (_guidedLoadOrderPrefixFor)
          uint8_t active_file_index   = invalid_load_prefix;
+         //
+         void _make_hardcoded_forms();
+         void _accept_hardcoded_form(form_stub*) noexcept;
+         void _build_use_info();
          //
          uint8_t load_order_prefix_for(const loaded_file*) const noexcept;
          uint8_t guided_load_order_prefix_for(const loaded_file*) const noexcept; // a version of (load_order_prefix_for) that's faster when called while loading the specified file

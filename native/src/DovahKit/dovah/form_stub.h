@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <cassert>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -8,6 +9,7 @@
 
 namespace dovah {
    class file_load_order;
+   class threaded_load_order_use_info_builder;
    namespace loaded_forms {
       class Form;
    }
@@ -58,7 +60,7 @@ namespace dovah {
       public:
          using wrapped_type = loaded_form_t;
          //
-         loaded_form_ptr(FormStub* stub) : wrapped(stub) { this->_incRef(); };
+         loaded_form_ptr(form_stub* stub) : wrapped(stub) { this->_inc(); };
          ~loaded_form_ptr() {
             this->_dec();
             this->wrapped = nullptr;
@@ -149,6 +151,7 @@ namespace dovah {
       friend file_load_order;
       friend tes_file_reading::basic_reader;
       friend tes_file_reading::file_reader;
+      friend threaded_load_order_use_info_builder;
       //
       public:
          ~form_stub();

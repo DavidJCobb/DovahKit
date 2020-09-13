@@ -46,16 +46,26 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.12.5 MSVC2017 x64</QtInstall>
-    <QtModules>
-    </QtModules>
+    <QtModules>core;gui;help;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>5.12.5 MSVC2017 x64</QtInstall>
-    <QtModules>
-    </QtModules>
+    <QtModules>core;gui;help;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
@@ -88,22 +98,111 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\core.cpp" />
+    <ClCompile Include="dovah\data\actor_values.cpp" />
+    <ClCompile Include="dovah\files\file_header.cpp" />
+    <ClCompile Include="dovah\files\file_load_order.cpp" />
+    <ClCompile Include="dovah\files\file_load_order_normalizer.cpp" />
+    <ClCompile Include="dovah\files\file_read_error.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\basic_reader.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\elements.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\file.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\threads.cpp" />
+    <ClCompile Include="dovah\files\threaded_load_order_use_info_builder.cpp" />
+    <ClCompile Include="dovah\forms\Activator.cpp" />
+    <ClCompile Include="dovah\forms\ActorBase.cpp" />
+    <ClCompile Include="dovah\forms\components\bounds.cpp" />
+    <ClCompile Include="dovah\forms\components\conditions.cpp" />
+    <ClCompile Include="dovah\forms\components\conditions\arg_types.cpp" />
+    <ClCompile Include="dovah\forms\components\container.cpp" />
+    <ClCompile Include="dovah\forms\components\destruction.cpp" />
+    <ClCompile Include="dovah\forms\components\model.cpp" />
+    <ClCompile Include="dovah\forms\components\papyrus.cpp" />
+    <ClCompile Include="dovah\forms\Container.cpp" />
+    <ClCompile Include="dovah\forms\factories\construct.cpp" />
+    <ClCompile Include="dovah\forms\factories\hardcoded.cpp" />
+    <ClCompile Include="dovah\forms\factories\use_info.cpp" />
+    <ClCompile Include="dovah\forms\form.cpp" />
+    <ClCompile Include="dovah\forms\FormList.cpp" />
+    <ClCompile Include="dovah\forms\Location.cpp" />
+    <ClCompile Include="dovah\forms\MagicEffect.cpp" />
+    <ClCompile Include="dovah\forms\ObjectReference.cpp" />
+    <ClCompile Include="dovah\forms\Quest.cpp" />
+    <ClCompile Include="dovah\forms\Shout.cpp" />
+    <ClCompile Include="dovah\forms\TopicInfo.cpp" />
+    <ClCompile Include="dovah\forms\Voicetype.cpp" />
+    <ClCompile Include="dovah\form_stub.cpp" />
+    <ClCompile Include="dovah\logging.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
+    <ClCompile Include="helpers\multiheap.cpp" />
+    <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ui\main_window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\core.h" />
+    <ClInclude Include="dovah\data\actor_values.h" />
+    <ClInclude Include="dovah\files\file_load_order_normalizer.h" />
+    <ClInclude Include="dovah\files\file_read_error.h" />
+    <ClInclude Include="dovah\files\file_header.h" />
+    <ClInclude Include="dovah\files\file_load_order.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\basic_reader.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\elements.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\file.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\threads.h" />
+    <ClInclude Include="dovah\files\threaded_load_order_use_info_builder.h" />
+    <ClInclude Include="dovah\forms\Activator.h" />
+    <ClInclude Include="dovah\forms\ActorBase.h" />
+    <ClInclude Include="dovah\forms\components\conditions.h" />
+    <ClInclude Include="dovah\forms\components\conditions\arg_types.h" />
+    <ClInclude Include="dovah\forms\components\conditions\arg_value.h" />
+    <ClInclude Include="dovah\forms\factories\hardcoded.h" />
+    <ClInclude Include="dovah\forms\factories\use_info.h" />
+    <ClInclude Include="dovah\forms\_common_cpp.h" />
+    <ClInclude Include="dovah\forms\components\bounds.h" />
+    <ClInclude Include="dovah\forms\components\container.h" />
+    <ClInclude Include="dovah\forms\components\destruction.h" />
+    <ClInclude Include="dovah\forms\components\model.h" />
+    <ClInclude Include="dovah\forms\components\papyrus.h" />
+    <ClInclude Include="dovah\forms\Container.h" />
+    <ClInclude Include="dovah\forms\factories\construct.h" />
+    <ClInclude Include="dovah\forms\form.h" />
+    <ClInclude Include="dovah\forms\FormList.h" />
+    <ClInclude Include="dovah\forms\Location.h" />
+    <ClInclude Include="dovah\forms\MagicEffect.h" />
+    <ClInclude Include="dovah\forms\ObjectReference.h" />
+    <ClInclude Include="dovah\forms\Quest.h" />
+    <ClInclude Include="dovah\forms\Shout.h" />
+    <ClInclude Include="dovah\forms\TopicInfo.h" />
+    <ClInclude Include="dovah\forms\Voicetype.h" />
+    <ClInclude Include="dovah\forms\_common.h" />
+    <ClInclude Include="dovah\form_stub.h" />
+    <ClInclude Include="dovah\form_stub_heap.h" />
+    <ClInclude Include="dovah\localized_strings.h" />
+    <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="helpers\bitset.h" />
+    <ClInclude Include="helpers\bitwise.h" />
     <ClInclude Include="helpers\files.h" />
     <ClInclude Include="helpers\ini.h" />
     <ClInclude Include="helpers\intrusive_windows_defines.h" />
     <ClInclude Include="helpers\memory.h" />
+    <ClInclude Include="helpers\miscellaneous.h" />
+    <ClInclude Include="helpers\multiheap.h" />
+    <ClInclude Include="helpers\strings.h" />
     <ClInclude Include="helpers\type_traits.h" />
+    <ClInclude Include="helpers\vector3.h" />
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\DovahKitSln\zlib\zlib.vcxproj">
+      <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

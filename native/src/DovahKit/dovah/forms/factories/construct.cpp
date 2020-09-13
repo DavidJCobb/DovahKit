@@ -8,10 +8,10 @@
 namespace {
    using namespace dovah;
 
-   template<typename T> loaded_forms::Form* _constructAndLoad(TESPluginRecord& record) {
+   template<typename T> loaded_forms::Form* _constructAndLoad(tes_record_reader& record) {
       auto instance = new T;
       instance->load(record);
-      return (LoadedForms::Form*) instance;
+      return (loaded_forms::Form*) instance;
    }
 
    struct _Builder {

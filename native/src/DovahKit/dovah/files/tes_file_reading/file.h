@@ -2,6 +2,7 @@
 #include "basic_reader.h"
 #include "threads.h"
 #include "../file_load_order.h"
+#include "../file_read_error.h"
 
 namespace dovah {
    class  form_stub;
@@ -75,6 +76,7 @@ namespace dovah {
             //
          public:
             file_load_order& load_order;
+            file_read_error  error; // if the load process was aborted, what error, if any, did we encounter?
             uint32_t     flags = 0;
             detail_flag_t details = 0;
             float    fileVersion = 0.94F;

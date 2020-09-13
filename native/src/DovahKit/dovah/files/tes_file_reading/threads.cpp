@@ -43,13 +43,14 @@ namespace dovah {
                         break;
                      }
                      if (!this->allow_nested_groups && this->_groups[1].exists()) {
-                        lo.logError([this, &desired](FatalLoadError& error) {
-                           error.code       = LoadErrorCode::malformed_file;
-                           error.file       = this->as_file()->get_filename();
-                           error.fileOffset = this->getPos();
-                           char sig[5];
-                           cobb::sprintf(error.parseError, "Unexpected nested group within \"simple\" top-group %s.", dovah::logging::format_signature(desired.signature, sig));
-                        });
+                        auto& error = this->owner->error;
+                        //
+                        error.code       = file_read_error::error_code::malformed_file;
+                        error.file       = this->as_file()->get_filename();
+                        error.fileOffset = this->getPos();
+                        char sig[5];
+                        cobb::sprintf(error.message, "Unexpected nested group within \"simple\" top-group %s.", dovah::logging::format_signature(desired.signature, sig));
+                        //
                         this->owner->abort();
                         break;
                      }

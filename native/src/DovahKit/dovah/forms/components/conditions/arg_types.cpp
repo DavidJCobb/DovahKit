@@ -70,9 +70,9 @@ namespace dovah::loaded_forms::components {
       }
 
       namespace arg_types {
-         arg_type      None            = ConditionArgType("None", arg_underlying_type::none);
+         arg_type      None            = arg_type("None", arg_underlying_type::none);
          arg_form_type Actor           = arg_form_type("Actor", { form_type::actor });
-         arg_form_type actor_base       = arg_form_type("actor_base", { form_type::actor_base });
+         arg_form_type ActorBase       = arg_form_type("actor_base", { form_type::actor_base });
          arg_enum_type ActorValue      = arg_enum_type("ActorValue", 0, {
             "Aggression",
             "Confidence",
@@ -239,26 +239,26 @@ namespace dovah::loaded_forms::components {
             "DEPRECATED05",
             "ReflectDamage",
          });
-         arg_type      AdvanceAction   = ConditionArgType("Advance Action", arg_underlying_type::int_signed, {
-            ConditionEnumValue(0, "Normal Usage"),
-            ConditionEnumValue(1, "Power Attack"),
-            ConditionEnumValue(2, "Bash"),
-            ConditionEnumValue(3, "Lockpick Success"),
-            ConditionEnumValue(4, "Lockpick Broken"),
+         arg_type      AdvanceAction   = arg_type("Advance Action", arg_underlying_type::int_signed, {
+            enum_value_definition(0, "Normal Usage"),
+            enum_value_definition(1, "Power Attack"),
+            enum_value_definition(2, "Bash"),
+            enum_value_definition(3, "Lockpick Success"),
+            enum_value_definition(4, "Lockpick Broken"),
          });
-         arg_type      Alias           = ConditionArgType("Alias", arg_underlying_type::aliasID);
-         arg_type      Alignment       = ConditionArgType("Alignment", arg_underlying_type::int_signed, {
-            ConditionEnumValue(0, "Good"),
-            ConditionEnumValue(1, "Neutral"),
-            ConditionEnumValue(2, "Evil"),
-            ConditionEnumValue(3, "Very Good"),
-            ConditionEnumValue(4, "Very Evil"),
+         arg_type      Alias           = arg_type("Alias", arg_underlying_type::aliasID);
+         arg_type      Alignment       = arg_type("Alignment", arg_underlying_type::int_signed, {
+            enum_value_definition(0, "Good"),
+            enum_value_definition(1, "Neutral"),
+            enum_value_definition(2, "Evil"),
+            enum_value_definition(3, "Very Good"),
+            enum_value_definition(4, "Very Evil"),
          });
          arg_form_type AssociationType = arg_form_type("Association Type", { form_type::association_type });
-         arg_type      Axis            = ConditionArgType("Axis", arg_underlying_type::character, {
-            ConditionEnumValue('X', "X"),
-            ConditionEnumValue('Y', "Y"),
-            ConditionEnumValue('Z', "Z"),
+         arg_type      Axis            = arg_type("Axis", arg_underlying_type::character, {
+            enum_value_definition('X', "X"),
+            enum_value_definition('Y', "Y"),
+            enum_value_definition('Z', "Z"),
          });
          arg_form_type BaseForm        = arg_form_type("Base Form", {
             form_type::acoustic_space, // Confirmed in CK. Strange, since these aren't placeable.
@@ -298,39 +298,39 @@ namespace dovah::loaded_forms::components {
             // Other:
             form_type::formlist,
          });
-         arg_type      CastingSource   = ConditionArgType("Casting Source", arg_underlying_type::int_signed, {
-            ConditionEnumValue(0, "Left"),
-            ConditionEnumValue(1, "Right"),
-            ConditionEnumValue(2, "Voice"),
-            ConditionEnumValue(3, "Instant"),
+         arg_type      CastingSource   = arg_type("Casting Source", arg_underlying_type::int_signed, {
+            enum_value_definition(0, "Left"),
+            enum_value_definition(1, "Right"),
+            enum_value_definition(2, "Voice"),
+            enum_value_definition(3, "Instant"),
          });
          arg_form_type Cell            = arg_form_type("Cell", { form_type::cell });
          arg_form_type Class           = arg_form_type("Class", { form_type::combat_class });
-         arg_type      CrimeType       = ConditionArgType("Crime Type", arg_underlying_type::int_signed, {
-            ConditionEnumValue(-1, "None"),
-            ConditionEnumValue( 0, "Steal"),
-            ConditionEnumValue( 1, "Pickpocket"),
-            ConditionEnumValue( 2, "Trespass"),
-            ConditionEnumValue( 3, "Attack"),
-            ConditionEnumValue( 4, "Murder"),
-            ConditionEnumValue( 5, "Escape Jail"),
-            ConditionEnumValue( 6, "Werewolf Transformation"),
+         arg_type      CrimeType       = arg_type("Crime Type", arg_underlying_type::int_signed, {
+            enum_value_definition(-1, "None"),
+            enum_value_definition( 0, "Steal"),
+            enum_value_definition( 1, "Pickpocket"),
+            enum_value_definition( 2, "Trespass"),
+            enum_value_definition( 3, "Attack"),
+            enum_value_definition( 4, "Murder"),
+            enum_value_definition( 5, "Escape Jail"),
+            enum_value_definition( 6, "Werewolf Transformation"),
          });
-         arg_type      CriticalStage   = ConditionArgType("Critical Stage", arg_underlying_type::int_signed, {
-            ConditionEnumValue(0, "None"),
-            ConditionEnumValue(1, "Goo Start"),
-            ConditionEnumValue(2, "Goo End"),
-            ConditionEnumValue(3, "Disintegrate Start"),
-            ConditionEnumValue(4, "Disintegrate End"),
+         arg_type      CriticalStage   = arg_type("Critical Stage", arg_underlying_type::int_signed, {
+            enum_value_definition(0, "None"),
+            enum_value_definition(1, "Goo Start"),
+            enum_value_definition(2, "Goo End"),
+            enum_value_definition(3, "Disintegrate Start"),
+            enum_value_definition(4, "Disintegrate End"),
          });
          arg_form_type EffectItem      = arg_form_type("Effect Item", { form_type::spell, form_type::potion, form_type::enchantment, form_type::ingredient, form_type::scroll });
          arg_form_type EncounterZone   = arg_form_type("Encounter Zone", { form_type::encounter_zone });
-         arg_type      EquipType       = ConditionArgType("Equip Type (Deprecated/Broken)", arg_underlying_type::int_unsigned);
-         arg_type      Event           = ConditionArgType("Event", arg_underlying_type::event);
-         arg_type      EventData       = ConditionArgType("Event Data", arg_underlying_type::event_data);
+         arg_type      EquipType       = arg_type("Equip Type (Deprecated/Broken)", arg_underlying_type::int_unsigned);
+         arg_type      Event           = arg_type("Event", arg_underlying_type::event);
+         arg_type      EventData       = arg_type("Event Data", arg_underlying_type::event_data);
          arg_form_type Faction         = arg_form_type("Faction", { form_type::faction });
-         arg_type      Float           = ConditionArgType("Float", arg_underlying_type::float32);
-         arg_form_type formlist        = arg_form_type("Form List", { form_type::formlist });
+         arg_type      Float           = arg_type("Float", arg_underlying_type::float32);
+         arg_form_type FormList        = arg_form_type("Form List", { form_type::formlist });
          arg_enum_type FormType        = arg_enum_type("Form Type", 0, {
             "Activator",
             "Armor",
@@ -435,21 +435,21 @@ namespace dovah::loaded_forms::components {
             "Reverb Parameters",
          });
          arg_form_type Furniture       = arg_form_type("Furniture", { form_type::furniture });
-         arg_type      FurnitureAnim   = ConditionArgType("Furniture Anim", arg_underlying_type::int_signed, {
-            ConditionEnumValue(1, "Sit"),
-            ConditionEnumValue(2, "Sleep"),
-            ConditionEnumValue(4, "Lean"),
+         arg_type      FurnitureAnim   = arg_type("Furniture Anim", arg_underlying_type::int_signed, {
+            enum_value_definition(1, "Sit"),
+            enum_value_definition(2, "Sleep"),
+            enum_value_definition(4, "Lean"),
          });
-         arg_type      FurnitureEntry  = ConditionArgType("Furniture Entry", arg_underlying_type::int_signed, {
-            ConditionEnumValue(0x01, "Front"),
-            ConditionEnumValue(0x02, "Back"),
-            ConditionEnumValue(0x04, "Left"),
-            ConditionEnumValue(0x08, "Right"),
-            ConditionEnumValue(0x10, "Up"),
+         arg_type      FurnitureEntry  = arg_type("Furniture Entry", arg_underlying_type::int_signed, {
+            enum_value_definition(0x01, "Front"),
+            enum_value_definition(0x02, "Back"),
+            enum_value_definition(0x04, "Left"),
+            enum_value_definition(0x08, "Right"),
+            enum_value_definition(0x10, "Up"),
          });
          arg_form_type Global          = arg_form_type("Global Variable", { form_type::global });
          arg_form_type Idle            = arg_form_type("Idle", { form_type::idle });
-         arg_type      Integer         = ConditionArgType("Integer", arg_underlying_type::int_signed);
+         arg_type      Integer         = arg_type("Integer", arg_underlying_type::int_signed);
          arg_form_type InventoryItem   = arg_form_type("Inventory Item", {
             form_type::ammo,
             form_type::armor,
@@ -471,115 +471,115 @@ namespace dovah::loaded_forms::components {
          arg_form_type Location        = arg_form_type("Location", { form_type::location });
          arg_form_type LocRefType      = arg_form_type("Location Ref Type", { form_type::location_ref_type });
          arg_form_type MagicEffect     = arg_form_type("Magic Effect", { form_type::magic_effect });
-         arg_type      MiscStat        = ConditionArgType("Misc Stat", arg_underlying_type::int_unsigned, {
-            ConditionEnumValue(0xFCDD5011, "Animals Killed"),
-            ConditionEnumValue(0x366D84CF, "Armor Improved"),
-            ConditionEnumValue(0x023497E6, "Armor Made"),
-            ConditionEnumValue(0x8E20D7C9, "Assaults"),
-            ConditionEnumValue(0x579FFA75, "Automations Killed"),
-            ConditionEnumValue(0xB9B50725, "Backstabs"),
-            ConditionEnumValue(0xED6A0EF2, "Barters"),
-            ConditionEnumValue(0xCCB952CE, "Books Read"),
-            ConditionEnumValue(0x317E8B4C, "Brawls Won"),
-            ConditionEnumValue(0x1D79006B, "Bribes"),
-            ConditionEnumValue(0x3602DE8F, "Bunnies Slaughtered"),
-            ConditionEnumValue(0x53D9E9B5, "Chests Looted"),
-            ConditionEnumValue(0x683C1980, "Civil War Quests Completed"),
-            ConditionEnumValue(0x66CCC50A, "College of Winterhold Quests Completed"),
-            ConditionEnumValue(0x40B11EFE, "Creatures Killed"),
-            ConditionEnumValue(0x22D5BA38, "Critical Strikes"),
-            ConditionEnumValue(0xA930980F, "Daedra Killed"),
-            ConditionEnumValue(0x3558374B, "Daedric Quests Completed"),
-            ConditionEnumValue(0x37A76425, "Dawnguard Quests Completed"),
-            ConditionEnumValue(0x2BDAC36F, "Days as a Vampire"),
-            ConditionEnumValue(0x6E684590, "Days as a Werewolf"),
-            ConditionEnumValue(0xB6F118DB, "Days Jailed"),
-            ConditionEnumValue(0x3C626A90, "Days Passed"),
-            ConditionEnumValue(0x8556AD88, "Diseases Contracted"),
-            ConditionEnumValue(0x46D6FBBC, "Dragon Souls Collected"),
-            ConditionEnumValue(0x8D115F78, "Dragonborn Quests Completed"),
-            ConditionEnumValue(0xAA444695, "Dungeons Cleared"),
-            ConditionEnumValue(0x1A37F336, "Eastmarch Bounty"),
-            ConditionEnumValue(0x5AC3A8ED, "Falkreath Bounty"),
-            ConditionEnumValue(0x87B12ECC, "Favorite School"),
-            ConditionEnumValue(0x518BBC4E, "Favorite Shout"),
-            ConditionEnumValue(0x41DD77A6, "Favorite Spell"),
-            ConditionEnumValue(0x171C5391, "Favorite Weapon"),
-            ConditionEnumValue(0x4F041AA2, "Fines Paid"),
-            ConditionEnumValue(0x9311B22B, "Food Eaten"),
-            ConditionEnumValue(0x57C089F7, "Gold Found"),
-            ConditionEnumValue(0xD20EDA4F, "Haafingar Bounty"),
-            ConditionEnumValue(0x516C486D, "Hjaalmarch Bounty"),
-            ConditionEnumValue(0xB0A1E32E, "Horses Owned"),
-            ConditionEnumValue(0xEBAE35E8, "Horses Stolen"),
-            ConditionEnumValue(0xFA024018, "Hours Slept"),
-            ConditionEnumValue(0xCAD2ECA1, "Hours Waiting"),
-            ConditionEnumValue(0x527DF857, "Houses Owned"),
-            ConditionEnumValue(0x47B4A015, "Ingredients Eaten"),
-            ConditionEnumValue(0xCE842356, "Ingredients Harvested"),
-            ConditionEnumValue(0x7D2E57C0, "Intimidations"),
-            ConditionEnumValue(0xC21702B5, "Items Pickpocketed"),
-            ConditionEnumValue(0x82F190C2, "Items Stolen"),
-            ConditionEnumValue(0x6627464B, "Jail Escapes"),
-            ConditionEnumValue(0x3520E710, "Largest Bounty"),
-            ConditionEnumValue(0x8A24FDE2, "Locations Discovered"),
-            ConditionEnumValue(0x5829CC2E, "Locks Picked"),
-            ConditionEnumValue(0x88089979, "Magic Items Made"),
-            ConditionEnumValue(0x7EA26C2D, "Main Quests Completed"),
-            ConditionEnumValue(0x7187A208, "Mauls"),
-            ConditionEnumValue(0x98EE55DC, "Misc Objectives Completed"),
-            ConditionEnumValue(0xFA06230B, "Most Gold Carried"),
-            ConditionEnumValue(0xD37C6909, "Murders"),
-            ConditionEnumValue(0x22C2CBD0, "Necks Bitten"),
-            ConditionEnumValue(0xBEEBCC87, "Nirnroots Found"),
-            ConditionEnumValue(0x56CCFC54, "NumVampirePerks"),
-            ConditionEnumValue(0x76A1A5C0, "NumWerewolfPerks"),
-            ConditionEnumValue(0xF22A8133, "People Killed"),
-            ConditionEnumValue(0x47A78467, "Persuasions"),
-            ConditionEnumValue(0xF2BAC234, "Pockets Picked"),
-            ConditionEnumValue(0x17C64668, "Poisons Mixed"),
-            ConditionEnumValue(0x7D8F2EA6, "Poisons Used"),
-            ConditionEnumValue(0x4228DE85, "Potions Mixed"),
-            ConditionEnumValue(0x9631EC11, "Potions Used"),
-            ConditionEnumValue(0xDE6C73FE, "Questlines Completed"),
-            ConditionEnumValue(0x0D7B8B16, "Quests Completed"),
-            ConditionEnumValue(0xBB39399E, "Shouts Learned"),
-            ConditionEnumValue(0x731B5333, "Shouts Mastered"),
-            ConditionEnumValue(0xF921D8BA, "Shouts Unlocked"),
-            ConditionEnumValue(0xB1AE4792, "Side Quests Completed"),
-            ConditionEnumValue(0xACE470D7, "Skill Books Read"),
-            ConditionEnumValue(0xF33130CE, "Skill Increases"),
-            ConditionEnumValue(0xB556CC52, "Sneak Attacks"),
-            ConditionEnumValue(0x9E8F2530, "Solstheim Locations Discovered"),
-            ConditionEnumValue(0xA74CBE83, "Soul Gems Used"),
-            ConditionEnumValue(0xC2C9E233, "Souls Trapped"),
-            ConditionEnumValue(0x5EC89F1A, "Spells Learned"),
-            ConditionEnumValue(0x593E44F8, "StalhrimItemsCrafted"),
-            ConditionEnumValue(0xB251A346, "Standing Stones Found"),
-            ConditionEnumValue(0x05D45702, "Stores Invested In"),
-            ConditionEnumValue(0xD0FE7031, "The Companions Quests Completed"),
-            ConditionEnumValue(0x52BA68CB, "The Dark Brotherhood Quests Completed"),
-            ConditionEnumValue(0x3E267D77, "The Pale Bounty"),
-            ConditionEnumValue(0x69B48177, "The Reach Bounty"),
-            ConditionEnumValue(0x50A23F69, "The Rift Bounty"),
-            ConditionEnumValue(0x62B2E95D, "Thieves' Guild Quests Completed"),
-            ConditionEnumValue(0x944CEA93, "Times Jailed"),
-            ConditionEnumValue(0x50AAB633, "Times Shouted"),
-            ConditionEnumValue(0x99BB86D8, "Total Lifetime Bounty"),
-            ConditionEnumValue(0x4C252391, "Training Sessions"),
-            ConditionEnumValue(0x7AEA9C2B, "Trespasses"),
-            ConditionEnumValue(0xA67626F4, "Tribal Orcs Bounty"),
-            ConditionEnumValue(0x41D4BC0F, "Undead Killed"),
-            ConditionEnumValue(0xF39260A1, "Vampirism Cures"),
-            ConditionEnumValue(0x61A5C5A9, "Weapons Disarmed"),
-            ConditionEnumValue(0x1D3BA844, "Weapons Improved"),
-            ConditionEnumValue(0x25F1EA25, "Weapons Made"),
-            ConditionEnumValue(0x38A2DD66, "Werewolf Transformations"),
-            ConditionEnumValue(0x4231FA4F, "Whiterun Bounty"),
-            ConditionEnumValue(0x92565767, "Wings Plucked"),
-            ConditionEnumValue(0xC7FC518D, "Winterhold Bounty"),
-            ConditionEnumValue(0x949FA7BC, "Words of Power Learned"),
-            ConditionEnumValue(0x2C6E3FC0, "Words of Power Unlocked"),
+         arg_type      MiscStat        = arg_type("Misc Stat", arg_underlying_type::int_unsigned, {
+            enum_value_definition(0xFCDD5011, "Animals Killed"),
+            enum_value_definition(0x366D84CF, "Armor Improved"),
+            enum_value_definition(0x023497E6, "Armor Made"),
+            enum_value_definition(0x8E20D7C9, "Assaults"),
+            enum_value_definition(0x579FFA75, "Automations Killed"),
+            enum_value_definition(0xB9B50725, "Backstabs"),
+            enum_value_definition(0xED6A0EF2, "Barters"),
+            enum_value_definition(0xCCB952CE, "Books Read"),
+            enum_value_definition(0x317E8B4C, "Brawls Won"),
+            enum_value_definition(0x1D79006B, "Bribes"),
+            enum_value_definition(0x3602DE8F, "Bunnies Slaughtered"),
+            enum_value_definition(0x53D9E9B5, "Chests Looted"),
+            enum_value_definition(0x683C1980, "Civil War Quests Completed"),
+            enum_value_definition(0x66CCC50A, "College of Winterhold Quests Completed"),
+            enum_value_definition(0x40B11EFE, "Creatures Killed"),
+            enum_value_definition(0x22D5BA38, "Critical Strikes"),
+            enum_value_definition(0xA930980F, "Daedra Killed"),
+            enum_value_definition(0x3558374B, "Daedric Quests Completed"),
+            enum_value_definition(0x37A76425, "Dawnguard Quests Completed"),
+            enum_value_definition(0x2BDAC36F, "Days as a Vampire"),
+            enum_value_definition(0x6E684590, "Days as a Werewolf"),
+            enum_value_definition(0xB6F118DB, "Days Jailed"),
+            enum_value_definition(0x3C626A90, "Days Passed"),
+            enum_value_definition(0x8556AD88, "Diseases Contracted"),
+            enum_value_definition(0x46D6FBBC, "Dragon Souls Collected"),
+            enum_value_definition(0x8D115F78, "Dragonborn Quests Completed"),
+            enum_value_definition(0xAA444695, "Dungeons Cleared"),
+            enum_value_definition(0x1A37F336, "Eastmarch Bounty"),
+            enum_value_definition(0x5AC3A8ED, "Falkreath Bounty"),
+            enum_value_definition(0x87B12ECC, "Favorite School"),
+            enum_value_definition(0x518BBC4E, "Favorite Shout"),
+            enum_value_definition(0x41DD77A6, "Favorite Spell"),
+            enum_value_definition(0x171C5391, "Favorite Weapon"),
+            enum_value_definition(0x4F041AA2, "Fines Paid"),
+            enum_value_definition(0x9311B22B, "Food Eaten"),
+            enum_value_definition(0x57C089F7, "Gold Found"),
+            enum_value_definition(0xD20EDA4F, "Haafingar Bounty"),
+            enum_value_definition(0x516C486D, "Hjaalmarch Bounty"),
+            enum_value_definition(0xB0A1E32E, "Horses Owned"),
+            enum_value_definition(0xEBAE35E8, "Horses Stolen"),
+            enum_value_definition(0xFA024018, "Hours Slept"),
+            enum_value_definition(0xCAD2ECA1, "Hours Waiting"),
+            enum_value_definition(0x527DF857, "Houses Owned"),
+            enum_value_definition(0x47B4A015, "Ingredients Eaten"),
+            enum_value_definition(0xCE842356, "Ingredients Harvested"),
+            enum_value_definition(0x7D2E57C0, "Intimidations"),
+            enum_value_definition(0xC21702B5, "Items Pickpocketed"),
+            enum_value_definition(0x82F190C2, "Items Stolen"),
+            enum_value_definition(0x6627464B, "Jail Escapes"),
+            enum_value_definition(0x3520E710, "Largest Bounty"),
+            enum_value_definition(0x8A24FDE2, "Locations Discovered"),
+            enum_value_definition(0x5829CC2E, "Locks Picked"),
+            enum_value_definition(0x88089979, "Magic Items Made"),
+            enum_value_definition(0x7EA26C2D, "Main Quests Completed"),
+            enum_value_definition(0x7187A208, "Mauls"),
+            enum_value_definition(0x98EE55DC, "Misc Objectives Completed"),
+            enum_value_definition(0xFA06230B, "Most Gold Carried"),
+            enum_value_definition(0xD37C6909, "Murders"),
+            enum_value_definition(0x22C2CBD0, "Necks Bitten"),
+            enum_value_definition(0xBEEBCC87, "Nirnroots Found"),
+            enum_value_definition(0x56CCFC54, "NumVampirePerks"),
+            enum_value_definition(0x76A1A5C0, "NumWerewolfPerks"),
+            enum_value_definition(0xF22A8133, "People Killed"),
+            enum_value_definition(0x47A78467, "Persuasions"),
+            enum_value_definition(0xF2BAC234, "Pockets Picked"),
+            enum_value_definition(0x17C64668, "Poisons Mixed"),
+            enum_value_definition(0x7D8F2EA6, "Poisons Used"),
+            enum_value_definition(0x4228DE85, "Potions Mixed"),
+            enum_value_definition(0x9631EC11, "Potions Used"),
+            enum_value_definition(0xDE6C73FE, "Questlines Completed"),
+            enum_value_definition(0x0D7B8B16, "Quests Completed"),
+            enum_value_definition(0xBB39399E, "Shouts Learned"),
+            enum_value_definition(0x731B5333, "Shouts Mastered"),
+            enum_value_definition(0xF921D8BA, "Shouts Unlocked"),
+            enum_value_definition(0xB1AE4792, "Side Quests Completed"),
+            enum_value_definition(0xACE470D7, "Skill Books Read"),
+            enum_value_definition(0xF33130CE, "Skill Increases"),
+            enum_value_definition(0xB556CC52, "Sneak Attacks"),
+            enum_value_definition(0x9E8F2530, "Solstheim Locations Discovered"),
+            enum_value_definition(0xA74CBE83, "Soul Gems Used"),
+            enum_value_definition(0xC2C9E233, "Souls Trapped"),
+            enum_value_definition(0x5EC89F1A, "Spells Learned"),
+            enum_value_definition(0x593E44F8, "StalhrimItemsCrafted"),
+            enum_value_definition(0xB251A346, "Standing Stones Found"),
+            enum_value_definition(0x05D45702, "Stores Invested In"),
+            enum_value_definition(0xD0FE7031, "The Companions Quests Completed"),
+            enum_value_definition(0x52BA68CB, "The Dark Brotherhood Quests Completed"),
+            enum_value_definition(0x3E267D77, "The Pale Bounty"),
+            enum_value_definition(0x69B48177, "The Reach Bounty"),
+            enum_value_definition(0x50A23F69, "The Rift Bounty"),
+            enum_value_definition(0x62B2E95D, "Thieves' Guild Quests Completed"),
+            enum_value_definition(0x944CEA93, "Times Jailed"),
+            enum_value_definition(0x50AAB633, "Times Shouted"),
+            enum_value_definition(0x99BB86D8, "Total Lifetime Bounty"),
+            enum_value_definition(0x4C252391, "Training Sessions"),
+            enum_value_definition(0x7AEA9C2B, "Trespasses"),
+            enum_value_definition(0xA67626F4, "Tribal Orcs Bounty"),
+            enum_value_definition(0x41D4BC0F, "Undead Killed"),
+            enum_value_definition(0xF39260A1, "Vampirism Cures"),
+            enum_value_definition(0x61A5C5A9, "Weapons Disarmed"),
+            enum_value_definition(0x1D3BA844, "Weapons Improved"),
+            enum_value_definition(0x25F1EA25, "Weapons Made"),
+            enum_value_definition(0x38A2DD66, "Werewolf Transformations"),
+            enum_value_definition(0x4231FA4F, "Whiterun Bounty"),
+            enum_value_definition(0x92565767, "Wings Plucked"),
+            enum_value_definition(0xC7FC518D, "Winterhold Bounty"),
+            enum_value_definition(0x949FA7BC, "Words of Power Learned"),
+            enum_value_definition(0x2C6E3FC0, "Words of Power Unlocked"),
          });
          arg_form_type ObjectReference = arg_form_type("ObjectReference", {
             form_type::actor,
@@ -595,48 +595,48 @@ namespace dovah::loaded_forms::components {
          });
          arg_form_type OwnerForm       = arg_form_type("Owner", { form_type::actor_base, form_type::faction });
          arg_form_type Package         = arg_form_type("Package", { form_type::package });
-         arg_type      PackageData     = ConditionArgType("Package Data", arg_underlying_type::package_data);
+         arg_type      PackageData     = arg_type("Package Data", arg_underlying_type::package_data);
          arg_form_type Perk            = arg_form_type("Perk", { form_type::perk });
          arg_form_type Quest           = arg_form_type("Quest", { form_type::quest });
-         arg_type      QuestStage      = ConditionArgType("Quest Stage", arg_underlying_type::quest_stage);
+         arg_type      QuestStage      = arg_type("Quest Stage", arg_underlying_type::quest_stage);
          arg_form_type Race            = arg_form_type("Race", { form_type::race });
          arg_form_type Region          = arg_form_type("Region", { form_type::region });
          arg_form_type Scene           = arg_form_type("Scene", { form_type::scene });
-         arg_type      Sex             = ConditionArgType("Axis", arg_underlying_type::int_signed, {
-            ConditionEnumValue(0, "Male"),
-            ConditionEnumValue(1, "Female"),
+         arg_type      Sex             = arg_type("Axis", arg_underlying_type::int_signed, {
+            enum_value_definition(0, "Male"),
+            enum_value_definition(1, "Female"),
          });
          arg_form_type Shout           = arg_form_type("Shout", { form_type::shout });
          arg_form_type Spell           = arg_form_type("Spell", { form_type::spell });
-         arg_type      String          = ConditionArgType("String", arg_underlying_type::string);
-         arg_type      VATSValueFunction = ConditionArgType("VATS Value Function", arg_underlying_type::int_signed, {
-            ConditionEnumValue( 0, "Weapon Is"),
-            ConditionEnumValue( 1, "Weapon In List"),
-            ConditionEnumValue( 2, "Target Is"),
-            ConditionEnumValue( 3, "Target In List"),
-            ConditionEnumValue( 4, "Target Distance"),
-            ConditionEnumValue( 5, "Target Part"),
-            ConditionEnumValue( 6, "VATS Action"),
-            ConditionEnumValue( 7, "Is Success"),
-            ConditionEnumValue( 8, "Is Critical"),
-            ConditionEnumValue( 9, "Critical Effect Is"),
-            ConditionEnumValue(10, "Critical Effect In List"),
-            ConditionEnumValue(11, "Is Fatal"),
-            ConditionEnumValue(12, "Explode Part"),
-            ConditionEnumValue(13, "Dismember Part"),
-            ConditionEnumValue(14, "Cripple Part"),
-            ConditionEnumValue(15, "Weapon Type Is"),
-            ConditionEnumValue(16, "Is Stranger"),
-            ConditionEnumValue(17, "Is Paralyzing Palm"),
-            ConditionEnumValue(18, "Projectile Type Is"),
-            ConditionEnumValue(19, "Delivery Type Is"),
-            ConditionEnumValue(20, "Casting Type Is"),
+         arg_type      String          = arg_type("String", arg_underlying_type::string);
+         arg_type      VATSValueFunction = arg_type("VATS Value Function", arg_underlying_type::int_signed, {
+            enum_value_definition( 0, "Weapon Is"),
+            enum_value_definition( 1, "Weapon In List"),
+            enum_value_definition( 2, "Target Is"),
+            enum_value_definition( 3, "Target In List"),
+            enum_value_definition( 4, "Target Distance"),
+            enum_value_definition( 5, "Target Part"),
+            enum_value_definition( 6, "VATS Action"),
+            enum_value_definition( 7, "Is Success"),
+            enum_value_definition( 8, "Is Critical"),
+            enum_value_definition( 9, "Critical Effect Is"),
+            enum_value_definition(10, "Critical Effect In List"),
+            enum_value_definition(11, "Is Fatal"),
+            enum_value_definition(12, "Explode Part"),
+            enum_value_definition(13, "Dismember Part"),
+            enum_value_definition(14, "Cripple Part"),
+            enum_value_definition(15, "Weapon Type Is"),
+            enum_value_definition(16, "Is Stranger"),
+            enum_value_definition(17, "Is Paralyzing Palm"),
+            enum_value_definition(18, "Projectile Type Is"),
+            enum_value_definition(19, "Delivery Type Is"),
+            enum_value_definition(20, "Casting Type Is"),
          });
          arg_form_type Voicetype       = arg_form_type("Voicetype", { form_type::voicetype });
-         arg_type      WardState       = ConditionArgType("Ward State", arg_underlying_type::int_signed, {
-            ConditionEnumValue(0, "None"),
-            ConditionEnumValue(1, "Absorb"),
-            ConditionEnumValue(2, "Break"),
+         arg_type      WardState       = arg_type("Ward State", arg_underlying_type::int_signed, {
+            enum_value_definition(0, "None"),
+            enum_value_definition(1, "Absorb"),
+            enum_value_definition(2, "Break"),
          });
          arg_form_type Weather         = arg_form_type("Weather", { form_type::weather });
          arg_form_type Worldspace      = arg_form_type("Worldspace", { form_type::worldspace });
@@ -647,19 +647,19 @@ namespace dovah::loaded_forms::components {
             arg_form_type Target     = arg_form_type("Target", { form_type::actor_base });
             arg_form_type TargetList = arg_form_type("Target List", { form_type::formlist });
             arg_type      TargetPart = ActorValue;
-            arg_type      VATSAction = ConditionArgType("VATS Action", arg_underlying_type::int_unsigned, {
-               ConditionEnumValue(0, "Unarmed"),
-               ConditionEnumValue(1, "One-Handed Melee"),
-               ConditionEnumValue(2, "Two-Handed Melee"),
-               ConditionEnumValue(3, "Magic"),
-               ConditionEnumValue(4, "Ranged"),
-               ConditionEnumValue(5, "Reload"),
-               ConditionEnumValue(6, "Crouch"),
-               ConditionEnumValue(7, "Stand"),
-               ConditionEnumValue(8, "Switch Weapon"),
-               ConditionEnumValue(9, "Draw/Sheathe Weapon"),
-               ConditionEnumValue(10, "Heal"),
-               ConditionEnumValue(11, "Player Death"),
+            arg_type      VATSAction = arg_type("VATS Action", arg_underlying_type::int_unsigned, {
+               enum_value_definition(0, "Unarmed"),
+               enum_value_definition(1, "One-Handed Melee"),
+               enum_value_definition(2, "Two-Handed Melee"),
+               enum_value_definition(3, "Magic"),
+               enum_value_definition(4, "Ranged"),
+               enum_value_definition(5, "Reload"),
+               enum_value_definition(6, "Crouch"),
+               enum_value_definition(7, "Stand"),
+               enum_value_definition(8, "Switch Weapon"),
+               enum_value_definition(9, "Draw/Sheathe Weapon"),
+               enum_value_definition(10, "Heal"),
+               enum_value_definition(11, "Player Death"),
             });
             arg_form_type CriticalEffect = arg_form_type("Critical Effect", { form_type::spell });
             arg_form_type CriticalEffectList = arg_form_type("Critical Effect List", { form_type::formlist });
@@ -675,27 +675,27 @@ namespace dovah::loaded_forms::components {
                "Staff",
                "Crossbow",
             });
-            arg_type  ProjectileType = ConditionArgType("Projectile Type", arg_underlying_type::int_unsigned, {
-               ConditionEnumValue(0, "Missile"),
-               ConditionEnumValue(1, "Lobber"),
-               ConditionEnumValue(2, "Beam"),
-               ConditionEnumValue(3, "Flame"),
-               ConditionEnumValue(4, "Cone"),
-               ConditionEnumValue(5, "Barrier"),
-               ConditionEnumValue(6, "Arrow"),
+            arg_type  ProjectileType = arg_type("Projectile Type", arg_underlying_type::int_unsigned, {
+               enum_value_definition(0, "Missile"),
+               enum_value_definition(1, "Lobber"),
+               enum_value_definition(2, "Beam"),
+               enum_value_definition(3, "Flame"),
+               enum_value_definition(4, "Cone"),
+               enum_value_definition(5, "Barrier"),
+               enum_value_definition(6, "Arrow"),
             });
-            arg_type  DeliveryType = ConditionArgType("Delivery Type", arg_underlying_type::int_unsigned, {
-               ConditionEnumValue(0, "Self"),
-               ConditionEnumValue(1, "Touch"),
-               ConditionEnumValue(2, "Aimed"),
-               ConditionEnumValue(3, "Target Actor"),
-               ConditionEnumValue(4, "Target Location"),
+            arg_type  DeliveryType = arg_type("Delivery Type", arg_underlying_type::int_unsigned, {
+               enum_value_definition(0, "Self"),
+               enum_value_definition(1, "Touch"),
+               enum_value_definition(2, "Aimed"),
+               enum_value_definition(3, "Target Actor"),
+               enum_value_definition(4, "Target Location"),
             });
-            arg_type  CastingType = ConditionArgType("Casting Type", arg_underlying_type::int_unsigned, {
-               ConditionEnumValue(0, "Constant Effect"),
-               ConditionEnumValue(1, "Fire and Forget"),
-               ConditionEnumValue(2, "Concentration"),
-               ConditionEnumValue(3, "Scroll"),
+            arg_type  CastingType = arg_type("Casting Type", arg_underlying_type::int_unsigned, {
+               enum_value_definition(0, "Constant Effect"),
+               enum_value_definition(1, "Fire and Forget"),
+               enum_value_definition(2, "Concentration"),
+               enum_value_definition(3, "Scroll"),
             });
          }
       }

@@ -11,5 +11,5 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    ui.setupUi(this);
    _window = this;
    //
-   QObject::connect(this->ui.actionOpen, &QAction::triggered, this, QOverload<>::of(&ReachVariantTool::openFile));
+   //QObject::connect(this->ui.actionOpen, &QAction::triggered, this, QOverload<>::of(&MainWindow::openFile));
 }

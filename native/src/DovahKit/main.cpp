@@ -11,10 +11,10 @@ int main(int argc, char* argv[]) {
    QApplication a(argc, argv);
    //
    #if _DEBUG // log all qt resources to the "output" tab in the debugger
-   QDirIterator it(":", QDirIterator::Subdirectories);
-   while (it.hasNext()) {
-      qDebug() << it.next();
-   }
+      QDirIterator it(":", QDirIterator::Subdirectories);
+      while (it.hasNext()) {
+         qDebug() << it.next();
+      }
    #endif
    //
    MainWindow w;

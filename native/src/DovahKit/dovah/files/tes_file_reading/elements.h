@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include "../../helpers/memory.h"
+#include "../../helpers/miscellaneous.h"
 #include "../../core.h"
 
 namespace dovah {

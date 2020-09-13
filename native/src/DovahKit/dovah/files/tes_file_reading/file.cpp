@@ -1,5 +1,6 @@
 #include "file.h"
 #include <filesystem>
+#include "../../../helpers/strings.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
 
@@ -63,22 +64,18 @@ namespace dovah::tes_file_reading {
    //
    bool file_reader::_load_header() {
       if (this->next_record_or_group() != object_type::record) {
-         LoadOrder::get().logError([this](FatalLoadError& error) {
-            error.code = LoadErrorCode::malformed_file;
-            error.file = this->name;
-            error.fileOffset = this->getPos();
-            error.parseError = "Expected TES4 record; no record found.";
-         });
+         this->error.code       = file_read_error::error_code::malformed_file;
+         this->error.file       = this->name;
+         this->error.fileOffset = this->getPos();
+         this->error.message    = "Expected TES4 record; no record found.";
          return false;
       }
       auto& r = this->get_current_record();
       if (r.signature() != 'TES4') {
-         LoadOrder::get().logError([this](FatalLoadError& error) {
-            error.code = LoadErrorCode::malformed_file;
-            error.file = this->name;
-            error.fileOffset = this->getPos();
-            error.parseError = "Expected TES4 record; got something else.";
-         });
+         this->error.code       = file_read_error::error_code::malformed_file;
+         this->error.file       = this->name;
+         this->error.fileOffset = this->getPos();
+         this->error.message    = "Expected TES4 record; got something else.";
          return false;
       }
       this->flags = r.flags();
@@ -123,12 +120,10 @@ namespace dovah::tes_file_reading {
                      return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                   }
                   if (this->masters.size() > 253) {
-                     LoadOrder::get().logError([this](FatalLoadError& error) {
-                        error.code = LoadErrorCode::malformed_file;
-                        error.file = this->name;
-                        error.fileOffset = this->getPos();
-                        error.parseError = "This file claims to have more than 253 masters.";
-                     });
+                     this->error.code       = file_read_error::error_code::malformed_file;
+                     this->error.file       = this->name;
+                     this->error.fileOffset = this->getPos();
+                     this->error.message    = "This file claims to have more than 253 masters.";
                      return false;
                   }
                   //
@@ -152,17 +147,15 @@ namespace dovah::tes_file_reading {
                break;
             case 'DATA': // always follows a MAST; vestigial; doesn't appear to be used
                if (last_subrecord != 'MAST') {
-                  LoadOrder::get().logError([this, last_subrecord](FatalLoadError& error) {
-                     error.code = LoadErrorCode::malformed_file;
-                     error.file = this->name;
-                     error.fileOffset = this->getPos();
-                     if (last_subrecord) {
-                        char sig[5];
-                        dovah::logging::format_signature(last_subrecord, sig);
-                        cobb::sprintf(error.parseError, "Unexpected 'DATA' subrecord in the file header following %s.", sig);
-                     } else
-                        error.parseError = "Unexpected 'DATA' subrecord at the start of the file header.";
-                  });
+                  this->error.code       = file_read_error::error_code::malformed_file;
+                  this->error.file       = this->name;
+                  this->error.fileOffset = this->getPos();
+                  if (last_subrecord) {
+                     char sig[5];
+                     dovah::logging::format_signature(last_subrecord, sig);
+                     cobb::sprintf(this->error.message, "Unexpected 'DATA' subrecord in the file header following %s.", sig);
+                  } else
+                     this->error.message = "Unexpected 'DATA' subrecord at the start of the file header.";
                   return false;
                } else {
                   auto& last = *this->masters.rbegin();
@@ -196,49 +189,48 @@ namespace dovah::tes_file_reading {
    }
    void file_reader::_insert_form(uint32_t formID, form_stub* stub) {
       if (!this->aborted) {
-         auto result = LoadOrder::get().accept_form_stub(stub);
+         auto result = this->load_order.accept_form_stub(stub);
          switch (result) {
             case file_load_order::form_id_status::missing_master:
             case file_load_order::form_id_status::out_of_bounds:
-               LoadOrder::get().logError([this, stub, result](FatalLoadError& error) {
-                  error.code = LoadErrorCode::out_of_bounds_form_id;
-                  error.file = this->name;
-                  error.fileOffset = this->getPos();
-                  error.formID = stub->formID;
-                  if (result == file_load_order::form_id_status::missing_master)
-                     error.message = "This form's ID corresponds to a missing master.";
-                  else
-                     error.message = "This form ID's load order prefix is out of bounds.";
-               });
+               this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
+               this->error.file       = this->name;
+               this->error.fileOffset = this->getPos();
+               this->error.formID    = stub->formID;
+               if (result == file_load_order::form_id_status::missing_master)
+                  this->error.message = "This form's ID corresponds to a missing master.";
+               else
+                  this->error.message = "This form ID's load order prefix is out of bounds.";
                this->abort();
                return;
             case file_load_order::form_id_status::null_is_not_allowed:
-               LoadOrder::get().logError([this, stub](FatalLoadError& error) {
-                  error.code = LoadErrorCode::out_of_bounds_form_id;
-                  error.file = this->name;
-                  error.fileOffset = this->getPos();
-                  error.formID = stub->formID;
-                  error.message = "A form cannot use xx000000 as its form ID.";
-               });
+               this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
+               this->error.file       = this->name;
+               this->error.fileOffset = this->getPos();
+               this->error.formID     = stub->formID;
+               this->error.message    = "A form cannot use xx000000 as its form ID.";
                this->abort();
                return;
          }
       }
    }
    bool file_reader::load(const char* filepath) {
-      this->path.clear();
-      this->file->open(filepath);
       this->path = filepath;
+      {  // TODO: this is hideous
+         std::wstring foo;
+         auto size = MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), 0);
+         foo.resize(size);
+         MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), size);
+         this->file->open(foo.c_str());
+      }
       this->name = std::filesystem::path(filepath).filename().string();
       //
       dovah::logging::print_line("Opened file: %s", this->name.c_str());
       if (!this->_load_header()) {
-         LoadOrder::get().logError([this](FatalLoadError& error) {
-            error.code = LoadErrorCode::malformed_file;
-            error.file = this->name;
-            error.fileOffset = this->getPos();
-            error.message = "Failed to read the file header.";
-         });
+         this->error.code       = file_read_error::error_code::malformed_file;
+         this->error.file       = this->name;
+         this->error.fileOffset = this->getPos();
+         this->error.message    = "Failed to read the file header.";
          return false;
       }
       dovah::logging::print_line("Read file header.");
@@ -346,23 +338,21 @@ namespace dovah::tes_file_reading {
                            else if (_byteswap_ulong(parent->header.label) != 'CELL')
                               err = 3;
                            if (err) {
-                              LoadOrder::get().logError([this, err](FatalLoadError& error) {
-                                 error.code = LoadErrorCode::malformed_file;
-                                 error.file = this->name;
-                                 error.fileOffset = this->getPos();
-                                 error.parseError = "Bad interior-cell-block group nesting. ";
-                                 switch (err) {
-                                    case 1:
-                                       error.parseError += "(No parent group.)";
-                                       break;
-                                    case 2:
-                                       error.parseError += "(Parent group is not a top-level group for a form type.)";
-                                       break;
-                                    case 3:
-                                       error.parseError += "(Parent group is not a group for CELL records.)";
-                                       break;
-                                 }
-                                 });
+                              this->error.code       = file_read_error::error_code::malformed_file;
+                              this->error.file       = this->name;
+                              this->error.fileOffset = this->getPos();
+                              this->error.message    = "Bad interior-cell-block group nesting. ";
+                              switch (err) {
+                                 case 1:
+                                    this->error.message += "(No parent group.)";
+                                    break;
+                                 case 2:
+                                    this->error.message += "(Parent group is not a top-level group for a form type.)";
+                                    break;
+                                 case 3:
+                                    this->error.message += "(Parent group is not a group for CELL records.)";
+                                    break;
+                              }
                               this->abort();
                               break;
                            }
