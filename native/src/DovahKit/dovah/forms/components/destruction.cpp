@@ -1,0 +1,99 @@
+#include "destruction.h"
+#include "../_common_cpp.h"
+#include "../Form.h" // for LOAD_NAIVELY_WHEN_THE_GAME_DOES directive
+
+namespace dovah::loaded_forms::components {
+   void destruction_stage_data::load(tes_subrecord_reader& subrecord) {
+      uint32_t stageCount = 0;
+      #if LOAD_NAIVELY_WHEN_THE_GAME_DOES == 1
+         auto& record = subrecord.get_containing_record();
+         for (; subrecord.exists() && subrecord.signature() != 'DSTF'; record.next_subrecord()) {
+            switch (subrecord.signature()) {
+               case 'DEST':
+                  subrecord.read(this->health);
+                  subrecord.read(stageCount);
+                  subrecord.read(this->flags);
+                  subrecord.skip_bytes(2);
+                  if (stageCount)
+                     this->stages.reserve(stageCount);
+                  break;
+               case 'DSTD':
+                  {
+                     auto& stage = this->stages.emplace_back();
+                     subrecord.read(stage.healthPercent);
+                     subrecord.read(stage.damageStage);
+                     subrecord.read(stage.flags);
+                     subrecord.read(stage.selfDamageRate);
+                     subrecord.read(stage.explosionID);
+                     subrecord.read(stage.debrisID);
+                     subrecord.read(stage.debrisCount);
+                  }
+                  break;
+               case 'DMDL':
+               case 'DMDT':
+               case 'DMDS':
+                  if (this->stages.size()) {
+                     auto& stage = *this->stages.rbegin();
+                     stage.replacementModel.load(subrecord);
+                  }
+                  break;
+            }
+         }
+      #else
+         switch (subrecord.signature()) {
+            case 'DEST':
+               subrecord.read(this->health);
+               subrecord.read(stageCount);
+               subrecord.read(this->flags);
+               subrecord.skip_bytes(2);
+               if (stageCount)
+                  this->stages.reserve(stageCount);
+               break;
+            case 'DSTD':
+               {
+                  auto& stage = this->stages.emplace_back();
+                  subrecord.read(stage.healthPercent);
+                  subrecord.read(stage.damageStage);
+                  subrecord.read(stage.flags);
+                  subrecord.read(stage.selfDamageRate);
+                  subrecord.read(stage.explosionID);
+                  subrecord.read(stage.debrisID);
+                  subrecord.read(stage.debrisCount);
+               }
+               break;
+            case 'DMDL':
+            case 'DMDT':
+            case 'DMDS':
+               if (this->stages.size()) {
+                  auto& stage = *this->stages.rbegin();
+                  stage.replacementModel.load(subrecord);
+               }
+               break;
+            case 'DSTF': // end marker
+               break;
+         }
+      #endif
+   }
+   /*static*/ void destruction_stage_data::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+      form_id_t formID;
+      switch (subrecord.signature()) {
+         case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
+            break;
+         case 'DSTD': // destruction stage data
+            subrecord.skip_bytes(8);
+            if (subrecord.read(formID)) // explosion
+               stub->add_outbound_reference(formID);
+            if (subrecord.read(formID)) // debris
+               stub->add_outbound_reference(formID);
+            // remaining four bytes don't matter
+            break;
+         case 'DMDL': // destruction stage model
+         case 'DMDT': // 
+         case 'DMDS': // 
+            model::generateUseInfo(subrecord, stub);
+            break;
+         case 'DSTF': // destruction stage end marker
+            break;
+      }
+   }
+}

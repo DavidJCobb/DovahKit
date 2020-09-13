@@ -1,0 +1,310 @@
+#include "basic_reader.h"
+#include "file.h"
+#include "../../../helpers/strings.h"
+#include "../../form_stub.h"
+#include "../../logging.h"
+#include "../../../zlib/zlib.h"
+
+namespace dovah::tes_file_reading {
+   void basic_reader::setPos(uint32_t pos) {
+      this->stream_position = pos;
+   }
+   uint32_t basic_reader::getPos() {
+      return this->stream_position;
+   }
+   void basic_reader::skipBytes(uint32_t count) {
+      this->stream_position += count;
+   }
+   void basic_reader::rewind(uint32_t by) {
+      this->setPos(this->getPos() - by);
+   }
+   bool basic_reader::isEOF() {
+      return !this->file->is_in_bounds(this->stream_position, 1);
+   }
+   bool basic_reader::is_good() {
+      return !this->isEOF();
+   }
+
+   namespace {
+      void _log_bad_record_signature(basic_reader* reader, uint32_t pos, uint32_t sig, bool isUnknown) {
+         auto  file = reader->as_file();
+         assert(file && "TESPluginBaseReader should be or have an owning file.");
+         auto& filename = file->get_filename();
+         file->load_order.logError([=](FatalLoadError& error) {
+            error.code = LoadErrorCode::malformed_file;
+            error.file = filename;
+            error.fileOffset = pos;
+            if (isUnknown)
+               error.parseError = "Record with an unknown signature. (";
+            else
+               error.parseError = "Record with a suspicious signature. (";
+            char s[5];
+            dovah::logging::format_signature(sig, s);
+            error.parseError += s;
+            error.parseError += ')';
+         });
+         file->abort();
+      }
+      bool _validate_record_signature(basic_reader* reader, uint32_t signature, uint32_t pos) {
+         auto& lo = LoadOrder::get();
+         if (lo.isLoading()) {
+            if (!lo.options.allowSuspiciousRecordSignatures) {
+               if (form_type_info::signature_is_suspicious(signature)) {
+                  _log_bad_record_signature(reader, pos, signature, false);
+                  //
+                  // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+                  // to load more of the file. The error still properly gets logged, because it's the first error 
+                  // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+                  // the load process, but we still waste time trying to load the rest of the file and indeed 
+                  // the rest of the load order.
+                  //
+                  // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+                  // could override it to log the filename and to abort, while the threaded readers could 
+                  // override it to log their owner's filename and abort their owner.
+                  //
+                  return false;
+               }
+            }
+            if (!lo.options.allowUnknownRecordSignatures) {
+               if (form_type_info::signature_to_form_type(signature) == form_type::none) {
+                  _log_bad_record_signature(reader, pos, signature, true);
+                  //
+                  // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+                  // to load more of the file. The error still properly gets logged, because it's the first error 
+                  // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+                  // the load process, but we still waste time trying to load the rest of the file and indeed 
+                  // the rest of the load order.
+                  //
+                  // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+                  // could override it to log the filename and to abort, while the threaded readers could 
+                  // override it to log their owner's filename and abort their owner.
+                  //
+                  return false;
+               }
+            }
+         }
+         return true;
+      }
+      void _log_record_allocation_failure(basic_reader* reader, uint32_t pos, uint32_t size, const record& record) {
+         auto  file = reader->as_file();
+         assert(file && "TESPluginBaseReader should be or have an owning file.");
+         auto& filename = file->get_filename();
+         LoadOrder::get().logError([&](FatalLoadError& error) {
+            error.code       = LoadErrorCode::insufficient_memory;
+            error.file       = filename;
+            error.fileOffset = pos;
+            error.formID     = record.formID();
+            cobb::sprintf(
+               error.parseError,
+               "Not enough memory to load the record's contents, even temporarily. A massive record size may indicate corrupted data or a parse error. The record claimed to be 0x%X bytes long",
+               size
+            );
+            if (record.body_is_compressed())
+               error.parseError += " after decompression.";
+            else
+               error.parseError += '.';
+         });
+         file->abort();
+      }
+   }
+   basic_reader::object_type basic_reader::next_record_or_group() {
+      auto filename = this->as_file()->get_filename().c_str();
+      //
+      auto& record = this->_record;
+      if (record) {
+         /*//
+         if (this->getPos() == record.end)
+            _DEBUGMSG("Reached the end of record of type %s from %08X to %08X...", FMT_SIGNATURE(record.signature()), record.head_pos, record.end);
+         else
+            _DEBUGMSG("Skipping record of type %s from %08X to %08X...", FMT_SIGNATURE(record.signature()), record.head_pos, record.end);
+         //*/
+         this->setPos(record.end);
+         record.reset();
+      }
+      //
+      // TODO: What happens if we hit an empty GRUP? Do we properly advance past it?
+      //
+      // Make sure we properly handle passing the end of a group:
+      //
+      auto pos = this->getPos();
+      for (uint32_t i = 0; i < this->_groups.size(); i++) {
+         auto& group = this->_groups[i];
+         if (!group)
+            break;
+         if (pos >= group.end)
+            group.reset();
+      }
+      //
+      if (!this->is_good())
+         return object_type::none;
+      uint32_t signature;
+      this->read(signature);
+      signature = _byteswap_ulong(signature);
+      if (signature == 'GRUP') {
+         this->rewind(4);
+         //
+         auto pos = this->getPos();
+         int32_t parent = -1;
+         for (uint32_t i = 0; i < this->_groups.size(); i++) {
+            auto& group = this->_groups[i];
+            if (!group)
+               break;
+            parent = i;
+         }
+         assert(parent + 1 < this->_groups.size());
+         auto& group = this->_groups[parent + 1];
+         group.pos   = this->getPos();
+         this->read(group.header);
+         group.header.signature = _byteswap_ulong(group.header.signature);
+         group.end   = group.pos + group.header.size;
+         return object_type::group;
+      }
+      //
+      // else it must be a record
+      //
+      this->rewind(4);
+      //
+      record.head_pos = this->getPos();
+      if (auto& group = this->get_current_group())
+         if (record.head_pos >= group.end)
+            return object_type::none;
+      this->read(record.header);
+      record.header.signature = _byteswap_ulong(record.header.signature);
+      record.body_pos = this->getPos();
+      record.end = record.body_pos + record.header.size;
+      if (!this->is_good())
+         return object_type::none;
+      if (!_validate_record_signature(this, record.header.signature, record.head_pos)) // also logs the appropriate error
+         return object_type::none;
+      {
+         switch (record.header.signature) {
+            case 'CELL':
+            case 'DIAL':
+            case 'WRLD':
+               this->last_potential_group_parent = record.header.formID;
+               break;
+            default:
+               this->last_potential_group_parent = 0;
+         }
+      }
+      if (record.header.body_is_compressed()) {
+         uint32_t decompressed_size;
+         uint32_t compressed_size = record.header.size - sizeof(decompressed_size);
+         this->read(decompressed_size);
+         record.data.allocate(decompressed_size);
+         if (record.data.empty()) {
+            _log_record_allocation_failure(this, record.head_pos, decompressed_size, record);
+            //
+            // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+            // to load more of the file. The error still properly gets logged, because it's the first error 
+            // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+            // the load process, but we still waste time trying to load the rest of the file and indeed 
+            // the rest of the load order.
+            //
+            // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+            // could override it to log the filename and to abort, while the threaded readers could 
+            // override it to log their owner's filename and abort their owner.
+            //
+         } else {
+            auto input_buffer = malloc(compressed_size);
+            this->read(input_buffer, compressed_size);
+            uint32_t out_size = decompressed_size;
+            uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
+            free(input_buffer);
+            if (out_size != decompressed_size) {
+               dovah::logging::print_line("Size mismatch for decompressed record! Offset %08X, expected final size %08X, got size %08X.", record.head_pos, decompressed_size, out_size);
+            }
+            assert(out_size == decompressed_size);
+         }
+      } else {
+         record.data.allocate(record.header.size);
+         if (record.data.empty()) {
+            _log_record_allocation_failure(this, record.head_pos, record.header.size, record);
+            //
+            // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+            // to load more of the file. The error still properly gets logged, because it's the first error 
+            // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+            // the load process, but we still waste time trying to load the rest of the file and indeed 
+            // the rest of the load order.
+            //
+            // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+            // could override it to log the filename and to abort, while the threaded readers could 
+            // override it to log their owner's filename and abort their owner.
+            //
+         } else {
+            this->read(record.data.raw(), record.header.size);
+         }
+      }
+      record.offset = 0;
+      //
+      return object_type::record;
+   }
+   //
+   bool basic_reader::next_subrecord() {
+      auto& r = this->_record;
+      if (this->_subrecord.header.signature) {
+         this->_record.skip(this->_subrecord.end - this->_record.stream_pos());
+         this->_subrecord.header.signature = 0;
+      }
+      if (this->_record.stream_pos() >= this->_record.end)
+         return false;
+      uint16_t size;
+      this->_record.read(this->_subrecord.header.signature);
+      this->_record.read(size);
+      this->_subrecord.header.size = size;
+      if (this->_subrecord.header.signature == 'XXXX') {
+         //
+         // An 'XXXX' subrecord is used as a prefix for a subrecord whose size is 
+         // larger than what can be represented with the usual two-byte length.
+         //
+         if (this->_subrecord.header.size != 4) {
+            LoadOrder::get().logError([this](FatalLoadError& error) {
+               error.code       = LoadErrorCode::malformed_file;
+               error.file       = this->as_file()->get_filename().c_str();
+               error.fileOffset = this->getPos();
+               error.parseError = "Extended subrecord with no length.";
+               //
+               auto& record = this->get_current_record();
+               if (record)
+                  error.formID = record.formID();
+            });
+            this->_subrecord.header.signature = 0;
+            return false; // ERROR
+         }
+         static_assert(sizeof(this->_subrecord.header.size) == 4, "XXXX subrecords store a four-byte subrecord length. Alter the struct definition accordingly.");
+         this->_record.read(this->_subrecord.header.size); // the contents of the XXXX subrecord are the length
+         //
+         // Get the next subrecord.
+         //
+         this->_record.read(this->_subrecord.header.signature);
+         this->_record.skip(2);
+      }
+      this->_subrecord.header.signature = _byteswap_ulong(this->_subrecord.header.signature);
+      this->_subrecord.pos = this->_record.body_pos + this->_record.offset;
+      this->_subrecord.end = this->_subrecord.pos + size;
+      if (!this->is_good() || !this->_record.is_in_bounds())
+         return false;
+      return true;
+   }
+   form_stub* basic_reader::make_stub_for_record(file_reader& file) {
+      auto& record = this->get_current_record();
+      auto  stub   = new form_stub();
+      stub->file     = &file;
+      stub->offset   = record.head_pos;
+      stub->formID   = record.formID();
+      stub->formType = form_type_info::signature_to_form_type(record.signature());
+      return stub;
+   }
+   void basic_reader::extract_editor_id_for_stub(form_stub* stub) {
+      if (form_type_info::lookup(stub->formType).flags & form_type_info::flag::no_editor_id)
+         return;
+      auto& record = this->get_current_record();
+      while (auto& subrecord = record.next_subrecord()) {
+         if (subrecord.signature() == 'EDID') {
+            subrecord.to_string(stub->editorID);
+            return;
+         }
+      }
+   }
+
+}

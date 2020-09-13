@@ -1,0 +1,207 @@
+#pragma once
+#include <atomic>
+#include <cstdint>
+#include <map>
+#include <string>
+#include <type_traits>
+#include "core.h"
+
+namespace dovah {
+   class file_load_order;
+   namespace loaded_forms {
+      class Form;
+   }
+   namespace tes_file_reading {
+      class basic_reader;
+      class file_reader;
+   }
+
+   class form_stub;
+
+   template<typename loaded_form_t> class loaded_form_ptr {
+      //
+      // This is intended as a smart pointer not for the FormStub itself, but for the 
+      // loaded form data, going *through* the FormStub.
+      //
+      // Suggested usage for when you have a FormStub, know the type of form it holds, 
+      // and wish to load and use the form data:
+      //
+      //    auto form  = myFormStub.load();
+      //    auto quest = form.ptr_cast<LoadedForms::Quest>();
+      //    //
+      //    // ...and then you can use (quest) if it were a LoadedForms::Quest*. Even 
+      //    // without casting, you can use (form) as if it were a LoadedForms::Form*.
+      //
+      protected:
+         form_stub* wrapped = nullptr;
+         inline void _inc() {
+            auto fs = this->wrapped;
+            if (fs) {
+               assert(!fs->refcount_is_maxed_out() && "FormStub refcount is already at maximum!");
+               fs->refcount++;
+            }
+         }
+         inline void _dec() {
+            auto fs = this->wrapped;
+            if (fs) {
+               assert(fs->get_refcount() != 0 && "FormStub refcount is already zero!");
+               fs->refcount--;
+               if (fs->refcount == 0 && fs->can_unload_form()) {
+                  auto form = fs->form;
+                  if (form) {
+                     delete form;
+                     fs->form = nullptr;
+                  }
+               }
+            }
+         }
+      public:
+         using wrapped_type = loaded_form_t;
+         //
+         loaded_form_ptr(FormStub* stub) : wrapped(stub) { this->_incRef(); };
+         ~loaded_form_ptr() {
+            this->_dec();
+            this->wrapped = nullptr;
+         }
+
+         operator bool() { return this->wrapped != nullptr && this->wrapped->form != nullptr; };
+         operator loaded_form_t* () const noexcept { return (loaded_form_t*)this->wrapped->form; };
+         loaded_form_t* operator->() const noexcept { return (loaded_form_t*)this->wrapped->form; };
+
+         loaded_form_ptr<loaded_form_t>& operator=(form_stub* stub) noexcept {
+            this->_dec();
+            this->wrapped = stub;
+            this->_inc();
+            return *this;
+         }
+         loaded_form_ptr<loaded_form_t>& operator=(const loaded_form_ptr<loaded_form_t>& other) noexcept {
+            this->_dec();
+            this->wrapped = other.wrapped;
+            this->_inc();
+            return *this;
+         }
+
+         template<typename other_loaded_form_t> loaded_form_ptr<other_loaded_form_t> ptr_cast() {
+            return loaded_form_ptr<other_loaded_form_t>(this->wrapped);
+         }
+   };
+
+   struct group_stub {
+      bare_form_id_t parentFormID = 0; // 0 for interior cells
+      uint8_t        type;
+      union {
+         uint32_t interior = 0;
+         struct {
+            int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
+            int16_t y;
+         } exterior;
+      } cellBlock; // 0 for non-cells
+      union {
+         uint32_t interior = 0;
+         struct {
+            int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
+            int16_t y;
+         } exterior;
+      } cellSubBlock; // 0 for non-cells
+   };
+
+   #pragma region Use Info
+   //
+   // USE INFO
+   //
+   // Use Info serves two purposes: it is a useful thing to be able to display in the UI; and 
+   // it is needed in order to safely delete a form. If Form A refers to Form B, and we delete 
+   // Form B, then we must clear B's form ID from Form A; if we don't, and if we create a new 
+   // form using the former Form B's form ID, then Form A will now have a reference to a form 
+   // that it doesn't expect. As such, Form B must be aware of all inbound connections, incl-
+   // uding from Form A.
+   //
+   // Yet Form A must also have a list of all outbound connections, including to Form B. If 
+   // we delete Form A, then we must be able to tell Form B that Form A no longer refers to 
+   // it; otherwise, if we then delete Form B, it will try to update the non-existent Form A.
+   //
+   // So we must keep track of all connections between forms, bidirectionally.
+   //
+   struct use_info_entry {
+      struct flag {
+         flag() = delete;
+         enum type : uint8_t {
+            i_am_child_of  = 0x01,
+            i_am_parent_of = 0x02,
+         };
+      };
+      using flags_t = std::underlying_type_t<flag::type>;
+      //
+      form_stub* other    = nullptr;
+      uint32_t   refcount = 0;
+      uint8_t    flags    = 0;
+   };
+   using use_info_list = std::map<bare_form_id_t, use_info_entry>;
+   #pragma endregion
+
+   class form_stub {
+      //
+      // A class which represents a form, whether loaded or unloaded. Every FormStub contains 
+      // information that can be used to load the form's data from a given ESP file on the fly. 
+      // The owner of a FormStub is the TESPluginFile that produced it.
+      //
+      template<typename loaded_form_t> friend class loaded_form_ptr;
+      friend file_load_order;
+      friend tes_file_reading::basic_reader;
+      friend tes_file_reading::file_reader;
+      //
+      public:
+         ~form_stub();
+         struct flag {
+            flag() = delete;
+            enum type : uint8_t {
+               is_edited    = 0x01,
+               is_hardcoded = 0x02,
+            };
+         };
+         using flags_t      = std::underlying_type_t<flag::type>;
+         using owner_file_t = tes_file_reading::file_reader;
+         //
+      protected:
+         owner_file_t*  file   = nullptr;
+         uint32_t       offset = 0; // offset of this form's record header within its owning file
+         std::atomic<uint32_t> refcount = 0;
+         void build_outbound_refs(tes_file_reading::basic_reader*) noexcept;
+         void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
+         void receive_inbound_ref(form_stub* inbound, flags_t flags = 0) noexcept;
+         //
+      public:
+         group_stub    groupInfo;
+         uint32_t      formID   = 0; // form ID (file-local)
+         uint8_t       formType = 0;
+         flags_t       flags    = 0;
+         // there will be 2 bytes of padding here
+         std::string   editorID;
+         loaded_forms::Form* form = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
+         use_info_list outbound; // other forms that this one refers to
+         use_info_list inbound;  // other forms that refer to this one
+         //
+         loaded_form_ptr<loaded_forms::Form> load();
+         //
+         inline bool can_unload_form() const noexcept {
+            if (this->is_edited())
+               return false;
+            if (this->is_hardcoded() && !this->file) // form is hardcoded and this FormStub is not an override
+               return false;
+            return true;
+         }
+         inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
+         inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
+         inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
+         inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
+         inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
+         void set_edited(bool v);
+         //
+         void get_source_filename(std::string& out) const noexcept;
+         //
+         void add_outbound_reference(uint32_t toFormID, flags_t flags = 0);
+         //
+         static void* operator new(std::size_t sz);
+         static void operator delete(void* ptr, std::size_t sz);
+   };
+}
