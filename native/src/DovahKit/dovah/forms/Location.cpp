@@ -175,8 +175,7 @@ namespace dovah::loaded_forms {
                   stub->add_outbound_reference(formID);
                   subrecord.unchecked_read(formID);
                   stub->add_outbound_reference(formID);
-                  subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  subrecord.skip_bytes(4);
                }
                break;
             case 'ACSR':

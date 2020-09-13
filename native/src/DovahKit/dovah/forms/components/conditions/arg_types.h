@@ -51,8 +51,9 @@ namespace dovah::loaded_forms::components {
             arg_type*    parent = nullptr;
             std::string  name;
             e_underlying underlying = e_underlying::none;
-            bool isEnum = false;
-            const bool isUnion = false;
+            bool         isEnum     = false;
+            const bool   isUnion    = false;
+            bool         can_be_alias = false;
             std::vector<enum_value_definition> enumValues;
             std::vector<form_type_t> allowedFormTypes;
             //
@@ -76,7 +77,8 @@ namespace dovah::loaded_forms::components {
       #pragma region Helper subclasses for quickly instantiating different argument types
       class arg_form_type : public arg_type {
          public:
-            arg_form_type(const char* n, std::initializer_list<form_type_t> formTypes) : arg_type(n, arg_underlying_type::formID) {
+            arg_form_type(const char* n, std::initializer_list<form_type_t> formTypes, bool can_be_alias = false) : arg_type(n, arg_underlying_type::formID) {
+               this->can_be_alias = can_be_alias;
                for (auto it = formTypes.begin(); it != formTypes.end(); ++it)
                   this->allowedFormTypes.push_back(*it);
             }

@@ -67,7 +67,7 @@ namespace dovah::loaded_forms::components {
          };
       };
 
-      uint8_t   type; // flags << 5 | operator
+      uint8_t   type; // flags | (operator << 5)
       float     compare_to_constant;
       form_id_t compare_to_global;
       uint16_t  function;

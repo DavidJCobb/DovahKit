@@ -222,6 +222,27 @@ namespace dovah::tes_file_reading {
          foo.resize(size);
          MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), size);
          this->file->open(foo.c_str());
+         if (!*this->file) {
+            void* message;
+            uint32_t size = FormatMessage(
+               FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+               nullptr,
+               this->file->get_error(),
+               LANG_USER_DEFAULT,
+               (LPTSTR)&message,
+               0,
+               nullptr
+            );
+            this->error.message.clear();
+            uint32_t i = 0;
+            while (wchar_t c = ((const wchar_t*)message)[i++])
+               this->error.message += c;
+            LocalFree(message);
+            //
+            this->error.code = file_read_error::error_code::filesystem_error;
+            this->error.file = this->name;
+            return false;
+         }
       }
       this->name = std::filesystem::path(filepath).filename().string();
       //

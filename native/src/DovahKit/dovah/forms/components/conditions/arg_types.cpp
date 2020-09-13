@@ -71,7 +71,7 @@ namespace dovah::loaded_forms::components {
 
       namespace arg_types {
          arg_type      None            = arg_type("None", arg_underlying_type::none);
-         arg_form_type Actor           = arg_form_type("Actor", { form_type::actor });
+         arg_form_type Actor           = arg_form_type("Actor", { form_type::actor }, true);
          arg_form_type ActorBase       = arg_form_type("actor_base", { form_type::actor_base });
          arg_enum_type ActorValue      = arg_enum_type("ActorValue", 0, {
             "Aggression",
@@ -592,9 +592,9 @@ namespace dovah::loaded_forms::components {
             form_type::grenade,
             form_type::missile,
             form_type::placed_hazard,
-         });
+         }, true);
          arg_form_type OwnerForm       = arg_form_type("Owner", { form_type::actor_base, form_type::faction });
-         arg_form_type Package         = arg_form_type("Package", { form_type::package });
+         arg_form_type Package         = arg_form_type("Package", { form_type::package }, true);
          arg_type      PackageData     = arg_type("Package Data", arg_underlying_type::package_data);
          arg_form_type Perk            = arg_form_type("Perk", { form_type::perk });
          arg_form_type Quest           = arg_form_type("Quest", { form_type::quest });

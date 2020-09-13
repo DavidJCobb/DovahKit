@@ -447,7 +447,7 @@ namespace dovah::loaded_forms::components {
          function(429, "IsScenePackageRunning", ""),
          function(430, "GetHealthPercentage", ""),
          function(431, function::dummy),
-         function(432, "GetIsObjectType", "", arg_types::FormList),
+         function(432, "GetIsObjectType", "", arg_types::FormType),
          function(433, function::dummy),
          function(434, "GetDialogueEmotion", ""),
          function(435, "GetDialogueEmotionValue", ""),
@@ -778,8 +778,11 @@ namespace dovah::loaded_forms::components {
    }
    condition_info::arg_underlying_type condition::get_argument_underlying_type(uint8_t index) const noexcept {
       auto a = this->get_argument_type(index);
-      if (a)
+      if (a) {
+         if (a->can_be_alias && this->get_flags() & flag::use_aliases)
+            return condition_info::arg_underlying_type::aliasID;
          return a->underlying;
+      }
       return condition_info::arg_underlying_type::none;
    }
 
@@ -851,11 +854,13 @@ namespace dovah::loaded_forms::components {
       subrecord.unchecked_read(function);
       subrecord.skip_bytes(2);
       {
+         bool uses_aliases = type & flag::use_aliases;
+         //
          auto func = condition_info::function::lookup_by_id(function);
          auto arg0 = func->argument_types[0];
          auto arg1 = func->argument_types[1];
          uint32_t firstValue; // needed for when the second arg is a union
-         if (arg0 && arg0->underlying == condition_info::arg_underlying_type::formID) {
+         if (!uses_aliases && arg0 && arg0->underlying == condition_info::arg_underlying_type::formID) {
             subrecord.unchecked_read(formID);
             stub->add_outbound_reference(formID);
          } else
@@ -865,7 +870,7 @@ namespace dovah::loaded_forms::components {
             value.dword = firstValue;
             arg1 = arg1->resolve_union(arg0, &value);
          }
-         if (arg1 && arg1->underlying == condition_info::arg_underlying_type::formID) {
+         if (!uses_aliases && arg1 && arg1->underlying == condition_info::arg_underlying_type::formID) {
             subrecord.unchecked_read(formID);
             stub->add_outbound_reference(formID);
          } else

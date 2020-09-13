@@ -113,8 +113,6 @@ namespace dovah {
          inline bool defined() const noexcept { return this->code != error_code::none; }
          const char* code_string() const noexcept;
          //
-         operator bool() const noexcept { return this->defined(); }
-         //
          static file_read_error success() { return file_read_error(); }
    };
 }

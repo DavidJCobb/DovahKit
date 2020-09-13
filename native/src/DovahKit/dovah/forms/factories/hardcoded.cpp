@@ -13,7 +13,7 @@
 namespace dovah {
    void add_hardcoded_forms_to_load_order(file_load_order& lo) {
       //
-      // TODO: [ACHR:00000014]PlayerRef
+      // TODO: [ACHR:00000014]PlayerRef needs a loaded form object
       //
       // TODO: The CK lists DefaultWorld as having one exterior cell; is that hardcoded or is its existence 
       //       just kinda implied (i.e. is it generated at run-time after DefaultWorld is created)?
@@ -136,6 +136,20 @@ namespace dovah {
          stub->formType = form_type_info::signature_to_form_type('STAT');
          stub->editorID = "HorseMarker";
          // Model File "Name: Marker_Horse.nif"
+         lo._accept_hardcoded_form(stub);
+      }
+      {  // [ACHR:014]"PlayerRef"
+         auto stub = new form_stub();
+         stub->formID   = 0x014;
+         stub->formType = form_type_info::signature_to_form_type('ACHR');
+         stub->editorID = "PlayerRef";
+         //
+         /*//auto form = new loaded_forms::Actor;
+         // TODO: set 0x00000007 as the base form
+         form->stub = stub;
+         stub->form = form;
+         //*/
+         //
          lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:015]"MultiBoundMarker"

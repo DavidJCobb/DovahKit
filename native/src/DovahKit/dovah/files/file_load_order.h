@@ -74,6 +74,7 @@ namespace dovah {
                bool allow_suspicious_record_signatures = false;
             } options;
          } queued_load;
+         file_read_error load_error;
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -98,6 +99,7 @@ namespace dovah {
          form_stub* get_form_of_probable_type(form_type_t, uint32_t formID) const noexcept; // searches (formType) first, then the other types
          void for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)>);
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
+         form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
          #pragma endregion
          
    };
