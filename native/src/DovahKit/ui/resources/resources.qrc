@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="widgets">
+    <file>treeview/branch_between.gif</file>
+    <file>treeview/branch_terminal.gif</file>
+    <file>treeview/branch_v.gif</file>
+  </qresource>
+</RCC>

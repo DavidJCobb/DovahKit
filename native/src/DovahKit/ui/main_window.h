@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <QtWidgets/QMainWindow>
 #include "ui_main_window.h"
+#include "main_window/object_window.h"
 
 class MainWindow : public QMainWindow {
    Q_OBJECT
@@ -15,4 +16,5 @@ class MainWindow : public QMainWindow {
       //
    private:
       Ui::MainWindow ui;
+      ObjectWindow* object_window = nullptr;
 };

@@ -133,13 +133,17 @@
     <ClCompile Include="dovah\forms\Voicetype.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\logging.cpp" />
+    <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\multiheap.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
+    <ClCompile Include="ui\main_window\object_window.cpp" />
+    <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\core.h" />
@@ -182,6 +186,11 @@
     <ClInclude Include="dovah\form_stub_heap.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="resource.h" />
+    <QtMoc Include="ui\generic\QLinedTreeView.h" />
+    <QtMoc Include="ui\main_window\object_window\basic_form_type_treeview.h" />
+    <QtMoc Include="ui\main_window\object_window.h" />
+    <QtMoc Include="editor\core.h" />
     <ClInclude Include="helpers\bitset.h" />
     <ClInclude Include="helpers\bitwise.h" />
     <ClInclude Include="helpers\files.h" />
@@ -200,9 +209,15 @@
     <QtUic Include="ui\main_window\object_window.ui" />
   </ItemGroup>
   <ItemGroup>
+    <QtRcc Include="ui\resources\resources.qrc" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\DovahKitSln\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
