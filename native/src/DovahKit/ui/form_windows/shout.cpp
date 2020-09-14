@@ -1,4 +1,5 @@
 #include "shout.h"
+#include "../../editor/core.h"
 
 FormDialogShout::FormDialogShout(dovah::form_stub* stub, QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
@@ -37,8 +38,9 @@ void FormDialogShout::load() {
 void FormDialogShout::save() {
    if (!this->form)
       return;
-   this->form->stub->set_edited(true);
-   this->form->stub->editorID = this->ui.editorID->text().toStdString();
+   auto stub = this->form->stub;
+   stub->set_edited(true);
+   stub->editorID = this->ui.editorID->text().toStdString();
    this->form->name = this->ui.name->text().toStdString();
    this->form->treat_as_power(this->ui.treatAsPower->isChecked());
    this->form->menuDisplayObjectID = this->ui.menuDisplayObject->formID();
@@ -46,4 +48,6 @@ void FormDialogShout::save() {
    this->ui.word0->save();
    this->ui.word1->save();
    this->ui.word2->save();
+   //
+   emit DovahKitCore::get().formModified(stub);
 }

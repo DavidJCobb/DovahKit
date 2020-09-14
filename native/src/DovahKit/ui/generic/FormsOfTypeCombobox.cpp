@@ -3,14 +3,12 @@
 #include "../../editor/core.h"
 
 //
-// Constructing these and populating them can incur a pretty darned heavy performance hit. 
-// I wonder... What if we built a single persistent model that handled all forms, and then 
-// gave every FormsOfTypeCombobox a proxy model which wrapped it and hid irrelevant forms? 
-// Failing that, what if we just had a persistent model for every form type, such that two 
-// FormsOfTypeComboboxes focusing on the same single form type could share models? (That 
-// would be less useful for FormsOfTypeComboxes that have to support multiple form types 
-// at a time.)
+// These can incur a performance hit in Debug, but they're mostly fine in Release.
 //
+
+FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
+   this->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon); // needed for performance with large data sets
+};
 
 void FormsOfTypeCombobox::addFormType(dovah::form_type_t ft) {
    this->_formTypes.push_back(ft);

@@ -113,7 +113,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       auto parent = new model_item_type(tr("Actors", disambig), dovah::form_type::none);
       model->invisibleRootItem()->appendChild(parent);
       //
-      parent->appendChild(new model_item_type(tr("Actor", disambig), dovah::form_type::actor));
+      parent->appendChild(new model_item_type(tr("ActorBase", disambig), dovah::form_type::actor_base));
       parent->appendChild(new model_item_type(tr("Actor Action", disambig), dovah::form_type::action));
       parent->appendChild(new model_item_type(tr("BodyPartData", disambig), dovah::form_type::body_part_data));
       parent->appendChild(new model_item_type(tr("LeveledCharacter", disambig), dovah::form_type::leveled_character));

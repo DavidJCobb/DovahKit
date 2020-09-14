@@ -5,7 +5,7 @@
 class FormsOfTypeCombobox : public QComboBox {
    Q_OBJECT
    public:
-      FormsOfTypeCombobox(QWidget* parent = nullptr) : QComboBox(parent) {};
+      FormsOfTypeCombobox(QWidget* parent = nullptr);
       //
       void addFormType(dovah::form_type_t);
       inline bool allowNone() const noexcept { return this->_allowNone; }

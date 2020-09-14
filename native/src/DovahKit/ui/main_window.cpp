@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       }
       qDebug() << "Loaded Skyrim.esm.";
       qDebug() << "Time taken: " << ((uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm)) << " ms";
-      __debugbreak();
+      auto text = QString("Loaded all files in %1 ms.").arg((uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
+      this->statusBar()->showMessage(text);
    });
 }

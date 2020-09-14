@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <QDialog>
+#include "../../dovah/form_stub.h"
+#include "../../dovah/forms/Shout.h"
 #include "ui_shout.h"
 
 class FormDialogShout : public QDialog {

@@ -28,6 +28,7 @@ class DovahKitCore : public QObject {
       void dataAbandonComplete(); // we have abandoned all forms
       void dataAcquireComplete(); // we have loaded new files and forms
       void dataAcquireFailed(const dovah::file_read_error&);   // we tried to load new files, but failed
+      void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
       //
    public:
       void abandon_data();

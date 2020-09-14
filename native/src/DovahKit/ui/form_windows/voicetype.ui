@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogVoicetype</class>
+ <widget class="QDialog" name="FormDialogVoicetype">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>320</width>
+    <height>118</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Voicetype</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Editor ID</string>
+     </property>
+     <property name="buddy">
+      <cstring>editorID</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="editorID">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>2</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Gender</string>
+     </property>
+     <property name="buddy">
+      <cstring>gender</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="gender">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>2</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <item>
+      <property name="text">
+       <string>Male</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Female</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QCheckBox" name="allowDefault">
+     <property name="whatsThis">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If this option is enabled, then this voicetype will be valid for any dialogue whose conditions don't explicitly exclude actors with this voicetype. &amp;quot;Valid&amp;quot; here means that the game will check for and use sound files associated with this voicetype when the dialogue in question plays. You would typically enable this option for voices that are meant to apply to &amp;quot;generic&amp;quot; dialogue, while disabling it for creatures, unique NPC voices, and so on.&lt;/p&gt;&lt;p&gt;If this option is disabled, then this voicetype will only be valid for lines of dialogue that include the voicetype (directly or indirectly) by virtue of having one of the following conditions:&lt;/p&gt;&lt;p&gt;GetAllowWorldInteractions&lt;br/&gt;GetFactionRank&lt;br/&gt;GetInFaction&lt;br/&gt;GetIsAliasRef&lt;br/&gt;GetIsCreature&lt;br/&gt;GetIsCreatureType&lt;br/&gt;GetIsClass&lt;br/&gt;GetIsFormType&lt;br/&gt;GetIsID&lt;br/&gt;GetIsPlayableRace&lt;br/&gt;GetIsRace&lt;br/&gt;GetIsReference&lt;br/&gt;GetIsSex&lt;br/&gt;GetIsVoiceType&lt;br/&gt;IsChild&lt;br/&gt;IsInList&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>Allow default dialogue</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -8,7 +8,7 @@ namespace dovah::loaded_forms {
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'DNAM': // flags
-               subrecord.read(this->flags);
+               subrecord.read(this->voicetype_flags);
                break;
          }
       }
