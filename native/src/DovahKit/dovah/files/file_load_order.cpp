@@ -29,10 +29,15 @@ namespace dovah {
          delete f;
       this->files.clear();
       this->active_file = nullptr;
+      if (auto file = this->hardcoded_forms_file) {
+         delete file;
+         this->hardcoded_forms_file = nullptr;
+      }
    }
 
    #pragma region File loading
    void file_load_order::_make_hardcoded_forms() {
+      this->hardcoded_forms_file = new tes_file_reading::file_reader(*this);
       add_hardcoded_forms_to_load_order(*this);
    }
    void file_load_order::_accept_hardcoded_form(form_stub* stub) noexcept {
@@ -40,6 +45,7 @@ namespace dovah {
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
       //
+      stub->file = this->hardcoded_forms_file;
       stub->flags |= form_stub::flag::is_hardcoded;
       //
       bare_form_id_t formID = stub->formID;
@@ -92,6 +98,8 @@ namespace dovah {
    }
 
    uint8_t file_load_order::load_order_prefix_for(const loaded_file* file) const noexcept {
+      if (file == this->hardcoded_forms_file)
+         return 0;
       uint8_t size = this->files.size();
       for (uint8_t i = 0; i < size; i++)
          if (file == this->files[i])
@@ -105,6 +113,8 @@ namespace dovah {
       // before searching the full load order. (If we're currently loading file 00, then we 
       // start at zero, which is the same as searching the full load order anyway.)
       //
+      if (file == this->hardcoded_forms_file)
+         return 0;
       uint8_t size = this->files.size();
       uint8_t li   = this->loading_index;
       if (li && li < size)

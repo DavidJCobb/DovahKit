@@ -84,9 +84,9 @@ namespace dovah {
          public:
             file_load_order& load_order;
             file_read_error  error; // if the load process was aborted, what error, if any, did we encounter?
-            uint32_t      header_record_version = 0;
             uint32_t      flags   = 0;
             detail_flag_t details = 0;
+            uint16_t      header_record_version = 0;
             float    fileVersion = 0.94F;
             uint32_t recordCount = 0;
             uint32_t nextFormID;

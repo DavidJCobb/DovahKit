@@ -43,7 +43,8 @@ namespace dovah {
          //
          file_load_order_normalizer normalizer;
          std::vector<loaded_file*> files;
-         loaded_file*      active_file = nullptr;
+         loaded_file*      hardcoded_forms_file = nullptr;
+         loaded_file*      active_file          = nullptr;
          _form_map         forms;
          _form_map_by_type forms_by_type;
          _form_map         active_file_forms; // all forms that come from the active file AND all edited forms, which means that some of these may have originally loaded from different files.
@@ -86,10 +87,12 @@ namespace dovah {
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
 
-         // acceptFormStub
+         // (acceptFormStub)
          // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 
          // from an override record, then the overridden record's stub is deleted and replaced -- we 
          // only retain the last-loaded record for any given form ID, like the game and the CK.
+         //
+         // Notably NOT used for the initial load of hardcoded forms; see _accept_hardcoded_form.
          //
          form_id_status accept_form_stub(form_stub*) noexcept;
          #pragma endregion

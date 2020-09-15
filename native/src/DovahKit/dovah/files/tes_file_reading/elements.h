@@ -136,6 +136,7 @@ namespace dovah {
             record(record& other) = delete; // no copy
             //
             subrecord& get_current_subrecord() const noexcept;
+            inline bool is_skyrim_special() const noexcept { return this->header.version >= 44; }
             //
             operator bool() const noexcept { return this->header.signature != 0; }
             //
@@ -205,6 +206,7 @@ namespace dovah {
             subrecord(subrecord& other) = delete; // no copy
             //
             record& get_containing_record() const;
+            inline bool is_skyrim_special() const noexcept { return this->get_containing_record().is_skyrim_special(); }
             inline void reset() {
                this->header.signature = 0;
             }

@@ -30,11 +30,11 @@
 //  - Generate proper Use Info for hardcoded forms.
 //
 //     - During use info generation, when we're setting up outbound use info, we 
-//       should have a special handler for any hardcoded form_stub with a nullptr 
-//       file (that is, any hardcoded form that hasn't been overridden by something 
-//       in the load order). This handler should construct outbound references for 
-//       these hardcoded forms, by hand. We mainly only need this for 14:PlayerRef 
-//       using 07:Player as its base form.
+//       should have a special handler for any hardcoded form_stub whose file is 
+//       the file_load_order::hardcoded_forms_file; these are hardcoded forms that 
+//       have not been overridden in any loaded files. Our special handler should 
+//       construct outbound references for these hardcoded forms, by hand. We 
+//       mainly only need this for 14:PlayerRef using 07:Player as its base form.
 //
 // THINGS TO LOOK INTO:
 //
@@ -123,6 +123,10 @@
 //          in general and per form type. That might provide some insight.
 //
 // DISTANT TASKS:
+//
+//  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
+//    they want to open files from. Currently, we just always use the Skyrim Classic 
+//    install path.
 //
 //  - Refhandle usage tracking: the number of persistent references in ESMs, and the 
 //    number of all references in non-ESMs, should be tracked and stored on each 
