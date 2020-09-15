@@ -1,7 +1,18 @@
 #include "core.h"
+#include <QThread>
+#include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
+#include "core_internals/load_task.h"
 
+DovahKitCore::DovahKitCore() {
+   qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
+}
 DovahKitCore::~DovahKitCore() {
+   if (auto thread = this->async_loader) {
+      thread->quit();
+      thread->wait();
+   }
+   //
    delete this->load_order;
    this->load_order = nullptr;
 }
@@ -21,14 +32,72 @@ void DovahKitCore::queue_load_order_file(const std::filesystem::path& p) {
 void DovahKitCore::unqueue_load_order_file(const std::filesystem::path& p) {
    this->load_order->unqueue_file(p.string());
 }
-bool DovahKitCore::acquire_load_order_data() {
-   auto result = this->load_order->load_queued_files();
-   if (result) {
-      this->loaded = true;
+void DovahKitCore::set_queued_active_file(const std::filesystem::path& p) {
+   this->load_order->queue_active_file(p.string());
+}
+
+bool DovahKitCore::acquire_load_order_data(bool async) {
+   if (this->loading || this->async_loader)
+      return false;
+   this->loading = true;
+   if (async) {
+      auto worker = new DovahKitEditorInternals::load_task(*this);
+      auto thread = this->async_loader;
+      if (!thread)
+         thread = this->async_loader = new QThread;
+      worker->moveToThread(thread);
+      QObject::connect(thread, &QThread::started,  worker, &DovahKitEditorInternals::load_task::exec);
+      QObject::connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+      QObject::connect(thread, &QThread::finished, this, [this, thread]() {
+         this->async_loader = nullptr;
+         this->loading      = false;
+         thread->deleteLater();
+      });
+      //
+      // NOTE: For any signals emitted by the worker and received from the spawning thread, you MUST 
+      // specify a context object (i.e. the QObject before your functor). If you don't, Qt WILL fail 
+      // an assertion when the signal is received, before even executing any of the code in your 
+      // signal handler, and the assertion message WILL be completely wrong and waste multiple hours 
+      // of your goddamned time.
+      //
+      // Presumably it has something to do with Qt::AutoConnection, which is supposed to adapt signals 
+      // across threads; I assume it can't do that if you don't explicitly provide a context object 
+      // for it to adapt to. (All QObjects are aware of their owning thread, apparently.)
+      // 
+      // Naturally, none of this is mentioned in their documentation or examples for QThread, at least 
+      // as of this writing. It's far from the only thing missing, either.
+      //
+      QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this](file_load_stats stats) {
+         emit dataAcquireComplete();
+         emit fileLoadStatisticsAvailable(stats);
+      });
+      QObject::connect(worker, &DovahKitEditorInternals::load_task::failed, this, [this]() {
+         emit dataAcquireFailed(this->load_order->load_error);
+      });
+      QObject::connect(worker, &DovahKitEditorInternals::load_task::ended, this, [this, thread]() {
+         //
+         // As a bonus, we also have to call QThread::quit() manually when our work is complete. For 
+         // some reason, QThread isn't cognizant of its no longer having any work to do. The documen-
+         // tation for QThread does not mention this, and the examples actively omit it. I managed to 
+         // find it explained over at <https://stackoverflow.com/a/17094375>, which has exactly the 
+         // level of detail that you should be able to expect from the official documentation, but 
+         // can't.
+         //
+         thread->quit();
+      });
+      //
+      thread->start();
+      return false;
+   }
+   auto task = DovahKitEditorInternals::load_task(*this);
+   task.exec();
+   if (task.result) {
       emit dataAcquireComplete();
-   } else
+      emit fileLoadStatisticsAvailable(task.stats);
+   } else {
       emit dataAcquireFailed(this->load_order->load_error);
-   return result;
+   }
+   return task.result;
 }
 
 const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept {

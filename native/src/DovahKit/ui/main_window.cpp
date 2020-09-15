@@ -23,6 +23,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    ui.setupUi(this);
    _window = this;
    //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::fileLoadStatisticsAvailable, [this](const DovahKitCore::file_load_stats& stats) {
+      auto text = QString("Loaded all files in %1 ms.").arg(stats.milliseconds);
+      this->statusBar()->showMessage(text);
+   });
+   //
    this->object_window = new ObjectWindow(this);
    this->ui.mdi->addSubWindow(this->object_window, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
    //
@@ -47,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          qDebug() << "Time taken: " << ((uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm)) << " ms";
          //
          auto& e = editor.get_last_read_error();
-         QString text = QString("%1\nFile: %2\nDependency: %3\n\n%4\n\nForm ID: %5\nOffset: %6")
+         QString text = QString("%1<br/>File: %2<br/>Dependency: %3<br/><br/>%4<br/><br/>Form ID: %5<br/>Offset: %6")
             .arg(e.code_string())
             .arg(e.file.c_str())
             .arg(e.dependency.c_str())

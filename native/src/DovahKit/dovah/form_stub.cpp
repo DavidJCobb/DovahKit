@@ -33,8 +33,11 @@ namespace dovah {
    }
    loaded_form_ptr<loaded_forms::Form> form_stub::load() {
       if (!this->form && this->file) {
-         //_DEBUGMSG("stub is loading...");
          auto file = this->file;
+         //
+         // TODO: if the file's load_order is in the middle of a save operation, then 
+         // do not try to load the form.
+         //
          if (this->file->load_record_at(this->offset)) {
             auto& record   = this->file->get_current_record();
             auto  formType = form_type_info::signature_to_form_type(record.signature());

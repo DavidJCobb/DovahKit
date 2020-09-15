@@ -4,10 +4,13 @@
 namespace cobb {
    namespace windows_registry {
       #if UNICODE
-         using cstring_t = const wchar_t*;
+         using char_t    = wchar_t;
+         using string_t  = std::wstring;
       #else
-         using cstring_t = const char*;
+         using char_t    = char;
+         using string_t  = std::string;
       #endif
+      using cstring_t = const char_t*;
 
       enum class hkey {
          classes_root,
@@ -24,6 +27,6 @@ namespace cobb {
          ~key_handle();
       };
       //
-      bool get_string_value(hkey, cstring_t key, cstring_t value, std::wstring& out);
+      bool get_string_value(hkey, cstring_t key, cstring_t value, string_t& out);
    }
 }

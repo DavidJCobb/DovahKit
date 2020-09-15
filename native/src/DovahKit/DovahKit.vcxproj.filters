@@ -210,6 +210,9 @@
     <ClCompile Include="helpers\windows_registry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\core_internals\load_task.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -383,6 +386,9 @@
     <ClInclude Include="helpers\windows_registry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\performance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -454,6 +460,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\load_window\file_list.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\core_internals\load_task.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

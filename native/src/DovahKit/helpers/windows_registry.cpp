@@ -21,29 +21,12 @@ namespace {
       return 0;
    }
 
-   class _key_read_handle {
-      protected:
-         HKEY key;
-         bool valid = false;
-      public:
-         _key_read_handle() {}
-         _key_read_handle(hkey h, cstring_t subkey) {
-            LRESULT result = RegOpenKeyEx(
-               _enum_to_win(h),
-               subkey,
-               0,
-               KEY_QUERY_VALUE | KEY_WOW64_32KEY,
-               &this->key
-            );
-            this->valid = result == ERROR_SUCCESS;
-         }
-         ~_key_read_handle() {
-            if (!valid)
-               return;
-            RegCloseKey(this->key);
-            this->valid = false;
-         }
-   };
+   void _shrink_to_null(string_t& out) {
+      auto i = out.find(char_t('\0'));
+      if (i == std::string::npos)
+         return;
+      out.resize(i);
+   }
 }
 
 namespace cobb::windows_registry {
@@ -64,7 +47,7 @@ namespace cobb::windows_registry {
       static constexpr hkey _invalid_hkey = (hkey)0x01234567;
    }
    //
-   bool get_string_value(hkey h, cstring_t subkey, cstring_t value, std::wstring& out) {
+   bool get_string_value(hkey h, cstring_t subkey, cstring_t value, string_t& out) {
       HKEY    handle;
       LSTATUS result = RegOpenKeyEx(_enum_to_win(h), subkey, 0, KEY_QUERY_VALUE | KEY_WOW64_32KEY, &handle);
       if (result != ERROR_SUCCESS)
@@ -80,6 +63,7 @@ namespace cobb::windows_registry {
       );
       if (result == ERROR_SUCCESS) {
          RegCloseKey(handle);
+         _shrink_to_null(out);
          return true;
       }
       if (result == ERROR_MORE_DATA) {
@@ -91,9 +75,11 @@ namespace cobb::windows_registry {
             out.data(),
             &size
          );
-         RegCloseKey(handle);
-         if (result == ERROR_SUCCESS)
+         if (result == ERROR_SUCCESS) {
+            RegCloseKey(handle);
+            _shrink_to_null(out);
             return true;
+         }
       }
       RegCloseKey(handle);
       out.clear();

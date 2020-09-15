@@ -1,6 +1,6 @@
 # DovahKit
 
-A work-in-progress tool for editing Skyrim ESM/ESP files.
+A work-in-progress tool for editing Skyrim ESM/ESP files. The name is a pun on "Creation Kit" and "*Dovahkiin*," which means "Dragonborn" in the Dragon language.
 
 This tool was built using Visual Studio 2019. It dynamically links Qt, which was licensed under LGPLv3. Zlib is used as well; see zlib.h for its license terms.
 

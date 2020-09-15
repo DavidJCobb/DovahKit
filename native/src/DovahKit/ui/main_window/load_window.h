@@ -13,6 +13,8 @@ class LoadOrderOpenDialog : public QDialog {
       //
    private:
       Ui::LoadOrderOpenDialog ui;
+      bool _loading = false;
 
-      void commit(); // load the selected files
+      void blockUI();
+      void commit(); // load the selected files. this is async; listen for DovahKitCore's dataAcquireComplete and dataAcquireFailed
 };

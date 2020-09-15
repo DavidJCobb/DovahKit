@@ -7,27 +7,43 @@
 namespace dovah {
    class form_stub;
 }
+namespace DovahKitEditorInternals {
+   class load_task;
+}
 
 class DovahKitCore : public QObject {
    Q_OBJECT
+   friend class DovahKitEditorInternals::load_task;
    public:
       using form_type_t    = dovah::form_type_t;
       using bare_form_id_t = dovah::bare_form_id_t;
+      struct file_load_stats {
+         uint8_t  file_count   = 0;
+         uint32_t microseconds = 0;
+         uint32_t milliseconds = 0;
+      };
+      //
       static DovahKitCore& get() {
          static DovahKitCore instance;
          return instance;
       }
+      DovahKitCore();
       ~DovahKitCore();
       //
    protected:
       dovah::file_load_order* load_order = new dovah::file_load_order;
-      bool loaded = false;
+      bool    loaded  = false;
+      bool    loading = false;
+      QThread* async_loader = nullptr;
       //
    signals:
       void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption
       void dataAbandonComplete(); // we have abandoned all forms
       void dataAcquireComplete(); // we have loaded new files and forms
       void dataAcquireFailed(const dovah::file_read_error&);   // we tried to load new files, but failed
+      //
+      void fileLoadStatisticsAvailable(const file_load_stats&);
+      //
       void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
       //
    public:
@@ -36,7 +52,8 @@ class DovahKitCore : public QObject {
       void set_load_order_folder(const std::filesystem::path&);
       void queue_load_order_file(const std::filesystem::path&);
       void unqueue_load_order_file(const std::filesystem::path&);
-      bool acquire_load_order_data();
+      void set_queued_active_file(const std::filesystem::path&);
+      bool acquire_load_order_data(bool async = false);
 
       const dovah::file_read_error& get_last_read_error() const noexcept;
 
@@ -51,3 +68,6 @@ class DovahKitCore : public QObject {
 
       bool get_game_path(std::filesystem::path& out) const noexcept;
 };
+
+Q_DECLARE_METATYPE(DovahKitCore::file_load_stats)
+// needed so that QObject::connect can pass these across threads (by copying them). refer to DovahKitCore's constructor as well.

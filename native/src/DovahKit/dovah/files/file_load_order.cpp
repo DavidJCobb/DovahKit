@@ -141,7 +141,8 @@ namespace dovah {
             this->queued_load.base_path += '/';
       }
       //
-      this->normalizer.base_path = this->queued_load.base_path;
+      this->normalizer.base_path   = this->queued_load.base_path;
+      this->normalizer.active_file = this->queued_load.active_file;
       for (auto it = this->queued_load.files.begin(); it != this->queued_load.files.end(); ++it) {
          if (!this->normalizer.add(this->load_error, *it))
             return false;
@@ -272,6 +273,13 @@ namespace dovah {
       this->loading_index = 0;
       //
       this->_build_use_info();
+      //
+      if (!this->active_file && this->files.size() < 254) { // TODO: the cutoff should be 253 if any of the loaded files are ESLs or SSE files
+         auto file = new tes_file_reading::file_reader(*this);
+         this->active_file = file;
+         // TODO: How should we handle file_reader::nextFormID?
+         this->files.push_back(file);
+      }
       //
       return !this->load_error.defined();
    }

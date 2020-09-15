@@ -197,48 +197,52 @@ namespace dovah::tes_file_reading {
          uint32_t compressed_size = record.header.size - sizeof(decompressed_size);
          this->read(decompressed_size);
          record.data.allocate(decompressed_size);
-         if (record.data.empty()) {
-            _log_record_allocation_failure(this, record.head_pos, decompressed_size, record);
-            return object_type::none;
-            //
-            // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
-            // to load more of the file. The error still properly gets logged, because it's the first error 
-            // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
-            // the load process, but we still waste time trying to load the rest of the file and indeed 
-            // the rest of the load order.
-            //
-            // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
-            // could override it to log the filename and to abort, while the threaded readers could 
-            // override it to log their owner's filename and abort their owner.
-            //
-         } else {
-            auto input_buffer = malloc(compressed_size);
-            this->read(input_buffer, compressed_size);
-            uint32_t out_size = decompressed_size;
-            uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
-            free(input_buffer);
-            if (out_size != decompressed_size) {
-               dovah::logging::print_line("Size mismatch for decompressed record! Offset %08X, expected final size %08X, got size %08X.", record.head_pos, decompressed_size, out_size);
+         if (decompressed_size) { // zero-size records are allowed, and would be indistinguishable from allocation failures
+            if (record.data.empty()) {
+               _log_record_allocation_failure(this, record.head_pos, decompressed_size, record);
+               return object_type::none;
+               //
+               // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+               // to load more of the file. The error still properly gets logged, because it's the first error 
+               // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+               // the load process, but we still waste time trying to load the rest of the file and indeed 
+               // the rest of the load order.
+               //
+               // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+               // could override it to log the filename and to abort, while the threaded readers could 
+               // override it to log their owner's filename and abort their owner.
+               //
+            } else {
+               auto input_buffer = malloc(compressed_size);
+               this->read(input_buffer, compressed_size);
+               uint32_t out_size = decompressed_size;
+               uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
+               free(input_buffer);
+               if (out_size != decompressed_size) {
+                  dovah::logging::print_line("Size mismatch for decompressed record! Offset %08X, expected final size %08X, got size %08X.", record.head_pos, decompressed_size, out_size);
+               }
+               assert(out_size == decompressed_size);
             }
-            assert(out_size == decompressed_size);
          }
       } else {
          record.data.allocate(record.header.size);
-         if (record.data.empty()) {
-            _log_record_allocation_failure(this, record.head_pos, record.header.size, record);
-            //
-            // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
-            // to load more of the file. The error still properly gets logged, because it's the first error 
-            // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
-            // the load process, but we still waste time trying to load the rest of the file and indeed 
-            // the rest of the load order.
-            //
-            // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
-            // could override it to log the filename and to abort, while the threaded readers could 
-            // override it to log their owner's filename and abort their owner.
-            //
-         } else {
-            this->read(record.data.raw(), record.header.size);
+         if (record.header.size) { // zero-size records are allowed, and would be indistinguishable from allocation failures
+            if (record.data.empty()) {
+               _log_record_allocation_failure(this, record.head_pos, record.header.size, record);
+               //
+               // TODO: This won't necessarily prevent TESPluginFile and its threaded readers from attempting 
+               // to load more of the file. The error still properly gets logged, because it's the first error 
+               // to log (presumably) and because LoadOrder checks whether errors were logged at the end of 
+               // the load process, but we still waste time trying to load the rest of the file and indeed 
+               // the rest of the load order.
+               //
+               // We may want to add a virtual method, logError, to TESPluginBaseReader; then, TESPluginFile 
+               // could override it to log the filename and to abort, while the threaded readers could 
+               // override it to log their owner's filename and abort their owner.
+               //
+            } else {
+               this->read(record.data.raw(), record.header.size);
+            }
          }
       }
       record.offset = 0;

@@ -21,6 +21,14 @@ LoadOrderFileListModelItem::LoadOrderFileListModelItem(const dovah::file_header&
    this->created  = created;
    this->modified = modified;
 }
+inline int LoadOrderFileListModelRoot::indexOf(item_type* item) const noexcept {
+   int size = this->_children.size();
+   for (int i = 0; i < size; ++i)
+      if (this->_children[i] == item)
+         return i;
+   return -1;
+}
+
 QModelIndex LoadOrderFileListModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
@@ -28,6 +36,10 @@ QModelIndex LoadOrderFileListModel::index(int row, int column, const QModelIndex
    if (childItem)
       return this->createIndex(row, column, childItem);
    return QModelIndex();
+}
+QModelIndex LoadOrderFileListModel::index(item_type* item) const {
+   int row = this->root->indexOf(item);
+   return this->index(row, 1, QModelIndex());
 }
 QModelIndex LoadOrderFileListModel::parent(const QModelIndex& index) const {
    return QModelIndex();
@@ -43,11 +55,14 @@ int LoadOrderFileListModel::columnCount(const QModelIndex& item) const {
 Qt::ItemFlags LoadOrderFileListModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
       return Qt::NoItemFlags;
-   auto flags = Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
+   int flags = Qt::ItemFlag::ItemIsSelectable;
    if (index.column() == 0) {
       flags |= Qt::ItemFlag::ItemIsUserCheckable;
-      if (index.internalPointer())
+      auto item = (item_type*)index.internalPointer();
+      if (item && item != this->active)
          flags |= Qt::ItemFlag::ItemIsEnabled;
+   } else {
+      flags |= Qt::ItemFlag::ItemIsEnabled;
    }
    return flags;
 }
@@ -58,8 +73,11 @@ QVariant LoadOrderFileListModel::data(const QModelIndex& index, int role) const 
    auto column = index.column();
    switch (role) {
       case Qt::CheckStateRole:
-         if (column == 0)
+         if (column == 0) {
+            if (item == this->active)
+               return Qt::Checked;
             return item->selected ? Qt::Checked : Qt::Unchecked;
+         }
          break;
       case Qt::DisplayRole:
          switch (column) {
@@ -86,6 +104,8 @@ bool LoadOrderFileListModel::setData(const QModelIndex& index, const QVariant& v
       return false;
    auto item  = static_cast<item_type*>(index.internalPointer());
    auto state = static_cast<Qt::CheckState>(value.toInt());
+   if (item == this->active) // do not allow the user to uncheck the active file
+      state = Qt::Checked;
    item->selected = state == Qt::Checked;
    emit dataChanged(index, index);
    return true;
@@ -120,6 +140,20 @@ void LoadOrderFileListModel::insert(const dovah::file_header& header, const QDat
    this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
    this->root->_children.push_back(item);
    this->endInsertRows();
+}
+
+void LoadOrderFileListModel::setActiveFile(item_type* item) noexcept {
+   auto previous = this->active;
+   this->active = item;
+   if (previous) {
+      auto index = this->index(item);
+      emit dataChanged(index, index);
+   }
+   if (item) {
+      item->selected = true;
+      auto index = this->index(item);
+      emit dataChanged(index, index);
+   }
 }
 #pragma endregion
 
