@@ -19,6 +19,9 @@ namespace dovah {
       if (this->file)
          out = this->file->get_filename();
    }
+   file_load_order& form_stub::_get_load_order() const noexcept {
+      return this->file->load_order;
+   }
    loaded_form_ptr<loaded_forms::Form> form_stub::load() {
       if (!this->form && this->file) {
          //_DEBUGMSG("stub is loading...");
@@ -38,6 +41,7 @@ namespace dovah {
    }
    void form_stub::set_edited(bool v) {
       cobb::modify_bit(this->flags, flag::is_edited, v);
+      this->_get_load_order().stub_flagged_as_edited(this);
    }
 
    void form_stub::build_outbound_refs(tes_file_reading::basic_reader* reader) noexcept {
@@ -69,12 +73,13 @@ namespace dovah {
       entry.refcount++;
       entry.flags = flags;
    }
+
    void form_stub::add_outbound_reference(uint32_t toFormID, form_stub::flags_t flags) {
       if (toFormID == 0)
          return;
       auto& list  = this->outbound;
       auto& entry = list[toFormID];
-      auto& lo    = this->file->load_order;
+      auto& lo    = this->_get_load_order();
       if (!entry.other)
          entry.other = lo.get_form(toFormID);
       #ifdef _DEBUG

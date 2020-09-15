@@ -36,10 +36,12 @@ namespace dovah {
       //
       auto header = new file_header;
       std::string path = this->base_path + name;
-      if (header->load(path.c_str()).defined()) {
-         error.code    = file_read_error::error_code::malformed_file;
-         error.file    = name;
-         error.message = "Failed initial read of the file header. The file ended too soon.";
+      if (!header->load(path.c_str())) {
+         error.code       = file_read_error::error_code::malformed_file;
+         error.file       = name;
+         error.fileOffset = header->error.fileOffset;
+         error.message    = "Failed initial read of the file header. ";
+         error.message    += header->error.message;
          delete header;
          return false;
       }

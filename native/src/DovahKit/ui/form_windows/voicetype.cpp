@@ -16,6 +16,12 @@ FormDialogVoicetype::FormDialogVoicetype(dovah::form_stub* stub, QWidget* parent
       this->accept();
    });
    //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->form = nullptr;
+      this->reject();
+   });
+   //
    this->load();
 }
 void FormDialogVoicetype::load() {

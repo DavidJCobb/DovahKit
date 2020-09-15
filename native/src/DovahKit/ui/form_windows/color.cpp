@@ -18,6 +18,12 @@ FormDialogColor::FormDialogColor(dovah::form_stub* stub, QWidget* parent) : QDia
       this->accept();
    });
    //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->form = nullptr;
+      this->reject();
+   });
+   //
    this->load();
 }
 void FormDialogColor::load() {

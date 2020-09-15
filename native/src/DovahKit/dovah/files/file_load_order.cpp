@@ -323,7 +323,7 @@ namespace dovah {
       }
       return 0;
    }
-   bool file_load_order::has_form(uint32_t formID) const noexcept {
+   bool file_load_order::has_form(bare_form_id_t formID) const noexcept {
       if (formID == 0)
          return false;
       auto& list = this->forms.forms;
@@ -339,7 +339,7 @@ namespace dovah {
       }
       return invalid_load_prefix;
    }
-   form_stub* file_load_order::get_form(uint32_t formID) const noexcept {
+   form_stub* file_load_order::get_form(bare_form_id_t formID) const noexcept {
       if (formID == 0)
          return nullptr;
       auto& list = this->forms.forms;
@@ -348,7 +348,7 @@ namespace dovah {
          return it->second;
       return nullptr;
    }
-   form_stub* file_load_order::get_form(form_type_t formType, uint32_t formID) const noexcept {
+   form_stub* file_load_order::get_form(form_type_t formType, bare_form_id_t formID) const noexcept {
       if (formID == 0)
          return nullptr;
       if (formType < this->forms_by_type.size()) {
@@ -359,7 +359,7 @@ namespace dovah {
       }
       return nullptr;
    }
-   form_stub* file_load_order::get_form_of_probable_type(form_type_t formType, uint32_t formID) const noexcept {
+   form_stub* file_load_order::get_form_of_probable_type(form_type_t formType, bare_form_id_t formID) const noexcept {
       if (formID == 0)
          return nullptr;
       if (formType < this->forms_by_type.size()) {
@@ -380,6 +380,22 @@ namespace dovah {
       }
       return false;
    }
+   bool file_load_order::form_is_from_active_file(const form_stub* stub) const noexcept {
+      if (stub->is_edited())
+         return true;
+      return stub->file == this->active_file;
+   }
+   bool file_load_order::form_is_from_active_file(bare_form_id_t formID) const noexcept {
+      auto stub = this->get_form(formID);
+      return this->form_is_from_active_file(stub);
+   }
+
+   void file_load_order::stub_flagged_as_edited(form_stub* stub) noexcept {
+      this->active_file_forms.forms[stub->formID] = stub;
+      auto& at = this->active_file_forms_by_type[stub->formType];
+      at.forms[stub->formID] = stub;
+   }
+
    file_load_order::form_id_status file_load_order::local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const {
       if ((id & plugin_form_id_mask) == 0) { // hardcoded
          id = id & hardcoded_form_id_mask;

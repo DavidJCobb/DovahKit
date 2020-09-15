@@ -16,6 +16,12 @@ FormDialogWordOfPower::FormDialogWordOfPower(dovah::form_stub* stub, QWidget* pa
       this->accept();
    });
    //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->form = nullptr;
+      this->reject();
+   });
+   //
    this->load();
 }
 void FormDialogWordOfPower::load() {

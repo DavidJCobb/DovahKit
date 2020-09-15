@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include "../editor/core.h"
 #include "../dovah/files/file_load_order.h"
+#include "main_window/load_window.h"
 
 #include <sys/timeb.h> // for benchmarks
 
@@ -26,14 +27,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    this->ui.mdi->addSubWindow(this->object_window, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
    //
    QObject::connect(this->ui.actionOpen, &QAction::triggered, this, [this]() {
-      //
-      // TODO: file_load_order relies on having a single "base path" i.e. all files must be in the 
-      // same folder. This sucks and we should change it
-      //
-      QString base_path = QFileDialog::getExistingDirectory(this, tr("Set base path"));
-      #if !_DEBUG
-        // static_assert(false, "Finish me");
-      #endif
+      auto modal = new LoadOrderOpenDialog(this);
+      modal->setModal(true);
+      modal->open();
    });
    QObject::connect(this->ui.actionDebugLoadSkyrim, &QAction::triggered, this, [this]() {
       auto& editor = DovahKitCore::get();

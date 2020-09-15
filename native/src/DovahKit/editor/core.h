@@ -46,4 +46,8 @@ class DovahKitCore : public QObject {
       dovah::form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
       bool for_each_form(std::function<bool(dovah::form_stub*)>);
       bool for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
+      bool form_is_from_active_file(const dovah::form_stub*) const noexcept;
+      bool form_is_from_active_file(bare_form_id_t) const noexcept;
+
+      bool get_game_path(std::filesystem::path& out) const noexcept;
 };

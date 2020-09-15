@@ -1,4 +1,5 @@
 #include "core.h"
+#include "../helpers/windows_registry.h"
 
 DovahKitCore::~DovahKitCore() {
    delete this->load_order;
@@ -55,4 +56,25 @@ bool DovahKitCore::for_each_form(std::function<bool(dovah::form_stub*)> functor)
 }
 bool DovahKitCore::for_each_form_of_type(form_type_t ft, std::function<bool(dovah::form_stub*)> functor) {
    return this->load_order->for_each_form_of_type(ft, functor);
+}
+bool DovahKitCore::form_is_from_active_file(const dovah::form_stub* stub) const noexcept {
+   if (!this->loaded)
+      return false;
+   return this->load_order->form_is_from_active_file(stub);
+}
+bool DovahKitCore::form_is_from_active_file(bare_form_id_t formID) const noexcept {
+   if (!this->loaded)
+      return false;
+   return this->load_order->form_is_from_active_file(formID);
+}
+
+bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
+   std::wstring value(512, 0);
+   bool success = cobb::windows_registry::get_string_value(cobb::windows_registry::hkey::local_machine, L"SOFTWARE\\Bethesda Softworks\\Skyrim\\", L"installed path", value);
+   if (success) {
+      out = value;
+      return true;
+   }
+   out.clear();
+   return false;
 }

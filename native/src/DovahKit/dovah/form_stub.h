@@ -167,18 +167,20 @@ namespace dovah {
          using owner_file_t = tes_file_reading::file_reader;
          //
       protected:
-         owner_file_t*  file   = nullptr;
+         owner_file_t*  file   = nullptr; // once a form_stub has been properly loaded, this should never be nullptr
          uint32_t       offset = 0; // offset of this form's record header within its owning file
          std::atomic<uint32_t> refcount = 0;
          void build_outbound_refs(tes_file_reading::basic_reader*) noexcept;
          void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
          void receive_inbound_ref(form_stub* inbound, flags_t flags = 0) noexcept;
          //
+         file_load_order& form_stub::_get_load_order() const noexcept;
+         //
       public:
          group_stub    groupInfo;
          uint32_t      formID   = 0; // form ID (file-local)
          uint8_t       formType = 0;
-         flags_t       flags    = 0;
+         flags_t       flags    = 0; // when there are getters/setters for these, use those instead of editing the mask directly
          // there will be 2 bytes of padding here
          std::string   editorID;
          loaded_forms::Form* form = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer

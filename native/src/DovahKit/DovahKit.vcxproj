@@ -144,6 +144,7 @@
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\multiheap.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
+    <ClCompile Include="helpers\windows_registry.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
@@ -154,6 +155,8 @@
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
+    <ClCompile Include="ui\main_window\load_window.cpp" />
+    <ClCompile Include="ui\main_window\load_window\file_list.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
@@ -203,7 +206,10 @@
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
     <ClInclude Include="editor\open_window_for_form.h" />
+    <ClInclude Include="helpers\windows_registry.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="ui\main_window\load_window\file_list.h" />
+    <QtMoc Include="ui\main_window\load_window.h" />
     <QtMoc Include="ui\generic\ColorPickerButton.h" />
     <QtMoc Include="ui\form_windows\color.h" />
     <QtMoc Include="ui\form_windows\word_of_power.h" />
@@ -236,6 +242,7 @@
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />
+    <QtUic Include="ui\main_window\load_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />
   </ItemGroup>
   <ItemGroup>

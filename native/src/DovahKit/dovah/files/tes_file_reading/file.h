@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include "basic_reader.h"
 #include "threads.h"
 #include "../file_load_order.h"

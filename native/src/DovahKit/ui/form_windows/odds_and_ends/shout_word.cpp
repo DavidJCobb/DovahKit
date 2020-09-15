@@ -1,8 +1,14 @@
 #include "shout_word.h"
+#include "../../../editor/core.h"
 
 FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
    this->initialize();
+   //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->form = nullptr;
+   });
 }
 void FormShoutWordEditor::initialize() {
    this->ui.word->addFormType(dovah::form_type::word_of_power);

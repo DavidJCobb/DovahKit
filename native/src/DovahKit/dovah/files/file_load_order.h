@@ -22,8 +22,6 @@ namespace dovah {
       // Used to select files to load, and stores all loaded forms after the load process 
       // is complete.
       //
-      // TODO: Bring everything over from the old DovahKit project.
-      //
       friend void add_hardcoded_forms_to_load_order(file_load_order&);
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
@@ -48,7 +46,7 @@ namespace dovah {
          loaded_file*      active_file = nullptr;
          _form_map         forms;
          _form_map_by_type forms_by_type;
-         _form_map         active_file_forms;
+         _form_map         active_file_forms; // all forms that come from the active file AND all edited forms, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
          //
          bool    loading_is_complete = false; // exists so that TESPluginBaseReader::nextSubrecord can call LoadOrder::logError without having to worry about whether it's running during or after the initial load
@@ -84,6 +82,9 @@ namespace dovah {
          bool load_queued_files();
          //
          inline bool is_loading() const noexcept { return !this->loading_is_complete; };
+         
+         form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
+         form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
 
          // acceptFormStub
          // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 
@@ -95,14 +96,16 @@ namespace dovah {
          
          #pragma region Content related to already-loaded data
          uint32_t count_forms_of_type(form_type_t) const noexcept;
-         bool has_form(uint32_t formID) const noexcept;
+         bool has_form(bare_form_id_t formID) const noexcept;
          uint8_t index_of_loaded_file(const std::string& filename) const noexcept;
-         form_stub* get_form(uint32_t formID) const noexcept;
-         form_stub* get_form(form_type_t, uint32_t formID) const noexcept; // use when you KNOW the form's type
-         form_stub* get_form_of_probable_type(form_type_t, uint32_t formID) const noexcept; // searches (formType) first, then the other types
+         form_stub* get_form(bare_form_id_t formID) const noexcept;
+         form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
+         form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
          bool for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)>); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
-         form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
-         form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
+         bool form_is_from_active_file(const form_stub*) const noexcept;
+         bool form_is_from_active_file(bare_form_id_t) const noexcept;
+         //
+         void stub_flagged_as_edited(form_stub*) noexcept; // called by form_stub::set_edited
          #pragma endregion
          
    };
