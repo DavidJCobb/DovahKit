@@ -5,7 +5,6 @@
 //
 // TODO:
 //  - Sort file list by load order (file_list.cpp)
-//  - Double-clicking an entry in the file list should select it
 //
 
 LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {

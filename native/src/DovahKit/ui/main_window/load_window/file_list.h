@@ -74,7 +74,6 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       }
       //
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-      QModelIndex index(item_type*) const;
       inline item_type* invisibleRootItem() const noexcept { return this->root; }
       QModelIndex parent(const QModelIndex& index) const;
       int rowCount(const QModelIndex& parent) const override;
@@ -87,12 +86,13 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       //
       void clear();
       void insert(const dovah::file_header&, const QDateTime& created, const QDateTime& modified);
-      void build(QString game_install_path);
       //
       inline const item_type* activeFile() const noexcept { return this->active; }
       inline const std::vector<item_type*>& files() const noexcept { return this->root->children(); }
       //
       void setActiveFile(item_type*) noexcept;
+      void setSelected(item_type*, bool) noexcept;
+      void toggleSelected(item_type*) noexcept;
 };
 
 class LoadOrderFileList : public QTableView {

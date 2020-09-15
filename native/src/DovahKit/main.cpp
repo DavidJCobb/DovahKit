@@ -22,6 +22,9 @@
 //  - If any loaded files are for SSE, then the file_load_order should cap the load 
 //    order at 253 entries, not 254.
 //
+//  - Add a menu bar item to edit the author and description of the current active 
+//    file. If no active file is loaded, then the menu item should be greyed out.
+//
 // UPCOMING TASKS:
 //
 //  - Code to save the current active file.

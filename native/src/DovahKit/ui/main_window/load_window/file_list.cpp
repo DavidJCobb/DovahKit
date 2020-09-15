@@ -37,10 +37,6 @@ QModelIndex LoadOrderFileListModel::index(int row, int column, const QModelIndex
       return this->createIndex(row, column, childItem);
    return QModelIndex();
 }
-QModelIndex LoadOrderFileListModel::index(item_type* item) const {
-   int row = this->root->indexOf(item);
-   return this->index(row, 1, QModelIndex());
-}
 QModelIndex LoadOrderFileListModel::parent(const QModelIndex& index) const {
    return QModelIndex();
 }
@@ -55,14 +51,18 @@ int LoadOrderFileListModel::columnCount(const QModelIndex& item) const {
 Qt::ItemFlags LoadOrderFileListModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
       return Qt::NoItemFlags;
-   int flags = Qt::ItemFlag::ItemIsSelectable;
+   int flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled;
    if (index.column() == 0) {
       flags |= Qt::ItemFlag::ItemIsUserCheckable;
-      auto item = (item_type*)index.internalPointer();
-      if (item && item != this->active)
-         flags |= Qt::ItemFlag::ItemIsEnabled;
-   } else {
-      flags |= Qt::ItemFlag::ItemIsEnabled;
+      //
+      // It's tempting to disable the checkbox for the active file, so the user can't 
+      // uncheck it, but since the checkbox and the filename are the same column, doing 
+      // that greys out the filename and makes it so you can't select the row by clicking 
+      // the filename. Not ideal.
+      //
+      // The (setData) override blocks unchecking active files anyway, so I guess it's 
+      // fine. We mainly just lose out on greying out the checkbox.
+      //
    }
    return flags;
 }
@@ -146,14 +146,27 @@ void LoadOrderFileListModel::setActiveFile(item_type* item) noexcept {
    auto previous = this->active;
    this->active = item;
    if (previous) {
-      auto index = this->index(item);
+      auto index = this->index(this->root->indexOf(item), 1, QModelIndex());
       emit dataChanged(index, index);
    }
    if (item) {
+      bool selected = item->selected;
+      auto row      = this->root->indexOf(item);
       item->selected = true;
-      auto index = this->index(item);
-      emit dataChanged(index, index);
+      auto index0 = this->index(row, selected ? 1 : 0, QModelIndex());
+      auto index1 = this->index(row, 1, QModelIndex());
+      emit dataChanged(index0, index1);
    }
+}
+void LoadOrderFileListModel::setSelected(item_type* data, bool state) noexcept {
+   data->selected = state;
+   auto index = this->index(this->root->indexOf(data), 0, QModelIndex());
+   emit dataChanged(index, index);
+}
+void LoadOrderFileListModel::toggleSelected(item_type* data) noexcept {
+   data->selected = !data->selected;
+   auto index = this->index(this->root->indexOf(data), 0, QModelIndex());
+   emit dataChanged(index, index);
 }
 #pragma endregion
 
@@ -169,6 +182,15 @@ LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
    header->setMinimumSectionSize(2);
    header->setSectionResizeMode(0, QHeaderView::Stretch);
    header->setSectionResizeMode(1, QHeaderView::Interactive);
+   QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
+      if (!index.isValid())
+         return;
+      auto data = (model_item_type*)index.internalPointer();
+      if (data) {
+         auto* model = (model_type*)this->model();
+         model->toggleSelected(data);
+      }
+   });
    //
    auto& editor = DovahKitCore::get();
    std::filesystem::path install_path;
