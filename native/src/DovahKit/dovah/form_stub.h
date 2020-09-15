@@ -48,13 +48,8 @@ namespace dovah {
             if (fs) {
                assert(fs->get_refcount() != 0 && "FormStub refcount is already zero!");
                fs->refcount--;
-               if (fs->refcount == 0 && fs->can_unload_form()) {
-                  auto form = fs->form;
-                  if (form) {
-                     delete form;
-                     fs->form = nullptr;
-                  }
-               }
+               if (fs->refcount == 0)
+                  fs->_unload_form();
             }
          }
       public:
@@ -175,6 +170,7 @@ namespace dovah {
          void receive_inbound_ref(form_stub* inbound, flags_t flags = 0) noexcept;
          //
          file_load_order& form_stub::_get_load_order() const noexcept;
+         void _unload_form();
          //
       public:
          group_stub    groupInfo;

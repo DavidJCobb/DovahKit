@@ -14,6 +14,15 @@ namespace dovah {
       if (this->get_refcount())
          assert(!this->form && "You should not be attempting to destroy a FormStub when something is still using its loaded form data!");
    }
+   void form_stub::_unload_form() {
+      if (!this->can_unload_form())
+         return;
+      auto form = this->form;
+      if (form) {
+         delete form;
+         this->form = nullptr;
+      }
+   }
    void form_stub::get_source_filename(std::string& out) const noexcept {
       out.clear();
       if (this->file)
@@ -41,7 +50,12 @@ namespace dovah {
    }
    void form_stub::set_edited(bool v) {
       cobb::modify_bit(this->flags, flag::is_edited, v);
-      this->_get_load_order().stub_flagged_as_edited(this);
+      if (v)
+         this->_get_load_order().stub_flagged_as_edited(this);
+      else {
+         if (this->refcount == 0)
+            this->_unload_form();
+      }
    }
 
    void form_stub::build_outbound_refs(tes_file_reading::basic_reader* reader) noexcept {
