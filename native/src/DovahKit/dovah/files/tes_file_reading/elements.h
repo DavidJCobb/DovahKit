@@ -149,6 +149,7 @@ namespace dovah {
             inline uint32_t formID() const noexcept { return this->header.formID; }
             inline uint32_t signature() const noexcept { return this->header.signature; }
             inline uint32_t size() const noexcept { return this->header.size; }
+            inline uint16_t version() const noexcept { return this->header.version; }
             //
             inline uint32_t stream_pos() const noexcept { return this->offset + this->body_pos; }
             //

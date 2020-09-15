@@ -27,6 +27,13 @@ namespace dovah::tes_file_reading {
       return !this->isEOF();
    }
 
+   bool basic_reader::is_skyrim_special() {
+      auto owner = this->owner;
+      if (!owner)
+         return false;
+      return owner->header_record_version >= 44;
+   }
+
    namespace {
       void _log_bad_record_signature(basic_reader* reader, uint32_t pos, uint32_t sig, bool isUnknown) {
          auto  file = reader->as_file();

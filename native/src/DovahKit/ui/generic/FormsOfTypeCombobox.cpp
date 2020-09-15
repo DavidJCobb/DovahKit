@@ -8,6 +8,20 @@
 
 FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
    this->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon); // needed for performance with large data sets
+   //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      const auto blocker = QSignalBlocker(this);
+      this->setDisabled(true);
+      this->clear();
+   });
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+      const auto blocker = QSignalBlocker(this);
+      //
+      // TODO: Locate the stub's entry in here, update the editor ID if that's changed, 
+      // and sort it within the list as appropriate.
+      //
+   });
 };
 
 void FormsOfTypeCombobox::addFormType(dovah::form_type_t ft) {

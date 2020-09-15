@@ -137,8 +137,14 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(2, QHeaderView::Interactive);
 
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &FormTable::rebuildModel);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &FormTable::clear);
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &FormTable::rebuildModel);
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+      //
+      // TODO: Locate the stub's entry in here, update the editor ID if that's changed, 
+      // and sort it within the list as appropriate.
+      //
+   });
 
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)
@@ -177,6 +183,12 @@ void FormTable::filterFinished() {
    this->_filterThrottle->stop();
    if (this->_filter)
       this->refilterModel(this->_filter->text());
+}
+void FormTable::clear() {
+   auto m = this->unwrappedModel();
+   if (!m)
+      return;
+   m->clear();
 }
 void FormTable::setFilter(QLineEdit* field) {
    this->_filterThrottle->stop();

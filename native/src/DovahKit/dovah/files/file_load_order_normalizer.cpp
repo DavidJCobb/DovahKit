@@ -33,6 +33,13 @@ namespace dovah {
    }
    bool file_load_order_normalizer::add(file_read_error& error, const std::string& name, bool isMasterOfMaster) {
       error.code = file_read_error::error_code::none;
+      if (this->contains(name)) {
+         //
+         // File is already in the normalized load order, probably because it was selected to load 
+         // after one of its masters and therefore added when we saw that master.
+         //
+         return true;
+      }
       //
       auto header = new file_header;
       std::string path = this->base_path + name;
@@ -114,6 +121,15 @@ namespace dovah {
          return false;
       }
       return true;
+   }
+   bool file_load_order_normalizer::contains(const std::string& name) const noexcept {
+      for (auto* file : this->masters)
+         if (cobb::strieq(file->name, name))
+            return true;
+      for (auto* file : this->plugins)
+         if (cobb::strieq(file->name, name))
+            return true;
+      return false;
    }
    void file_load_order_normalizer::delete_contents() {
       for (auto* header : this->masters)

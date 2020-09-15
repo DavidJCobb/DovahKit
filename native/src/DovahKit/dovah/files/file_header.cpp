@@ -141,8 +141,7 @@ namespace dovah {
          return false;
       }
       _skip(file, 8); // form ID of TES4 record; version control bytes
-      uint16_t recordVersion;
-      if (!_read(file, recordVersion)) {
+      if (!_read(file, this->header_record_version)) {
          this->error.code       = file_read_error::error_code::malformed_file;
          this->error.fileOffset = ftell(file);
          this->error.message    = "Failed to read the file header's record header.";

@@ -117,6 +117,7 @@ class FormTable : public QTableView {
       void recheckFormTypes();
       void rebuildModel();
       void refilterModel(const QString&);
+      void clear();
       //
       void filterChanged();
       void filterFinished();

@@ -30,6 +30,11 @@ class DovahKitCore : public QObject {
       DovahKitCore();
       ~DovahKitCore();
       //
+      DovahKitCore(const DovahKitCore&) = delete; // no copy
+      DovahKitCore(DovahKitCore&&) = delete;      // no move
+      DovahKitCore& operator=(const DovahKitCore&) = delete; // no copy
+      DovahKitCore& operator=(DovahKitCore&&) = delete;      // no move
+      //
    protected:
       dovah::file_load_order* load_order = new dovah::file_load_order;
       bool    loaded  = false;
@@ -69,5 +74,6 @@ class DovahKitCore : public QObject {
       bool get_game_path(std::filesystem::path& out) const noexcept;
 };
 
+// IntelliSense doesn't like Q_DECLARE_METATYPE; ignore errors here unless they're compiler errors:
 Q_DECLARE_METATYPE(DovahKitCore::file_load_stats)
 // needed so that QObject::connect can pass these across threads (by copying them). refer to DovahKitCore's constructor as well.

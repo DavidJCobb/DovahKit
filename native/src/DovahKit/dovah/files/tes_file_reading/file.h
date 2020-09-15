@@ -22,7 +22,13 @@ namespace dovah {
                flag() = delete;
                enum type {
                   master                 = 0x0001,
+                  altered                = 0x0002,
+                  checked                = 0x0004,
+                  active                 = 0x0008,
+                  optimized              = 0x0010,
+                  temp_id_owner          = 0x0020,
                   localized_string_table = 0x0080,
+                  precalc_data_only      = 0x0100,
                   light                  = 0x0200, // SSE-only
                };
             };
@@ -51,8 +57,8 @@ namespace dovah {
             ~file_reader();
             //
             bool load(const char* filepath);
-            bool load_record_at(uint32_t pos); // for FormStub
-            bool load_record_at(uint32_t pos, basic_reader* reader); // for FormStub (multi-threaded building of Use Info); the reader passed in must not be the "owner" of its mapped file
+            bool load_record_at(uint32_t pos); // for form_stub
+            bool load_record_at(uint32_t pos, basic_reader* reader); // for form_stub (multi-threaded building of Use Info). the reader passed in must not be the "owner" of its mapped file. (this) will take ownership of (reader) by setting the latter's (owner).
             //
          protected:
             bool _load_header();
@@ -78,7 +84,8 @@ namespace dovah {
          public:
             file_load_order& load_order;
             file_read_error  error; // if the load process was aborted, what error, if any, did we encounter?
-            uint32_t     flags = 0;
+            uint32_t      header_record_version = 0;
+            uint32_t      flags   = 0;
             detail_flag_t details = 0;
             float    fileVersion = 0.94F;
             uint32_t recordCount = 0;
@@ -86,9 +93,11 @@ namespace dovah {
             char     authorName[512];
             char     description[512];
             std::vector<master_entry> masters;
-            // TODO: ONAM
+            // TODO: ONAM, a list of overridden records within temporary CELLs, of the following types: ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA
+            // TODO: DELE
             uint32_t subINTV;
             uint32_t subINCC;
+            // TODO: SCRN
             //
             inline const std::string& get_filename() const noexcept { return this->name; }
             void abort() noexcept;

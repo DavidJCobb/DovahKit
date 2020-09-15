@@ -39,14 +39,14 @@ namespace dovah {
          inline void _inc() {
             auto fs = this->wrapped;
             if (fs) {
-               assert(!fs->refcount_is_maxed_out() && "FormStub refcount is already at maximum!");
+               assert(!fs->refcount_is_maxed_out() && "form_stub refcount is already at maximum!");
                fs->refcount++;
             }
          }
          inline void _dec() {
             auto fs = this->wrapped;
             if (fs) {
-               assert(fs->get_refcount() != 0 && "FormStub refcount is already zero!");
+               assert(fs->get_refcount() != 0 && "form_stub refcount is already zero!");
                fs->refcount--;
                if (fs->refcount == 0)
                   fs->_unload_form();
@@ -154,7 +154,20 @@ namespace dovah {
          struct flag {
             flag() = delete;
             enum type : uint8_t {
-               is_edited    = 0x01,
+               //
+               // (is_edited)
+               // Indicates that changes have been made to this form_stub's loaded data, and so that data should not 
+               // be allowed to unload. When changes are saved, the flag will be cleared, and if at that time the 
+               // loaded form data is not in use, it will be unloaded.
+               //
+               is_edited = 0x01,
+               //
+               // (is_hardcoded)
+               // Indicates that this form_stub represents a form that is hardcoded into Skyrim's game engine. These 
+               // forms will always have form IDs below 0x00000800. If the form has not been overridden by one of 
+               // the loaded files, then the form_stub's (file) pointer will be nullptr, but the form_stub will also 
+               // have loaded data presupplied by this application.
+               //
                is_hardcoded = 0x02,
             };
          };
@@ -162,7 +175,7 @@ namespace dovah {
          using owner_file_t = tes_file_reading::file_reader;
          //
       protected:
-         owner_file_t*  file   = nullptr; // once a form_stub has been properly loaded, this should never be nullptr
+         owner_file_t*  file   = nullptr; // once a form_stub has been properly loaded, this should never be nullptr UNLESS the form_stub is for a hardcoded form that was never overridden
          uint32_t       offset = 0; // offset of this form's record header within its owning file
          std::atomic<uint32_t> refcount = 0;
          void build_outbound_refs(tes_file_reading::basic_reader*) noexcept;

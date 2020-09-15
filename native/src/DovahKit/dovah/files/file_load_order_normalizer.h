@@ -41,6 +41,7 @@ namespace dovah {
          }
          //
          bool add(file_read_error& out, const std::string& name, bool is_master_of_master = false);
+         bool contains(const std::string& name) const noexcept;
          //
          void delete_contents();
    };

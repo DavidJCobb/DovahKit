@@ -34,7 +34,7 @@ namespace dovah {
             static constexpr int max_group_depth = 7;
             //
          protected:
-            file_reader*          owner = nullptr;
+            file_reader*       owner = nullptr; // this should ONLY be nullptr if (this) is a (file_reader*)
             cobb::mapped_file* file  = nullptr; // NOTE: an instance of basic_reader may not necessarily own the file it has a pointer to
             uint32_t  stream_position = 0;
             std::array<group, max_group_depth> _groups;
@@ -42,7 +42,7 @@ namespace dovah {
             subrecord _subrecord;
             uint32_t  last_potential_group_parent = 0; // form ID: CELL, WRLD, DIAL
             //
-            bool is_skyrim_special = false; // needed for subrecord::read and friends to handle SSE struct form IDs properly
+            bool is_skyrim_special();
             bool uses_string_table = false;
             //
             void read(void* buffer, uint32_t size) {

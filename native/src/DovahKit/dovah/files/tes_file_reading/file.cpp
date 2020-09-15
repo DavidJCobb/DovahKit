@@ -87,6 +87,7 @@ namespace dovah::tes_file_reading {
             this->flags |= flag::master | flag::light;
          }
       }
+      this->header_record_version = r.version();
       //
       uint32_t last_subrecord = 0;
       while (auto& subrecord = r.next_subrecord()) {

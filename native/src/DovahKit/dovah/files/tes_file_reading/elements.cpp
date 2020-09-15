@@ -127,7 +127,7 @@ namespace dovah {
          return false;
       }
       bool subrecord::_read_form_id(struct_form_id_t& field) const noexcept {
-         if (this->is_in_bounds(this->owner.is_skyrim_special ? 8 : 4)) {
+         if (this->is_in_bounds(this->owner.is_skyrim_special() ? 8 : 4)) {
             this->unchecked_read(field);
             return true;
          }
@@ -140,7 +140,7 @@ namespace dovah {
       void subrecord::_unchecked_read_form_id(struct_form_id_t& field) const noexcept {
          this->get_containing_record().unchecked_read(field.value);
          this->_fixupFormID(field.value);
-         if (this->owner.is_skyrim_special)
+         if (this->owner.is_skyrim_special())
             this->get_containing_record().unchecked_read(field.padding);
       }
       //

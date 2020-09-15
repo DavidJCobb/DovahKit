@@ -15,15 +15,45 @@
 //
 //  - Add a UI for loading files.
 //
-//     - Allow the user to set an active file.
-//
-//     - Add code to actually attempt to load the files.
+//     - Sort the file list.
 //
 //  - If any loaded files are for SSE, then the file_load_order should cap the load 
 //    order at 253 entries, not 254.
 //
+//     - To identify a file's version, check the version value on the TES4 record. 
+//       (But of course, file_header and file_reader have already been amended to 
+//       retain that information.)
+//
 //  - Add a menu bar item to edit the author and description of the current active 
 //    file. If no active file is loaded, then the menu item should be greyed out.
+//
+//  - Generate proper Use Info for hardcoded forms.
+//
+//     - During use info generation, when we're setting up outbound use info, we 
+//       should have a special handler for any hardcoded form_stub with a nullptr 
+//       file (that is, any hardcoded form that hasn't been overridden by something 
+//       in the load order). This handler should construct outbound references for 
+//       these hardcoded forms, by hand. We mainly only need this for 14:PlayerRef 
+//       using 07:Player as its base form.
+//
+// THINGS TO LOOK INTO:
+//
+//  - Build a unit testing framework wherein we run automated correctness checks 
+//    on loaded data, use info, etc., for pre-chosen forms and compare the results 
+//    to data prepared in advance. We should run these tests periodically if not 
+//    regularly, in order to catch unexpected regressions.
+//
+//  - 9/14/2020: Very rare crashes on exit. One access violation seen; two 0xC0000374 
+//    seen (the latter is memory mismanagement). No consistent repro steps, and it's 
+//    not like there's a lot you can do in the program as of this writing (the file 
+//    load dialog is finished except for being unsorted). Let's keep an eye out for 
+//    more issues like this. It's not consistent, which means it isn't the result of 
+//    something we're doing consistently; it's random chance or maybe an edge-case in 
+//    in the UI somewhere.
+//
+//     - Made some preemptive tweaks to memory management, including having the 
+//       file_load_order only discard its file_readers after the form_stubs instead 
+//       of before. For now, let's just try to stay alert for this.
 //
 // UPCOMING TASKS:
 //
@@ -130,6 +160,9 @@
 //          number since they never intended for us to define forms outside of the 
 //          active file, so...
 //
+//        - Everything that listens for formModified will probably also need to listen 
+//          for these.
+//
 //  - Code for deleting forms.
 //
 //     - How should we handle the case of a user deleting a form from one of the active 
@@ -173,6 +206,9 @@
 //
 //        - Presumably we should only fire these signals when deleting forms out of 
 //          the active file.
+//
+//        - Everything that listens for dataAbandonImminent will probably also need to 
+//          listen for these.
 //
 //  - Support for loading the contents of localized strings.
 //

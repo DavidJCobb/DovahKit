@@ -11,8 +11,16 @@
 
 namespace dovah {
    form_stub::~form_stub() {
-      if (this->get_refcount())
-         assert(!this->form && "You should not be attempting to destroy a FormStub when something is still using its loaded form data!");
+      if (this->get_refcount()) {
+         #if _DEBUG
+            __debugbreak(); // Something is still using this form_stub's loaded data. Why are you destroying it?
+         #endif
+         this->form = nullptr;
+      }
+      if (auto form = this->form) { // needed for edited forms, hardcoded forms, and other forms that aren't normally allowed to unload
+         delete form;
+         this->form = nullptr;
+      }
    }
    void form_stub::_unload_form() {
       if (!this->can_unload_form())

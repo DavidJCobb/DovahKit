@@ -47,15 +47,7 @@
     </property>
     <addaction name="actionOpen"/>
    </widget>
-   <widget class="QMenu" name="menuDebug">
-    <property name="title">
-     <string>Debug</string>
-    </property>
-    <addaction name="actionDebugLoadSkyrim"/>
-    <addaction name="actionDebugLoadDawnguard"/>
-   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">

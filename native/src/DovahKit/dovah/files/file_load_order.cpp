@@ -9,13 +9,7 @@
 
 namespace dovah {
    file_load_order::~file_load_order() {
-      for (auto* f : this->files)
-         delete f;
-      this->files.clear();
-      this->active_file = nullptr;
-      //
       this->normalizer.delete_contents();
-      //
       this->queued_load.files.clear();
       this->queued_load.active_file.clear();
       //
@@ -30,6 +24,11 @@ namespace dovah {
       this->active_file_forms.forms.clear();
       for (auto& m : this->active_file_forms_by_type)
          m.forms.clear();
+      //
+      for (auto* f : this->files)
+         delete f;
+      this->files.clear();
+      this->active_file = nullptr;
    }
 
    #pragma region File loading

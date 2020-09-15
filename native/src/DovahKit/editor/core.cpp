@@ -11,6 +11,8 @@ DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {
       thread->quit();
       thread->wait();
+      delete thread;
+      this->async_loader = nullptr;
    }
    //
    delete this->load_order;
