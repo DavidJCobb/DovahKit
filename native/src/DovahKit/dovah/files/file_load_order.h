@@ -109,6 +109,9 @@ namespace dovah {
          bool form_is_from_active_file(const form_stub*) const noexcept;
          bool form_is_from_active_file(bare_form_id_t) const noexcept;
          //
+         bool active_file_has_forms_of_type(form_type_t) const noexcept;
+         bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)>);
+         //
          void stub_flagged_as_edited(form_stub*) noexcept; // called by form_stub::set_edited
          #pragma endregion
          

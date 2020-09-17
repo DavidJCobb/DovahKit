@@ -1,0 +1,169 @@
+#include "file_writer.h"
+#include "../file_load_order.h"
+#include "../tes_file_reading/file.h"
+#include "../../core.h"
+#include "../../form_stub.h"
+#include "../../form_stub_helpers.h"
+#include "../common.h"
+
+namespace dovah::tes_file_writing {
+   void file_writer::_write_header() {
+      tes_file_record_header header;
+      header.signature = 'TES4';
+      header.flags     = this->source.flags;
+      header.version   = this->source.header_record_version;
+
+      //
+      // TODO: FINISH ME
+      //
+
+   }
+   bool file_writer::_write_record(form_stub* stub) {
+      auto& read_write_interface = this->source.get_writer_interface(*this); // TODO: can we just use one instance, instead of creating a new one for each function call?
+      bool  can_handwrite_form   = false; // can we save the form from its loaded data?
+
+      //
+      // TODO: if the form is loaded, call its (save) method. if that returns (true), write the 
+      // data it provided; else, try to blind-copy data from the source file (and if that isn't 
+      // possible, e.g. for a form that wasn't in the source file, then abort with an error).
+      //
+
+      if (!can_handwrite_form) {
+         //
+         // loaded_forms::Form::save(...) returned false, indicating that a write wasn't possible. 
+         // Try to blind-copy data from the source file.
+         //
+         if (!stub->has_usable_source_file()) {
+            //
+            // This stub doesn't have a usable source file, e.g. because it was created during 
+            // this session or it was a hardcoded form.
+            //
+            //
+            // TODO: Fail with an error.
+            //
+            return false;
+         }
+         auto& write_info = this->stub_writes[stub->formID];
+         write_info.offset = this->get_stream_position();
+         //
+         const void* source_data   = read_write_interface.data_at(stub->get_file_offset());
+         const auto* source_header = (const tes_file_record_header*)source_data;
+         uint32_t size = source_header->size;
+         this->stream.write((const uint8_t*)source_data, size + sizeof(tes_file_record_header));
+      } else {
+         //
+         // TODO: write the form using its loaded data
+         //
+      }
+      if (stub->has_child_forms()) {
+         //
+         // Now, we need to write child groups and forms as appropriate:
+         //
+         switch (stub->formType) {
+            case form_type::cell:
+               if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_persistent_children)) {
+                  auto& group = this->open_group();
+                  group.header.signature = 'GRUP';
+                  group.header.label     = stub->formID;
+                  group.header.type      = tes_file_group_type::cell_persistent_children;
+                  group.header.unknown   = 0xCCCCCCCC;
+                  group.header.version_control = this->version_control;
+                  //
+                  form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+                     if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_persistent_children)
+                        return false;
+                     this->_write_record(child);
+                     return false;
+                  });
+                  //
+                  this->close_current_group();
+               }
+               if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_temporary_children)) {
+                  auto& group = this->open_group();
+                  group.header.signature = 'GRUP';
+                  group.header.label     = stub->formID;
+                  group.header.type      = tes_file_group_type::cell_temporary_children;
+                  group.header.unknown   = 0xCCCCCCCC;
+                  group.header.version_control = this->version_control;
+                  //
+                  form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+                     if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_temporary_children)
+                        return false;
+                     this->_write_record(child);
+                     return false;
+                  });
+                  //
+                  this->close_current_group();
+               }
+               break;
+            case form_type::worldspace:
+               // TODO: write persistent cell
+               // TODO: write cell blocks groups (in what order?)
+                  // TODO: write cell sub-blocks groups (in what order?)
+               break;
+            case form_type::topic:
+               {
+                  auto& group = this->open_group();
+                  group.header.signature = 'GRUP';
+                  group.header.label     = stub->formID;
+                  group.header.type      = tes_file_group_type::topic_children;
+                  group.header.unknown   = 0xCCCCCCCC; // typically uninitialized memory in Bethesda output
+                  group.header.version_control = this->version_control;
+                  //
+                  form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+                     if (child->formType != form_type::topic_info)
+                        return false;
+                     this->_write_record(child);
+                     return false;
+                  });
+                  //
+                  this->close_current_group();
+               }
+               break;
+         }
+      }
+      return true;
+   }
+
+   group& file_writer::open_group() {
+      //
+      // TODO: FINISH ME
+      //
+      return this->_groups[0];
+   }
+   void file_writer::close_current_group() {
+      //
+      // TODO: FINISH ME
+      //
+   }
+
+   uint32_t file_writer::get_stream_position() const noexcept {
+      return this->stream.tellp();
+   }
+
+   void file_writer::write() {
+      auto& read_write_interface = this->source.get_writer_interface(*this);
+      //
+      this->_write_header();
+      for (uint32_t signature : group_sequence_list) {
+         auto form_type = form_type_info::signature_to_form_type(signature);
+         if (!this->owner.active_file_has_forms_of_type(form_type))
+            continue;
+         //
+         auto& group = this->open_group();
+         group.header.signature = 'GRUP';
+         group.header.label     = signature;
+         group.header.type      = tes_file_group_type::forms_of_type;
+         group.header.unknown   = 0; // TODO: this can be 1 for some interior CELL groups; why?
+         group.header.version_control = this->version_control;
+         //
+         // TODO: write the group header to the file; remember the position of its length field 
+         // so we can fix that up in (close_current_group).
+         //
+         this->owner.for_each_active_file_form_of_type(form_type, [this, &read_write_interface](form_stub* stub) {
+            return !this->_write_record(stub);
+         });
+         this->close_current_group();
+      }
+   }
+}

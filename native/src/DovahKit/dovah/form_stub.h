@@ -175,11 +175,11 @@ namespace dovah {
          //
       protected:
          owner_file_t*  file   = nullptr; // once a form_stub has been properly loaded, this should never be nullptr
-         uint32_t       offset = 0;       // offset of this form's record header within its owning file
+         uint32_t       offset = 0;       // offset of this form's record header within its owning file. this should be 0 for newly-created forms and for non-overridden hardcoded forms.
          std::atomic<uint32_t> refcount = 0;
          void build_outbound_refs(tes_file_reading::basic_reader*) noexcept;
          void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
-         void receive_inbound_ref(form_stub* inbound, flags_t flags = 0) noexcept;
+         void receive_inbound_ref(form_stub* inbound, use_info_entry::flags_t flags = 0) noexcept;
          //
          file_load_order& form_stub::_get_load_order() const noexcept;
          void _unload_form();
@@ -204,8 +204,10 @@ namespace dovah {
                return false;
             return true;
          }
+         inline uint32_t    get_file_offset() const noexcept { return this->offset; }
          inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
          inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
+         inline bool        has_usable_source_file() const noexcept { return this->offset != 0; }
          inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
          inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
          inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
@@ -213,7 +215,9 @@ namespace dovah {
          //
          void get_source_filename(std::string& out) const noexcept;
          //
-         void add_outbound_reference(uint32_t toFormID, flags_t flags = 0);
+         void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         bool has_child_forms() const noexcept;
+         bool has_child_forms_of_group(uint8_t) const noexcept;
          //
          static void* operator new(std::size_t sz);
          static void operator delete(void* ptr, std::size_t sz);

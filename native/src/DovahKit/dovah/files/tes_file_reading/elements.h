@@ -5,6 +5,7 @@
 #include "../../helpers/memory.h"
 #include "../../helpers/miscellaneous.h"
 #include "../../core.h"
+#include "../common.h"
 
 namespace dovah {
    class  form_stub;
@@ -22,40 +23,14 @@ namespace dovah {
          protected:
             inline void initialize(basic_reader* f) noexcept { this->owner = f; }
          public:
-            enum class type : int32_t {
-               forms_of_type            = 0,
-               world_children           = 1,
-               interior_cell_block      = 2,
-               interior_cell_sub_block  = 3,
-               exterior_cell_block      = 4,
-               exterior_cell_sub_block  = 5,
-               cell_children            = 6,
-               topic_children           = 7, // DIAL -> INFO
-               cell_persistent_children = 8,
-               cell_temporary_children  = 9,
-            };
-            struct header_t {
-               uint32_t signature = 0; // should always be 'GRUP'
-               uint32_t size;
-               uint32_t label;
-               type     type;
-               union {
-                  struct {
-                     uint8_t vc_day;
-                     uint8_t vc_month;
-                     uint8_t vc_last_editor;
-                     uint8_t vc_current_editor;
-                  };
-                  uint32_t version_control;
-               };
-               uint32_t unknown;
-            };
+            using type     = dovah::tes_file_group_type;
+            using header_t = dovah::tes_file_group_header;
             //
          public:
             basic_reader* owner = nullptr;
-            header_t          header;
-            uint32_t          pos;
-            uint32_t          end;
+            header_t      header;
+            uint32_t      pos;
+            uint32_t      end;
             //
             inline operator bool() const noexcept { return this->header.signature != 0; }
             inline bool exists() const noexcept { return this->header.signature != 0; }
@@ -90,38 +65,13 @@ namespace dovah {
          friend file_reader;
          friend subrecord;
          public:
-            struct header_t {
-               struct flag {
-                  flag() = delete;
-                  enum {
-                     compressed = 0x00040000,
-                  };
-               };
-               //
-               uint32_t signature = 0;
-               uint32_t size;
-               uint32_t flags;
-               uint32_t formID = 0;
-               union {
-                  struct {
-                     uint8_t vc_day;
-                     uint8_t vc_month;
-                     uint8_t vc_last_editor;
-                     uint8_t vc_current_editor;
-                  };
-                  uint32_t version_control;
-               };
-               uint16_t version;
-               uint16_t unknown;
-               //
-               inline bool body_is_compressed() const noexcept { return (this->flags & flag::compressed) != 0; }
-            };
+            using header_t = dovah::tes_file_record_header;
          protected:
             basic_reader& owner;
-            header_t          header;
-            uint32_t          head_pos; // position in the file (start of the record)
-            uint32_t          body_pos; // position in the file (start of the record body)
-            uint32_t          end;
+            header_t      header;
+            uint32_t      head_pos; // position in the file (start of the record)
+            uint32_t      body_pos; // position in the file (start of the record body)
+            uint32_t      end;
             //
             cobb::generic_buffer data; // record body (uncompressed)
             uint32_t offset = 0; // offset for reading, within the record body
@@ -139,6 +89,7 @@ namespace dovah {
             inline bool is_skyrim_special() const noexcept { return this->header.version >= 44; }
             //
             operator bool() const noexcept { return this->header.signature != 0; }
+            inline bool exists() const noexcept { return this->header.signature != 0; }
             //
             inline bool is_in_bounds() const noexcept {
                return this->offset < this->data.size();
@@ -184,14 +135,13 @@ namespace dovah {
       };
       class subrecord {
          friend basic_reader;
+         public:
+            using header_t = dovah::tes_file_subrecord_header;
          protected:
             subrecord(basic_reader& file) : owner(file) {}
             //
             basic_reader& owner;
-            struct {
-               uint32_t signature = 0;
-               uint32_t size      = 0;
-            } header;
+            header_t header;
             uint32_t pos; // position in the file
             uint32_t end; // position in the file
             //

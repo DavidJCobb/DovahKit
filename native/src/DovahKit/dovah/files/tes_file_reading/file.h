@@ -2,13 +2,19 @@
 #include <filesystem>
 #include "basic_reader.h"
 #include "threads.h"
+#include "../common.h"
 #include "../file_load_order.h"
 #include "../file_read_error.h"
 
 namespace dovah {
-   class  form_stub;
+   class form_stub;
+   namespace tes_file_writing {
+      class file_writer;
+   }
 
    namespace tes_file_reading {
+      class localized_string_file;
+
       class file_reader : public basic_reader {
          //
          // Class used to load a single ESP/ESM/ESL file.
@@ -18,20 +24,7 @@ namespace dovah {
          friend threads::worldspace_sub_block;
          friend threads::worldspace_persistent_cell_children;
          public:
-            struct flag {
-               flag() = delete;
-               enum type {
-                  master                 = 0x0001,
-                  altered                = 0x0002,
-                  checked                = 0x0004,
-                  active                 = 0x0008,
-                  optimized              = 0x0010,
-                  temp_id_owner          = 0x0020,
-                  localized_string_table = 0x0080,
-                  precalc_data_only      = 0x0100,
-                  light                  = 0x0200, // SSE-only
-               };
-            };
+            using flag = tes_file_flag;
             struct detail_flag {
                detail_flag() = delete;
                enum type {
@@ -51,6 +44,18 @@ namespace dovah {
             static constexpr int threads_for_interior_cell_load   = 4;
             static constexpr int threads_for_worldspace_load      = 6;
             static constexpr int threads_for_worldspace_cell_load = 2;
+            static constexpr int threads_for_localization_load    = 1; // currently just here to be informative; there's no support for loading these on multiple threads yet
+            //
+            struct writer_interface {
+               friend file_reader;
+               protected:
+                  const file_reader& wrapped;
+                  writer_interface(file_reader& r) : wrapped(r) {}
+               public:
+                  inline const void* data_at(std::ptrdiff_t o) const noexcept {
+                     return this->wrapped.file->data_at(o);
+                  }
+            };
             //
          public:
             file_reader(file_load_order&);
@@ -71,6 +76,7 @@ namespace dovah {
                std::array<threads::interior_cell,                       threads_for_interior_cell_load>   interior_cell;
                std::array<threads::worldspace_sub_block,                threads_for_worldspace_load>      worldspace;
                std::array<threads::worldspace_persistent_cell_children, threads_for_worldspace_cell_load> world_cell;
+               threads::localized_strings localized_strings;
                //
                _readers(file_reader&);
                void start();
@@ -98,9 +104,16 @@ namespace dovah {
             uint32_t subINTV;
             uint32_t subINCC;
             // TODO: SCRN
+            struct {
+               localized_string_file* common    = nullptr;
+               localized_string_file* journal   = nullptr;
+               localized_string_file* subtitles = nullptr;
+            } localization_files;
             //
             inline const std::string& get_filename() const noexcept { return this->name; }
             void abort() noexcept;
+
+            writer_interface get_writer_interface(tes_file_writing::file_writer&) { return writer_interface(*this); }
       };
    }
 }

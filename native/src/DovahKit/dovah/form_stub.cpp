@@ -69,6 +69,7 @@ namespace dovah {
       }
    }
 
+   #pragma region form_stub use info functions
    void form_stub::build_outbound_refs(tes_file_reading::basic_reader* reader) noexcept {
       if (this->is_hardcoded()) { // hardcoded forms only have hardcoded outbound refs
          //
@@ -84,14 +85,21 @@ namespace dovah {
          if (builder)
             builder(record, this);
       }
-      this->add_outbound_reference(this->groupInfo.parentFormID);
+      this->add_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
    }
    void form_stub::send_inbound_refs() noexcept {
-      for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it)
+      for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it) {
+         use_info_entry::flags_t flags = 0;
+         if (it->second.flags & use_info_entry::flag::i_am_child_of)
+            flags |= use_info_entry::flag::i_am_parent_of;
+         if (it->second.flags & use_info_entry::flag::i_am_parent_of)
+            flags |= use_info_entry::flag::i_am_child_of;
+         //
          if (it->second.other)
-            it->second.other->receive_inbound_ref(this);
+            it->second.other->receive_inbound_ref(this, flags);
+      }
    }
-   void form_stub::receive_inbound_ref(form_stub* inbound, form_stub::flags_t flags) noexcept {
+   void form_stub::receive_inbound_ref(form_stub* inbound, use_info_entry::flags_t flags) noexcept {
       auto& list  = this->inbound;
       auto& entry = list[inbound->formID];
       entry.other = inbound;
@@ -99,7 +107,7 @@ namespace dovah {
       entry.flags = flags;
    }
 
-   void form_stub::add_outbound_reference(uint32_t toFormID, form_stub::flags_t flags) {
+   void form_stub::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
       if (toFormID == 0)
          return;
       auto& list  = this->outbound;
@@ -118,12 +126,32 @@ namespace dovah {
       entry.refcount++;
       //
       if (flags) {
-         if (flags & use_info_entry::flag::i_am_child_of)
-            entry.flags |= use_info_entry::flag::i_am_parent_of;
-         else if (flags & use_info_entry::flag::i_am_parent_of)
-            entry.flags |= use_info_entry::flag::i_am_child_of;
+         entry.flags |= flags;
       }
    }
+
+   bool form_stub::has_child_forms() const noexcept {
+      for (auto& pair : this->outbound) {
+         auto& entry = pair.second;
+         if (entry.flags & use_info_entry::flag::i_am_parent_of)
+            return true;
+      }
+      return false;
+   }
+   bool form_stub::has_child_forms_of_group(uint8_t gt) const noexcept {
+      for (auto& pair : this->outbound) {
+         auto& entry = pair.second;
+         if (!entry.other)
+            continue;
+         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
+            continue;
+         if (entry.other->groupInfo.type == gt)
+            return true;
+      }
+      return false;
+   }
+   #pragma endregion
+
    /*static*/ void* form_stub::operator new(std::size_t sz) {
       if (sz != sizeof(form_stub))
          return ::operator new(sz);

@@ -8,6 +8,7 @@ extern "C" {
 }
 
 namespace dovah::tes_file_reading {
+   #pragma region basic stream operations
    void basic_reader::setPos(uint32_t pos) {
       this->stream_position = pos;
    }
@@ -26,6 +27,7 @@ namespace dovah::tes_file_reading {
    bool basic_reader::is_good() {
       return !this->isEOF();
    }
+   #pragma endregion
 
    bool basic_reader::is_skyrim_special() {
       auto owner = this->owner;

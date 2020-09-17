@@ -34,6 +34,12 @@
 //
 //  - Support for loading the contents of localized strings.
 //
+//     - BLOCKED by BSA loading: Skyrim stores its localized string files inside of 
+//       Interface.bsa. We have a rough-draft class for localized_string_file and 
+//       commented-out integration in file_reader, but that rough-draft class needs 
+//       to be revised to store the localized string data persistently (since we 
+//       can't just rely on a mapped_file anymore).
+//
 //     - We should not allow you to set something as the active file if it uses 
 //       a localized string file, since we don't have the means to edit those yet. 
 //       However, we should still be able to load localized strings just so that you 
@@ -62,6 +68,12 @@
 // UPCOMING TASKS:
 //
 //  - Code to save the current active file.
+//
+//     = CURRENT GOAL: CREATE A (file_writer) CLASS THAT CAN RECONSTRUCT GROUPS FROM 
+//       THE LOADED FORM STUBS WHILE OTHERWISE BLINDLY COPYING DATA ON A PER-RECORD 
+//       BASIS. WHEN WE HAVE THAT WORKING, WE CAN MOVE ONTO THE MORE COMPLICATED TASK 
+//       OF GIVING RECORDS CODE TO HANDLE THEIR LOADED DATA, DEALING WITH THE WORLD-
+//       SPACE "OFST" SUBRECORD, AND SO ON.
 //
 //     - DovahKitCore needs to provide two signals, onSaveImminent and onSaveComplete, 
 //       so that the UI can abandon any form pointers prior to a save and reacquire 
@@ -125,6 +137,14 @@
 //        - If we add some debug logging to the load code, we can log the largest 
 //          uncompressed record size and the smallest compressed record size, both 
 //          in general and per form type. That might provide some insight.
+//
+//        - Skyrim.esm only compresses some CELL and LAND, and all NAVM and NPC_. It 
+//          doesn't seem to take record size into account at all, actually; I've seen 
+//          LAND at (uncompressed) size 0x0A bytes be both compressed and not.
+//
+//           - CELLs are compressed if they have a TVDT subrecord.
+//
+//           - LAND is compressed if its parent CELL is compressed.
 //
 // DISTANT TASKS:
 //

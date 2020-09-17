@@ -107,7 +107,9 @@
     <ClCompile Include="dovah\files\tes_file_reading\basic_reader.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\elements.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\file.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\localized_string_file.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\threads.cpp" />
+    <ClCompile Include="dovah\files\tes_file_writing\file_writer.cpp" />
     <ClCompile Include="dovah\files\threaded_load_order_use_info_builder.cpp" />
     <ClCompile Include="dovah\forms\Activator.cpp" />
     <ClCompile Include="dovah\forms\ActorBase.cpp" />
@@ -135,6 +137,7 @@
     <ClCompile Include="dovah\forms\Voicetype.cpp" />
     <ClCompile Include="dovah\forms\WordOfPower.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
+    <ClCompile Include="dovah\form_stub_helpers.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />
     <ClCompile Include="dovah\logging.cpp" />
     <ClCompile Include="editor\core.cpp" />
@@ -165,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
+    <ClInclude Include="dovah\files\common.h" />
     <ClInclude Include="dovah\files\file_load_order_normalizer.h" />
     <ClInclude Include="dovah\files\file_read_error.h" />
     <ClInclude Include="dovah\files\file_header.h" />
@@ -172,7 +176,10 @@
     <ClInclude Include="dovah\files\tes_file_reading\basic_reader.h" />
     <ClInclude Include="dovah\files\tes_file_reading\elements.h" />
     <ClInclude Include="dovah\files\tes_file_reading\file.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\localized_string_file.h" />
     <ClInclude Include="dovah\files\tes_file_reading\threads.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\elements.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\file_writer.h" />
     <ClInclude Include="dovah\files\threaded_load_order_use_info_builder.h" />
     <ClInclude Include="dovah\forms\Activator.h" />
     <ClInclude Include="dovah\forms\ActorBase.h" />
@@ -204,6 +211,7 @@
     <ClInclude Include="dovah\forms\_common.h" />
     <ClInclude Include="dovah\form_stub.h" />
     <ClInclude Include="dovah\form_stub_heap.h" />
+    <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
     <QtMoc Include="editor\core_internals\load_task.h" />

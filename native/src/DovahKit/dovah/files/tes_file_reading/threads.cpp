@@ -3,6 +3,7 @@
 #include "../../../helpers/strings.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
+#include "localized_string_file.h"
 
 namespace dovah {
    namespace tes_file_reading {
@@ -330,6 +331,26 @@ namespace dovah {
             this->thread = std::thread(worldspace_persistent_cell_children::_thread_handler, this);
          }
          void worldspace_persistent_cell_children::wait_for() {
+            this->thread.join();
+         }
+         #pragma endregion
+
+         #pragma region localized_strings
+         void localized_strings::_thread_handler(localized_strings* instance) {
+            instance->_load();
+         }
+         void localized_strings::_load() {
+            for (auto* file : this->targets) {
+               file->open();
+            }
+         }
+         void localized_strings::add_target(localized_string_file* f) {
+            this->targets.emplace_back(f);
+         }
+         void localized_strings::start() {
+            this->thread = std::thread(localized_strings::_thread_handler, this);
+         }
+         void localized_strings::wait_for() {
             this->thread.join();
          }
          #pragma endregion

@@ -37,6 +37,7 @@ namespace cobb {
          //
          const void*    data() const noexcept { return this->_view; }
          const uint64_t size() const noexcept { return this->_size; }
+         const void*    data_at(std::ptrdiff_t offset) const noexcept { return (const uint8_t*)this->_view + offset; }
          //
          void open(wchar_t const* path) noexcept;
          void open(FILE* handle) noexcept;

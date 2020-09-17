@@ -3,6 +3,7 @@
 #include "../../../helpers/strings.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
+#include "localized_string_file.h"
 
 namespace dovah::tes_file_reading {
    file_reader::_readers::_readers(file_reader& owner) : 
@@ -22,6 +23,7 @@ namespace dovah::tes_file_reading {
          reader.start();
       for (auto& reader : this->world_cell)
          reader.start();
+      this->localized_strings.start();
    }
    void file_reader::_readers::wait_for() {
       for (auto& reader : this->simple)
@@ -33,6 +35,7 @@ namespace dovah::tes_file_reading {
       for (auto& reader : this->world_cell)
          reader.wait_for();
       this->complex.wait_for();
+      this->localized_strings.wait_for();
    }
 
    file_reader::file_reader(file_load_order& lo) : basic_reader(nullptr), load_order(lo),
@@ -47,6 +50,18 @@ namespace dovah::tes_file_reading {
       if (this->file) {
          delete this->file;
          this->file = nullptr;
+      }
+      if (auto& p = this->localization_files.common) {
+         delete p;
+         p = nullptr;
+      }
+      if (auto& p = this->localization_files.journal) {
+         delete p;
+         p = nullptr;
+      }
+      if (auto& p = this->localization_files.subtitles) {
+         delete p;
+         p = nullptr;
       }
    }
    bool file_reader::load_record_at(uint32_t pos) {
@@ -257,6 +272,28 @@ namespace dovah::tes_file_reading {
       }
       dovah::logging::print_line("Read file header.");
       this->uses_string_table = (bool)(this->flags & flag::localized_string_table);
+      if (this->uses_string_table) {
+         /*// BLOCKED; SEE localized_string_file.h
+         auto& lf = this->localization_files;
+         lf.common    = new localized_string_file;
+         lf.journal   = new localized_string_file;
+         lf.subtitles = new localized_string_file;
+         //
+         lf.common->type    = localized_string_file::file_type::common;
+         lf.journal->type   = localized_string_file::file_type::journal;
+         lf.subtitles->type = localized_string_file::file_type::subtitles;
+         //
+         // TODO: set the localized_string_files' language as appropriate.
+         //
+         lf.common->set_path_from_owner_path(filepath);
+         lf.journal->set_path_from_owner_path(filepath);
+         lf.subtitles->set_path_from_owner_path(filepath);
+         //
+         this->readers.localized_strings.add_target(lf.common);
+         this->readers.localized_strings.add_target(lf.journal);
+         this->readers.localized_strings.add_target(lf.subtitles);
+         //*/
+      }
       {
          object_type ot;
          uint32_t   which_simple = 0;

@@ -5,7 +5,10 @@
 
 namespace dovah {
    namespace tes_file_reading {
+      class localized_string_file;
+
       namespace threads {
+         #pragma region Record and subrecord loaders
          class basic : public basic_reader {
             //
             // Class for reading a top-level GRUP for a form type that cannot contain child 
@@ -100,6 +103,22 @@ namespace dovah {
                void start();
                void wait_for();
          };
+         #pragma endregion
+         //
+         #pragma region Localized string loaders
+         class localized_strings {
+            protected:
+               void _load();
+               static void _thread_handler(localized_strings* instance);
+            public:
+               std::vector<localized_string_file*> targets;
+               std::thread thread;
+               //
+               void add_target(localized_string_file*);
+               void start();
+               void wait_for();
+         };
+         #pragma endregion
       }
    }
 }

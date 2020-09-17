@@ -397,6 +397,24 @@ namespace dovah {
       return this->form_is_from_active_file(stub);
    }
 
+   bool file_load_order::active_file_has_forms_of_type(form_type_t form_type) const noexcept {
+      if (form_type < this->active_file_forms_by_type.size()) {
+         auto& list = this->active_file_forms_by_type[form_type].forms;
+         return !list.empty();
+      }
+      return false;
+   }
+   bool file_load_order::for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
+      if (form_type < this->active_file_forms_by_type.size()) {
+         auto& list = this->active_file_forms_by_type[form_type].forms;
+         for (auto it = list.begin(); it != list.end(); ++it) {
+            if (functor(it->second))
+               return true;
+         }
+      }
+      return false;
+   }
+
    void file_load_order::stub_flagged_as_edited(form_stub* stub) noexcept {
       this->active_file_forms.forms[stub->formID] = stub;
       auto& at = this->active_file_forms_by_type[stub->formType];
