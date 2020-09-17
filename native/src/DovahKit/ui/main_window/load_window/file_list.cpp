@@ -141,6 +141,35 @@ void LoadOrderFileListModel::insert(const dovah::file_header& header, const QDat
    this->root->_children.push_back(item);
    this->endInsertRows();
 }
+void LoadOrderFileListModel::sortByPluginsTxt() {
+   std::vector<QString> files;
+   DovahKitCore::get().get_game_plugins(files);
+   if (files.empty())
+      return;
+   uint8_t i    = 0;
+   uint8_t j    = 0;
+   int     max  = std::min<int>(255, files.size());
+   auto&   list = this->root->_children;
+   auto    size = list.size();
+   for (; i < max; ++i) {
+      auto& name = files[i];
+      for (int k = j; k < size; ++k) {
+         auto* item = list[k];
+         if (item->name() == name) {
+            if (k == i) // item is already in position
+               break;
+            std::swap(list[j], list[k]);
+            ++j;
+            break;
+         }
+      }
+   }
+   if (j < size) {
+      std::sort(list.begin() + j, list.end(), [](const item_type* a, const item_type* b) {
+         return a->modified < b->modified;
+      });
+   }
+}
 
 void LoadOrderFileListModel::setActiveFile(item_type* item) noexcept {
    auto previous = this->active;
@@ -219,7 +248,6 @@ LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
       fh.clear();
    }
    //
-   // TODO: Can we sort the model by the user's load order?
-   //
+   model->sortByPluginsTxt();
 };
 #pragma endregion

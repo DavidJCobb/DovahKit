@@ -1,12 +1,32 @@
 #include "open_window_for_form.h"
 #include <QMessageBox>
 #include "../dovah/form_stub.h"
+#include "core.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
 
 void open_window_for_form(dovah::form_stub* stub, QWidget* parent) {
+   //
+   // First, let's check if there's already a window for this form. If so, we should just 
+   // refocus that window instead of opening a new one.
+   //
+   auto  formID = stub->formID;
+   auto& editor = DovahKitCore::get();
+   auto  it     = editor.extant_form_edit_dialogs.find(formID);
+   if (it != editor.extant_form_edit_dialogs.end()) {
+      auto dialog = it->second;
+      if (dialog) {
+         dialog->raise();
+         dialog->activateWindow();
+         return;
+      }
+   }
+   //
+   // If we made it to here, then there isn't already a window for this form, so let's 
+   // open one.
+   //
    QDialog* opened = nullptr;
    switch (stub->formType) {
       case dovah::form_type::color:
@@ -23,6 +43,15 @@ void open_window_for_form(dovah::form_stub* stub, QWidget* parent) {
          break;
    }
    if (opened) {
+      editor.extant_form_edit_dialogs[stub->formID] = opened;
+      QObject::connect(opened, &QDialog::finished, &editor, [formID, opened]() {
+         auto& editor = DovahKitCore::get();
+         auto& map    = editor.extant_form_edit_dialogs;
+         auto  it     = map.find(formID);
+         if (it != map.end())
+            map.erase(it);
+      });
+      //
       opened->show();
       return;
    }

@@ -1,5 +1,7 @@
 #pragma once
 #include <filesystem>
+#include <unordered_map>
+#include <QDialog>
 #include <QObject>
 #include "../dovah/core.h"
 #include "../dovah/files/file_load_order.h"
@@ -14,6 +16,7 @@ namespace DovahKitEditorInternals {
 class DovahKitCore : public QObject {
    Q_OBJECT
    friend class DovahKitEditorInternals::load_task;
+   friend void open_window_for_form(dovah::form_stub*, QWidget* parent);
    public:
       using form_type_t    = dovah::form_type_t;
       using bare_form_id_t = dovah::bare_form_id_t;
@@ -40,6 +43,8 @@ class DovahKitCore : public QObject {
       bool    loaded  = false;
       bool    loading = false;
       QThread* async_loader = nullptr;
+      //
+      std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
       //
    signals:
       void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption
@@ -72,6 +77,7 @@ class DovahKitCore : public QObject {
       bool form_is_from_active_file(bare_form_id_t) const noexcept;
 
       bool get_game_path(std::filesystem::path& out) const noexcept;
+      bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt
 };
 
 // IntelliSense doesn't like Q_DECLARE_METATYPE; ignore errors here unless they're compiler errors:

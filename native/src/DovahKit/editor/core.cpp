@@ -1,8 +1,11 @@
 #include "core.h"
+#include <QFile>
+#include <QProcessEnvironment>
 #include <QThread>
 #include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
 #include "core_internals/load_task.h"
+#include <QDebug>
 
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
@@ -148,4 +151,33 @@ bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
    }
    out.clear();
    return false;
+}
+bool DovahKitCore::get_game_plugins(std::vector<QString>& out) const noexcept {
+   out.clear();
+   //
+   auto env  = QProcessEnvironment::systemEnvironment();
+   auto file = QFile(env.value("LOCALAPPDATA") + "\\Skyrim\\plugins.txt");
+   if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+      return false;
+   //
+   out.push_back("Skyrim.esm"); // game forces this to be 00, and it is not present in plugins.txt
+   out.push_back("Update.esm"); // game forces this to be 01, and it is not present in plugins.txt
+   //
+   // TODO: Apparently Skyrim Special also hardcodes the DLCs and omits them from plugins.txt. 
+   // If we want the SSE plugins.txt (we need an argument for that), then we should pull from 
+   // the right game's directory and for SSE, hardcode the DLCs both at this spot and in the 
+   // loop below.
+   //
+   while (!file.atEnd()) {
+      auto line = file.readLine();
+      if (line[0] == '#')
+         continue;
+      line = line.trimmed();
+      if (line.compare("Skyrim.esm", Qt::CaseInsensitive) == 0) // hardcoded file; already in our list; don't allow it to appear twice if plugins.txt wrongly includes it
+         continue;
+      if (line.compare("Update.esm", Qt::CaseInsensitive) == 0) // hardcoded file; already in our list; don't allow it to appear twice if plugins.txt wrongly includes it
+         continue;
+      out.push_back(line);
+   }
+   return true;
 }

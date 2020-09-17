@@ -43,7 +43,7 @@ namespace dovah {
          //
          file_load_order_normalizer normalizer;
          std::vector<loaded_file*> files;
-         loaded_file*      hardcoded_forms_file = nullptr;
+         loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
          loaded_file*      active_file          = nullptr;
          _form_map         forms;
          _form_map_by_type forms_by_type;

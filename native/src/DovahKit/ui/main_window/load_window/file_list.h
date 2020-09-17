@@ -86,6 +86,7 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       //
       void clear();
       void insert(const dovah::file_header&, const QDateTime& created, const QDateTime& modified);
+      void sortByPluginsTxt();
       //
       inline const item_type* activeFile() const noexcept { return this->active; }
       inline const std::vector<item_type*>& files() const noexcept { return this->root->children(); }

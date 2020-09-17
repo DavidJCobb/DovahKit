@@ -13,10 +13,6 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - Add a UI for loading files.
-//
-//     - Sort the file list.
-//
 //  - If any loaded files are for SSE, then the file_load_order should cap the load 
 //    order at 253 entries, not 254.
 //
@@ -35,6 +31,14 @@
 //       have not been overridden in any loaded files. Our special handler should 
 //       construct outbound references for these hardcoded forms, by hand. We 
 //       mainly only need this for 14:PlayerRef using 07:Player as its base form.
+//
+//  - Support for loading the contents of localized strings.
+//
+//     - We should not allow you to set something as the active file if it uses 
+//       a localized string file, since we don't have the means to edit those yet. 
+//       However, we should still be able to load localized strings just so that you 
+//       can create overrides of forms that contain localized strings, and so you can 
+//       see those strings in the editor.
 //
 // THINGS TO LOOK INTO:
 //
@@ -128,6 +132,9 @@
 //    they want to open files from. Currently, we just always use the Skyrim Classic 
 //    install path.
 //
+//  - UI for displaying Use Info, available via right-clicking forms in the Object 
+//    Window (or, when we eventually add it, the Cell View window).
+//
 //  - Refhandle usage tracking: the number of persistent references in ESMs, and the 
 //    number of all references in non-ESMs, should be tracked and stored on each 
 //    file_reader. This information should be accessible to UI code.
@@ -166,6 +173,9 @@
 //
 //        - Everything that listens for formModified will probably also need to listen 
 //          for these.
+//
+//     - We'll probably want signals for when forms are created, so that UI controls 
+//       that draw lists of forms don't have to rebuild their entire lists/models.
 //
 //  - Code for deleting forms.
 //
@@ -214,13 +224,12 @@
 //        - Everything that listens for dataAbandonImminent will probably also need to 
 //          listen for these.
 //
-//  - Support for loading the contents of localized strings.
+// HORIZON TASKS:
 //
-//     - We should not allow you to set something as the active file if it uses 
-//       a localized string file, since we don't have the means to edit those yet. 
-//       However, we should still be able to load localized strings just so that you 
-//       can create overrides of forms that contain localized strings, and so you can 
-//       see those strings in the editor.
+//  - Ability to convert files bidirectionally between Skyrim Special and Skyrim Classic.
+//
+//     - Requires being able to warn the user about data loss in cases where fields 
+//       don't exist in the target version.
 //
 // FINALIZING TASKS:
 //

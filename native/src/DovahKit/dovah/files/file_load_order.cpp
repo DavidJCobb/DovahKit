@@ -210,12 +210,6 @@ namespace dovah {
          for (auto* header : this->normalizer.plugins)
             dovah::logging::print_line("[P] %s", header->name.c_str());
       }
-      #if BENCHMARK_FORM_STUB_BUILD == 1
-      struct timeb bench_start;
-      struct timeb bench_end;
-      dovah::logging::print_line("Building FormStubs...\n");
-      ftime(&bench_start);
-      #endif
       for (auto* header : this->normalizer.masters) {
          std::string path = this->queued_load.base_path + header->name;
          auto file = new tes_file_reading::file_reader(*this);
@@ -274,10 +268,6 @@ namespace dovah {
          // 3. Load the rest of the file.
          //
       }
-      #if BENCHMARK_FORM_STUB_BUILD == 1
-      ftime(&bench_end);
-      printf("Time taken to build all FormStubs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-      #endif
       this->loading_is_complete = true;
       this->loading_index = 0;
       //

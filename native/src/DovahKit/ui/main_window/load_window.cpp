@@ -2,11 +2,6 @@
 #include <QErrorMessage>
 #include "../../editor/core.h"
 
-//
-// TODO:
-//  - Sort file list by load order (file_list.cpp)
-//
-
 LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
