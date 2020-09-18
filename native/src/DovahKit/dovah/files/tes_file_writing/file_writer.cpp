@@ -63,10 +63,9 @@ namespace dovah::tes_file_writing {
             case form_type::cell:
                if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_persistent_children)) {
                   auto& group = this->open_group();
-                  group.header.signature = 'GRUP';
-                  group.header.label     = stub->formID;
-                  group.header.type      = tes_file_group_type::cell_persistent_children;
-                  group.header.unknown   = 0xCCCCCCCC;
+                  group.header.label   = stub->formID;
+                  group.header.type    = tes_file_group_type::cell_persistent_children;
+                  group.header.unknown = 0xCCCCCCCC;
                   group.header.version_control = this->version_control;
                   //
                   form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
@@ -80,10 +79,9 @@ namespace dovah::tes_file_writing {
                }
                if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_temporary_children)) {
                   auto& group = this->open_group();
-                  group.header.signature = 'GRUP';
-                  group.header.label     = stub->formID;
-                  group.header.type      = tes_file_group_type::cell_temporary_children;
-                  group.header.unknown   = 0xCCCCCCCC;
+                  group.header.label   = stub->formID;
+                  group.header.type    = tes_file_group_type::cell_temporary_children;
+                  group.header.unknown = 0xCCCCCCCC;
                   group.header.version_control = this->version_control;
                   //
                   form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
@@ -104,10 +102,9 @@ namespace dovah::tes_file_writing {
             case form_type::topic:
                {
                   auto& group = this->open_group();
-                  group.header.signature = 'GRUP';
-                  group.header.label     = stub->formID;
-                  group.header.type      = tes_file_group_type::topic_children;
-                  group.header.unknown   = 0xCCCCCCCC; // typically uninitialized memory in Bethesda output
+                  group.header.label   = stub->formID;
+                  group.header.type    = tes_file_group_type::topic_children;
+                  group.header.unknown = 0xCCCCCCCC; // typically uninitialized memory in Bethesda output
                   group.header.version_control = this->version_control;
                   //
                   form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
@@ -126,15 +123,30 @@ namespace dovah::tes_file_writing {
    }
 
    group& file_writer::open_group() {
-      //
-      // TODO: FINISH ME
-      //
-      return this->_groups[0];
+      int32_t parent = -1;
+      for (uint32_t i = 0; i < this->_groups.size(); i++) {
+         auto& group = this->_groups[i];
+         if (!group)
+            break;
+         parent = i;
+      }
+      assert(parent + 1 < this->_groups.size());
+      auto& group = this->_groups[parent + 1];
+      group.header.signature = 'GRUP';
+      group.pos = this->get_stream_position();
+      return group;
    }
    void file_writer::close_current_group() {
+      auto& group = this->get_current_group();
+      auto  pos   = this->get_stream_position();
+      if (!group)
+         assert(false && "file_writer: tried to close a group when there are no groups!");
+      this->stream.seekp(group.pos + offsetof(tes_file_group_header, size));
+      this->stream << (uint32_t)(pos - group.pos);
+      this->stream.seekp(pos);
       //
-      // TODO: FINISH ME
-      //
+      group.header = tes_file_group_header();
+      group.pos    = 0;
    }
 
    uint32_t file_writer::get_stream_position() const noexcept {

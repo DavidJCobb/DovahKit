@@ -21,6 +21,7 @@ namespace dovah {
             //
          protected:
             header_t header;
+            uint32_t pos = 0; // position of the start of the group, i.e. just before the signature
             //
          public:
             inline operator bool() const noexcept { return this->header.signature != 0; }
