@@ -222,6 +222,15 @@
     <ClCompile Include="dovah\form_stub_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\form_use_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\qt\strings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -413,6 +422,9 @@
     <ClInclude Include="dovah\form_stub_helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\qt\strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -437,6 +449,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\main_window\load_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\main_window\form_use_info.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -487,6 +502,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\core_internals\load_task.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\form_use_info.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\form_use_info\use_info_list.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -10,6 +10,9 @@ namespace dovah::loaded_forms {
                components::papyrus_attachment_data::generateUseInfo(subrecord, stub);
                break;
             case 'NAME': // base form (subrecord signature is vestigial from Morrowind, which used editor IDs instead of form IDs)
+               if (subrecord.read(formID))
+                  stub->add_outbound_reference(formID, use_info_entry::flag::i_am_reference_of);
+               break;
             case 'LNAM': // lighting template
             case 'INAM': // imagespace (for imagespace modifier volumes)
             case 'XLRM': // location room marker (roombounds?)

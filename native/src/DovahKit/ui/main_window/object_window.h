@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <QAction>
 #include <QDialog>
 #include "ui_object_window.h"
 
@@ -13,4 +14,5 @@ class ObjectWindow : public QWidget {
       //
    private:
       Ui::ObjectWindow ui;
+      QAction* _formActionShowUseInfo = nullptr;
 };

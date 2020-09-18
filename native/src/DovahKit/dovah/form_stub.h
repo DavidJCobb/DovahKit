@@ -124,8 +124,10 @@ namespace dovah {
       struct flag {
          flag() = delete;
          enum type : uint8_t {
-            i_am_child_of  = 0x01,
-            i_am_parent_of = 0x02,
+            i_am_child_of     = 0x01, // (this) is the child of (other)
+            i_am_parent_of    = 0x02, // (other) is the child of (this)
+            i_am_base_form_of = 0x04, // (this) is the base form of (other)
+            i_am_reference_of = 0x08, // (other) is the base form of (this)
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;

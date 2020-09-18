@@ -92,8 +92,12 @@ namespace dovah {
          use_info_entry::flags_t flags = 0;
          if (it->second.flags & use_info_entry::flag::i_am_child_of)
             flags |= use_info_entry::flag::i_am_parent_of;
-         if (it->second.flags & use_info_entry::flag::i_am_parent_of)
+         else if (it->second.flags & use_info_entry::flag::i_am_parent_of)
             flags |= use_info_entry::flag::i_am_child_of;
+         if (it->second.flags & use_info_entry::flag::i_am_base_form_of)
+            flags |= use_info_entry::flag::i_am_reference_of;
+         else if (it->second.flags & use_info_entry::flag::i_am_reference_of)
+            flags |= use_info_entry::flag::i_am_base_form_of;
          //
          if (it->second.other)
             it->second.other->receive_inbound_ref(this, flags);

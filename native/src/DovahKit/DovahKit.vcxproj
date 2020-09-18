@@ -147,6 +147,7 @@
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\multiheap.cpp" />
+    <ClCompile Include="helpers\qt\strings.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="helpers\windows_registry.cpp" />
     <ClCompile Include="main.cpp" />
@@ -159,6 +160,8 @@
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
+    <ClCompile Include="ui\main_window\form_use_info.cpp" />
+    <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp" />
     <ClCompile Include="ui\main_window\load_window.cpp" />
     <ClCompile Include="ui\main_window\load_window\file_list.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
@@ -214,9 +217,12 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <QtMoc Include="ui\main_window\form_use_info\use_info_list.h" />
+    <QtMoc Include="ui\main_window\form_use_info.h" />
     <QtMoc Include="editor\core_internals\load_task.h" />
     <ClInclude Include="editor\open_window_for_form.h" />
     <ClInclude Include="helpers\performance.h" />
+    <ClInclude Include="helpers\qt\strings.h" />
     <ClInclude Include="helpers\windows_registry.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="ui\main_window\load_window\file_list.h" />
@@ -253,6 +259,7 @@
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />
+    <QtUic Include="ui\main_window\form_use_info.ui" />
     <QtUic Include="ui\main_window\load_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />
   </ItemGroup>

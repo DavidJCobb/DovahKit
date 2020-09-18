@@ -32,20 +32,6 @@
 //       construct outbound references for these hardcoded forms, by hand. We 
 //       mainly only need this for 14:PlayerRef using 07:Player as its base form.
 //
-//  - Support for loading the contents of localized strings.
-//
-//     - BLOCKED by BSA loading: Skyrim stores its localized string files inside of 
-//       Interface.bsa. We have a rough-draft class for localized_string_file and 
-//       commented-out integration in file_reader, but that rough-draft class needs 
-//       to be revised to store the localized string data persistently (since we 
-//       can't just rely on a mapped_file anymore).
-//
-//     - We should not allow you to set something as the active file if it uses 
-//       a localized string file, since we don't have the means to edit those yet. 
-//       However, we should still be able to load localized strings just so that you 
-//       can create overrides of forms that contain localized strings, and so you can 
-//       see those strings in the editor.
-//
 // THINGS TO LOOK INTO:
 //
 //  - Build a unit testing framework wherein we run automated correctness checks 
@@ -146,6 +132,20 @@
 //
 //           - LAND is compressed if its parent CELL is compressed.
 //
+//  - Use Info window
+//
+//     - Currently, it can't split between base-form/reference relationships and other 
+//       relationships. This means that it can't separate out, say, a reference using 
+//       the given form as its base form and also referring to that form through some 
+//       other means (e.g. a Papyrus property).
+//
+//        - If we define a uint24_t type (i.e. three-byte integer), then we should be 
+//          more than able to add a "number of forms that use me as their base form" 
+//          count to dovah::use_info_entry without having to expand the struct.
+//
+//           - I've created a helper file for uint24_t, but it's completely untested. 
+//             I should run some tests in here before I use it.
+//
 // DISTANT TASKS:
 //
 //  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
@@ -243,6 +243,22 @@
 //
 //        - Everything that listens for dataAbandonImminent will probably also need to 
 //          listen for these.
+//
+//  - Render Window
+//
+//  - Support for loading the contents of localized strings.
+//
+//     - BLOCKED by BSA loading: Skyrim stores its localized string files inside of 
+//       Interface.bsa. We have a rough-draft class for localized_string_file and 
+//       commented-out integration in file_reader, but that rough-draft class needs 
+//       to be revised to store the localized string data persistently (since we 
+//       can't just rely on a mapped_file anymore).
+//
+//     - We should not allow you to set something as the active file if it uses 
+//       a localized string file, since we don't have the means to edit those yet. 
+//       However, we should still be able to load localized strings just so that you 
+//       can create overrides of forms that contain localized strings, and so you can 
+//       see those strings in the editor.
 //
 // HORIZON TASKS:
 //

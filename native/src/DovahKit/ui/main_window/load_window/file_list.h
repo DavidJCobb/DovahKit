@@ -4,10 +4,8 @@
 #include <vector>
 #include <QAbstractItemModel>
 #include <QDateTime>
-#include <QSortFilterProxyModel>
 #include <QString>
 #include <QTableView>
-#include <QTimer>
 #include "../../../dovah/core.h"
 
 namespace dovah {
