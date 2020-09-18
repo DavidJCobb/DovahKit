@@ -19,7 +19,7 @@ namespace cobb {
          operator uint32_t() const noexcept {
             return a | ((uint32_t)b) << 0x10;
          }
-         inline bool operator!() const noexcept { return (a + b) == 0; }
+         inline bool operator!() const noexcept { return (a | b) == 0; }
 
          uint24_t& operator+=(int v) {
             *this = (uint32_t)(*this) + v;

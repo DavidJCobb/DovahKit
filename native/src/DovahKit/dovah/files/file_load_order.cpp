@@ -397,6 +397,12 @@ namespace dovah {
       return this->form_is_from_active_file(stub);
    }
 
+   uint32_t file_load_order::active_file_form_count() const noexcept {
+      uint32_t total = 0;
+      for (auto& map : this->active_file_forms_by_type)
+         total += map.forms.size();
+      return total;
+   }
    bool file_load_order::active_file_has_forms_of_type(form_type_t form_type) const noexcept {
       if (form_type < this->active_file_forms_by_type.size()) {
          auto& list = this->active_file_forms_by_type[form_type].forms;
@@ -411,6 +417,38 @@ namespace dovah {
             if (functor(it->second))
                return true;
          }
+      }
+      return false;
+   }
+   bool file_load_order::for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
+      if (form_type >= this->active_file_forms_by_type.size())
+         return false;
+      auto  prefix = this->index_of_active_file();
+      auto& list   = this->active_file_forms_by_type[form_type].forms;
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         auto stub = it->second;
+         if ((stub->formID >> 0x18) == prefix)
+            continue;
+         if (functor(stub))
+            return true;
+      }
+      return false;
+   }
+   uint8_t file_load_order::index_of_active_file() const noexcept {
+      auto size = this->files.size();
+      for (uint8_t i = 0; i < size; i++) {
+         if (this->files[i] == this->active_file)
+            return i;
+      }
+      return invalid_load_prefix;
+   }
+   //
+   bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path)> functor) {
+      std::filesystem::path filename;
+      for (auto* file : this->files) {
+         filename = file->get_filename();
+         if (functor(filename))
+            return true;
       }
       return false;
    }

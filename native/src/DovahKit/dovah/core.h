@@ -181,6 +181,8 @@ namespace dovah {
 
       static bool form_type_is_reference(form_type_t ft) noexcept;
       static bool signature_is_reference(uint32_t signature) noexcept;
+
+      inline bool is_reference() const noexcept { return form_type_is_reference(this->formType); }
    };
    extern std::array<form_type_info, 140> form_types;
    extern std::array<uint32_t,       120> group_sequence_list; // the order in which record groups appear

@@ -23,10 +23,10 @@ namespace cobb {
       }
       this->_data = malloc(bytes);
       if (this->_data) {
-         this->_size = bytes;
+         this->_size     = bytes;
          this->_capacity = bytes;
       } else {
-         this->_size = 0;
+         this->_size     = 0;
          this->_capacity = 0;
       }
    }
@@ -46,6 +46,22 @@ namespace cobb {
             this->_capacity = this->_size;
          }
       }
+   }
+   void generic_buffer::resize(uint32_t bytes) {
+      this->reserve(bytes);
+      this->_size = bytes;
+   }
+   void generic_buffer::reserve(uint32_t bytes) {
+      if (bytes <= this->_capacity)
+         return;
+      auto buffer = malloc(bytes);
+      if (this->_data) {
+         if (this->_size)
+            memcpy(buffer, this->_data, this->_size);
+         ::free(this->_data);
+      }
+      this->_data     = buffer;
+      this->_capacity = bytes;
    }
    generic_buffer& generic_buffer::operator=(const generic_buffer& other) noexcept {
       this->free();

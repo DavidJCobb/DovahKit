@@ -113,7 +113,7 @@ namespace dovah {
          uint32_t version_control;
       };
       uint16_t version;
-      uint16_t unknown;
+      uint16_t version_control_2;
       //
       inline bool body_is_compressed() const noexcept { return (this->flags & flag::compressed) != 0; }
    };

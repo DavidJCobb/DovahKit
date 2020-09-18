@@ -8,14 +8,16 @@
 namespace cobb {
    class generic_buffer {
       private:
-         void*    _data = nullptr;
-         uint32_t _size = 0;
+         void*    _data     = nullptr;
+         uint32_t _size     = 0;
          uint32_t _capacity = 0;
       public:
-         void allocate(uint32_t bytes); // TODO: rename to (resize)
+         void allocate(uint32_t bytes); // discards the current buffer content
          void free(); // checks whether (data) is nullptr
          inline void* raw() { return this->_data; }
          void shrink_to_fit();
+         void resize(uint32_t bytes);
+         void reserve(uint32_t bytes);
 
          inline uint8_t* data() const noexcept { return (uint8_t*)this->_data; }
 

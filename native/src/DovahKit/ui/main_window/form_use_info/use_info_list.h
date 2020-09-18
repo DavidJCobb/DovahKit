@@ -16,12 +16,12 @@ class FormUseInfoListModelItem {
       using form_id_t = dovah::bare_form_id_t;
       using data_t    = dovah::use_info_entry;
       //
-      data_t::flags_t            flags       = 0;
-      dovah::form_type_t         otherType   = 0;
-      decltype(data_t::refcount) countUsed   = 0;
-      decltype(data_t::refcount) countPlaced = 0;
-      dovah::bare_form_id_t      otherID     = 0;
-      dovah::form_stub*          otherStub   = nullptr;
+      data_t::flags_t       flags       = 0;
+      dovah::form_type_t    otherType   = 0;
+      uint32_t              countUsed   = 0;
+      uint32_t              countPlaced = 0;
+      dovah::bare_form_id_t otherID     = 0;
+      dovah::form_stub*     otherStub   = nullptr;
       QString signature;
       QString editorID;
       QString parentCell;

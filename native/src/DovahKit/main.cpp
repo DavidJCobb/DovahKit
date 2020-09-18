@@ -65,6 +65,17 @@
 //       OF GIVING RECORDS CODE TO HANDLE THEIR LOADED DATA, DEALING WITH THE WORLD-
 //       SPACE "OFST" SUBRECORD, AND SO ON.
 //
+//        - IMMEDIATE NEXT STEP IS WRITING OUT THE FILE HEADER (TES4 RECORD). WE 
+//          SHOULD HAVE THE CODE USE THE RECORD INTERFACE FOR THAT, WHICH ALSO MEANS 
+//          THAT WE NEED TO START FLESHING OUT HOW THE RECORD AND SUBRECORD INTERFACES 
+//          WILL WORK.
+//
+//           - Subrecords need their own cobb::generic_buffer so that if a subrecord's 
+//             body is larger than 65535 bytes, we can generate an 'XXXX' subrecord as 
+//             appropriate. When a subrecord is "closed," we'd transfer its header and 
+//             body to the record's buffer, dealing with the 'XXXX' subrecord if needed 
+//             at that time.
+//
 //     - DovahKitCore needs to provide two signals, onSaveImminent and onSaveComplete, 
 //       so that the UI can abandon any form pointers prior to a save and reacquire 
 //       them afterward.

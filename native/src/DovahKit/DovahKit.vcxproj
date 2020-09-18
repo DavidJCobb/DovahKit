@@ -109,6 +109,7 @@
     <ClCompile Include="dovah\files\tes_file_reading\file.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\localized_string_file.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\threads.cpp" />
+    <ClCompile Include="dovah\files\tes_file_writing\elements.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\file_writer.cpp" />
     <ClCompile Include="dovah\files\threaded_load_order_use_info_builder.cpp" />
     <ClCompile Include="dovah\forms\Activator.cpp" />

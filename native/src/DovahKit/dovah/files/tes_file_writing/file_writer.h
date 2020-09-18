@@ -16,8 +16,9 @@ namespace dovah {
          friend record;
          friend subrecord;
          public:
-            using file_reader = tes_file_reading::file_reader;
-            using stream_t    = std::basic_ofstream<uint8_t>;
+            using file_reader   = tes_file_reading::file_reader;
+            using file_offset_t = uint32_t;
+            using stream_t      = std::basic_ofstream<uint8_t>;
             static constexpr int max_group_depth = 7;
             //
             struct form_stub_write_info {
@@ -39,9 +40,22 @@ namespace dovah {
             record    _record;
             subrecord _subrecord;
             std::unordered_map<bare_form_id_t, form_stub_write_info> stub_writes;
+            struct {
+               struct {
+                  file_offset_t record_count   = 0;
+                  file_offset_t next_object_id = 0;
+               } header;
+            } fixup_data;
             //
+            record& _open_next_record(uint32_t signature, bare_form_id_t);
             void _write_header();
-            bool _write_record(form_stub*);
+            bool _write_form(form_stub*);
+            void _write_record();
+            //
+            void _write(const void* source, uint32_t size);
+            template<typename T> inline void _write(const T& v) {
+               this->_write(&v, sizeof(T));
+            }
             //
          public:
             union {
@@ -53,6 +67,7 @@ namespace dovah {
                };
                uint32_t version_control;
             };
+            uint16_t version_control_2;
             //
             inline group& get_current_group() {
                for (signed int i = this->_groups.size() - 1; i >= 0; i--) {

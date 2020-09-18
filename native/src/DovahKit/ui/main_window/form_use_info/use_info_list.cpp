@@ -157,9 +157,11 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
             if (entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of))
                if (entry.refcount <= 1)
                   continue;
+            break;
          case relationship_mode::base_form_only:
             if (!(entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of)))
                continue;
+            break;
       }
       auto item = new item_type(&entry);
       insertions.push_back(item);

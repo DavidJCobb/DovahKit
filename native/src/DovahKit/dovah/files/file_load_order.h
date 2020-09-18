@@ -1,5 +1,6 @@
 #pragma once
 #include "../core.h"
+#include <filesystem>
 #include <functional>
 #include <mutex>
 #include <set>
@@ -105,12 +106,17 @@ namespace dovah {
          form_stub* get_form(bare_form_id_t formID) const noexcept;
          form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
          form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
-         bool for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)>); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
+         bool for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
          bool form_is_from_active_file(const form_stub*) const noexcept;
          bool form_is_from_active_file(bare_form_id_t) const noexcept;
          //
+         uint32_t active_file_form_count() const noexcept;
          bool active_file_has_forms_of_type(form_type_t) const noexcept;
-         bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)>);
+         bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
+         bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
+         uint8_t index_of_active_file() const noexcept;
+         //
+         bool for_each_load_order_filename(std::function<bool(std::filesystem::path)> functor);
          //
          void stub_flagged_as_edited(form_stub*) noexcept; // called by form_stub::set_edited
          #pragma endregion
