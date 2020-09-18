@@ -53,9 +53,13 @@ namespace dovah {
             void _write_record();
             //
             void _write_impl(const void* source, uint32_t size);
+            void _write_impl(const tes_file_group_header&);
             void _write_impl(const tes_file_record_header&);
             template<typename T> inline void _write(const T& v) {
                this->_write_impl(&v, sizeof(T));
+            }
+            template<> inline void _write(const tes_file_group_header& v) {
+               this->_write_impl(v);
             }
             template<> inline void _write(const tes_file_record_header& v) {
                this->_write_impl(v);
@@ -84,10 +88,11 @@ namespace dovah {
             inline record& get_current_record() { return this->_record; }
             inline subrecord& get_current_subrecord() { return this->_subrecord; }
 
-            group& open_group();
+            group& open_group(tes_file_group_type, uint32_t label, uint32_t unknown = 0);
             void close_current_group();
 
             uint32_t get_stream_position() const noexcept;
+            void set_stream_position(file_offset_t) noexcept;
 
             void open();
             void write();

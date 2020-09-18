@@ -157,11 +157,7 @@ namespace dovah::tes_file_writing {
          switch (stub->formType) {
             case form_type::cell:
                if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_persistent_children)) {
-                  auto& group = this->open_group();
-                  group.header.label   = stub->formID;
-                  group.header.type    = tes_file_group_type::cell_persistent_children;
-                  group.header.unknown = 0xCCCCCCCC;
-                  group.header.version_control = this->version_control;
+                  auto& group = this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
                   //
                   form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
                      if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_persistent_children)
@@ -173,11 +169,7 @@ namespace dovah::tes_file_writing {
                   this->close_current_group();
                }
                if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_temporary_children)) {
-                  auto& group = this->open_group();
-                  group.header.label   = stub->formID;
-                  group.header.type    = tes_file_group_type::cell_temporary_children;
-                  group.header.unknown = 0xCCCCCCCC;
-                  group.header.version_control = this->version_control;
+                  auto& group = this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
                   //
                   form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
                      if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_temporary_children)
@@ -196,11 +188,7 @@ namespace dovah::tes_file_writing {
                break;
             case form_type::topic:
                {
-                  auto& group = this->open_group();
-                  group.header.label   = stub->formID;
-                  group.header.type    = tes_file_group_type::topic_children;
-                  group.header.unknown = 0xCCCCCCCC; // typically uninitialized memory in Bethesda output
-                  group.header.version_control = this->version_control;
+                  auto& group = this->open_group(tes_file_group_type::topic_children, stub->formID, tes_file_group_header::uninitialized_unknown);
                   //
                   form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
                      if (child->formType != form_type::topic_info)
@@ -224,6 +212,14 @@ namespace dovah::tes_file_writing {
    void file_writer::_write_impl(const void* source, uint32_t size) {
       this->stream.write((const uint8_t*)source, size);
    }
+   void file_writer::_write_impl(const tes_file_group_header& header) {
+      this->_write(header.signature);
+      this->_write(header.size);
+      this->_write(header.label);
+      this->_write(header.type);
+      this->_write(header.version_control);
+      this->_write(header.unknown);
+   }
    void file_writer::_write_impl(const tes_file_record_header& header) {
       this->_write(header.signature);
       this->_write(header.size);
@@ -234,7 +230,7 @@ namespace dovah::tes_file_writing {
       this->_write(header.version_control_2);
    }
 
-   group& file_writer::open_group() {
+   group& file_writer::open_group(tes_file_group_type group_type, uint32_t label, uint32_t unknown) {
       int32_t parent = -1;
       for (uint32_t i = 0; i < this->_groups.size(); i++) {
          auto& group = this->_groups[i];
@@ -245,7 +241,11 @@ namespace dovah::tes_file_writing {
       assert(parent + 1 < this->_groups.size());
       auto& group = this->_groups[parent + 1];
       group.header.signature = 'GRUP';
+      group.header.type      = group_type;
+      group.header.unknown   = unknown;
+      group.header.version_control = this->version_control;
       group.pos = this->get_stream_position();
+      this->_write(group.header);
       return group;
    }
    void file_writer::close_current_group() {
@@ -257,9 +257,9 @@ namespace dovah::tes_file_writing {
       auto  pos   = this->get_stream_position();
       if (!group)
          assert(false && "file_writer: tried to close a group when there are no groups!");
-      this->stream.seekp(group.pos + offsetof(tes_file_group_header, size));
+      this->set_stream_position(group.pos + tes_file_group_header::offset_of_size);
       this->_write(uint32_t(pos - group.pos));
-      this->stream.seekp(pos);
+      this->set_stream_position(pos);
       //
       group.header = tes_file_group_header();
       group.pos    = 0;
@@ -267,6 +267,9 @@ namespace dovah::tes_file_writing {
 
    uint32_t file_writer::get_stream_position() const noexcept {
       return this->stream.tellp();
+   }
+   void file_writer::set_stream_position(file_offset_t offset) noexcept {
+      this->stream.seekp(offset);
    }
 
    void file_writer::write() {
@@ -278,16 +281,7 @@ namespace dovah::tes_file_writing {
          if (!this->owner.active_file_has_forms_of_type(form_type))
             continue;
          //
-         auto& group = this->open_group();
-         group.header.signature = 'GRUP';
-         group.header.label     = signature;
-         group.header.type      = tes_file_group_type::forms_of_type;
-         group.header.unknown   = 0; // TODO: this can be 1 for some interior CELL groups; why?
-         group.header.version_control = this->version_control;
-         //
-         // TODO: write the group header to the file; remember the position of its length field 
-         // so we can fix that up in (close_current_group).
-         //
+         this->open_group(tes_file_group_type::forms_of_type, signature, 0);
          this->owner.for_each_active_file_form_of_type(form_type, [this, &read_write_interface](form_stub* stub) {
             return !this->_write_form(stub);
          });

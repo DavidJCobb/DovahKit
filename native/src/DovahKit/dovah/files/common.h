@@ -86,7 +86,11 @@ namespace dovah {
          };
          uint32_t version_control;
       };
-      uint32_t unknown;
+      uint32_t unknown; // TODO: this can be 1 for some interior CELL groups; why?
+      //
+      static constexpr uint32_t uninitialized_unknown = 0xCCCCCCCC; // seen in Bethesda content; MSVC can use this for uninitialized memory, especially in Debug
+      //
+      static constexpr int offset_of_size = 4; // don't use offsetof(); compilers can insert padding bytes anywhere in a struct at their discretion, and we want to be future-proof
    };
    #pragma endregion
 
