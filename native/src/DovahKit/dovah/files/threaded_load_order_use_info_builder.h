@@ -8,6 +8,10 @@ namespace dovah {
       protected:
          std::vector<form_stub*> queue;
          std::thread thread;
+         struct {
+            uint32_t maximum = 0;
+            uint32_t current = 0;
+         } progress;
          //
          static void _thread_handler(threaded_load_order_use_info_builder* instance) {
             instance->_execute();
@@ -21,5 +25,6 @@ namespace dovah {
          void wait_for() noexcept;
          //
          inline bool is_active() const noexcept { return this->thread.get_id() != std::thread::id(); }
+         float assess_load_progress() const noexcept;
    };
 }

@@ -14,6 +14,7 @@ namespace dovah {
    using map_of_forms = std::unordered_map<bare_form_id_t, form_stub*>;
 
    class file_header;
+   class threaded_load_order_use_info_builder;
    namespace tes_file_reading {
       class file_reader;
    }
@@ -43,6 +44,10 @@ namespace dovah {
          using _form_map_by_type = std::array<_form_map, form_types.size()>;
          //
          file_load_order_normalizer normalizer;
+         //
+         std::array<threaded_load_order_use_info_builder*, 8> use_info_build_threads{};
+         mutable std::mutex use_info_build_threads_lock;
+         //
          std::vector<loaded_file*> files;
          loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
          loaded_file*      active_file          = nullptr;
@@ -51,9 +56,11 @@ namespace dovah {
          _form_map         active_file_forms; // all forms that come from the active file AND all edited forms, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
          //
-         bool    loading_is_complete = false; // exists so that TESPluginBaseReader::nextSubrecord can call LoadOrder::logError without having to worry about whether it's running during or after the initial load
-         uint8_t loading_index       = 0;     // which load order index we're loading, or 0 if none; set in (load_queued_files); see (_guidedLoadOrderPrefixFor)
-         uint8_t active_file_index   = invalid_load_prefix;
+         bool    loading_is_complete        = false; // helps with UI progress display
+         bool    use_info_outbound_complete = false; // helps with UI progress display
+         bool    use_info_build_is_complete = false; // helps with UI progress display
+         uint8_t loading_index              = 0;     // which load order index we're loading, or 0 if none; set in (load_queued_files); see (_guidedLoadOrderPrefixFor)
+         uint8_t active_file_index          = invalid_load_prefix;
          //
          void _make_hardcoded_forms();
          void _accept_hardcoded_form(form_stub*) noexcept;
@@ -97,6 +104,8 @@ namespace dovah {
          //
          form_id_status accept_form_stub(form_stub*) noexcept;
          #pragma endregion
+
+         float assess_load_progress() const noexcept;
          
          #pragma region Content related to already-loaded data
          uint32_t count_forms_of_type(form_type_t) const noexcept;

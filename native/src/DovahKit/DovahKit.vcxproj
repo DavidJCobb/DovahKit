@@ -60,12 +60,12 @@
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.12.5 MSVC2017 x64</QtInstall>
-    <QtModules>core;gui;help;widgets</QtModules>
+    <QtModules>core;gui;help;widgets;winextras</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>5.12.5 MSVC2017 x64</QtInstall>
-    <QtModules>core;gui;help;widgets</QtModules>
+    <QtModules>core;gui;help;widgets;winextras</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">

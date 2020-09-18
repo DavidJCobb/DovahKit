@@ -8,8 +8,28 @@ namespace dovah {
       class localized_string_file;
 
       namespace threads {
+         class threaded_reader_base : public basic_reader {
+            public:
+               struct {
+                  //
+                  // These values are non-atomic (i.e. not thread-safe) and should only be used for cosmetic 
+                  // tasks, like displaying progress in the UI, not actual important tasks that need a 100% 
+                  // accurate result.
+                  //
+                  uint32_t current = 0;
+                  uint32_t maximum = 0;
+               } progress;
+               //
+               inline float assess_progress() const noexcept {
+                  return (float)this->progress.current / (float)this->progress.maximum;
+               }
+               //
+            protected:
+               threaded_reader_base(file_reader& f) : basic_reader(&f) {}
+         };
+
          #pragma region Record and subrecord loaders
-         class basic : public basic_reader {
+         class basic : public threaded_reader_base {
             //
             // Class for reading a top-level GRUP for a form type that cannot contain child 
             // GRUPs.
@@ -25,8 +45,8 @@ namespace dovah {
                void _load();
                static void _thread_handler(basic* instance);
             public:
-               basic(file_reader& f) : basic_reader(&f) {}
-               basic(file_reader& f, bool allowNestedGroups) : basic_reader(&f), allow_nested_groups(allowNestedGroups) {}
+               basic(file_reader& f) : threaded_reader_base(f) {}
+               basic(file_reader& f, bool allowNestedGroups) : threaded_reader_base(f), allow_nested_groups(allowNestedGroups) {}
 
                bool allow_nested_groups = false;
                std::vector<queued_group> queue;
@@ -36,7 +56,7 @@ namespace dovah {
                void start();
                void wait_for();
          };
-         class interior_cell : public basic_reader {
+         class interior_cell : public threaded_reader_base {
             protected:
                struct queued_block {
                   uint32_t blockNumber = 0;
@@ -48,7 +68,7 @@ namespace dovah {
                void _load();
                static void _thread_handler(interior_cell* instance);
             public:
-               interior_cell(file_reader& f) : basic_reader(&f) {}
+               interior_cell(file_reader& f) : threaded_reader_base(f) {}
                //
                std::vector<queued_block> queue;
                std::thread thread;
@@ -57,7 +77,7 @@ namespace dovah {
                void start();
                void wait_for();
          };
-         class worldspace_sub_block : public basic_reader {
+         class worldspace_sub_block : public threaded_reader_base {
             protected:
                struct queued_sub_block {
                   uint32_t worldspaceID = 0;
@@ -73,7 +93,7 @@ namespace dovah {
                void _load();
                static void _thread_handler(worldspace_sub_block* instance);
             public:
-               worldspace_sub_block(file_reader& f) : basic_reader(&f) {}
+               worldspace_sub_block(file_reader& f) : threaded_reader_base(f) {}
                //
                std::vector<queued_sub_block> queue;
                std::thread thread;
@@ -82,7 +102,7 @@ namespace dovah {
                void start();
                void wait_for();
          };
-         class worldspace_persistent_cell_children : public basic_reader {
+         class worldspace_persistent_cell_children : public threaded_reader_base {
             protected:
                struct queued_group {
                   uint32_t cellID;
@@ -94,7 +114,7 @@ namespace dovah {
                void _load();
                static void _thread_handler(worldspace_persistent_cell_children* instance);
             public:
-               worldspace_persistent_cell_children(file_reader& f) : basic_reader(&f) {}
+               worldspace_persistent_cell_children(file_reader& f) : threaded_reader_base(f) {}
                //
                std::vector<queued_group> queue;
                std::thread thread;

@@ -1,9 +1,14 @@
 #include "load_window.h"
 #include <QErrorMessage>
 #include "../../editor/core.h"
+#include "../main_window.h"
 
 LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
+   //
+   this->_load_poller.setSingleShot(false);
+   this->_load_poller.setInterval(100); // ms
+   QObject::connect(&this->_load_poller, &QTimer::timeout, this, &LoadOrderOpenDialog::loadPoll);
    //
    this->ui.dateCreated->setText("");
    this->ui.dateModified->setText("");
@@ -62,13 +67,18 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, [this]() {
+      MainWindow::get().setProgressEnableState(false);
+      //
       this->_loading = false;
+      this->_load_poller.stop();
       this->accept();
    });
    QObject::connect(&editor, &DovahKitCore::dataAcquireFailed, [this](const dovah::file_read_error& e) {
       if (!this->_loading)
          return;
       this->_loading = false;
+      this->_load_poller.stop();
+      MainWindow::get().setProgressEnableState(false);
       //
       QString text = QString("%1<br/>File: %2<br/>Dependency: %3<br/><br/>%4<br/><br/>Form ID: %5<br/>Offset: %6")
          .arg(e.code_string())
@@ -90,6 +100,23 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
       this->commit();
    });
 }
+
+void LoadOrderOpenDialog::loadPoll() {
+   if (!this->_loading)
+      return;
+   auto& main_window = MainWindow::get();
+   float progress    = DovahKitCore::get().assess_load_progress();
+   if (isnan(progress) || progress <= 0.00001F) {
+      main_window.setProgressBounds(0, 0);
+      main_window.setProgressStep(0);
+   } else {
+      progress *= 1000.0F;
+      main_window.setProgressBounds(0, 1000);
+      main_window.setProgressStep(progress);
+   }
+   main_window.setProgressEnableState(true);
+}
+
 void LoadOrderOpenDialog::blockUI() {
    this->ui.fileList->setDisabled(true);
    this->ui.author->setDisabled(true);
@@ -104,6 +131,12 @@ void LoadOrderOpenDialog::commit() {
    if (this->_loading)
       return;
    this->_loading = true;
+   {  // Progress indicator
+      auto& main_window = MainWindow::get();
+      main_window.setProgressBounds(0, 0);
+      main_window.setProgressStep(0);
+      main_window.setProgressEnableState(true);
+   }
    //
    auto& editor = DovahKitCore::get();
    auto  model  = (LoadOrderFileList::model_type*) this->ui.fileList->model();
@@ -127,4 +160,5 @@ void LoadOrderOpenDialog::commit() {
    }
    //
    editor.acquire_load_order_data(true);
+   this->_load_poller.start();
 }

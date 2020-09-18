@@ -105,6 +105,9 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
    return task.result;
 }
 
+float DovahKitCore::assess_load_progress() const noexcept {
+   return this->load_order->assess_load_progress();
+}
 const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept {
    return this->load_order->load_error;
 }

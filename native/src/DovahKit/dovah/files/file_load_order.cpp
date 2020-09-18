@@ -69,19 +69,32 @@ namespace dovah {
          printf("Building Use Info...\n");
          ftime(&bench_start);
       #endif
-      threaded_load_order_use_info_builder builders[8];
+      auto& builders = this->use_info_build_threads;
+      {
+         auto guard = std::lock_guard(this->use_info_build_threads_lock);
+         for (auto& entry : builders)
+            entry = new threaded_load_order_use_info_builder;
+      }
       uint32_t which_thread = 0;
       // Inbound first, since we can multi-thread that
       for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
          form_stub* stub = it->second;
-         builders[which_thread].add_to_queue(stub);
+         builders[which_thread]->add_to_queue(stub);
          if (++which_thread > 7)
             which_thread = 0;
       }
-      for (int i = 0; i < std::extent<decltype(builders)>::value; i++)
-         builders[i].start();
-      for (int i = 0; i < std::extent<decltype(builders)>::value; i++)
-         builders[i].wait_for();
+      for (auto* thread : builders)
+         thread->start();
+      for (auto*& thread : builders)
+         thread->wait_for();
+      {
+         auto guard = std::lock_guard(this->use_info_build_threads_lock);
+         for (auto*& entry : builders) {
+            delete entry;
+            entry = nullptr;
+         }
+         this->use_info_outbound_complete = true;
+      }
       #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
          ftime(&bench_end);
          printf("Time taken for outbound refs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
@@ -272,6 +285,7 @@ namespace dovah {
       this->loading_index = 0;
       //
       this->_build_use_info();
+      this->use_info_build_is_complete = true;
       //
       if (!this->active_file && this->files.size() < 254) { // TODO: the cutoff should be 253 if any of the loaded files are ESLs or SSE files
          auto file = new tes_file_reading::file_reader(*this);
@@ -322,6 +336,52 @@ namespace dovah {
       return form_id_status::valid;
    }
    #pragma endregion
+
+   float file_load_order::assess_load_progress() const noexcept {
+      constexpr float use_info_proportion = 0.2F;
+      //
+      bool l = this->loading_is_complete;
+      bool u = this->use_info_build_is_complete;
+      if (l) {
+         if (u)
+            return 1.0F;
+         float progress = 0.0F;
+         //
+         {
+            auto guard = std::lock_guard(this->use_info_build_threads_lock);
+            for (auto* thread : this->use_info_build_threads)
+               if (thread)
+                  progress += thread->assess_load_progress();
+         }
+         if (this->use_info_outbound_complete)
+            return NAN;
+         progress /= this->use_info_build_threads.size();
+         //
+         progress *= use_info_proportion;
+         progress += (1.0F - use_info_proportion);
+         return progress;
+      }
+      int count = this->files.size();
+      if (this->active_file && this->active_file->get_filename().empty())
+         //
+         // If we added an implicit active file to the load order, don't count it.
+         //
+         --count;
+      if (count <= 0)
+         return 0.0F;
+      //
+      float per_file = 1.0F / count;
+      float progress = per_file * this->loading_index;
+      auto* current  = this->files[this->loading_index];
+      if (!current)
+         return progress;
+      auto this_file = current->assess_load_progress();
+      if (!isnan(this_file))
+         progress += per_file * this_file;
+      //
+      progress *= (1.0F - use_info_proportion);
+      return progress;
+   }
 
    uint32_t file_load_order::count_forms_of_type(form_type_t ft) const noexcept {
       if (ft < this->forms_by_type.size()) {

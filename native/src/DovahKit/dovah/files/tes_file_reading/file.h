@@ -81,6 +81,8 @@ namespace dovah {
                _readers(file_reader&);
                void start();
                void wait_for();
+               //
+               float assess_progress() const noexcept; // returns NaN if any threaded reader hasn't set up its maximum yet
             } readers;
             //
             bool aborted = false;
@@ -112,6 +114,7 @@ namespace dovah {
             //
             inline const std::string& get_filename() const noexcept { return this->name; }
             void abort() noexcept;
+            float assess_load_progress() const noexcept; // returns NaN if any threaded reader hasn't set up its maximum yet
 
             writer_interface get_writer_interface(tes_file_writing::file_writer&) { return writer_interface(*this); }
       };

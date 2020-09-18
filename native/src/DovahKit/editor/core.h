@@ -65,6 +65,7 @@ class DovahKitCore : public QObject {
       void set_queued_active_file(const std::filesystem::path&);
       bool acquire_load_order_data(bool async = false);
 
+      float assess_load_progress() const noexcept;
       const dovah::file_read_error& get_last_read_error() const noexcept;
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;

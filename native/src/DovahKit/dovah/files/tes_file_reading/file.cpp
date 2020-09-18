@@ -37,6 +37,27 @@ namespace dovah::tes_file_reading {
       this->complex.wait_for();
       this->localized_strings.wait_for();
    }
+   float file_reader::_readers::assess_progress() const noexcept {
+      float   progress = 0.0F;
+      uint8_t count    = 0;
+      for (auto& reader : this->interior_cell) {
+         progress += reader.assess_progress();
+         ++count;
+      }
+      for (auto& reader : this->simple) {
+         progress += reader.assess_progress();
+         ++count;
+      }
+      for (auto& reader : this->world_cell) {
+         progress += reader.assess_progress();
+         ++count;
+      }
+      for (auto& reader : this->worldspace) {
+         progress += reader.assess_progress();
+         ++count;
+      }
+      return progress / count;
+   }
 
    file_reader::file_reader(file_load_order& lo) : basic_reader(nullptr), load_order(lo),
       readers{ *this }
@@ -490,5 +511,8 @@ namespace dovah::tes_file_reading {
    }
    void file_reader::abort() noexcept {
       this->aborted = true;
+   }
+   float file_reader::assess_load_progress() const noexcept {
+      return this->readers.assess_progress();
    }
 }
