@@ -425,6 +425,9 @@
     <ClInclude Include="helpers\qt\strings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\int24_t.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

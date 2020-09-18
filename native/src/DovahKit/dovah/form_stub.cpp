@@ -154,6 +154,18 @@ namespace dovah {
       }
       return false;
    }
+   form_stub* form_stub::get_parent_form() const noexcept {
+      for (auto& pair : this->outbound) {
+         auto& entry = pair.second;
+         if (!entry.other)
+            continue;
+         if (!(entry.flags & use_info_entry::flag::i_am_child_of))
+            continue;
+         if (entry.other->formID == this->groupInfo.parentFormID)
+            return entry.other;
+      }
+      return nullptr;
+   }
    #pragma endregion
 
    /*static*/ void* form_stub::operator new(std::size_t sz) {

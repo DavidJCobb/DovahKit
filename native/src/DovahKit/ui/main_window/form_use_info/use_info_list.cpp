@@ -7,8 +7,15 @@
 
 #pragma region FormUseInfoListModel
 FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* source) {
-   this->flags = source->flags;
-   this->count = source->refcount;
+   bool is_reference = (source->flags & data_t::flag::i_am_base_form_of) != 0;
+   //
+   this->flags       = source->flags;
+   this->countUsed   = source->refcount;
+   this->countPlaced = 0;
+   if (is_reference) {
+      --this->countUsed;
+      ++this->countPlaced;
+   }
    if (auto stub = source->other) {
       this->otherStub = stub;
       this->otherID   = stub->formID;
@@ -17,6 +24,26 @@ FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* 
       //
       uint32_t signature = dovah::form_type_info::lookup(this->otherType).signature;
       this->signature = cobb::qt::four_cc_to_string(signature);
+      //
+      if (is_reference) {
+         auto parent = stub->get_parent_form();
+         if (parent) {
+            auto name = parent->get_editor_id();
+            auto id   = QString("%1").arg(parent->formID, 8, 16, QChar('0')).toUpper();
+            this->parentCell = QString("[CELL:%1]").arg(id);
+            if (name && name[0]) {
+               this->parentCell += name;
+            } else {
+               auto world = parent->get_parent_form();
+               if (world) {
+                  auto id = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
+                  QString s = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
+                  this->parentCell = QString("%2 in %1").arg(s).arg(this->parentCell);
+               }
+            }
+         }
+      }
+      //
    }
 }
 
@@ -45,6 +72,9 @@ int FormUseInfoListModel::rowCount(const QModelIndex& parent) const {
    return this->root->childCount();
 }
 int FormUseInfoListModel::columnCount(const QModelIndex& item) const {
+   if (this->mode == relationship_mode::base_form_only) {
+      return 3;
+   }
    return 4;
 }
 Qt::ItemFlags FormUseInfoListModel::flags(const QModelIndex& index) const {
@@ -63,11 +93,20 @@ QVariant FormUseInfoListModel::data(const QModelIndex& index, int role) const {
             case 0:
                return item->signature;
             case 1:
-               return item->otherID;
+               return QString("%1").arg(item->otherID, 8, 16, QChar('0')).toUpper();
             case 2:
+               if (this->mode == relationship_mode::base_form_only) {
+                  return item->parentCell;
+               }
                return item->editorID;
             case 3:
-               return item->count;
+               switch (this->mode) {
+                  case relationship_mode::general_only:
+                     return item->countUsed;
+                  case relationship_mode::base_form_only:
+                     return item->countPlaced;
+               }
+               return 0;
          }
          break;
    }
@@ -82,8 +121,16 @@ QVariant FormUseInfoListModel::headerData(int section, Qt::Orientation orientati
          switch (section) {
             case 0: return tr("Type",      "use info report");
             case 1: return tr("Form ID",   "use info report");
-            case 2: return tr("Editor ID", "use info report");
-            case 3: return tr("Use Count", "use info report");
+            case 2:
+               if (this->mode == relationship_mode::base_form_only) {
+                  return tr("Parent Cell", "use info report");
+               }
+               return tr("Editor ID", "use info report");
+            case 3:
+               if (this->mode == relationship_mode::base_form_only) {
+                  return tr("No. Placed", "use info report");
+               }
+               return tr("Use Count", "use info report");
          }
          break;
    }
@@ -108,7 +155,8 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
       switch (this->mode) {
          case relationship_mode::general_only:
             if (entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of))
-               continue;
+               if (entry.refcount <= 1)
+                  continue;
          case relationship_mode::base_form_only:
             if (!(entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of)))
                continue;

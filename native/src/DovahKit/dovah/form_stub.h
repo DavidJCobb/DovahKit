@@ -194,8 +194,8 @@ namespace dovah {
          // there will be 2 bytes of padding here
          std::string   editorID;
          loaded_forms::Form* form = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
-         use_info_list outbound; // other forms that this one refers to
-         use_info_list inbound;  // other forms that refer to this one
+         use_info_list outbound; // other forms that this one refers to. flags describe (this), the form that is referring.
+         use_info_list inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
          //
          loaded_form_ptr<loaded_forms::Form> load();
          //
@@ -218,6 +218,7 @@ namespace dovah {
          void get_source_filename(std::string& out) const noexcept;
          //
          void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;
          bool has_child_forms_of_group(uint8_t) const noexcept;
          //

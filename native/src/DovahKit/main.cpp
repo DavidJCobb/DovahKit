@@ -32,6 +32,10 @@
 //       construct outbound references for these hardcoded forms, by hand. We 
 //       mainly only need this for 14:PlayerRef using 07:Player as its base form.
 //
+//  - Use Info dialog
+//
+//     - Only allow the user to open one per form, as with form-editing dialogs.
+//
 // THINGS TO LOOK INTO:
 //
 //  - Build a unit testing framework wherein we run automated correctness checks 
@@ -134,17 +138,7 @@
 //
 //  - Use Info window
 //
-//     - Currently, it can't split between base-form/reference relationships and other 
-//       relationships. This means that it can't separate out, say, a reference using 
-//       the given form as its base form and also referring to that form through some 
-//       other means (e.g. a Papyrus property).
-//
-//        - If we define a uint24_t type (i.e. three-byte integer), then we should be 
-//          more than able to add a "number of forms that use me as their base form" 
-//          count to dovah::use_info_entry without having to expand the struct.
-//
-//           - I've created a helper file for uint24_t, but it's completely untested. 
-//             I should run some tests in here before I use it.
+//     - Should show tooltips on table items so you can view longer editor IDs.
 //
 // DISTANT TASKS:
 //
@@ -245,6 +239,10 @@
 //          listen for these.
 //
 //  - Render Window
+//
+//     - When looking at a base form's Use Info, double-clicking a reference in the 
+//       listing should open its parent cell in the Render Window and select it, instead 
+//       of opening the reference's form-edit dialog.
 //
 //  - Support for loading the contents of localized strings.
 //

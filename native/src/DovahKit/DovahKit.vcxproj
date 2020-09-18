@@ -221,6 +221,7 @@
     <QtMoc Include="ui\main_window\form_use_info.h" />
     <QtMoc Include="editor\core_internals\load_task.h" />
     <ClInclude Include="editor\open_window_for_form.h" />
+    <ClInclude Include="helpers\int24_t.h" />
     <ClInclude Include="helpers\performance.h" />
     <ClInclude Include="helpers\qt\strings.h" />
     <ClInclude Include="helpers\windows_registry.h" />
