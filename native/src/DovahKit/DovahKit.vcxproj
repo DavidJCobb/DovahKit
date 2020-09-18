@@ -276,6 +276,10 @@
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="dovah\_docs\basics.txt" />
+    <Text Include="dovah\_docs\reading files.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
     <Import Project="$(QtMsBuild)\qt.targets" />

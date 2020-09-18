@@ -314,15 +314,43 @@ namespace dovah::tes_file_reading {
       stub->formType = form_type_info::signature_to_form_type(record.signature());
       return stub;
    }
-   void basic_reader::extract_editor_id_for_stub(form_stub* stub) {
+   void basic_reader::extract_high_value_subrecords_for_stub(form_stub* stub) {
       if (form_type_info::lookup(stub->formType).flags & form_type_info::flag::no_editor_id)
          return;
+      //
+      struct _state {
+         _state() = delete;
+         enum {
+            found_editor_id   = 0x01,
+            found_cell_coords = 0x02,
+         };
+      };
+      constexpr int found_all = _state::found_editor_id | _state::found_cell_coords;
+      //
+      int   state  = 0;
       auto& record = this->get_current_record();
+      bool  is_ext = stub->is_exterior_cell();
+      if (!is_ext)
+         state |= _state::found_cell_coords;
+      //
       while (auto& subrecord = record.next_subrecord()) {
-         if (subrecord.signature() == 'EDID') {
-            subrecord.to_string(stub->editorID);
-            return;
+         switch (subrecord.signature()) {
+            case 'EDID':
+               state |= _state::found_editor_id;
+               subrecord.to_string(stub->editorID);
+               break;
+            case 'XCLC':
+               subrecord.read(stub->groupInfo.gridX);
+               subrecord.read(stub->groupInfo.gridY);
+               break;
+            default:
+               continue;
          }
+         if (state == found_all)
+            return;
+      }
+      if (is_ext && !(state & _state::found_cell_coords)) {
+         stub->flags |= form_stub::flag::missing_coordinates;
       }
    }
 

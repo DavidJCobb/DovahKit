@@ -65,16 +65,13 @@
 //       OF GIVING RECORDS CODE TO HANDLE THEIR LOADED DATA, DEALING WITH THE WORLD-
 //       SPACE "OFST" SUBRECORD, AND SO ON.
 //
-//        - IMMEDIATE NEXT STEP IS WRITING OUT THE FILE HEADER (TES4 RECORD). WE 
-//          SHOULD HAVE THE CODE USE THE RECORD INTERFACE FOR THAT, WHICH ALSO MEANS 
-//          THAT WE NEED TO START FLESHING OUT HOW THE RECORD AND SUBRECORD INTERFACES 
-//          WILL WORK.
+//        - CODE TO WRITE GROUP HEADERS TO THE FILE
 //
-//           - Subrecords need their own cobb::generic_buffer so that if a subrecord's 
-//             body is larger than 65535 bytes, we can generate an 'XXXX' subrecord as 
-//             appropriate. When a subrecord is "closed," we'd transfer its header and 
-//             body to the record's buffer, dealing with the 'XXXX' subrecord if needed 
-//             at that time.
+//        - CODE TO FIX UP GROUP HEADERS' SIZE FIELDS WHEN CLOSING THE GROUPS
+//
+//        - CODE TO GENERATE CHILD GROUPS FOR WORLDSPACES
+//
+//        - CODE TO OPEN A FILE FOR WRITING
 //
 //     - DovahKitCore needs to provide two signals, onSaveImminent and onSaveComplete, 
 //       so that the UI can abandon any form pointers prior to a save and reacquire 
@@ -156,9 +153,6 @@
 //  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
 //    they want to open files from. Currently, we just always use the Skyrim Classic 
 //    install path.
-//
-//  - UI for displaying Use Info, available via right-clicking forms in the Object 
-//    Window (or, when we eventually add it, the Cell View window).
 //
 //  - Refhandle usage tracking: the number of persistent references in ESMs, and the 
 //    number of all references in non-ESMs, should be tracked and stored on each 
@@ -268,6 +262,22 @@
 //       However, we should still be able to load localized strings just so that you 
 //       can create overrides of forms that contain localized strings, and so you can 
 //       see those strings in the editor.
+//
+//  - If a worldspace contains two cells with the same grid coordinates, then we need 
+//    some kind of handling, especially since a plug-in like that would crash the CK. 
+//    It's worth noting, though, that this should only be possible if the user is hex-
+//    editing ES[LPM] files to cause havoc in the first place. Possible options:
+//
+//     - Force the user to choose which cell to retain when loading.
+//
+//     - Give the user the option to discard either of the cells, or transplant one 
+//       of them to another grid coordinate. (The latter could be especially useful 
+//       if we allow cells to be swapped, though that would have TONS of ramifications 
+//       for things like navmeshing and navmesh info maps.)
+//
+//     - Refuse to render either cell in the Render Window (just show some kind of 
+//       error indicator), and otherwise don't bother solving the problem or giving 
+//       the user the option to solve the problem.
 //
 // HORIZON TASKS:
 //

@@ -525,4 +525,8 @@
   <ItemGroup>
     <QtRcc Include="ui\resources\resources.qrc" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="dovah\_docs\basics.txt" />
+    <Text Include="dovah\_docs\reading files.txt" />
+  </ItemGroup>
 </Project>

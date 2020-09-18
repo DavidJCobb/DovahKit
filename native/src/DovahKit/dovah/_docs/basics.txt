@@ -1,0 +1,33 @@
+
+DovahKit doesn't load the full content of ES[LPM] files. Instead, it scans over 
+a file and creates "form stubs."  A form stub is a simplified representation of 
+a form,  containing its form ID, editor ID,  file of origin, and the  offset of 
+the form's  record within that file  (along with some other basic information). 
+When the full content of a form is needed, the file of origin can be  accessed; 
+we  can seek to the record offset and  load the full form  data on demand. This 
+approach allows us to keep memory usage low.
+
+Form stubs also track use info bidirectionally.
+
+DovahKit offers a  set of loaded-form  classes which can be  instantiated via a 
+form stub. The stub will return a smart pointer that relies on a stub-side ref-
+count to delete the loaded form from memory when it is no longer in use.
+
+Form  stubs  are stored  in a (file_load_order)  class, which is  also used  to 
+coordinate reading  files in the first  place in order to  build the form stubs 
+and generate their use info. Clients,  then, must construct a (file_load_order) 
+and ask it to load the desired files.
+
+---
+
+Internally, loaded form classes must be capable of four things:
+
+ - Storing a form's full loaded data, obviously.
+
+ - Generating use info  for a form type, given a record  (see documentation for 
+   reading files). This must be done via a static member function, i.e. not for 
+   an instance.
+
+ - Loading a form's data, given a record.
+
+ - Saving a form's data back into a file.

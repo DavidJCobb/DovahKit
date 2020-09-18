@@ -42,15 +42,21 @@ namespace dovah {
             uint32_t pos = 0;
             cobb::generic_buffer data; // record body (uncompressed)
             //
-            void _write(const void* source, uint32_t size);
+            void _write_impl(const void* source, uint32_t size);
+            void _write_impl(const tes_file_subrecord_header&);
             template<typename T> inline void _write(const T& v) {
-               this->_write(&v, sizeof(T));
+               this->_write_impl(&v, sizeof(T));
             }
             template<> inline void _write(const std::string& v) {
-               this->_write(v.c_str(), v.size() + 1);
+               this->_write_impl(v.c_str(), v.size() + 1);
             }
             template<> inline void _write(const cobb::generic_buffer& v) {
-               this->_write(v.data(), v.size());
+               this->_write_impl(v.data(), v.size());
+            }
+            template<> inline void _write(const tes_file_group_header& v) = delete;
+            template<> inline void _write(const tes_file_record_header& v) = delete;
+            template<> inline void _write(const tes_file_subrecord_header& v) {
+               this->_write_impl(v);
             }
             //
             void _close_current_subrecord();
@@ -102,6 +108,9 @@ namespace dovah {
             template<> inline void write(const cobb::generic_buffer& v) {
                this->write(v.data(), v.size());
             }
+            template<> inline void write(const tes_file_group_header& v) = delete;
+            template<> inline void write(const tes_file_record_header& v) = delete;
+            template<> inline void write(const tes_file_subrecord_header& v) = delete;
             //
             void close();
       };

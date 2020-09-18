@@ -65,7 +65,7 @@ namespace dovah {
             }
             //
             form_stub* make_stub_for_record(file_reader& file);
-            void extract_editor_id_for_stub(form_stub*); // searches (the remainder of) the current record for EDID; if found, writes its value to the form stub
+            void extract_high_value_subrecords_for_stub(form_stub*); // searches (the remainder of) the current record for EDID; if found, writes its value to the form stub
             //
          public:
             basic_reader(file_reader* owner) : owner(owner), _record(*this), _subrecord(*this) {

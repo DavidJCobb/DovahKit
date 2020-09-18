@@ -86,21 +86,10 @@ namespace dovah {
 
    struct group_stub {
       bare_form_id_t parentFormID = 0; // 0 for interior cells
-      uint8_t        type;
-      union {
-         uint32_t interior = 0;
-         struct {
-            int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
-            int16_t y;
-         } exterior;
-      } cellBlock; // 0 for non-cells
-      union {
-         uint32_t interior = 0;
-         struct {
-            int16_t x; // TODO: is it XXXXYYYY or YYYYXXXX? how does endianness affect it?
-            int16_t y;
-         } exterior;
-      } cellSubBlock; // 0 for non-cells
+      uint8_t type;
+      // we have 3 padding bytes here
+      int32_t gridX = 0; // exterior cells only
+      int32_t gridY = 0; // exterior cells only
    };
 
    #pragma region Use Info
@@ -170,6 +159,15 @@ namespace dovah {
                // the loaded files, then the stub's (file) pointer will be (file_load_order::hardcoded_forms_file).
                //
                is_hardcoded = 0x02,
+               //
+               // (missing_coordinates) // only for exterior CELLs
+               // Indicates that an exterior CELL was missing its XCLC subrecord. These default to grid coordinates 
+               // (0, 0), but if another cell exists at those coordinates, then the file will crash the Creation Kit 
+               // while loading. Official tools shouldn't ever save an exterior cell without XCLC, and xEdit won't 
+               // allow you to remove it (but also won't bother to add it if it's missing), so you'd have to hex-edit 
+               // a file to even get this to happen.
+               //
+               missing_coordinates = 0x04,
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;
@@ -221,6 +219,10 @@ namespace dovah {
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;
          bool has_child_forms_of_group(uint8_t) const noexcept;
+         //
+         bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
+         uint32_t get_cell_block() const noexcept;
+         uint32_t get_cell_sub_block() const noexcept;
          //
          static void* operator new(std::size_t sz);
          static void operator delete(void* ptr, std::size_t sz);

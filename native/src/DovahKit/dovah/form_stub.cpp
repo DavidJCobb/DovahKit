@@ -168,6 +168,43 @@ namespace dovah {
    }
    #pragma endregion
 
+   bool form_stub::is_exterior_cell() const noexcept {
+      if (this->formType != form_type::cell)
+         return false;
+      return this->groupInfo.parentFormID != 0;
+   }
+   namespace {
+      union _cell_grid_dword {
+         struct {
+            int16_t y;
+            int16_t x;
+         };
+         uint32_t merged; // 0xXXXXYYYY, but since it's in little-endian, the words are reversed above
+      };
+   }
+   uint32_t form_stub::get_cell_block() const noexcept {
+      if (this->formType != form_type::cell)
+         return 0;
+      if (this->is_exterior_cell()) {
+         _cell_grid_dword value;
+         value.x = this->groupInfo.gridX / 8 / 4;
+         value.y = this->groupInfo.gridY / 8 / 4;
+         return value.merged;
+      }
+      return (this->formID % 10);
+   }
+   uint32_t form_stub::get_cell_sub_block() const noexcept {
+      if (this->formType != form_type::cell)
+         return 0;
+      if (this->is_exterior_cell()) {
+         _cell_grid_dword value;
+         value.x = this->groupInfo.gridX / 8;
+         value.y = this->groupInfo.gridY / 8;
+         return value.merged;
+      }
+      return (this->formID % 100) / 10;
+   }
+
    /*static*/ void* form_stub::operator new(std::size_t sz) {
       if (sz != sizeof(form_stub))
          return ::operator new(sz);

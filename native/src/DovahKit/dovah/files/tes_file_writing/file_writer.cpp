@@ -218,11 +218,20 @@ namespace dovah::tes_file_writing {
    }
    void file_writer::_write_record() {
       auto& record = this->get_current_record();
-      this->stream.write((const uint8_t*)&record.header, sizeof(tes_file_record_header));
+      this->_write(record.header);
       this->stream.write(record.data.data(), record.header.size);
    }
-   void file_writer::_write(const void* source, uint32_t size) {
+   void file_writer::_write_impl(const void* source, uint32_t size) {
       this->stream.write((const uint8_t*)source, size);
+   }
+   void file_writer::_write_impl(const tes_file_record_header& header) {
+      this->_write(header.signature);
+      this->_write(header.size);
+      this->_write(header.flags);
+      this->_write(header.formID);
+      this->_write(header.version_control);
+      this->_write(header.version);
+      this->_write(header.version_control_2);
    }
 
    group& file_writer::open_group() {

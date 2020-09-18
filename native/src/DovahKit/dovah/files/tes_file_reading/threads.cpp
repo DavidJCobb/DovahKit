@@ -80,7 +80,7 @@ namespace dovah {
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner->as_file()->get_filename(), stub->formID);
                      }
                      this->owner->_insert_form(stub->formID, stub);
-                     this->extract_editor_id_for_stub(stub);
+                     this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }
                }
@@ -151,10 +151,7 @@ namespace dovah {
                      //
                      auto  stub = this->make_stub_for_record(*this->owner);
                      stub->groupInfo.type = (int)group.header.type;
-                     if (record.signature() == 'CELL') {
-                        stub->groupInfo.cellBlock.interior    = this->_groups[0].header.label;
-                        stub->groupInfo.cellSubBlock.interior = this->_groups[1].header.label;
-                     } else if (form_type_info::form_type_is_reference(stub->formType)) {
+                     if (form_type_info::form_type_is_reference(stub->formType)) {
                         uint32_t cellID = group.getRawIDOfParentCell();
                         if (cellID) {
                            lo.local_formID_to_global_formID(this->owner->as_file(), cellID);
@@ -163,7 +160,7 @@ namespace dovah {
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->owner->as_file()->get_filename(), stub->formID);
                      }
                      this->owner->_insert_form(stub->formID, stub);
-                     this->extract_editor_id_for_stub(stub);
+                     this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }
                }
@@ -233,10 +230,6 @@ namespace dovah {
                      stub->groupInfo.type = (int)group.header.type;
                      if (record.signature() == 'CELL') {
                         stub->groupInfo.parentFormID = desired.worldspaceID; // already normalized
-                        stub->groupInfo.cellBlock.exterior.x = desired.blockX;
-                        stub->groupInfo.cellBlock.exterior.y = desired.blockY;
-                        stub->groupInfo.cellSubBlock.exterior.x = desired.subBlockX;
-                        stub->groupInfo.cellSubBlock.exterior.y = desired.subBlockY;
                      } else if (form_type_info::form_type_is_reference(stub->formType)) {
                         uint32_t cellID = group.getRawIDOfParentCell();
                         if (cellID) {
@@ -246,7 +239,7 @@ namespace dovah {
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->owner->as_file()->get_filename(), stub->formID);
                      }
                      this->owner->_insert_form(stub->formID, stub);
-                     this->extract_editor_id_for_stub(stub);
+                     this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }
                }
@@ -323,7 +316,7 @@ namespace dovah {
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->owner->as_file()->get_filename(), stub->formID);
                      }
                      this->owner->_insert_form(stub->formID, stub);
-                     this->extract_editor_id_for_stub(stub);
+                     this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }
                }

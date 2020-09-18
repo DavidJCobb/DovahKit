@@ -2,11 +2,16 @@
 #include "file_writer.h"
 
 namespace dovah::tes_file_writing {
-   void record::_write(const void* source, uint32_t size) {
+   void record::_write_impl(const void* source, uint32_t size) {
       this->data.reserve(this->pos + size);
       void* target = this->data.data() + size;
       memcpy(target, source, size);
       this->pos += size;
+   }
+   void record::_write_impl(const tes_file_subrecord_header& header) {
+      this->data.reserve(this->pos + sizeof(tes_file_subrecord_header));
+      this->_write(header.signature);
+      this->_write(header.size);
    }
    void record::_close_current_subrecord() {
       auto& subrecord = this->get_current_subrecord();

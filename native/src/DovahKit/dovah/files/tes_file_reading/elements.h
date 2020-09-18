@@ -145,10 +145,10 @@ namespace dovah {
             uint32_t pos; // position in the file
             uint32_t end; // position in the file
             //
-            void _fixupFormID(uint32_t& id) const noexcept; // LoadOrder includes this header, so we can't include it from this header
+            void _fixupFormID(uint32_t& id) const noexcept;
             bool _read_form_id(form_id_t& field) const noexcept;
             bool _read_form_id(struct_form_id_t& field) const noexcept;
-            void _unchecked_read_form_id(form_id_t& field) const noexcept; // this class's definition precedes the definition for TESPluginBaseReader, so we can't check if we're SSE from the header
+            void _unchecked_read_form_id(form_id_t& field) const noexcept;
             void _unchecked_read_form_id(struct_form_id_t& field) const noexcept;
             //
          public:

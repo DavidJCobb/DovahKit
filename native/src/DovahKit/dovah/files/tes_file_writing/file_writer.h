@@ -52,9 +52,13 @@ namespace dovah {
             bool _write_form(form_stub*);
             void _write_record();
             //
-            void _write(const void* source, uint32_t size);
+            void _write_impl(const void* source, uint32_t size);
+            void _write_impl(const tes_file_record_header&);
             template<typename T> inline void _write(const T& v) {
-               this->_write(&v, sizeof(T));
+               this->_write_impl(&v, sizeof(T));
+            }
+            template<> inline void _write(const tes_file_record_header& v) {
+               this->_write_impl(v);
             }
             //
          public:

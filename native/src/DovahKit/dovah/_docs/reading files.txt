@@ -1,0 +1,40 @@
+
+The (basic_reader) class  is the core of DovahKit's  ES[LPM] file reading code. 
+That class  contains a memory-mapped file view and three  structs that are used 
+to keep track of state related to the  record group, record, and subrecord that 
+are currently being read. The structs are, appropriately enough, named (group), 
+(record), and (subrecord).
+
+In addition to maintaining state for  the reading of their respective elements, 
+the (record)  and (subrecord)  structs serve as  interfaces; they  are aware of 
+their owning (basic_reader)  and rely on it to perform  stream operations (i.e. 
+to access data  in the underlying file by  way of the memory-mapped file view). 
+References to these structs can be  passed to systems outside of the core file-
+reading code, such as loaded-form classes.
+
+But here's where the magic comes in: (basic_reader) can share its memory-mapped 
+file view, which means  that multiple (basic_reader)  instances can participate 
+in the reading  of a single file.  Moreover, each (basic_reader) has an "owner" 
+pointer that can refer to a (file_reader).
+
+The (file_reader) class is a subclass  of (basic_reader) and is responsible for 
+coordinating the reading of a  single file. It can utilize other (basic_reader) 
+instances to  read a file  using multiple threads.  The ES[LPM]  file format is 
+especially friendly to this: forms (records) are divided into record groups, so 
+each of a  (file_reader)'s subordinate  (basic_reader) instances  can simply be 
+given ownership  of one  or more record groups.  The record groups  can be read 
+independently.
+
+We use a (file_reader), then, to read a file and produce (form_stub) instances. 
+That (file_reader) creates (basic_reader) instances which each run on their own 
+thread and read  different parts of  the underlying file.  After the form stubs 
+have been generated,  we use another set of  (basic_reader) instances to set up 
+use info using multiple threads.
+
+Of course, clients should not work  with (file_reader) at all. It is rare for a 
+single ES[LPM] file to be entirely independent;  most will have dependencies on 
+one or more other  ES[LPM] files. The (file_load_order)  should be used to read 
+one or more ES[LPM] files and store  their loaded forms. In fact, (file_reader) 
+instances rely on (file_load_order) instances to actually store the loaded form 
+stubs. The (file_load_order) instance  will handle dependencies for you: ask it 
+to load a given file X, and it will make sure  to also load all of X's masters.
