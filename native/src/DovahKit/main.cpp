@@ -3,6 +3,7 @@
 #if _DEBUG
    #include <QDebug>
    #include <QDirIterator>
+   #undef NDEBUG
 #endif
 
 #include "ui/main_window.h"
@@ -36,6 +37,28 @@
 //
 //     - Only allow the user to open one per form, as with form-editing dialogs.
 //
+//     - The form ID in the title bar should be uppercase.
+//
+//     - The tables need to be sortable.
+//
+//     - For listed refs that are in exterior cells, consider showing the grid 
+//       coordinates whenever the cell is unnamed. We can do that now that the 
+//       group_stub has those.
+//
+//     - Consider collating references that are in the same cell together and then 
+//       showing a count, like the CK does.
+//
+//        - Double-clicking a listing takes you to the ref, in the Render Window, 
+//          but... if a listing represents multiple refs, what then?
+//
+//     - Victor would like to be able to filter the Use Info window to just certain 
+//       form types. We should think about potential UI designs that would allow 
+//       for this, e.g. a drop-down of form type signatures and a textbox for 
+//       filtering form and editor IDs.
+//
+//        - Actually, that UI sounds about perfect, and it should be pretty compact 
+//          too. Oughta fit on one line.
+//
 // THINGS TO LOOK INTO:
 //
 //  - Build a unit testing framework wherein we run automated correctness checks 
@@ -64,8 +87,6 @@
 //       BASIS. WHEN WE HAVE THAT WORKING, WE CAN MOVE ONTO THE MORE COMPLICATED TASK 
 //       OF GIVING RECORDS CODE TO HANDLE THEIR LOADED DATA, DEALING WITH THE WORLD-
 //       SPACE "OFST" SUBRECORD, AND SO ON.
-//
-//        - CODE TO GENERATE CHILD GROUPS FOR WORLDSPACES
 //
 //        - CODE TO OPEN A FILE FOR WRITING
 //

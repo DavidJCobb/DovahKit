@@ -49,6 +49,18 @@ namespace cobb {
       va_end(safe);
       va_end(args);
    };
+   void sprintfw(std::wstring& out, const wchar_t* format, ...) {
+      va_list args;
+      va_start(args, format);
+      va_list safe;
+      va_copy(safe, args);
+      auto size = _vsnwprintf(nullptr, 0, format, args);
+      out.resize(size + 1);
+      size = _vsnwprintf(out.data(), size + 1, format, safe);
+      out.resize(size);
+      va_end(safe);
+      va_end(args);
+   };
    int strieq(const std::string& a, const std::string& b) {
       int length = a.size();
       if (length != b.size())

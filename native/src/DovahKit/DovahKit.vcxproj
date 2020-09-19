@@ -144,6 +144,7 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
+    <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
@@ -222,6 +223,7 @@
     <QtMoc Include="ui\main_window\form_use_info.h" />
     <QtMoc Include="editor\core_internals\load_task.h" />
     <ClInclude Include="editor\open_window_for_form.h" />
+    <ClInclude Include="helpers\assert.h" />
     <ClInclude Include="helpers\int24_t.h" />
     <ClInclude Include="helpers\performance.h" />
     <ClInclude Include="helpers\qt\strings.h" />

@@ -19,6 +19,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace cobb {
    extern void sprintf(std::string& out, const char* format, ...);
+   extern void sprintfw(std::wstring& out, const wchar_t* format, ...);
    extern int  strieq(const std::string& a, const std::string& b);
    //
    extern bool string_says_false(const char* str); // the string spells the case-insensitive word "false", ignoring whitespace

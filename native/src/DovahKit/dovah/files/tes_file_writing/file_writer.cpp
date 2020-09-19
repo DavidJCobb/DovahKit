@@ -156,49 +156,13 @@ namespace dovah::tes_file_writing {
          //
          switch (stub->formType) {
             case form_type::cell:
-               if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_persistent_children)) {
-                  auto& group = this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-                  //
-                  form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
-                     if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_persistent_children)
-                        return false;
-                     this->_write_form(child);
-                     return false;
-                  });
-                  //
-                  this->close_current_group();
-               }
-               if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_temporary_children)) {
-                  auto& group = this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-                  //
-                  form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
-                     if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_temporary_children)
-                        return false;
-                     this->_write_form(child);
-                     return false;
-                  });
-                  //
-                  this->close_current_group();
-               }
+               this->_write_child_forms_for_cell(stub);
                break;
             case form_type::worldspace:
-               // TODO: write persistent cell
-               // TODO: write cell blocks groups (in what order?)
-                  // TODO: write cell sub-blocks groups (in what order?)
+               this->_write_child_forms_for_worldspace(stub);
                break;
             case form_type::topic:
-               {
-                  auto& group = this->open_group(tes_file_group_type::topic_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-                  //
-                  form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
-                     if (child->formType != form_type::topic_info)
-                        return false;
-                     this->_write_form(child);
-                     return false;
-                  });
-                  //
-                  this->close_current_group();
-               }
+               this->_write_child_forms_for_topic(stub);
                break;
          }
       }
@@ -209,6 +173,110 @@ namespace dovah::tes_file_writing {
       this->_write(record.header);
       this->stream.write(record.data.data(), record.header.size);
    }
+
+   void file_writer::_write_child_forms_for_cell(form_stub* stub) {
+      if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_persistent_children)) {
+         auto& group = this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         //
+         form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+            if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_persistent_children)
+               return false;
+            this->_write_form(child);
+            return false;
+         });
+         //
+         this->close_current_group();
+      }
+      if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_temporary_children)) {
+         auto& group = this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         //
+         form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+            if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_temporary_children)
+               return false;
+            this->_write_form(child);
+            return false;
+         });
+         //
+         this->close_current_group();
+      }
+   }
+   void file_writer::_write_child_forms_for_topic(form_stub* stub) {
+      auto& group = this->open_group(tes_file_group_type::topic_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+      //
+      form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+         if (child->formType != form_type::topic_info)
+            return false;
+         this->_write_form(child);
+         return false;
+      });
+      //
+      this->close_current_group();
+   }
+   //
+   namespace {
+      struct _cell_sub_block {
+         std::vector<form_stub*> cells;
+      };
+      struct _cell_block {
+         std::map<uint32_t, _cell_sub_block> contents;
+      };
+   }
+   void file_writer::_write_child_forms_for_worldspace(form_stub* stub) {
+      auto& group_wc = this->open_group(tes_file_group_type::world_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+      //
+      if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(stub)) {
+         this->_write_form(cell);
+      }
+      //
+      std::map<uint32_t, _cell_block> blocks;
+      form_stub_helpers::for_each_child_form(stub, [&blocks](form_stub* child) {
+         if (child->formType != form_type::cell)
+            return false;
+         auto b  = child->get_cell_block();
+         auto sb = child->get_cell_sub_block();
+         blocks[b].contents[sb].cells.push_back(child);
+         return false;
+      });
+      for (auto& pair : blocks) {
+         auto& group_b = this->open_group(tes_file_group_type::exterior_cell_block, pair.first, tes_file_group_header::uninitialized_unknown);
+         auto& list = pair.second.contents;
+         for (auto& pair : list) {
+            auto& group_s = this->open_group(tes_file_group_type::exterior_cell_sub_block, pair.first, tes_file_group_header::uninitialized_unknown);
+            for (auto* cell : pair.second.cells) {
+               this->_write_form(cell);
+               assert(&group_s == &this->get_current_group() && "An exterior CELL record opened one or more child GRUPs for its REFRs, but forgot to close the GRUP(s) after writing all of the REFRs.");
+            }
+            this->close_current_group();
+         }
+         this->close_current_group();
+      }
+      //
+      this->close_current_group();
+   }
+   void file_writer::_write_interior_cells() {
+      std::map<uint32_t, _cell_block> blocks;
+      this->owner.for_each_active_file_form_of_type(form_type::cell, [&blocks](form_stub* stub) {
+         if (stub->is_exterior_cell())
+            return false;
+         auto b  = stub->get_cell_block();
+         auto sb = stub->get_cell_sub_block();
+         blocks[b].contents[sb].cells.push_back(stub);
+      });
+      for (auto& pair : blocks) {
+         auto& group_b = this->open_group(tes_file_group_type::interior_cell_block, pair.first, tes_file_group_header::uninitialized_unknown);
+         auto& list = pair.second.contents;
+         for (auto& pair : list) {
+            auto& group_s = this->open_group(tes_file_group_type::interior_cell_sub_block, pair.first, tes_file_group_header::uninitialized_unknown);
+            for (auto* cell : pair.second.cells) {
+               this->_write_form(cell);
+               assert(&group_s == &this->get_current_group() && "An interior CELL record opened one or more child GRUPs for its REFRs, but forgot to close the GRUP(s) after writing all of the REFRs.");
+            }
+            this->close_current_group();
+         }
+         this->close_current_group();
+      }
+   }
+
    void file_writer::_write_impl(const void* source, uint32_t size) {
       this->stream.write((const uint8_t*)source, size);
    }
@@ -273,16 +341,19 @@ namespace dovah::tes_file_writing {
    }
 
    void file_writer::write() {
-      auto& read_write_interface = this->source.get_writer_interface(*this);
-      //
       this->_write_header();
       for (uint32_t signature : group_sequence_list) {
          auto form_type = form_type_info::signature_to_form_type(signature);
          if (!this->owner.active_file_has_forms_of_type(form_type))
             continue;
          //
+         if (form_type == form_type::cell) { // special case; requires a particular hierarchy of nested GRUPs
+            this->_write_interior_cells();
+            continue;
+         }
+         //
          this->open_group(tes_file_group_type::forms_of_type, signature, 0);
-         this->owner.for_each_active_file_form_of_type(form_type, [this, &read_write_interface](form_stub* stub) {
+         this->owner.for_each_active_file_form_of_type(form_type, [this](form_stub* stub) {
             return !this->_write_form(stub);
          });
          this->close_current_group();
