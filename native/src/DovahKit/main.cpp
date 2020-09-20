@@ -85,17 +85,42 @@
 //
 //  - Code to save the current active file.
 //
-//     = CURRENT GOAL: CREATE A (file_writer) CLASS THAT CAN RECONSTRUCT GROUPS FROM 
-//       THE LOADED FORM STUBS WHILE OTHERWISE BLINDLY COPYING DATA ON A PER-RECORD 
-//       BASIS. WHEN WE HAVE THAT WORKING, WE CAN MOVE ONTO THE MORE COMPLICATED TASK 
-//       OF GIVING RECORDS CODE TO HANDLE THEIR LOADED DATA, DEALING WITH THE WORLD-
-//       SPACE "OFST" SUBRECORD, AND SO ON.
+//     - Define Form::save overrides for all loaded-form classes, and then consider 
+//       making the member function on Form virtual.
 //
-//        - CODE TO OPEN A FILE FOR WRITING
+//        - Alternatively, use the non-virtual interface idiom: have (Form::save) 
+//          be a non-virtual function which writes whatever subrecords are needed, 
+//          and have some virtual (Form::_save_impl) that subclasses are meant to 
+//          override. That way, overrides don't need to call super, and the function 
+//          that we want overridden can be made pure while still having superclass-
+//          provided behavior.
 //
-//        - Have it just generate a temporary file for now, so we can inspect the 
-//          output of small active files both by hand and in xEdit to check for 
-//          correctness.
+//     - NOTE: COPYING RECORD DATA FROM THE SOURCE FILE IS ONLY APPROPRIATE WHEN 
+//       RESAVING THE SAME FILE WITH THE SAME MASTERS. IF ANY MASTERS IN THE ACTIVE 
+//       FILE DIFFER FROM THOSE OF THE ORIGINAL, THEN THE COPIED DATA WILL END UP 
+//       HAVING BAD FORM IDs. FIXUP WOULD HAVE TO BE CODED PER-FORM AND AT THAT 
+//       POINT, WE MAY AS WELL WRITE FULL SAVE CODE.
+//
+//        - This unfortunately also means that we actually can't ship DovahKit with 
+//          a minimum of form types and patch it incrementally, as hoped. Damn.
+//
+//     - The UI should offer a file-save dialog that lets the user choose what game 
+//       they want to save for (Classic or Special) and whether they want to use 
+//       any special file header flags (e.g. ESM-flagged ESPs).
+//
+//        - There should also be a filename field, which should be greyed out unless 
+//          the active file is implicit/invisible (i.e. nameless)
+//
+//        - The game and flags should default to those of the source file, if any. 
+//          If the active file is implicit/invisible, then choose the game based on 
+//          the current load order.
+//
+//        - Show the load order as a panel on the righthand side.
+//
+//           - Perhaps at some point in the future, we can let the user exclude files 
+//             that the active file neither overrides nor references; however, we'd 
+//             have to check the latter very carefully, and we'd need to introduce a 
+//             form ID fixup step when saving.
 //
 //     - DovahKitCore needs to provide two signals, onSaveImminent and onSaveComplete, 
 //       so that the UI can abandon any form pointers prior to a save and reacquire 
@@ -112,25 +137,17 @@
 //
 //        - Remember to cap at 253 instead if any SSE files are loaded.
 //
-//     - If the active file has no name, then the user needs to be prompted to pick 
-//       where to save it. This in turn means that file_load_order and DovahKitCore 
-//       need accessors for the loaded files and the active file -- at least enough 
-//       to query basic information like the name.
+//     - Each dovah::form_stub to be saved needs its file pointer and file offset 
+//       updated. Currently, file_writer retains fixup data including the offset 
+//       within the new file, but we never actually perform the update (in part 
+//       because we're still just saving to temporary files).
 //
-//     - The active file needs its dependencies/masters updated. If we just blindly 
-//       assume that all loaded files should be encoded as masters, then we don't 
-//       need to adjust any form IDs being written to the file.
-//
-//     - Each dovah::form_stub to be saved needs its file offset updated.
-//
-//     - If a dovah::form_stub was defined in a non-active file and then edited (such 
-//       that we are now saving an override), then it needs its file pointer changed.
+//        - Similarly, the active file needs to have its cobb::mapepd_file replaced 
+//          once the output file has been written, in tandem with replacing the 
+//          form_stubs' file data.
 //
 //     - Each dovah::form_stub to be saved needs its "edited" flag cleared. Make sure 
 //       to use the setter rather than directly manipulating bits.
-//
-//     - The active file needs to have its cobb::mapped_file replaced once the output 
-//       file has been fully written.
 //
 //     - form_stub::load should not attempt to load any form data from the active file 
 //       while a save operation is in progress. To that end, we should add a function 
