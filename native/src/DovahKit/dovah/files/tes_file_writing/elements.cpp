@@ -3,14 +3,14 @@
 
 namespace dovah::tes_file_writing {
    void record::_write_impl(const void* source, uint32_t size) {
-      this->data.reserve(this->pos + size);
-      void* target = this->data.data() + size;
+      this->data.resize(this->pos + size);
+      void* target = this->data.data() + this->pos;
       memcpy(target, source, size);
       this->pos += size;
    }
    void record::_write_impl(const tes_file_subrecord_header& header) {
-      this->data.reserve(this->pos + sizeof(tes_file_subrecord_header));
-      this->_write(header.signature);
+      this->reserve_more(sizeof(tes_file_subrecord_header));
+      this->_write(_byteswap_ulong(header.signature));
       this->_write(header.size);
    }
    void record::_close_current_subrecord() {
@@ -18,18 +18,18 @@ namespace dovah::tes_file_writing {
       if (!subrecord.exists())
          return;
       if (subrecord.pos > std::numeric_limits<decltype(tes_file_subrecord_header::size)>::max()) {
-         this->data.reserve(16 + subrecord.data.size());
+         this->reserve_more(16 + subrecord.data.size()); // we could do data.reserve_more, but if for some godforsaken reason we ever needed to write mid-buffer then that'd break
          //
          this->_write(uint32_t('XXXX'));
          this->_write(uint16_t(4));
          this->_write(uint32_t(subrecord.pos));
          //
-         this->_write(subrecord.header.signature);
+         this->_write(_byteswap_ulong(subrecord.header.signature));
          this->_write(uint16_t(0));
       } else {
-         this->data.reserve(6 + subrecord.data.size());
+         this->reserve_more(6 + subrecord.data.size());
          //
-         this->_write(subrecord.header.signature);
+         this->_write(_byteswap_ulong(subrecord.header.signature));
          this->_write(uint16_t(subrecord.pos));
       }
       this->_write(subrecord.data);
@@ -37,7 +37,7 @@ namespace dovah::tes_file_writing {
       subrecord.header.signature = 0;
       subrecord.header.size      = 0;
       subrecord.pos = 0;
-      subrecord.data.free();
+      subrecord.data.clear();
    }
    subrecord& record::get_current_subrecord() const noexcept {
       return this->owner._subrecord;
@@ -60,15 +60,28 @@ namespace dovah::tes_file_writing {
       this->header.formID    = 0;
       this->header.size      = 0;
       this->pos = 0;
-      this->data.free();
+      this->data.clear();
+   }
+
+   void record::write_string_subrecord(uint32_t signature, const char* s) {
+      auto& subrecord = this->open_next_subrecord(signature);
+      subrecord.write(s, strlen(s) + 1);
+      subrecord.close();
+   }
+   void record::write_string_subrecord(uint32_t signature, const std::string& s) {
+      auto& subrecord = this->open_next_subrecord(signature);
+      subrecord.reserve_more(s.size() + 1); // make room for the null terminator
+      subrecord.write(s.data(), s.size());
+      subrecord.write('\0');
+      subrecord.close();
    }
 
    record& subrecord::get_containing_record() const {
       return this->owner._record;
    }
    void subrecord::write(const void* source, uint32_t size) {
-      this->data.reserve(this->pos + size);
-      void* target = this->data.data() + size;
+      this->data.resize(this->pos + size);
+      void* target = this->data.data() + this->pos;
       memcpy(target, source, size);
       this->pos += size;
    }

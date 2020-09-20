@@ -36,11 +36,11 @@ namespace dovah::tes_file_writing {
       //
       {  // HEDR
          auto& subrecord = record.open_next_subrecord('HEDR');
-         subrecord.reserve(0xC);
+         subrecord.reserve_more(0xC);
          subrecord.write(1.7F);
          uint32_t count = this->owner.active_file_form_count();
          subrecord.write(count);
-         subrecord.write(this->source.recordCount);
+         subrecord.write(this->source.nextFormID);
          subrecord.close();
       }
       //
@@ -48,24 +48,18 @@ namespace dovah::tes_file_writing {
       //
       // TODO: DELE? xEdit lists it in their definitions, but it doesn't appear in any Skyrim Classic masters.
       //
-      if (!this->source.authorName[0]) { // CNAM
-         auto& subrecord = record.open_next_subrecord('CNAM');
-         subrecord.write(this->source.authorName);
-         subrecord.close();
+      if (!this->source.authorName.empty()) { // CNAM
+         record.write_string_subrecord('CNAM', this->source.authorName);
       }
-      if (!this->source.description[0]) { // SNAM
-         auto& subrecord = record.open_next_subrecord('SNAM');
-         subrecord.write(this->source.description);
-         subrecord.close();
+      if (!this->source.description.empty()) { // SNAM
+         record.write_string_subrecord('SNAM', this->source.description);
       }
       this->owner.for_each_load_order_filename([&record](std::filesystem::path name, bool is_active_file) { // MAST, DATA
          if (is_active_file)
             return false;
          //
          auto  filename  = name.string();
-         auto& subrecord = record.open_next_subrecord('MAST');
-         subrecord.write(filename);
-         subrecord.close();
+         record.write_string_subrecord('MAST', filename);
          //
          auto& extra = record.open_next_subrecord('DATA');
          extra.write(uint64_t(0));
@@ -297,7 +291,7 @@ namespace dovah::tes_file_writing {
       this->stream.write((const uint8_t*)source, size);
    }
    void file_writer::_write_impl(const tes_file_group_header& header) {
-      this->_write(header.signature);
+      this->_write(_byteswap_ulong(header.signature));
       this->_write(header.size);
       this->_write(header.label);
       this->_write(header.type);
@@ -305,7 +299,7 @@ namespace dovah::tes_file_writing {
       this->_write(header.unknown);
    }
    void file_writer::_write_impl(const tes_file_record_header& header) {
-      this->_write(header.signature);
+      this->_write(_byteswap_ulong(header.signature));
       this->_write(header.size);
       this->_write(header.flags);
       this->_write(header.formID);
@@ -325,6 +319,7 @@ namespace dovah::tes_file_writing {
       assert(parent + 1 < this->_groups.size());
       auto& group = this->_groups[parent + 1];
       group.header.signature = 'GRUP';
+      group.header.label     = label;
       group.header.type      = group_type;
       group.header.unknown   = unknown;
       group.header.version_control = this->version_control;
@@ -371,7 +366,7 @@ namespace dovah::tes_file_writing {
             continue;
          }
          //
-         this->open_group(tes_file_group_type::forms_of_type, signature, 0);
+         this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong(signature), 0);
          this->owner.for_each_active_file_form_of_type(form_type, [this](form_stub* stub) {
             return !this->_write_form(stub);
          });

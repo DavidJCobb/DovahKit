@@ -62,9 +62,6 @@ namespace dovah::tes_file_reading {
    file_reader::file_reader(file_load_order& lo) : basic_reader(nullptr), load_order(lo),
       readers{ *this }
    {
-      this->authorName[511] = '\0';
-      this->description[511] = '\0';
-      //
       this->file = new cobb::mapped_file();
    }
    file_reader::~file_reader() {
@@ -137,12 +134,12 @@ namespace dovah::tes_file_reading {
                subrecord.unchecked_read(this->nextFormID);
                break;
             case 'CNAM': // author/creator
-               if (!subrecord.read(this->authorName, subrecord.size())) {
+               if (!subrecord.to_string(this->authorName)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                break;
             case 'SNAM': // description
-               if (!subrecord.read(this->description, subrecord.size())) {
+               if (!subrecord.to_string(this->description)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                break;

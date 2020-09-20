@@ -75,6 +75,11 @@ namespace dovah {
             subrecord& get_current_subrecord() const noexcept;
             subrecord& open_next_subrecord(uint32_t signature);
             void close();
+            //
+            inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
+            //
+            void write_string_subrecord(uint32_t signature, const char* s);
+            void write_string_subrecord(uint32_t signature, const std::string& s);
       };
 
       class subrecord {
@@ -100,7 +105,12 @@ namespace dovah {
             record& get_containing_record() const;
             inline bool is_skyrim_special() const noexcept { return this->get_containing_record().is_skyrim_special(); }
             //
-            inline void reserve(uint32_t bytes) { this->data.reserve(bytes); }
+            inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
+            //
+            #pragma region writing
+            //
+            // NOTE: Prefer record::write_string_subrecord for writing subrecords that consist 
+            // entirely of strings. Always use it for const char*.
             //
             void write(const void* source, uint32_t size);
             template<typename T> inline void write(const T& v) {
@@ -115,6 +125,7 @@ namespace dovah {
             template<> inline void write(const tes_file_group_header& v) = delete;
             template<> inline void write(const tes_file_record_header& v) = delete;
             template<> inline void write(const tes_file_subrecord_header& v) = delete;
+            #pragma endregion
             //
             void close();
       };

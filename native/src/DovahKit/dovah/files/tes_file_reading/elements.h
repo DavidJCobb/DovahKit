@@ -123,7 +123,7 @@ namespace dovah {
             uint32_t peek_next_subrecord_type();
             //
             void reset() {
-               this->data.free();
+               this->data.clear();
                this->offset = 0;
                this->header.signature = 0;
             }

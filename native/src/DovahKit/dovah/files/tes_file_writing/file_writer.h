@@ -84,9 +84,9 @@ namespace dovah {
                   uint8_t vc_last_editor;
                   uint8_t vc_current_editor;
                };
-               uint32_t version_control;
+               uint32_t version_control = 0;
             };
-            uint16_t version_control_2;
+            uint16_t version_control_2 = 0;
             //
             inline group& get_current_group() {
                for (signed int i = this->_groups.size() - 1; i >= 0; i--) {

@@ -12,12 +12,14 @@ namespace cobb {
          uint32_t _size     = 0;
          uint32_t _capacity = 0;
       public:
-         void allocate(uint32_t bytes); // discards the current buffer content
-         void free(); // checks whether (data) is nullptr
+         void clear(); // checks whether (data) is nullptr
          inline void* raw() { return this->_data; }
          void shrink_to_fit();
          void resize(uint32_t bytes);
          void reserve(uint32_t bytes);
+         inline void reserve_more(uint32_t bytes) { // reserves (this->_size + bytes)
+            this->reserve(this->size() + bytes);
+         }
 
          inline uint8_t* data() const noexcept { return (uint8_t*)this->_data; }
 
@@ -35,16 +37,16 @@ namespace cobb {
          explicit inline operator std::ptrdiff_t() const { return (std::ptrdiff_t)this->_data; }
 
          generic_buffer() {};
-         generic_buffer(uint32_t bytes) { this->allocate(bytes); }
+         generic_buffer(uint32_t bytes) { this->resize(bytes); }
          ~generic_buffer() {
-            this->free();
+            this->clear();
          }
 
          generic_buffer(const generic_buffer& other) noexcept { *this = other; }
          generic_buffer(generic_buffer&& other) noexcept {
             *this = std::move(other);
          }
-         generic_buffer& operator=(const generic_buffer& other) noexcept;
+         generic_buffer& operator=(const generic_buffer& other) noexcept; // NOTE: no handling possible for out-of-memory; maybe avoid copying particularly huge buffers
          generic_buffer& operator=(generic_buffer&& other) noexcept;
    };
 }

@@ -205,7 +205,7 @@ namespace dovah::tes_file_reading {
          uint32_t decompressed_size;
          uint32_t compressed_size = record.header.size - sizeof(decompressed_size);
          this->read(decompressed_size);
-         record.data.allocate(decompressed_size);
+         record.data.resize(decompressed_size);
          if (decompressed_size) { // zero-size records are allowed, and would be indistinguishable from allocation failures
             if (record.data.empty()) {
                _log_record_allocation_failure(this, record.head_pos, decompressed_size, record);
@@ -234,7 +234,7 @@ namespace dovah::tes_file_reading {
             }
          }
       } else {
-         record.data.allocate(record.header.size);
+         record.data.resize(record.header.size);
          if (record.header.size) { // zero-size records are allowed, and would be indistinguishable from allocation failures
             if (record.data.empty()) {
                _log_record_allocation_failure(this, record.head_pos, record.header.size, record);

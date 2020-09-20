@@ -328,7 +328,7 @@ namespace dovah {
       //
       stub->formID = formID;
       //
-      if (this->active_file && formID >> 0x18 == this->active_file_index) {
+      if (this->active_file && (stub->file == this->active_file || (formID >> 0x18) == this->active_file_index)) {
          this->active_file_forms.forms[formID] = stub;
          auto& at = this->active_file_forms_by_type[stub->formType];
          at.forms[formID] = stub;

@@ -98,8 +98,8 @@ namespace dovah {
             float    fileVersion = 0.94F;
             uint32_t recordCount = 0;
             uint32_t nextFormID;
-            char     authorName[512];
-            char     description[512];
+            std::string authorName;
+            std::string description;
             std::vector<master_entry> masters;
             // TODO: ONAM, a list of overridden records within temporary CELLs, of the following types: ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA
             // TODO: DELE

@@ -2,37 +2,9 @@
 #include <cstdlib>
 
 namespace cobb {
-   void generic_buffer::allocate(uint32_t bytes) {
-      #ifdef _DEBUG
-         if (false && bytes > 100000) {
-            __debugbreak();
-         }
-      #endif
+   void generic_buffer::clear() {
       if (this->_data) {
-         if (bytes < this->_capacity * 4) {
-            this->_size = bytes;
-            return;
-         }
-         ::free(this->_data);
-      }
-      if (!bytes) {
-         this->_data     = nullptr;
-         this->_size     = 0;
-         this->_capacity = 0;
-         return;
-      }
-      this->_data = malloc(bytes);
-      if (this->_data) {
-         this->_size     = bytes;
-         this->_capacity = bytes;
-      } else {
-         this->_size     = 0;
-         this->_capacity = 0;
-      }
-   }
-   void generic_buffer::free() {
-      if (this->_data) {
-         ::free(this->_data);
+         free(this->_data);
          this->_data = nullptr;
          this->_size     = 0;
          this->_capacity = 0;
@@ -42,35 +14,44 @@ namespace cobb {
       if (this->_size < this->_capacity) {
          auto buf = realloc(this->_data, this->_size);
          if (buf) {
-            this->_data = buf;
+            this->_data     = buf;
             this->_capacity = this->_size;
          }
       }
    }
    void generic_buffer::resize(uint32_t bytes) {
+      if (bytes == 0) {
+         free(this->_data);
+         this->_data     = nullptr;
+         this->_size     = 0;
+         this->_capacity = 0;
+         return;
+      }
       this->reserve(bytes);
-      this->_size = bytes;
+      #if _DEBUG
+         assert(this->_capacity >= bytes);
+      #endif
+      if (this->_capacity >= bytes) // check, in case the process didn't have enough memory to perform the reservation
+         this->_size = bytes;
    }
    void generic_buffer::reserve(uint32_t bytes) {
       if (bytes <= this->_capacity)
          return;
-      auto buffer = malloc(bytes);
-      if (this->_data) {
-         if (this->_size)
-            memcpy(buffer, this->_data, this->_size);
-         ::free(this->_data);
+      auto buffer = realloc(this->_data, bytes);
+      if (!buffer) { // if allocation failed (typically due to the process not having (bytes) much memory to spare)
+         return;
       }
       this->_data     = buffer;
       this->_capacity = bytes;
    }
    generic_buffer& generic_buffer::operator=(const generic_buffer& other) noexcept {
-      this->free();
-      this->allocate(other.size());
-      memcpy(this->_data, other.data(), this->size());
+      auto size = other.size();
+      this->resize(size);
+      memcpy(this->_data, other.data(), size);
       return *this;
    }
    generic_buffer& generic_buffer::operator=(generic_buffer&& other) noexcept {
-      this->free();
+      this->clear();
       this->_data     = other._data;
       this->_size     = other._size;
       this->_capacity = other._capacity;

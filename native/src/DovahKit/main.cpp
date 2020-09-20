@@ -24,6 +24,9 @@
 //  - Add a menu bar item to edit the author and description of the current active 
 //    file. If no active file is loaded, then the menu item should be greyed out.
 //
+//  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
+//    template specialization of subrecord::read.
+//
 //  - Generate proper Use Info for hardcoded forms.
 //
 //     - During use info generation, when we're setting up outbound use info, we 
