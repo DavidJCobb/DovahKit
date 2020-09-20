@@ -53,7 +53,7 @@ namespace dovah {
          loaded_file*      active_file          = nullptr;
          _form_map         forms;
          _form_map_by_type forms_by_type;
-         _form_map         active_file_forms; // all forms that come from the active file AND all edited forms, which means that some of these may have originally loaded from different files.
+         _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
          //
          bool    loading_is_complete        = false; // helps with UI progress display

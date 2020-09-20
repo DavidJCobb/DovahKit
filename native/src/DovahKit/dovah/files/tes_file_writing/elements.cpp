@@ -39,6 +39,32 @@ namespace dovah::tes_file_writing {
       subrecord.pos = 0;
       subrecord.data.clear();
    }
+   void record::_clear() {
+      auto& subrecord = this->get_current_subrecord();
+      if (subrecord.exists())
+         this->_close_current_subrecord();
+      //
+      this->header.signature = 0;
+      this->header.version   = 0;
+      this->header.formID    = 0;
+      this->header.size      = 0;
+      this->pos = 0;
+      this->data.clear();
+   }
+   void record::_close() {
+      auto& subrecord = this->get_current_subrecord();
+      if (subrecord.exists())
+         this->_close_current_subrecord();
+      //
+      this->header.size = this->pos;
+      this->owner._write_record();
+      this->header.signature = 0;
+      this->header.version = 0;
+      this->header.formID = 0;
+      this->header.size = 0;
+      this->pos = 0;
+      this->data.clear();
+   }
    subrecord& record::get_current_subrecord() const noexcept {
       return this->owner._subrecord;
    }
@@ -47,20 +73,6 @@ namespace dovah::tes_file_writing {
       auto& subrecord = this->get_current_subrecord();
       subrecord.header.signature = signature;
       return subrecord;
-   }
-   void record::close() {
-      auto& subrecord = this->get_current_subrecord();
-      if (subrecord.exists())
-         this->_close_current_subrecord();
-      //
-      this->header.size = this->pos;
-      this->owner._write_record();
-      this->header.signature = 0;
-      this->header.version   = 0;
-      this->header.formID    = 0;
-      this->header.size      = 0;
-      this->pos = 0;
-      this->data.clear();
    }
 
    void record::write_string_subrecord(uint32_t signature, const char* s) {

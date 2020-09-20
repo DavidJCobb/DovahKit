@@ -49,6 +49,10 @@ namespace dovah {
                   file_offset_t record_count   = 0;
                   file_offset_t next_object_id = 0;
                } header;
+               struct {
+                  uint32_t      value = 0;
+                  file_offset_t offset = 0;
+               } record_and_group_count;
             } fixup_data;
             //
             record& _open_next_record(uint32_t signature, bare_form_id_t);

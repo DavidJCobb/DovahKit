@@ -200,6 +200,7 @@ namespace dovah {
          use_info_list inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
          //
          loaded_form_ptr<loaded_forms::Form> load();
+         loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
          //
          inline bool can_unload_form() const noexcept {
             if (this->is_edited())

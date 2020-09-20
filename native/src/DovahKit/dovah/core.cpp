@@ -79,7 +79,7 @@ namespace dovah {
       { 'WRLD', form_type::worldspace, "Worldspace" },
       { 'LAND', form_type::land, "Landscape", form_type_info::flag::no_editor_id },
       { 'NAVM', form_type::navmesh, "Navmesh" },
-      // TLOD: Unknown. Not found in any file, and not loaded by the game (the form factory table has a null entry for this form type).
+      { 'TLOD', form_type::tlod, "Unknown (TLOD)" },
       { 'DIAL', form_type::topic, "Dialogue Topic" },
       { 'INFO', form_type::topic_info, "Dialogue Topic Info" },
       { 'QUST', form_type::quest, "Quest" },
@@ -91,7 +91,7 @@ namespace dovah {
       { 'ANIO', form_type::animation_prop, "Animation Prop" }, // a.k.a. AnimObject
       { 'WATR', form_type::water_type, "Water Type" },
       { 'EFSH', form_type::effect_shader, "EffectShader" },
-      // TOFT: Unknown. Not found in any file, and not loaded by the game (the form factory table has a null entry for this form type).
+      { 'TOFT', form_type::toft, "Unknown (TOFT)" },
       { 'EXPL', form_type::explosion, "Explosion" },
       { 'DEBR', form_type::debris, "Debris" },
       { 'IMGS', form_type::imagespace, "ImageSpace" },

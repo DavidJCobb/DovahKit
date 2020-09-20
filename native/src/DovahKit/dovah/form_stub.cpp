@@ -59,6 +59,9 @@ namespace dovah {
       }
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
+   loaded_form_ptr<loaded_forms::Form> form_stub::get_content_if_loaded() {
+      return loaded_form_ptr<loaded_forms::Form>(this);
+   }
    void form_stub::set_edited(bool v) {
       cobb::modify_bit(this->flags, flag::is_edited, v);
       if (v)

@@ -25,5 +25,6 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
+         virtual bool save(tes_file_writing::record& record) override;
    };
 }

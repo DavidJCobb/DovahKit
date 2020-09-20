@@ -16,4 +16,12 @@ namespace dovah::loaded_forms {
    /*static*/ void Voicetype::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       return; // this form type does not have any subrecords that contain form IDs
    }
+   bool Voicetype::save(tes_record_writer& record) {
+      Form::save(record);
+      //
+      auto& DNAM = record.open_next_subrecord('DNAM');
+      DNAM.write(this->voicetype_flags);
+      DNAM.close();
+      return true;
+   }
 }

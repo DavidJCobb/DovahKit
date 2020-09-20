@@ -63,6 +63,9 @@ namespace dovah {
             //
             void _close_current_subrecord();
             //
+            void _clear(); // clears a record's state without writing it to the file; file-writing internals can call this to abort writing a record
+            void _close(); // writes the record to the file (closing any open subrecord) and then clears its state
+            //
          public:
             record& operator=(const record& other) = delete; // no copy
             record(record& other) = delete; // no copy
@@ -74,7 +77,6 @@ namespace dovah {
             //
             subrecord& get_current_subrecord() const noexcept;
             subrecord& open_next_subrecord(uint32_t signature);
-            void close();
             //
             inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
             //
@@ -130,4 +132,7 @@ namespace dovah {
             void close();
       };
    }
+
+   using tes_record_writer    = tes_file_writing::record;
+   using tes_subrecord_writer = tes_file_writing::subrecord;
 }
