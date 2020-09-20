@@ -112,6 +112,20 @@ const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept
    return this->load_order->load_error;
 }
 
+bool DovahKitCore::active_file_has_name() const noexcept {
+   return this->load_order->active_file_has_name();
+}
+bool DovahKitCore::has_active_file() const noexcept {
+   return this->load_order->index_of_active_file() != dovah::file_load_order::invalid_load_prefix;
+}
+void DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless) {
+   //
+   // TODO: this is VERY incomplete and, among other things, needs to emit signals, fail 
+   // if a save is already in progress, etc., etc.
+   //
+   this->load_order->save_active_file(name_to_use_if_nameless);
+}
+
 uint32_t DovahKitCore::count_forms_of_type(form_type_t ft) const noexcept {
    return this->load_order->count_forms_of_type(ft);
 }

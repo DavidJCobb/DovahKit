@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <unordered_map>
 #include "elements.h"
@@ -21,6 +22,12 @@ namespace dovah {
             using stream_t      = std::basic_ofstream<uint8_t>;
             static constexpr int max_group_depth = 7;
             //
+            enum class compression_policy {
+               never,     // never compress records
+               threshold, // compress records that are larger than a certain size
+               bethesda,  // compress NAVM, NPC_, any CELL that has TVDT, and any LAND in a compressed CELL, all regardless of the records' sizes
+            };
+            //
             struct form_stub_write_info {
                //
                // This data should be transplanted into a form_stub after the full file write is complete.
@@ -29,9 +36,6 @@ namespace dovah {
             };
             //
          protected:
-            file_writer(file_load_order&, file_reader&);
-            ~file_writer();
-            //
             mutable stream_t stream; // ofstream::tellp and friends aren't const despite not modifying the stream state
             file_load_order& owner;
             file_reader&     source;
@@ -70,6 +74,9 @@ namespace dovah {
             }
             //
          public:
+            file_writer(file_load_order&, file_reader&);
+            ~file_writer();
+            //
             union {
                struct {
                   uint8_t vc_day;
@@ -98,7 +105,7 @@ namespace dovah {
             uint32_t get_stream_position() const noexcept;
             void set_stream_position(file_offset_t) noexcept;
 
-            void open();
+            void open(std::filesystem::path);
             void write();
       };
    }

@@ -90,7 +90,7 @@ namespace dovah {
          void queue_active_file(const std::string& name); // TODO
          bool load_queued_files();
          //
-         inline bool is_loading() const noexcept { return !this->loading_is_complete; };
+         inline bool is_loading() const noexcept { return !this->loading_is_complete || !this->use_info_build_is_complete; };
          
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
@@ -119,16 +119,18 @@ namespace dovah {
          bool form_is_from_active_file(const form_stub*) const noexcept;
          bool form_is_from_active_file(bare_form_id_t) const noexcept;
          //
+         bool active_file_has_name() const noexcept;
          uint32_t active_file_form_count() const noexcept;
          bool active_file_has_forms_of_type(form_type_t) const noexcept;
          bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          uint8_t index_of_active_file() const noexcept;
          //
-         bool for_each_load_order_filename(std::function<bool(std::filesystem::path)> functor);
+         bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
          void stub_flagged_as_edited(form_stub*) noexcept; // called by form_stub::set_edited
          #pragma endregion
-         
+
+         void save_active_file(std::filesystem::path name_to_use_if_nameless);
    };
 }

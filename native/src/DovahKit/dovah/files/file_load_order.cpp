@@ -4,6 +4,7 @@
 #include "../../helpers/strings.h"
 #include "../form_stub.h"
 #include "tes_file_reading/file.h"
+#include "tes_file_writing/file_writer.h"
 #include "../forms/factories/hardcoded.h"
 #include "../logging.h"
 
@@ -457,6 +458,13 @@ namespace dovah {
       return this->form_is_from_active_file(stub);
    }
 
+   bool file_load_order::active_file_has_name() const noexcept {
+      if (!this->active_file)
+         return false;
+      if (this->active_file->get_filename().empty())
+         return false;
+      return true;
+   }
    uint32_t file_load_order::active_file_form_count() const noexcept {
       uint32_t total = 0;
       for (auto& map : this->active_file_forms_by_type)
@@ -503,11 +511,11 @@ namespace dovah {
       return invalid_load_prefix;
    }
    //
-   bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path)> functor) {
+   bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) {
       std::filesystem::path filename;
       for (auto* file : this->files) {
          filename = file->get_filename();
-         if (functor(filename))
+         if (functor(filename, file == this->active_file))
             return true;
       }
       return false;
@@ -584,5 +592,36 @@ namespace dovah {
       }
       out = stub->formID & 0x00FFFFFF | (j << 0x18);
       return form_id_status::valid;
+   }
+
+   void file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless) {
+      if (!this->active_file)
+         return;
+      if (this->is_loading())
+         return;
+      //
+      std::filesystem::path filename = this->active_file->get_filename();
+      if (filename.empty()) {
+         filename = name_to_use_if_nameless;
+         if (filename.empty())
+            return;
+      }
+      //
+      filename = this->queued_load.base_path + filename.string();
+      {  // opening the file for writing will clear its contents (which is bad for the user and will break our reading/writing), so we want to ALWAYS write to a temporary file first!
+         auto ext = filename.extension().string();
+         if (_stricmp(ext.data(), ".tes") == 0) {
+         } else {
+            filename.replace_extension(".tes");
+         }
+      }
+      //
+      {
+         tes_file_writing::file_writer writer(*this, *this->active_file);
+         writer.open(filename);
+         writer.write();
+      }
+
+      // TODO: replace the original file (if any) with the temporary file, now that the write is complete.
    }
 }

@@ -37,6 +37,8 @@ namespace dovah {
          public:
             using header_t = dovah::tes_file_record_header;
          protected:
+            record(file_writer& o) : owner(o) {}
+            //
             file_writer& owner;
             header_t header;
             uint32_t pos = 0;
@@ -81,6 +83,8 @@ namespace dovah {
          public:
             using header_t = dovah::tes_file_subrecord_header;
          protected:
+            subrecord(file_writer& o) : owner(o) {}
+            //
             file_writer& owner;
             header_t header;
             uint32_t pos = 0;

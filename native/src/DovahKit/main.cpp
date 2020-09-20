@@ -90,6 +90,10 @@
 //
 //        - CODE TO OPEN A FILE FOR WRITING
 //
+//        - Have it just generate a temporary file for now, so we can inspect the 
+//          output of small active files both by hand and in xEdit to check for 
+//          correctness.
+//
 //     - DovahKitCore needs to provide two signals, onSaveImminent and onSaveComplete, 
 //       so that the UI can abandon any form pointers prior to a save and reacquire 
 //       them afterward.
@@ -140,26 +144,16 @@
 //          data to the targeted file; HOWEVER, we cannot clear the "edited" flag 
 //          until after we've changed the file pointer to the active file.
 //
-//     - Subrecords that exceed the max representable length for subrecords should 
-//       use the extended format (i.e. a leading 'XXXX' subrecord with the full 
-//       length).
-//
 //     - When saving WRLD, the OFST subrecord needs special handling.
 //
 //     - Records that exceed a certain length should be zlib-compressed. What length 
 //       threshold should we use?
 //
-//        - If we add some debug logging to the load code, we can log the largest 
-//          uncompressed record size and the smallest compressed record size, both 
-//          in general and per form type. That might provide some insight.
-//
-//        - Skyrim.esm only compresses some CELL and LAND, and all NAVM and NPC_. It 
-//          doesn't seem to take record size into account at all, actually; I've seen 
-//          LAND at (uncompressed) size 0x0A bytes be both compressed and not.
-//
-//           - CELLs are compressed if they have a TVDT subrecord.
-//
-//           - LAND is compressed if its parent CELL is compressed.
+//        - I've added a (compression_policy) enum to (file_writer), but it currently 
+//          isn't used by anything. For (compression_policy::threshold), I'm thinking 
+//          maybe 0x200 bytes would be a good threshold, but we could always set up 
+//          some debug logging to determine the mean/median/mode/standard deviation/etc. 
+//          of uncompressed record sizes to try and figure out a good "outlier" size.
 //
 //  - Use Info window
 //

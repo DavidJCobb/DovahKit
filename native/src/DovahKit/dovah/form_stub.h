@@ -17,6 +17,9 @@ namespace dovah {
       class basic_reader;
       class file_reader;
    }
+   namespace tes_file_writing {
+      class file_writer;
+   }
 
    class form_stub;
 
@@ -138,6 +141,7 @@ namespace dovah {
       friend file_load_order;
       friend tes_file_reading::basic_reader;
       friend tes_file_reading::file_reader;
+      friend tes_file_writing::file_writer;
       friend threaded_load_order_use_info_builder;
       //
       public:

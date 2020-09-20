@@ -59,6 +59,7 @@ class DovahKitCore : public QObject {
    public:
       void abandon_data();
       inline bool has_data() const noexcept { return this->loaded; }
+
       void set_load_order_folder(const std::filesystem::path&);
       void queue_load_order_file(const std::filesystem::path&);
       void unqueue_load_order_file(const std::filesystem::path&);
@@ -67,6 +68,10 @@ class DovahKitCore : public QObject {
 
       float assess_load_progress() const noexcept;
       const dovah::file_read_error& get_last_read_error() const noexcept;
+
+      bool active_file_has_name() const noexcept;
+      bool has_active_file() const noexcept;
+      void save_active_file(std::filesystem::path name_to_use_if_nameless);
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;

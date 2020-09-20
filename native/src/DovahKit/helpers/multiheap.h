@@ -6,18 +6,9 @@
 #include <vector>
 #include "../helpers/bitset.h"
 
-//
-// If this macro is enabled and you compile in debug, each multi-heap will log the first 
-// time something is allocated on it; this can be a good way to verify that your allocator 
-// is being used as expected (since Allocator::rebind may be silently failing or falling 
-// back to the default std::allocator).
-//
-#define COBB_CONFIRM_MULTIHEAP_USAGE 0
-#if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
-   #include <atomic>
-#endif
-
 namespace cobb {
+   extern void _multiheap_dumper(void* s, uint32_t count_per_block); // defined this way just so that the code to dump heap information for debugging isn't just sitting out in the header
+   //
    template<typename T, uint32_t count_per_block> class multiheap {
       //
       // MULTIHEAP
@@ -49,28 +40,29 @@ namespace cobb {
       //
       // To that end, an interface is already available: multiheap_allocator, below.
       //
+      friend void _multiheap_dumper(void* s, uint32_t count_per_block);
       public:
          using mapped_type = T;
-         static constexpr uint32_t element_size = sizeof(T);
+         static constexpr uint32_t element_size    = sizeof(T);
          static constexpr uint32_t count_per_block = count_per_block;
          //
       protected:
          struct Block;
          struct BlockInfo {
-            Block* prev = nullptr;
-            Block* next = nullptr;
+            Block*   prev      = nullptr;
+            Block*   next      = nullptr;
             uint32_t remaining = count_per_block; // optimization for large block sizes
             uint32_t startFrom = 0; // optimization for large block sizes
             cobb::bitset<count_per_block> presence;
             //
             inline void on_allocate(uint32_t index) noexcept {
                this->presence.set(index);
-               this->remaining--;
+               --this->remaining;
                this->startFrom = index;
             }
             inline void on_free(uint32_t index) noexcept {
                this->presence.reset(index);
-               this->remaining++;
+               ++this->remaining;
                if (this->startFrom > index)
                   this->startFrom = index;
             }
@@ -79,23 +71,29 @@ namespace cobb {
             BlockInfo info;
             uint8_t   buffer[count_per_block * element_size];
             //
-            inline bool has_free_slots()     const noexcept { return this->info.remaining; };
-            inline bool has_any_slots_used() const noexcept {
-               //return !this->info.presence.none();
-               return this->info.remaining < count_per_block;
+            ~Block() {
+               auto p = this->info.prev;
+               auto n = this->info.next;
+               if (p)
+                  p->info.next = n;
+               if (n)
+                  n->info.prev = p;
             }
-            void* try_allocate() noexcept {
+            //
+            inline bool has_free_slots()     const noexcept { return this->info.remaining; };
+            inline bool has_any_slots_used() const noexcept { return this->info.remaining < count_per_block; }
+            void* try_allocate() noexcept { // function to be called on the head block only. allocates a single element
                if (!this->has_free_slots())
                   return nullptr;
                auto i = this->info.presence.find_first_clear_from(this->info.startFrom);
                if (i < 0)
                   return nullptr;
                std::ptrdiff_t start = (std::ptrdiff_t) & this->buffer;
-               std::ptrdiff_t addr = start + (element_size * i);
+               std::ptrdiff_t addr  = start + (element_size * i);
                this->info.on_allocate(i);
                return (void*)addr;
             }
-            bool  try_free(void* mem) noexcept {
+            bool  try_free(void* mem) noexcept { // function to be called on the head block only. frees a single element (and if that leaves a non-head block empty, free that entire block)
                auto block = this;
                #if _DEBUG
                   Block* previous = nullptr; // useless variable; when debugging, allows us to better understand where we were if something goes wrong and (block) goes bad
@@ -113,14 +111,9 @@ namespace cobb {
                      //
                      if (block != this && !block->has_any_slots_used()) {
                         //
-                        // This block is no longer in use. Delete it.
+                        // The block that contained (mem) was not a list head, and is now empty. 
+                        // Delete it.
                         //
-                        auto p = block->info.prev;
-                        auto n = block->info.next;
-                        if (p)
-                           p->info.next = n;
-                        if (n)
-                           n->info.prev = p;
                         delete block;
                      }
                      return true;
@@ -148,21 +141,17 @@ namespace cobb {
                return count;
             }
             //
-            void prune() noexcept {
+            void prune() noexcept { // removes all empty blocks after this one
                auto n = this->info.next;
                for (auto block = n; block; block = n) {
                   n = block->info.next;
-                  if (!block->has_any_slots_used()) {
-                     auto p = block->info.prev;
-                     if (p)
-                        p->info.next = n;
-                     if (n)
-                        n->info.prev = p;
+                  if (!block->has_any_slots_used())
                      delete block;
-                  }
                }
             }
-            void destroy_and_prune_elements() noexcept {
+            //
+            #pragma region Helpers for State::force_destroy_all
+            void destroy_elements() noexcept {
                auto& presence = this->info.presence;
                for (uint32_t i = 0; i < count_per_block; i++) {
                   if (presence.test(i)) {
@@ -184,34 +173,19 @@ namespace cobb {
                   last = last->info.next;
                auto prev = last->info.prev;
                do {
-                  last->destroy_and_prune_elements();
-                  //
-                  if (last != this) { // never delete the first block in a list
-                     auto p = last->info.prev;
-                     auto n = last->info.next;
-                     if (p)
-                        p->info.next = n;
-                     if (n)
-                        n->info.prev = p;
+                  last->destroy_elements();
+                  if (last != this) // never delete the first block in a list
                      delete last;
-                  }
+                  //
                   last = prev;
                   if (prev)
                      prev = prev->info.prev;
                } while (last);
             }
-            //
-            bool list_has_any() const noexcept {
-               auto block = this;
-               do {
-                  if (block->has_any_slots_used())
-                     return true;
-               } while (block = block->info.next);
-               return false;
-            }
+            #pragma endregion
          };
          struct Subheap {
-            Block* first = new Block();
+            Block* first = new Block;
             #if _DEBUG
                std::thread::id threadID; // just so you can see the thread that owns this Subheap in a debugger
             #endif
@@ -222,9 +196,6 @@ namespace cobb {
             std::mutex subheapsLock;
             Block*     unowned     = nullptr;
             std::mutex unownedLock;
-            #if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
-               std::atomic<bool> hasLoggedUsage = false;
-            #endif
             //
             void register_subheap(Subheap* sub) noexcept {
                std::lock_guard<std::mutex> guard(this->subheapsLock);
@@ -242,12 +213,7 @@ namespace cobb {
                auto block = sub->first;
                block->prune();
                if (!sub->first->has_any_slots_used()) {
-                  auto p = block->info.prev;
                   auto n = block->info.next;
-                  if (p)
-                     p->info.next = n;
-                  if (n)
-                     n->info.prev = p;
                   delete block;
                   sub->first = nullptr;
                   block = n;
@@ -280,52 +246,25 @@ namespace cobb {
                }
                assert(false && "This heap cannot free memory that it isn't responsible for.");
             }
-            void force_destroy_all() noexcept {
-               {
-                  std::lock_guard<std::mutex> guard(this->subheapsLock);
-                  #if _DEBUG
-                     uint32_t found_count = 0;
-                  #endif
-                  for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
-                     auto last = (*it)->first;
-                     if (last) {
-                        #if _DEBUG
-                           if (found_count < 2) {
-                              if (last->list_has_any()) {
-                                 if (++found_count > 1) { // the main thread counts, so we want to test for more than one thread
-                                    //
-                                    // This would imply that you're force-freeing the heap while multiple threads are using it. Sounds risky!
-                                    //
-                                    __debugbreak();
-                                 }
-                              }
-                           }
-                        #endif
-                        last->destroy_and_prune_list();
-                        //
-                        // Note: Don't destroy the subheap's first block; otherwise crashes will occur, as you delete the main thread's 
-                        // subheap out from under it.
-                     }
+            //
+            void force_destroy_all() noexcept { // probably risky; i wouldn't recommend calling this ever
+               std::lock_guard<std::mutex> guard(this->subheapsLock);
+               std::lock_guard<std::mutex> guard(this->unownedLock);
+               for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
+                  auto last = (*it)->first;
+                  if (last) {
+                     last->destroy_and_prune_list();
+                     //
+                     // Note: Don't destroy the subheap's first block; otherwise crashes will occur, as you delete the main thread's 
+                     // subheap out from under it.
                   }
                }
-               {
-                  std::lock_guard<std::mutex> guard(this->unownedLock);
-                  if (this->unowned) {
-                     this->unowned->destroy_and_prune_list();
-                     delete this->unowned;
-                     this->unowned = nullptr;
-                  }
+               if (this->unowned) {
+                  this->unowned->destroy_and_prune_list();
+                  delete this->unowned;
+                  this->unowned = nullptr;
                }
             }
-            //
-            #if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
-               void _log_usage() {
-                  if (this->hasLoggedUsage)
-                     return;
-                  this->hasLoggedUsage = true;
-                  printf("\nNOTE: Confirming that allocator class %s is in use.\n", typeid(*this).name());
-               }
-            #endif
          };
          static State& _get_state() {
             static State instance;
@@ -360,12 +299,10 @@ namespace cobb {
                      this->data->threadID = std::thread::id();
                   #endif
                   multiheap::_get_state().take_over_subheap(this->data);
-                  this->data = nullptr;
-                  //
-                  // Don't free (this->data); the heap state owns it.
+                  this->data = nullptr; // Don't free (this->data); the heap state owns it.
                }
             }
-            Subheap* get() const noexcept { return this->data; }
+            inline Subheap* get() const noexcept { return this->data; }
          };
          //
          inline thread_local static SubheapHandle current_thread;
@@ -376,14 +313,11 @@ namespace cobb {
          //
       public:
          static void* allocate() noexcept {
-            #if _DEBUG && COBB_CONFIRM_MULTIHEAP_USAGE
-               multiheap::_get_state()._log_usage();
-            #endif
             auto t = multiheap::_get_subheap();
-            assert(t && "Failed to get/create subheap?");
+            assert(t        && "Failed to get/create subheap?");
             assert(t->first && "The subheap has no block?");
             Block* block = t->first;
-            Block* last = block;
+            Block* last  = block;
             void* out = block->try_allocate();
             while (!out) {
                block = block->info.next;
@@ -417,63 +351,7 @@ namespace cobb {
          //
          static void dump_stats() noexcept {
             auto& state = multiheap::_get_state();
-            std::lock_guard<std::mutex> guard1(state.subheapsLock);
-            std::lock_guard<std::mutex> guard2(state.unownedLock);
-            printf("DUMPING INFORMATION FOR MULTI-HEAP...\n");
-            printf("Number of extant sub-heaps: %d\n", state.subheaps.size());
-            printf("Number of unowned blocks: %d\n", state.unowned ? state.unowned->count() : 0);
-            if (state.subheaps.size()) {
-               printf("STATS BY SUBHEAP:\n");
-               for (uint32_t i = 0; i < state.subheaps.size(); i++) {
-                  auto sh = state.subheaps[i];
-                  printf("Subheap %d: ", i);
-                  if (!sh->first) {
-                     printf("<empty>\n");
-                     continue;
-                  }
-                  printf("\n");
-                  if (count_per_block < 150) {
-                     printf("Overview by block:\n");
-                     uint32_t blockCount = 0;
-                     for (auto block = sh->first; block; block = block->info.next) {
-                        printf(" - Block %d:\n", blockCount);
-                        blockCount++;
-                        //
-                        auto& presence = block->info.presence;
-                        printf("    - ");
-                        for (uint16_t i = 0; i < count_per_block; i++) {
-                           if (presence.test(i))
-                              printf("1");
-                           else
-                              printf("0");
-                        }
-                        printf("\n");
-                     }
-                     printf("All blocks listed.\n");
-                  }
-               }
-            }
-            if (state.unowned && count_per_block < 150) {
-               printf("UNOWNED BLOCKS:\n");
-               printf("Overview by block:\n");
-               uint32_t blockCount = 0;
-               for (auto block = state.unowned; block; block = block->info.next) {
-                  printf(" - Block %d:\n", blockCount);
-                  blockCount++;
-                  //
-                  auto& presence = block->info.presence;
-                  printf("    - ");
-                  for (uint16_t i = 0; i < count_per_block; i++) {
-                     if (presence.test(i))
-                        printf("1");
-                     else
-                        printf("0");
-                  }
-                  printf("\n");
-               }
-               printf("All blocks listed.\n");
-            }
-            printf("ALL INFORMATION DUMPED.\n");
+            _multiheap_dumper(&state, count_per_block);
          }
    };
    template<typename T, uint32_t count_per_block> class multiheap_allocator {

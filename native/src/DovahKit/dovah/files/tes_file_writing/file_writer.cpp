@@ -4,9 +4,16 @@
 #include "../../core.h"
 #include "../../form_stub.h"
 #include "../../form_stub_helpers.h"
+#include "../../forms/Form.h"
 #include "../common.h"
 
 namespace dovah::tes_file_writing {
+   file_writer::file_writer(file_load_order& owner, file_reader& source) : owner(owner), source(source), _record(*this), _subrecord(*this) {
+   }
+   file_writer::~file_writer() {
+      this->stream.close();
+   }
+
    record& file_writer::_open_next_record(uint32_t signature, bare_form_id_t formID) {
       auto& record = this->get_current_record();
       auto& header = record.header;
@@ -51,7 +58,10 @@ namespace dovah::tes_file_writing {
          subrecord.write(this->source.description);
          subrecord.close();
       }
-      this->owner.for_each_load_order_filename([&record](std::filesystem::path name) { // MAST, DATA
+      this->owner.for_each_load_order_filename([&record](std::filesystem::path name, bool is_active_file) { // MAST, DATA
+         if (is_active_file)
+            return false;
+         //
          auto  filename  = name.string();
          auto& subrecord = record.open_next_subrecord('MAST');
          subrecord.write(filename);
@@ -110,13 +120,17 @@ namespace dovah::tes_file_writing {
       record.close();
    }
    bool file_writer::_write_form(form_stub* stub) {
-      auto& read_write_interface = this->source.get_writer_interface(*this); // TODO: can we just use one instance, instead of creating a new one for each function call?
       bool  can_handwrite_form   = false; // can we save the form from its loaded data?
 
       //
-      // TODO: if the form is loaded, call its (save) method. if that returns (true), write the 
+      // TODO: If the form is loaded, call its (save) method. if that returns (true), write the 
       // data it provided; else, try to blind-copy data from the source file (and if that isn't 
       // possible, e.g. for a form that wasn't in the source file, then abort with an error).
+      //
+      // NOTE: Use a smart pointer to gain access to the form, so that it doesn't unload out 
+      // from under us (e.g. due to UI code). This means that we need to give (form_stub) a 
+      // function that wraps the loaded form (if any) in a smart pointer and returns it, but 
+      // without actually loading the form if it's not loaded.
       //
 
       if (!can_handwrite_form) {
@@ -137,18 +151,19 @@ namespace dovah::tes_file_writing {
          auto& write_info = this->stub_writes[stub->formID];
          write_info.offset = this->get_stream_position();
          //
-         const void* source_data   = read_write_interface.data_at(stub->get_file_offset());
+         const void* source_data   = stub->file->get_writer_interface(*this).data_at(stub->get_file_offset());
          const auto* source_header = (const tes_file_record_header*)source_data;
          uint32_t size = source_header->size;
          this->stream.write((const uint8_t*)source_data, size + sizeof(tes_file_record_header));
       } else {
-         //
-         // TODO: open a record
+         assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
+         auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
+         auto* loaded = stub->form;
+         record.header.flags = loaded->flags & ~tes_file_record_header::non_data_flags;
          //
          // TODO: write the form using its loaded data
          //
-         // TODO: close the record
-         //
+         record.close();
       }
       if (stub->has_child_forms()) {
          //
@@ -261,6 +276,7 @@ namespace dovah::tes_file_writing {
          auto b  = stub->get_cell_block();
          auto sb = stub->get_cell_sub_block();
          blocks[b].contents[sb].cells.push_back(stub);
+         return false;
       });
       for (auto& pair : blocks) {
          auto& group_b = this->open_group(tes_file_group_type::interior_cell_block, pair.first, tes_file_group_header::uninitialized_unknown);
@@ -340,6 +356,9 @@ namespace dovah::tes_file_writing {
       this->stream.seekp(offset);
    }
 
+   void file_writer::open(std::filesystem::path path) {
+      this->stream.open(path, std::ios_base::binary | std::ios_base::trunc);
+   }
    void file_writer::write() {
       this->_write_header();
       for (uint32_t signature : group_sequence_list) {

@@ -102,6 +102,7 @@ namespace dovah {
             compressed = 0x00040000,
          };
       };
+      static constexpr uint32_t non_data_flags = flag::compressed; // when serializing a form, the serializer should decide whether these flags remain set
       //
       uint32_t signature = 0;
       uint32_t size;
