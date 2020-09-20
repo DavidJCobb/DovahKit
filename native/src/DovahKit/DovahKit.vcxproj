@@ -178,6 +178,7 @@
     <ClInclude Include="dovah\files\file_read_error.h" />
     <ClInclude Include="dovah\files\file_header.h" />
     <ClInclude Include="dovah\files\file_load_order.h" />
+    <ClInclude Include="dovah\files\file_write_error.h" />
     <ClInclude Include="dovah\files\tes_file_reading\basic_reader.h" />
     <ClInclude Include="dovah\files\tes_file_reading\elements.h" />
     <ClInclude Include="dovah\files\tes_file_reading\file.h" />

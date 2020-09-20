@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 #include "file_load_order_normalizer.h"
+#include "file_write_error.h"
 
 namespace dovah {
    class form_stub;
@@ -83,7 +84,8 @@ namespace dovah {
                bool allow_suspicious_record_signatures = false;
             } options;
          } queued_load;
-         file_read_error load_error;
+         file_read_error  load_error;
+         file_write_error save_error;
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -131,6 +133,6 @@ namespace dovah {
          void stub_flagged_as_edited(form_stub*) noexcept; // called by form_stub::set_edited
          #pragma endregion
 
-         void save_active_file(std::filesystem::path name_to_use_if_nameless);
+         bool save_active_file(std::filesystem::path name_to_use_if_nameless);
    };
 }

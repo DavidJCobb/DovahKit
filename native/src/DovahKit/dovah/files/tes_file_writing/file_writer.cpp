@@ -39,7 +39,7 @@ namespace dovah::tes_file_writing {
          subrecord.reserve_more(0xC);
          subrecord.write(1.7F);
          //
-         this->fixup_data.record_and_group_count.offset = this->get_stream_position() + subrecord.pos;
+         this->fixup_data.record_and_group_count.offset = this->get_output_position();
          subrecord.write(uint32_t(0));
          //
          subrecord.write(this->source.nextFormID);
@@ -116,52 +116,30 @@ namespace dovah::tes_file_writing {
       record._close();
    }
    bool file_writer::_write_form(form_stub* stub) {
-      //
-      // If the form is loaded, we're going to call the loaded data's (save) method. If that 
-      // returns (true), then we'll write the data that it provided to the file; otherwise, 
-      // we'll attempt to blind-copy the form's original data from the source file. (That 
-      // may not be possible, e.g. for a newly-created form, so we may have to abort with an 
-      // error.)
-      //
-      bool can_handwrite_form = false; // can we save the form from its loaded data?
-      auto loaded = stub->get_content_if_loaded(); // get the loaded data, if any, in a smart pointer so it doesn't unload out from under us.
+      auto loaded = stub->load();
       if (loaded) {
          assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
          record.header.flags = loaded->flags & ~tes_file_record_header::non_data_flags;
          if (loaded->save(record)) {
             auto& write_info = this->stub_writes[stub->formID];
-            write_info.offset = this->get_stream_position();
+            write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
             //
             record._close();
-            can_handwrite_form = true;
          } else {
             record._clear(); // abort this attempt at writing a record
-         }
-      }
-      //
-      if (!can_handwrite_form) {
-         //
-         // The form wasn't loaded, or the loaded data failed to save, so we need to try and 
-         // blind-copy data from the source file.
-         //
-         if (!stub->has_usable_source_file()) {
-            //
-            // This stub doesn't have a usable source file, e.g. because it was created during 
-            // this session or it was a hardcoded form.
-            //
-            //
-            // TODO: Fail with an error.
-            //
+            this->error.code        = file_write_error::error_code::unknown_form_type;
+            this->error.formID      = stub->formID;
+            this->error.form_type   = stub->formType;
+            this->error.file_offset = this->get_stream_position();
             return false;
          }
-         auto& write_info = this->stub_writes[stub->formID];
-         write_info.offset = this->get_stream_position();
-         //
-         const void* source_data   = stub->file->get_writer_interface(*this).data_at(stub->get_file_offset());
-         const auto* source_header = (const tes_file_record_header*)source_data;
-         uint32_t size = source_header->size;
-         this->stream.write((const uint8_t*)source_data, size + sizeof(tes_file_record_header));
+      } else {
+         this->error.code        = file_write_error::error_code::unknown_form_type;
+         this->error.formID      = stub->formID;
+         this->error.form_type   = stub->formType;
+         this->error.file_offset = this->get_stream_position();
+         return false;
       }
       if (stub->has_child_forms()) {
          //
@@ -356,11 +334,20 @@ namespace dovah::tes_file_writing {
    void file_writer::set_stream_position(file_offset_t offset) noexcept {
       this->stream.seekp(offset);
    }
+   uint32_t file_writer::get_output_position() const noexcept {
+      auto position = this->get_stream_position();
+      if (this->_record) {
+         position += this->_record.pos;
+         if (this->_subrecord)
+            position += this->_subrecord.pos;
+      }
+      return position;
+   }
 
    void file_writer::open(std::filesystem::path path) {
       this->stream.open(path, std::ios_base::binary | std::ios_base::trunc);
    }
-   void file_writer::write() {
+   bool file_writer::write() {
       this->_write_header();
       for (uint32_t signature : group_sequence_list) {
          auto form_type = form_type_info::signature_to_form_type(signature);
@@ -383,5 +370,7 @@ namespace dovah::tes_file_writing {
       this->set_stream_position(this->fixup_data.record_and_group_count.offset);
       this->_write(uint32_t(this->fixup_data.record_and_group_count.value));
       this->set_stream_position(pos);
+      //
+      return !this->error.defined();
    }
 }

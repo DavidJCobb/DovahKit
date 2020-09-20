@@ -594,17 +594,24 @@ namespace dovah {
       return form_id_status::valid;
    }
 
-   void file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless) {
-      if (!this->active_file)
-         return;
-      if (this->is_loading())
-         return;
+   bool file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless) {
+      this->save_error = file_write_error();
+      if (!this->active_file) {
+         this->save_error.code = file_write_error::error_code::no_active_file;
+         return false;
+      }
+      if (this->is_loading()) {
+         this->save_error.code = file_write_error::error_code::cannot_save_right_now;
+         return false;
+      }
       //
       std::filesystem::path filename = this->active_file->get_filename();
       if (filename.empty()) {
          filename = name_to_use_if_nameless;
-         if (filename.empty())
-            return;
+         if (filename.empty()) {
+            this->save_error.code = file_write_error::error_code::no_filename_specified;
+            return false;
+         }
       }
       //
       filename = this->queued_load.base_path + filename.string();
@@ -616,12 +623,14 @@ namespace dovah {
          }
       }
       //
-      {
-         tes_file_writing::file_writer writer(*this, *this->active_file);
-         writer.open(filename);
-         writer.write();
+      tes_file_writing::file_writer writer(*this, *this->active_file);
+      writer.open(filename);
+      if (writer.write()) {
+         //
+         // TODO: replace the original file (if any) with the temporary file, now that the write is complete.
+         //
       }
-
-      // TODO: replace the original file (if any) with the temporary file, now that the write is complete.
+      this->save_error = writer.error;
+      return !writer.error.defined();
    }
 }

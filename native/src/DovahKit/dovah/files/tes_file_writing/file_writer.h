@@ -4,6 +4,7 @@
 #include <fstream>
 #include <unordered_map>
 #include "elements.h"
+#include "../file_write_error.h"
 
 namespace dovah {
    class file_load_order;
@@ -81,6 +82,7 @@ namespace dovah {
             file_writer(file_load_order&, file_reader&);
             ~file_writer();
             //
+            #pragma region config
             union {
                struct {
                   uint8_t vc_day;
@@ -91,6 +93,9 @@ namespace dovah {
                uint32_t version_control = 0;
             };
             uint16_t version_control_2 = 0;
+            #pragma endregion
+            //
+            file_write_error error;
             //
             inline group& get_current_group() {
                for (signed int i = this->_groups.size() - 1; i >= 0; i--) {
@@ -106,11 +111,12 @@ namespace dovah {
             group& open_group(tes_file_group_type, uint32_t label, uint32_t unknown = 0);
             void close_current_group();
 
-            uint32_t get_stream_position() const noexcept;
+            uint32_t get_stream_position() const noexcept; // position in the file. note that (sub)record writes don't advance this until the record is closed.
             void set_stream_position(file_offset_t) noexcept;
+            uint32_t get_output_position() const noexcept; // stream position + record position if open + subrecord position if open
 
             void open(std::filesystem::path);
-            void write();
+            bool write();
       };
    }
 }

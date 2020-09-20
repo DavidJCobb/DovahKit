@@ -1,5 +1,6 @@
 #include "main_window.h"
 #include <QCloseEvent>
+#include <QErrorMessage>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QShowEvent>
@@ -81,7 +82,42 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          active_file_name = text.toStdString();
       }
       //
-      editor.save_active_file(active_file_name);
+      if (!editor.save_active_file(active_file_name)) {
+         auto& error = editor.get_last_write_error();
+         QString message;
+         switch (error.code) {
+            case dovah::file_write_error::error_code::unknown_form_type:
+               message = tr("One of the forms that needs to be saved is of a type that DovahKit has not yet been programmed to handle.", "write error");
+               break;
+            case dovah::file_write_error::error_code::no_active_file:
+               message = tr("You did not select an active file, and there is no room in this load order for another file.", "write error");
+               break;
+            case dovah::file_write_error::error_code::cannot_save_right_now:
+               message = tr("It is not safe to save right now, because DovahKit is currently performing some other operation (e.g. a load or save).", "write error");
+               break;
+            case dovah::file_write_error::error_code::no_filename_specified:
+               message = tr("The active file is implicit (nameless) and no filename was provided. (Wait, what? How did this happen? We should've made you either provide a name or cancel.)", "write error");
+               break;
+            default:
+               message = tr("Unknown error.", "write error");
+               break;
+         }
+         QString text;
+         if (error.formID) {
+            text = QString("Unable to save the file. %1<br/>Form ID: %2<br/>Form type: %3<br/>File offset: %4")
+               .arg(message)
+               .arg(error.formID)
+               .arg(error.form_type)
+               .arg(error.file_offset);
+         } else {
+            text = QString("Unable to save the file. %1<br/>File offset: %2")
+               .arg(message)
+               .arg(error.file_offset);
+         }
+         //
+         auto dialog = new QErrorMessage(this);
+         dialog->showMessage(text);
+      }
    });
 }
 

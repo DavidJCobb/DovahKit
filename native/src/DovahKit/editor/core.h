@@ -8,6 +8,7 @@
 
 namespace dovah {
    class form_stub;
+   class file_write_error;
 }
 namespace DovahKitEditorInternals {
    class load_task;
@@ -71,7 +72,9 @@ class DovahKitCore : public QObject {
 
       bool active_file_has_name() const noexcept;
       bool has_active_file() const noexcept;
-      void save_active_file(std::filesystem::path name_to_use_if_nameless);
+      bool save_active_file(std::filesystem::path name_to_use_if_nameless);
+
+      const dovah::file_write_error& get_last_write_error() const noexcept;
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;
