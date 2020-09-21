@@ -115,6 +115,11 @@ const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept
 bool DovahKitCore::active_file_has_name() const noexcept {
    return this->load_order->active_file_has_name();
 }
+QString DovahKitCore::get_active_file_name() const noexcept {
+   std::filesystem::path out;
+   this->load_order->get_active_file_name(out);
+   return QString::fromStdWString(out.wstring());
+}
 bool DovahKitCore::has_active_file() const noexcept {
    return this->load_order->index_of_active_file() != dovah::file_load_order::invalid_load_prefix;
 }
@@ -124,6 +129,10 @@ bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameles
    // if a save is already in progress, etc., etc.
    //
    return this->load_order->save_active_file(name_to_use_if_nameless);
+}
+
+int DovahKitCore::load_order_index_of_file(const std::filesystem::path& filename) {
+   return this->load_order->index_of_loaded_file(filename.string());
 }
 
 const dovah::file_write_error& DovahKitCore::get_last_write_error() const noexcept {

@@ -502,6 +502,11 @@ namespace dovah {
       }
       return false;
    }
+   void file_load_order::get_active_file_name(std::filesystem::path& out) const noexcept {
+      out.clear();
+      if (this->active_file)
+         out = this->active_file->get_filename();
+   }
    uint8_t file_load_order::index_of_active_file() const noexcept {
       auto size = this->files.size();
       for (uint8_t i = 0; i < size; i++) {
@@ -614,7 +619,7 @@ namespace dovah {
          }
       }
       //
-      filename = this->queued_load.base_path + filename.string();
+      filename = std::filesystem::path(this->queued_load.base_path) / filename;
       {  // opening the file for writing will clear its contents (which is bad for the user and will break our reading/writing), so we want to ALWAYS write to a temporary file first!
          auto ext = filename.extension().string();
          if (_stricmp(ext.data(), ".tes") == 0) {

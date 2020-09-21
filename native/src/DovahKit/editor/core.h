@@ -71,8 +71,11 @@ class DovahKitCore : public QObject {
       const dovah::file_read_error& get_last_read_error() const noexcept;
 
       bool active_file_has_name() const noexcept;
+      QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;
       bool save_active_file(std::filesystem::path name_to_use_if_nameless);
+
+      int load_order_index_of_file(const std::filesystem::path& filename);
 
       const dovah::file_write_error& get_last_write_error() const noexcept;
 

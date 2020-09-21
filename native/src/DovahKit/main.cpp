@@ -27,6 +27,9 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
+//  - hey dude did we ever set FormsOfTypeCombobox to sort its contents? if not, 
+//    we kinda need to
+//
 //  - Generate proper Use Info for hardcoded forms.
 //
 //     - During use info generation, when we're setting up outbound use info, we 
@@ -311,6 +314,50 @@
 //     - Refuse to render either cell in the Render Window (just show some kind of 
 //       error indicator), and otherwise don't bother solving the problem or giving 
 //       the user the option to solve the problem.
+//
+//  - ESL Support
+//
+//     = The current state of ESL support is that we treat ESLs the same as ESPs and 
+//       ESMs. They are not placed at load order slot 0xFE and do not share a load 
+//       order slot, and we take no steps to prevent them from being used as masters  
+//       for other files. In other words, we don't *have* ESL support.
+//
+//     - Currently, (file_load_order) stores all loaded files in (file_load_order::files). 
+//       For ESL support, we'd need two separate lists. We'd also need to amend form ID 
+//       resolution.
+//
+//     - ESLs are not allowed to be dependencies of other files. This means that we'd 
+//       need to make some pretty big modifications to DovahKit. We have two options:
+//
+//       a) Do not allow the user to load an ESL unless it is both the only ESL to load 
+//          and the active file.
+//
+//       b) Allow the user to load one or more ESLs without them being the active file, 
+//          but take steps to prevent the user from modifying any forms that originate 
+//          from an ESL, and take steps to prevent the user from modifying any other 
+//          forms in such a way that they refer to ESL-sourced forms.
+//
+//           - If the active file is an ESL, then the user should be able to modify 
+//             forms in that ESL only, and make forms defined or overridden in that ESL 
+//             refer to other forms in that ESL only.
+//
+//              - This requires that it be possible to query whether two form_stubs 
+//                belong to the same file, and query whether a form_stub belongs to an 
+//                ESL file.
+//
+//           - When saving the active file, we'd need to exclude all loaded ESLs from 
+//             the final list of masters to use. We'd also need the file-saving code 
+//             to fail when serializing any references between forms that the UI should 
+//             have prevented (in case the UI *doesn't* prevent them).
+//
+//              - This would require subrecord::_write_impl(const form_id_t&) to set 
+//                error information on the owning file_writer. If we're doing that, 
+//                then it'd be nice if subrecord::write could return a boolean so that 
+//                a form can immediately abort a write if any error occurs.
+//
+//       Unless and until one of the above two approaches is implemented, DovahKit 
+//       cannot be said to be compatible with ESLs even if we implement proper loading 
+//       for ESLs.
 //
 // HORIZON TASKS:
 //

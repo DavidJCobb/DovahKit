@@ -97,6 +97,9 @@ namespace dovah {
             uint32_t pos = 0;
             cobb::generic_buffer data; // record body (uncompressed)
             //
+            void _write_impl(const form_id_t&);
+            void _write_impl(const struct_form_id_t&);
+            //
          public:
             subrecord& operator=(const subrecord& other) = delete; // no copy
             subrecord(subrecord& other) = delete; // no copy
@@ -123,6 +126,12 @@ namespace dovah {
             }
             template<> inline void write(const cobb::generic_buffer& v) {
                this->write(v.data(), v.size());
+            }
+            template<> inline void write(const form_id_t& field) {
+               return this->_write_impl(field);
+            }
+            template<> inline void write(const struct_form_id_t& field) {
+               return this->_write_impl(field);
             }
             template<> inline void write(const tes_file_group_header& v) = delete;
             template<> inline void write(const tes_file_record_header& v) = delete;

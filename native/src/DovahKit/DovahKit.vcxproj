@@ -146,6 +146,7 @@
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\files.cpp" />
+    <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\multiheap.cpp" />
@@ -169,6 +170,7 @@
     <ClCompile Include="ui\main_window\object_window.cpp" />
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
+    <ClCompile Include="ui\main_window\save_window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\core.h" />
@@ -220,11 +222,13 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <QtMoc Include="ui\main_window\save_window.h" />
     <QtMoc Include="ui\main_window\form_use_info\use_info_list.h" />
     <QtMoc Include="ui\main_window\form_use_info.h" />
     <QtMoc Include="editor\core_internals\load_task.h" />
     <ClInclude Include="editor\open_window_for_form.h" />
     <ClInclude Include="helpers\assert.h" />
+    <ClInclude Include="helpers\filesystem.h" />
     <ClInclude Include="helpers\int24_t.h" />
     <ClInclude Include="helpers\performance.h" />
     <ClInclude Include="helpers\qt\strings.h" />
@@ -267,6 +271,7 @@
     <QtUic Include="ui\main_window\form_use_info.ui" />
     <QtUic Include="ui\main_window\load_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />
+    <QtUic Include="ui\main_window\save_window.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="ui\resources\resources.qrc" />

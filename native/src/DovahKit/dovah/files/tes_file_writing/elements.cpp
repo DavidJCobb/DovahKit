@@ -88,6 +88,16 @@ namespace dovah::tes_file_writing {
       subrecord.close();
    }
 
+   #pragma region subrecord
+   void subrecord::_write_impl(const form_id_t& formID) {
+      this->write(uint32_t(formID));
+   }
+   void subrecord::_write_impl(const struct_form_id_t& formID) {
+      this->_write_impl((form_id_t)formID);
+      if (this->is_skyrim_special())
+         this->_write_impl(formID.padding);
+   }
+   //
    record& subrecord::get_containing_record() const {
       return this->owner._record;
    }
@@ -100,4 +110,5 @@ namespace dovah::tes_file_writing {
    void subrecord::close() {
       this->get_containing_record()._close_current_subrecord();
    }
+   #pragma endregion
 }

@@ -110,6 +110,8 @@ void FormTableModel::rebuild(const form_type_set& types) {
    uint32_t total = 0;
    for (auto ft : types)
       total += editor.count_forms_of_type(ft);
+   if (!total)
+      return;
    this->beginInsertRows(QModelIndex(), 0, total - 1); // we're not passing the count, we're passing the index of the last row. how annoying.
    for (auto ft : types)
       editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) { this->insertItem(stub); return false; });

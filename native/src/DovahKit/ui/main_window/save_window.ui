@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ActiveFileSaveDialog</class>
+ <widget class="QDialog" name="ActiveFileSaveDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>528</width>
+    <height>386</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Save File...</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagMaster">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESM&amp;quot; flag are &amp;quot;masters.&amp;quot; The game will always move them to the top of the load order, and will handle various pieces of game data differently.&lt;/p&gt;&lt;p&gt;One of the most notable differences is that if a file &lt;span style=&quot; font-style:italic;&quot;&gt;isn't&lt;/span&gt; a master, then any physical objects that it places in the game world will remain in the game's memory at all times. The game can only keep track of about a million such objects at a time, so mods that define large numbers of objects (e.g. new lands mods) should always be ESMs.&lt;/p&gt;&lt;p&gt;If a file has the *.ESM file extension, then the game will always act as if this flag is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>ESM</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="filename"/>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagLight">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESL&amp;quot; flag are &amp;quot;light plug-ins&amp;quot; intended for use with Skyrim Special Edition. Instead of taking up an entire load order slot, all light plug-ins in a load order will share the 0xFE slot. This is very useful when designing very simple mods that make only minor changes to existing game data.&lt;/p&gt;&lt;p&gt;Light plug-ins have a number of limitations. A load order cannot have more than 4096 light plug-ins. Each light plug-in can only have 2048 forms, which must be &amp;quot;compacted&amp;quot; into the form ID range [xx000800, xx000FFF]. Light plug-ins also cannot be dependencies for other files.&lt;/p&gt;&lt;p&gt;The game will always treat files that have the *.ESL extension as if they are both light plug-ins and master files (ESMs). Among other things, this means that if an *.ESL file has any *.ESP dependencies, it will force those dependencies to load out-of-order with the master files.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>ESL</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>File:</string>
+       </property>
+       <property name="buddy">
+        <cstring>filename</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <spacer name="spacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Dependencies</string>
+       </property>
+       <property name="buddy">
+        <cstring>listWidget</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QListWidget" name="listWidget"/>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <layout class="QHBoxLayout">
+     <property name="spacing">
+      <number>6</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <spacer>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>131</width>
+         <height>31</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>filename</tabstop>
+  <tabstop>flagMaster</tabstop>
+  <tabstop>flagLight</tabstop>
+  <tabstop>listWidget</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -128,7 +128,8 @@ namespace dovah::tes_file_writing {
             record._close();
          } else {
             record._clear(); // abort this attempt at writing a record
-            this->error.code        = file_write_error::error_code::unknown_form_type;
+            if (!this->error.defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
+               this->error.code = file_write_error::error_code::unknown_form_type;
             this->error.formID      = stub->formID;
             this->error.form_type   = stub->formType;
             this->error.file_offset = this->get_stream_position();

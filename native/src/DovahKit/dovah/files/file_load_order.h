@@ -126,6 +126,7 @@ namespace dovah {
          bool active_file_has_forms_of_type(form_type_t) const noexcept;
          bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
+         void get_active_file_name(std::filesystem::path& out) const noexcept;
          uint8_t index_of_active_file() const noexcept;
          //
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
