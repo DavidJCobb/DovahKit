@@ -97,7 +97,7 @@ namespace dovah {
             uint16_t      header_record_version = 0;
             float    fileVersion = 0.94F;
             uint32_t recordCount = 0;
-            uint32_t nextFormID;
+            uint32_t nextFormID  = 0x00000800;
             std::string authorName;
             std::string description;
             std::vector<master_entry> masters;

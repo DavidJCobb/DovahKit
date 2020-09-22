@@ -30,5 +30,8 @@ namespace dovah::loaded_forms {
 
          inline bool treat_as_power() const noexcept { return (this->flags & 0x00000080) != 0; }
          inline void treat_as_power(bool v) noexcept { cobb::modify_bit(this->flags, 0x00000080, v); }
+         //
+      protected:
+         virtual bool _save_impl(tes_file_writing::record& record) override;
    };
 }

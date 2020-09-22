@@ -14,4 +14,13 @@ namespace dovah::loaded_forms::components {
    /*static*/ void object_bounds::generateUseInfo(tes_subrecord_reader&, form_stub*) {
       return; // no use info to generate
    }
+   void object_bounds::save(tes_subrecord_writer& subrecord) {
+      subrecord.reserve_more(12);
+      subrecord.write(this->min.x);
+      subrecord.write(this->min.y);
+      subrecord.write(this->min.z);
+      subrecord.write(this->max.x);
+      subrecord.write(this->max.y);
+      subrecord.write(this->max.z);
+   }
 }

@@ -57,6 +57,10 @@ class DovahKitCore : public QObject {
       //
       void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
       //
+      void dataSaveImminent();
+      void dataSaveComplete();
+      void dataSaveFailed(const dovah::file_write_error&);
+      //
    public:
       void abandon_data();
       inline bool has_data() const noexcept { return this->loaded; }
@@ -75,6 +79,7 @@ class DovahKitCore : public QObject {
       bool has_active_file() const noexcept;
       bool save_active_file(std::filesystem::path name_to_use_if_nameless);
 
+      bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
       int load_order_index_of_file(const std::filesystem::path& filename);
 
       const dovah::file_write_error& get_last_write_error() const noexcept;

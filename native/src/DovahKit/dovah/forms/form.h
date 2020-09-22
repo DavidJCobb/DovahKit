@@ -23,17 +23,10 @@ namespace dovah {
             uint32_t flags = 0;
             void load(tes_file_reading::record& record);
 
+            bool save(tes_file_writing::record& record); // returns a success bool. will write EDID for you.
             //
-            // This function returns a success bool.
-            //
-            // When you override it, you should call super so that you write the form's 
-            // editor ID. However, you should NOT check the return value. The default 
-            // function provided here on this class always returns false, so that form 
-            // types without explicit save code can be handled properly. (In the future 
-            // I may just make this a pure function and then require subclasses to check 
-            // the result of calling super.)
-            //
-            virtual bool save(tes_file_writing::record& record);
+         protected:
+            virtual bool _save_impl(tes_file_writing::record& record) { return false; }; // TODO: implement on existing forms; then, make pure
       };
    }
 }

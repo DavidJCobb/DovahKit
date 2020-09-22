@@ -20,7 +20,8 @@ FormUseInfoDialog::FormUseInfoDialog(const dovah::form_stub* stub, QWidget* pare
 void FormUseInfoDialog::rebuild() {
    if (this->stub) {
       uint32_t signature = dovah::form_type_info::lookup(this->stub->formType).signature;
-      this->setWindowTitle(tr("Use Info Report for [%1:%2]%3", "use info report").arg(cobb::qt::four_cc_to_string(signature)).arg(this->stub->formID, 8, 16, QChar('0')).arg(this->stub->get_editor_id()));
+      QString  formID    = QString("%1").arg(this->stub->formID, 8, 16, QChar('0')).toUpper();
+      this->setWindowTitle(tr("Use Info Report for [%1:%2]%3", "use info report").arg(cobb::qt::four_cc_to_string(signature)).arg(formID).arg(this->stub->get_editor_id()));
    } else {
       this->setWindowTitle(tr("Use Info Report", "use info report"));
    }

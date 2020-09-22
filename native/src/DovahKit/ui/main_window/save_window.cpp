@@ -17,8 +17,13 @@ ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
       this->ui.filename->setReadOnly(true);
       this->ui.filename->setText(editor.get_active_file_name());
    }
-   //
-   // TODO: dependency list
+   editor.for_each_load_order_filename([this](std::filesystem::path filename, bool is_active_file) {
+      if (is_active_file)
+         return false;
+      auto item = new QListWidgetItem(QString::fromStdWString(filename.wstring()));
+      this->ui.dependencies->addItem(item);
+      return false;
+   });
    //
    // TODO: as filename input changes, disable checkboxes where appropriate
    //

@@ -34,5 +34,8 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
+         //
+      protected:
+         virtual bool _save_impl(tes_file_writing::record& record) override;
    };
 }

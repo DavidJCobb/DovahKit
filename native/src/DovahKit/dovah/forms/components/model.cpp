@@ -68,4 +68,38 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
+   void model::save(tes_subrecord_writer& subrecord) {
+      switch (subrecord.signature()) {
+         case 'MODL':
+         case 'MOD2':
+         case 'DMDL': // for destruction stages
+            subrecord.write(this->modelPath);
+            break;
+         case 'MODT':
+         case 'MO2T':
+         case 'DMDT': // for destruction stages
+            for (auto& byte : this->textureHashes.data) {
+               subrecord.write(byte);
+            }
+            break;
+         case 'MODS':
+         case 'MO2S':
+         case 'DMDS': // for destruction stages
+            subrecord.write(uint32_t(this->textureSwaps.size()));
+            for (auto& entry : this->textureSwaps) {
+               subrecord.write_length_prefixed_string<4>(entry.nifBlockName);
+               subrecord.write(entry.textureSet);
+               subrecord.write(entry.nifBlockIndex);
+            }
+            break;
+      }
+   }
+   void model::save(tes_record_writer& record, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap) {
+      if (!this->modelPath.empty())
+         this->save(record.open_next_subrecord(signature_path));
+      if (this->has_texture_hashes())
+         this->save(record.open_next_subrecord(signature_hash));
+      if (!this->textureSwaps.empty())
+         this->save(record.open_next_subrecord(signature_swap));
+   }
 }

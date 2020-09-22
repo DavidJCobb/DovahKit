@@ -43,8 +43,6 @@
 //
 //     - Only allow the user to open one per form, as with form-editing dialogs.
 //
-//     - The form ID in the title bar should be uppercase.
-//
 //     - The tables need to be sortable.
 //
 //     - For listed refs that are in exterior cells, consider showing the grid 
@@ -88,71 +86,39 @@
 //
 //  - Code to save the current active file.
 //
-//     - Define Form::save overrides for all loaded-form classes, and then consider 
-//       making the member function on Form virtual.
+//     - Define Form::_save_impl overrides for all loaded-form classes, and then make 
+//       it pure on Form.
 //
-//        - Alternatively, use the non-virtual interface idiom: have (Form::save) 
-//          be a non-virtual function which writes whatever subrecords are needed, 
-//          and have some virtual (Form::_save_impl) that subclasses are meant to 
-//          override. That way, overrides don't need to call super, and the function 
-//          that we want overridden can be made pure while still having superclass-
-//          provided behavior.
+//        - Write save code for Papyrus data, container data, and conditions. The 
+//          container data will require a new (tes_subrecord_writer::lookup_form_by_id) 
+//          function so that it can check the form types of forms it's writing.
 //
-//     - NOTE: COPYING RECORD DATA FROM THE SOURCE FILE IS ONLY APPROPRIATE WHEN 
-//       RESAVING THE SAME FILE WITH THE SAME MASTERS. IF ANY MASTERS IN THE ACTIVE 
-//       FILE DIFFER FROM THOSE OF THE ORIGINAL, THEN THE COPIED DATA WILL END UP 
-//       HAVING BAD FORM IDs. FIXUP WOULD HAVE TO BE CODED PER-FORM AND AT THAT 
-//       POINT, WE MAY AS WELL WRITE FULL SAVE CODE.
-//
-//        - This unfortunately also means that we actually can't ship DovahKit with 
-//          a minimum of form types and patch it incrementally, as hoped. Damn.
-//
-//     - The UI should offer a file-save dialog that lets the user choose what game 
-//       they want to save for (Classic or Special) and whether they want to use 
-//       any special file header flags (e.g. ESM-flagged ESPs).
-//
-//        - There should also be a filename field, which should be greyed out unless 
-//          the active file is implicit/invisible (i.e. nameless)
+//     - File-save dialog
 //
 //        - The game and flags should default to those of the source file, if any. 
 //          If the active file is implicit/invisible, then choose the game based on 
 //          the current load order.
 //
-//        - Show the load order as a panel on the righthand side.
+//     - WHEN WE FINISH WRITING OUT THE TARGET FILE, WE NEED TO...
 //
-//           - Perhaps at some point in the future, we can let the user exclude files 
-//             that the active file neither overrides nor references; however, we'd 
-//             have to check the latter very carefully, and we'd need to introduce a 
-//             form ID fixup step when saving.
+//        - Destroy the active file_reader's mapped_file, if any.
 //
-//     = = = = TASKS THAT CAN WAIT = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+//        - Delete the original file, if any, and move our newly-written temporary 
+//          file into its place.
 //
-//     - DovahKitCore needs to provide two signals, onSaveImminent and onSaveComplete, 
-//       so that the UI can abandon any form pointers prior to a save and reacquire 
-//       them afterward.
+//        - Reopen the active file_reader's mapped_file on the new file.
 //
-//        - Form-editing dialogs need to store form_stub pointers in addition to 
-//          loaded_form_ptrs.
+//        - Mass-update the file offsets for all saved forms, as well as anything else 
+//          that needs updating (e.g. file pointer for newly-overridden forms). Then, 
+//          clear the "edited" flag from the stubs (make sure to user the setter rather 
+//          than directly manipulating bits).
 //
-//     - Saving should fail immediately with an error message if there is no active 
-//       file. The file_load_order class creates an invisible/implicit active file 
-//       (i.e. one with no name or forms) at the end of the load order if there's 
-//       room for it; it does not do this if there is no room (i.e. 254 other files 
-//       in the load order, such that an active file would be 0xFF).
+//           - The file_writer class retains fixup data including the new file offsets.
 //
-//        - Remember to cap at 253 instead if any SSE files are loaded.
-//
-//     - Each dovah::form_stub to be saved needs its file pointer and file offset 
-//       updated. Currently, file_writer retains fixup data including the offset 
-//       within the new file, but we never actually perform the update (in part 
-//       because we're still just saving to temporary files).
-//
-//        - Similarly, the active file needs to have its cobb::mapepd_file replaced 
-//          once the output file has been written, in tandem with replacing the 
-//          form_stubs' file data.
-//
-//     - Each dovah::form_stub to be saved needs its "edited" flag cleared. Make sure 
-//       to use the setter rather than directly manipulating bits.
+//     - Form-editing dialogs need to store form_stub pointers in addition to 
+//       loaded_form_ptrs. When the editor fires onSaveImminent, they need to 
+//       discard their loaded_form_ptrs; when the editor fires onSaveComplete or 
+//       onSaveFailed, it's safe for them to retrieve the loaded form data again.
 //
 //     - form_stub::load should not attempt to load any form data from the active file 
 //       while a save operation is in progress. To that end, we should add a function 
@@ -161,13 +127,10 @@
 //       the received stub is flagged as edited or hails from the active file, and if 
 //       so, returns false; otherwise, true.
 //
-//        - We should probably run those checks in the reverse order because since 
-//          this is explicitly meant to deal with multi-threading, I suspect we'll 
-//          want to use an atomic bool for the "we're currently saving" check.
-//
-//        - When we're saving files, we can update form_stubs as we write their form 
-//          data to the targeted file; HOWEVER, we cannot clear the "edited" flag 
-//          until after we've changed the file pointer to the active file.
+//        - Except that the save process itself relies on form_stub::load. We'll need 
+//          to move the code for that to some _load_impl that has an option to load 
+//          the stub even if a save is in progress, and then have the public (load) 
+//          call that.
 //
 //     - When saving WRLD, the OFST subrecord needs special handling.
 //
@@ -179,6 +142,15 @@
 //          maybe 0x200 bytes would be a good threshold, but we could always set up 
 //          some debug logging to determine the mean/median/mode/standard deviation/etc. 
 //          of uncompressed record sizes to try and figure out a good "outlier" size.
+//
+//     - NOTE: COPYING RECORD DATA FROM THE SOURCE FILE IS ONLY APPROPRIATE WHEN 
+//       RESAVING THE SAME FILE WITH THE SAME MASTERS. IF ANY MASTERS IN THE ACTIVE 
+//       FILE DIFFER FROM THOSE OF THE ORIGINAL, THEN THE COPIED DATA WILL END UP 
+//       HAVING BAD FORM IDs. FIXUP WOULD HAVE TO BE CODED PER-FORM AND AT THAT 
+//       POINT, WE MAY AS WELL WRITE FULL SAVE CODE.
+//
+//        - This unfortunately also means that we actually can't ship DovahKit with 
+//          a minimum of form types and patch it incrementally, as hoped. Darn.
 //
 //  - Use Info window
 //
@@ -218,19 +190,16 @@
 //
 //  - Code for creating new forms.
 //
-//     - When we have an invisible/implicit active file, we don't set its nextFormID. 
-//       We may want to amend that decision.
+//     - We need to update the active file's nextFormID.
 //
-//        - How is nextFormID stored in the file? Is it relative to the master list? 
-//          It's stored as a uint32_t, but Bethesda could've gotten away with a 3-byte 
-//          number since they never intended for us to define forms outside of the 
-//          active file, so...
-//
-//        - Everything that listens for formModified will probably also need to listen 
-//          for these.
+//        - If the active file has no masters, then use load order prefix 00; if the 
+//          active file has any masters, use load order prefix FF.
 //
 //     - We'll probably want signals for when forms are created, so that UI controls 
 //       that draw lists of forms don't have to rebuild their entire lists/models.
+//
+//        - Everything that listens for formModified will probably also need to listen 
+//          for these.
 //
 //  - Code for deleting forms.
 //

@@ -96,4 +96,31 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
+   void destruction_stage_data::save(tes_record_writer& record) {
+      auto& DEST = record.open_next_subrecord('DEST');
+      DEST.write(this->health);
+      DEST.write(uint32_t(this->stages.size()));
+      DEST.write(this->flags);
+      DEST.skip_bytes(2);
+      DEST.close();
+      //
+      for (auto& stage : this->stages) {
+         auto& DSTD = record.open_next_subrecord('DSTD');
+         DSTD.write(stage.healthPercent);
+         DSTD.write(stage.damageStage);
+         DSTD.write(stage.flags);
+         DSTD.write(stage.selfDamageRate);
+         DSTD.write(stage.explosionID);
+         DSTD.write(stage.debrisID);
+         DSTD.write(stage.debrisCount);
+         DSTD.close();
+         //
+         auto& model = stage.replacementModel;
+         model.save(record, 'DMDL', 'DMDT', 'DMDS');
+      }
+      if (!this->stages.empty()) {
+         auto& DSTF = record.open_next_subrecord('DSTF');
+         DSTF.close();
+      }
+   }
 }

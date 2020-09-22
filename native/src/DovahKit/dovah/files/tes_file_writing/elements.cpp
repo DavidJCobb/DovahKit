@@ -1,5 +1,6 @@
 #include "elements.h"
 #include "file_writer.h"
+#include "../../localized_strings.h"
 
 namespace dovah::tes_file_writing {
    void record::_write_impl(const void* source, uint32_t size) {
@@ -97,6 +98,13 @@ namespace dovah::tes_file_writing {
       if (this->is_skyrim_special())
          this->_write_impl(formID.padding);
    }
+   void subrecord::_write_impl(const localized_string& field) {
+      if (this->owner.use_string_table) {
+         this->write(field.index);
+         return;
+      }
+      this->write(field.value);
+   }
    //
    record& subrecord::get_containing_record() const {
       return this->owner._record;
@@ -105,6 +113,12 @@ namespace dovah::tes_file_writing {
       this->data.resize(this->pos + size);
       void* target = this->data.data() + this->pos;
       memcpy(target, source, size);
+      this->pos += size;
+   }
+   void subrecord::skip_bytes(uint32_t size) {
+      this->data.resize(this->pos + size);
+      void* target = this->data.data() + this->pos;
+      memset(target, 0, size);
       this->pos += size;
    }
    void subrecord::close() {

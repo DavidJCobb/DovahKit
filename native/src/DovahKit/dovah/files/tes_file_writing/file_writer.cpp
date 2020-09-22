@@ -9,6 +9,7 @@
 
 namespace dovah::tes_file_writing {
    file_writer::file_writer(file_load_order& owner, file_reader& source) : owner(owner), source(source), _record(*this), _subrecord(*this) {
+      this->use_string_table = (source.flags & tes_file_flag::localized_string_table) != 0;
    }
    file_writer::~file_writer() {
       this->stream.close();

@@ -93,6 +93,7 @@ namespace dovah {
                uint32_t version_control = 0;
             };
             uint16_t version_control_2 = 0;
+            bool     use_string_table; // constructor defaults this to whatever the source file did
             #pragma endregion
             //
             file_write_error error;

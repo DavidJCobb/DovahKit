@@ -21,4 +21,13 @@ namespace dovah::loaded_forms {
    /*static*/ void WordOfPower::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       return; // this form type does not have any subrecords that contain form IDs
    }
+   bool WordOfPower::_save_impl(tes_record_writer& record) {
+      auto& FULL = record.open_next_subrecord('FULL');
+      FULL.write(this->dragon_name);
+      FULL.close();
+      auto& TNAM = record.open_next_subrecord('TNAM');
+      TNAM.write(this->human_name);
+      TNAM.close();
+      return true;
+   }
 }

@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include "../../helpers/memory.h"
+#include "../../helpers/miscellaneous.h"
 #include "../../core.h"
 #include "../common.h"
 
@@ -99,6 +100,7 @@ namespace dovah {
             //
             void _write_impl(const form_id_t&);
             void _write_impl(const struct_form_id_t&);
+            void _write_impl(const localized_string&);
             //
          public:
             subrecord& operator=(const subrecord& other) = delete; // no copy
@@ -109,6 +111,8 @@ namespace dovah {
             //
             record& get_containing_record() const;
             inline bool is_skyrim_special() const noexcept { return this->get_containing_record().is_skyrim_special(); }
+            //
+            inline uint32_t signature() const noexcept { return this->header.signature; }
             //
             inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
             //
@@ -127,15 +131,22 @@ namespace dovah {
             template<> inline void write(const cobb::generic_buffer& v) {
                this->write(v.data(), v.size());
             }
-            template<> inline void write(const form_id_t& field) {
-               return this->_write_impl(field);
-            }
-            template<> inline void write(const struct_form_id_t& field) {
-               return this->_write_impl(field);
-            }
+            template<> inline void write(const form_id_t& field) { return this->_write_impl(field); }
+            template<> inline void write(const struct_form_id_t& field) { return this->_write_impl(field); }
+            template<> inline void write(const localized_string& field) { return this->_write_impl(field); }
             template<> inline void write(const tes_file_group_header& v) = delete;
             template<> inline void write(const tes_file_record_header& v) = delete;
             template<> inline void write(const tes_file_subrecord_header& v) = delete;
+            //
+            template<int length_bytes> void write_length_prefixed_string(const std::string& v) {
+               using int_t = cobb::bytecount_to_int_t<length_bytes>;
+               int_t length = v.size();
+               this->reserve_more(length_bytes + v.size() + 1);
+               this->write(length);
+               this->write(v);
+            }
+            //
+            void skip_bytes(uint32_t bytes);
             #pragma endregion
             //
             void close();

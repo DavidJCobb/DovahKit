@@ -29,4 +29,19 @@ namespace dovah::loaded_forms {
    /*static*/ void Color::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       return; // this form type does not have any subrecords that contain form IDs
    }
+   bool Color::_save_impl(tes_record_writer& record) {
+      auto& FULL = record.open_next_subrecord('FULL');
+      FULL.write(this->name);
+      FULL.close();
+      auto& CNAM = record.open_next_subrecord('CNAM');
+      CNAM.write(this->color.r);
+      CNAM.write(this->color.g);
+      CNAM.write(this->color.b);
+      CNAM.write(this->color.unused);
+      CNAM.close();
+      auto& FNAM = record.open_next_subrecord('FNAM');
+      FNAM.write(this->color_flags);
+      FNAM.close();
+      return true;
+   }
 }

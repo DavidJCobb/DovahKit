@@ -12,7 +12,7 @@ namespace dovah::loaded_forms::components {
       if (subrecord.signature() == 'COED') {
          //
          // There's a formID followed by an integer/formID union whose type depends on the form 
-         // type of the formID preceding it. Fortunately, we load all FormStubs before we load 
+         // type of the formID preceding it. Fortunately, we load all form stubs before we load 
          // any one form, so we can identify the type of the owner form from here.
          //
          if (!this->entries.size())

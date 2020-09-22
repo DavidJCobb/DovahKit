@@ -27,5 +27,9 @@ namespace dovah::loaded_forms::components {
       //
       void load(tes_subrecord_reader&);
       static void generateUseInfo(tes_subrecord_reader&, form_stub*);
+      void save(tes_subrecord_writer&); // open the subrecord before calling
+      void save(tes_record_writer&, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap); // opens the subrecords, etc., for you
+      //
+      inline bool has_texture_hashes() const noexcept { return !this->textureHashes.data.empty(); }
    };
 }

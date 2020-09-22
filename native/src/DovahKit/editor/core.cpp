@@ -125,12 +125,20 @@ bool DovahKitCore::has_active_file() const noexcept {
 }
 bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless) {
    //
-   // TODO: this is VERY incomplete and, among other things, needs to emit signals, fail 
-   // if a save is already in progress, etc., etc.
+   // TODO: fail if a save is in progress.
    //
-   return this->load_order->save_active_file(name_to_use_if_nameless);
+   emit dataSaveImminent();
+   if (this->load_order->save_active_file(name_to_use_if_nameless)) {
+      emit dataSaveComplete();
+      return true;
+   }
+   emit dataSaveFailed(this->load_order->save_error);
+   return false;
 }
 
+bool DovahKitCore::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept {
+   return this->load_order->for_each_load_order_filename(functor);
+}
 int DovahKitCore::load_order_index_of_file(const std::filesystem::path& filename) {
    return this->load_order->index_of_loaded_file(filename.string());
 }

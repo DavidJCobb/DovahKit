@@ -15,6 +15,6 @@ namespace dovah::loaded_forms {
       if (editor_id && editor_id[0])
          record.write_string_subrecord('EDID', editor_id);
       //
-      return false;
+      return this->_save_impl(record);
    }
 }

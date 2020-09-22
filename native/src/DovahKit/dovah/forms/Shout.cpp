@@ -10,11 +10,11 @@ namespace dovah::loaded_forms {
             case 'FULL':
                subrecord.to_string(this->name);
                break;
-            case 'DESC':
-               subrecord.to_string(this->description);
-               break;
             case 'MDOB':
                subrecord.read(this->menuDisplayObjectID);
+               break;
+            case 'DESC':
+               subrecord.to_string(this->description);
                break;
             case 'SNAM':
                {
@@ -50,5 +50,24 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+   }
+   bool Shout::_save_impl(tes_record_writer& record) {
+      auto& FULL = record.open_next_subrecord('FULL');
+      FULL.write(this->name);
+      FULL.close();
+      auto& MDOB = record.open_next_subrecord('MDOB');
+      MDOB.write(this->menuDisplayObjectID);
+      MDOB.close();
+      auto& DESC = record.open_next_subrecord('DESC');
+      DESC.write(this->description);
+      DESC.close();
+      for (auto& word : this->words) {
+         auto& SNAM = record.open_next_subrecord('SNAM');
+         SNAM.write(word.wordOfPowerID);
+         SNAM.write(word.spellID);
+         SNAM.write(word.recoveryTime);
+         SNAM.close();
+      }
+      return true;
    }
 }

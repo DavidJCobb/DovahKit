@@ -72,12 +72,12 @@
         <string>Dependencies</string>
        </property>
        <property name="buddy">
-        <cstring>listWidget</cstring>
+        <cstring>dependencies</cstring>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QListWidget" name="listWidget"/>
+      <widget class="QListWidget" name="dependencies"/>
      </item>
     </layout>
    </item>
@@ -133,7 +133,7 @@
   <tabstop>filename</tabstop>
   <tabstop>flagMaster</tabstop>
   <tabstop>flagLight</tabstop>
-  <tabstop>listWidget</tabstop>
+  <tabstop>dependencies</tabstop>
  </tabstops>
  <resources/>
  <connections/>
