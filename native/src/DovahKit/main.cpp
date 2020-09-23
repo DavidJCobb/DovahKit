@@ -24,9 +24,6 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
-//  - hey dude did we ever set FormsOfTypeCombobox to sort its contents? if not, 
-//    we kinda need to
-//
 //  - Generate proper Use Info for hardcoded forms.
 //
 //     - During use info generation, when we're setting up outbound use info, we 
@@ -89,19 +86,6 @@
 //        - The game and flags should default to those of the source file, if any. 
 //          If the active file is implicit/invisible, then choose the game based on 
 //          the current load order.
-//
-//     - TEST THE SAVE PROCESS:
-//
-//        - Reopening the active file's mapped file view.
-//
-//           - If this fails, report the failure and abandon all loaded form data.
-//
-//        - Mass-updating all active file forms' file offsets, and clearing their 
-//          "edited" flags.
-//
-//           - The next access to a saved form should load it from scratch (verifiable 
-//             with a breakpoint) and should show the changes that were made, presuming 
-//             we had no dialogs open when we saved.
 //
 //     - Form-editing dialogs need to store form_stub pointers in addition to 
 //       loaded_form_ptrs. When the editor fires onSaveImminent, they need to 

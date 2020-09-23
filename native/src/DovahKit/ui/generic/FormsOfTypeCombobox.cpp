@@ -1,4 +1,6 @@
 #include "FormsOfTypeCombobox.h"
+#include <QSortFilterProxyModel>
+#include <QStandardItemModel>
 #include "../../dovah/form_stub.h"
 #include "../../editor/core.h"
 
@@ -43,12 +45,21 @@ void FormsOfTypeCombobox::populate() {
    auto& editor = DovahKitCore::get();
    if (!editor.has_data())
       return;
+   auto* model = new QStandardItemModel(this); // we need to do this indirectly instead of using QComboBox::addItem in order to get case-insensitive sorting
    for (auto ft : this->_formTypes) {
-      editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) {
-         this->addItem(QString::fromStdString(stub->get_editor_id()), stub->formID);
+      editor.for_each_form_of_type(ft, [model](dovah::form_stub* stub) {
+         auto* item = new QStandardItem(QString::fromStdString(stub->get_editor_id()));
+         item->setData(stub->formID, Qt::UserRole);
+         model->appendRow(item);
          return false;
       });
    }
+   auto* proxy = new QSortFilterProxyModel;
+   proxy->setSourceModel(model);
+   proxy->setSortCaseSensitivity(Qt::CaseInsensitive);
+   this->setModel(proxy);
+   proxy->sort(0);
+   //
    emit populated();
 }
 void FormsOfTypeCombobox::setAllowNone(bool s) noexcept {
