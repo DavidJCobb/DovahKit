@@ -13,12 +13,7 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->name);
                break;
             case 'CNAM':
-               if (subrecord.is_in_bounds(4)) {
-                  subrecord.unchecked_read(this->color.r);
-                  subrecord.unchecked_read(this->color.g);
-                  subrecord.unchecked_read(this->color.b);
-                  subrecord.unchecked_read(this->color.unused);
-               }
+               this->color.load(subrecord);
                break;
             case 'FNAM':
                subrecord.read(this->color_flags);
@@ -34,10 +29,7 @@ namespace dovah::loaded_forms {
       FULL.write(this->name);
       FULL.close();
       auto& CNAM = record.open_next_subrecord('CNAM');
-      CNAM.write(this->color.r);
-      CNAM.write(this->color.g);
-      CNAM.write(this->color.b);
-      CNAM.write(this->color.unused);
+      this->color.save(CNAM);
       CNAM.close();
       auto& FNAM = record.open_next_subrecord('FNAM');
       FNAM.write(this->color_flags);

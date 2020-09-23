@@ -1,6 +1,7 @@
 #include "use_info.h"
 #include "../Activator.h"
 #include "../ActorBase.h"
+#include "../Cell.h"
 #include "../Color.h"
 #include "../Container.h"
 #include "../FormList.h"
@@ -27,6 +28,7 @@ namespace {
       { form_type::activator,     dovah::loaded_forms::Activator::generateUseInfo },
       { form_type::container,     dovah::loaded_forms::Container::generateUseInfo },
       { form_type::actor_base,    dovah::loaded_forms::ActorBase::generateUseInfo },
+      { form_type::cell,          dovah::loaded_forms::Cell::generateUseInfo },
       { form_type::reference,     dovah::loaded_forms::ObjectReference::generateUseInfo },
       { form_type::topic_info,    dovah::loaded_forms::TopicInfo::generateUseInfo },
       { form_type::quest,         dovah::loaded_forms::Quest::generateUseInfo },

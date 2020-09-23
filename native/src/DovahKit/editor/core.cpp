@@ -30,7 +30,7 @@ void DovahKitCore::abandon_data() {
    emit dataAbandonComplete();
 }
 void DovahKitCore::set_load_order_folder(const std::filesystem::path& p) {
-   this->load_order->queued_load.base_path = p.string();
+   this->load_order->base_path = p.string();
 }
 void DovahKitCore::queue_load_order_file(const std::filesystem::path& p) {
    this->load_order->queue_file(p.string());

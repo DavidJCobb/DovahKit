@@ -81,6 +81,7 @@ namespace dovah {
             //
             inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
             //
+            void write_formID_subrecord(uint32_t signature, form_id_t);
             void write_string_subrecord(uint32_t signature, const char* s);
             void write_string_subrecord(uint32_t signature, const std::string& s);
       };

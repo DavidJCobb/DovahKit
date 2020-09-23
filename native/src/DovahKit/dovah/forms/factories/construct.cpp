@@ -1,4 +1,5 @@
 #include "construct.h"
+#include "../Cell.h"
 #include "../Color.h"
 #include "../FormList.h"
 #include "../Location.h"
@@ -23,6 +24,7 @@ namespace {
       _Builder(form_type_t f, loaded_form_factory_t b) : formType(f), builder(b) {}
    };
    _Builder _builders[] = {
+      { form_type::cell,          _constructAndLoad<loaded_forms::Cell> },
       { form_type::quest,         _constructAndLoad<loaded_forms::Quest> },
       { form_type::formlist,      _constructAndLoad<loaded_forms::FormList> },
       { form_type::voicetype,     _constructAndLoad<loaded_forms::Voicetype> },

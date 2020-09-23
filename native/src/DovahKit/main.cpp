@@ -71,6 +71,15 @@
 //
 //        - Allow the user to select which game (Classic/Special) to save for.
 //
+//           - If they save for a different game than they loaded for, then where 
+//             should we put the new file?
+//
+//           - If they save for a different game than they loaded for, then editing 
+//             can't continue unless we support mixed Classic/Special load orders.
+//
+//              - We'd only have to treat the active file as an exception, rather 
+//                than "fully" supporting mixed-game load orders.
+//
 //     - When saving WRLD, the OFST subrecord needs special handling.
 //
 //     - Record compression

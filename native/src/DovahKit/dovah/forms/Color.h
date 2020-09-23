@@ -4,6 +4,7 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "structs/color_dword.h"
 
 namespace dovah::loaded_forms {
    class Color : public Form {
@@ -21,15 +22,7 @@ namespace dovah::loaded_forms {
          Color() : Form(form_type) {};
 
          localized_string name;
-         union {
-            struct {
-               uint8_t r;
-               uint8_t g;
-               uint8_t b;
-               uint8_t unused;
-            };
-            uint32_t hex = 0;
-         } color;
+         color_t       color;
          color_flags_t color_flags = 0;
 
          void load(tes_record_reader&);

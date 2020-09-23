@@ -76,6 +76,11 @@ namespace dovah::tes_file_writing {
       return subrecord;
    }
 
+   void record::write_formID_subrecord(uint32_t signature, form_id_t formID) {
+      auto& subrecord = this->open_next_subrecord(signature);
+      subrecord.write(formID);
+      subrecord.close();
+   }
    void record::write_string_subrecord(uint32_t signature, const char* s) {
       auto& subrecord = this->open_next_subrecord(signature);
       subrecord.write(s, strlen(s) + 1);

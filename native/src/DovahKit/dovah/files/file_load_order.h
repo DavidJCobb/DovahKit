@@ -105,8 +105,8 @@ namespace dovah {
          ~file_load_order();
          //
          #pragma region Content related to loading
+         std::string base_path; // used for loading and saving. changing this between loading files and saving them back out is undefined behavior.
          struct {
-            std::string base_path;
             std::vector<std::string> files;
             std::string active_file;
             //

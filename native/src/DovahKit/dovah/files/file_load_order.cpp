@@ -163,13 +163,13 @@ namespace dovah {
       }
       this->save_load_state.flags = save_load_flag::none;
       //
-      if (!this->queued_load.base_path.empty()) {
-         char end = *this->queued_load.base_path.rbegin();
+      if (!this->base_path.empty()) {
+         char end = *this->base_path.rbegin();
          if (end != '/' && end != '\\')
-            this->queued_load.base_path += '/';
+            this->base_path += '/';
       }
       //
-      this->normalizer.base_path   = this->queued_load.base_path;
+      this->normalizer.base_path   = this->base_path;
       this->normalizer.active_file = this->queued_load.active_file;
       for (auto it = this->queued_load.files.begin(); it != this->queued_load.files.end(); ++it) {
          if (!this->normalizer.add(this->load_error, *it))
@@ -228,7 +228,7 @@ namespace dovah {
             dovah::logging::print_line("[P] %s", header->name.c_str());
       }
       for (auto* header : this->normalizer.masters) {
-         std::string path = this->queued_load.base_path + header->name;
+         std::string path = this->base_path + header->name;
          auto file = new tes_file_reading::file_reader(*this);
          this->save_load_state.loading_index = this->files.size();
          this->files.push_back(file);
@@ -257,7 +257,7 @@ namespace dovah {
          //
       }
       for (auto* header : this->normalizer.plugins) {
-         std::string path = this->queued_load.base_path + header->name;
+         std::string path = this->base_path + header->name;
          auto file = new tes_file_reading::file_reader(*this);
          this->save_load_state.loading_index = this->files.size();
          this->files.push_back(file);
@@ -669,10 +669,10 @@ namespace dovah {
             this->save_error.code = file_write_error::error_code::no_filename_specified;
             return false;
          }
-         this->active_file->set_path(std::filesystem::path(this->queued_load.base_path) / filename);
+         this->active_file->set_path(std::filesystem::path(this->base_path) / filename);
       }
       //
-      filename = std::filesystem::path(this->queued_load.base_path) / filename;
+      filename = std::filesystem::path(this->base_path) / filename;
       {  // opening the file for writing will clear its contents (which is bad for the user and will break our reading/writing), so we want to ALWAYS write to a temporary file first!
          auto ext = filename.extension().string();
          if (_stricmp(ext.data(), ".tes") == 0) {
