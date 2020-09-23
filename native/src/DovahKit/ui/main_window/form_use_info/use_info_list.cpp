@@ -34,6 +34,7 @@ void FormUseInfoListModelItem::updateFromStub() {
    //
    if (is_reference) {
       auto parent = stub->get_parent_form();
+      assert(parent->formType == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
       if (parent) {
          auto name = parent->get_editor_id();
          auto id   = QString("%1").arg(parent->formID, 8, 16, QChar('0')).toUpper();
@@ -42,10 +43,12 @@ void FormUseInfoListModelItem::updateFromStub() {
             this->parentCell += name;
          } else {
             auto world = parent->get_parent_form();
+            assert(parent->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
             if (world) {
-               auto id = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
-               QString s = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
-               this->parentCell = QString("%2 in %1").arg(s).arg(this->parentCell);
+               auto    id   = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
+               QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
+               QString grid = QString("(%1, %2)").arg(parent->groupInfo.gridX).arg(parent->groupInfo.gridY);
+               this->parentCell = QString("%2%3 in %1").arg(s).arg(this->parentCell).arg(grid);
             }
          }
       }

@@ -485,6 +485,7 @@ namespace dovah::tes_file_reading {
                      break;
                }
                this->_insert_form(stub->formID, stub); // also normalizes (stub->formID)
+               this->extract_high_value_subrecords_for_stub(stub);
                if (record.signature() == 'WRLD')
                   last_worldspace_id = stub->formID;
             }

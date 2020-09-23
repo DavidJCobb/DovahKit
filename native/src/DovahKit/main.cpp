@@ -37,10 +37,6 @@
 //
 //     - Only allow the user to open one per form, as with form-editing dialogs.
 //
-//     - For listed refs that are in exterior cells, consider showing the grid 
-//       coordinates whenever the cell is unnamed. We can do that now that the 
-//       group_stub has those.
-//
 //     - Consider collating references that are in the same cell together and then 
 //       showing a count, like the CK does.
 //
