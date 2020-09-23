@@ -2,12 +2,46 @@
 #include <QMessageBox>
 #include "../dovah/form_stub.h"
 #include "core.h"
+#include "../ui/main_window/form_use_info.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
 
-void open_window_for_form(dovah::form_stub* stub, QWidget* parent) {
+void open_use_info_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
+   //
+   // First, let's check if there's already a window for this form. If so, we should just 
+   // refocus that window instead of opening a new one.
+   //
+   auto  formID = stub->formID;
+   auto& editor = DovahKitCore::get();
+   auto  it     = editor.extant_use_info_dialogs.find(formID);
+   if (it != editor.extant_use_info_dialogs.end()) {
+      auto dialog = it->second;
+      if (dialog) {
+         dialog->raise();
+         dialog->activateWindow();
+         return;
+      }
+   }
+   //
+   // If we made it to here, then there isn't already a window for this form, so let's 
+   // open one.
+   //
+   auto dialog = new FormUseInfoDialog(stub, parent);
+   editor.extant_use_info_dialogs[stub->formID] = dialog;
+   QObject::connect(dialog, &QDialog::finished, &editor, [formID, dialog]() {
+      auto& editor = DovahKitCore::get();
+      auto& map    = editor.extant_use_info_dialogs;
+      auto  it     = map.find(formID);
+      if (it != map.end())
+         map.erase(it);
+      //
+      dialog->deleteLater();
+   });
+   dialog->show();
+}
+void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    //
    // First, let's check if there's already a window for this form. If so, we should just 
    // refocus that window instead of opening a new one.

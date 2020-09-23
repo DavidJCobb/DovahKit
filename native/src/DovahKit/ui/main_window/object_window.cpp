@@ -18,7 +18,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       auto data = (item_type*)real.internalPointer();
       if (!data || !data->stub)
          return;
-      open_window_for_form(data->stub, this);
+      open_edit_dialog_for_form(data->stub, this);
    });
    //
    this->_formActionShowUseInfo = new QAction(tr("Use Info...", "object window form actions"), this->ui.table);
@@ -37,8 +37,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       if (!data || !data->stub)
          return;
       //
-      auto dialog = new FormUseInfoDialog(data->stub, this->parentWidget());
-      dialog->show();
+      open_use_info_dialog_for_form(data->stub, this->parentWidget());
    });
    this->ui.table->setContextMenuPolicy(Qt::CustomContextMenu);
    QObject::connect(this->ui.table, &QWidget::customContextMenuRequested, [this](const QPoint& pos) {

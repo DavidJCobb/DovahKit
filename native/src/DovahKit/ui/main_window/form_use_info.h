@@ -12,7 +12,7 @@ class FormUseInfoDialog : public QDialog {
    //
    public:
       FormUseInfoDialog(QWidget* parent) = delete;
-      FormUseInfoDialog(const dovah::form_stub* stub, QWidget* parent = Q_NULLPTR); // needs to be public for Qt? but do not call; use the static getter
+      FormUseInfoDialog(const dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
       //
    private slots:
       void rebuild();

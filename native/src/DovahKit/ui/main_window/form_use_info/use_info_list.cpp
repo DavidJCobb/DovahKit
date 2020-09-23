@@ -282,7 +282,7 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
          return;
       auto data = (model_item_type*)real.internalPointer();
       if (data && data->otherStub)
-         open_window_for_form(data->otherStub, this);
+         open_edit_dialog_for_form(data->otherStub, this);
    });
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)

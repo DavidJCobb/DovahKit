@@ -18,7 +18,8 @@ namespace DovahKitEditorInternals {
 class DovahKitCore : public QObject {
    Q_OBJECT
    friend class DovahKitEditorInternals::load_task;
-   friend void open_window_for_form(dovah::form_stub*, QWidget* parent);
+   friend void open_use_info_dialog_for_form(dovah::form_stub*, QWidget* parent);
+   friend void open_edit_dialog_for_form(dovah::form_stub*, QWidget* parent);
    public:
       using form_type_t    = dovah::form_type_t;
       using bare_form_id_t = dovah::bare_form_id_t;
@@ -47,6 +48,7 @@ class DovahKitCore : public QObject {
       QThread* async_loader = nullptr;
       //
       std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
+      std::unordered_map<bare_form_id_t, QDialog*> extant_use_info_dialogs;
       //
    signals:
       void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption

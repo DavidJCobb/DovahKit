@@ -14,19 +14,18 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - If any loaded files are for SSE, then the file_load_order should cap the load 
-//    order at 253 entries, not 254.
+//  - If the load order has been configured to load Skyrim Special Edition files, 
+//    then the load order should be capped at 253 entries, not 254.
 //
-//     - To identify a file's version, check the version value on the TES4 record. 
-//       (But of course, file_header and file_reader have already been amended to 
-//       retain that information.)
+//     - It's tempting to go by the individual files' versions, but remember: we 
+//       have to load Special files from a different location than Classic files. 
+//       Don't bother mucking around with file versions; just put a flag on the 
+//       file_load_order and use that.
 //
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
 //  - Use Info dialog
-//
-//     - Only allow the user to open one per form, as with form-editing dialogs.
 //
 //     - Consider collating references that are in the same cell together and then 
 //       showing a count, like the CK does.
