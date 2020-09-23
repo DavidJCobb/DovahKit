@@ -64,12 +64,6 @@ namespace dovah {
       // given form, we must update each form it refers to. As such, we can't multi-thread 
       // the generation of inbound Use Info unless we put a lock on each individual form.
       //
-      #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
-         struct timeb bench_start;
-         struct timeb bench_end;
-         printf("Building Use Info...\n");
-         ftime(&bench_start);
-      #endif
       auto& builders = this->use_info_build_threads;
       {
          auto guard = std::lock_guard(this->use_info_build_threads_lock);
@@ -96,19 +90,10 @@ namespace dovah {
          }
          this->use_info_outbound_complete = true;
       }
-      #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
-         ftime(&bench_end);
-         printf("Time taken for outbound refs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-         ftime(&bench_start);
-      #endif
       // Outbound next; has to be single-threaded
       for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
          it->second->send_inbound_refs();
       }
-      #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
-         ftime(&bench_end);
-         printf("Time taken for inbound refs: %d ms\n", (uint32_t)(1000.0 * (bench_end.time - bench_start.time)) + (bench_end.millitm - bench_start.millitm));
-      #endif
    }
 
    uint8_t file_load_order::load_order_prefix_for(const loaded_file* file) const noexcept {
@@ -213,10 +198,8 @@ namespace dovah {
             total += header->record_and_group_count;
          for (auto* header : this->normalizer.plugins)
             total += header->record_and_group_count;
-         #if COBB_ESP_BLOCK_ALLOCATE_MAP_PAIRS != 1
          this->forms.forms.reserve((size_t)(total * 1.1) + 0x800);
-         #endif
-      }//*/
+      }
       {
          dovah::logging::print_line("Final load order:");
          for (auto* header : this->normalizer.masters)
@@ -505,6 +488,16 @@ namespace dovah {
    bool file_load_order::for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor) {
       if (form_type >= this->forms_by_type.size())
          return false;
+      //
+      // A form needs to be saved if it has been edited during the current session, 
+      // if it was defined in or overridden by the active file, or if any of these 
+      // things are true for any of its child or descendant forms.
+      //
+      // In practice, this means that for form types that can have child forms, we 
+      // need to iterate over all loaded forms to check for descendants that meet 
+      // the criteria, whereas for form types that cannot have child forms, we only 
+      // need to loop over active file forms.
+      //
       if (form_types[form_type].flags & form_type_info::flag::can_have_children) {
          auto& list = this->forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
@@ -649,6 +642,12 @@ namespace dovah {
       {  // opening the file for writing will clear its contents (which is bad for the user and will break our reading/writing), so we want to ALWAYS write to a temporary file first!
          auto ext = filename.extension().string();
          if (_stricmp(ext.data(), ".tes") == 0) {
+            //
+            // This normally should never happen. The editor should never allow you to open a *.TES 
+            // file directly. You can end up working with one e.g. if a save is successful but we are 
+            // unable to replace the file being saved over, but when that happens, we shouldn't be 
+            // updating the file_reader's stored filename, so that should still point to the old name.
+            //
          } else {
             filename.replace_extension(".tes");
          }
@@ -672,9 +671,10 @@ namespace dovah {
          if (code) {
             this->save_warning.code     = file_write_warning::warning_code::save_complete_but_to_temporary_file;
             this->save_warning.filename = filename.filename();
-            reopen_result = this->active_file->open_mapped_file();
-         } else {
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
+            assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
+         } else {
+            reopen_result = this->active_file->open_mapped_file();
          }
          if (!reopen_result) {
             //
