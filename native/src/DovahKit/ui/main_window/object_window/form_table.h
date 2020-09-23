@@ -29,6 +29,7 @@ class FormTableModelItem {
       FormTableModelItem(dovah::form_stub*);
       //
       inline const QString& name() const noexcept { return this->editorID; }
+      void update();
 };
 class FormTableModelRoot : public FormTableModelItem {
    friend FormTableModel;
@@ -79,6 +80,7 @@ class FormTableModel : public QAbstractTableModel {
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
       void insertItem(dovah::form_stub*);
+      void updateExistingItem(const dovah::form_stub*);
       //
       void clear();
       //

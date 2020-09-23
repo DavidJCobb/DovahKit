@@ -18,32 +18,37 @@ FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* 
    }
    if (auto stub = source->other) {
       this->otherStub = stub;
-      this->otherID   = stub->formID;
-      this->otherType = stub->formType;
-      this->editorID  = stub->get_editor_id();
-      //
-      uint32_t signature = dovah::form_type_info::lookup(this->otherType).signature;
-      this->signature = cobb::qt::four_cc_to_string(signature);
-      //
-      if (is_reference) {
-         auto parent = stub->get_parent_form();
-         if (parent) {
-            auto name = parent->get_editor_id();
-            auto id   = QString("%1").arg(parent->formID, 8, 16, QChar('0')).toUpper();
-            this->parentCell = QString("[CELL:%1]").arg(id);
-            if (name && name[0]) {
-               this->parentCell += name;
-            } else {
-               auto world = parent->get_parent_form();
-               if (world) {
-                  auto id = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
-                  QString s = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
-                  this->parentCell = QString("%2 in %1").arg(s).arg(this->parentCell);
-               }
+      this->updateFromStub();
+   }
+}
+void FormUseInfoListModelItem::updateFromStub() {
+   bool is_reference = (this->flags & data_t::flag::i_am_base_form_of) != 0;
+   auto stub = this->otherStub;
+   //
+   this->otherID   = stub->formID;
+   this->otherType = stub->formType;
+   this->editorID  = stub->get_editor_id();
+   //
+   uint32_t signature = dovah::form_type_info::lookup(this->otherType).signature;
+   this->signature = cobb::qt::four_cc_to_string(signature);
+   //
+   if (is_reference) {
+      auto parent = stub->get_parent_form();
+      if (parent) {
+         auto name = parent->get_editor_id();
+         auto id   = QString("%1").arg(parent->formID, 8, 16, QChar('0')).toUpper();
+         this->parentCell = QString("[CELL:%1]").arg(id);
+         if (name && name[0]) {
+            this->parentCell += name;
+         } else {
+            auto world = parent->get_parent_form();
+            if (world) {
+               auto id = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
+               QString s = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
+               this->parentCell = QString("%2 in %1").arg(s).arg(this->parentCell);
             }
          }
       }
-      //
    }
 }
 
@@ -207,6 +212,19 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
 void FormUseInfoListModel::setRelationshipMode(relationship_mode mode) noexcept {
    this->mode = mode;
 }
+void FormUseInfoListModel::updateExistingItem(const dovah::form_stub* stub) {
+   auto& list = this->root->_children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->otherStub == stub) {
+         item->updateFromStub();
+         auto index = this->index(i, 0, QModelIndex());
+         emit dataChanged(index, index);
+         break;
+      }
+   }
+}
 #pragma endregion
 
 FormUseInfoListModelProxy::FormUseInfoListModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {
@@ -271,9 +289,8 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() { this->setTarget(nullptr); });
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-      //
-      // TODO: If (stub) was one of the forms using our target, then update our model.
-      //
+      if (auto model = this->unwrappedModel())
+         model->updateExistingItem(stub);
    });
 };
 FormUseInfoList::relationship_mode FormUseInfoList::relationshipMode() const noexcept {

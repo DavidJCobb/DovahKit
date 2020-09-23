@@ -270,6 +270,10 @@
 //       can create overrides of forms that contain localized strings, and so you can 
 //       see those strings in the editor.
 //
+//  - If the user has any unsaved changes, the main window should show a confirmation 
+//    prompt on exit. We already override MainWindow::closeEvent; we'll want to do what 
+//    we need to do in there.
+//
 //  - Render Window
 //
 //     - When looking at a base form's Use Info, double-clicking a reference in the 

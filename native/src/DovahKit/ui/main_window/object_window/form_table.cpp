@@ -5,13 +5,20 @@
 #include "../../../editor/core.h"
 #include "../../../dovah/form_stub.h"
 
-#pragma region FormTableModel
 FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
    this->stub      = stub;
    this->editorID  = QString::fromUtf8(stub->get_editor_id());
    this->formID    = stub->formID;
    this->userCount = stub->inbound.size();
 }
+void FormTableModelItem::update() {
+   auto stub = this->stub;
+   this->editorID  = QString::fromUtf8(stub->get_editor_id());
+   this->formID    = stub->formID;
+   this->userCount = stub->inbound.size();
+}
+
+#pragma region FormTableModel
 QModelIndex FormTableModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
@@ -92,6 +99,19 @@ QVariant FormTableModel::headerData(int section, Qt::Orientation orientation, in
 void FormTableModel::insertItem(dovah::form_stub* stub) {
    this->root->_children.push_back(new FormTableModelItem(stub));
 }
+void FormTableModel::updateExistingItem(const dovah::form_stub* stub) {
+   auto& list = this->root->_children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == stub) {
+         item->update();
+         auto index = this->index(i, 0, QModelIndex());
+         emit dataChanged(index, index);
+         break;
+      }
+   }
+}
 
 void FormTableModel::clear() {
    this->beginResetModel();
@@ -142,10 +162,8 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &FormTable::clear);
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &FormTable::rebuildModel);
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-      //
-      // TODO: Locate the stub's entry in here, update the editor ID if that's changed, 
-      // and sort it within the list as appropriate.
-      //
+      if (auto model = this->unwrappedModel())
+         model->updateExistingItem(stub);
    });
 
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {

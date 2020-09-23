@@ -29,6 +29,7 @@ class FormUseInfoListModelItem {
       //
       FormUseInfoListModelItem() {}
       FormUseInfoListModelItem(const data_t*);
+      void updateFromStub();
 };
 class FormUseInfoListModelRoot : public FormUseInfoListModelItem {
    friend FormUseInfoListModel;
@@ -89,6 +90,7 @@ class FormUseInfoListModel : public QAbstractTableModel {
       void build(const dovah::form_stub* used);
       inline relationship_mode relationshipMode() const noexcept { return this->mode; }
       void setRelationshipMode(relationship_mode) noexcept; // does not rebuild the model
+      void updateExistingItem(const dovah::form_stub*);
 };
 
 class FormUseInfoListModelProxy : public QSortFilterProxyModel {
