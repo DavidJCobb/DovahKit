@@ -7,8 +7,8 @@
 #include "../dovah/files/file_load_order.h"
 
 namespace dovah {
-   class form_stub;
-   class file_write_error;
+   class  form_stub;
+   class  file_write_error;
 }
 namespace DovahKitEditorInternals {
    class load_task;
@@ -78,6 +78,10 @@ class DovahKitCore : public QObject {
       QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;
       bool save_active_file(std::filesystem::path name_to_use_if_nameless);
+      QString get_active_file_author() const noexcept;
+      QString get_active_file_description() const noexcept;
+      void set_active_file_author(const QString&) const noexcept;
+      void set_active_file_description(const QString&) const noexcept;
 
       bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
       int load_order_index_of_file(const std::filesystem::path& filename);

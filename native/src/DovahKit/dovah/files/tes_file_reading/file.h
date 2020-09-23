@@ -3,6 +3,7 @@
 #include "basic_reader.h"
 #include "threads.h"
 #include "../common.h"
+#include "../file_header.h"
 #include "../file_load_order.h"
 #include "../file_read_error.h"
 
@@ -25,16 +26,8 @@ namespace dovah {
          friend threads::worldspace_persistent_cell_children;
          public:
             using flag = tes_file_flag;
-            struct detail_flag {
-               detail_flag() = delete;
-               enum type {
-                  has_intv           = 0x0001,
-                  has_incc           = 0x0002,
-                  has_onam           = 0x0004,
-                  is_hardcoded_dummy = 0x0008,
-               };
-            };
-            using detail_flag_t = std::underlying_type_t<detail_flag::type>;
+            using detail_flag   = tes_file_header::detail_flag;
+            using detail_flag_t = tes_file_header::detail_flag_t;
             //
             struct master_entry {
                std::string master; // MAST
@@ -96,20 +89,7 @@ namespace dovah {
          public:
             file_load_order& load_order;
             file_read_error  error; // if the load process was aborted, what error, if any, did we encounter?
-            uint32_t      flags   = 0;
-            detail_flag_t details = 0;
-            uint16_t      header_record_version = 0;
-            float    fileVersion = 0.94F;
-            uint32_t recordCount = 0;
-            uint32_t nextFormID  = 0x00000800;
-            std::string authorName;
-            std::string description;
-            std::vector<master_entry> masters;
-            // TODO: ONAM, a list of overridden records within temporary CELLs, of the following types: ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA
-            // TODO: DELE
-            uint32_t subINTV;
-            uint32_t subINCC;
-            // TODO: SCRN
+            tes_file_header  header;
             struct {
                localized_string_file* common    = nullptr;
                localized_string_file* journal   = nullptr;

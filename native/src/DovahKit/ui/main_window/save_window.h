@@ -8,7 +8,7 @@ class ActiveFileSaveDialog : public QDialog {
    Q_OBJECT
    //
    public:
-      ActiveFileSaveDialog(QWidget* parent = Q_NULLPTR); // needs to be public for Qt? but do not call; use the static getter
+      ActiveFileSaveDialog(QWidget* parent = Q_NULLPTR);
       //
    private:
       Ui::ActiveFileSaveDialog ui;

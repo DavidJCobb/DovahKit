@@ -9,6 +9,7 @@
 #include "../dovah/files/file_load_order.h"
 #include "main_window/load_window.h"
 #include "main_window/save_window.h"
+#include "main_window/file_metadata_window.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -28,14 +29,39 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       auto text = QString("Loaded all files in %1 ms.").arg(stats.milliseconds);
       this->statusBar()->showMessage(text);
    });
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
+      this->ui.actionEditFileMetadata->setDisabled(false);
+      this->ui.actionSave->setDisabled(false);
+   });
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->ui.actionEditFileMetadata->setDisabled(true);
+      this->ui.actionSave->setDisabled(true);
+   });
    //
    this->object_window = new ObjectWindow(this);
    this->ui.mdi->addSubWindow(this->object_window, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
    //
+   this->ui.actionEditFileMetadata->setDisabled(true);
+   this->ui.actionSave->setDisabled(true);
    QObject::connect(this->ui.actionOpen, &QAction::triggered, this, [this]() {
       auto modal = new LoadOrderOpenDialog(this);
       modal->setModal(true);
       modal->open();
+   });
+   QObject::connect(this->ui.actionEditFileMetadata, &QAction::triggered, this, [this]() {
+      if (auto dialog = this->metadata_window) {
+         dialog->raise();
+         dialog->activateWindow();
+         return;
+      }
+      auto& editor = DovahKitCore::get();
+      auto  dialog = new FileMetadataWindow(this);
+      this->metadata_window = dialog;
+      QObject::connect(dialog, &QDialog::finished, &editor, [this, dialog]() {
+         this->metadata_window = nullptr;
+         dialog->deleteLater();
+      });
+      dialog->show();
    });
    QObject::connect(this->ui.actionSave, &QAction::triggered, this, [this]() {
       auto& editor = DovahKitCore::get();

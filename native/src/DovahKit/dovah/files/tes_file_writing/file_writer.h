@@ -115,7 +115,7 @@ namespace dovah {
 
             uint32_t get_stream_position() const noexcept; // position in the file. note that (sub)record writes don't advance this until the record is closed.
             void set_stream_position(file_offset_t) noexcept;
-            uint32_t get_output_position() const noexcept; // stream position + record position if open + subrecord position if open
+            uint32_t get_output_position() const noexcept; // stream position + record position if open + subrecord position if open. WARNING: this can't account for large subrecords that end up using 'XXXX'
 
             void open(std::filesystem::path);
             bool write();

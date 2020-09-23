@@ -8,7 +8,7 @@ class LoadOrderOpenDialog : public QDialog {
    Q_OBJECT
    //
    public:
-      LoadOrderOpenDialog(QWidget* parent = Q_NULLPTR); // needs to be public for Qt? but do not call; use the static getter
+      LoadOrderOpenDialog(QWidget* parent = Q_NULLPTR);
       //
    private slots:
       void loadPoll();

@@ -91,6 +91,7 @@ namespace dovah {
       static constexpr uint32_t uninitialized_unknown = 0xCCCCCCCC; // seen in Bethesda content; MSVC can use this for uninitialized memory, especially in Debug
       //
       static constexpr int offset_of_size = 4; // don't use offsetof(); compilers can insert padding bytes anywhere in a struct at their discretion, and we want to be future-proof
+      static constexpr int struct_size    = sizeof(signature) + sizeof(size) + sizeof(label) + sizeof(type) + sizeof(version_control) + sizeof(unknown);
    };
    #pragma endregion
 
@@ -121,6 +122,8 @@ namespace dovah {
       uint16_t version_control_2;
       //
       inline bool body_is_compressed() const noexcept { return (this->flags & flag::compressed) != 0; }
+      //
+      static constexpr int struct_size = sizeof(signature) + sizeof(size) + sizeof(flags) + sizeof(formID) + sizeof(version_control) + sizeof(version) + sizeof(version_control_2);
    };
    #pragma endregion
 
@@ -128,6 +131,8 @@ namespace dovah {
    struct tes_file_subrecord_header {
       uint32_t signature = 0;
       uint32_t size      = 0;
+      //
+      static constexpr int struct_size = sizeof(signature) + sizeof(size);
    };
    #pragma endregion
 }

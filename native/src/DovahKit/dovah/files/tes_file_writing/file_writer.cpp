@@ -9,7 +9,7 @@
 
 namespace dovah::tes_file_writing {
    file_writer::file_writer(file_load_order& owner, file_reader& source) : owner(owner), source(source), _record(*this), _subrecord(*this) {
-      this->use_string_table = (source.flags & tes_file_flag::localized_string_table) != 0;
+      this->use_string_table = (source.header.flags & tes_file_flag::localized_string_table) != 0;
    }
    file_writer::~file_writer() {
       this->stream.close();
@@ -22,7 +22,7 @@ namespace dovah::tes_file_writing {
          record._close();
       //
       header.signature = signature;
-      header.version   = this->source.header_record_version;
+      header.version   = this->source.header.record_version;
       header.formID    = formID;
       header.flags     = 0;
       header.version_control   = this->version_control;
@@ -33,7 +33,7 @@ namespace dovah::tes_file_writing {
    void file_writer::_write_header() {
       auto& record = this->_open_next_record('TES4', 0);
       auto& header = record.header;
-      header.flags = this->source.flags;
+      header.flags = this->source.header.flags;
       //
       {  // HEDR
          auto& subrecord = record.open_next_subrecord('HEDR');
@@ -43,7 +43,7 @@ namespace dovah::tes_file_writing {
          this->fixup_data.record_and_group_count.offset = this->get_output_position();
          subrecord.write(uint32_t(0));
          //
-         subrecord.write(this->source.nextFormID);
+         subrecord.write(this->source.header.nextFormID);
          subrecord.close();
       }
       //
@@ -51,11 +51,11 @@ namespace dovah::tes_file_writing {
       //
       // TODO: DELE? xEdit lists it in their definitions, but it doesn't appear in any Skyrim Classic masters.
       //
-      if (!this->source.authorName.empty()) { // CNAM
-         record.write_string_subrecord('CNAM', this->source.authorName);
+      if (!this->source.header.author.empty()) { // CNAM
+         record.write_string_subrecord('CNAM', this->source.header.author);
       }
-      if (!this->source.description.empty()) { // SNAM
-         record.write_string_subrecord('SNAM', this->source.description);
+      if (!this->source.header.description.empty()) { // SNAM
+         record.write_string_subrecord('SNAM', this->source.header.description);
       }
       this->owner.for_each_load_order_filename([&record](std::filesystem::path name, bool is_active_file) { // MAST, DATA
          if (is_active_file)
@@ -104,17 +104,18 @@ namespace dovah::tes_file_writing {
       //
       // TODO: SCRN? xEdit lists it in their definitions, but it doesn't appear in any Skyrim Classic masters.
       //
-      if (this->source.details & file_reader::detail_flag::has_intv) {
+      if (this->source.header.details & tes_file_header::detail_flag::has_intv) {
          auto& subrecord = record.open_next_subrecord('INTV');
-         subrecord.write(uint32_t(this->source.subINTV));
+         subrecord.write(uint32_t(this->source.header.subINTV));
          subrecord.close();
       }
-      if (this->source.details & file_reader::detail_flag::has_incc) {
+      if (this->source.header.details & tes_file_header::detail_flag::has_incc) {
          auto& subrecord = record.open_next_subrecord('INCC');
-         subrecord.write(uint32_t(this->source.subINCC));
+         subrecord.write(uint32_t(this->source.header.subINCC));
          subrecord.close();
       }
       record._close();
+      --this->fixup_data.record_and_group_count.value; // this should not include the file-header record
    }
    bool file_writer::_write_form(form_stub* stub) {
       auto loaded = stub->load();
@@ -368,9 +369,12 @@ namespace dovah::tes_file_writing {
    uint32_t file_writer::get_output_position() const noexcept {
       auto position = this->get_stream_position();
       if (this->_record) {
+         position += tes_file_record_header::struct_size;
          position += this->_record.pos;
-         if (this->_subrecord)
+         if (this->_subrecord) {
+            position += tes_file_subrecord_header::struct_size;
             position += this->_subrecord.pos;
+         }
       }
       return position;
    }

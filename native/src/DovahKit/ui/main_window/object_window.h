@@ -8,7 +8,7 @@ class ObjectWindow : public QWidget {
    Q_OBJECT
    //
    public:
-      ObjectWindow(QWidget* parent = Q_NULLPTR); // needs to be public for Qt? but do not call; use the static getter
+      ObjectWindow(QWidget* parent = Q_NULLPTR);
       //
    private slots:
       //

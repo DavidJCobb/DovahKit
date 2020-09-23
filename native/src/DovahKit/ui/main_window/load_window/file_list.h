@@ -8,8 +8,8 @@
 #include <QTableView>
 #include "../../../dovah/core.h"
 
-namespace dovah {
-   class file_header;
+namespace dovah::tes_file_reading {
+   class file_header_reader;
 }
 
 class LoadOrderFileListModel;
@@ -28,7 +28,7 @@ class LoadOrderFileListModelItem {
       QDateTime modified;
       //
       LoadOrderFileListModelItem() {}
-      LoadOrderFileListModelItem(const dovah::file_header& header, const QDateTime& created, const QDateTime& modified);
+      LoadOrderFileListModelItem(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified);
       //
       inline const QString& name() const noexcept { return this->filename; }
 };
@@ -83,7 +83,7 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
       void clear();
-      void insert(const dovah::file_header&, const QDateTime& created, const QDateTime& modified);
+      void insert(const dovah::tes_file_reading::file_header_reader&, const QDateTime& created, const QDateTime& modified);
       void sortByPluginsTxt();
       //
       inline const item_type* activeFile() const noexcept { return this->active; }

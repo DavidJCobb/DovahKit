@@ -100,7 +100,7 @@
   <ItemGroup>
     <ClCompile Include="dovah\core.cpp" />
     <ClCompile Include="dovah\data\actor_values.cpp" />
-    <ClCompile Include="dovah\files\file_header.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp" />
     <ClCompile Include="dovah\files\file_load_order.cpp" />
     <ClCompile Include="dovah\files\file_load_order_normalizer.cpp" />
     <ClCompile Include="dovah\files\file_read_error.cpp" />
@@ -163,6 +163,7 @@
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
+    <ClCompile Include="ui\main_window\file_metadata_window.cpp" />
     <ClCompile Include="ui\main_window\form_use_info.cpp" />
     <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp" />
     <ClCompile Include="ui\main_window\load_window.cpp" />
@@ -176,9 +177,10 @@
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
     <ClInclude Include="dovah\files\common.h" />
+    <ClInclude Include="dovah\files\file_header.h" />
     <ClInclude Include="dovah\files\file_load_order_normalizer.h" />
     <ClInclude Include="dovah\files\file_read_error.h" />
-    <ClInclude Include="dovah\files\file_header.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\file_header.h" />
     <ClInclude Include="dovah\files\file_load_order.h" />
     <ClInclude Include="dovah\files\file_write_error.h" />
     <ClInclude Include="dovah\files\tes_file_reading\basic_reader.h" />
@@ -222,6 +224,7 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <QtMoc Include="ui\main_window\file_metadata_window.h" />
     <QtMoc Include="ui\main_window\save_window.h" />
     <QtMoc Include="ui\main_window\form_use_info\use_info_list.h" />
     <QtMoc Include="ui\main_window\form_use_info.h" />
@@ -268,6 +271,7 @@
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />
+    <QtUic Include="ui\main_window\file_metadata_window.ui" />
     <QtUic Include="ui\main_window\form_use_info.ui" />
     <QtUic Include="ui\main_window\load_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />

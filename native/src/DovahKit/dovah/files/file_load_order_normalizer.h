@@ -5,7 +5,9 @@
 #include "file_read_error.h"
 
 namespace dovah {
-   class file_header;
+   namespace tes_file_reading {
+      class file_header_reader;
+   }
 
    class file_load_order_normalizer {
       //
@@ -26,9 +28,11 @@ namespace dovah {
       // that need to be reordered due to having the master flag.
       //
       public:
-         std::set<std::string>     seen; // used to detect cyclical dependencies between files
-         std::vector<file_header*> masters;
-         std::vector<file_header*> plugins;
+         using file_header_reader = tes_file_reading::file_header_reader;
+         //
+         std::set<std::string> seen; // used to detect cyclical dependencies between files
+         std::vector<file_header_reader*> masters;
+         std::vector<file_header_reader*> plugins;
          std::string base_path;
          std::string active_file;
          //

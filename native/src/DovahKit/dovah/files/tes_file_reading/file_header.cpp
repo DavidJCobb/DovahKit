@@ -1,7 +1,7 @@
 #include "file_header.h"
 #include <filesystem>
-#include "../../helpers/files.h"
-#include "../logging.h"
+#include "../../../helpers/files.h"
+#include "../../logging.h"
 
 #include <QDebug>
 
@@ -80,8 +80,8 @@ namespace {
    };
 }
 
-namespace dovah {
-   void file_header::clear() {
+namespace dovah::tes_file_reading {
+   void file_header_reader::clear() {
       this->name.clear();
       this->flags = 0;
       this->record_and_group_count = 0;
@@ -90,7 +90,7 @@ namespace dovah {
       this->masters.clear();
       this->error = file_read_error();
    }
-   bool file_header::load(const char* path) noexcept {
+   bool file_header_reader::load(const char* path) noexcept {
       this->error.code = file_read_error::error_code::none;
       this->error.file = std::filesystem::path(path).filename().string();
       //

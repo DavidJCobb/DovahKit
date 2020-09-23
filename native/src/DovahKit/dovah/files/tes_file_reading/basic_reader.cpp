@@ -33,7 +33,7 @@ namespace dovah::tes_file_reading {
       auto owner = this->owner;
       if (!owner)
          return false;
-      return owner->header_record_version >= 44;
+      return owner->header.record_version >= 44;
    }
 
    namespace {

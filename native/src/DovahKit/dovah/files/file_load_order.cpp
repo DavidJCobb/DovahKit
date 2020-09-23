@@ -1,9 +1,9 @@
 #include "file_load_order.h"
-#include "file_header.h"
 #include "threaded_load_order_use_info_builder.h"
 #include "../../helpers/strings.h"
 #include "../form_stub.h"
 #include "tes_file_reading/file.h"
+#include "tes_file_reading/file_header.h"
 #include "tes_file_writing/file_writer.h"
 #include "../forms/factories/hardcoded.h"
 #include "../logging.h"
@@ -39,7 +39,7 @@ namespace dovah {
    #pragma region File loading
    void file_load_order::_make_hardcoded_forms() {
       this->hardcoded_forms_file = new tes_file_reading::file_reader(*this);
-      this->hardcoded_forms_file->details |= tes_file_reading::file_reader::detail_flag::is_hardcoded_dummy;
+      this->hardcoded_forms_file->header.details |= tes_file_reading::file_reader::detail_flag::is_hardcoded_dummy;
       add_hardcoded_forms_to_load_order(*this);
    }
    void file_load_order::_accept_hardcoded_form(form_stub* stub) noexcept {
@@ -186,9 +186,9 @@ namespace dovah {
          if (isMaster)
             list = &this->normalizer.masters;
          //
-         auto it = std::find_if(list->begin(), list->end(), [&name](file_header* file) { return cobb::strieq(name, file->name); });
+         auto it = std::find_if(list->begin(), list->end(), [&name](loaded_header* file) { return cobb::strieq(name, file->name); });
          assert(it != list->end() && "How is it not in the list?!");
-         file_header* header = *it;
+         loaded_header* header = *it;
          list->erase(it);
          list->push_back(header);
       }
@@ -560,7 +560,7 @@ namespace dovah {
          id = 0;
          return form_id_status::missing_master;
       }
-      uint8_t local  = file->masters.size();
+      uint8_t local  = file->header.masters.size();
       uint8_t prefix = id >> 0x18;
       if (prefix == local) {
          id = id & 0x00FFFFFF | (this->guided_load_order_prefix_for(file) << 0x18);
@@ -570,7 +570,7 @@ namespace dovah {
          id = 0;
          return form_id_status::out_of_bounds;
       }
-      auto&   name = file->masters[prefix].master;
+      auto&   name = file->header.masters[prefix].master;
       uint8_t j    = this->index_of_loaded_file(name);
       if (j == invalid_load_prefix) {
          id = 0;
@@ -598,7 +598,7 @@ namespace dovah {
          return form_id_status::valid;
       }
       auto    file = stub->file;
-      uint8_t local = file->masters.size();
+      uint8_t local = file->header.masters.size();
       uint8_t prefix = stub->formID >> 0x18;
       if (prefix == local) {
          out = stub->formID & 0x00FFFFFF | (this->guided_load_order_prefix_for(file) << 0x18);
@@ -608,7 +608,7 @@ namespace dovah {
          out = 0;
          return form_id_status::out_of_bounds;
       }
-      auto& name = file->masters[prefix].master;
+      auto& name = file->header.masters[prefix].master;
       uint8_t j = this->index_of_loaded_file(name);
       if (j == invalid_load_prefix) {
          out = 0;
@@ -616,6 +616,12 @@ namespace dovah {
       }
       out = stub->formID & 0x00FFFFFF | (j << 0x18);
       return form_id_status::valid;
+   }
+
+   tes_file_header* file_load_order::get_active_file_header() const noexcept {
+      if (!this->active_file)
+         return nullptr;
+      return &this->active_file->header;
    }
 
    bool file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless) {

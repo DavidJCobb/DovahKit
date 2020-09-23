@@ -45,9 +45,6 @@
     <ClCompile Include="dovah\logging.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\file_header.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\files\tes_file_reading\elements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -243,6 +240,12 @@
     <ClCompile Include="helpers\filesystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\file_metadata_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -270,9 +273,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\logging.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\file_header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\tes_file_reading\elements.h">
@@ -449,6 +449,12 @@
     <ClInclude Include="helpers\filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading\file_header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\file_header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -479,6 +485,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\main_window\save_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\main_window\file_metadata_window.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -538,6 +547,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\save_window.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\file_metadata_window.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

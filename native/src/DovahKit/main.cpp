@@ -14,20 +14,12 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - The main window should grey out the "Save" menu item if no data has been 
-//    loaded. Note that even if you don't want to load any *files*, you still have 
-//    to go through the "Open" menu item in order to get the hardcoded forms to 
-//    load, and in order to have the file_load_order set up an implicit active file.
-//
 //  - If any loaded files are for SSE, then the file_load_order should cap the load 
 //    order at 253 entries, not 254.
 //
 //     - To identify a file's version, check the version value on the TES4 record. 
 //       (But of course, file_header and file_reader have already been amended to 
 //       retain that information.)
-//
-//  - Add a menu bar item to edit the author and description of the current active 
-//    file. If no active file is loaded, then the menu item should be greyed out.
 //
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.

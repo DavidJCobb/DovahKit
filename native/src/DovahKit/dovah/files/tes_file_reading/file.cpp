@@ -111,16 +111,16 @@ namespace dovah::tes_file_reading {
          this->error.message    = "Expected TES4 record; got something else.";
          return false;
       }
-      this->flags = r.flags();
+      this->header.flags = r.flags();
       if (this->name.size() > 4) {  // Force flags based on file extension.
          const char* extension = this->name.data() + this->name.size() - 4;
          if (_strnicmp(".esm", extension, 4) == 0) {
-            this->flags |= flag::master;
+            this->header.flags |= flag::master;
          } else if (_strnicmp(".esl", extension, 4) == 0) {
-            this->flags |= flag::master | flag::light;
+            this->header.flags |= flag::master | flag::light;
          }
       }
-      this->header_record_version = r.version();
+      this->header.record_version = r.version();
       //
       uint32_t last_subrecord = 0;
       while (auto& subrecord = r.next_subrecord()) {
@@ -129,17 +129,17 @@ namespace dovah::tes_file_reading {
                if (!subrecord.is_in_bounds(12)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
-               subrecord.unchecked_read(this->fileVersion);
-               subrecord.unchecked_read(this->recordCount);
-               subrecord.unchecked_read(this->nextFormID);
+               subrecord.unchecked_read(this->header.file_version);
+               subrecord.unchecked_read(this->header.record_and_group_count);
+               subrecord.unchecked_read(this->header.nextFormID);
                break;
             case 'CNAM': // author/creator
-               if (!subrecord.to_string(this->authorName)) {
+               if (!subrecord.to_string(this->header.author)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                break;
             case 'SNAM': // description
-               if (!subrecord.to_string(this->description)) {
+               if (!subrecord.to_string(this->header.description)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                break;
@@ -148,12 +148,12 @@ namespace dovah::tes_file_reading {
                   dovah::logging::print_line("Warning: a 'MAST' subrecord in the file header lacked a matching 'DATA' subrecord.");
                }
                {
-                  this->masters.emplace_back();
-                  auto& last = *this->masters.rbegin();
+                  this->header.masters.emplace_back();
+                  auto& last = *this->header.masters.rbegin();
                   if (!subrecord.to_string(last.master)) {
                      return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                   }
-                  if (this->masters.size() > 253) {
+                  if (this->header.masters.size() > 253) {
                      this->error.code       = file_read_error::error_code::malformed_file;
                      this->error.file       = this->name;
                      this->error.fileOffset = this->getPos();
@@ -192,7 +192,7 @@ namespace dovah::tes_file_reading {
                      this->error.message = "Unexpected 'DATA' subrecord at the start of the file header.";
                   return false;
                } else {
-                  auto& last = *this->masters.rbegin();
+                  auto& last = *this->header.masters.rbegin();
                   if (!subrecord.read(last.data)) {
                      dovah::logging::print_line("Warning: failed to read the 'DATA' subrecord for master: %s", last.master.c_str());
                   }
@@ -202,19 +202,19 @@ namespace dovah::tes_file_reading {
                //
                // TODO
                //
-               this->details |= detail_flag::has_onam;
+               this->header.details |= detail_flag::has_onam;
                break;
             case 'INTV':
-               if (!subrecord.read(this->subINTV)) {
+               if (!subrecord.read(this->header.subINTV)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
-               this->details |= detail_flag::has_intv;
+               this->header.details |= detail_flag::has_intv;
                break;
             case 'INCC':
-               if (!subrecord.read(this->subINCC)) {
+               if (!subrecord.read(this->header.subINCC)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
-               this->details |= detail_flag::has_incc;
+               this->header.details |= detail_flag::has_incc;
                break;
          }
          last_subrecord = subrecord.signature();
@@ -263,7 +263,7 @@ namespace dovah::tes_file_reading {
          return false;
       }
       dovah::logging::print_line("Read file header.");
-      this->uses_string_table = (bool)(this->flags & flag::localized_string_table);
+      this->uses_string_table = (bool)(this->header.flags & flag::localized_string_table);
       if (this->uses_string_table) {
          /*// BLOCKED; SEE localized_string_file.h
          auto& lf = this->localization_files;

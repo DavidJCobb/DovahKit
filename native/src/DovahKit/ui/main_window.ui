@@ -46,6 +46,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionEditFileMetadata"/>
     <addaction name="actionSave"/>
    </widget>
    <addaction name="menuFile"/>
@@ -53,7 +54,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
    <property name="text">
-    <string>Open...</string>
+    <string>Load Data...</string>
    </property>
   </action>
   <action name="actionDebugLoadDawnguard">
@@ -69,6 +70,11 @@
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
+   </property>
+  </action>
+  <action name="actionEditFileMetadata">
+   <property name="text">
+    <string>Edit File Metadata</string>
    </property>
   </action>
  </widget>

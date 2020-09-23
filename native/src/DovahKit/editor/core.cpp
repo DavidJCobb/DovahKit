@@ -4,6 +4,7 @@
 #include <QThread>
 #include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
+#include "../dovah/files/tes_file_reading/file.h"
 #include "core_internals/load_task.h"
 #include <QDebug>
 
@@ -134,6 +135,24 @@ bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameles
    }
    emit dataSaveFailed(this->load_order->save_error);
    return false;
+}
+QString DovahKitCore::get_active_file_author() const noexcept {
+   if (auto* header = this->load_order->get_active_file_header())
+      return QString::fromStdString(header->author);
+   return QString();
+}
+QString DovahKitCore::get_active_file_description() const noexcept {
+   if (auto* header = this->load_order->get_active_file_header())
+      return QString::fromStdString(header->description);
+   return QString();
+}
+void DovahKitCore::set_active_file_author(const QString& text) const noexcept {
+   if (auto* header = this->load_order->get_active_file_header())
+      header->author = text.toStdString();
+}
+void DovahKitCore::set_active_file_description(const QString& text) const noexcept {
+   if (auto* header = this->load_order->get_active_file_header())
+      header->description = text.toStdString();
 }
 
 bool DovahKitCore::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept {

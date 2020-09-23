@@ -14,10 +14,11 @@ namespace dovah {
    class form_stub;
    using map_of_forms = std::unordered_map<bare_form_id_t, form_stub*>;
 
-   class file_header;
-   class threaded_load_order_use_info_builder;
+   struct tes_file_header;
+   class  threaded_load_order_use_info_builder;
    namespace tes_file_reading {
       class file_reader;
+      class file_header_reader;
    }
 
    class file_load_order {
@@ -28,7 +29,8 @@ namespace dovah {
       friend void add_hardcoded_forms_to_load_order(file_load_order&);
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
-         using loaded_file = tes_file_reading::file_reader;
+         using loaded_file   = tes_file_reading::file_reader;
+         using loaded_header = tes_file_reading::file_header_reader;
          //
          enum class form_id_status {
             valid,
@@ -135,6 +137,9 @@ namespace dovah {
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
          void stub_flagged_as_edited(form_stub*) noexcept; // called by form_stub::set_edited
+         //
+         inline const loaded_file* get_active_file() const noexcept { return this->active_file; }
+         tes_file_header* get_active_file_header() const noexcept;
          #pragma endregion
 
          bool save_active_file(std::filesystem::path name_to_use_if_nameless);

@@ -68,7 +68,7 @@ namespace dovah {
       if (this->is_hardcoded()) {
          if (!this->file)
             return false;
-         if (this->file->details & owner_file_t::detail_flag::is_hardcoded_dummy) // allow overrides of hardcoded forms to unload
+         if (this->file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) // allow overrides of hardcoded forms to unload
             return false;
       }
       return true;

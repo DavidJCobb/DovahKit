@@ -1,6 +1,6 @@
 #include "file_load_order_normalizer.h"
 #include "../../helpers/strings.h"
-#include "file_header.h"
+#include "tes_file_reading/file_header.h"
 
 namespace dovah {
    bool file_load_order_normalizer::has_master(const std::string& name) const {
@@ -19,10 +19,10 @@ namespace dovah {
    }
    void file_load_order_normalizer::move_to_masters(const std::string& name) noexcept {
       auto& list = this->plugins;
-      auto  it   = std::find_if(list.begin(), list.end(), [&name](file_header* file) { return cobb::strieq(name, file->name); });
+      auto  it   = std::find_if(list.begin(), list.end(), [&name](file_header_reader* file) { return cobb::strieq(name, file->name); });
       if (it == list.end())
          return;
-      file_header* header = *it;
+      file_header_reader* header = *it;
       list.erase(it);
       //
       auto& masterNames = header->masters;
@@ -41,7 +41,7 @@ namespace dovah {
          return true;
       }
       //
-      auto header = new file_header;
+      auto header = new file_header_reader;
       std::string path = this->base_path + name;
       if (!header->load(path.c_str())) {
          error.code       = file_read_error::error_code::malformed_file;

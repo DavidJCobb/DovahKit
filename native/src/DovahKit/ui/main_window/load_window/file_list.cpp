@@ -3,14 +3,14 @@
 #include <QDirIterator>
 #include <QHeaderView>
 #include <QLineEdit>
-#include "../../../dovah/files/file_header.h"
+#include "../../../dovah/files/tes_file_reading/file_header.h"
 #include "../../../editor/core.h"
 
 #include "windows.h"
 #include "../../../helpers/intrusive_windows_defines.h"
 
 #pragma region LoadOrderFileListModel
-LoadOrderFileListModelItem::LoadOrderFileListModelItem(const dovah::file_header& header, const QDateTime& created, const QDateTime& modified) {
+LoadOrderFileListModelItem::LoadOrderFileListModelItem(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified) {
    this->filename  = QString::fromStdString(header.name);
    this->is_master = header.is_master();
    this->dependencies.reserve(header.masters.size());
@@ -131,7 +131,7 @@ void LoadOrderFileListModel::clear() {
    this->root->clear();
    this->endResetModel();
 }
-void LoadOrderFileListModel::insert(const dovah::file_header& header, const QDateTime& created, const QDateTime& modified) {
+void LoadOrderFileListModel::insert(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified) {
    auto item = new item_type(header, created, modified);
    //
    auto first_inserted = this->root->childCount();
@@ -230,7 +230,7 @@ LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
       return;
    }
    auto model = (model_type*)this->model();
-   dovah::file_header fh;
+   dovah::tes_file_reading::file_header_reader fh;
    QDateTime created;
    QDateTime modified;
    QDirIterator it(QString::fromStdWString(install_path.c_str()) + "\\Data\\");
