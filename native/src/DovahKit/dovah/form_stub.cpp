@@ -62,16 +62,26 @@ namespace dovah {
    loaded_form_ptr<loaded_forms::Form> form_stub::get_content_if_loaded() {
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
+   bool form_stub::fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size) const noexcept {
+      if (!this->file || this->is_non_overridden_hardcoded_form())
+         return false;
+      return this->file->fetch_record_header(this->offset, out, out_record_decompressed_size);
+   }
    bool form_stub::can_unload_form() const noexcept {
       if (this->is_edited())
          return false;
+      if (this->is_non_overridden_hardcoded_form())
+         return false;
+      return true;
+   }
+   bool form_stub::is_non_overridden_hardcoded_form() const noexcept {
       if (this->is_hardcoded()) {
          if (!this->file)
-            return false;
+            return true;
          if (this->file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) // allow overrides of hardcoded forms to unload
-            return false;
+            return true;
       }
-      return true;
+      return false;
    }
    void form_stub::set_edited(bool v) {
       cobb::modify_bit(this->flags, flag::is_edited, v);

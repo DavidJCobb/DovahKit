@@ -87,21 +87,6 @@
 //          If the active file is implicit/invisible, then choose the game based on 
 //          the current load order.
 //
-//     - Form-editing dialogs need to store form_stub pointers in addition to 
-//       loaded_form_ptrs. When the editor fires onSaveImminent, they need to 
-//       discard their loaded_form_ptrs; when the editor fires onSaveComplete or 
-//       onSaveFailed, it's safe for them to retrieve the loaded form data again.
-//
-//        - Can we please make these derive from a common superclass?
-//
-//           - Well, QObjects can't be templated, which complicates both accessing 
-//             subclass UI controls and templating the loaded_form_ptr.
-//
-//              - What about a non-templated QObject superclass with template methods 
-//                that we'd just pass (this) or (this->ui) to? Or a single non-member 
-//                template function that the dialogs all pass themselves to during 
-//                init?
-//
 //     - form_stub::load should not attempt to load any form data from the active file 
 //       while a save operation is in progress. To that end, we should add a function 
 //       {bool file_load_order::is_form_loading_blocked(form_stub&) const noexcept} 
@@ -116,23 +101,14 @@
 //
 //     - When saving WRLD, the OFST subrecord needs special handling.
 //
-//     - Records that exceed a certain length should be zlib-compressed. What length 
-//       threshold should we use?
+//     - Record compression
 //
-//        - I've added a (compression_policy) enum to (file_writer), but it currently 
-//          isn't used by anything. For (compression_policy::threshold), I'm thinking 
-//          maybe 0x200 bytes would be a good threshold, but we could always set up 
-//          some debug logging to determine the mean/median/mode/standard deviation/etc. 
-//          of uncompressed record sizes to try and figure out a good "outlier" size.
+//        - Test the "threshold" implementation.
 //
-//     - NOTE: COPYING RECORD DATA FROM THE SOURCE FILE IS ONLY APPROPRIATE WHEN 
-//       RESAVING THE SAME FILE WITH THE SAME MASTERS. IF ANY MASTERS IN THE ACTIVE 
-//       FILE DIFFER FROM THOSE OF THE ORIGINAL, THEN THE COPIED DATA WILL END UP 
-//       HAVING BAD FORM IDs. FIXUP WOULD HAVE TO BE CODED PER-FORM AND AT THAT 
-//       POINT, WE MAY AS WELL WRITE FULL SAVE CODE.
+//        - Write the code to decide when CELL records should be compressed.
 //
-//        - This unfortunately also means that we actually can't ship DovahKit with 
-//          a minimum of form types and patch it incrementally, as hoped. Darn.
+//           - Not possible until we implement loading and saving cells in the first 
+//             place.
 //
 //  - Use Info window
 //

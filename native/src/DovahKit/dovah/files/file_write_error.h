@@ -62,6 +62,15 @@ namespace dovah {
                // form stubs from that file.
                //
                save_complete_but_reopen_failed,
+               //
+               // (out_of_memory)
+               // DovahKit failed to allocate memory for a buffer at some point during the write 
+               // process.
+               //
+               out_of_memory,
+               //
+               zlib_memory_error,
+               zlib_buffer_error,
             };
          };
          using error_code_t = std::underlying_type_t<error_code::type>;

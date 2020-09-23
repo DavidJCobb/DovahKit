@@ -36,7 +36,7 @@ void FormShoutWordEditor::save() {
    if (!this->form)
       return;
    auto& list = this->form->words;
-   if (list.size() >= this->which_word)
+   if (list.size() <= this->which_word)
       return;
    auto& word = list[this->which_word];
    word.wordOfPowerID = this->ui.word->formID();

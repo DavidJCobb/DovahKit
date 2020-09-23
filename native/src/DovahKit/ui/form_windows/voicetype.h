@@ -1,22 +1,22 @@
 #pragma once
 #include <cstdint>
 #include <QDialog>
-#include "../../dovah/form_stub.h"
+#include "_base.h"
 #include "../../dovah/forms/Voicetype.h"
 #include "ui_voicetype.h"
 
-class FormDialogVoicetype : public QDialog {
+class FormDialogVoicetype : public FormDialogBaseTemplate {
    Q_OBJECT
-   //
+   DOVAHKIT_FORM_EDIT_DIALOG
    public:
       FormDialogVoicetype(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
       //
-      void load();
-      void save();
-      //
    private slots:
       //
-   private:
+   protected:
       Ui::FormDialogVoicetype ui;
       dovah::loaded_form_ptr<dovah::loaded_forms::Voicetype> form;
+      //
+      virtual void _load_impl() override;
+      virtual void _save_impl() override;
 };

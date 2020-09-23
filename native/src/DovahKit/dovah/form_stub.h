@@ -8,8 +8,9 @@
 #include "core.h"
 
 namespace dovah {
-   class file_load_order;
-   class threaded_load_order_use_info_builder;
+   class  file_load_order;
+   struct tes_file_record_header;
+   class  threaded_load_order_use_info_builder;
    namespace loaded_forms {
       class Form;
    }
@@ -210,6 +211,8 @@ namespace dovah {
          loaded_form_ptr<loaded_forms::Form> load();
          loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
          //
+         bool fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size) const noexcept;
+         //
          bool can_unload_form() const noexcept;
          inline uint32_t    get_file_offset() const noexcept { return this->offset; }
          inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
@@ -218,6 +221,7 @@ namespace dovah {
          inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
          inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
          inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
+         bool is_non_overridden_hardcoded_form() const noexcept;
          void set_edited(bool v);
          //
          void get_source_filename(std::string& out) const noexcept;

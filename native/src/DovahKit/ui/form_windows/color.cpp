@@ -1,34 +1,15 @@
 #include "color.h"
+#include "_base_cpp.h"
 #include "../../helpers/bitwise.h"
-#include "../../editor/core.h"
 
-FormDialogColor::FormDialogColor(dovah::form_stub* stub, QWidget* parent) : QDialog(parent) {
-   ui.setupUi(this);
-   //
-   if (stub->formType == dovah::form_type::color)
-      this->form = stub->load().ptr_cast<dovah::loaded_forms::Color>();
+FormDialogColor::FormDialogColor(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
+   form_dialog_helpers::initialize<FormDialogColor, dovah::loaded_forms::Color>(*this, stub);
    //
    this->ui.colorPicker->setHasAlpha(false);
    //
-   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, [this]() {
-      this->reject();
-   });
-   QObject::connect(this->ui.buttonOK, &QPushButton::clicked, [this]() {
-      this->save();
-      this->accept();
-   });
-   //
-   auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
-      this->form = nullptr;
-      this->reject();
-   });
-   //
    this->load();
 }
-void FormDialogColor::load() {
-   if (!this->form)
-      return;
+void FormDialogColor::_load_impl() {
    this->ui.editorID->setText(QString::fromStdString(this->form->stub->get_editor_id()));
    this->ui.name->setText(QString::fromStdString(this->form->name.c_str()));
    //
@@ -37,12 +18,8 @@ void FormDialogColor::load() {
    //
    this->ui.playable->setChecked((this->form->color_flags & dovah::loaded_forms::Color::color_flag::playable) != 0);
 }
-void FormDialogColor::save() {
-   if (!this->form)
-      return;
-   auto stub = this->form->stub;
-   stub->set_edited(true);
-   stub->editorID = this->ui.editorID->text().toStdString();
+void FormDialogColor::_save_impl() {
+   this->stub->editorID = this->ui.editorID->text().toStdString();
    this->form->name = this->ui.name->text().toStdString();
    //
    auto color = this->ui.colorPicker->color();
@@ -51,6 +28,4 @@ void FormDialogColor::save() {
    this->form->color.b = color.blue();
    //
    cobb::modify_bit(this->form->color_flags, dovah::loaded_forms::Color::color_flag::playable, this->ui.playable->isChecked());
-   //
-   emit DovahKitCore::get().formModified(stub);
 }

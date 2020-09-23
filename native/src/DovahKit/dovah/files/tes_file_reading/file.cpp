@@ -94,6 +94,21 @@ namespace dovah::tes_file_reading {
       reader->setPos(pos);
       return reader->next_record_or_group() == object_type::record;
    }
+   bool file_reader::fetch_record_header(uint32_t pos, tes_file_record_header& out_header, uint32_t& record_decompressed_size) {
+      this->resetParseState();
+      this->setPos(pos);
+      out_header = tes_file_record_header();
+      if (this->next_record_or_group() == object_type::record) {
+         out_header = this->_record.header;
+         if (out_header.body_is_compressed()) {
+            record_decompressed_size = this->_record.data.size();
+         } else {
+            record_decompressed_size = out_header.size;
+         }
+         return true;
+      }
+      return false;
+   }
    //
    bool file_reader::_load_header() {
       if (this->next_record_or_group() != object_type::record) {

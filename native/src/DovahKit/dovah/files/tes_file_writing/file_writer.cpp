@@ -6,6 +6,13 @@
 #include "../../form_stub_helpers.h"
 #include "../../forms/Form.h"
 #include "../common.h"
+extern "C" {
+   #include "../../../zlib/zlib.h" // interproject ref
+}
+
+namespace {
+   static constexpr int record_compress_threshold = 0x280;
+}
 
 namespace dovah::tes_file_writing {
    file_writer::file_writer(file_load_order& owner, file_reader& source) : owner(owner), source(source), _record(*this), _subrecord(*this) {
@@ -29,6 +36,41 @@ namespace dovah::tes_file_writing {
       header.version_control_2 = this->version_control_2;
       //
       return record;
+   }
+   bool file_writer::_should_compress_current_record(form_stub* stub) const noexcept {
+      switch (this->compress_policy) {
+         case compression_policy::never:
+            return false;
+         case compression_policy::bethesda:
+            //
+            // Inspection of Skyrim.esm indicates that Bethesda always compresses NPC_ and 
+            // NAVM. CELL is compressed if it has a TVDT subrecord (and probably if it has 
+            // similar large subrecords like MHDT), and LAND is compressed when inside of 
+            // a compressed CELL.
+            //
+            // Bethesda doesn't seem to take record size into account at all when deciding 
+            // whether to compress a record. I've seen ten-byte LANDs get compressed.
+            //
+            if (!stub)
+               return false;
+            switch (stub->formType) {
+               case form_type::actor_base:
+                  return true;
+               case form_type::navmesh:
+                  return true;
+               case form_type::land:
+                  return this->compress_state.containing_cell_is_compressed;
+               case form_type::cell:
+                  //
+                  // TODO
+                  //
+                  break;
+            }
+            return false;
+         case compression_policy::threshold:
+            return this->_record.pos >= record_compress_threshold;
+      }
+      return false;
    }
    void file_writer::_write_header() {
       auto& record = this->_open_next_record('TES4', 0);
@@ -128,7 +170,16 @@ namespace dovah::tes_file_writing {
             write_info.stub   = stub;
             write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
             //
+            if (this->_should_compress_current_record())
+               record.header.flags |= tes_file_record_header::flag::compressed;
+            //
+            if (stub->formType == form_type::cell) {
+               this->compress_state.containing_cell_is_compressed = record.header.body_is_compressed();
+            }
+            //
             record._close();
+            if (this->error.defined()) // any zlib errors?
+               return false;
          } else {
             record._clear(); // abort this attempt at writing a record
             //
@@ -180,12 +231,54 @@ namespace dovah::tes_file_writing {
                break;
          }
       }
+      if (stub->formType == form_type::cell) {
+         this->compress_state.containing_cell_is_compressed = false;
+      }
       return true;
    }
-   void file_writer::_write_record() {
+   void file_writer::_write_record(form_stub* stub) {
       auto& record = this->get_current_record();
-      this->_write(record.header);
-      this->stream.write(record.data.data(), record.header.size);
+      if (record.header.body_is_compressed()) {
+         //
+         // Write compressed record data.
+         //
+         auto& error  = this->error;
+         uint32_t decompressed_size = record.header.size;
+         uint32_t compressed_size   = compressBound(decompressed_size);
+         auto  buffer = malloc(compressed_size);
+         if (!buffer) {
+            error.code        = file_write_error::error_code::out_of_memory;
+            error.formID      = record.header.formID;
+            error.form_type   = stub ? stub->formType : form_type::none;
+            error.file_offset = this->get_stream_position();
+            return;
+         }
+         record.header.size = compressed_size + sizeof(tes_file_record_header::size);
+         int result = compress2((Bytef*)buffer, (uLongf*)&compressed_size, (const Bytef*)record.data.data(), decompressed_size, Z_BEST_COMPRESSION);
+         if (result != Z_OK) {
+            error.formID      = record.header.formID;
+            error.form_type   = stub ? stub->formType : form_type::none;
+            error.file_offset = this->get_stream_position();
+            switch (result) {
+               case Z_MEM_ERROR:
+                  error.code = file_write_error::error_code::zlib_memory_error;
+                  return;
+               case Z_BUF_ERROR:
+                  error.code = file_write_error::error_code::zlib_buffer_error;
+                  return;
+            }
+         }
+         this->_write(record.header);
+         this->_write(decompressed_size);
+         this->stream.write((const uint8_t*)buffer, compressed_size);
+         free(buffer);
+      } else {
+         //
+         // Write uncompressed record data.
+         //
+         this->_write(record.header);
+         this->stream.write(record.data.data(), record.header.size);
+      }
       ++this->fixup_data.record_and_group_count.value;
    }
 

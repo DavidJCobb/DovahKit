@@ -159,6 +159,7 @@
     <ClCompile Include="ui\form_windows\shout.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
+    <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
@@ -224,6 +225,8 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="ui\form_windows\_base_cpp.h" />
+    <QtMoc Include="ui\form_windows\_base.h" />
     <QtMoc Include="ui\main_window\file_metadata_window.h" />
     <QtMoc Include="ui\main_window\save_window.h" />
     <QtMoc Include="ui\main_window\form_use_info\use_info_list.h" />

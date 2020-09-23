@@ -49,7 +49,14 @@
     <addaction name="actionEditFileMetadata"/>
     <addaction name="actionSave"/>
    </widget>
+   <widget class="QMenu" name="menuDebug">
+    <property name="title">
+     <string>Debug</string>
+    </property>
+    <addaction name="actionDebugGetRecordSizeStats"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -75,6 +82,11 @@
   <action name="actionEditFileMetadata">
    <property name="text">
     <string>Edit File Metadata</string>
+   </property>
+  </action>
+  <action name="actionDebugGetRecordSizeStats">
+   <property name="text">
+    <string>Get record size stats</string>
    </property>
   </action>
  </widget>

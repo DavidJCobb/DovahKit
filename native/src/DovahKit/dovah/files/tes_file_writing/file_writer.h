@@ -45,11 +45,15 @@ namespace dovah {
             std::array<group, max_group_depth> _groups;
             record    _record;
             subrecord _subrecord;
+            struct {
+               bool containing_cell_is_compressed = false;
+            } compress_state;
             //
             record& _open_next_record(uint32_t signature, bare_form_id_t);
+            bool _should_compress_current_record(form_stub* stub = nullptr) const noexcept;
             void _write_header();
             bool _write_form(form_stub*);
-            void _write_record();
+            void _write_record(form_stub* stub = nullptr); // pass the stub when writing forms, for error reporting purposes
             void _write_child_forms_for_cell(form_stub*);
             void _write_child_forms_for_topic(form_stub*);
             void _write_child_forms_for_worldspace(form_stub*);
@@ -84,6 +88,7 @@ namespace dovah {
             };
             uint16_t version_control_2 = 0;
             bool     use_string_table; // constructor defaults this to whatever the source file did
+            compression_policy compress_policy = compression_policy::never;
             #pragma endregion
             //
             file_write_error error;

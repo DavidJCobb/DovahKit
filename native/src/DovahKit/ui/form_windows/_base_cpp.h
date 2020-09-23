@@ -1,0 +1,36 @@
+#pragma once
+#include "_base.h"
+#include "../../dovah/form_stub.h"
+#include "../../editor/core.h"
+
+namespace form_dialog_helpers {
+   template<class _dialog_t, typename loaded_form_t> void initialize(_dialog_t& dialog, dovah::form_stub* stub) {
+      dialog.ui.setupUi(&dialog);
+
+      if (stub->formType == loaded_form_t::form_type) {
+         dialog.stub = stub;
+         dialog.form = stub->load().ptr_cast<loaded_form_t>();
+      }
+      //
+      QObject::connect(dialog.ui.buttonCancel, &QPushButton::clicked, [&dialog]() {
+         dialog.reject();
+      });
+      QObject::connect(dialog.ui.buttonOK, &QPushButton::clicked, [&dialog]() {
+         dialog.save();
+         dialog.accept();
+      });
+      //
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, &dialog, [&dialog]() {
+         dialog.form = nullptr;
+         dialog.stub = nullptr;
+         dialog.reject();
+      });
+      QObject::connect(&editor, &DovahKitCore::dataSaveImminent, &dialog, [&dialog]() {
+         dialog.form = nullptr;
+      });
+      auto _reload = [&dialog]() { dialog.form = dialog.stub->load().ptr_cast<loaded_form_t>(); };
+      QObject::connect(&editor, &DovahKitCore::dataSaveComplete, &dialog, _reload);
+      QObject::connect(&editor, &DovahKitCore::dataSaveFailed,   &dialog, _reload);
+   }
+}
