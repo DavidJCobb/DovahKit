@@ -87,30 +87,58 @@ QVariant FormUseInfoListModel::data(const QModelIndex& index, int role) const {
       return QVariant();
    auto item   = (item_type*)index.internalPointer();
    auto column = index.column();
-   switch (role) {
-      case Qt::DisplayRole:
-         switch (column) {
-            case 0:
+   switch (column) {
+      case 0: // signature
+         switch (role) {
+            case Qt::DisplayRole:
+            case Qt::UserRole + 0: // sorting
                return item->signature;
-            case 1:
+            case Qt::UserRole + 1: // filtering
+               return QVariant();
+         }
+         break;
+      case 1: // form ID
+         switch (role) {
+            case Qt::DisplayRole:
                return QString("%1").arg(item->otherID, 8, 16, QChar('0')).toUpper();
-            case 2:
+               return QString("%1").arg(item->otherID, 8, 16, QChar('0')).toUpper();
+            case Qt::UserRole + 0: // sorting
+               return item->otherID;
+         }
+         break;
+      case 2: // editor ID or parent cell information
+         switch (role) {
+            case Qt::DisplayRole:
+            case Qt::UserRole + 0: // sorting
+            case Qt::UserRole + 1: // filtering
                if (this->mode == relationship_mode::base_form_only) {
                   return item->parentCell;
                }
                return item->editorID;
-            case 3:
-               switch (this->mode) {
-                  case relationship_mode::general_only:
-                     return item->countUsed;
-                  case relationship_mode::base_form_only:
-                     return item->countPlaced;
-               }
-               return 0;
          }
          break;
+      case 3: // count
+         switch (role) {
+            case Qt::DisplayRole:
+            case Qt::UserRole + 0: // sorting
+               if (this->mode == relationship_mode::general_only)
+                  return item->countUsed;
+               if (this->mode == relationship_mode::base_form_only)
+                  return item->countPlaced;
+               return QVariant();
+            case Qt::UserRole + 1: // filtering
+               return QVariant(); // don't allow filtering
+         }
    }
    return QVariant();
+}
+inline const FormUseInfoListModel::item_type* FormUseInfoListModel::row(int rowIndex) const noexcept {
+   if (!this->root)
+      return nullptr;
+   auto& list = this->root->_children;
+   if (rowIndex < 0 || rowIndex >= list.size())
+      return nullptr;
+   return list[rowIndex];
 }
 //
 QVariant FormUseInfoListModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -166,8 +194,10 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
       auto item = new item_type(&entry);
       insertions.push_back(item);
    }
+   if (insertions.size() == 0)
+      return;
    auto first_inserted = this->root->childCount();
-   auto last_inserted  = first_inserted + insertions.size();
+   auto last_inserted  = first_inserted + insertions.size() - 1;
    this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
    for(auto* item : insertions)
       this->root->_children.push_back(item);
@@ -178,9 +208,36 @@ void FormUseInfoListModel::setRelationshipMode(relationship_mode mode) noexcept 
 }
 #pragma endregion
 
+FormUseInfoListModelProxy::FormUseInfoListModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {
+   this->setFilterCaseSensitivity(Qt::CaseInsensitive);
+   this->setFilterRole(Qt::UserRole + 1);
+   this->setFilterKeyColumn(-1);
+   this->setSortCaseSensitivity(Qt::CaseInsensitive);
+   this->setSortRole(Qt::UserRole + 0);
+}
+bool FormUseInfoListModelProxy::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
+   if (this->_formType != dovah::form_type::none) {
+      auto* model = (model_type*)this->sourceModel();
+      auto* item  = model->row(sourceRow);
+      if (item && item->otherType != this->_formType) {
+         return false;
+      }
+   }
+   return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+}
+void FormUseInfoListModelProxy::setFormType(dovah::form_type_t ft) {
+   this->_formType = ft;
+   this->invalidateFilter();
+}
+
 #pragma region FormUseInfoList
 FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
-   this->setModel(new model_type);
+   {
+      auto model = new model_type;
+      auto proxy = new FormUseInfoListModelProxy(this);
+      proxy->setSourceModel(model);
+      this->setModel(proxy);
+   }
    this->verticalHeader()->setDefaultSectionSize(0);
    this->sortByColumn(0, Qt::AscendingOrder);
    //
@@ -197,14 +254,19 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(3, QHeaderView::Interactive);
    //
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
-      if (!index.isValid())
+      auto* proxy = (QSortFilterProxyModel*)this->model();
+      auto  real  = proxy->mapToSource(index); // the (index) we received is specific to the proxy; we need an index relative to the underlying model
+      if (!real.isValid())
          return;
-      auto data = (model_item_type*)index.internalPointer();
+      auto data = (model_item_type*)real.internalPointer();
       if (data && data->otherStub)
          open_window_for_form(data->otherStub, this);
    });
+   QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
+      if (this->_filter)
+         this->refilterModelByText(this->_filter->text());
+   });
    //
-   auto  model  = (model_type*)this->model();
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() { this->setTarget(nullptr); });
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
@@ -214,27 +276,63 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    });
 };
 FormUseInfoList::relationship_mode FormUseInfoList::relationshipMode() const noexcept {
-   auto model = (model_type*)this->model();
+   auto model = (model_type*)this->unwrappedModel();
    if (!model)
       return relationship_mode::invalid;
    return model->relationshipMode();
 }
 void FormUseInfoList::setRelationshipMode(relationship_mode m) noexcept {
-   auto model = (model_type*)this->model();
+   auto model = (model_type*)this->unwrappedModel();
    if (!model)
       return;
    model->setRelationshipMode(m);
    model->build(this->target);
 }
+void FormUseInfoList::refilterModelByText(const QString& text) {
+   auto wrapper = (QSortFilterProxyModel*)this->model();
+   if (!wrapper)
+      return;
+   wrapper->setFilterFixedString(text);
+}
+void FormUseInfoList::textFilterChanged() {
+   auto& timer = *this->_filterThrottle;
+   if (timer.isActive())
+      return;
+   timer.start(200);
+}
+void FormUseInfoList::textFilterFinished() {
+   this->_filterThrottle->stop();
+   if (this->_filter)
+      this->refilterModelByText(this->_filter->text());
+}
 void FormUseInfoList::setTarget(const dovah::form_stub* stub) {
    this->target = stub;
-   auto model = (model_type*)this->model();
+   auto model = (model_type*)this->unwrappedModel();
    if (!model)
       return;
    model->build(stub);
 }
+void FormUseInfoList::setTextFilter(QLineEdit* field) {
+   this->_filterThrottle->stop();
+   if (this->_filter) {
+      QObject::disconnect(this->_filter, &QLineEdit::textEdited, this, &FormUseInfoList::textFilterChanged);
+      QObject::disconnect(this->_filter, &QLineEdit::editingFinished, this, &FormUseInfoList::textFilterFinished);
+   }
+   this->_filter = field;
+   if (!field)
+      return;
+   this->refilterModelByText(field->text());
+   QObject::connect(field, &QLineEdit::textEdited, this, &FormUseInfoList::textFilterChanged);
+   QObject::connect(field, &QLineEdit::editingFinished, this, &FormUseInfoList::textFilterFinished);
+}
+void FormUseInfoList::setFormTypeFilter(dovah::form_type_t ft) {
+   auto* proxy = (FormUseInfoListModelProxy*)this->model();
+   if (!proxy)
+      return;
+   proxy->setFormType(ft);
+}
 void FormUseInfoList::build() {
-   auto model = (model_type*)this->model();
+   auto model = (model_type*)this->unwrappedModel();
    if (!model)
       return;
    model->build(this->target);

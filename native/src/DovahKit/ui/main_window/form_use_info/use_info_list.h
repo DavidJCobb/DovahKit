@@ -6,6 +6,7 @@
 #include <QSortFilterProxyModel>
 #include <QString>
 #include <QTableView>
+#include <QTimer>
 #include "../../../dovah/core.h"
 #include "../../../dovah/form_stub.h"
 
@@ -80,6 +81,7 @@ class FormUseInfoListModel : public QAbstractTableModel {
       int columnCount(const QModelIndex& item) const override;
       Qt::ItemFlags flags(const QModelIndex& index) const override;
       QVariant data(const QModelIndex& index, int role) const override;
+      inline const item_type* row(int rowIndex) const noexcept;
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
@@ -87,6 +89,22 @@ class FormUseInfoListModel : public QAbstractTableModel {
       void build(const dovah::form_stub* used);
       inline relationship_mode relationshipMode() const noexcept { return this->mode; }
       void setRelationshipMode(relationship_mode) noexcept; // does not rebuild the model
+};
+
+class FormUseInfoListModelProxy : public QSortFilterProxyModel {
+   Q_OBJECT
+   public:
+      FormUseInfoListModelProxy(QObject* parent = nullptr);
+      using model_type      = FormUseInfoListModel;
+      using model_item_type = model_type::item_type;
+      //
+      bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
+      //
+      inline dovah::form_type_t formType() const noexcept { return this->_formType; };
+      void setFormType(dovah::form_type_t);
+      //
+   protected:
+      dovah::form_type_t _formType = dovah::form_type::none;
 };
 
 class FormUseInfoList : public QTableView {
@@ -98,15 +116,23 @@ class FormUseInfoList : public QTableView {
       using relationship_mode = model_type::relationship_mode;
       //
       inline model_type* unwrappedModel() const noexcept {
-         return (model_type*)this->model();
+         auto wrapper = (QSortFilterProxyModel*)this->model();
+         return wrapper ? (model_type*)wrapper->sourceModel() : nullptr;
       }
       relationship_mode relationshipMode() const noexcept;
       void setRelationshipMode(relationship_mode) noexcept; // rebuilds the model
       void setTarget(const dovah::form_stub*);
+      void setTextFilter(QLineEdit*);
+      void setFormTypeFilter(dovah::form_type_t);
       //
    public slots:
       void build();
+      void refilterModelByText(const QString&);
+      void textFilterChanged();
+      void textFilterFinished();
       //
    protected:
       const dovah::form_stub* target = nullptr;
+      QLineEdit* _filter         = nullptr;
+      QTimer*    _filterThrottle = new QTimer(this);
 };

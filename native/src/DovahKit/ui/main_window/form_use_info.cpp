@@ -8,6 +8,35 @@ FormUseInfoDialog::FormUseInfoDialog(const dovah::form_stub* stub, QWidget* pare
    //
    this->ui.usesInGeneral->setRelationshipMode(FormUseInfoList::relationship_mode::general_only);
    this->ui.usesAsBaseForm->setRelationshipMode(FormUseInfoList::relationship_mode::base_form_only);
+   this->ui.usesInGeneral->setTextFilter(this->ui.filterText);
+   this->ui.usesAsBaseForm->setTextFilter(this->ui.filterText);
+   {
+      auto widget = this->ui.filterSignature;
+      widget->addItem(tr(" ANY ", "use info filter by signature"), int(dovah::form_type::none));
+      for (auto& info : dovah::form_types) {
+         switch (info.formType) {
+            case dovah::form_type::none:
+            case dovah::form_type::file_header:
+            case dovah::form_type::file_record_group:
+            case dovah::form_type::setting:
+               continue;
+         }
+         auto signature = QString("%1%2%3%4")
+            .arg(QChar(info.signature >> 0x18))
+            .arg(QChar((info.signature >> 0x10) & 0xFF))
+            .arg(QChar((info.signature >> 0x08) & 0xFF))
+            .arg(QChar(info.signature & 0xFF));
+         widget->addItem(signature, int(info.formType));
+      }
+      auto model = widget->model();
+      if (model)
+         model->sort(0, Qt::AscendingOrder);
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         dovah::form_type_t data = this->ui.filterSignature->itemData(index, Qt::UserRole).toInt();
+         this->ui.usesInGeneral->setFormTypeFilter(data);
+         this->ui.usesAsBaseForm->setFormTypeFilter(data);
+      });
+   }
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {

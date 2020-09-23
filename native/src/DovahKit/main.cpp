@@ -40,8 +40,6 @@
 //
 //     - Only allow the user to open one per form, as with form-editing dialogs.
 //
-//     - The tables need to be sortable.
-//
 //     - For listed refs that are in exterior cells, consider showing the grid 
 //       coordinates whenever the cell is unnamed. We can do that now that the 
 //       group_stub has those.
@@ -51,14 +49,6 @@
 //
 //        - Double-clicking a listing takes you to the ref, in the Render Window, 
 //          but... if a listing represents multiple refs, what then?
-//
-//     - Victor would like to be able to filter the Use Info window to just certain 
-//       form types. We should think about potential UI designs that would allow 
-//       for this, e.g. a drop-down of form type signatures and a textbox for 
-//       filtering form and editor IDs.
-//
-//        - Actually, that UI sounds about perfect, and it should be pretty compact 
-//          too. Oughta fit on one line.
 //
 // THINGS TO LOOK INTO:
 //
