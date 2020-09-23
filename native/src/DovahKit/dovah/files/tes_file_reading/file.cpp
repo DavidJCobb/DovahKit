@@ -495,6 +495,8 @@ namespace dovah::tes_file_reading {
    bool file_reader::open_mapped_file(const char* filepath) {
       if (filepath)
          this->path = filepath;
+      if (!this->file)
+         this->file = new cobb::mapped_file();
       //
       /*//
       std::wstring foo;
@@ -527,5 +529,9 @@ namespace dovah::tes_file_reading {
          return false;
       }
       return true;
+   }
+   void file_reader::set_path(const std::filesystem::path& fullpath) {
+      this->path = fullpath;
+      this->name = fullpath.filename().string();
    }
 }

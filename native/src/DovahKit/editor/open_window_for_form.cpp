@@ -50,6 +50,8 @@ void open_window_for_form(dovah::form_stub* stub, QWidget* parent) {
          auto  it     = map.find(formID);
          if (it != map.end())
             map.erase(it);
+         //
+         opened->deleteLater();
       });
       //
       opened->show();

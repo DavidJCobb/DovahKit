@@ -75,6 +75,17 @@
 //    to data prepared in advance. We should run these tests periodically if not 
 //    regularly, in order to catch unexpected regressions.
 //
+//     - TESTS TO RUN:
+//
+//        - Create a file that overrides a DIAL, an interior CELL, and a WRLD, and 
+//          nothing else. Ensure that these forms, only these forms, and not any of 
+//          their children are saved to the file.
+//
+//        - Create a new file that overrides an INFO within a master's DIAL, a CELL 
+//          within a master's WRLD, a REFR within a different one of the master's 
+//          WRLDs, and an ACHR within an interior cell. Ensure that the overridden 
+//          forms and their parents/ancestors are both properly saved to the file.
+//
 //  - 9/14/2020: Very rare crashes on exit. One access violation seen; two 0xC0000374 
 //    seen (the latter is memory mismanagement). No consistent repro steps, and it's 
 //    not like there's a lot you can do in the program as of this writing (the file 
@@ -98,12 +109,6 @@
 //          the current load order.
 //
 //     - TEST THE SAVE PROCESS:
-//
-//        - Closing the active file's mapped file view.
-//
-//        - Replacing the old active file with the newly-written file.
-//
-//           - Reporting any failure to accomplish this to the user.
 //
 //        - Reopening the active file's mapped file view.
 //

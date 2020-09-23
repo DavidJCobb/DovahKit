@@ -39,6 +39,7 @@ namespace dovah {
    #pragma region File loading
    void file_load_order::_make_hardcoded_forms() {
       this->hardcoded_forms_file = new tes_file_reading::file_reader(*this);
+      this->hardcoded_forms_file->details |= tes_file_reading::file_reader::detail_flag::is_hardcoded_dummy;
       add_hardcoded_forms_to_load_order(*this);
    }
    void file_load_order::_accept_hardcoded_form(form_stub* stub) noexcept {
@@ -636,6 +637,7 @@ namespace dovah {
             this->save_error.code = file_write_error::error_code::no_filename_specified;
             return false;
          }
+         this->active_file->set_path(std::filesystem::path(this->queued_load.base_path) / filename);
       }
       //
       filename = std::filesystem::path(this->queued_load.base_path) / filename;
@@ -663,7 +665,8 @@ namespace dovah {
          // on the updated file. (The file view needs to be closed because it's shared read access; 
          // it *should* prevent the file from being modified.)
          //
-         this->active_file->close();
+         writer.close(); // so we can move the new file
+         this->active_file->close(); // so we can replace the old file
          //
          std::error_code code;
          std::filesystem::rename(filename, this->active_file->get_path(), code);

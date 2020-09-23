@@ -119,6 +119,7 @@ namespace dovah {
 
             void open(std::filesystem::path);
             bool write();
+            void close();
       };
    }
 }

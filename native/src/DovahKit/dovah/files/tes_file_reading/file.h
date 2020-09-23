@@ -28,9 +28,10 @@ namespace dovah {
             struct detail_flag {
                detail_flag() = delete;
                enum type {
-                  has_intv = 0x0001,
-                  has_incc = 0x0002,
-                  has_onam = 0x0004,
+                  has_intv           = 0x0001,
+                  has_incc           = 0x0002,
+                  has_onam           = 0x0004,
+                  is_hardcoded_dummy = 0x0008,
                };
             };
             using detail_flag_t = std::underlying_type_t<detail_flag::type>;
@@ -121,6 +122,7 @@ namespace dovah {
             float assess_load_progress() const noexcept; // returns NaN if any threaded reader hasn't set up its maximum yet
 
             writer_interface get_writer_interface(tes_file_writing::file_writer&) { return writer_interface(*this); }
+            void set_path(const std::filesystem::path&); // also sets the filename. should only be used when saving an implicit active file
       };
    }
 }

@@ -40,17 +40,15 @@ namespace dovah {
       protected:
          form_stub* wrapped = nullptr;
          inline void _inc() {
-            auto fs = this->wrapped;
-            if (fs) {
+            if (auto fs = this->wrapped) {
                assert(!fs->refcount_is_maxed_out() && "form_stub refcount is already at maximum!");
-               fs->refcount++;
+               ++fs->refcount;
             }
          }
          inline void _dec() {
-            auto fs = this->wrapped;
-            if (fs) {
+            if (auto fs = this->wrapped) {
                assert(fs->get_refcount() != 0 && "form_stub refcount is already zero!");
-               fs->refcount--;
+               --fs->refcount;
                if (fs->refcount == 0)
                   fs->_unload_form();
             }
@@ -60,13 +58,17 @@ namespace dovah {
          //
          loaded_form_ptr() {}
          loaded_form_ptr(form_stub* stub) : wrapped(stub) { this->_inc(); };
+         template<typename other_form_t> loaded_form_ptr(loaded_form_ptr<other_form_t>&& other) {
+            this->wrapped = other.wrapped;
+            other.wrapped = nullptr;
+         }
          ~loaded_form_ptr() {
             this->_dec();
             this->wrapped = nullptr;
          }
 
          operator bool() { return this->wrapped != nullptr && this->wrapped->form != nullptr; };
-         operator loaded_form_t* () const noexcept { return (loaded_form_t*)this->wrapped->form; };
+         operator loaded_form_t*() const noexcept { return (loaded_form_t*)this->wrapped->form; };
          loaded_form_t* operator->() const noexcept { return (loaded_form_t*)this->wrapped->form; };
 
          loaded_form_ptr<loaded_form_t>& operator=(form_stub* stub) noexcept {
@@ -79,6 +81,12 @@ namespace dovah {
             this->_dec();
             this->wrapped = other.wrapped;
             this->_inc();
+            return *this;
+         }
+         loaded_form_ptr<loaded_form_t>& operator=(loaded_form_ptr<loaded_form_t>&& other) noexcept {
+            this->_dec();
+            this->wrapped = other.wrapped;
+            other.wrapped = nullptr;
             return *this;
          }
 
@@ -202,13 +210,7 @@ namespace dovah {
          loaded_form_ptr<loaded_forms::Form> load();
          loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
          //
-         inline bool can_unload_form() const noexcept {
-            if (this->is_edited())
-               return false;
-            if (this->is_hardcoded() && !this->file) // form is hardcoded and this FormStub is not an override
-               return false;
-            return true;
-         }
+         bool can_unload_form() const noexcept;
          inline uint32_t    get_file_offset() const noexcept { return this->offset; }
          inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
          inline uint32_t    get_refcount()  const noexcept { return this->refcount; };

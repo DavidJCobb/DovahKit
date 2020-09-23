@@ -404,4 +404,7 @@ namespace dovah::tes_file_writing {
       //
       return !this->error.defined();
    }
+   void file_writer::close() {
+      this->stream.close();
+   }
 }
