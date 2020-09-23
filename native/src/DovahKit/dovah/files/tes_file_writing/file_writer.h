@@ -33,7 +33,8 @@ namespace dovah {
                //
                // This data should be transplanted into a form_stub after the full file write is complete.
                //
-               uint32_t offset = 0;
+               form_stub* stub   = nullptr;
+               uint32_t   offset = 0;
             };
             //
          protected:
@@ -44,17 +45,6 @@ namespace dovah {
             std::array<group, max_group_depth> _groups;
             record    _record;
             subrecord _subrecord;
-            std::unordered_map<bare_form_id_t, form_stub_write_info> stub_writes;
-            struct {
-               struct {
-                  file_offset_t record_count   = 0;
-                  file_offset_t next_object_id = 0;
-               } header;
-               struct {
-                  uint32_t      value = 0;
-                  file_offset_t offset = 0;
-               } record_and_group_count;
-            } fixup_data;
             //
             record& _open_next_record(uint32_t signature, bare_form_id_t);
             void _write_header();
@@ -97,6 +87,17 @@ namespace dovah {
             #pragma endregion
             //
             file_write_error error;
+            struct {
+               struct {
+                  file_offset_t record_count   = 0;
+                  file_offset_t next_object_id = 0;
+               } header;
+               struct {
+                  uint32_t      value = 0;
+                  file_offset_t offset = 0;
+               } record_and_group_count;
+               std::unordered_map<bare_form_id_t, form_stub_write_info> form_stubs;
+            } fixup_data;
             //
             inline group& get_current_group() {
                for (signed int i = this->_groups.size() - 1; i >= 0; i--) {

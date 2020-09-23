@@ -169,6 +169,45 @@ namespace dovah {
       }
       return nullptr;
    }
+   bool form_stub::is_any_descendant_form_edited() const noexcept {
+      if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
+         return false;
+      }
+      for (auto& pair : this->outbound) {
+         auto& entry = pair.second;
+         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
+            continue;
+         auto stub = entry.other;
+         if (stub->is_edited() || stub->is_any_descendant_form_edited())
+            return true;
+      }
+      return false;
+   }
+   bool form_stub::does_descendant_form_need_save() const noexcept {
+      if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
+         return false;
+      }
+      auto& owner = this->_get_load_order();
+      for (auto& pair : this->outbound) {
+         auto& entry = pair.second;
+         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
+            continue;
+         auto stub = entry.other;
+         if (owner.is_defined_or_overridden_in_active_file(stub))
+            return true;
+         if (stub->is_edited() || stub->does_descendant_form_need_save())
+            return true;
+      }
+      return false;
+   }
+   bool form_stub::needs_save() const noexcept {
+      if (this->is_edited())
+         return true;
+      auto& owner = this->_get_load_order();
+      if (owner.is_defined_or_overridden_in_active_file(this))
+         return true;
+      return this->does_descendant_form_need_save();
+   }
    #pragma endregion
 
    bool form_stub::is_exterior_cell() const noexcept {

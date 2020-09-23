@@ -164,8 +164,9 @@ namespace dovah {
          flag() = delete;
          enum type : uint32_t {
             none = 0,
-            no_editor_id   = 0x01, // Forms of this type cannot have editor IDs.
-            no_connections = 0x02, // Forms of this type cannot refer to or be referred to by other forms.
+            no_editor_id      = 0x01, // Forms of this type cannot have editor IDs.
+            no_connections    = 0x02, // Forms of this type cannot refer to or be referred to by other forms.
+            can_have_children = 0x04, // Forms of this type can have child forms. (Used to optimize saving.)
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;

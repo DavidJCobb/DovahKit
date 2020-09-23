@@ -14,5 +14,5 @@ class ActiveFileSaveDialog : public QDialog {
       Ui::ActiveFileSaveDialog ui;
 
       void commit();
-      void reportLastSaveError();
+      void handleLastSaveError(); // return (true) if the error prevented the save from working or made further editing impossible; false otherwise (e.g. warnings)
 };

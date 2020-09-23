@@ -110,15 +110,25 @@ void ActiveFileSaveDialog::commit() {
    //
    auto result = editor.save_active_file(fallback_filename);
    if (!result) {
-      this->reportLastSaveError();
+      this->handleLastSaveError();
       this->reject();
    } else {
+      auto& warning = editor.get_write_warning();
+      if (warning.code == dovah::file_write_warning::warning_code::save_complete_but_to_temporary_file) {
+         QString message = tr("A minor problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
+         QMessageBox::critical(
+            this,
+            tr("Warning", "save error"),
+            message
+         );
+      }
       this->accept();
    }
 }
-void ActiveFileSaveDialog::reportLastSaveError() {
-   auto& editor = DovahKitCore::get();
-   auto& error  = editor.get_last_write_error();
+void ActiveFileSaveDialog::handleLastSaveError() {
+   auto& editor  = DovahKitCore::get();
+   auto& error   = editor.get_last_write_error();
+   auto& warning = editor.get_write_warning();
    QString message;
    switch (error.code) {
       case dovah::file_write_error::error_code::unknown_form_type:
@@ -133,11 +143,17 @@ void ActiveFileSaveDialog::reportLastSaveError() {
       case dovah::file_write_error::error_code::no_filename_specified:
          message = tr("The active file is implicit (nameless) and no filename was provided. (Wait, what? How did this happen? We should've made you either provide a name or cancel.)", "write error");
          break;
+      case dovah::file_write_error::error_code::save_complete_but_reopen_failed:
+         message = tr("The file was successfully saved, but could not be reopened for editing after the save. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+         if (warning.code == dovah::file_write_warning::warning_code::save_complete_but_to_temporary_file) {
+            message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
+         }
+         break;
       default:
          message = tr("Unknown error.", "write error");
          break;
    }
-   QString text;
+   QString text = QString("Unable to save the file. %1").arg(message);
    if (error.formID) {
       text = QString("Unable to save the file. %1<br/>Form ID: %2<br/>Form type: %3<br/>File offset: %4")
          .arg(message)
@@ -145,13 +161,14 @@ void ActiveFileSaveDialog::reportLastSaveError() {
          .arg(error.form_type)
          .arg(error.file_offset);
    } else {
-      text = QString("Unable to save the file. %1<br/>File offset: %2")
-         .arg(message)
-         .arg(error.file_offset);
+      if (error.has_file_offset())
+         text += tr("<br/>File offset: %1").arg(error.file_offset);
    }
    QMessageBox::critical(
       this,
       tr("Error", "save error"),
       text
    );
+   if (error.requires_full_reload())
+      editor.abandon_data();
 }

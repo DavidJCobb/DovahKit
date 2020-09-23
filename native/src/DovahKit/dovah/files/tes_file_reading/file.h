@@ -65,10 +65,13 @@ namespace dovah {
             bool load_record_at(uint32_t pos); // for form_stub
             bool load_record_at(uint32_t pos, basic_reader* reader); // for form_stub (multi-threaded building of Use Info). the reader passed in must not be the "owner" of its mapped file. (this) will take ownership of (reader) by setting the latter's (owner).
             //
+            bool open_mapped_file(const char* filepath = nullptr);
+            void close(); // intended for use during the save process; not thread-safe; do not call during load
+            //
          protected:
             bool _load_header();
             //
-            std::string path;
+            std::filesystem::path path;
             std::string name;
             struct _readers {
                threads::basic complex;
@@ -113,6 +116,7 @@ namespace dovah {
             } localization_files;
             //
             inline const std::string& get_filename() const noexcept { return this->name; }
+            inline const std::filesystem::path& get_path() const noexcept { return this->path; }
             void abort() noexcept;
             float assess_load_progress() const noexcept; // returns NaN if any threaded reader hasn't set up its maximum yet
 

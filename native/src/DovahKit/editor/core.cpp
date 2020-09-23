@@ -146,6 +146,9 @@ int DovahKitCore::load_order_index_of_file(const std::filesystem::path& filename
 const dovah::file_write_error& DovahKitCore::get_last_write_error() const noexcept {
    return this->load_order->save_error;
 }
+const dovah::file_write_warning& DovahKitCore::get_write_warning() const noexcept {
+   return this->load_order->save_warning;
+}
 
 uint32_t DovahKitCore::count_forms_of_type(form_type_t ft) const noexcept {
    return this->load_order->count_forms_of_type(ft);

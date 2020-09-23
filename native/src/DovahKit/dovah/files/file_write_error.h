@@ -1,9 +1,31 @@
 #pragma once
+#include <filesystem>
 #include <string>
 #include <type_traits>
 #include "../core.h"
 
 namespace dovah {
+   class file_write_warning {
+      public:
+         struct warning_code {
+            warning_code() = delete;
+            enum type {
+               none = 0,
+               //
+               // (save_complete_but_to_temporary_file)
+               // DovahKit was able to save a temporary file, but was unable to swap the old 
+               // active file out.
+               //
+               save_complete_but_to_temporary_file,
+            };
+         };
+         using warning_code_t = std::underlying_type_t<warning_code::type>;
+         //
+         warning_code_t code = warning_code::none;
+         std::filesystem::path filename;
+         //
+         inline bool defined() const noexcept { return this->code != warning_code::none; }
+   };
    class file_write_error {
       public:
          struct error_code {
@@ -33,6 +55,13 @@ namespace dovah {
                // was provided for it to use.
                //
                no_filename_specified,
+               //
+               // (save_complete_but_reopen_failed)
+               // DovahKit was able to save the active file, but was not able to reopen it to 
+               // continue editing. This means that we can no longer load form content for any 
+               // form stubs from that file.
+               //
+               save_complete_but_reopen_failed,
             };
          };
          using error_code_t = std::underlying_type_t<error_code::type>;
@@ -43,5 +72,23 @@ namespace dovah {
          form_type_t  form_type   = form_type::none;
          //
          inline bool defined() const noexcept { return this->code != error_code::none; }
+         inline bool has_file_offset() const noexcept {
+            switch (this->code) {
+               case error_code::none:
+               case error_code::no_active_file:
+               case error_code::cannot_save_right_now:
+               case error_code::no_filename_specified:
+               case error_code::save_complete_but_reopen_failed:
+                  return false;
+            }
+            return true;
+         }
+         inline bool requires_full_reload() const noexcept {
+            switch (this->code) {
+               case error_code::save_complete_but_reopen_failed:
+                  return true;
+            }
+            return false;
+         }
    };
 }

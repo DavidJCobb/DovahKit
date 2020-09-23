@@ -123,12 +123,32 @@ namespace dovah::tes_file_writing {
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
          record.header.flags = loaded->flags & ~tes_file_record_header::non_data_flags;
          if (loaded->save(record)) {
-            auto& write_info = this->stub_writes[stub->formID];
+            auto& write_info = this->fixup_data.form_stubs[stub->formID];
+            write_info.stub   = stub;
             write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
             //
             record._close();
          } else {
             record._clear(); // abort this attempt at writing a record
+            //
+            // The question now is, what do we want to do as an alternative to trying to write 
+            // the loaded form data?
+            //
+            // Here's a brave idea: what if we just copied the form's original data from its 
+            // source file? I mean, if it's not a hardcoded form or a form that we've created 
+            // at run-time, then it should have come from a file. The whole point of form stubs 
+            // is to let us load form data on demand, and if it's good enough to load, then it 
+            // should be good enough to save, too, right?
+            //
+            // Well, yes, but actually no. See, the source file could have a different list of 
+            // masters than the new file that we're saving, which means that we need to fix up 
+            // form IDs in the data that we're saving. We can't do that if we're just blindly 
+            // copying data, so (outside of just resaving a file with the same masters it had 
+            // to start with) we'd just end up writing a ton of garbage form IDs.
+            //
+            // The only suitable alternative to writing loaded form data, then, is failing with 
+            // an error.
+            //
             if (!this->error.defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
                this->error.code = file_write_error::error_code::unknown_form_type;
             this->error.formID      = stub->formID;
@@ -175,6 +195,8 @@ namespace dovah::tes_file_writing {
          form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
             if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_persistent_children)
                return false;
+            if (!child->needs_save())
+               return false;
             this->_write_form(child);
             return false;
          });
@@ -186,6 +208,8 @@ namespace dovah::tes_file_writing {
          //
          form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
             if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_temporary_children)
+               return false;
+            if (!child->needs_save())
                return false;
             this->_write_form(child);
             return false;
@@ -199,6 +223,8 @@ namespace dovah::tes_file_writing {
       //
       form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
          if (child->formType != form_type::topic_info)
+            return false;
+         if (!child->needs_save())
             return false;
          this->_write_form(child);
          return false;
@@ -219,12 +245,15 @@ namespace dovah::tes_file_writing {
       auto& group_wc = this->open_group(tes_file_group_type::world_children, stub->formID, tes_file_group_header::uninitialized_unknown);
       //
       if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(stub)) {
-         this->_write_form(cell);
+         if (cell->needs_save())
+            this->_write_form(cell);
       }
       //
       std::map<uint32_t, _cell_block> blocks;
       form_stub_helpers::for_each_child_form(stub, [&blocks](form_stub* child) {
          if (child->formType != form_type::cell)
+            return false;
+         if (!child->needs_save())
             return false;
          auto b  = child->get_cell_block();
          auto sb = child->get_cell_sub_block();
@@ -362,7 +391,7 @@ namespace dovah::tes_file_writing {
          }
          //
          this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong(signature), 0);
-         this->owner.for_each_active_file_form_of_type(form_type, [this](form_stub* stub) {
+         this->owner.for_each_top_level_form_needing_save(form_type, [this](form_stub* stub) {
             return !this->_write_form(stub);
          });
          this->close_current_group();

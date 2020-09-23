@@ -250,35 +250,9 @@ namespace dovah::tes_file_reading {
    }
    bool file_reader::load(const char* filepath) {
       this->path = filepath;
-      {  // TODO: this is hideous
-         std::wstring foo;
-         auto size = MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), 0);
-         foo.resize(size);
-         MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), size);
-         this->file->open(foo.c_str());
-         if (!*this->file) {
-            void* message;
-            uint32_t size = FormatMessage(
-               FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-               nullptr,
-               this->file->get_error(),
-               LANG_USER_DEFAULT,
-               (LPTSTR)&message,
-               0,
-               nullptr
-            );
-            this->error.message.clear();
-            uint32_t i = 0;
-            while (wchar_t c = ((const wchar_t*)message)[i++])
-               this->error.message += c;
-            LocalFree(message);
-            //
-            this->error.code = file_read_error::error_code::filesystem_error;
-            this->error.file = this->name;
-            return false;
-         }
-      }
-      this->name = std::filesystem::path(filepath).filename().string();
+      this->name = this->path.filename().string();
+      if (!this->open_mapped_file())
+         return false;
       //
       dovah::logging::print_line("Opened file: %s", this->name.c_str());
       if (!this->_load_header()) {
@@ -511,5 +485,47 @@ namespace dovah::tes_file_reading {
    }
    float file_reader::assess_load_progress() const noexcept {
       return this->readers.assess_progress();
+   }
+   void file_reader::close() {
+      if (this->file) {
+         delete this->file;
+         this->file = nullptr;
+      }
+   }
+   bool file_reader::open_mapped_file(const char* filepath) {
+      if (filepath)
+         this->path = filepath;
+      //
+      /*//
+      std::wstring foo;
+      auto size = MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), 0);
+      foo.resize(size);
+      MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), size);
+      //*/
+      this->file->open(this->path.c_str());
+      if (!*this->file) {
+         void* message;
+         uint32_t size = FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr,
+            this->file->get_error(),
+            LANG_USER_DEFAULT,
+            (LPTSTR)&message,
+            0,
+            nullptr
+         );
+         this->error.message.clear();
+         uint32_t i = 0;
+         while (wchar_t c = ((const wchar_t*)message)[i++])
+            this->error.message += c;
+         LocalFree(message);
+         //
+         this->error.code = file_read_error::error_code::filesystem_error;
+         this->error.file = this->name;
+         delete this->file;
+         this->file = nullptr;
+         return false;
+      }
+      return true;
    }
 }

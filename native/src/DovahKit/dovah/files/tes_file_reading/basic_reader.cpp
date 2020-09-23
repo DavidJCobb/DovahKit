@@ -136,6 +136,9 @@ namespace dovah::tes_file_reading {
          record.reset();
       }
       //
+      if (!this->file)
+         return object_type::none;
+      //
       // TODO: What happens if we hit an empty GRUP? Do we properly advance past it?
       //
       // Make sure we properly handle passing the end of a group:

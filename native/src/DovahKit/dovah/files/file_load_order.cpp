@@ -502,6 +502,21 @@ namespace dovah {
       }
       return false;
    }
+   bool file_load_order::for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor) {
+      if (form_type >= this->active_file_forms_by_type.size())
+         return false;
+      auto& list = this->active_file_forms_by_type[form_type].forms;
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         auto* stub = it->second;
+         bool  exec = stub->file == this->active_file;
+         if (!exec)
+            exec = stub->is_edited() || stub->does_descendant_form_need_save();
+         if (exec)
+            if (functor(stub))
+               return true;
+      }
+      return false;
+   }
    void file_load_order::get_active_file_name(std::filesystem::path& out) const noexcept {
       out.clear();
       if (this->active_file)
@@ -514,6 +529,9 @@ namespace dovah {
             return i;
       }
       return invalid_load_prefix;
+   }
+   bool file_load_order::is_defined_or_overridden_in_active_file(const form_stub* stub) const noexcept {
+      return stub->file == this->active_file;
    }
    //
    bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) {
@@ -600,7 +618,8 @@ namespace dovah {
    }
 
    bool file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless) {
-      this->save_error = file_write_error();
+      this->save_error   = file_write_error();
+      this->save_warning = file_write_warning();
       if (!this->active_file) {
          this->save_error.code = file_write_error::error_code::no_active_file;
          return false;
@@ -632,8 +651,61 @@ namespace dovah {
       writer.open(filename);
       if (writer.write()) {
          //
-         // TODO: replace the original file (if any) with the temporary file, now that the write is complete.
+         // Okay, so we have successfully written the updated form data to a temporary file. Now, we 
+         // need to do a few things: we need to close the active file's mapped file view; we need to 
+         // replace the old file with our temporary one; and we need to reopen the mapped file view 
+         // on the updated file. (The file view needs to be closed because it's shared read access; 
+         // it *should* prevent the file from being modified.)
          //
+         this->active_file->close();
+         //
+         std::error_code code;
+         std::filesystem::rename(filename, this->active_file->get_path(), code);
+         bool reopen_result = false;
+         if (code) {
+            this->save_warning.code     = file_write_warning::warning_code::save_complete_but_to_temporary_file;
+            this->save_warning.filename = filename.filename();
+            reopen_result = this->active_file->open_mapped_file();
+         } else {
+            reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
+         }
+         if (!reopen_result) {
+            //
+            // We were unable to reopen the mapped file view after fully updating the active file, 
+            // so we can't load form content for active file form stubs anymore. In other words, the 
+            // save completed, but further editing is not possible.
+            //
+            auto& error = this->save_error;
+            error.code = file_write_error::error_code::save_complete_but_reopen_failed;
+            return false;
+         }
+         //
+         // The last step, before editing can resume, is to update all of the form stubs that were 
+         // saved to the new file.
+         //
+         for (auto& pair : writer.fixup_data.form_stubs) {
+            auto& info = pair.second;
+            auto* stub = info.stub;
+            stub->offset = info.offset;
+            stub->file   = this->active_file;
+            if (!stub->is_edited()) {
+               //
+               // If the form stub was written to the file despite not having been flagged as edited, 
+               // it would be because a child/descendant form or parent/ancestor form was edited. 
+               // We need to add this form to the active file form list.
+               //
+               this->active_file_forms.forms[stub->formID] = stub;
+               auto& at = this->active_file_forms_by_type[stub->formType];
+               at.forms[stub->formID] = stub;
+            }
+            stub->set_edited(false);
+         }
+         #if _DEBUG
+            for (auto& pair : this->active_file_forms.forms) {
+               auto* stub = pair.second;
+               assert(!stub->is_edited() && "Somehow we didn't fully commit changes to an active file form stub after a save operation.");
+            }
+         #endif
       }
       this->save_error = writer.error;
       return !writer.error.defined();

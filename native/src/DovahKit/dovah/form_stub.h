@@ -224,6 +224,9 @@ namespace dovah {
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;
          bool has_child_forms_of_group(uint8_t) const noexcept;
+         bool is_any_descendant_form_edited() const noexcept;
+         bool does_descendant_form_need_save() const noexcept;
+         bool needs_save() const noexcept;
          //
          bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
          uint32_t get_cell_block() const noexcept;

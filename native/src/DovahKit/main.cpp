@@ -14,6 +14,11 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
+//  - The main window should grey out the "Save" menu item if no data has been 
+//    loaded. Note that even if you don't want to load any *files*, you still have 
+//    to go through the "Open" menu item in order to get the hardcoded forms to 
+//    load, and in order to have the file_load_order set up an implicit active file.
+//
 //  - If any loaded files are for SSE, then the file_load_order should cap the load 
 //    order at 253 entries, not 254.
 //
@@ -86,39 +91,45 @@
 //
 //  - Code to save the current active file.
 //
-//     - Define Form::_save_impl overrides for all loaded-form classes, and then make 
-//       it pure on Form.
-//
-//        - Write save code for Papyrus data, container data, and conditions. The 
-//          container data will require a new (tes_subrecord_writer::lookup_form_by_id) 
-//          function so that it can check the form types of forms it's writing.
-//
 //     - File-save dialog
 //
 //        - The game and flags should default to those of the source file, if any. 
 //          If the active file is implicit/invisible, then choose the game based on 
 //          the current load order.
 //
-//     - WHEN WE FINISH WRITING OUT THE TARGET FILE, WE NEED TO...
+//     - TEST THE SAVE PROCESS:
 //
-//        - Destroy the active file_reader's mapped_file, if any.
+//        - Closing the active file's mapped file view.
 //
-//        - Delete the original file, if any, and move our newly-written temporary 
-//          file into its place.
+//        - Replacing the old active file with the newly-written file.
 //
-//        - Reopen the active file_reader's mapped_file on the new file.
+//           - Reporting any failure to accomplish this to the user.
 //
-//        - Mass-update the file offsets for all saved forms, as well as anything else 
-//          that needs updating (e.g. file pointer for newly-overridden forms). Then, 
-//          clear the "edited" flag from the stubs (make sure to user the setter rather 
-//          than directly manipulating bits).
+//        - Reopening the active file's mapped file view.
 //
-//           - The file_writer class retains fixup data including the new file offsets.
+//           - If this fails, report the failure and abandon all loaded form data.
+//
+//        - Mass-updating all active file forms' file offsets, and clearing their 
+//          "edited" flags.
+//
+//           - The next access to a saved form should load it from scratch (verifiable 
+//             with a breakpoint) and should show the changes that were made, presuming 
+//             we had no dialogs open when we saved.
 //
 //     - Form-editing dialogs need to store form_stub pointers in addition to 
 //       loaded_form_ptrs. When the editor fires onSaveImminent, they need to 
 //       discard their loaded_form_ptrs; when the editor fires onSaveComplete or 
 //       onSaveFailed, it's safe for them to retrieve the loaded form data again.
+//
+//        - Can we please make these derive from a common superclass?
+//
+//           - Well, QObjects can't be templated, which complicates both accessing 
+//             subclass UI controls and templating the loaded_form_ptr.
+//
+//              - What about a non-templated QObject superclass with template methods 
+//                that we'd just pass (this) or (this->ui) to? Or a single non-member 
+//                template function that the dialogs all pass themselves to during 
+//                init?
 //
 //     - form_stub::load should not attempt to load any form data from the active file 
 //       while a save operation is in progress. To that end, we should add a function 

@@ -83,6 +83,7 @@ class DovahKitCore : public QObject {
       int load_order_index_of_file(const std::filesystem::path& filename);
 
       const dovah::file_write_error& get_last_write_error() const noexcept;
+      const dovah::file_write_warning& get_write_warning() const noexcept;
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;
