@@ -4,6 +4,7 @@
 #include "files/tes_file_reading/basic_reader.h"
 #include "files/tes_file_reading/file.h"
 #include "forms/factories/construct.h"
+#include "forms/factories/hardcoded.h"
 #include "forms/factories/use_info.h"
 #include "forms/Form.h"
 #include "form_stub_heap.h"
@@ -95,11 +96,8 @@ namespace dovah {
 
    #pragma region form_stub use info functions
    void form_stub::build_outbound_refs(tes_file_reading::basic_reader* reader) noexcept {
-      if (this->is_hardcoded()) { // hardcoded forms only have hardcoded outbound refs
-         //
-         // TODO: [ACHR:00000014]PlayerRef is a hardcoded form and should be given a 
-         // ref to its ActorBase, no?
-         //
+      if (this->is_non_overridden_hardcoded_form()) { // hardcoded forms only have hardcoded outbound refs
+         build_hardcoded_form_outbound_refs(*this);
          return;
       }
       assert(this->file && "FormStub cannot build outbound refs without a file. How did this happen?");

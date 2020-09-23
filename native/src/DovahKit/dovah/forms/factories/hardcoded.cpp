@@ -13,15 +13,13 @@
 namespace dovah {
    void add_hardcoded_forms_to_load_order(file_load_order& lo) {
       //
-      // TODO: [ACHR:00000014]PlayerRef needs a loaded form object
+      // TODO: Add loaded form objects for objects below as we implement more loaded form classes.
       //
-      // TODO: The CK lists DefaultWorld as having one exterior cell; is that hardcoded or is its existence 
-      //       just kinda implied (i.e. is it generated at run-time after DefaultWorld is created)?
-      //
-      //        - It's [CELL:00000800]Wilderness, which is outside of the hardcoded range.
-      //
-      // TODO: Consider hooking TESForm::SetFormID and having it log on any hardcoded ID, so we can try to 
-      //       catch anything we've missed.
+      // NOTE: Some forms below are listed as being hardcoded into the CK but not the game. This 
+      //       is an educated guess; I have not reverse-engineered the CK to verify this. These 
+      //       IDs are in the range reserved for hardcoded forms, but it's equally possible that 
+      //       they *were* hardcoded at some point during early development and remained inside 
+      //       of Skyrim.esm as leftovers after being removed from both the game *and* the CK.
       //
       {  // Actor values
          auto& list = data::actor_Value_info_list::get();
@@ -138,6 +136,18 @@ namespace dovah {
          // Model File "Name: Marker_Horse.nif"
          lo._accept_hardcoded_form(stub);
       }
+      {  // [FACT:013]"CreatureFaction"
+         //
+         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
+         // never passes 0x013 as an argument to TESForm::SetFormID, which means that it does not instan-
+         // tiate this form programmatically.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x013;
+         stub->formType = form_type_info::signature_to_form_type('FACT');
+         stub->editorID = "CreatureFaction";
+         lo._accept_hardcoded_form(stub);
+      }
       {  // [ACHR:014]"PlayerRef"
          auto stub = new form_stub();
          stub->formID   = 0x014;
@@ -173,6 +183,18 @@ namespace dovah {
          stub->formID   = 0x018;
          stub->formType = form_type_info::signature_to_form_type('WATR');
          stub->editorID = "DefaultWater";
+         lo._accept_hardcoded_form(stub);
+      }
+      {  // [RACE:019]"DefaultRace"
+         //
+         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
+         // never passes 0x019 as an argument to TESForm::SetFormID, which means that it does not instan-
+         // tiate this form programmatically.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x019;
+         stub->formType = form_type_info::signature_to_form_type('RACE');
+         stub->editorID = "DefaultRace";
          lo._accept_hardcoded_form(stub);
       }
       {  // [EYES:01A]"eyeReanimate"
@@ -358,6 +380,18 @@ namespace dovah {
          stub->editorID = "DefaultWorld";
          lo._accept_hardcoded_form(stub);
       }
+      {  // [CSTY:03D]"DefaultCombatstyle"
+         //
+         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
+         // never passes 0x03D as an argument to TESForm::SetFormID, which means that it does not instan-
+         // tiate this form programmatically.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x03D;
+         stub->formType = form_type_info::signature_to_form_type('CSTY');
+         stub->editorID = "DefaultCombatstyle";
+         lo._accept_hardcoded_form(stub);
+      }
       {  // [SMBN:05B]"Root"
          auto stub = new form_stub();
          stub->formID   = 0x05B;
@@ -433,6 +467,42 @@ namespace dovah {
          stub->editorID = "WaterCurrentZoneMarker";
          // Flags: 0x800000
          // Model File Name: ""
+         lo._accept_hardcoded_form(stub);
+      }
+      {  // [EFSH:146]"LifeDetected"
+         //
+         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
+         // never passes 0x146 as an argument to any function, let alone TESForm::SetFormID, which means 
+         // that it does not instantiate this form programmatically.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x146;
+         stub->formType = form_type_info::signature_to_form_type('EFSH');
+         stub->editorID = "LifeDetected";
+         lo._accept_hardcoded_form(stub);
+      }
+      {  // [MGEF:14A]"ScriptEffect"
+         //
+         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
+         // never passes 0x14A as an argument to TESForm::SetFormID, which means that it does not instan-
+         // tiate this form programmatically.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x14A;
+         stub->formType = form_type_info::signature_to_form_type('MGEF');
+         stub->editorID = "ScriptEffect";
+         lo._accept_hardcoded_form(stub);
+      }
+      {  // [MGEF:14C]"WardConcSelf0"
+         //
+         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
+         // never passes 0x14C as an argument to TESForm::SetFormID, which means that it does not instan-
+         // tiate this form programmatically.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x14C;
+         stub->formType = form_type_info::signature_to_form_type('MGEF');
+         stub->editorID = "WardConcSelf0";
          lo._accept_hardcoded_form(stub);
       }
       {  // [WTHR:15E]"DefaultWeather"
@@ -636,6 +706,22 @@ namespace dovah {
       // Hardcoded Message forms end at (and include) 0x187 (though forms are not defined 
       // for all of these IDs).
       //
+      {  // [FLST:1F3]"HairColorListDoNotUse"
+         //
+         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
+         // never passes 0x1F3 as an argument to TESForm::SetFormID, which means that it does not instan-
+         // tiate this form programmatically.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x1F3;
+         stub->formType = form_type_info::signature_to_form_type('FLST');
+         stub->editorID = "HairColorListDoNotUse";
+         lo._accept_hardcoded_form(stub);
+         //
+         auto form = new loaded_forms::FormList;
+         form->stub = stub;
+         stub->form = form;
+      }
       {  // [WEAP:1F4]"Unarmed"
          auto stub = new form_stub();
          stub->formID   = 0x1F4;
@@ -680,6 +766,21 @@ namespace dovah {
          stub->formType = form_type_info::signature_to_form_type('NONE');
          stub->editorID = "CommandingActorPersistenceForm";
          lo._accept_hardcoded_form(stub);
+      }
+   }
+   void build_hardcoded_form_outbound_refs(form_stub& stub) {
+      switch (stub.formID) {
+         case 0x00000014: // [ACHR]PlayerRef
+            stub.add_outbound_reference(0x00000007, use_info_entry::flag::i_am_reference_of);
+            break;
+         case 0x0000015E: // [WTHR]DefaultWeather
+            //
+            // The Creation Kit lists this form as referring to [IMGS:167]DefaultImageSpace, but 
+            // when the game initializes both forms, it doesn't actually link them together on 
+            // its own. Presumably, it's just Skyrim.esm that does it, though that doesn't mean 
+            // it isn't a Creation Kit-level default.
+            //
+            break;
       }
    }
 }

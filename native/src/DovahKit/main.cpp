@@ -24,15 +24,6 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
-//  - Generate proper Use Info for hardcoded forms.
-//
-//     - During use info generation, when we're setting up outbound use info, we 
-//       should have a special handler for any hardcoded form_stub whose file is 
-//       the file_load_order::hardcoded_forms_file; these are hardcoded forms that 
-//       have not been overridden in any loaded files. Our special handler should 
-//       construct outbound references for these hardcoded forms, by hand. We 
-//       mainly only need this for 14:PlayerRef using 07:Player as its base form.
-//
 //  - Use Info dialog
 //
 //     - Only allow the user to open one per form, as with form-editing dialogs.
@@ -118,23 +109,16 @@
 //       away from frontend code while still being able to display file-specific 
 //       stats (and make those stats available for editing):
 //
-//       a) Rename the current file_header class to file_overview_reader.
-//
-//       b) Define a file_header struct, move all header-related members from 
-//          file_reader to this new file_header, and then have add a file_header 
-//          field to file_reader.
-//
-//       c) Define a file_stats struct, which would also appears a field on the 
+//       a) Define a file_stats struct, which would also appears a field on the 
 //          file_reader class. This struct can contain, among other things, stats 
 //          on refhandle usage.
 //
-//       d) Give DovahKitCore accessors that return file_header& and file_stats& 
-//          references.
+//       b) Give DovahKitCore an accessor that returns const file_stats&.
 //
 //     - If the load order exceeds the game's refhandle limit, we should display 
 //       appropriate warnings to the user; we should also point out that exceeding 
 //       the refhandle limit breaks the Creation Kit as well. (Good thing we're not 
-//       using them ourselves!)
+//       using refhandles ourselves!)
 //
 //  - Code for creating new forms.
 //
@@ -275,6 +259,9 @@
 //     - When looking at a base form's Use Info, double-clicking a reference in the 
 //       listing should open its parent cell in the Render Window and select it, instead 
 //       of opening the reference's form-edit dialog.
+//
+//        - ...but double-clicking [ACHR:00000014]PlayerRef, in the use info for the 
+//          base [NPC_:00000007]Player form, shouldn't do anything at all.
 //
 //  - If a worldspace contains two cells with the same grid coordinates, then we need 
 //    some kind of handling, especially since a plug-in like that would crash the CK. 
