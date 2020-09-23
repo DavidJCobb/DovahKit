@@ -503,17 +503,24 @@ namespace dovah {
       return false;
    }
    bool file_load_order::for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor) {
-      if (form_type >= this->active_file_forms_by_type.size())
+      if (form_type >= this->forms_by_type.size())
          return false;
-      auto& list = this->active_file_forms_by_type[form_type].forms;
-      for (auto it = list.begin(); it != list.end(); ++it) {
-         auto* stub = it->second;
-         bool  exec = stub->file == this->active_file;
-         if (!exec)
-            exec = stub->is_edited() || stub->does_descendant_form_need_save();
-         if (exec)
-            if (functor(stub))
-               return true;
+      if (form_types[form_type].flags & form_type_info::flag::can_have_children) {
+         auto& list = this->forms_by_type[form_type].forms;
+         for (auto it = list.begin(); it != list.end(); ++it) {
+            auto* stub = it->second;
+            if (stub->file == this->active_file || stub->is_edited() || stub->does_descendant_form_need_save())
+               if (functor(stub))
+                  return true;
+         }
+      } else {
+         auto& list = this->active_file_forms_by_type[form_type].forms;
+         for (auto it = list.begin(); it != list.end(); ++it) {
+            auto* stub = it->second;
+            if (stub->file == this->active_file || stub->is_edited())
+               if (functor(stub))
+                  return true;
+         }
       }
       return false;
    }

@@ -259,11 +259,61 @@
 //        - Everything that listens for dataAbandonImminent will probably also need to 
 //          listen for these.
 //
-//  - Render Window
+//  - Lua scripting
 //
-//     - When looking at a base form's Use Info, double-clicking a reference in the 
-//       listing should open its parent cell in the Render Window and select it, instead 
-//       of opening the reference's form-edit dialog.
+//     - Scripts should run in a second thread, and the user should have the option to 
+//       forcibly terminate the script early, as a way of dealing with scripts that 
+//       have frozen.
+//
+//       In order to terminate a script early, we need to set a debug hook function to 
+//       run every few script instructions (i.e. a count hook set up with lua_sethook). 
+//       This hook function will need to check an atomic "abort" bool stored outside 
+//       of Lua (i.e. on a singleton); if the bool is true, then the hook function 
+//       should raise an error within Lua. If that error isn't caught, then it'll 
+//       end up halting the script properly.
+//
+//       So how do we make sure that the error isn't caught? Well, scripts can catch 
+//       errors using pcall and xpcall, so we can just make sure to only provide a 
+//       script with shimmed versions of those functions that have been rigged to 
+//       never catch the bogus error that we raise when trying to abort a script. 
+//       (Note that we need to check the content of the error AND the "abort" bool: 
+//       the debug hook only runs every few instructions, so it's possible for a 
+//       normal Lua error to occur before we see and react to the "abort" bool.)
+//
+//        - The debug hook only runs every few Lua instructions, so if the script 
+//          calls some long-running C function, then the "abort" bool won't be 
+//          checked until after that function runs. This means that if we provide 
+//          any long-running C functions to the script, those need to also check 
+//          the "abort" bool and terminate early if possible.
+//
+//          As an example, if we wanted to provide a sleep(ms) function, then we'd 
+//          want to program it roughly like this:
+//
+//             for(int slept = 0; slept < ms; slept += 50) { // sleep in 50ms increments
+//                Sleep(50);
+//                if (abort_bool)
+//                   return;
+//             }
+//
+//     - The script execution window should consist of a status message and progress 
+//       bar. Scripts should be able to set the status message, the progress bar 
+//       bounds, the progress bar current value, and the progress bar state (i.e. 
+//       it should be possible to recolor the progress bar to represent "running," 
+//       "paused," and "stopped," as one can with the Windows taskbar button progress 
+//       bar). Additionally, setting the progress bar bounds to a zero width should 
+//       show an "indeterminate" animation.
+//
+//        - If we really want to go the extra mile, we can have a log panel that 
+//          shows *every* call into any of the script APIs that we provide.
+//
+//     - Since we don't reveal every single form through a unified interface as xEdit 
+//       does, it will need to be possible for scripts to define forms (as in sheets 
+//       of values, not as in game data) that the user can fill out to provide values 
+//       to the script (e.g. to tell it what forms, as in game data, to operate on). 
+//       We *could* create Lua wrappers for creating and managing Qt UI, but that 
+//       feels like it'd be very involved; a data format for describing "script 
+//       arguments" could work better but would require us to account for every 
+//       possible case. Bad trade-off either way, it looks like.
 //
 //  - Support for loading the contents of localized strings.
 //
@@ -278,6 +328,12 @@
 //       However, we should still be able to load localized strings just so that you 
 //       can create overrides of forms that contain localized strings, and so you can 
 //       see those strings in the editor.
+//
+//  - Render Window
+//
+//     - When looking at a base form's Use Info, double-clicking a reference in the 
+//       listing should open its parent cell in the Render Window and select it, instead 
+//       of opening the reference's form-edit dialog.
 //
 //  - If a worldspace contains two cells with the same grid coordinates, then we need 
 //    some kind of handling, especially since a plug-in like that would crash the CK. 
