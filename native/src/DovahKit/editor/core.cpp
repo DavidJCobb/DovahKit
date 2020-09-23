@@ -154,6 +154,9 @@ void DovahKitCore::set_active_file_description(const QString& text) const noexce
    if (auto* header = this->load_order->get_active_file_header())
       header->description = text.toStdString();
 }
+const dovah::tes_file_header* DovahKitCore::get_active_file_header() const noexcept {
+   return this->load_order->get_active_file_header();
+}
 
 bool DovahKitCore::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept {
    return this->load_order->for_each_load_order_filename(functor);

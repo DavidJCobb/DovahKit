@@ -83,9 +83,7 @@
 //
 //     - File-save dialog
 //
-//        - The game and flags should default to those of the source file, if any. 
-//          If the active file is implicit/invisible, then choose the game based on 
-//          the current load order.
+//        - Allow the user to select which game (Classic/Special) to save for.
 //
 //     - form_stub::load should not attempt to load any form data from the active file 
 //       while a save operation is in progress. To that end, we should add a function 
@@ -109,10 +107,6 @@
 //
 //           - Not possible until we implement loading and saving cells in the first 
 //             place.
-//
-//  - Use Info window
-//
-//     - Should show tooltips on table items so you can view longer editor IDs.
 //
 // DISTANT TASKS:
 //

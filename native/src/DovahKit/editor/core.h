@@ -9,6 +9,7 @@
 namespace dovah {
    class  form_stub;
    class  file_write_error;
+   struct tes_file_header;
 }
 namespace DovahKitEditorInternals {
    class load_task;
@@ -82,6 +83,7 @@ class DovahKitCore : public QObject {
       QString get_active_file_description() const noexcept;
       void set_active_file_author(const QString&) const noexcept;
       void set_active_file_description(const QString&) const noexcept;
+      const dovah::tes_file_header* get_active_file_header() const noexcept;
 
       bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
       int load_order_index_of_file(const std::filesystem::path& filename);

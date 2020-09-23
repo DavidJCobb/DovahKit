@@ -109,6 +109,7 @@ QVariant FormUseInfoListModel::data(const QModelIndex& index, int role) const {
       case 2: // editor ID or parent cell information
          switch (role) {
             case Qt::DisplayRole:
+            case Qt::ToolTipRole:
             case Qt::UserRole + 0: // sorting
             case Qt::UserRole + 1: // filtering
                if (this->mode == relationship_mode::base_form_only) {

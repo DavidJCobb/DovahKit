@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include "common.h"
 
 namespace dovah {
    struct tes_file_header {
@@ -19,6 +20,8 @@ namespace dovah {
          };
       };
       using detail_flag_t = std::underlying_type_t<detail_flag::type>;
+      //
+      using flag = tes_file_flag;
       //
       uint32_t      flags   = 0;
       detail_flag_t details = 0;

@@ -1,6 +1,7 @@
 #include "save_window.h"
 #include <QMessageBox>
 #include "../../helpers/filesystem.h"
+#include "../../dovah/files/file_header.h"
 #include "../../editor/core.h"
 #include "../main_window.h"
 
@@ -16,6 +17,12 @@ ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
       this->ui.filename->setDisabled(true);
       this->ui.filename->setReadOnly(true);
       this->ui.filename->setText(editor.get_active_file_name());
+      //
+      auto* header = editor.get_active_file_header();
+      if (header) {
+         this->ui.flagMaster->setChecked(header->flags & dovah::tes_file_header::flag::master);
+         this->ui.flagLight->setChecked(header->flags & dovah::tes_file_header::flag::light);
+      }
    }
    editor.for_each_load_order_filename([this](std::filesystem::path filename, bool is_active_file) {
       if (is_active_file)
@@ -148,6 +155,15 @@ void ActiveFileSaveDialog::handleLastSaveError() {
          if (warning.code == dovah::file_write_warning::warning_code::save_complete_but_to_temporary_file) {
             message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
          }
+         break;
+      case dovah::file_write_error::error_code::out_of_memory:
+         message = tr("An out-of-memory error occurred at some point during the save process, likely while trying to write a compressed record.", "write error");
+         break;
+      case dovah::file_write_error::error_code::zlib_memory_error:
+         message = tr("A zlib memory error occurred while trying to save a compressed record.", "write error");
+         break;
+      case dovah::file_write_error::error_code::zlib_buffer_error:
+         message = tr("A zlib buffer error occurred while trying to save a compressed record.", "write error");
          break;
       default:
          message = tr("Unknown error.", "write error");

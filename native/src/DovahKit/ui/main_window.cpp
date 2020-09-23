@@ -2,6 +2,7 @@
 #include <QCloseEvent>
 #include <QErrorMessage>
 #include <QInputDialog>
+#include <QMDISubWindow>
 #include <QMessageBox>
 #include <QShowEvent>
 #include <QtWinExtras/QWinTaskbarProgress.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
@@ -157,8 +158,19 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 }
 void MainWindow::showEvent(QShowEvent* event) {
    event->accept();
+   //
    if (auto tb = this->taskbar_button)
       tb->setWindow(this->windowHandle());
+   for (auto* subwindow : this->ui.mdi->subWindowList()) { // set initial object window height
+      if (subwindow->widget() == this->object_window) {
+         auto g_canvas = this->ui.mdi->geometry();
+         auto g_subwin = subwindow->geometry();
+         subwindow->move(0, 0);
+         subwindow->resize(g_subwin.width(), g_canvas.height() - 2); // not sure why this is off by 2px or whether that's consistent :(
+         break;
+      }
+   }
+   //
    if (event->spontaneous()) // spontaneous events occur just after the window is visible; internal events, just before.
       emit shown();
 }
