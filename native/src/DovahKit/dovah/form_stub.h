@@ -195,6 +195,7 @@ namespace dovah {
          void receive_inbound_ref(form_stub* inbound, use_info_entry::flags_t flags = 0) noexcept;
          //
          file_load_order& form_stub::_get_load_order() const noexcept;
+         loaded_form_ptr<loaded_forms::Form> _load(bool force = false);
          void _unload_form();
          //
       public:
@@ -208,7 +209,7 @@ namespace dovah {
          use_info_list outbound; // other forms that this one refers to. flags describe (this), the form that is referring.
          use_info_list inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
          //
-         loaded_form_ptr<loaded_forms::Form> load();
+         loaded_form_ptr<loaded_forms::Form> load() { return this->_load(); }
          loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
          //
          bool fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size) const noexcept;

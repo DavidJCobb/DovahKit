@@ -160,7 +160,7 @@ namespace dovah::tes_file_writing {
       --this->fixup_data.record_and_group_count.value; // this should not include the file-header record
    }
    bool file_writer::_write_form(form_stub* stub) {
-      auto loaded = stub->load();
+      auto loaded = stub->_load(true);
       if (loaded) {
          assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);

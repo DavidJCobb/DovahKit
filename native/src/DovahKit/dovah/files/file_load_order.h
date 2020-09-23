@@ -1,5 +1,6 @@
 #pragma once
 #include "../core.h"
+#include <atomic>
 #include <filesystem>
 #include <functional>
 #include <mutex>
@@ -58,12 +59,40 @@ namespace dovah {
          _form_map_by_type forms_by_type;
          _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
+         uint8_t           active_file_index = invalid_load_prefix;
          //
-         bool    loading_is_complete        = false; // helps with UI progress display
-         bool    use_info_outbound_complete = false; // helps with UI progress display
-         bool    use_info_build_is_complete = false; // helps with UI progress display
-         uint8_t loading_index              = 0;     // which load order index we're loading, or 0 if none; set in (load_queued_files); see (_guidedLoadOrderPrefixFor)
-         uint8_t active_file_index          = invalid_load_prefix;
+         #pragma region State fields for tracking whether and how we are saving and loading
+         enum class save_load_type : uint8_t {
+            none = 0,
+            is_loading,
+            is_saving,
+         };
+         struct _save_load_lock_guard {
+            protected:
+               file_load_order& owner;
+               bool success = false;
+            public:
+               _save_load_lock_guard(file_load_order& o, file_load_order::save_load_type);
+               ~_save_load_lock_guard();
+               inline operator bool() const noexcept { return this->success; }
+         };
+         struct save_load_flag { // Flags for reporting progress and status to UI and other non-critical systems
+            save_load_flag() = delete;
+            enum type : uint8_t {
+               none = 0,
+               loading_is_complete        = 0x01,
+               use_info_outbound_complete = 0x02,
+               use_info_build_is_complete = 0x04,
+            };
+         };
+         using save_load_flags_t = std::underlying_type_t<save_load_flag::type>;
+         //
+         struct {
+            std::atomic<save_load_type> type  = save_load_type::none;
+            save_load_flags_t           flags = save_load_flag::none; // helps with UI progress display
+            uint8_t loading_index = 0; // which load order index we're loading, or 0 if none; set in (load_queued_files); see (_guidedLoadOrderPrefixFor)
+         } save_load_state;
+         #pragma endregion
          //
          void _make_hardcoded_forms();
          void _accept_hardcoded_form(form_stub*) noexcept;
@@ -95,7 +124,10 @@ namespace dovah {
          void queue_active_file(const std::string& name); // TODO
          bool load_queued_files();
          //
-         inline bool is_loading() const noexcept { return !this->loading_is_complete || !this->use_info_build_is_complete; };
+         inline bool is_loading() const noexcept {
+            constexpr save_load_flags_t test = save_load_flag::loading_is_complete | save_load_flag::use_info_build_is_complete;
+            return (this->save_load_state.flags & test) != test;
+         };
          
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
@@ -111,6 +143,8 @@ namespace dovah {
          #pragma endregion
 
          float assess_load_progress() const noexcept;
+
+         bool is_form_loading_blocked(const form_stub*) const noexcept;
          
          #pragma region Content related to already-loaded data
          uint32_t count_forms_of_type(form_type_t) const noexcept;

@@ -71,18 +71,6 @@
 //
 //        - Allow the user to select which game (Classic/Special) to save for.
 //
-//     - form_stub::load should not attempt to load any form data from the active file 
-//       while a save operation is in progress. To that end, we should add a function 
-//       {bool file_load_order::is_form_loading_blocked(form_stub&) const noexcept} 
-//       which takes a form_stub, checks if a save operation is in progress, checks if 
-//       the received stub is flagged as edited or hails from the active file, and if 
-//       so, returns false; otherwise, true.
-//
-//        - Except that the save process itself relies on form_stub::load. We'll need 
-//          to move the code for that to some _load_impl that has an option to load 
-//          the stub even if a save is in progress, and then have the public (load) 
-//          call that.
-//
 //     - When saving WRLD, the OFST subrecord needs special handling.
 //
 //     - Record compression

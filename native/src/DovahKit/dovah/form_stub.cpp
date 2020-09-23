@@ -40,12 +40,19 @@ namespace dovah {
    file_load_order& form_stub::_get_load_order() const noexcept {
       return this->file->load_order;
    }
-   loaded_form_ptr<loaded_forms::Form> form_stub::load() {
+   loaded_form_ptr<loaded_forms::Form> form_stub::_load(bool force) {
       if (!this->form && this->file) {
          auto file = this->file;
          //
-         // TODO: if the file's load_order is in the middle of a save operation, then 
-         // do not try to load the form.
+         if (!force) {
+            //
+            // Don't try to load the form if the file's load order is in the middle of 
+            // a save operation, or if loading is otherwise unsafe.
+            //
+            auto& lo = this->_get_load_order();
+            if (lo.is_form_loading_blocked(this))
+               return loaded_form_ptr<loaded_forms::Form>(this);
+         }
          //
          if (this->file->load_record_at(this->offset)) {
             auto& record   = this->file->get_current_record();

@@ -36,6 +36,18 @@ namespace dovah {
       }
    }
 
+   file_load_order::_save_load_lock_guard::_save_load_lock_guard(file_load_order& o, file_load_order::save_load_type desired) : owner(o) {
+      auto& lock  = owner.save_load_state.type;
+      auto  prior = save_load_type::none;
+      if (!lock.compare_exchange_strong(prior, desired))
+         return;
+      this->success = true;
+   }
+   file_load_order::_save_load_lock_guard::~_save_load_lock_guard() {
+      if (this->success)
+         owner.save_load_state.type = save_load_type::none;
+   }
+
    #pragma region File loading
    void file_load_order::_make_hardcoded_forms() {
       this->hardcoded_forms_file = new tes_file_reading::file_reader(*this);
@@ -89,7 +101,7 @@ namespace dovah {
             delete entry;
             entry = nullptr;
          }
-         this->use_info_outbound_complete = true;
+         this->save_load_state.flags |= save_load_flag::use_info_outbound_complete;
       }
       // Outbound next; has to be single-threaded
       for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
@@ -116,7 +128,7 @@ namespace dovah {
       if (file == this->hardcoded_forms_file)
          return 0;
       uint8_t size = this->files.size();
-      uint8_t li   = this->loading_index;
+      uint8_t li   = this->save_load_state.loading_index;
       if (li && li < size)
          if (file == this->files[li])
             return li;
@@ -142,8 +154,15 @@ namespace dovah {
       this->queued_load.active_file = name;
    }
    bool file_load_order::load_queued_files() {
-      this->load_error          = file_read_error();
-      this->loading_is_complete = false;
+      this->load_error = file_read_error();
+      //
+      _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_loading);
+      if (!save_load_lock_guard) {
+         this->load_error.code = file_read_error::error_code::cannot_load_right_now;
+         return false;
+      }
+      this->save_load_state.flags = save_load_flag::none;
+      //
       if (!this->queued_load.base_path.empty()) {
          char end = *this->queued_load.base_path.rbegin();
          if (end != '/' && end != '\\')
@@ -211,11 +230,11 @@ namespace dovah {
       for (auto* header : this->normalizer.masters) {
          std::string path = this->queued_load.base_path + header->name;
          auto file = new tes_file_reading::file_reader(*this);
-         this->loading_index = this->files.size();
+         this->save_load_state.loading_index = this->files.size();
          this->files.push_back(file);
          if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
             this->active_file = file;
-            this->active_file_index = this->loading_index;
+            this->active_file_index = this->save_load_state.loading_index;
          }
          if (!file->load(path.c_str())) {
             auto fn = header->name;
@@ -240,11 +259,11 @@ namespace dovah {
       for (auto* header : this->normalizer.plugins) {
          std::string path = this->queued_load.base_path + header->name;
          auto file = new tes_file_reading::file_reader(*this);
-         this->loading_index = this->files.size();
+         this->save_load_state.loading_index = this->files.size();
          this->files.push_back(file);
          if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
             this->active_file = file;
-            this->active_file_index = this->loading_index;
+            this->active_file_index = this->save_load_state.loading_index;
          }
          if (!file->load(path.c_str())) {
             auto fn = header->name;
@@ -266,11 +285,11 @@ namespace dovah {
          // 3. Load the rest of the file.
          //
       }
-      this->loading_is_complete = true;
-      this->loading_index = 0;
+      this->save_load_state.flags |= save_load_flag::loading_is_complete;
+      this->save_load_state.loading_index = 0;
       //
       this->_build_use_info();
-      this->use_info_build_is_complete = true;
+      this->save_load_state.flags |= save_load_flag::use_info_build_is_complete;
       //
       if (!this->active_file && this->files.size() < 254) { // TODO: the cutoff should be 253 if any of the loaded files are ESLs or SSE files
          auto file = new tes_file_reading::file_reader(*this);
@@ -325,8 +344,8 @@ namespace dovah {
    float file_load_order::assess_load_progress() const noexcept {
       constexpr float use_info_proportion = 0.2F;
       //
-      bool l = this->loading_is_complete;
-      bool u = this->use_info_build_is_complete;
+      bool l = this->save_load_state.flags & save_load_flag::loading_is_complete;
+      bool u = this->save_load_state.flags & save_load_flag::use_info_build_is_complete;
       if (l) {
          if (u)
             return 1.0F;
@@ -338,7 +357,7 @@ namespace dovah {
                if (thread)
                   progress += thread->assess_load_progress();
          }
-         if (this->use_info_outbound_complete)
+         if (this->save_load_state.flags & save_load_flag::use_info_outbound_complete)
             return NAN;
          progress /= this->use_info_build_threads.size();
          //
@@ -356,8 +375,8 @@ namespace dovah {
          return 0.0F;
       //
       float per_file = 1.0F / count;
-      float progress = per_file * this->loading_index;
-      auto* current  = this->files[this->loading_index];
+      float progress = per_file * this->save_load_state.loading_index;
+      auto* current  = this->files[this->save_load_state.loading_index];
       if (!current)
          return progress;
       auto this_file = current->assess_load_progress();
@@ -366,6 +385,12 @@ namespace dovah {
       //
       progress *= (1.0F - use_info_proportion);
       return progress;
+   }
+
+   bool file_load_order::is_form_loading_blocked(const form_stub* stub) const noexcept {
+      if (this->save_load_state.type != save_load_type::none)
+         return true;
+      return false;
    }
 
    uint32_t file_load_order::count_forms_of_type(form_type_t ft) const noexcept {
@@ -631,7 +656,8 @@ namespace dovah {
          this->save_error.code = file_write_error::error_code::no_active_file;
          return false;
       }
-      if (this->is_loading()) {
+      _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_saving);
+      if (!save_load_lock_guard) {
          this->save_error.code = file_write_error::error_code::cannot_save_right_now;
          return false;
       }

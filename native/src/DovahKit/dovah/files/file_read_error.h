@@ -99,6 +99,12 @@ namespace dovah {
                // and there are non-ESMs in the load order.
                //
                active_file_is_master_and_there_are_plugins = 13,
+               //
+               // (cannot_load_right_now)
+               // It is not safe to load right now because some other operation (e.g. a load or 
+               // save) is currently in progress.
+               //
+               cannot_load_right_now,
             };
          };
          using error_code_t = std::underlying_type_t<error_code::type>;
