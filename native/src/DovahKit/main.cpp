@@ -91,6 +91,18 @@
 //           - Not possible until we implement loading and saving cells in the first 
 //             place.
 //
+//              - It looks like CELL and REFR both load all possible types of extra-
+//                data, even if they don't use them. We'll want to do that here as 
+//                well -- we need to support all extra-data subrecords for both form 
+//                types. I've written up some preliminary extra-data component structs 
+//                but I probably need to do something similar to what the game itself 
+//                does: give the forms an extra-data list, and have all extra-data 
+//                structs inherit from a superclass with virtual load/save members.
+//
+//                 - I can define some generic extra-data superclasses for the 
+//                   structs that consist of single form IDs / integers / floats / 
+//                   etc.
+//
 // DISTANT TASKS:
 //
 //  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 

@@ -121,6 +121,7 @@
     <ClCompile Include="dovah\forms\components\conditions\arg_types.cpp" />
     <ClCompile Include="dovah\forms\components\container.cpp" />
     <ClCompile Include="dovah\forms\components\destruction.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data.cpp" />
     <ClCompile Include="dovah\forms\components\interior_lighting.cpp" />
     <ClCompile Include="dovah\forms\components\keyword_list.cpp" />
     <ClCompile Include="dovah\forms\components\model.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="dovah\forms\components\conditions.h" />
     <ClInclude Include="dovah\forms\components\conditions\arg_types.h" />
     <ClInclude Include="dovah\forms\components\conditions\arg_value.h" />
+    <ClInclude Include="dovah\forms\components\extra_data.h" />
     <ClInclude Include="dovah\forms\components\interior_lighting.h" />
     <ClInclude Include="dovah\forms\components\keyword_list.h" />
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />

@@ -47,9 +47,9 @@ namespace dovah::loaded_forms {
                subrecord.read(this->interior.owner_ID);
                break;
             case 'TVDT':
-               //
-               // TODO
-               //
+               this->exterior.occlusion_data.present = true;
+               this->exterior.occlusion_data.bytes.resize(subrecord.size());
+               subrecord.read(this->exterior.occlusion_data.bytes.data(), subrecord.size());
                break;
             case 'MHDT':
                /*// whoops, this is for WRLD
@@ -78,7 +78,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'LNAM':
-               subrecord.read(this->exterior.deprecated_land_flags);
+               subrecord.read(this->interior.lighting.inherit_flags);
                break;
             case 'XCLR':
                while (subrecord.is_in_bounds(4)) {
@@ -118,6 +118,15 @@ namespace dovah::loaded_forms {
                // TODO
                //
                break;
+            //
+            // Miscellaneous extra-data:
+            //
+            case 'XGLB':
+               subrecord.read(this->misc_extra.global_ID);
+               break;
+            case 'XTNM':
+               subrecord.read(this->misc_extra.teleport_message_ID);
+               break;
          }
       }
    }
@@ -135,6 +144,8 @@ namespace dovah::loaded_forms {
             case 'XILL':
             case 'XOWN':
             case 'XCWT':
+            case 'XGLB': // miscellaneous extra data...
+            case 'XTNM':
                if (subrecord.read(formID))
                   stub->add_outbound_reference(formID);
                break;

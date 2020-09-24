@@ -17,7 +17,7 @@ namespace dovah::loaded_forms {
             cell_flag() = delete;
             enum {
                interior              = 0x0001,
-               has_water             = 0x0002,
+               has_water             = 0x0002, // TESV.exe forces this to (true) on load if the (interior) flag is not set
                cant_travel_from_here = 0x0004,
                no_lod_water          = 0x0008,
                public_area           = 0x0020,
@@ -61,6 +61,10 @@ namespace dovah::loaded_forms {
             std::array<std::array<int8_t, 32>, 32> grid;
             bool  present = false;
          };
+         struct occlusion_data_t {
+            std::vector<uint8_t> bytes;
+            bool present = false;
+         };
 
          localized_string name; // FULL
          uint16_t cell_flags = 0; // DATA
@@ -75,16 +79,15 @@ namespace dovah::loaded_forms {
          form_id_t music_type_ID;     // XCMO
          form_id_t sky_region_ID;     // XCCM
          struct {
-            components::interior_lighting lighting; // XCLL
+            components::interior_lighting lighting; // XCLL (LNAM overrides the inherit flags specifically)
             form_id_t acoustic_space_ID;     // XCAS
             form_id_t lighting_template_ID;  // LTMP
             form_id_t lock_list_ID;          // XILL (FLST, NPC_)
             form_id_t owner_ID;              // XOWN (FACT, NPC_)
          } interior;
          struct {
-            std::vector<uint8_t>   occlusion_data;        // TVDT
+            occlusion_data_t       occlusion_data;        // TVDT
             max_height_data_t      max_height_data;       // MHDT
-            uint32_t               deprecated_land_flags; // LNAM // leftover flags, moved to XCLC
             std::vector<form_id_t> containing_region_IDs; // XCLR
          } exterior;
          struct {
@@ -98,9 +101,27 @@ namespace dovah::loaded_forms {
                uint32_t unk0C;
                cobb::vector3<float> angular;
             } velocity; // XWCU
-            // TODO: XWCN
-            // TODO: XWCS
+            // TODO: XWCN (see BaseExtraList::LoadExtraDataSubrecord)
+            // TODO: XWCS (see BaseExtraList::LoadExtraDataSubrecord)
          } water;
+         struct {
+            //
+            // It looks like TESObjectCELL can load most or all of the same extra-data types as TESObjectREFR, 
+            // even if they don't make sense for cells and aren't ever actually used when present on cells.
+            //
+            form_id_t global_ID;           // XGLB: ExtraGlobal
+            form_id_t teleport_message_ID; // XTNM: ExtraTeleportName
+         } misc_extra;
+         // TODO: RNAM (see BaseExtraList::LoadExtraDataSubrecord, and no, this isn't a typo)
+         // TODO: XCZA (see BaseExtraList::LoadExtraDataSubrecord)
+         // TODO: XHOR (see BaseExtraList::LoadExtraDataSubrecord)
+         // TODO: XIS2 (see BaseExtraList::LoadExtraDataSubrecord)
+         // TODO: XMRC (see BaseExtraList::LoadExtraDataSubrecord)
+         // TODO: XNDP (see BaseExtraList::LoadExtraDataSubrecord)
+         // TODO: XORD (see BaseExtraList::LoadExtraDataSubrecord)
+         // TODO: XPPA (see BaseExtraList::LoadExtraDataSubrecord)
+         // TODO: VMAD
+         // TODO: OBND
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
