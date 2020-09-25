@@ -16,7 +16,7 @@ namespace dovah::loaded_forms::components {
       action,
       activate_loop_sound,
       activate_parent_data,      // XAPD, XAPR
-      activate_ref_children,
+      activate_ref,              // XACR
       actor_cause,
       alias_instance_array,
       alpha_cutoff,              // XALP
@@ -53,7 +53,7 @@ namespace dovah::loaded_forms::components {
       editor_ref_move_data,
       emittance_source,          // XEMI
       enable_state_children,
-      enable_state_parent,
+      enable_state_parent,       // XESP
       enchantment,
       encounter_zone,            // XEZN
       faction_changes,
@@ -75,7 +75,7 @@ namespace dovah::loaded_forms::components {
       heading_target,
       headtracking_weight,       // XHTW
       health,
-      health_percentage,
+      health_percent,            // XHLP
       horse,                     // XHOR
       hotkey,
       ignored_by_sandbox,        // XIS2 (the XIBS subrecord is checked for, but deprecated)
@@ -104,10 +104,11 @@ namespace dovah::loaded_forms::components {
       multibound,
       multibound_bounds,         // XMBO
       multibound_ref,            // XMBR
-      navmesh_portal,
+      navmesh_door_portal,       // XNDP
       north_rotation,
       object_health,
-      occlusion_plane_ref_data,
+      occlusion_plane,           // XOCP (discarded by the game after load)
+      occlusion_plane_ref_data,  // XORD
       occlusion_shape,
       open_close_activate_ref,
       original_reference,
@@ -352,76 +353,6 @@ namespace dovah::loaded_forms::components {
 }
 
 namespace dovah::loaded_forms::components::extra {
-   struct activate_ref {
-      static constexpr uint32_t signature = 'XACR';
-      //
-      uint32_t unk00 = 0;
-      uint32_t unk04 = 0;
-      uint32_t unk08 = 0;
-   };
-   struct enable_state_parent {
-      static constexpr uint32_t signature = 'XESP';
-      struct flag {
-         flag() = delete;
-         enum : uint8_t {
-            opposite = 0x01, // uses the opposite state of its parent
-            pop_in   = 0x02,
-         };
-      };
-      //
-      form_id_t reference;
-      uint8_t   flags = 0;
-      uint8_t   padding[3];
-      //
-      void load(tes_subrecord_reader&);
-      void save(tes_subrecord_writer&); // open the subrecord before calling
-   };
-   struct light_data {
-      static constexpr uint32_t signature = 'XLIG';
-      //
-      float    fov;
-      float    fade;
-      uint32_t unk08;
-      float    shadow_depth_bias = 1.0F;
-      float    unk10;
-      //
-      void load(tes_subrecord_reader&);
-      void save(tes_subrecord_writer&); // open the subrecord before calling
-   };
-   struct multibound_halfwidths {
-      static constexpr uint32_t signature = 'XMBO';
-      //
-      cobb::vector3<float> bounds;
-      //
-      void load(tes_subrecord_reader&);
-      void save(tes_subrecord_writer&); // open the subrecord before calling
-   };
-   struct navmesh_door_portal {
-      static constexpr uint32_t signature = 'XNDP';
-      //
-      form_id_t navmesh;
-      int16_t   teleport_marker_triangle;
-      uint16_t  unused;
-      //
-      void load(tes_subrecord_reader&);
-      void save(tes_subrecord_writer&); // open the subrecord before calling
-   };
-   struct occlusion_plane_data {
-      static constexpr uint32_t signature = 'XOCP';
-      //
-      float width;
-      float height;
-      cobb::vector3<float> position;
-      struct { // quaternion
-         float a;
-         float b;
-         float c;
-         float d;
-      } rotation;
-      //
-      void load(tes_subrecord_reader&);
-      void save(tes_subrecord_writer&); // open the subrecord before calling
-   };
    struct placed_water_reflections { // the water is placed, not the reflections
       static constexpr uint32_t signature = 'XPWR';
       enum class type_t : uint32_t {

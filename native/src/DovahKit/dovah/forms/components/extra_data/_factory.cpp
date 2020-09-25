@@ -2,7 +2,9 @@
 #pragma region All extra-data classes
    #pragma region A
       #include "activate_parent_data.h"
+      #include "activate_ref.h"
       #include "alpha_cutoff.h"
+      #include "attach_ref.h"
    #pragma endregion
    #pragma region C
       #include "cell_acoustic_space.h"
@@ -18,10 +20,15 @@
    #include "distant_data.h"
    #pragma region E
       #include "emittance_source.h"
+      #include "enable_state_parent.h"
       #include "encounter_zone.h"
    #pragma endregion
    #include "favor_cost.h"
    #include "global.h"
+   #pragma region H
+      #include "health_percent.h"
+      #include "horse.h"
+   #pragma endregion
    #pragma region I
       #include "ignored_by_sandbox.h"
       #include "interior_lock_list.h"
@@ -37,8 +44,11 @@
    #pragma region M
       #include "map_marker.h"
       #include "multibound_bounds.h"
+      #include "multibound_ref.h"
    #pragma endregion
+   #include "navmesh_door_portal.h"
    #pragma region O
+      #include "occlusion_plane.h"
       #include "occlusion_plane_ref_data.h"
       #include "ownership.h"
    #pragma endregion
@@ -54,6 +64,7 @@
       #include "radius.h"
       #include "ragdoll_data.h"
       #include "rank.h"
+      #include "room_ref_data.h"
    #pragma endregion
    #pragma region S
       #include "scale.h"
@@ -87,7 +98,9 @@ namespace {
       #pragma region A
          { activate_parent_data::signature_flags,  _create<activate_parent_data> }, // This extra-data type has multiple signatures...
          { activate_parent_data::signature_parent, _create<activate_parent_data> }, // 
+         { activate_ref::signature,                _create<activate_ref> },
          { alpha_cutoff::signature,                _create<alpha_cutoff> },
+         { attach_ref::signature,                  _create<attach_ref> },
       #pragma endregion
       #pragma region C
          { cell_acoustic_space::signature, _create<cell_acoustic_space> },
@@ -102,11 +115,16 @@ namespace {
       #pragma endregion
       { distant_data::signature, _create<distant_data> },
       #pragma region E
-         { emittance_source::signature, _create<emittance_source> },
-         { encounter_zone::signature,   _create<encounter_zone> },
+         { emittance_source::signature,    _create<emittance_source> },
+         { enable_state_parent::signature, _create<enable_state_parent> },
+         { encounter_zone::signature,      _create<encounter_zone> },
       #pragma endregion
       { favor_cost::signature,          _create<favor_cost> },
       { global::signature,              _create<global> },
+      #pragma region H
+         { health_percent::signature, _create<health_percent> },
+         { horse::signature,          _create<horse> },
+      #pragma endregion
       #pragma region I
          { ignored_by_sandbox::signature,  _create<ignored_by_sandbox> },
          { interior_lock_list::signature,  _create<interior_lock_list> },
@@ -122,8 +140,11 @@ namespace {
       #pragma region M
          { map_marker::signature,        _create<map_marker> },
          { multibound_bounds::signature, _create<multibound_bounds> },
+         { multibound_ref::signature,    _create<multibound_ref> },
       #pragma endregion
+      { navmesh_door_portal::signature, _create<navmesh_door_portal> },
       #pragma region O
+         { occlusion_plane::signature,          _create<occlusion_plane> },
          { occlusion_plane_ref_data::signature, _create<occlusion_plane_ref_data> },
          { ownership::signature,                _create<ownership> },
       #pragma endregion
@@ -141,6 +162,7 @@ namespace {
          { ragdoll_data::signature_base,  _create<ragdoll_data> }, // This extra-data type has multiple signatures...
          { ragdoll_data::signature_biped, _create<ragdoll_data> }, // 
          { rank::signature,               _create<rank> },
+         { room_ref_data::signature,      _create<room_ref_data> },
       #pragma endregion
       #pragma region S
          { scale::signature,           _create<scale> },
