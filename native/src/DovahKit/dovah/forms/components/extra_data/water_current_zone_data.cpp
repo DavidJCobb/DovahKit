@@ -30,8 +30,5 @@ namespace dovah::loaded_forms::components::extra {
       XCVR.write(this->velocity.angular.y);
       XCVR.write(this->velocity.angular.z);
       XCVR.close();
-      //
-      // TODO: anything else?
-      //
    }
 }

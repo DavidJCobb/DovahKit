@@ -7,14 +7,21 @@ namespace dovah::loaded_forms::components::extra {
          case signature_time:
             subrecord.read(this->idle_time);
             break;
+         case signature_event:
+            return load_result::requires_record;
          default:
             return load_result::unrecognized;
       }
       return load_result::succeeded;
    }
+   bool patrol_ref_data::load(tes_record_reader& record) {
+      return this->event.load(record);
+   }
    void patrol_ref_data::save(tes_record_writer& record) {
       auto& XPRD = record.open_next_subrecord(signature_time);
       XPRD.write(this->idle_time);
       XPRD.close();
+      if (!this->event.empty())
+         this->event.save(record);
    }
 }

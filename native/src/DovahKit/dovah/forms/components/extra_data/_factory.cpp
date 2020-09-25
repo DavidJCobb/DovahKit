@@ -1,9 +1,12 @@
 #include "_factory.h"
 #pragma region All extra-data classes
+   #include "_unknown.h"
    #pragma region A
+      #include "action.h"
       #include "activate_parent_data.h"
       #include "activate_ref.h"
       #include "alpha_cutoff.h"
+      #include "ammo.h"
       #include "attach_ref.h"
    #pragma endregion
    #pragma region C
@@ -16,6 +19,7 @@
       #include "cell_water_type.h"
       #include "charge.h"
       #include "collision_data.h"
+      #include "count.h"
    #pragma endregion
    #include "distant_data.h"
    #pragma region E
@@ -26,6 +30,8 @@
    #include "favor_cost.h"
    #include "global.h"
    #pragma region H
+      #include "headtracking_weight.h"
+      #include "health.h"
       #include "health_percent.h"
       #include "horse.h"
    #pragma endregion
@@ -38,11 +44,15 @@
       #include "leveled_item_base.h"
       #include "light.h"
       #include "linked_ref.h"
+      #include "linked_ref_color.h"
+      #include "lit_water.h"
       #include "location.h"
+      #include "location_ref_type.h"
       #include "lock.h"
    #pragma endregion
    #pragma region M
       #include "map_marker.h"
+      #include "merchant_container.h"
       #include "multibound_bounds.h"
       #include "multibound_ref.h"
    #pragma endregion
@@ -64,6 +74,8 @@
       #include "radius.h"
       #include "ragdoll_data.h"
       #include "rank.h"
+      #include "random_teleport_marker.h"
+      #include "reflector_refs.h"
       #include "room_ref_data.h"
    #pragma endregion
    #pragma region S
@@ -95,11 +107,34 @@ namespace {
    };
 
    _entry _factories[] = {
+      { unknown::XCZA::signature, _create<unknown::XCZA> },
+      { unknown::XCZC::signature, _create<unknown::XCZC> },
+      { unknown::XCZR::signature, _create<unknown::XCZR> },
+      { unknown::XEDL::signature, _create<unknown::XEDL> },
+      { unknown::XENC::signature, _create<unknown::XENC> },
+      { unknown::XLMB::signature, _create<unknown::XLMB> },
+      { unknown::XNVP::signature, _create<unknown::XNVP> },
+      { unknown::XPSL::signature, _create<unknown::XPSL> },
+      { unknown::XROO::signature, _create<unknown::XROO> },
+      { unknown::XUSE::signature, _create<unknown::XUSE> },
+      { unknown::XWLT::signature, _create<unknown::XWLT> },
+      { unknown::XWNT::signature, _create<unknown::XWNT> },
+      { deprecated::XDCR::signature, _create<deprecated::XDCR> },
+      { deprecated::XHRS::signature, _create<deprecated::XHRS> },
+      { deprecated::XIBS::signature, _create<deprecated::XIBS> },
+      { deprecated::XPCI::signature, _create<deprecated::XPCI> },
+      { deprecated::XRAD::signature, _create<deprecated::XRAD> },
+      { deprecated::XRDO::signature, _create<deprecated::XRDO> },
+      { deprecated::XSED::signature, _create<deprecated::XSED> },
+      { deprecated::XSOL::signature, _create<deprecated::XSOL> },
       #pragma region A
+         { action::signature,                      _create<action> },
          { activate_parent_data::signature_flags,  _create<activate_parent_data> }, // This extra-data type has multiple signatures...
          { activate_parent_data::signature_parent, _create<activate_parent_data> }, // 
          { activate_ref::signature,                _create<activate_ref> },
          { alpha_cutoff::signature,                _create<alpha_cutoff> },
+         { ammo::signature_type,                   _create<ammo> }, // This extra-data type has multiple signatures...
+         { ammo::signature_count,                  _create<ammo> }, // 
          { attach_ref::signature,                  _create<attach_ref> },
       #pragma endregion
       #pragma region C
@@ -112,6 +147,7 @@ namespace {
          { cell_water_type::signature,     _create<cell_water_type> },
          { charge::signature,              _create<charge> },
          { collision_data::signature,      _create<collision_data> },
+         { count::signature,               _create<count> },
       #pragma endregion
       { distant_data::signature, _create<distant_data> },
       #pragma region E
@@ -119,28 +155,34 @@ namespace {
          { enable_state_parent::signature, _create<enable_state_parent> },
          { encounter_zone::signature,      _create<encounter_zone> },
       #pragma endregion
-      { favor_cost::signature,          _create<favor_cost> },
-      { global::signature,              _create<global> },
+      { favor_cost::signature, _create<favor_cost> },
+      { global::signature,     _create<global> },
       #pragma region H
-         { health_percent::signature, _create<health_percent> },
-         { horse::signature,          _create<horse> },
+         { headtracking_weight::signature, _create<headtracking_weight> },
+         { health::signature,              _create<health> },
+         { health_percent::signature,      _create<health_percent> },
+         { horse::signature,               _create<horse> },
       #pragma endregion
       #pragma region I
-         { ignored_by_sandbox::signature,  _create<ignored_by_sandbox> },
-         { interior_lock_list::signature,  _create<interior_lock_list> },
+         { ignored_by_sandbox::signature, _create<ignored_by_sandbox> },
+         { interior_lock_list::signature, _create<interior_lock_list> },
       #pragma endregion
       #pragma region L
          { leveled_creature_modifier::signature, _create<leveled_creature_modifier> },
          { leveled_item_base::signature,         _create<leveled_item_base> },
          { light::signature,                     _create<light> },
          { linked_ref::signature,                _create<linked_ref> },
+         { linked_ref_color::signature,          _create<linked_ref_color> },
+         { lit_water::signature,                 _create<lit_water> },
          { location::signature,                  _create<location> },
+         { location_ref_type::signature,         _create<location_ref_type> },
          { lock::signature,                      _create<lock> },
       #pragma endregion
       #pragma region M
-         { map_marker::signature,        _create<map_marker> },
-         { multibound_bounds::signature, _create<multibound_bounds> },
-         { multibound_ref::signature,    _create<multibound_ref> },
+         { map_marker::signature,         _create<map_marker> },
+         { merchant_container::signature, _create<merchant_container> },
+         { multibound_bounds::signature,  _create<multibound_bounds> },
+         { multibound_ref::signature,     _create<multibound_ref> },
       #pragma endregion
       { navmesh_door_portal::signature, _create<navmesh_door_portal> },
       #pragma region O
@@ -150,7 +192,8 @@ namespace {
       #pragma endregion
       #pragma region P
          { package_start_location::signature,        _create<package_start_location> },
-         { patrol_ref_data::signature_time,          _create<patrol_ref_data> },
+         { patrol_ref_data::signature_time,          _create<patrol_ref_data> }, // This extra-data type has multiple signatures...
+         { patrol_ref_data::signature_event,         _create<patrol_ref_data> }, // 
          { poison::signature_type,                   _create<poison> }, // This extra-data type has multiple signatures...
          { poison::signature_dose,                   _create<poison> }, // 
          { portal::signature,                        _create<portal> },
@@ -158,11 +201,13 @@ namespace {
          { primitive::signature,                     _create<primitive> },
       #pragma endregion
       #pragma region R
-         { radius::signature,             _create<radius> },
-         { ragdoll_data::signature_base,  _create<ragdoll_data> }, // This extra-data type has multiple signatures...
-         { ragdoll_data::signature_biped, _create<ragdoll_data> }, // 
-         { rank::signature,               _create<rank> },
-         { room_ref_data::signature,      _create<room_ref_data> },
+         { radius::signature,                 _create<radius> },
+         { ragdoll_data::signature_base,      _create<ragdoll_data> }, // This extra-data type has multiple signatures...
+         { ragdoll_data::signature_biped,     _create<ragdoll_data> }, // 
+         { random_teleport_marker::signature, _create<random_teleport_marker> },
+         { rank::signature,                   _create<rank> },
+         { reflector_refs::signature,         _create<reflector_refs> },
+         { room_ref_data::signature,          _create<room_ref_data> },
       #pragma endregion
       #pragma region S
          { scale::signature,           _create<scale> },

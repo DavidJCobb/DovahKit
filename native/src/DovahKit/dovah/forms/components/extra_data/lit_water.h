@@ -1,0 +1,15 @@
+#pragma once
+#include "../extra_data.h"
+
+namespace dovah::loaded_forms::components::extra {
+   class lit_water : public basic_extra_data {
+      public:
+         static constexpr uint32_t signature = 'XLTW';
+         //
+         std::vector<form_id_t> refs;
+         //
+         virtual extra_data_type get_type() const noexcept { return extra_data_type::lit_water; };
+         virtual load_result load(tes_subrecord_reader&) override;
+         virtual void save(tes_record_writer&) override;
+   };
+}

@@ -10,7 +10,7 @@ namespace dovah::loaded_forms::components::extra {
             enum type : uint8_t {
                visible         = 0x01,
                can_travel_to   = 0x02,
-               show_all_hidden = 0x04,
+               show_all_hidden = 0x04, // prevents ShowAllMapMarkers and friends from affecting this marker unless the scripter specifically decides otherwise
             };
          };
          using flags_t = std::underlying_type_t<flag::type>;

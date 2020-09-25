@@ -66,6 +66,12 @@ namespace dovah::loaded_forms {
             bool present = false;
          };
 
+         //
+         // TODO: Extra-data list
+         // TODO: VMAD
+         // TODO: OBND
+         //
+
          localized_string name; // FULL
          uint16_t cell_flags = 0; // DATA
          struct {

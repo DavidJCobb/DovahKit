@@ -3,7 +3,11 @@
 
 namespace dovah::loaded_forms::components::extra {
    class ammo : public basic_extra_data {
+      //
+      // Apparently a Fallout 3 leftover.
+      //
       public:
+         static constexpr uint32_t signature_type  = 'XAMT';
          static constexpr uint32_t signature_count = 'XAMC';
          //
          form_id_t type;  // XAMT
