@@ -1,5 +1,5 @@
 #pragma once
-#include "../extra_data.h"
+#include "_templates.h"
 
 namespace dovah::loaded_forms::components::extra {
    class merchant_container : public formID_extra_data<'XMRC', extra_data_type::merchant_container> {

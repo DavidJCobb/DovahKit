@@ -1,5 +1,5 @@
 #pragma once
-#include "../extra_data.h"
+#include "_templates.h"
 
 namespace dovah::loaded_forms::components::extra::unknown {
    class XCZA : public empty_extra_data<'XCZA', extra_data_type::unknown_xcza> {
@@ -64,7 +64,7 @@ namespace dovah::loaded_forms::components::extra::deprecated {
    class XRDO : public empty_extra_data<'XRDO', extra_data_type::deprecated_xrdo> {
       // The game skips loading this subrecord. In FO3, it was radio data.
    };
-   class XSED : basic_extra_data {
+   class XSED : public basic_extra_data {
       public:
          static constexpr uint32_t signature = 'XSED';
          //

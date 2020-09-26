@@ -73,8 +73,9 @@ namespace dovah::loaded_forms::components::papyrus {
    }
    bool script_data::save(tes_record_writer& record) {
       auto& VMAD = record.open_next_subrecord('VMAD');
-      this->save(VMAD);
+      auto result = this->save(VMAD);
       VMAD.close();
+      return result;
    }
 
    #pragma region Script sub-objects loading

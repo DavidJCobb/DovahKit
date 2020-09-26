@@ -1,5 +1,5 @@
 #pragma once
-#include "../extra_data.h"
+#include "_templates.h"
 
 namespace dovah::loaded_forms::components::extra {
    class emittance_source : public formID_extra_data<'XEMI', extra_data_type::emittance_source> {
