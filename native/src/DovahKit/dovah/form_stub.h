@@ -129,6 +129,9 @@ namespace dovah {
    //    inbound references from their child forms.
    //
    struct use_info_entry {
+      enum class outbound_type {
+         i_am_reference_of,
+      };
       struct flag {
          flag() = delete;
          enum type : uint8_t {
@@ -142,7 +145,9 @@ namespace dovah {
       //
       form_stub* other    = nullptr;
       uint32_t   refcount = 0;
-      uint8_t    flags    = 0;
+      flags_t    flags    = 0;
+      //
+      static flags_t invert_flags(flags_t);
    };
    using use_info_list = std::map<bare_form_id_t, use_info_entry>;
    #pragma endregion
@@ -234,6 +239,7 @@ namespace dovah {
          //
          void get_source_filename(std::string& out) const noexcept;
          //
+         void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;
@@ -245,6 +251,10 @@ namespace dovah {
          bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
          uint32_t get_cell_block() const noexcept;
          uint32_t get_cell_sub_block() const noexcept;
+         //
+         void revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags = 0);
+         void replace_outbound_reference(bare_form_id_t old, form_stub* changeTo, use_info_entry::flags_t flags = 0);
+         void replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags = 0);
          //
          static void* operator new(std::size_t sz);
          static void operator delete(void* ptr, std::size_t sz);

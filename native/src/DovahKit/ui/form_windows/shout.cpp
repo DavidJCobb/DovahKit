@@ -27,7 +27,7 @@ void FormDialogShout::_save_impl() {
    this->stub->editorID = this->ui.editorID->text().toStdString();
    this->form->name = this->ui.name->text().toStdString();
    this->form->treat_as_power(this->ui.treatAsPower->isChecked());
-   this->form->menuDisplayObjectID = this->ui.menuDisplayObject->formID();
+   this->save_form_id(this->form->menuDisplayObjectID, this->ui.menuDisplayObject->formID());
    this->form->description = this->ui.description->toPlainText().toStdString();
    this->ui.word0->save();
    this->ui.word1->save();

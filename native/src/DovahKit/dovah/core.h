@@ -3,6 +3,14 @@
 #include <cstdint>
 
 namespace dovah {
+   class form_stub;
+   namespace tes_file_reading {
+      class subrecord;
+   }
+   namespace tes_file_writing {
+      class subrecord;
+   }
+
    using bare_form_id_t = uint32_t;
 
    struct form_type {
@@ -193,31 +201,64 @@ namespace dovah {
 
    struct form_id_t {
       //
-      // A struct to wrap form IDs. This exists so that tes_file_reading::subrecord::read and 
-      // similar functions can be templated on it to normalize and resolve form IDs.
+      // This struct exists for a few reasons:
       //
-      uint32_t value = 0;
+      //  - For file I/O, the subrecord-reading and -writing classes can have "read" functions 
+      //    templated on this struct, in order to automate form ID fixup.
       //
-      form_id_t() {};
-      form_id_t(uint32_t i) : value(i) {};
+      //  - When working with loaded forms, this struct can automate the task of fixing up use 
+      //    info when assigning to form IDs.
       //
-      inline operator uint32_t() const noexcept { return this->value; };
-      inline form_id_t& operator=(const uint32_t& other) { this->value = other; return *this; };
-      inline form_id_t& operator=(const int& other) { this->value = other; return *this; };
+      // Accordingly, this struct should be used in the following situations only:
       //
-      inline bool operator>(const uint32_t& other) { return this->value > other; };
-      inline bool operator<(const uint32_t& other) { return this->value < other; };
-      inline bool operator>=(const uint32_t& other) { return this->value >= other; };
-      inline bool operator<=(const uint32_t& other) { return this->value <= other; };
-      inline bool operator==(const uint32_t& other) { return this->value == other; };
-      inline bool operator!=(const uint32_t& other) { return this->value != other; };
+      //  - When reading form IDs from a file, or saving them to a file.
       //
-      inline bool operator>(const form_id_t& other) { return this->value > other.value; };
-      inline bool operator<(const form_id_t& other) { return this->value < other.value; };
-      inline bool operator>=(const form_id_t& other) { return this->value >= other.value; };
-      inline bool operator<=(const form_id_t& other) { return this->value <= other.value; };
-      inline bool operator==(const form_id_t& other) { return this->value == other.value; };
-      inline bool operator!=(const form_id_t& other) { return this->value != other.value; };
+      //  - For all form ID members on a loaded-form class.
+      //
+      // When you wish to change the form ID's value (e.g. to make changes to a loaded form), 
+      // you must call this struct's (set) member function, passing two arguments: the 
+      // (form_stub) that owns the loaded-form that the form_id_t instance is a member of; and 
+      // the form ID or (form_stub) that you want the form_id_t instance to be set to.
+      //
+      friend class tes_file_reading::subrecord;
+      friend class tes_file_writing::subrecord;
+      protected:
+         uint32_t value = 0;
+      public:
+         form_id_t() {};
+         form_id_t(uint32_t i) : value(i) {};
+         //
+         inline operator uint32_t() const noexcept { return this->value; };
+         //
+         inline bool operator>(const uint32_t& other) { return this->value > other; };
+         inline bool operator<(const uint32_t& other) { return this->value < other; };
+         inline bool operator>=(const uint32_t& other) { return this->value >= other; };
+         inline bool operator<=(const uint32_t& other) { return this->value <= other; };
+         inline bool operator==(const uint32_t& other) { return this->value == other; };
+         inline bool operator!=(const uint32_t& other) { return this->value != other; };
+         //
+         inline bool operator>(const form_id_t& other) { return this->value > other.value; };
+         inline bool operator<(const form_id_t& other) { return this->value < other.value; };
+         inline bool operator>=(const form_id_t& other) { return this->value >= other.value; };
+         inline bool operator<=(const form_id_t& other) { return this->value <= other.value; };
+         inline bool operator==(const form_id_t& other) { return this->value == other.value; };
+         inline bool operator!=(const form_id_t& other) { return this->value != other.value; };
+         //
+         void set(form_stub* owner, bare_form_id_t set_to); // set (this->value) and update use info for the old and new forms
+         void set(form_stub* owner, form_stub* set_to);     // set (this->value) and update use info for the old and new forms
+         //
+      protected:
+         inline form_id_t& operator=(const uint32_t& other) { this->value = other; return *this; };
+         inline form_id_t& operator=(const int& other) { this->value = other; return *this; };
+   };
+   struct base_form_id_t : form_id_t {
+      //
+      // This is a special-case subclass of form_id_t which should be used for REFR/NAME, 
+      // a.k.a. a reference's, uh, reference to its base form.
+      //
+      public:
+         void set(form_stub* owner, bare_form_id_t set_to);
+         void set(form_stub* owner, form_stub* set_to);
    };
    struct struct_form_id_t : form_id_t {
       //
@@ -230,7 +271,8 @@ namespace dovah {
       // such, structs that are blindly copied will have their layouts change, with four 
       // padding bytes following each four-byte form ID.
       //
-      uint32_t padding = 0;
+      public:
+         uint32_t padding = 0;
    };
 
    namespace loaded_forms {

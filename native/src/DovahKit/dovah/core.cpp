@@ -1,4 +1,5 @@
 #include "core.h"
+#include "form_stub.h"
 
 namespace dovah {
    #pragma region huge arrays
@@ -265,6 +266,7 @@ namespace dovah {
    }};
    #pragma endregion
 
+   #pragma region form_type_info
    /*static*/ const form_type_info& form_type_info::lookup(form_type_t ft) noexcept {
       for (uint8_t i = 0; i < form_types.size(); i++) {
          auto& info = form_types[i];
@@ -393,5 +395,28 @@ namespace dovah {
             return true;
       }
       return false;
+   }
+   #pragma endregion
+
+   void form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
+      if (this->value == set_to)
+         return;
+      owner->replace_outbound_reference(this->value, set_to);
+   }
+   void form_id_t::set(form_stub* owner, form_stub* set_to) {
+      if (this->value == set_to->formID)
+         return;
+      owner->replace_outbound_reference(this->value, set_to);
+   }
+
+   void base_form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
+      if (this->value == set_to)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::i_am_reference_of);
+   }
+   void base_form_id_t::set(form_stub* owner, form_stub* set_to) {
+      if (this->value == set_to->formID)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::i_am_reference_of);
    }
 }

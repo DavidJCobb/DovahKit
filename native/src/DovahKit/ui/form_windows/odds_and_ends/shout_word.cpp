@@ -1,4 +1,5 @@
 #include "shout_word.h"
+#include "../_base_cpp.h"
 #include "../../../editor/core.h"
 
 FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
@@ -8,6 +9,7 @@ FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
       this->form = nullptr;
+      this->stub = nullptr;
    });
 }
 void FormShoutWordEditor::initialize() {
@@ -39,14 +41,23 @@ void FormShoutWordEditor::save() {
    if (list.size() <= this->which_word)
       return;
    auto& word = list[this->which_word];
-   word.wordOfPowerID = this->ui.word->formID();
-   word.spellID       = this->ui.spell->formID();
+   this->save_form_id(word.wordOfPowerID, this->ui.word->formID());
+   this->save_form_id(word.spellID,       this->ui.spell->formID());
    word.recoveryTime  = this->ui.recoveryTime->value();
 }
 void FormShoutWordEditor::linkToForm(int which_word, dovah::form_stub* stub) {
    this->which_word = which_word;
-   if (stub->formType == dovah::form_type::shout)
+   if (stub->formType == dovah::form_type::shout) {
       this->form = stub->load().ptr_cast<dovah::loaded_forms::Shout>();
-   else
+      this->stub = stub;
+   } else {
       this->form = nullptr;
+      this->stub = nullptr;
+   }
+}
+void FormShoutWordEditor::save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t value) {
+   target.set(this->stub, value);
+}
+void FormShoutWordEditor::save_form_id(dovah::form_id_t& target, dovah::form_stub* value) {
+   target.set(this->stub, value);
 }

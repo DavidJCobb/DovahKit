@@ -45,5 +45,8 @@ class FormDialogBaseTemplate : public QDialog {
       //
       virtual void _load_impl() = 0; // pull data from a loaded form into the UI
       virtual void _save_impl() = 0; // save data from the UI into a loaded form
+      //
+      void save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t);
+      void save_form_id(dovah::form_id_t& target, dovah::form_stub*);
 };
 #define DOVAHKIT_FORM_EDIT_DIALOG template<class _dialog_t, typename loaded_form_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog, dovah::form_stub* stub);

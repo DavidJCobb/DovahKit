@@ -25,30 +25,6 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
-//  - OKAY, SO WE HAVE A WEE BIT OF A MASSIVE OVERSIGHT IN OUR CURRENT UI CODE. WHEN 
-//    YOU USE A FORM-EDITING DIALOG TO COMMIT CHANGES TO A FORM, WE JUST... MAKE 
-//    THOSE CHANGES. IF YOU'RE CHANGING A FORM ID, THEN WE JUST WRITE THE NEW VALUE 
-//    WITHOUT UPDATING ANY IN-MEMORY USE INFO. THAT IS A PROBLEM.
-//
-//    WHAT WE NEED IS THIS:
-//
-//       void form_stub::set_form_id(form_id_t&, bare_form_id_t set_to);
-//
-//    OR ALTERNATIVELY (MAYBE PREFERABLY):
-//
-//       void form_id_t::set(form_stub*);
-//
-//    MAKING ALL CHANGES THROUGH THE FORM STUB WOULD ALLOW US TO ENSURE THAT USE 
-//    INFO GETS A CHANCE TO UPDATE. (OF COURSE, THIS WILL ALSO REQUIRE SOME NEW 
-//    INFRASTRUCTURE IN form_stub, NAMELY THE ABILITY TO BIDIRECTIONALLY SEVER A 
-//    SINGLE USE, AND, IF WE DON'T ALREADY HAVE IT, THE ABILITY TO ESTABLISH A NEW 
-//    USE POST-LOAD.)
-//
-//     - One thing we could do to help with this is make form_id_t::operator= 
-//       protected, accessible only to form_stub and the file-element readers. 
-//       That way, trying to assign to it is an error -- a nice reminder to use 
-//       the form-stub-involved setter instead.
-//
 //  - Cell View
 //
 //     - Implement the "Sort loaded at top" checkbox.
@@ -87,6 +63,14 @@
 //    regularly, in order to catch unexpected regressions.
 //
 //     - TESTS TO RUN:
+//
+//        - Change a REFR's base form in-editor and ensure that we properly update 
+//          use info. We know that the connection between the REFR and its old base 
+//          form will be severed, and a new connection between the REFR and its new 
+//          base form will be established, but we need to test to verify that the 
+//          new connection has the appropriate flags. When you view the use info 
+//          window on the new base form, the modified REFR should be listed in the 
+//          bottom pane (for references), not the top pane (for general uses).
 //
 //        - Create a file that overrides a DIAL, an interior CELL, and a WRLD, and 
 //          nothing else. Ensure that these forms, only these forms, and not any of 

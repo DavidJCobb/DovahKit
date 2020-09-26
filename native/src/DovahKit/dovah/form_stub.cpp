@@ -11,6 +11,22 @@
 #include "logging.h"
 
 namespace dovah {
+   /*static*/ use_info_entry::flags_t use_info_entry::invert_flags(use_info_entry::flags_t f) {
+      flags_t flags = 0;
+      //
+      if (f & use_info_entry::flag::i_am_child_of)
+         flags |= use_info_entry::flag::i_am_parent_of;
+      else if (f & use_info_entry::flag::i_am_parent_of)
+         flags |= use_info_entry::flag::i_am_child_of;
+      //
+      if (f & use_info_entry::flag::i_am_base_form_of)
+         flags |= use_info_entry::flag::i_am_reference_of;
+      else if (f & use_info_entry::flag::i_am_reference_of)
+         flags |= use_info_entry::flag::i_am_base_form_of;
+      //
+      return flags;
+   }
+
    form_stub::~form_stub() {
       if (this->get_refcount()) {
          #if _DEBUG
@@ -118,15 +134,7 @@ namespace dovah {
    }
    void form_stub::send_inbound_refs() noexcept {
       for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it) {
-         use_info_entry::flags_t flags = 0;
-         if (it->second.flags & use_info_entry::flag::i_am_child_of)
-            flags |= use_info_entry::flag::i_am_parent_of;
-         else if (it->second.flags & use_info_entry::flag::i_am_parent_of)
-            flags |= use_info_entry::flag::i_am_child_of;
-         if (it->second.flags & use_info_entry::flag::i_am_base_form_of)
-            flags |= use_info_entry::flag::i_am_reference_of;
-         else if (it->second.flags & use_info_entry::flag::i_am_reference_of)
-            flags |= use_info_entry::flag::i_am_base_form_of;
+         use_info_entry::flags_t flags = use_info_entry::invert_flags(it->second.flags);
          //
          if (it->second.other)
             it->second.other->receive_inbound_ref(this, flags);
@@ -140,6 +148,18 @@ namespace dovah {
       entry.flags = flags;
    }
 
+   void form_stub::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
+      if (!to_stub)
+         return;
+      auto& list  = this->outbound;
+      auto& entry = list[to_stub->formID];
+      if (!entry.other)
+         entry.other = to_stub;
+      entry.refcount++;
+      //
+      if (flags)
+         entry.flags |= flags;
+   }
    void form_stub::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
       if (toFormID == 0)
          return;
@@ -277,6 +297,55 @@ namespace dovah {
          return value.merged;
       }
       return (this->formID % 100) / 10;
+   }
+
+   void form_stub::revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags) {
+      auto& target_list = target->inbound;
+      for (auto it = target_list.begin(); it != target_list.end(); ++it) {
+         auto& pair  = *it;
+         auto& entry = pair.second;
+         if (pair.first == this->formID) {
+            entry.flags &= ~use_info_entry::invert_flags(flags);
+            if (--entry.refcount == 0)
+               target_list.erase(it);
+            break;
+         }
+      }
+      auto& subject_list = this->outbound;
+      for (auto it = subject_list.begin(); it != subject_list.end(); ++it) {
+         auto& pair  = *it;
+         auto& entry = pair.second;
+         if (pair.first == target->formID) {
+            entry.flags &= ~flags;
+            if (--entry.refcount == 0)
+               subject_list.erase(it);
+            break;
+         }
+      }
+   }
+   void form_stub::replace_outbound_reference(bare_form_id_t old, form_stub* new_stub, use_info_entry::flags_t flags) {
+      using outbound_type = use_info_entry::outbound_type;
+      using use_flag      = use_info_entry::flag;
+      //
+      if (old != 0) {
+         form_stub* old_stub = nullptr;
+         for (auto& pair : this->outbound)
+            if (pair.first == old)
+               old_stub = pair.second.other;
+         //
+         if (old_stub)
+            this->revoke_outbound_reference(old_stub, flags);
+      }
+      //
+      this->add_outbound_reference(new_stub, flags);
+      new_stub->receive_inbound_ref(this, use_info_entry::invert_flags(flags));
+   }
+   void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {
+      auto& lo       = this->_get_load_order();
+      auto* new_stub = lo.get_form(change_to);
+      if (!new_stub)
+         return;
+      this->replace_outbound_reference(old, new_stub, flags);
    }
 
    /*static*/ void* form_stub::operator new(std::size_t sz) {

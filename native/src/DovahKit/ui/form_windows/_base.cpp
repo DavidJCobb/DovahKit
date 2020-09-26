@@ -14,3 +14,9 @@ void FormDialogBaseTemplate::save() {
    this->_save_impl();
    emit DovahKitCore::get().formModified(this->stub);
 }
+void FormDialogBaseTemplate::save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t value) {
+   target.set(this->stub, value);
+}
+void FormDialogBaseTemplate::save_form_id(dovah::form_id_t& target, dovah::form_stub* value) {
+   target.set(this->stub, value);
+}
