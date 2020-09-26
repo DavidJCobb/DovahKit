@@ -3,6 +3,7 @@
 #include "../../helpers/bitwise.h"
 #include "../../helpers/miscellaneous.h"
 #include "../../helpers/qt/spinbox.h"
+#include "../../helpers/qt/vector3.h"
 #include "../../dovah/forms/factories/hardcoded.h"
 #include "../../dovah/forms/components/extra_data/cell_acoustic_space.h"
 #include "../../dovah/forms/components/extra_data/cell_climate.h"
@@ -171,7 +172,7 @@ void FormDialogCell::_load_impl() {
       } else {
          this->ui.musicType->setToUndefined();
       }
-      if (!this->stub->is_exterior_cell()) {
+      if (!is_exterior) {
          this->ui.waterEnabled->setChecked(this->form->cell_flags & cell_flag::has_water);
          this->ui.waterEnabled->setEnabled(true);
       } else {
@@ -188,17 +189,14 @@ void FormDialogCell::_load_impl() {
       this->ui.waterAngularVelocityY->setValue(0.0);
       this->ui.waterAngularVelocityZ->setValue(0.0);
       if (auto* data = extra.lookup<extra::water_data>(extra_data_type::water_data)) {
-         if (data->data.size() > 0) {
+         auto size = data->data.size();
+         if (size > 0) {
             auto& vector4 = data->data[0];
-            this->ui.waterLinearVelocityX->setValue(vector4.velocity.x);
-            this->ui.waterLinearVelocityY->setValue(vector4.velocity.y);
-            this->ui.waterLinearVelocityZ->setValue(vector4.velocity.z);
+            cobb::qt::bring_vector3_to_ui(vector4.velocity, this->ui.waterLinearVelocityX, this->ui.waterLinearVelocityY, this->ui.waterLinearVelocityZ);
          }
-         if (data->data.size() > 1) {
+         if (size > 1) {
             auto& vector4 = data->data[1];
-            this->ui.waterLinearVelocityX->setValue(vector4.velocity.x);
-            this->ui.waterAngularVelocityY->setValue(vector4.velocity.y);
-            this->ui.waterAngularVelocityZ->setValue(vector4.velocity.z);
+            cobb::qt::bring_vector3_to_ui(vector4.velocity, this->ui.waterAngularVelocityX, this->ui.waterAngularVelocityY, this->ui.waterAngularVelocityZ);
          }
       }
       //
@@ -300,15 +298,11 @@ void FormDialogCell::_save_impl() {
             data->data.resize(3);
             //
             auto& linear = data->data[0];
-            linear.velocity.x = this->ui.waterLinearVelocityX->value();
-            linear.velocity.y = this->ui.waterLinearVelocityY->value();
-            linear.velocity.z = this->ui.waterLinearVelocityZ->value();
+            cobb::qt::get_vector3_from_ui(linear.velocity, this->ui.waterLinearVelocityX, this->ui.waterLinearVelocityY, this->ui.waterLinearVelocityZ);
             linear.unk0C = 0.0F;
             //
             auto& angular = data->data[1];
-            angular.velocity.x = this->ui.waterAngularVelocityX->value();
-            angular.velocity.y = this->ui.waterAngularVelocityY->value();
-            angular.velocity.z = this->ui.waterAngularVelocityZ->value();
+            cobb::qt::get_vector3_from_ui(angular.velocity, this->ui.waterAngularVelocityX, this->ui.waterAngularVelocityY, this->ui.waterAngularVelocityZ);
             angular.unk0C = 0.0F;
             //
             auto& unknown = data->data[2];

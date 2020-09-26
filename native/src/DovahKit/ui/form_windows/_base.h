@@ -27,10 +27,6 @@
 
 */
 
-namespace dovah::loaded_forms::components {
-   class extra_data_list;
-}
-
 namespace form_dialog_helpers {
    template<class _dialog_t, typename loaded_form_t> void initialize(_dialog_t& dialog, dovah::form_stub* stub);
 }
