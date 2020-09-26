@@ -335,4 +335,63 @@ namespace dovah {
       }
       return false;
    }
+
+   /*static*/ bool form_type_info::form_type_is_base_form(form_type_t ft) noexcept {
+      switch (ft) {
+         case form_type::activator:
+         case form_type::actor_base:
+         case form_type::apparatus:
+         case form_type::armor:
+         case form_type::book:
+         case form_type::container:
+         case form_type::door:
+         case form_type::flora:
+         case form_type::furniture:
+         case form_type::ingredient:
+         case form_type::key:
+         case form_type::light:
+         case form_type::misc_item:
+         case form_type::movable_static:
+         case form_type::potion:
+         // TODO: projectile?
+         case form_type::scroll:
+         case form_type::soul_gem:
+         case form_type::sound:
+         case form_type::statik:
+         case form_type::talking_activator:
+         case form_type::tree:
+         case form_type::weapon:
+            return true;
+      }
+      return false;
+   }
+   /*static*/ bool form_type_info::signature_is_base_form(uint32_t signature) noexcept {
+      switch (signature) {
+         case 'ACTI':
+         case 'NPC_':
+         case 'APPA':
+         case 'ARMO':
+         case 'BOOK':
+         case 'CONT':
+         case 'DOOR':
+         case 'FLOR':
+         case 'FURN':
+         case 'INGR':
+         case 'KEYM':
+         case 'LIGH':
+         case 'MISC':
+         case 'MSTT':
+         case 'ALCH':
+         // TODO: projectile?
+         case 'SCRL':
+         case 'SLGM':
+         case 'SOUN':
+         case 'STAT':
+         case 'TACT':
+         case 'TREE':
+         case 'WEAP':
+            return true;
+      }
+      return false;
+   }
 }

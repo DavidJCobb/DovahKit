@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <QAbstractItemModel>
+#include <QLineEdit>
 #include <QSortFilterProxyModel>
 #include <QString>
 #include <QTableView>
@@ -76,6 +77,7 @@ class CellRefListModel : public QAbstractTableModel {
       int columnCount(const QModelIndex& item) const override;
       Qt::ItemFlags flags(const QModelIndex& index) const override;
       QVariant data(const QModelIndex& index, int role) const override;
+      inline const item_type* row(int rowIndex) const noexcept;
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
@@ -90,13 +92,17 @@ class CellRefListModel : public QAbstractTableModel {
 class CellRefListModelProxy : public QSortFilterProxyModel {
    Q_OBJECT
    public:
-      CellRefListModelProxy(QObject* parent = nullptr) : QSortFilterProxyModel(parent) {
-         this->setFilterCaseSensitivity(Qt::CaseInsensitive);
-         this->setFilterRole(Qt::UserRole + 1);
-         this->setFilterKeyColumn(-1);
-         this->setSortCaseSensitivity(Qt::CaseInsensitive);
-         this->setSortRole(Qt::UserRole);
-      }
+      CellRefListModelProxy(QObject* parent = nullptr);
+      using model_type      = CellRefListModel;
+      using model_item_type = model_type::item_type;
+      //
+      bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
+      //
+      inline dovah::form_type_t formType() const noexcept { return this->_formType; };
+      void setFormType(dovah::form_type_t);
+      //
+   protected:
+      dovah::form_type_t _formType = dovah::form_type::none;
 };
 
 class CellRefList : public QTableView {
@@ -114,13 +120,20 @@ class CellRefList : public QTableView {
       //
       inline const CellList* cellPicker() const noexcept { return this->_cellSelector; }
       void setCellPicker(const CellList*);
+      void setTextFilter(QLineEdit*);
+      void setFormTypeFilter(dovah::form_type_t);
       //
    public slots:
       void rebuildModel();
       void clear();
+      void refilterModelByText(const QString&);
+      void textFilterChanged();
+      void textFilterFinished();
       //
    protected:
       const CellList* _cellSelector = nullptr;
+      QLineEdit* _filter = nullptr;
+      QTimer*    _filterThrottle = new QTimer(this);
       //
       model_item_type* _getCurrentItem() const noexcept;
 };

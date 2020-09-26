@@ -91,6 +91,14 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
    }
    return QVariant();
 }
+inline const CellRefListModel::item_type* CellRefListModel::row(int rowIndex) const noexcept {
+   if (!this->root)
+      return nullptr;
+   auto& list = this->root->_children;
+   if (rowIndex < 0 || rowIndex >= list.size())
+      return nullptr;
+   return list[rowIndex];
+}
 //
 QVariant CellRefListModel::headerData(int section, Qt::Orientation orientation, int role) const {
    if (orientation != Qt::Orientation::Horizontal)
@@ -163,6 +171,28 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
 }
 #pragma endregion
 
+CellRefListModelProxy::CellRefListModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {
+   this->setFilterCaseSensitivity(Qt::CaseInsensitive);
+   this->setFilterRole(Qt::UserRole + 1);
+   this->setFilterKeyColumn(-1);
+   this->setSortCaseSensitivity(Qt::CaseInsensitive);
+   this->setSortRole(Qt::UserRole + 0);
+}
+bool CellRefListModelProxy::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
+   if (this->_formType != dovah::form_type::none) {
+      auto* model = (model_type*)this->sourceModel();
+      auto* item  = model->row(sourceRow);
+      if (item && item->formType() != this->_formType) {
+         return false;
+      }
+   }
+   return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+}
+void CellRefListModelProxy::setFormType(dovah::form_type_t ft) {
+   this->_formType = ft;
+   this->invalidateFilter();
+}
+
 #pragma region CellRefList
 CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
    auto underlying = new model_type;
@@ -199,6 +229,11 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
          return;
       open_edit_dialog_for_form(data->stub, this);
    });
+   
+   QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
+      if (this->_filter)
+         this->refilterModelByText(this->_filter->text());
+   });
 };
 void CellRefList::setCellPicker(const CellList* picker) {
    if (picker == this->_cellSelector)
@@ -209,6 +244,42 @@ void CellRefList::setCellPicker(const CellList* picker) {
    if (picker) {
       QObject::connect(picker, &CellList::currentCellChanged, this, &CellRefList::rebuildModel);
    }
+}
+void CellRefList::refilterModelByText(const QString& text) {
+   auto wrapper = (QSortFilterProxyModel*)this->model();
+   if (!wrapper)
+      return;
+   wrapper->setFilterFixedString(text);
+}
+void CellRefList::textFilterChanged() {
+   auto& timer = *this->_filterThrottle;
+   if (timer.isActive())
+      return;
+   timer.start(200);
+}
+void CellRefList::textFilterFinished() {
+   this->_filterThrottle->stop();
+   if (this->_filter)
+      this->refilterModelByText(this->_filter->text());
+}
+void CellRefList::setTextFilter(QLineEdit* field) {
+   this->_filterThrottle->stop();
+   if (this->_filter) {
+      QObject::disconnect(this->_filter, &QLineEdit::textEdited,      this, &CellRefList::textFilterChanged);
+      QObject::disconnect(this->_filter, &QLineEdit::editingFinished, this, &CellRefList::textFilterFinished);
+   }
+   this->_filter = field;
+   if (!field)
+      return;
+   this->refilterModelByText(field->text());
+   QObject::connect(field, &QLineEdit::textEdited,      this, &CellRefList::textFilterChanged);
+   QObject::connect(field, &QLineEdit::editingFinished, this, &CellRefList::textFilterFinished);
+}
+void CellRefList::setFormTypeFilter(dovah::form_type_t ft) {
+   auto* proxy = (proxy_type*)this->model();
+   if (!proxy)
+      return;
+   proxy->setFormType(ft);
 }
 void CellRefList::rebuildModel() {
    auto m = this->unwrappedModel();

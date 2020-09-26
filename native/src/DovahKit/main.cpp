@@ -30,20 +30,25 @@
 //     - Add a context menu for the cell list and the reference list, allowing the 
 //       user to view Use Info for cells and references.
 //
-//     - Implement filtering the reference list by form type and editor/form ID.
-//
 //     - Implement the "Sort loaded at top" checkbox.
 //
-//        - Can't, until we have a render window that supports worldspaces.
+//        - Can't, until we have a render window that supports worldspaces. Once the 
+//          render window is ready, we can update CellListModelItem::cellIsLoaded, 
+//          and also update the list model proxy to prioritize that above all other 
+//          sorting.
 //
-//  - Support for CELL
+//  - Support for CELL and REFR
 //
-//     - Make it possible to browse through interior cells, now that we can load 
-//       them.
+//     - Add a dialog box for editing a cell's properties, so that we can actually 
+//       view a cell's loaded data in the editor.
 //
 //     - Test resaving CELL.
 //
 //     - Test resaving CELL/REFR and CELL/ACHR.
+//
+//     - All of the placed projectile records are just direct subclasses of REFR 
+//       and load all of the same things. Implement them the same way we implemented 
+//       ACHR.
 //
 // THINGS TO LOOK INTO:
 //
@@ -93,6 +98,8 @@
 //                than "fully" supporting mixed-game load orders.
 //
 //     - When saving WRLD, the OFST subrecord needs special handling.
+//
+//        - Requires implementing support for WRLD and CELL.
 //
 //     - Record compression
 //

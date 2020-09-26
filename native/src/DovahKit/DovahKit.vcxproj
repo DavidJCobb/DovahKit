@@ -203,6 +203,7 @@
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
+    <ClCompile Include="ui\generic\FormSignatureCombobox.cpp" />
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
@@ -345,6 +346,7 @@
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
     <ClInclude Include="ui\form_windows\_base_cpp.h" />
+    <QtMoc Include="ui\generic\FormSignatureCombobox.h" />
     <QtMoc Include="ui\main_window\cell_view\cell_ref_list.h" />
     <QtMoc Include="ui\main_window\cell_view\cell_list.h" />
     <QtMoc Include="ui\main_window\cell_view.h" />

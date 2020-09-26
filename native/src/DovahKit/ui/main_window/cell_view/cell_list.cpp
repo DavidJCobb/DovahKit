@@ -11,8 +11,11 @@ CellListModelItem::CellListModelItem(dovah::form_stub* stub) {
    this->gridY    = stub->groupInfo.gridY;
 }
 bool CellListModelItem::cellIsLoaded() {
-   if (this->stub)
-      return this->stub->form != nullptr;
+   //
+   // TODO: It's not enough to check if the form is loaded, because it could be loaded by a 
+   // properties dialog or something. What we want to know is if the Render Window has a 
+   // cell loaded and ready to render.
+   //
    return false;
 }
 void CellListModelItem::update() {

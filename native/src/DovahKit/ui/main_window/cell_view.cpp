@@ -1,5 +1,6 @@
 #include "cell_view.h"
 #include <QMenu>
+#include "../../helpers/qt/strings.h"
 #include "../../dovah/form_stub.h"
 #include "../../editor/core.h"
 #include "../../editor/open_window_for_form.h"
@@ -12,8 +13,20 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    this->ui.worldspace->setNoneLabel(tr(" Interiors", "worldspace selector"));
    this->ui.worldspace->setAllowNone(true);
    //
+   this->ui.filterFormType->setNoneLabel(tr(" ALL "));
+   this->ui.filterFormType->setAllowNone(true);
+   for (auto& info : dovah::form_types) {
+      if (dovah::form_type_info::form_type_is_base_form(info.formType))
+         this->ui.filterFormType->whitelistSignature(info.signature);
+   }
+   //
    this->ui.cellList->setWorldspacePicker(this->ui.worldspace);
    this->ui.referenceList->setCellPicker(this->ui.cellList);
+   this->ui.referenceList->setTextFilter(this->ui.filterText);
+   QObject::connect(this->ui.filterFormType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+      dovah::form_type_t ft = this->ui.filterFormType->formType();
+      this->ui.referenceList->setFormTypeFilter(ft);
+   });
    QObject::connect(this->ui.cellList, &CellList::currentCellChanged, this, [this](const dovah::form_stub* cell) {
       auto    widget = this->ui.selectedCellName;
       QString text;

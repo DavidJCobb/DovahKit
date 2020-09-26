@@ -384,6 +384,9 @@
     <ClCompile Include="ui\main_window\cell_view\cell_ref_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -928,6 +931,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\cell_view\cell_ref_list.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\FormSignatureCombobox.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

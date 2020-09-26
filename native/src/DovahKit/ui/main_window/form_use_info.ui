@@ -33,7 +33,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="filterSignature"/>
+      <widget class="FormSignatureCombobox" name="filterSignature"/>
      </item>
      <item>
       <widget class="QLineEdit" name="filterText"/>
@@ -114,6 +114,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>FormSignatureCombobox</class>
+   <extends>QComboBox</extends>
+   <header>../generic/FormSignatureCombobox.h</header>
+  </customwidget>
   <customwidget>
    <class>FormUseInfoList</class>
    <extends>QTableView</extends>

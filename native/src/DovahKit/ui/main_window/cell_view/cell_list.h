@@ -29,7 +29,7 @@ class CellListModelItem {
       CellListModelItem() {}
       CellListModelItem(dovah::form_stub*);
       //
-      bool cellIsLoaded();
+      bool cellIsLoaded(); // TODO: update this when the render window is implemented
       void update();
 };
 class CellListModelRoot : public CellListModelItem {

@@ -69,7 +69,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="filterFormType"/>
+      <widget class="FormSignatureCombobox" name="filterFormType"/>
      </item>
     </layout>
    </item>
@@ -241,6 +241,11 @@
    <class>CellRefList</class>
    <extends>QTableView</extends>
    <header>cell_view/cell_ref_list.h</header>
+  </customwidget>
+  <customwidget>
+   <class>FormSignatureCombobox</class>
+   <extends>QComboBox</extends>
+   <header>../generic/FormSignatureCombobox.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

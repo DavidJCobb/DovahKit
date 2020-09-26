@@ -183,6 +183,9 @@ namespace dovah {
       static bool form_type_is_reference(form_type_t ft) noexcept;
       static bool signature_is_reference(uint32_t signature) noexcept;
 
+      static bool form_type_is_base_form(form_type_t ft) noexcept;
+      static bool signature_is_base_form(uint32_t signature) noexcept;
+
       inline bool is_reference() const noexcept { return form_type_is_reference(this->formType); }
    };
    extern std::array<form_type_info, 140> form_types;
