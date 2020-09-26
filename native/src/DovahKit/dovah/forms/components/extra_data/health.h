@@ -3,6 +3,11 @@
 
 namespace dovah::loaded_forms::components::extra {
    class health : public basic_extra_data {
+      //
+      // Apparently an Oblivion leftover; still read. I wonder how much of Skyrim is still 
+      // compatible with this, e.g. whether you could slap it onto a destructible object 
+      // REFR to spawn it partially destroyed.
+      //
       public:
          static constexpr uint32_t signature = 'XHLT';
          //
