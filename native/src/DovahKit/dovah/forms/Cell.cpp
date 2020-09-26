@@ -16,35 +16,11 @@ namespace dovah::loaded_forms {
                subrecord.read(this->grid_coords.y);
                subrecord.read(this->land_flags);
                break;
-            case 'XEZN':
-               subrecord.read(this->encounter_zone_ID);
-               break;
-            case 'IMGS':
-               subrecord.read(this->imagespace_ID);
-               break;
-            case 'XLCN':
-               subrecord.read(this->location_ID);
-               break;
-            case 'XCMO':
-               subrecord.read(this->music_type_ID);
-               break;
-            case 'XCCM':
-               subrecord.read(this->sky_region_ID);
-               break;
             case 'XCLL':
                this->interior.lighting.load(subrecord);
                break;
-            case 'XCAS':
-               subrecord.read(this->interior.acoustic_space_ID);
-               break;
             case 'LTMP':
                subrecord.read(this->interior.lighting_template_ID);
-               break;
-            case 'XILL':
-               subrecord.read(this->interior.lock_list_ID);
-               break;
-            case 'XOWN':
-               subrecord.read(this->interior.owner_ID);
                break;
             case 'TVDT':
                this->exterior.occlusion_data.present = true;
@@ -80,52 +56,18 @@ namespace dovah::loaded_forms {
             case 'LNAM':
                subrecord.read(this->interior.lighting.inherit_flags);
                break;
-            case 'XCLR':
-               while (subrecord.is_in_bounds(4)) {
-                  if (subrecord.read(formID))
-                     this->exterior.containing_region_IDs.push_back(formID);
-               }
-               break;
             case 'XCLW':
                subrecord.read(this->water.height);
-               break;
-            case 'XCWT':
-               subrecord.read(this->water.type);
-               break;
-            case 'XWEM':
-               subrecord.to_string(this->water.environment_map);
                break;
             case 'XNAM':
                subrecord.to_string(this->water.noise_texture);
                break;
-            case 'XWCU':
-               this->water.velocity.present = true;
-               subrecord.read(this->water.velocity.linear.x);
-               subrecord.read(this->water.velocity.linear.y);
-               subrecord.read(this->water.velocity.linear.z);
-               subrecord.read(this->water.velocity.unk0C);
-               subrecord.read(this->water.velocity.angular.x);
-               subrecord.read(this->water.velocity.angular.y);
-               subrecord.read(this->water.velocity.angular.z);
-               break;
-            case 'XWCN':
-               //
-               // TODO
-               //
-               break;
-            case 'XWCS':
-               //
-               // TODO
-               //
-               break;
-            //
-            // Miscellaneous extra-data:
-            //
-            case 'XGLB':
-               subrecord.read(this->misc_extra.global_ID);
-               break;
-            case 'XTNM':
-               subrecord.read(this->misc_extra.teleport_message_ID);
+            default:
+               if (this->extra_data.load(record) == components::extra_data_load_result::unrecognized) {
+                  //
+                  // Subrecord is not extra-data.
+                  //
+               }
                break;
          }
       }
@@ -134,25 +76,16 @@ namespace dovah::loaded_forms {
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
-            case 'XEZN':
-            case 'IMGS':
-            case 'XLCN':
-            case 'XCMO':
-            case 'XCCM':
-            case 'XCAS':
             case 'LTMP':
-            case 'XILL':
-            case 'XOWN':
-            case 'XCWT':
-            case 'XGLB': // miscellaneous extra data...
-            case 'XTNM':
                if (subrecord.read(formID))
                   stub->add_outbound_reference(formID);
                break;
-            case 'XCLR':
-               while (subrecord.is_in_bounds(4))
-                  if (subrecord.read(formID))
-                     stub->add_outbound_reference(formID);
+            default:
+               if (components::extra_data_list::generate_use_info(record, stub) == components::extra_data_load_result::unrecognized) {
+                  //
+                  // Subrecord is not extra-data.
+                  //
+               }
                break;
          }
       }
@@ -177,9 +110,12 @@ namespace dovah::loaded_forms {
          this->interior.lighting.save(XCLL);
          XCLL.close();
       }
-      //
-      // TODO: TVDT
-      //
+      if (this->exterior.occlusion_data.present) {
+         auto& data = this->exterior.occlusion_data;
+         auto& TVDT = record.open_next_subrecord('TVDT');
+         TVDT.write(data.bytes.data(), data.bytes.size());
+         TVDT.close();
+      }
       if (this->exterior.max_height_data.present) {
          auto& data = this->exterior.max_height_data;
          auto& MHDT = record.open_next_subrecord('MHDT');
@@ -190,55 +126,15 @@ namespace dovah::loaded_forms {
          MHDT.close();
       }
       record.write_formID_subrecord('LTMP', this->interior.lighting_template_ID);
-      //
-      // TODO: LNAM
-      //
       auto& XCLW = record.open_next_subrecord('XCLW');
       XCLW.write(this->water.height);
       XCLW.close();
+      auto& XNAM = record.open_next_subrecord('XNAM');
+      XNAM.write(this->water.noise_texture);
+      XNAM.close();
       //
-      // TODO: XNAM
-      // TODO: XCLR
+      this->extra_data.save(record);
       //
-      // --- Forms below here can appear in any order ---
-      //
-      if (this->location_ID)
-         record.write_formID_subrecord('XLCN', this->location_ID);
-      //
-      // TODO: XWCS
-      // TODO: XWCN
-      //
-      if (this->water.velocity.present) {
-         auto& data = this->water.velocity;
-         auto& XWCU = record.open_next_subrecord('XWCU');
-         XWCU.write(this->water.velocity.linear.x);
-         XWCU.write(this->water.velocity.linear.y);
-         XWCU.write(this->water.velocity.linear.z);
-         XWCU.write(this->water.velocity.unk0C);
-         XWCU.write(this->water.velocity.angular.x);
-         XWCU.write(this->water.velocity.angular.y);
-         XWCU.write(this->water.velocity.angular.z);
-         XWCU.close();
-      }
-      if (this->water.type)
-         record.write_formID_subrecord('XCWT', this->water.type);
-      if (this->interior.owner_ID)
-         record.write_formID_subrecord('XOWN', this->interior.owner_ID);
-      if (this->interior.lock_list_ID)
-         record.write_formID_subrecord('XILL', this->interior.lock_list_ID);
-      //
-      // TODO: XWEM
-      //
-      if (this->sky_region_ID)
-         record.write_formID_subrecord('XCCM', this->sky_region_ID);
-      if (this->interior.acoustic_space_ID)
-         record.write_formID_subrecord('XCAS', this->interior.acoustic_space_ID);
-      if (this->encounter_zone_ID)
-         record.write_formID_subrecord('XEZN', this->encounter_zone_ID);
-      if (this->music_type_ID)
-         record.write_formID_subrecord('XCMO', this->music_type_ID);
-      if (this->imagespace_ID)
-         record.write_formID_subrecord('XCIM', this->imagespace_ID);
       return true;
    }
 }

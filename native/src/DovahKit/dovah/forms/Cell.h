@@ -4,6 +4,7 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "components/extra_data.h"
 #include "components/interior_lighting.h"
 #include "../../helpers/vector3.h"
 
@@ -67,7 +68,6 @@ namespace dovah::loaded_forms {
          };
 
          //
-         // TODO: Extra-data list
          // TODO: VMAD
          // TODO: OBND
          //
@@ -78,56 +78,20 @@ namespace dovah::loaded_forms {
             int32_t x = 0;
             int32_t y = 0;
          } grid_coords; // XCLC
-         uint32_t  land_flags = 0;    // XCLC
-         form_id_t encounter_zone_ID; // XEZN
-         form_id_t imagespace_ID;     // IMGS
-         form_id_t location_ID;       // XLCN
-         form_id_t music_type_ID;     // XCMO
-         form_id_t sky_region_ID;     // XCCM
+         uint32_t land_flags = 0; // XCLC
+         components::extra_data_list extra_data;
          struct {
             components::interior_lighting lighting; // XCLL (LNAM overrides the inherit flags specifically)
-            form_id_t acoustic_space_ID;     // XCAS
-            form_id_t lighting_template_ID;  // LTMP
-            form_id_t lock_list_ID;          // XILL (FLST, NPC_)
-            form_id_t owner_ID;              // XOWN (FACT, NPC_)
+            form_id_t lighting_template_ID; // LTMP
          } interior;
          struct {
-            occlusion_data_t       occlusion_data;        // TVDT
-            max_height_data_t      max_height_data;       // MHDT
-            std::vector<form_id_t> containing_region_IDs; // XCLR
+            occlusion_data_t  occlusion_data;  // TVDT
+            max_height_data_t max_height_data; // MHDT
          } exterior;
          struct {
-            float       height;          // XCLW
-            form_id_t   type;            // XCWT
-            std::string environment_map; // XWEM
-            std::string noise_texture;   // XNAM
-            struct {
-               bool present = false;
-               cobb::vector3<float> linear;
-               uint32_t unk0C;
-               cobb::vector3<float> angular;
-            } velocity; // XWCU
-            // TODO: XWCN (see BaseExtraList::LoadExtraDataSubrecord)
-            // TODO: XWCS (see BaseExtraList::LoadExtraDataSubrecord)
+            float       height;        // XCLW
+            std::string noise_texture; // XNAM
          } water;
-         struct {
-            //
-            // It looks like TESObjectCELL can load most or all of the same extra-data types as TESObjectREFR, 
-            // even if they don't make sense for cells and aren't ever actually used when present on cells.
-            //
-            form_id_t global_ID;           // XGLB: ExtraGlobal
-            form_id_t teleport_message_ID; // XTNM: ExtraTeleportName
-         } misc_extra;
-         // TODO: RNAM (see BaseExtraList::LoadExtraDataSubrecord, and no, this isn't a typo)
-         // TODO: XCZA (see BaseExtraList::LoadExtraDataSubrecord)
-         // TODO: XHOR (see BaseExtraList::LoadExtraDataSubrecord)
-         // TODO: XIS2 (see BaseExtraList::LoadExtraDataSubrecord)
-         // TODO: XMRC (see BaseExtraList::LoadExtraDataSubrecord)
-         // TODO: XNDP (see BaseExtraList::LoadExtraDataSubrecord)
-         // TODO: XORD (see BaseExtraList::LoadExtraDataSubrecord)
-         // TODO: XPPA (see BaseExtraList::LoadExtraDataSubrecord)
-         // TODO: VMAD
-         // TODO: OBND
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);

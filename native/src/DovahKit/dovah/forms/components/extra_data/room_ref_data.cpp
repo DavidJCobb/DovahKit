@@ -64,4 +64,16 @@ namespace dovah::loaded_forms::components::extra {
       for (int i = 0; i < this->linked_room_count; ++i)
          record.write_formID_subrecord('XLRM', this->linked_rooms[i]);
    }
+   //
+   /*static*/ void room_ref_data::generate_use_info(tes_record_reader& record, form_stub* stub) {
+      room_ref_data temp;
+      temp.load(record);
+      if (temp.lighting_template)
+         stub->add_outbound_reference(temp.lighting_template);
+      if (temp.imagespace)
+         stub->add_outbound_reference(temp.imagespace);
+      for (auto id : temp.linked_rooms)
+         if (id)
+            stub->add_outbound_reference(id);
+   }
 }

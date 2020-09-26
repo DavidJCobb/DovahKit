@@ -17,4 +17,13 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->pad05);
       subrecord.close();
    }
+   //
+   /*static*/ void enable_state_parent::generate_use_info(tes_record_reader& record, form_stub* stub) {
+      auto& subrecord = record.get_current_subrecord();
+      if (subrecord.signature() == signature) {
+         form_id_t formID;
+         if (subrecord.read(formID) && formID)
+            stub->add_outbound_reference(formID);
+      }
+   }
 }

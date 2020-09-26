@@ -14,6 +14,13 @@ namespace dovah::loaded_forms {
             this->words.reserve(3);
          };
 
+         struct form_flag {
+            form_flag() = delete;
+            enum : uint32_t {
+               treat_as_power = 0x00000080,
+            };
+         };
+
          struct Word {
             form_id_t wordOfPowerID;
             form_id_t spellID;
@@ -28,8 +35,8 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
 
-         inline bool treat_as_power() const noexcept { return (this->flags & 0x00000080) != 0; }
-         inline void treat_as_power(bool v) noexcept { cobb::modify_bit(this->flags, 0x00000080, v); }
+         inline bool treat_as_power() const noexcept { return (this->flags & form_flag::treat_as_power) != 0; }
+         inline void treat_as_power(bool v) noexcept { cobb::modify_bit(this->flags, form_flag::treat_as_power, v); }
          //
       protected:
          virtual bool _save_impl(tes_file_writing::record& record) override;

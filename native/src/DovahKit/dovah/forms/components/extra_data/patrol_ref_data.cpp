@@ -24,4 +24,10 @@ namespace dovah::loaded_forms::components::extra {
       if (!this->event.empty())
          this->event.save(record);
    }
+   //
+   /*static*/ void patrol_ref_data::generate_use_info(tes_record_reader& record, form_stub* stub) {
+      auto& subrecord = record.get_current_subrecord();
+      if (subrecord.signature() == signature_event)
+         package_event_dialogue::generateUseInfo(record, stub);
+   }
 }

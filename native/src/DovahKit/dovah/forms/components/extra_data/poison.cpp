@@ -28,4 +28,13 @@ namespace dovah::loaded_forms::components::extra {
       XPSC.write(this->doses);
       XPSC.close();
    }
+   //
+   /*static*/ void poison::generate_use_info(tes_record_reader& record, form_stub* stub) {
+      auto& subrecord = record.get_current_subrecord();
+      if (subrecord.signature() == signature_type) {
+         form_id_t formID;
+         if (subrecord.read(formID) && formID)
+            stub->add_outbound_reference(formID);
+      }
+   }
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include "../_common.h"
 #include "../../../helpers/vector3.h"
+#include "../../form_stub.h"
 
 //
 // SUBRECORDS THAT BEGIN WITH 'X' BUT AREN'T EXTRA-DATA:
@@ -29,6 +30,7 @@ namespace dovah::loaded_forms::components {
       unknown_xpsl,
       unknown_xroo,
       unknown_xuse,
+      unknown_xwcs, // probably related to XWCN+XWCU, but not used by the game
       unknown_xwlt,
       unknown_xwnt,
       //
@@ -125,15 +127,39 @@ namespace dovah::loaded_forms::components {
          virtual extra_data_type get_type() const noexcept = 0;
          //
          virtual load_result load(tes_subrecord_reader&) = 0;
+         virtual bool        load(tes_record_reader&) = 0;
          virtual void        save(tes_record_writer&) = 0;
          //
-         // Your override for (load) must check the incoming subrecord's signature. When 
-         // loading any extra-data subrecord, an (extra_data_list) will blindly call the 
-         // (load) override on all existing extra-data objects; it only goes through the 
-         // extra-data factory (which matches signatures to extra-data subclasses) if 
-         // all existing extra-data objects reject the signature.
+         // The general process for loading a subrecord works as follows:
          //
-         virtual bool load(tes_record_reader&) = 0;
+         //  - The (extra_data_list) will blindly call (basic_extra_data::load) on all 
+         //    of its stored extra-data objects until one of them returns a result code 
+         //    other than (extra_data_load_result::unrecognized).
+         //
+         //  - The (load) function that takes a subrecord will be called. Your override 
+         //    must check the incoming subrecord's signature and return the appropriate 
+         //    (extra_data_load_result) code.
+         //
+         //    If your extra-data class needs to load additional subrecords immediately 
+         //    after this one, then return (extra_data_load_result::requires_record). 
+         //    The (load) function that takes a record will then be called immediately. 
+         //    This functionality is needed for certain extra-data types that consume 
+         //    subrecords immediately after their first (e.g. XMRK, XWCN).
+         //
+         //  - If none of an (extra_data_list)'s stored extra-data objects handles the 
+         //    subrecord, then it will use a factory that maps subrecord signatures to 
+         //    extra-data constructors and create a new extra-data object, before then 
+         //    calling (load) on it in the same manner as for existing extra-data 
+         //    objects.
+         //
+         // ---------------------------------------------------------------------------
+         //
+         // Subclasses must also override (generate_use_info). This static function is 
+         // called while a subrecord is open, by way of a factory; this means that if 
+         // an extra-data class only has one subrecord signature, its use info builder 
+         // doesn't need to check the current subrecord's signature.
+         //
+         static void generate_use_info(tes_record_reader&, form_stub*) = delete;
    };
    class extra_data_list {
       public:
@@ -143,11 +169,16 @@ namespace dovah::loaded_forms::components {
          list_t content; // contents are owned. list should only allow one of each type.
          //
       public:
+         ~extra_data_list();
+         //
          inline const list_t& get_items() const noexcept { return this->content; };
          bool insert(basic_extra_data*); // returns (true) if the insertion succeeded.
          void remove(basic_extra_data*);
          //
          load_result load(tes_record_reader&);
+         void save(tes_record_writer&);
+         //
+         static extra_data_load_result generate_use_info(tes_record_reader&, form_stub*);
    };
 
    template<uint32_t signature, extra_data_type et, int bytecount> class buffer_extra_data : public basic_extra_data {
@@ -172,6 +203,7 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->bytes.data());
             subrecord.close();
          }
+         static void generate_use_info(tes_record_reader&, form_stub*) {}
    };
    template<uint32_t signature, extra_data_type et> class binary_extra_data : public basic_extra_data {
       //
@@ -197,6 +229,7 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->bytes.data(), this->bytes.size());
             subrecord.close();
          }
+         static void generate_use_info(tes_record_reader&, form_stub*) {}
    };
    template<uint32_t signature, extra_data_type et> class empty_extra_data : public basic_extra_data {
       //
@@ -216,6 +249,7 @@ namespace dovah::loaded_forms::components {
             auto& subrecord = record.open_next_subrecord(signature);
             subrecord.close();
          }
+         static void generate_use_info(tes_record_reader&, form_stub*) {}
    };
    template<uint32_t signature, extra_data_type et> class float_extra_data : public basic_extra_data {
       public:
@@ -236,6 +270,7 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->value);
             subrecord.close();
          }
+         static void generate_use_info(tes_record_reader&, form_stub*) {}
    };
    template<uint32_t signature, extra_data_type et> class formID_extra_data : public basic_extra_data {
       public:
@@ -244,15 +279,22 @@ namespace dovah::loaded_forms::components {
          form_id_t formID;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual bool load(tes_subrecord_reader& subrecord) override {
+         virtual load_result load(tes_subrecord_reader& subrecord) override {
             if (subrecord.signature() == signature) {
-               subrecord.read(this->value);
+               subrecord.read(this->formID);
                return load_result::succeeded;
             }
             return load_result::unrecognized;
          }
          virtual void save(tes_record_writer& record) override {
             record.write_formID_subrecord(signature, this->formID);
+         }
+         static void generate_use_info(tes_record_reader& record, form_stub* stub) {
+            auto&     subrecord = record.get_current_subrecord();
+            form_id_t formID;
+            subrecord.read(formID);
+            if (formID)
+               stub->add_outbound_reference(formID);
          }
    };
    template<uint32_t signature, extra_data_type et> class string_extra_data : public basic_extra_data {
@@ -282,5 +324,6 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->value.data(), this->value.size() + 1);
             subrecord.close();
          }
+         static void generate_use_info(tes_record_reader&, form_stub*) {}
    };
 }

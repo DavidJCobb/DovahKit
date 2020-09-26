@@ -1,8 +1,10 @@
 #include "construct.h"
+#include "../Actor.h"
 #include "../Cell.h"
 #include "../Color.h"
 #include "../FormList.h"
 #include "../Location.h"
+#include "../ObjectReference.h"
 #include "../Quest.h"
 #include "../Shout.h"
 #include "../Voicetype.h"
@@ -25,6 +27,8 @@ namespace {
    };
    _Builder _builders[] = {
       { form_type::cell,          _constructAndLoad<loaded_forms::Cell> },
+      { form_type::reference,     _constructAndLoad<loaded_forms::ObjectReference> },
+      { form_type::actor,         _constructAndLoad<loaded_forms::Actor> },
       { form_type::quest,         _constructAndLoad<loaded_forms::Quest> },
       { form_type::formlist,      _constructAndLoad<loaded_forms::FormList> },
       { form_type::voicetype,     _constructAndLoad<loaded_forms::Voicetype> },

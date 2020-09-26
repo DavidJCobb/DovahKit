@@ -5,11 +5,21 @@ namespace dovah::loaded_forms::components::extra {
    class water_data : public basic_extra_data {
       public:
          static constexpr uint32_t signature_base = 'XWCN';
+         static constexpr uint32_t signature_vel  = 'XWCU';
          //
-         std::vector<uint8_t> bytes;
+         struct _vector4 {
+            cobb::vector3<float> velocity;
+            float unk0C;
+         };
+         //
+         uint32_t count; // XWCN
+         std::vector<_vector4> data; // XWCU
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::water_data; };
          virtual load_result load(tes_subrecord_reader&) override;
-         virtual void save(tes_record_writer&) override;
+         virtual bool        load(tes_record_reader&) override;
+         virtual void        save(tes_record_writer&) override;
+         //
+         static void generate_use_info(tes_record_reader&, form_stub*) {}
    };
 }

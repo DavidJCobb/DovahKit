@@ -46,6 +46,7 @@ namespace dovah::loaded_forms::components {
             basic_fragment_data(fragment_type t) : type(t) {}
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) = 0;
+            virtual void save(script_data& owner, tes_subrecord_writer&) = 0;
       };
 
       class script_data {
@@ -58,8 +59,11 @@ namespace dovah::loaded_forms::components {
             std::vector<script>  scripts;
             basic_fragment_data* fragment_data = nullptr;
             //
-            bool load(tes_subrecord_reader&); // assumes we're at a VMAD subrecord // TODO: needs to load fragments
+            bool load(tes_subrecord_reader&); // assumes we're at a VMAD subrecord
+            bool save(tes_subrecord_writer&);
             static void generateUseInfo(tes_subrecord_reader&, form_stub*);
+            //
+            bool save(tes_record_writer&); // opens VMAD, writes, closes
             //
             void for_each_script(std::function<bool(script*)>);
             //
@@ -79,6 +83,7 @@ namespace dovah::loaded_forms::components {
                uint16_t  always_zero = 0;
                //
                bool load(script_data& owner, tes_subrecord_reader&);
+               bool save(script_data& owner, tes_subrecord_writer&);
             };
             class property {
                friend script;
@@ -89,6 +94,7 @@ namespace dovah::loaded_forms::components {
                   void*           value = nullptr;
                   //
                   bool load(script_data& owner, tes_subrecord_reader&);
+                  bool save(script_data& owner, tes_subrecord_writer&);
                   //
                   ~property();
             };
@@ -100,9 +106,11 @@ namespace dovah::loaded_forms::components {
                   std::vector<property> properties;
                   //
                   bool load(script_data& owner, tes_subrecord_reader&);
+                  bool save(script_data& owner, tes_subrecord_writer&);
             };
       };
       
+      #pragma region Script fragment definitions
       struct basic_fragment_entry {
          uint8_t     unknown;
          std::string script;
@@ -123,6 +131,7 @@ namespace dovah::loaded_forms::components {
             using fragment_t = basic_fragment_entry;
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             //
             uint8_t         unknown = 2;
             fragment_flag_t flags   = 0;
@@ -146,6 +155,7 @@ namespace dovah::loaded_forms::components {
             using fragment_t = basic_fragment_entry;
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             //
             uint8_t         unknown = 2;
             fragment_flag_t flags = 0;
@@ -166,6 +176,7 @@ namespace dovah::loaded_forms::components {
             };
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             //
             uint8_t     unknown = 2;
             std::string filename;
@@ -190,6 +201,7 @@ namespace dovah::loaded_forms::components {
             };
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             //
             uint8_t     unknown = 2;
             std::string filename;
@@ -218,6 +230,7 @@ namespace dovah::loaded_forms::components {
             };
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             //
             uint8_t     unknown = 2;
             uint8_t     flags   = 0;
@@ -226,6 +239,7 @@ namespace dovah::loaded_forms::components {
             fragment_t  onEndFragment;
             std::vector<phase_fragment_type> phaseFragments;
       };
+      #pragma endregion
    }
    using papyrus_attachment_data = papyrus::script_data;
 }

@@ -17,6 +17,7 @@ namespace dovah::loaded_forms::components::papyrus {
          this->value = nullptr;
       }
    }
+   //
    bool script_data::load(tes_subrecord_reader& subrecord) {
       if (!subrecord.read(this->version) || !subrecord.read(this->object_format))
          return false;
@@ -56,6 +57,25 @@ namespace dovah::loaded_forms::components::papyrus {
          this->fragment_data->load(*this, subrecord);
       return subrecord.is_in_bounds();
    }
+   bool script_data::save(tes_subrecord_writer& subrecord) {
+      subrecord.write(this->version);
+      subrecord.write(this->object_format);
+      if (this->scripts.size() > std::numeric_limits<uint16_t>::max())
+         return false;
+      subrecord.write(uint16_t(this->scripts.size()));
+      for (auto& script : this->scripts) {
+         if (!script.save(*this, subrecord))
+            return false;
+      }
+      if (this->fragment_data)
+         this->fragment_data->save(*this, subrecord);
+      return true;
+   }
+   bool script_data::save(tes_record_writer& record) {
+      auto& VMAD = record.open_next_subrecord('VMAD');
+      this->save(VMAD);
+      VMAD.close();
+   }
 
    #pragma region Script sub-objects loading
    bool script_data::script::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -75,6 +95,25 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
+   bool script_data::script::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      subrecord.write_length_prefixed_string<2>(this->name);
+      uint16_t count = this->properties.size();
+      if (this->properties.size() > std::numeric_limits<decltype(count)>::max()) {
+         dovah::logging::print_line("Problem encountered while saving script %s: too many properties.", this->name.c_str());
+         return false;
+      }
+      subrecord.write(this->status);
+      subrecord.write(count);
+      for (uint16_t i = 0; i < count; i++) {
+         auto& prop = this->properties[i];
+         if (!prop.save(owner, subrecord)) {
+            dovah::logging::print_line("Problem encountered while saving property %d for script %s.", i, this->name.c_str());
+            return false;
+         }
+      }
+      return true;
+   }
+
    bool script_data::property_object_value::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (!subrecord.is_in_bounds(sizeof(this->always_zero) + sizeof(this->aliasID) + sizeof(this->formID)))
          return false;
@@ -89,10 +128,20 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
+   bool script_data::property_object_value::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      if (owner.object_format == 2) {
+         subrecord.write(this->always_zero);
+         subrecord.write(this->aliasID);
+         subrecord.write(this->formID);
+      } else {
+         subrecord.write(this->formID);
+         subrecord.write(this->aliasID);
+         subrecord.write(this->always_zero);
+      }
+      return true;
+   }
+
    bool script_data::property::load(script_data& owner, tes_subrecord_reader& subrecord) {
-      //
-      // TODO: Add some way to detect when we blow past the end of the VMAD subrecord and return false
-      //
       subrecord.read_length_prefixed_string<2>(this->name);
       if (!subrecord.is_in_bounds(sizeof(this->type) + sizeof(this->status)))
          return false;
@@ -229,10 +278,81 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
+   namespace {
+      template<typename T> void _property_array_save_helper(script_data& owner, tes_subrecord_writer& subrecord, void* value) {
+         auto& v = *(std::vector<T>*)value;
+         subrecord.write(uint32_t(v.size()));
+         for (auto& entry : v)
+            subrecord.write(entry);
+      }
+      template<> void _property_array_save_helper<script_data::property_object_value>(script_data& owner, tes_subrecord_writer& subrecord, void* value) {
+         auto& v = *(std::vector<script_data::property_object_value>*)value;
+         subrecord.write(uint32_t(v.size()));
+         for (auto& entry : v)
+            entry.save(owner, subrecord);
+      }
+      template<> void _property_array_save_helper<std::string>(script_data& owner, tes_subrecord_writer& subrecord, void* value) {
+         auto& v = *(std::vector<std::string>*)value;
+         subrecord.write(uint32_t(v.size()));
+         for (auto& entry : v)
+            subrecord.write_length_prefixed_string<2>(entry);
+      }
+   }
+   bool script_data::property::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      subrecord.write_length_prefixed_string<2>(this->name);
+      subrecord.write(this->type);
+      subrecord.write(this->status);
+      if (!property_type_is_array(this->type)) {
+         switch (this->type) {
+            case property_type::object:
+               ((property_object_value*)this->value)->save(owner, subrecord);
+               break;
+            case property_type::string:
+               subrecord.write_length_prefixed_string<2>(*(std::string*)this->value);
+               break;
+            case property_type::integer:
+               subrecord.write(*(int32_t*)this->value);
+               break;
+            case property_type::float32:
+               subrecord.write(*(float*)this->value);
+               break;
+            case property_type::boolean:
+               static_assert(sizeof(bool) == sizeof(uint8_t), "Bools aren't one byte on your platform. They are in the VMAD data, so rewrite this code accordingly.");
+               subrecord.write(*(bool*)this->value);
+               break;
+            default:
+               dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
+               assert(false && "bad property type");
+               return false;
+         }
+      } else {
+         switch (this->type) {
+            case property_type::array_of_object:
+               _property_array_save_helper<property_object_value>(owner, subrecord, this->value);
+               break;
+            case property_type::array_of_string:
+               _property_array_save_helper<std::string>(owner, subrecord, this->value);
+               break;
+            case property_type::array_of_integer:
+               _property_array_save_helper<int32_t>(owner, subrecord, this->value);
+               break;
+            case property_type::array_of_float32:
+               _property_array_save_helper<float>(owner, subrecord, this->value);
+               break;
+            case property_type::array_of_boolean:
+               _property_array_save_helper<bool>(owner, subrecord, this->value);
+               break;
+            default:
+               dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
+               return false;
+         }
+      }
+      return true;
+   }
    #pragma endregion
 
    #pragma region Fragment data loading
-   void topic_info_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) { // virtual
+   void topic_info_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (subrecord.is_in_bounds(2)) {
          subrecord.unchecked_read(this->unknown);
          subrecord.unchecked_read(this->flags);
@@ -251,7 +371,25 @@ namespace dovah::loaded_forms::components::papyrus {
                subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void package_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) { // virtual
+   void topic_info_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      subrecord.write(this->unknown);
+      subrecord.write(this->flags);
+      subrecord.write_length_prefixed_string<2>(this->filename);
+      if (this->flags & fragment_flag::has_begin_fragment) {
+         auto& frag = this->onBeginFragment;
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+      if (this->flags & fragment_flag::has_end_fragment) {
+         auto& frag = this->onEndFragment;
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+   }
+
+   void package_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (subrecord.is_in_bounds(2)) {
          subrecord.unchecked_read(this->unknown);
          subrecord.unchecked_read(this->flags);
@@ -276,7 +414,31 @@ namespace dovah::loaded_forms::components::papyrus {
                subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void perk_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) { // virtual
+   void package_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      subrecord.write(this->unknown);
+      subrecord.write(this->flags);
+      subrecord.write_length_prefixed_string<2>(this->filename);
+      if (this->flags & fragment_flag::has_begin_fragment) {
+         auto& frag = this->onBeginFragment;
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+      if (this->flags & fragment_flag::has_end_fragment) {
+         auto& frag = this->onEndFragment;
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+      if (this->flags & fragment_flag::has_change_fragment) {
+         auto& frag = this->onChangeFragment;
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+   }
+
+   void perk_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       subrecord.read(this->unknown);
       subrecord.read_length_prefixed_string<2>(this->filename);
       uint16_t count = 0;
@@ -296,7 +458,21 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   void quest_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) { // virtual
+   void perk_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      subrecord.write(this->unknown);
+      subrecord.write_length_prefixed_string<2>(this->filename);
+      assert(this->fragments.size() <= std::numeric_limits<uint16_t>::max() && "Too many fragments in perk_fragment_data.");
+      subrecord.write(uint16_t(this->fragments.size()));
+      for (auto& frag : this->fragments) {
+         subrecord.write(frag.index);
+         subrecord.write(frag.unknown02);
+         subrecord.write(frag.unknown04);
+         subrecord.write_length_prefixed_string<2>(frag.filename);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+   }
+
+   void quest_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       subrecord.unchecked_read(this->unknown);
       uint16_t fragCount;
       subrecord.unchecked_read(fragCount);
@@ -332,7 +508,34 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   void scene_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) { // virtual
+   void quest_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      subrecord.write(this->unknown);
+      assert(this->fragments.size() <= std::numeric_limits<uint16_t>::max() && "Too many fragments in quest_fragment_data.");
+      subrecord.write(uint16_t(this->fragments.size()));
+      subrecord.write_length_prefixed_string<2>(this->filename);
+      for (auto& frag : this->fragments) {
+         subrecord.write(frag.index);
+         subrecord.write(frag.unknown02);
+         subrecord.write(frag.logEntry);
+         subrecord.write(frag.unknown08);
+         subrecord.write_length_prefixed_string<2>(frag.filename);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+      assert(this->aliasScriptData.size() <= std::numeric_limits<uint16_t>::max() && "Too many aliases in quest_fragment_data.");
+      subrecord.write(uint16_t(this->aliasScriptData.size()));
+      for (auto& alias : this->aliasScriptData) {
+         alias.alias.save(owner, subrecord);
+         subrecord.write(alias.version);
+         subrecord.write(alias.objFormat);
+         assert(alias.scripts.size() <= std::numeric_limits<uint16_t>::max() && "Too many scripts on an alias in quest_fragment_data.");
+         subrecord.write(uint16_t(alias.scripts.size()));
+         for (auto& script : alias.scripts) {
+            script.save(owner, subrecord);
+         }
+      }
+   }
+
+   void scene_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (subrecord.is_in_bounds(2)) {
          subrecord.unchecked_read(this->unknown);
          subrecord.unchecked_read(this->flags);
@@ -363,6 +566,32 @@ namespace dovah::loaded_forms::components::papyrus {
             subrecord.read_length_prefixed_string<2>(frag.filename);
             subrecord.read_length_prefixed_string<2>(frag.function);
          }
+      }
+   }
+   void scene_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      subrecord.write(this->unknown);
+      subrecord.write(this->flags);
+      subrecord.write_length_prefixed_string<2>(this->filename);
+      if (this->flags & fragment_flag::has_begin_fragment) {
+         auto& frag = this->onBeginFragment;
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+      if (this->flags & fragment_flag::has_end_fragment) {
+         auto& frag = this->onEndFragment;
+         subrecord.write(frag.unknown);
+         subrecord.write_length_prefixed_string<2>(frag.script);
+         subrecord.write_length_prefixed_string<2>(frag.function);
+      }
+      assert(this->phaseFragments.size() <= std::numeric_limits<uint16_t>::max() && "Too many phase fragments in scene_fragment_data.");
+      subrecord.write(uint16_t(this->phaseFragments.size()));
+      for (auto& frag : this->phaseFragments) {
+         subrecord.write(frag.unknown00);
+         subrecord.write(frag.phase);
+         subrecord.write(frag.unknown05);
+         subrecord.write_length_prefixed_string<2>(frag.filename);
+         subrecord.write_length_prefixed_string<2>(frag.function);
       }
    }
    #pragma endregion

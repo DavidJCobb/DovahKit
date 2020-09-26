@@ -34,6 +34,9 @@ namespace dovah::loaded_forms::components::extra::unknown {
    class XUSE : public empty_extra_data<'XUSE', extra_data_type::unknown_xuse> {
       // The game skips loading this subrecord, and no one's ever seen it before.
    };
+   class XWCS : public empty_extra_data<'XWCS', extra_data_type::unknown_xwcs> {
+      // The game skips loading this subrecord.
+   };
    class XWLT : public empty_extra_data<'XWLT', extra_data_type::unknown_xwlt> {
       // The game skips loading this subrecord, and no one's ever seen it before.
    };
@@ -70,6 +73,8 @@ namespace dovah::loaded_forms::components::extra::deprecated {
          virtual extra_data_type get_type() const noexcept { return extra_data_type::deprecated_xsed; };
          virtual load_result load(tes_subrecord_reader&) override;
          virtual void save(tes_record_writer&) override;
+         //
+         static void generate_use_info(tes_record_reader&, form_stub*) {}
    };
    class XSOL : public empty_extra_data<'XSOL', extra_data_type::deprecated_xsol> {
       // The game skips loading this subrecord. In TES4, it indicated the contained soul size in a ref.

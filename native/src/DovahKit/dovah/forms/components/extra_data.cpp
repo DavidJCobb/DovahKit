@@ -4,6 +4,12 @@
 #include "extra_data/_factory.h"
 
 namespace dovah::loaded_forms::components {
+   extra_data_list::~extra_data_list() {
+      for (auto* extra : this->content)
+         if (extra)
+            delete extra;
+      this->content.clear();
+   }
    bool extra_data_list::insert(basic_extra_data* item) {
       auto& list = this->content;
       auto& type = typeid(*item);
@@ -43,5 +49,12 @@ namespace dovah::loaded_forms::components {
          return result;
       }
       return load_result::unrecognized;
+   }
+   void extra_data_list::save(tes_record_writer& record) {
+      for (auto* extra : this->content)
+         extra->save(record);
+   }
+   /*static*/ extra_data_load_result extra_data_list::generate_use_info(tes_record_reader& record, form_stub* stub) {
+      return generate_extra_data_use_info(record, stub);
    }
 }
