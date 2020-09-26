@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>454</width>
-    <height>598</height>
+    <height>603</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -58,6 +58,9 @@
            <property name="text">
             <string>Editor ID</string>
            </property>
+           <property name="buddy">
+            <cstring>editorID</cstring>
+           </property>
           </widget>
          </item>
          <item row="0" column="1">
@@ -78,43 +81,55 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Type</string>
+          <item row="4" column="1">
+           <widget class="QGroupBox" name="groupBox_5">
+            <property name="title">
+             <string>Angular Velocity</string>
             </property>
-            <property name="buddy">
-             <cstring>waterType</cstring>
-            </property>
+            <layout class="QGridLayout" name="gridLayout_7">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>X</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterAngularVelocityX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="waterAngularVelocityX"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="waterAngularVelocityY"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="waterAngularVelocityZ"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>Y</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterAngularVelocityY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Z</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterAngularVelocityZ</cstring>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="FormsOfTypeCombobox" name="waterType"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="waterHeight">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="minimum">
-             <double>-100000000000000000000.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>100000000000000000000.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Height</string>
-            </property>
-            <property name="buddy">
-             <cstring>waterHeight</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
+          <item row="4" column="0">
            <widget class="QGroupBox" name="groupBox_4">
             <property name="title">
              <string>Linear Velocity</string>
@@ -162,52 +177,47 @@
             </layout>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QGroupBox" name="groupBox_5">
-            <property name="title">
-             <string>Angular Velocity</string>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Type</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout_7">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_8">
-               <property name="text">
-                <string>X</string>
-               </property>
-               <property name="buddy">
-                <cstring>waterAngularVelocityX</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="waterAngularVelocityX"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="waterAngularVelocityY"/>
-             </item>
-             <item row="2" column="1">
-              <widget class="QDoubleSpinBox" name="waterAngularVelocityZ"/>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_11">
-               <property name="text">
-                <string>Y</string>
-               </property>
-               <property name="buddy">
-                <cstring>waterAngularVelocityY</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_12">
-               <property name="text">
-                <string>Z</string>
-               </property>
-               <property name="buddy">
-                <cstring>waterAngularVelocityZ</cstring>
-               </property>
-              </widget>
-             </item>
-            </layout>
+            <property name="buddy">
+             <cstring>waterType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="FormsOfTypeCombobox" name="waterType"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="waterHeight">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="minimum">
+             <double>-100000000000000000000.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>100000000000000000000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Height</string>
+            </property>
+            <property name="buddy">
+             <cstring>waterHeight</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagNoLODWater">
+            <property name="text">
+             <string>No LOD Water</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -1143,6 +1153,7 @@
  </customwidgets>
  <tabstops>
   <tabstop>tabs</tabstop>
+  <tabstop>editorID</tabstop>
   <tabstop>location</tabstop>
   <tabstop>flagCantTravel</tabstop>
   <tabstop>flagHandChanged</tabstop>
@@ -1150,6 +1161,7 @@
   <tabstop>imagespace</tabstop>
   <tabstop>musicType</tabstop>
   <tabstop>waterEnabled</tabstop>
+  <tabstop>flagNoLODWater</tabstop>
   <tabstop>waterType</tabstop>
   <tabstop>waterHeight</tabstop>
   <tabstop>waterLinearVelocityX</tabstop>
@@ -1162,8 +1174,6 @@
   <tabstop>hideLandQuad2</tabstop>
   <tabstop>hideLandQuad3</tabstop>
   <tabstop>hideLandQuad4</tabstop>
-  <tabstop>buttonOK</tabstop>
-  <tabstop>buttonCancel</tabstop>
   <tabstop>lightingTemplate</tabstop>
   <tabstop>inheritAmbient</tabstop>
   <tabstop>inheritDirectionalColor</tabstop>
@@ -1188,10 +1198,28 @@
   <tabstop>lightingDirectionalRotationXY</tabstop>
   <tabstop>lightingDirectionalRotationZ</tabstop>
   <tabstop>skyVisible</tabstop>
-  <tabstop>skyRegion</tabstop>
   <tabstop>skyLighting</tabstop>
+  <tabstop>skyRegion</tabstop>
   <tabstop>lightingFadeDistanceStart</tabstop>
   <tabstop>lightingFadeDistanceEnd</tabstop>
+  <tabstop>directionalAmbColorXPos</tabstop>
+  <tabstop>directionalAmbColorYPos</tabstop>
+  <tabstop>directionalAmbColorZPos</tabstop>
+  <tabstop>directionalAmbColorXNeg</tabstop>
+  <tabstop>directionalAmbColorYNeg</tabstop>
+  <tabstop>directionalAmbColorZNeg</tabstop>
+  <tabstop>directionalAmbientSetFromAmbient</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>encounterZone</tabstop>
+  <tabstop>ownerNPC</tabstop>
+  <tabstop>ownerFaction</tabstop>
+  <tabstop>ownerFactionRequiredRank</tabstop>
+  <tabstop>interiorLockList</tabstop>
+  <tabstop>flagPublicArea</tabstop>
+  <tabstop>flagOffLimits</tabstop>
+  <tabstop>flagCantWait</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>
  <connections/>

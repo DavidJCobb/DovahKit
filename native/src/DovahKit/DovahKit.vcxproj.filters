@@ -66,9 +66,6 @@
     <ClCompile Include="dovah\form_stub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\multiheap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\files\file_load_order.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -388,6 +385,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\qt\vector3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -825,6 +825,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\qt\spinbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\vector3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

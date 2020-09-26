@@ -179,6 +179,7 @@ void FormDialogCell::_load_impl() {
          this->ui.waterEnabled->setChecked(true);
          this->ui.waterEnabled->setEnabled(false);
       }
+      this->ui.flagNoLODWater->setChecked(this->form->cell_flags& cell_flag::no_lod_water);
       _load_extra_formID<extra::cell_water_type, extra_data_type::cell_water_type>(this->ui.waterType, extra); // only serialized if Has Water is enabled
       this->ui.waterHeight->setValue(this->form->water.height); // only serialized if Has Water is enabled
       //
@@ -288,7 +289,8 @@ void FormDialogCell::_save_impl() {
       this->save_extra_form(this->ui.musicType->formID(),     extra, extra_data_type::cell_music_override);
       //
       bool has_water = is_exterior || this->ui.waterEnabled->isChecked();
-      cobb::edit_bit(this->form->cell_flags, cell_flag::has_water, has_water);
+      cobb::edit_bit(this->form->cell_flags, cell_flag::has_water,    has_water);
+      cobb::edit_bit(this->form->cell_flags, cell_flag::no_lod_water, this->ui.flagNoLODWater->isChecked());
       if (has_water) {
          this->save_extra_form(this->ui.waterType->formID(), extra, extra_data_type::cell_water_type);
          this->form->water.height = this->ui.waterHeight->value();
