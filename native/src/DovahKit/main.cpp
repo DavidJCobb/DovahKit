@@ -49,6 +49,8 @@
 //
 //     - Test resaving CELL.
 //
+//        - Everything of consequence except XWEM has been tested.
+//
 //     - Test resaving CELL/REFR and CELL/ACHR.
 //
 //     - All of the placed projectile records are just direct subclasses of REFR 

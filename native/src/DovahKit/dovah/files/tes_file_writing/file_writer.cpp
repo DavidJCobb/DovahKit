@@ -371,6 +371,8 @@ namespace dovah::tes_file_writing {
       this->close_current_group();
    }
    void file_writer::_write_interior_cells() {
+      this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong('CELL'), 0);
+      //
       std::map<uint32_t, _cell_block> blocks;
       this->owner.for_each_active_file_form_of_type(form_type::cell, [&blocks](form_stub* stub) {
          if (stub->is_exterior_cell())
@@ -393,6 +395,8 @@ namespace dovah::tes_file_writing {
          }
          this->close_current_group();
       }
+      //
+      this->close_current_group();
    }
 
    void file_writer::_write_impl(const void* source, uint32_t size) {
