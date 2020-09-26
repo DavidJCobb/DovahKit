@@ -42,10 +42,6 @@
 //        - We need to be able to load FACT in order to edit ownership required 
 //          rank, as that's based on the ranks that the faction defines.
 //
-//        - Music Type needs to be settable to DEFAULT (no XCMO) or NONE (XCMO set 
-//          to form ID 00000000). Currently, FormsOfTypeCombobox doesn't support 
-//          having two separate "none" options.
-//
 //     - Test resaving CELL.
 //
 //     - Test resaving CELL/REFR and CELL/ACHR.

@@ -36,7 +36,7 @@ dovah::bare_form_id_t FormsOfTypeCombobox::formID() const noexcept {
    int i = this->currentIndex();
    if (i < 0)
       return 0;
-   return this->currentData().toUInt();
+   return this->currentData().value<quint32>();
 }
 void FormsOfTypeCombobox::populate() {
    const auto blocker = QSignalBlocker(this);
@@ -54,6 +54,15 @@ void FormsOfTypeCombobox::populate() {
          model->appendRow(item);
          return false;
       });
+   }
+   if (this->_allowUndefined) {
+      QString text = this->_undefinedLabel;
+      if (text.isEmpty())
+         text = tr("UNDEFINED");
+      auto* item = new QStandardItem(text);
+      item->setData(0, Qt::UserRole);
+      item->setData(1, undefined_role);
+      model->appendRow(item);
    }
    if (this->_allowNone) {
       QString text = this->_noneLabel;
@@ -82,6 +91,7 @@ void FormsOfTypeCombobox::populate() {
    //
    emit populated();
 }
+
 void FormsOfTypeCombobox::setAllowNone(bool s) noexcept {
    if (this->_allowNone == s)
       return;
@@ -106,6 +116,46 @@ void FormsOfTypeCombobox::setNoneLabel(const QString& v) noexcept {
       this->setItemText(index, this->_noneLabel);
    }
 }
+
+void FormsOfTypeCombobox::setAllowUndefined(bool s) noexcept {
+   if (this->_allowUndefined == s)
+      return;
+   this->_allowUndefined = s;
+   if (s) {
+      QString text = this->_undefinedLabel;
+      if (text.isEmpty())
+         text = tr("UNDEFINED");
+      this->addItem(text, 0);
+      this->setItemData(this->count() - 1, 1, undefined_role); // using the model here feels safer, but Qt crashes when we try
+   } else {
+      int i = this->findData(1, undefined_role);
+      if (i >= 0)
+         this->removeItem(i);
+   }
+}
+void FormsOfTypeCombobox::setUndefinedLabel(const QString& v) noexcept {
+   this->_undefinedLabel = v;
+   if (this->_allowUndefined) {
+      int index = this->findData(1, undefined_role);
+      if (index < 0)
+         return;
+      this->setItemText(index, this->_undefinedLabel);
+   }
+}
+bool FormsOfTypeCombobox::isUndefined() const noexcept {
+   if (!this->_allowUndefined)
+      return false;
+   return this->currentData(undefined_role).toInt() != 0;
+}
+void FormsOfTypeCombobox::setToUndefined() noexcept {
+   if (!this->_allowUndefined)
+      return;
+   int index = this->findData(1, undefined_role);
+   if (index < 0)
+      return;
+   this->setCurrentIndex(index);
+}
+
 void FormsOfTypeCombobox::setFormByID(dovah::bare_form_id_t formID) noexcept {
    if (!formID && !this->_allowNone)
       formID = this->_defaultFormID;
@@ -115,25 +165,4 @@ void FormsOfTypeCombobox::setFormByID(dovah::bare_form_id_t formID) noexcept {
 }
 void FormsOfTypeCombobox::setDefaultFormID(dovah::bare_form_id_t formID) noexcept {
    this->_defaultFormID = formID;
-}
-
-/*static*/ void FormsOfTypeCombobox::populate(dovah::form_type_t ft, QVector<FormsOfTypeCombobox*>& widgets) {
-   for (auto*& widget : widgets) {
-      widget->clear();
-      widget->blockSignals(true);
-      if (!widget->allowsFormType(ft)) {
-         widget->blockSignals(false);
-         widget = nullptr;
-      }
-   }
-   auto& editor = DovahKitCore::get();
-   if (!editor.has_data())
-      return;
-   editor.for_each_form_of_type(ft, [&widgets](dovah::form_stub* stub) {
-      for (auto widget : widgets)
-         widget->addItem(QString::fromStdString(stub->get_editor_id()), stub->formID);
-      return false;
-   });
-   for (auto* widget : widgets)
-      widget->blockSignals(false);
 }

@@ -4,6 +4,9 @@
 
 class FormsOfTypeCombobox : public QComboBox {
    Q_OBJECT
+   protected:
+      static const Qt::ItemDataRole undefined_role = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      //
    public:
       FormsOfTypeCombobox(QWidget* parent = nullptr);
       //
@@ -16,14 +19,19 @@ class FormsOfTypeCombobox : public QComboBox {
       void setAllowNone(bool) noexcept; // set whether a "NONE" option appears
       void setNoneLabel(const QString&) noexcept;
       //
+      void setAllowUndefined(bool) noexcept; // set whether an "UNDEFINED" option appears
+      void setUndefinedLabel(const QString&) noexcept;
+      bool isUndefined() const noexcept;
+      void setToUndefined() noexcept; // fails if undefined is not allowed
+      //
       void setFormByID(dovah::bare_form_id_t) noexcept; // set value
       void setDefaultFormID(dovah::bare_form_id_t) noexcept; // used if you call setFormByID(0) and allow-none is false
       //
-      static void populate(dovah::form_type_t, QVector<FormsOfTypeCombobox*>&);
-      //
    protected:
-      bool _allowNone = false;
+      bool    _allowNone = false;
       QString _noneLabel;
+      bool    _allowUndefined = false;
+      QString _undefinedLabel;
       QVector<dovah::form_type_t> _formTypes;
       dovah::bare_form_id_t _defaultFormID = 0;
       //

@@ -69,6 +69,8 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDi
    this->ui.imagespace->setAllowNone(true);
    this->ui.imagespace->setNoneLabel(tr("DEFAULT", "cell imagespace"));
    this->ui.musicType->setAllowNone(true);
+   this->ui.musicType->setAllowUndefined(true);
+   this->ui.musicType->setUndefinedLabel(tr("DEFAULT", "cell music"));
    this->ui.waterType->setDefaultFormID(dovah::hardcoded_form_ids::DefaultWater);
    this->ui.location->populate();
    this->ui.acousticSpace->populate();
@@ -127,7 +129,11 @@ void FormDialogCell::_load_impl() {
       this->ui.flagHandChanged->setChecked(this->form->cell_flags & cell_flag::hand_changed);
       _load_extra_formID<extra::cell_acoustic_space, extra_data_type::cell_acoustic_space>(this->ui.acousticSpace, extra);
       _load_extra_formID<extra::cell_imagespace,     extra_data_type::cell_imagespace>    (this->ui.imagespace, extra);
-      _load_extra_formID<extra::cell_music_override, extra_data_type::cell_music_override>(this->ui.musicType, extra);
+      if (auto* data = extra.lookup<extra::cell_music_override>(extra_data_type::cell_music_override)) {
+         this->ui.musicType->setFormByID(data->formID);
+      } else {
+         this->ui.musicType->setToUndefined();
+      }
       this->ui.waterEnabled->setChecked(this->form->cell_flags & cell_flag::has_water);
       _load_extra_formID<extra::cell_water_type, extra_data_type::cell_water_type>(this->ui.waterType, extra);
       this->ui.waterHeight->setValue(this->form->water.height);
@@ -228,4 +234,9 @@ void FormDialogCell::_save_impl() {
    #if !_DEBUG
       static_assert(false, "FINISH ME");
    #endif
+   //
+   // TODO: 
+   // if (this->ui.musicType->isUndefined()) then remove the music-type extra data entirely.
+   // otherwise, set the extra-data to whatever form ID was specified, even if it's NONE.
+   //
 }

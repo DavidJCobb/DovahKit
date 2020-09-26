@@ -13,14 +13,27 @@ class _FormsOfTypeComboboxProxy : public QSortFilterProxyModel {
          auto source    = this->sourceModel();
          auto sort_role = this->sortRole();
          //
+         #pragma region Undefined
+         auto x = source->data(left,  Qt::UserRole + 1).toInt();
+         auto y = source->data(right, Qt::UserRole + 1).toInt();
+         if (x | y) { // is either of them non-zero?
+            if (x)
+               return true;
+            if (y)
+               return false;
+         }
+         #pragma endregion
+         //
+         #pragma region None
          auto a = source->data(left,  Qt::UserRole).toInt();
          auto b = source->data(right, Qt::UserRole).toInt();
-         if (a | b) {
+         if (a & b == 0) { // is either of them zero?
             if (!a)
                return true;
             if (!b)
                return false;
          }
+         #pragma endregion
          //
          QVariant leftData  = source->data(left,  sort_role);
          QVariant rightData = source->data(right, sort_role);
