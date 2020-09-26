@@ -25,14 +25,6 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
-//  - Use Info dialog
-//
-//     - Consider collating references that are in the same cell together and then 
-//       showing a count, like the CK does.
-//
-//        - Double-clicking a listing takes you to the ref, in the Render Window, 
-//          but... if a listing represents multiple refs, what then?
-//
 //  - Cell View
 //
 //     - Add a context menu for the cell list and the reference list, allowing the 
@@ -43,8 +35,6 @@
 //       editor ID.
 //
 //     - Implement filtering the reference list by form type and editor/form ID.
-//
-//     - When browsing interior cells, do not display grid X/Y columns.
 //
 //     - When the Cell View window is enlarged, the jump-to-grid spinboxes should 
 //       not expand to full the column, but rather should remain at a small size 
@@ -122,6 +112,12 @@
 //        - Write the code to decide when CELL records should be compressed.
 //
 //           - Not possible until we've finished implementing CELL.
+//
+//  - Add a "Windows" menu to the main window. It should list all open windows and 
+//    allow the user to bring them to the front.
+//
+//     - This includes Use Info and form-editing dialogs. But what if the user has 
+//       too many of those open?
 //
 // DISTANT TASKS:
 //

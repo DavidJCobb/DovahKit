@@ -7,8 +7,6 @@
 #include "../helpers/bitset.h"
 
 namespace cobb {
-   extern void _multiheap_dumper(void* s, uint32_t count_per_block); // defined this way just so that the code to dump heap information for debugging isn't just sitting out in the header
-   //
    template<typename T, uint32_t count_per_block> class multiheap {
       //
       // MULTIHEAP
@@ -21,9 +19,9 @@ namespace cobb {
       // to allocate memory, a new sub-heap is created for it; when the thread dies, the 
       // sub-heap is automatically destroyed and its blocks are moved to a list of unowned 
       // blocks. (This is accomplished using a thread_local struct that leverages RAII, 
-      // like a smart pointer or lock guard.) The effect of this is that allocations don't 
-      // cause the entire heap to lock; locking is only necessary when adding or removing 
-      // threads, or when freeing any element.
+      // similarly to smart pointers and lock guards.) The effect of this is that alloc-
+      // ations don't cause the entire heap to lock; locking is only necessary when adding 
+      // or removing threads, or when freeing any element.
       //
       // To help prevent memory fragmentation, if a sub-heap is created while there are 
       // unowned blocks, those blocks are assigned to the new sub-heap.
@@ -35,12 +33,11 @@ namespace cobb {
       // internal node types; however, because you never actually need to access this 
       // heap from the outside (i.e. you don't need your threads to manually register 
       // with it or any such), this isn't a problem. (Allocator rebinding does mean, 
-      // however, that methods like (force_free_all) and (dump_stats) are unusable when 
-      // working with STL containers.)
+      // however, that methods like (force_free_all) are unusable when working with STL 
+      // containers.)
       //
       // To that end, an interface is already available: multiheap_allocator, below.
       //
-      friend void _multiheap_dumper(void* s, uint32_t count_per_block);
       public:
          using mapped_type = T;
          static constexpr uint32_t element_size    = sizeof(T);
@@ -95,9 +92,6 @@ namespace cobb {
             }
             bool  try_free(void* mem) noexcept { // function to be called on the head block only. frees a single element (and if that leaves a non-head block empty, free that entire block)
                auto block = this;
-               #if _DEBUG
-                  Block* previous = nullptr; // useless variable; when debugging, allows us to better understand where we were if something goes wrong and (block) goes bad
-               #endif
                do {
                   std::ptrdiff_t m_addr  = (std::ptrdiff_t)mem;
                   std::ptrdiff_t b_start = (std::ptrdiff_t) & block->buffer;
@@ -118,9 +112,6 @@ namespace cobb {
                      }
                      return true;
                   }
-                  #if _DEBUG
-                     previous = block;
-                  #endif
                } while (block = block->info.next);
                return false;
             }
@@ -348,11 +339,6 @@ namespace cobb {
          static void force_destroy_all() noexcept {
             multiheap::_get_state().force_destroy_all();
          }
-         //
-         static void dump_stats() noexcept {
-            auto& state = multiheap::_get_state();
-            _multiheap_dumper(&state, count_per_block);
-         }
    };
    template<typename T, uint32_t count_per_block> class multiheap_allocator {
       //
@@ -397,20 +383,4 @@ namespace cobb {
          template<typename U, uint32_t cb> bool operator==(const multiheap_allocator<U, cb>& other) { return false; }
          template<typename U, uint32_t cb> bool operator!=(const multiheap_allocator<U, cb>& other) { return true; }
    };
-
-   namespace unit_tests {
-      namespace multiheap {
-         struct test_struct {
-            uint32_t value = 0;
-            //
-            test_struct() {};
-            test_struct(uint32_t a) : value(a) {};
-            //
-            static void* operator new(std::size_t sz);
-            static void operator delete(void* ptr, std::size_t sz);
-         };
-         //
-         void test();
-      }
-   }
 }

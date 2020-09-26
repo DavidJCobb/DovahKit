@@ -182,6 +182,7 @@ CellList::CellList(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(0, QHeaderView::Stretch);
    header->setSectionResizeMode(1, QHeaderView::Interactive);
    header->setSectionResizeMode(2, QHeaderView::Interactive);
+   header->setSectionResizeMode(3, QHeaderView::Interactive);
 
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &CellList::clear);
@@ -234,6 +235,10 @@ void CellList::rebuildModel() {
       }
    }
    m->rebuild(stub);
+   //
+   auto header = this->horizontalHeader();
+   header->setSectionHidden(2, !stub); // don't show grid coordinates for interior cells, as they do not have any
+   header->setSectionHidden(3, !stub); // 
 }
 void CellList::clear() {
    auto m = this->unwrappedModel();

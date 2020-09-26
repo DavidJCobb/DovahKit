@@ -85,6 +85,9 @@ class CellListModel : public QAbstractTableModel {
       void clear();
       //
       void rebuild(const dovah::form_stub* worldspace);
+      //
+   signals:
+      void columnCountChanged(); // needed so the widget can handle column sizes sensibly
 };
 
 class CellListModelProxy : public QSortFilterProxyModel {
