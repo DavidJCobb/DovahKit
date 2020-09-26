@@ -4,7 +4,7 @@
 namespace dovah::loaded_forms::components::extra {
    class reflector_refs : public basic_extra_data {
       public:
-         static constexpr uint32_t signature = 'XLOC';
+         static constexpr uint32_t signature = 'XPWR';
          enum class type : uint32_t {
             reflection,
             refraction,

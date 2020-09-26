@@ -99,6 +99,7 @@ namespace dovah::loaded_forms::components {
       ragdoll_data,              // XRGB, XRGD
       random_teleport_marker,    // XRTM
       rank,                      // XRNK
+      reflector_refs,            // XPWR
       room_ref_data,             // XRMR
       scale,                     // XSCL
       spawn_container,           // XSPC
@@ -174,6 +175,7 @@ namespace dovah::loaded_forms::components {
          inline const list_t& get_items() const noexcept { return this->content; };
          bool insert(basic_extra_data*); // returns (true) if the insertion succeeded.
          void remove(basic_extra_data*);
+         void remove_by_type(extra_data_type);
          //
          load_result load(tes_record_reader&);
          void save(tes_record_writer&);
@@ -183,6 +185,11 @@ namespace dovah::loaded_forms::components {
          basic_extra_data* lookup_by_type(extra_data_type) const noexcept;
          template<class e> inline e* lookup(extra_data_type et) const noexcept {
             return dynamic_cast<e*>(this->lookup_by_type(et));
+         }
+         //
+         basic_extra_data* get_or_create_by_type(extra_data_type) noexcept;
+         template<class e> inline e* get_or_create(extra_data_type et) noexcept {
+            return dynamic_cast<e*>(this->get_or_create_by_type(et));
          }
    };
 }

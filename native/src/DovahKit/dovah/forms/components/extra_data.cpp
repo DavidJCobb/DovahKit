@@ -29,6 +29,16 @@ namespace dovah::loaded_forms::components {
          }
       }
    }
+   void extra_data_list::remove_by_type(extra_data_type t) {
+      auto& list = this->content;
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         auto* item = *it;
+         if (item->get_type() == t) {
+            list.erase(it);
+            return;
+         }
+      }
+   }
    extra_data_load_result extra_data_list::load(tes_record_reader& record) {
       auto& subrecord = record.get_current_subrecord();
       for (auto* extra : this->content) {
@@ -62,5 +72,14 @@ namespace dovah::loaded_forms::components {
          if (item && item->get_type() == t)
             return item;
       return nullptr;
+   }
+   basic_extra_data* extra_data_list::get_or_create_by_type(extra_data_type t) noexcept {
+      auto* item = this->lookup_by_type(t);
+      if (item)
+         return item;
+      item = create_extra_data_by_type(t);
+      if (item)
+         this->content.push_back(item);
+      return item;
    }
 }

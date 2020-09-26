@@ -1,6 +1,7 @@
 #pragma once
 #include <QDialog>
 #include "../../dovah/form_stub.h"
+#include "../../dovah/forms/components/extra_data.h"
 
 /*
 
@@ -26,12 +27,19 @@
 
 */
 
+namespace dovah::loaded_forms::components {
+   class extra_data_list;
+}
+
 namespace form_dialog_helpers {
    template<class _dialog_t, typename loaded_form_t> void initialize(_dialog_t& dialog, dovah::form_stub* stub);
 }
 
 class FormDialogBaseTemplate : public QDialog {
    Q_OBJECT
+   private:
+      using extra_data_type = dovah::loaded_forms::components::extra_data_type;
+      using extra_data_list = dovah::loaded_forms::components::extra_data_list;
    public:
       FormDialogBaseTemplate(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
       //
@@ -48,5 +56,7 @@ class FormDialogBaseTemplate : public QDialog {
       //
       void save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t);
       void save_form_id(dovah::form_id_t& target, dovah::form_stub*);
+      //
+      void save_extra_form(dovah::bare_form_id_t, extra_data_list&, extra_data_type, bool remove_if_no_form = true);
 };
 #define DOVAHKIT_FORM_EDIT_DIALOG template<class _dialog_t, typename loaded_form_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog, dovah::form_stub* stub);
