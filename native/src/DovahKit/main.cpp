@@ -25,6 +25,30 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
+//  - OKAY, SO WE HAVE A WEE BIT OF A MASSIVE OVERSIGHT IN OUR CURRENT UI CODE. WHEN 
+//    YOU USE A FORM-EDITING DIALOG TO COMMIT CHANGES TO A FORM, WE JUST... MAKE 
+//    THOSE CHANGES. IF YOU'RE CHANGING A FORM ID, THEN WE JUST WRITE THE NEW VALUE 
+//    WITHOUT UPDATING ANY IN-MEMORY USE INFO. THAT IS A PROBLEM.
+//
+//    WHAT WE NEED IS THIS:
+//
+//       void form_stub::set_form_id(form_id_t&, bare_form_id_t set_to);
+//
+//    OR ALTERNATIVELY (MAYBE PREFERABLY):
+//
+//       void form_id_t::set(form_stub*);
+//
+//    MAKING ALL CHANGES THROUGH THE FORM STUB WOULD ALLOW US TO ENSURE THAT USE 
+//    INFO GETS A CHANCE TO UPDATE. (OF COURSE, THIS WILL ALSO REQUIRE SOME NEW 
+//    INFRASTRUCTURE IN form_stub, NAMELY THE ABILITY TO BIDIRECTIONALLY SEVER A 
+//    SINGLE USE, AND, IF WE DON'T ALREADY HAVE IT, THE ABILITY TO ESTABLISH A NEW 
+//    USE POST-LOAD.)
+//
+//     - One thing we could do to help with this is make form_id_t::operator= 
+//       protected, accessible only to form_stub and the file-element readers. 
+//       That way, trying to assign to it is an error -- a nice reminder to use 
+//       the form-stub-involved setter instead.
+//
 //  - Cell View
 //
 //     - Implement the "Sort loaded at top" checkbox.
@@ -41,6 +65,11 @@
 //
 //        - We need to be able to load FACT in order to edit ownership required 
 //          rank, as that's based on the ranks that the faction defines.
+//
+//        - Define a custom widget for the water environment map: a texture file 
+//          picker. For now, it should just contain a QLineEdit, but we want to be 
+//          able to add a QPushButton (and custom file browser that can dig into 
+//          loaded BSAs) in the future.
 //
 //     - Test resaving CELL.
 //
