@@ -11,8 +11,7 @@ FormUseInfoDialog::FormUseInfoDialog(const dovah::form_stub* stub, QWidget* pare
    this->ui.usesInGeneral->setTextFilter(this->ui.filterText);
    this->ui.usesAsBaseForm->setTextFilter(this->ui.filterText);
    //
-   this->ui.filterSignature->setNoneLabel(tr(" ALL "));
-   this->ui.filterSignature->setAllowNone(true);
+   this->ui.filterSignature->setAllowUnfiltered(true);
    QObject::connect(this->ui.filterSignature, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
       dovah::form_type_t data = this->ui.filterSignature->formType();
       this->ui.usesInGeneral->setFormTypeFilter(data);

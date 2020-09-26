@@ -13,8 +13,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    this->ui.worldspace->setNoneLabel(tr(" Interiors", "worldspace selector"));
    this->ui.worldspace->setAllowNone(true);
    //
-   this->ui.filterFormType->setNoneLabel(tr(" ALL "));
-   this->ui.filterFormType->setAllowNone(true);
+   this->ui.filterFormType->setAllowUnfiltered(true);
    for (auto& info : dovah::form_types) {
       if (dovah::form_type_info::form_type_is_base_form(info.formType))
          this->ui.filterFormType->whitelistSignature(info.signature);

@@ -1,8 +1,7 @@
 #include "FormSignatureCombobox.h"
-#include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include "../../helpers/qt/strings.h"
-#include "../../dovah/core.h"
+#include "impl/_FormSignatureComboboxProxy.h"
 
 FormSignatureCombobox::FormSignatureCombobox(QWidget* parent) : QComboBox(parent) {
    this->_rebuild();
@@ -45,16 +44,16 @@ void FormSignatureCombobox::_rebuild() {
       item->setData(info.formType, Qt::UserRole);
       model->appendRow(item);
    }
-   if (this->_allowNone) {
-      QString text = this->_noneLabel;
+   if (this->_allowUnfiltered) {
+      QString text = this->_unfilteredLabel;
       if (text.isEmpty())
-         text = tr("NONE");
+         text = tr("Any");
       auto* item = new QStandardItem(text);
       item->setData(dovah::form_type::none, Qt::UserRole);
       model->appendRow(item);
    }
    //
-   auto* proxy = new QSortFilterProxyModel;
+   auto* proxy = new _FormSignatureComboboxProxy;
    proxy->setSourceModel(model);
    proxy->setSortCaseSensitivity(Qt::CaseInsensitive);
    this->setModel(proxy);
@@ -65,19 +64,19 @@ void FormSignatureCombobox::_rebuild() {
       this->setCurrentIndex(index);
    else {
       index = -1;
-      if (this->_allowNone)
+      if (this->_allowUnfiltered)
          index = this->findData(dovah::form_type::none, Qt::UserRole);
       this->setCurrentIndex(index);
    }
 }
-void FormSignatureCombobox::setAllowNone(bool s) noexcept {
-   if (this->_allowNone == s)
+void FormSignatureCombobox::setAllowUnfiltered(bool s) noexcept {
+   if (this->_allowUnfiltered == s)
       return;
-   this->_allowNone = s;
+   this->_allowUnfiltered = s;
    if (s) {
-      QString text = this->_noneLabel;
+      QString text = this->_unfilteredLabel;
       if (text.isEmpty())
-         text = tr("NONE");
+         text = tr("ANY");
       this->addItem(text, 0);
    } else {
       int i = this->findData(0);
@@ -85,12 +84,12 @@ void FormSignatureCombobox::setAllowNone(bool s) noexcept {
          this->removeItem(i);
    }
 }
-void FormSignatureCombobox::setNoneLabel(const QString& v) noexcept {
-   this->_noneLabel = v;
-   if (this->_allowNone) {
+void FormSignatureCombobox::setUnfilteredLabel(const QString& v) noexcept {
+   this->_unfilteredLabel = v;
+   if (this->_allowUnfiltered) {
       int index = this->findData(0, Qt::UserRole);
       if (index < 0)
          return;
-      this->setItemText(index, this->_noneLabel);
+      this->setItemText(index, this->_unfilteredLabel);
    }
 }

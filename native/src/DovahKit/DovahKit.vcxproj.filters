@@ -936,6 +936,12 @@
     <QtMoc Include="ui\generic\FormSignatureCombobox.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\generic\impl\_FormSignatureComboboxProxy.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\impl\_FormsOfTypeComboboxProxy.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">

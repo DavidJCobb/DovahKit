@@ -1,8 +1,8 @@
 #include "FormsOfTypeCombobox.h"
-#include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include "../../dovah/form_stub.h"
 #include "../../editor/core.h"
+#include "impl/_FormsOfTypeComboboxProxy.h"
 
 //
 // These can incur a performance hit in Debug, but they're mostly fine in Release.
@@ -19,10 +19,10 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
    });
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
       const auto blocker = QSignalBlocker(this);
-      //
-      // TODO: Locate the stub's entry in here, update the editor ID if that's changed, 
-      // and sort it within the list as appropriate.
-      //
+      int index = this->findData(stub->formID);
+      if (index < 0)
+         return;
+      this->setItemText(index, stub->get_editor_id());
    });
 };
 
@@ -64,7 +64,7 @@ void FormsOfTypeCombobox::populate() {
       model->appendRow(item);
    }
    //
-   auto* proxy = new QSortFilterProxyModel;
+   auto* proxy = new _FormsOfTypeComboboxProxy;
    proxy->setSourceModel(model);
    proxy->setSortCaseSensitivity(Qt::CaseInsensitive);
    this->setModel(proxy);
