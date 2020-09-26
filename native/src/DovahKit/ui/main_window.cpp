@@ -45,6 +45,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    this->object_window = new ObjectWindow(this);
    this->ui.mdi->addSubWindow(this->object_window, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
    //
+   this->cell_view_window = new CellViewWindow(this);
+   this->ui.mdi->addSubWindow(this->cell_view_window, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+   //
    this->ui.actionEditFileMetadata->setDisabled(true);
    this->ui.actionSave->setDisabled(true);
    QObject::connect(this->ui.actionOpen, &QAction::triggered, this, [this]() {

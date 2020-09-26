@@ -1,0 +1,38 @@
+#include "cell_view.h"
+#include <QMenu>
+#include "../../editor/core.h"
+#include "../../editor/open_window_for_form.h"
+#include "../generic/FormsOfTypeCombobox.h"
+
+CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
+   ui.setupUi(this);
+   //
+   this->ui.worldspace->addFormType(dovah::form_type::worldspace);
+   this->ui.worldspace->setNoneLabel(tr(" Interiors", "worldspace selector"));
+   this->ui.worldspace->setAllowNone(true);
+   //
+   this->ui.cellList->setWorldspacePicker(this->ui.worldspace);
+   this->ui.referenceList->setCellPicker(this->ui.cellList);
+   //
+   this->setAllEnableStates(false);
+   //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
+      this->ui.worldspace->populate();
+      this->ui.cellList->rebuildModel();
+      this->ui.referenceList->rebuildModel();
+      this->setAllEnableStates(true);
+   });
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->setAllEnableStates(false);
+   });
+}
+void CellViewWindow::setAllEnableStates(bool state) {
+   this->ui.worldspace->setEnabled(state);
+   this->ui.jumpToGrid->setEnabled(state);
+   this->ui.filterFormType->setEnabled(state);
+   this->ui.filterText->setEnabled(state);
+   this->ui.loadedCellsAtTop->setEnabled(state);
+   this->ui.cellList->setEnabled(state);
+   this->ui.referenceList->setEnabled(state);
+}

@@ -375,6 +375,15 @@
     <ClCompile Include="dovah\forms\components\extra_data\_unknown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\cell_view.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\cell_view\cell_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\cell_view\cell_ref_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -844,6 +853,9 @@
     <QtUic Include="ui\main_window\file_metadata_window.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\main_window\cell_view.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -907,6 +919,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\_base.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\cell_view.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\cell_view\cell_list.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\cell_view\cell_ref_list.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -40,6 +40,7 @@ dovah::bare_form_id_t FormsOfTypeCombobox::formID() const noexcept {
 }
 void FormsOfTypeCombobox::populate() {
    const auto blocker = QSignalBlocker(this);
+   auto previous_selection = this->currentData().toInt();
    this->clear();
    //
    auto& editor = DovahKitCore::get();
@@ -54,11 +55,30 @@ void FormsOfTypeCombobox::populate() {
          return false;
       });
    }
+   if (this->_allowNone) {
+      QString text = this->_noneLabel;
+      if (text.isEmpty())
+         text = tr("NONE");
+      auto* item = new QStandardItem(text);
+      item->setData(0, Qt::UserRole);
+      model->appendRow(item);
+   }
+   //
    auto* proxy = new QSortFilterProxyModel;
    proxy->setSourceModel(model);
    proxy->setSortCaseSensitivity(Qt::CaseInsensitive);
    this->setModel(proxy);
    proxy->sort(0);
+   //
+   int index = this->findData(previous_selection, Qt::UserRole);
+   if (index >= 0)
+      this->setCurrentIndex(index);
+   else {
+      index = -1;
+      if (this->_allowNone)
+         index = this->findData(0, Qt::UserRole);
+      this->setCurrentIndex(index);
+   }
    //
    emit populated();
 }
@@ -67,11 +87,23 @@ void FormsOfTypeCombobox::setAllowNone(bool s) noexcept {
       return;
    this->_allowNone = s;
    if (s) {
-      this->addItem(tr("NONE"), 0);
+      QString text = this->_noneLabel;
+      if (text.isEmpty())
+         text = tr("NONE");
+      this->addItem(text, 0);
    } else {
       int i = this->findData(0);
       if (i >= 0)
          this->removeItem(i);
+   }
+}
+void FormsOfTypeCombobox::setNoneLabel(const QString& v) noexcept {
+   this->_noneLabel = v;
+   if (this->_allowNone) {
+      int index = this->findData(0, Qt::UserRole);
+      if (index < 0)
+         return;
+      this->setItemText(index, this->_noneLabel);
    }
 }
 void FormsOfTypeCombobox::setFormByID(dovah::bare_form_id_t formID) noexcept {

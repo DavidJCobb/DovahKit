@@ -3,6 +3,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWinExtras/qwintaskbarbutton.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "ui_main_window.h"
+#include "main_window/cell_view.h"
 #include "main_window/object_window.h"
 
 class FileMetadataWindow;
@@ -25,9 +26,10 @@ class MainWindow : public QMainWindow {
       //
    private:
       Ui::MainWindow ui;
-      QWinTaskbarButton*  taskbar_button  = nullptr;
-      ObjectWindow*       object_window   = nullptr;
-      FileMetadataWindow* metadata_window = nullptr;
+      QWinTaskbarButton*  taskbar_button   = nullptr;
+      CellViewWindow*     cell_view_window = nullptr;
+      ObjectWindow*       object_window    = nullptr;
+      FileMetadataWindow* metadata_window  = nullptr;
       //
    protected:
       virtual void closeEvent(QCloseEvent* event) override;

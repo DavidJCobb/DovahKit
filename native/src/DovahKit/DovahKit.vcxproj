@@ -206,6 +206,9 @@
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
+    <ClCompile Include="ui\main_window\cell_view.cpp" />
+    <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
+    <ClCompile Include="ui\main_window\cell_view\cell_ref_list.cpp" />
     <ClCompile Include="ui\main_window\file_metadata_window.cpp" />
     <ClCompile Include="ui\main_window\form_use_info.cpp" />
     <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp" />
@@ -342,6 +345,9 @@
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
     <ClInclude Include="ui\form_windows\_base_cpp.h" />
+    <QtMoc Include="ui\main_window\cell_view\cell_ref_list.h" />
+    <QtMoc Include="ui\main_window\cell_view\cell_list.h" />
+    <QtMoc Include="ui\main_window\cell_view.h" />
     <QtMoc Include="ui\form_windows\_base.h" />
     <QtMoc Include="ui\main_window\file_metadata_window.h" />
     <QtMoc Include="ui\main_window\save_window.h" />
@@ -390,6 +396,7 @@
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />
+    <QtUic Include="ui\main_window\cell_view.ui" />
     <QtUic Include="ui\main_window\file_metadata_window.ui" />
     <QtUic Include="ui\main_window\form_use_info.ui" />
     <QtUic Include="ui\main_window\load_window.ui" />

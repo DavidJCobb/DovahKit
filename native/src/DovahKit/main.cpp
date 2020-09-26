@@ -33,6 +33,39 @@
 //        - Double-clicking a listing takes you to the ref, in the Render Window, 
 //          but... if a listing represents multiple refs, what then?
 //
+//  - Cell View
+//
+//     - Add a context menu for the cell list and the reference list, allowing the 
+//       user to view Use Info for cells and references.
+//
+//     - Unnamed cells in exterior worldspaces should display as "Unnamed Cell" in 
+//       italics, and should be sorted below all other cells when sorting by cell 
+//       editor ID.
+//
+//     - Implement filtering the reference list by form type and editor/form ID.
+//
+//     - When browsing interior cells, do not display grid X/Y columns.
+//
+//     - When the Cell View window is enlarged, the jump-to-grid spinboxes should 
+//       not expand to full the column, but rather should remain at a small size 
+//       sufficient for entering any 3-digit number.
+//
+//     - When a cell is selected, change the displayed cell name shown above the 
+//       reference list.
+//
+//     - Implement the "Sort loaded at top" checkbox.
+//
+//        - Can't, until we have a render window that supports worldspaces.
+//
+//  - Support for CELL
+//
+//     - Make it possible to browse through interior cells, now that we can load 
+//       them.
+//
+//     - Test resaving CELL.
+//
+//     - Test resaving CELL/REFR and CELL/ACHR.
+//
 // THINGS TO LOOK INTO:
 //
 //  - Build a unit testing framework wherein we run automated correctness checks 
@@ -88,20 +121,7 @@
 //
 //        - Write the code to decide when CELL records should be compressed.
 //
-//           - Not possible until we implement loading and saving cells in the first 
-//             place.
-//
-//              - It looks like CELL and REFR both load all possible types of extra-
-//                data, even if they don't use them. We'll want to do that here as 
-//                well -- we need to support all extra-data subrecords for both form 
-//                types. I've written up some preliminary extra-data component structs 
-//                but I probably need to do something similar to what the game itself 
-//                does: give the forms an extra-data list, and have all extra-data 
-//                structs inherit from a superclass with virtual load/save members.
-//
-//                 - I can define some generic extra-data superclasses for the 
-//                   structs that consist of single form IDs / integers / floats / 
-//                   etc.
+//           - Not possible until we've finished implementing CELL.
 //
 // DISTANT TASKS:
 //

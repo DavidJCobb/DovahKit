@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <set>
 #include <vector>
 #include <QAbstractItemModel>
 #include <QDateTime>
@@ -100,7 +99,6 @@ class LoadOrderFileList : public QTableView {
       LoadOrderFileList(QWidget* parent);
       using model_type      = LoadOrderFileListModel;
       using model_item_type = model_type::item_type;
-      using form_type_set   = std::set<dovah::form_type_t>;
       //
       inline model_type* unwrappedModel() const noexcept {
          return (model_type*)this->model();

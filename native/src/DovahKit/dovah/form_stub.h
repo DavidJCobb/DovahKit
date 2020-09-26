@@ -121,6 +121,13 @@ namespace dovah {
    //
    // So we must keep track of all connections between forms, bidirectionally.
    //
+   // ---------------------------------------------------------------------------------------
+   //
+   // NOTES:
+   //
+   //  - Child forms have outbound references to their parent forms, so parent forms have 
+   //    inbound references from their child forms.
+   //
    struct use_info_entry {
       struct flag {
          flag() = delete;

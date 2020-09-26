@@ -6,6 +6,7 @@ namespace dovah {
    //
    namespace form_stub_helpers {
       void for_each_child_form(const form_stub* parent, std::function<bool(form_stub*)> functor); // return (true) to stop looping early
+      form_stub* get_base_form(const form_stub* ref);
       form_stub* get_worldspace_persistent_cell(const form_stub*);
    }
 }

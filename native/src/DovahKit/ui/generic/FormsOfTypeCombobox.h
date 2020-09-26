@@ -12,13 +12,17 @@ class FormsOfTypeCombobox : public QComboBox {
       bool allowsFormType(dovah::form_type_t) const noexcept;
       dovah::bare_form_id_t formID() const noexcept;
       void populate();
-      void setAllowNone(bool) noexcept;
-      void setFormByID(dovah::bare_form_id_t) noexcept;
+      //
+      void setAllowNone(bool) noexcept; // set whether a "NONE" option appears
+      void setNoneLabel(const QString&) noexcept;
+      //
+      void setFormByID(dovah::bare_form_id_t) noexcept; // set value
       //
       static void populate(dovah::form_type_t, QVector<FormsOfTypeCombobox*>&);
       //
    protected:
       bool _allowNone = false;
+      QString _noneLabel;
       QVector<dovah::form_type_t> _formTypes;
       //
    signals:

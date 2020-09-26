@@ -149,7 +149,13 @@ namespace dovah {
       if (!entry.other)
          entry.other = lo.get_form(toFormID);
       #ifdef _DEBUG
-         if (!entry.other && /*toFormID >= 0x800 &&*/ toFormID != 0x02006718) { // exclude known dangling ref in Dawnguard.esm
+         //
+         // When compiled in Debug, warn on any use of a missing form.
+         //
+         if (!entry.other
+            && toFormID != 0x02006718 // Dawnguard.esm
+            && toFormID != 0x00106633 // Skyrim.esm: CELL/XCLR has references to a non-existent REGN
+         ) {
             if (lo.has_form(toFormID))
                __debugbreak();
             else
