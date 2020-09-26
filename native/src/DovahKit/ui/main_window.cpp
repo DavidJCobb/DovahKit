@@ -1,7 +1,5 @@
 #include "main_window.h"
 #include <QCloseEvent>
-#include <QErrorMessage>
-#include <QInputDialog>
 #include <QMDISubWindow>
 #include <QMessageBox>
 #include <QShowEvent>

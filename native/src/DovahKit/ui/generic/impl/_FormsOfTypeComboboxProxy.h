@@ -27,7 +27,7 @@ class _FormsOfTypeComboboxProxy : public QSortFilterProxyModel {
          #pragma region None
          auto a = source->data(left,  Qt::UserRole).toInt();
          auto b = source->data(right, Qt::UserRole).toInt();
-         if (a & b == 0) { // is either of them zero?
+         if ((a & b) == 0) { // is either of them zero?
             if (!a)
                return true;
             if (!b)

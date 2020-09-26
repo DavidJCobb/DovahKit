@@ -268,7 +268,7 @@ namespace dovah::tes_file_reading {
          this->_record.skip(this->_subrecord.end - this->_record.stream_pos());
          this->_subrecord.header.signature = 0;
       }
-      if (this->_record.stream_pos() >= this->_record.end)
+      if (!this->_record.is_in_bounds())
          return false;
       uint16_t size;
       this->_record.read(this->_subrecord.header.signature);

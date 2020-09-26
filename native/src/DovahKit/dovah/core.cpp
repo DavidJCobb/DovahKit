@@ -397,7 +397,8 @@ namespace dovah {
       return false;
    }
    #pragma endregion
-
+   
+   #pragma region form_id_t and friends
    void form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
       if (this->value == set_to)
          return;
@@ -419,4 +420,5 @@ namespace dovah {
          return;
       owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::i_am_reference_of);
    }
+   #pragma endregion
 }

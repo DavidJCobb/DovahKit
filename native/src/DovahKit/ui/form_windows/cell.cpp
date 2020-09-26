@@ -9,6 +9,7 @@
 #include "../../dovah/forms/components/extra_data/cell_music_override.h"
 #include "../../dovah/forms/components/extra_data/cell_water_type.h"
 #include "../../dovah/forms/components/extra_data/encounter_zone.h"
+#include "../../dovah/forms/components/extra_data/interior_lock_list.h"
 #include "../../dovah/forms/components/extra_data/location.h"
 #include "../../dovah/forms/components/extra_data/ownership.h"
 #include "../../dovah/forms/components/extra_data/rank.h"
@@ -59,6 +60,8 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDi
    cobb::qt::remove_spinbox_bounds(this->ui.waterLinearVelocityY);
    cobb::qt::remove_spinbox_bounds(this->ui.waterLinearVelocityZ);
    //
+   this->ui.tabs->setCurrentIndex(0);
+   //
    this->ui.location->addFormType(dovah::form_type::location);
    this->ui.acousticSpace->addFormType(dovah::form_type::acoustic_space);
    this->ui.imagespace->addFormType(dovah::form_type::imagespace);
@@ -88,39 +91,68 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDi
    this->ui.encounterZone->addFormType(dovah::form_type::encounter_zone);
    this->ui.ownerNPC->addFormType(dovah::form_type::actor_base);
    this->ui.ownerFaction->addFormType(dovah::form_type::faction);
+   this->ui.interiorLockList->addFormType(dovah::form_type::actor_base);
+   this->ui.interiorLockList->addFormType(dovah::form_type::formlist);
    this->ui.encounterZone->setAllowNone(true);
    this->ui.ownerNPC->setAllowNone(true);
    this->ui.ownerFaction->setAllowNone(true);
+   this->ui.interiorLockList->setAllowNone(true);
    this->ui.encounterZone->populate();
    this->ui.ownerNPC->populate();
    this->ui.ownerFaction->populate();
+   this->ui.interiorLockList->populate();
+   QObject::connect(this->ui.ownerFaction, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+      auto& editor = DovahKitCore::get();
+      this->working_ownership.form = editor.get_form(this->ui.ownerFaction->formID());
+      this->_update_ownership_widgets();
+   });
+   QObject::connect(this->ui.ownerNPC, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+      auto& editor = DovahKitCore::get();
+      this->working_ownership.form = editor.get_form(this->ui.ownerNPC->formID());
+      this->_update_ownership_widgets();
+   });
    //
    this->load();
 }
 void FormDialogCell::_update_ownership_widgets() {
+   const auto blocker0 = QSignalBlocker(this->ui.ownerFaction);
+   const auto blocker1 = QSignalBlocker(this->ui.ownerFactionRequiredRank);
+   const auto blocker2 = QSignalBlocker(this->ui.ownerNPC);
+   //
    this->ui.ownerFactionRequiredRank->clear();
    //
+   this->ui.ownerFaction->setEnabled(true);
+   this->ui.ownerNPC->setEnabled(true);
+   this->ui.ownerFactionRequiredRank->setEnabled(true);
    this->ui.ownerFaction->setFormByID(0);
    this->ui.ownerNPC->setFormByID(0);
    if (auto stub = this->working_ownership.form) {
       if (stub->formType == dovah::form_type::actor_base) {
          this->ui.ownerNPC->setFormByID(stub->formID);
-         this->ui.ownerIsFaction->setChecked(false);
-         this->ui.ownerIsNPC->setChecked(true);
       } else if (stub->formType == dovah::form_type::faction) {
          this->ui.ownerFaction->setFormByID(stub->formID);
-         this->ui.ownerIsFaction->setChecked(true);
-         this->ui.ownerIsNPC->setChecked(false);
-         //
-         // TODO: faction rank
-         //
       }
+      //
+      // TODO: faction rank
+      //
+   }
+   if (this->ui.ownerFaction->formID()) {
+      this->ui.ownerNPC->setEnabled(false);
+   } else {
+      this->ui.ownerFactionRequiredRank->setEnabled(false);
+      if (this->ui.ownerNPC->formID())
+         this->ui.ownerFaction->setEnabled(false);
    }
 }
 void FormDialogCell::_load_impl() {
    auto& extra    = this->form->extra_data;
    auto& lighting = this->form->interior.lighting;
    auto& editor   = DovahKitCore::get();
+   //
+   bool is_exterior = this->stub->is_exterior_cell();
+   this->ui.tabs->setTabEnabled(1, !is_exterior);
+   this->ui.tabs->setTabEnabled(2, !is_exterior);
+   this->ui.tabs->setTabEnabled(3, !is_exterior);
    //
    #pragma region General
       this->ui.editorID->setText(QString::fromStdString(this->form->stub->get_editor_id()));
@@ -134,14 +166,20 @@ void FormDialogCell::_load_impl() {
       } else {
          this->ui.musicType->setToUndefined();
       }
-      this->ui.waterEnabled->setChecked(this->form->cell_flags & cell_flag::has_water);
-      _load_extra_formID<extra::cell_water_type, extra_data_type::cell_water_type>(this->ui.waterType, extra);
-      this->ui.waterHeight->setValue(this->form->water.height);
+      if (!this->stub->is_exterior_cell()) {
+         this->ui.waterEnabled->setChecked(this->form->cell_flags & cell_flag::has_water);
+         this->ui.waterEnabled->setEnabled(true);
+      } else {
+         this->ui.waterEnabled->setChecked(true);
+         this->ui.waterEnabled->setEnabled(false);
+      }
+      _load_extra_formID<extra::cell_water_type, extra_data_type::cell_water_type>(this->ui.waterType, extra); // only serialized if Has Water is enabled
+      this->ui.waterHeight->setValue(this->form->water.height); // only serialized if Has Water is enabled
       //
-      this->ui.waterLinearVelocityX->setValue(0.0);
+      this->ui.waterLinearVelocityX->setValue(0.0); // only serialized if Has Water is enabled
       this->ui.waterLinearVelocityY->setValue(0.0);
       this->ui.waterLinearVelocityZ->setValue(0.0);
-      this->ui.waterAngularVelocityX->setValue(0.0);
+      this->ui.waterAngularVelocityX->setValue(0.0); // only serialized if Has Water is enabled
       this->ui.waterAngularVelocityY->setValue(0.0);
       this->ui.waterAngularVelocityZ->setValue(0.0);
       if (auto* data = extra.lookup<extra::water_data>(extra_data_type::water_data)) {
@@ -164,7 +202,7 @@ void FormDialogCell::_load_impl() {
       this->ui.hideLandQuad3->setChecked(this->form->land_flags & land_flag::force_hide_quad_3);
       this->ui.hideLandQuad4->setChecked(this->form->land_flags & land_flag::force_hide_quad_4);
    #pragma endregion
-   if (!this->stub->is_exterior_cell()) {
+   if (!is_exterior) {
       #pragma region Lighting
          this->ui.lightingTemplate->setFormByID(this->form->interior.lighting_template_ID);
          //
@@ -223,6 +261,7 @@ void FormDialogCell::_load_impl() {
             this->working_ownership.rank = data->value;
          }
          this->_update_ownership_widgets();
+         _load_extra_formID<extra::interior_lock_list, extra_data_type::interior_lock_list>(this->ui.interiorLockList, extra);
          this->ui.flagPublicArea->setChecked(this->form->cell_flags & cell_flag::public_area);
          this->ui.flagOffLimits->setChecked(this->form->cell_flags & form_flag::off_limits);
          this->ui.flagCantWait->setChecked(this->form->cell_flags & form_flag::cant_wait);
@@ -239,4 +278,6 @@ void FormDialogCell::_save_impl() {
    // if (this->ui.musicType->isUndefined()) then remove the music-type extra data entirely.
    // otherwise, set the extra-data to whatever form ID was specified, even if it's NONE.
    //
+   if (!this->stub->is_exterior_cell()) {
+   }
 }
