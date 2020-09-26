@@ -189,6 +189,14 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
    using _ue_flag = dovah::use_info_entry::flag;
    for (auto& pair : used->inbound) {
       auto& entry = pair.second;
+      //
+      // Do not list child forms as "using" their parents, in the UI:
+      //
+      if (entry.flags & (_ue_flag::i_am_parent_of)) {
+         if (entry.refcount <= 1)
+            continue;
+      }
+      //
       switch (this->mode) {
          case relationship_mode::general_only:
             if (entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of))

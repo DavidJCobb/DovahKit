@@ -220,9 +220,6 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
          model->updateExistingItem(stub);
    });
    
-   //
-   // TODO: context menu for right-clicking refs
-   //
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto data = this->_getCurrentItem();
       if (!data || !data->stub)
@@ -280,6 +277,18 @@ void CellRefList::setFormTypeFilter(dovah::form_type_t ft) {
    if (!proxy)
       return;
    proxy->setFormType(ft);
+}
+dovah::bare_form_id_t CellRefList::formID() const noexcept {
+   const auto* item = this->_getCurrentItem();
+   if (!item || !item->stub)
+      return 0;
+   return item->stub->formID;
+}
+dovah::form_stub* CellRefList::formStub() const noexcept {
+   const auto* item = this->_getCurrentItem();
+   if (!item || !item->stub)
+      return nullptr;
+   return item->stub;
 }
 void CellRefList::rebuildModel() {
    auto m = this->unwrappedModel();

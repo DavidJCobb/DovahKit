@@ -14,5 +14,6 @@ class ObjectWindow : public QWidget {
       //
    private:
       Ui::ObjectWindow ui;
+      QAction* _formActionEdit        = nullptr;
       QAction* _formActionShowUseInfo = nullptr;
 };

@@ -123,6 +123,9 @@ class CellRefList : public QTableView {
       void setTextFilter(QLineEdit*);
       void setFormTypeFilter(dovah::form_type_t);
       //
+      dovah::bare_form_id_t formID() const noexcept;
+      dovah::form_stub* formStub() const noexcept;
+      //
    public slots:
       void rebuildModel();
       void clear();

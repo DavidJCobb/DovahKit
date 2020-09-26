@@ -27,9 +27,6 @@
 //
 //  - Cell View
 //
-//     - Add a context menu for the cell list and the reference list, allowing the 
-//       user to view Use Info for cells and references.
-//
 //     - Implement the "Sort loaded at top" checkbox.
 //
 //        - Can't, until we have a render window that supports worldspaces. Once the 

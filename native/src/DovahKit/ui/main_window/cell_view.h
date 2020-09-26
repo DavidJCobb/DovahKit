@@ -15,4 +15,14 @@ class CellViewWindow : public QWidget {
       //
    private:
       Ui::CellViewWindow ui;
+      struct {
+         QAction* edit        = nullptr;
+         QAction* showUseInfo = nullptr;
+      } cellContextMenu;
+      struct {
+         QAction* edit        = nullptr;
+         QAction* showUseInfo = nullptr;
+      } refContextMenu;
+      //
+      void _setupContextMenu(QTableView*);
 };

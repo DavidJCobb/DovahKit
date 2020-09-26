@@ -42,6 +42,55 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
       widget->setText(text);
    });
    //
+   #pragma region Context menus
+      #pragma region Cell
+         this->cellContextMenu.edit        = new QAction(tr("Edit...",     "cell view cell actions"), this->ui.cellList);
+         this->cellContextMenu.showUseInfo = new QAction(tr("Use Info...", "cell view cell actions"), this->ui.cellList);
+         QObject::connect(this->cellContextMenu.edit, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.cellList->formStub())
+               open_edit_dialog_for_form(stub, this->parentWidget());
+         });
+         QObject::connect(this->cellContextMenu.showUseInfo, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.cellList->formStub())
+               open_use_info_dialog_for_form(stub, this->parentWidget());
+         });
+         //
+         this->ui.cellList->setContextMenuPolicy(Qt::CustomContextMenu);
+         QObject::connect(this->ui.cellList, &QWidget::customContextMenuRequested, [this](const QPoint& pos) {
+            auto  opener = this->ui.cellList;
+            auto& items  = this->cellContextMenu;
+            //
+            QMenu menu(opener);
+            menu.addAction(items.edit);
+            menu.addAction(items.showUseInfo);
+            menu.exec(opener->mapToGlobal(pos));
+         });
+      #pragma endregion
+      #pragma region Reference
+         this->refContextMenu.edit        = new QAction(tr("Edit...",     "cell view ref actions"), this->ui.referenceList);
+         this->refContextMenu.showUseInfo = new QAction(tr("Use Info...", "cell view ref actions"), this->ui.referenceList);
+         QObject::connect(this->refContextMenu.edit, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.referenceList->formStub())
+               open_edit_dialog_for_form(stub, this->parentWidget());
+         });
+         QObject::connect(this->refContextMenu.showUseInfo, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.referenceList->formStub())
+               open_use_info_dialog_for_form(stub, this->parentWidget());
+         });
+         //
+         this->ui.referenceList->setContextMenuPolicy(Qt::CustomContextMenu);
+         QObject::connect(this->ui.referenceList, &QWidget::customContextMenuRequested, [this](const QPoint& pos) {
+            auto  opener = this->ui.referenceList;
+            auto& items  = this->refContextMenu;
+            //
+            QMenu menu(opener);
+            menu.addAction(items.edit);
+            menu.addAction(items.showUseInfo);
+            menu.exec(opener->mapToGlobal(pos));
+         });
+      #pragma endregion
+   #pragma endregion
+   //
    this->setAllEnableStates(false);
    //
    auto& editor = DovahKitCore::get();
