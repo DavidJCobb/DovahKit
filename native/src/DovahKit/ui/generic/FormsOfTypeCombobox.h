@@ -17,6 +17,7 @@ class FormsOfTypeCombobox : public QComboBox {
       void setNoneLabel(const QString&) noexcept;
       //
       void setFormByID(dovah::bare_form_id_t) noexcept; // set value
+      void setDefaultFormID(dovah::bare_form_id_t) noexcept; // used if you call setFormByID(0) and allow-none is false
       //
       static void populate(dovah::form_type_t, QVector<FormsOfTypeCombobox*>&);
       //
@@ -24,6 +25,7 @@ class FormsOfTypeCombobox : public QComboBox {
       bool _allowNone = false;
       QString _noneLabel;
       QVector<dovah::form_type_t> _formTypes;
+      dovah::bare_form_id_t _defaultFormID = 0;
       //
    signals:
       void populated();

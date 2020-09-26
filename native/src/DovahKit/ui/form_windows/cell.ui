@@ -1,0 +1,1179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogCell</class>
+ <widget class="QDialog" name="FormDialogCell">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>454</width>
+    <height>598</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabs">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabGeneral">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Location</string>
+           </property>
+           <property name="buddy">
+            <cstring>location</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="2">
+          <widget class="QCheckBox" name="flagHandChanged">
+           <property name="text">
+            <string>Hand-Changed</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="FormsOfTypeCombobox" name="location"/>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QCheckBox" name="flagCantTravel">
+           <property name="text">
+            <string>Can't Fast-Travel From Here</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_39">
+           <property name="text">
+            <string>Editor ID</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="editorID"/>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Water</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0" colspan="2">
+           <widget class="QCheckBox" name="waterEnabled">
+            <property name="text">
+             <string>Enabled</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Type</string>
+            </property>
+            <property name="buddy">
+             <cstring>waterType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="FormsOfTypeCombobox" name="waterType"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="waterHeight">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="minimum">
+             <double>-100000000000000000000.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>100000000000000000000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Height</string>
+            </property>
+            <property name="buddy">
+             <cstring>waterHeight</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QGroupBox" name="groupBox_4">
+            <property name="title">
+             <string>Linear Velocity</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_6">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>X</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterLinearVelocityX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="waterLinearVelocityY"/>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="waterLinearVelocityX"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="waterLinearVelocityZ"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>Y</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterLinearVelocityY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>Z</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterLinearVelocityZ</cstring>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QGroupBox" name="groupBox_5">
+            <property name="title">
+             <string>Angular Velocity</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_7">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>X</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterAngularVelocityX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="waterAngularVelocityX"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="waterAngularVelocityY"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="waterAngularVelocityZ"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>Y</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterAngularVelocityY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Z</string>
+               </property>
+               <property name="buddy">
+                <cstring>waterAngularVelocityZ</cstring>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Ambiance</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>ImageSpace</string>
+            </property>
+            <property name="buddy">
+             <cstring>imagespace</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Acoustic Space</string>
+            </property>
+            <property name="buddy">
+             <cstring>acousticSpace</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="FormsOfTypeCombobox" name="acousticSpace"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Music Type</string>
+            </property>
+            <property name="buddy">
+             <cstring>musicType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="FormsOfTypeCombobox" name="imagespace"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="FormsOfTypeCombobox" name="musicType"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>Force Hide Land</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>18</number>
+          </property>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="hideLandQuad1">
+            <property name="text">
+             <string>Quad 1</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="hideLandQuad2">
+            <property name="text">
+             <string>Quad 2</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="hideLandQuad3">
+            <property name="text">
+             <string>Quad 3</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="hideLandQuad4">
+            <property name="text">
+             <string>Quad 4</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabLighting">
+      <attribute name="title">
+       <string>Lighting</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_8">
+       <item row="2" column="1">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QGroupBox" name="groupBox_9">
+           <property name="title">
+            <string>Directional light</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_13">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_24">
+              <property name="text">
+               <string>Fade</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingDirectionalFade</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="lightingDirectionalRotationXY">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="maximum">
+               <number>999999999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_25">
+              <property name="text">
+               <string>Rotation XY</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingDirectionalRotationXY</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="lightingDirectionalFade">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_26">
+              <property name="text">
+               <string>Rotation Z</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingDirectionalRotationZ</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="lightingDirectionalRotationZ">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="maximum">
+               <number>999999999</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_10">
+           <property name="title">
+            <string>Sky</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_10">
+            <item row="2" column="1">
+             <widget class="FormsOfTypeCombobox" name="skyRegion"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Region</string>
+              </property>
+              <property name="buddy">
+               <cstring>skyRegion</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0" colspan="2">
+             <widget class="QCheckBox" name="skyVisible">
+              <property name="text">
+               <string>Show Sky</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QCheckBox" name="skyLighting">
+              <property name="text">
+               <string>Use Sky Lighting</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_11">
+           <property name="title">
+            <string>Light Fade Distances</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_14">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_27">
+              <property name="text">
+               <string>Start</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFadeDistanceStart</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_28">
+              <property name="text">
+               <string>End</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFadeDistanceEnd</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="lightingFadeDistanceStart">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="lightingFadeDistanceEnd">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Inherit values from lighting template</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="inheritDirectionalFade">
+            <property name="text">
+             <string>Directional Fade</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="inheritDirectionalColor">
+            <property name="text">
+             <string>Directional Color</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="inheritAmbient">
+            <property name="text">
+             <string>Ambient Color</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="inheritLightFadeDistances">
+            <property name="text">
+             <string>Light Fade Distances</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="inheritDirectionalRot">
+            <property name="text">
+             <string>Directional Rot</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="inheritFogColor">
+            <property name="text">
+             <string>Fog Color</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="inheritFogDistanceNear">
+            <property name="text">
+             <string>Fog Near Distance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="inheritFogDistanceFar">
+            <property name="text">
+             <string>Fog Far Distance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="inheritFogPower">
+            <property name="text">
+             <string>Fog Power</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QCheckBox" name="inheritFogMax">
+            <property name="text">
+             <string>Fog Max</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Lighting Template</string>
+           </property>
+           <property name="buddy">
+            <cstring>lightingTemplate</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="FormsOfTypeCombobox" name="lightingTemplate"/>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBox_7">
+           <property name="title">
+            <string>Light colors</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_11">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Ambient</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingColorAmbient</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="ColorPickerButton" name="lightingColorAmbient">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>Directional</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingColorDirectional</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="ColorPickerButton" name="lightingColorDirectional">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_8">
+           <property name="title">
+            <string>Fog</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_12">
+            <item row="1" column="1">
+             <widget class="ColorPickerButton" name="lightingFogColorFar">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Near Color</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFogColorNear</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Far Color</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFogColorFar</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_19">
+              <property name="text">
+               <string>Near Distance</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFogDistanceNear</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="ColorPickerButton" name="lightingFogColorNear">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_22">
+              <property name="text">
+               <string>Max</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFogMax</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_21">
+              <property name="text">
+               <string>Power</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFogPower</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="lightingFogDistanceNear">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="lightingFogDistanceFar">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>Far Distance</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFogDistanceFar</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QDoubleSpinBox" name="lightingFogPower">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_23">
+              <property name="text">
+               <string>Clip Distance</string>
+              </property>
+              <property name="buddy">
+               <cstring>lightingFogClipDistance</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QDoubleSpinBox" name="lightingFogMax">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QDoubleSpinBox" name="lightingFogClipDistance">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabDirectionalAmbient">
+      <attribute name="title">
+       <string>Directional Ambient Lighting</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_17" columnstretch="0,1,2,0,1">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_34">
+         <property name="text">
+          <string>Y+</string>
+         </property>
+         <property name="buddy">
+          <cstring>directionalAmbColorYPos</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_33">
+         <property name="text">
+          <string>X+</string>
+         </property>
+         <property name="buddy">
+          <cstring>directionalAmbColorXPos</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="ColorPickerButton" name="directionalAmbColorXPos">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" rowspan="2">
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Preferred</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="label_37">
+         <property name="text">
+          <string>Y-</string>
+         </property>
+         <property name="buddy">
+          <cstring>directionalAmbColorYNeg</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="ColorPickerButton" name="directionalAmbColorYNeg">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="ColorPickerButton" name="directionalAmbColorXNeg">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="ColorPickerButton" name="directionalAmbColorZPos">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="5">
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_35">
+         <property name="text">
+          <string>Z+</string>
+         </property>
+         <property name="buddy">
+          <cstring>directionalAmbColorZPos</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_38">
+         <property name="text">
+          <string>Z-</string>
+         </property>
+         <property name="buddy">
+          <cstring>directionalAmbColorZNeg</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="ColorPickerButton" name="directionalAmbColorYPos">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="label_36">
+         <property name="text">
+          <string>X-</string>
+         </property>
+         <property name="buddy">
+          <cstring>directionalAmbColorXNeg</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="ColorPickerButton" name="directionalAmbColorZNeg">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QPushButton" name="directionalAmbientSetFromAmbient">
+         <property name="text">
+          <string>Set from Ambient Color</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabInterior">
+      <attribute name="title">
+       <string>Interior Data</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_15" columnstretch="1,1">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_30">
+         <property name="text">
+          <string>Encounter Zone</string>
+         </property>
+         <property name="buddy">
+          <cstring>encounterZone</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="name"/>
+       </item>
+       <item row="4" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagPublicArea">
+         <property name="text">
+          <string>Public Area</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="FormsOfTypeCombobox" name="encounterZone"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_29">
+         <property name="text">
+          <string>Name</string>
+         </property>
+         <property name="buddy">
+          <cstring>name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_31">
+         <property name="text">
+          <string>Water Environment Map</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagOffLimits">
+         <property name="text">
+          <string>Off Limits</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QWidget" name="waterEnvironmentMap" native="true"/>
+       </item>
+       <item row="7" column="0" colspan="2">
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_12">
+         <property name="title">
+          <string>Ownership</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_16">
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="ownerIsFaction">
+            <property name="text">
+             <string>Faction</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="FormsOfTypeCombobox" name="ownerFaction"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="ownerIsNPC">
+            <property name="text">
+             <string>NPC</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="ownerFactionRequiredRank"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="FormsOfTypeCombobox" name="ownerNPC"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_32">
+            <property name="text">
+             <string>Required Rank:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="buddy">
+             <cstring>ownerFactionRequiredRank</cstring>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagCantWait">
+         <property name="text">
+          <string>Player Can't Wait Here</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FormsOfTypeCombobox</class>
+   <extends>QComboBox</extends>
+   <header>../generic/FormsOfTypeCombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ColorPickerButton</class>
+   <extends>QPushButton</extends>
+   <header>../generic/ColorPickerButton.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>tabs</tabstop>
+  <tabstop>location</tabstop>
+  <tabstop>flagCantTravel</tabstop>
+  <tabstop>flagHandChanged</tabstop>
+  <tabstop>acousticSpace</tabstop>
+  <tabstop>imagespace</tabstop>
+  <tabstop>musicType</tabstop>
+  <tabstop>waterEnabled</tabstop>
+  <tabstop>waterType</tabstop>
+  <tabstop>waterHeight</tabstop>
+  <tabstop>waterLinearVelocityX</tabstop>
+  <tabstop>waterLinearVelocityY</tabstop>
+  <tabstop>waterLinearVelocityZ</tabstop>
+  <tabstop>waterAngularVelocityX</tabstop>
+  <tabstop>waterAngularVelocityY</tabstop>
+  <tabstop>waterAngularVelocityZ</tabstop>
+  <tabstop>hideLandQuad1</tabstop>
+  <tabstop>hideLandQuad2</tabstop>
+  <tabstop>hideLandQuad3</tabstop>
+  <tabstop>hideLandQuad4</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+  <tabstop>lightingTemplate</tabstop>
+  <tabstop>inheritAmbient</tabstop>
+  <tabstop>inheritDirectionalColor</tabstop>
+  <tabstop>inheritDirectionalRot</tabstop>
+  <tabstop>inheritDirectionalFade</tabstop>
+  <tabstop>inheritLightFadeDistances</tabstop>
+  <tabstop>inheritFogColor</tabstop>
+  <tabstop>inheritFogDistanceNear</tabstop>
+  <tabstop>inheritFogDistanceFar</tabstop>
+  <tabstop>inheritFogPower</tabstop>
+  <tabstop>inheritFogMax</tabstop>
+  <tabstop>lightingColorAmbient</tabstop>
+  <tabstop>lightingColorDirectional</tabstop>
+  <tabstop>lightingFogColorNear</tabstop>
+  <tabstop>lightingFogColorFar</tabstop>
+  <tabstop>lightingFogDistanceNear</tabstop>
+  <tabstop>lightingFogDistanceFar</tabstop>
+  <tabstop>lightingFogPower</tabstop>
+  <tabstop>lightingFogMax</tabstop>
+  <tabstop>lightingFogClipDistance</tabstop>
+  <tabstop>lightingDirectionalFade</tabstop>
+  <tabstop>lightingDirectionalRotationXY</tabstop>
+  <tabstop>lightingDirectionalRotationZ</tabstop>
+  <tabstop>skyVisible</tabstop>
+  <tabstop>skyRegion</tabstop>
+  <tabstop>skyLighting</tabstop>
+  <tabstop>lightingFadeDistanceStart</tabstop>
+  <tabstop>lightingFadeDistanceEnd</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

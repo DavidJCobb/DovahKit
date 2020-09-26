@@ -387,6 +387,9 @@
     <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -821,6 +824,9 @@
     <ClInclude Include="dovah\forms\components\extra_data\_templates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\qt\spinbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -857,6 +863,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\main_window\cell_view.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\cell.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -940,6 +949,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\impl\_FormsOfTypeComboboxProxy.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\cell.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

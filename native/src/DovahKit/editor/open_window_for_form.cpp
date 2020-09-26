@@ -3,6 +3,7 @@
 #include "../dovah/form_stub.h"
 #include "core.h"
 #include "../ui/main_window/form_use_info.h"
+#include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/voicetype.h"
@@ -63,6 +64,9 @@ void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    //
    QDialog* opened = nullptr;
    switch (stub->formType) {
+      case dovah::form_type::cell:
+         opened = new FormDialogCell(stub, parent);
+         break;
       case dovah::form_type::color:
          opened = new FormDialogColor(stub, parent);
          break;

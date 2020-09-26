@@ -14,6 +14,15 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::cell;
          Cell() : Form(form_type) {};
 
+         struct form_flag {
+            form_flag() = delete;
+            enum : uint32_t {
+               persistent = 0x00000400,
+               off_limits = 0x00020000,
+               cant_wait  = 0x00080000,
+            };
+         };
+
          struct cell_flag {
             cell_flag() = delete;
             enum {
@@ -89,7 +98,7 @@ namespace dovah::loaded_forms {
             max_height_data_t max_height_data; // MHDT
          } exterior;
          struct {
-            float       height;        // XCLW
+            float       height = 0.0F; // XCLW
             std::string noise_texture; // XNAM
          } water;
 

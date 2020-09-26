@@ -57,4 +57,10 @@ namespace dovah::loaded_forms::components {
    /*static*/ extra_data_load_result extra_data_list::generate_use_info(tes_record_reader& record, form_stub* stub) {
       return generate_extra_data_use_info(record, stub);
    }
+   basic_extra_data* extra_data_list::lookup_by_type(extra_data_type t) const noexcept {
+      for (auto* item : this->content)
+         if (item && item->get_type() == t)
+            return item;
+      return nullptr;
+   }
 }

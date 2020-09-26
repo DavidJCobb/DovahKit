@@ -179,5 +179,10 @@ namespace dovah::loaded_forms::components {
          void save(tes_record_writer&);
          //
          static extra_data_load_result generate_use_info(tes_record_reader&, form_stub*);
+         //
+         basic_extra_data* lookup_by_type(extra_data_type) const noexcept;
+         template<class e> inline e* lookup(extra_data_type et) const noexcept {
+            return dynamic_cast<e*>(this->lookup_by_type(et));
+         }
    };
 }

@@ -107,9 +107,14 @@ void FormsOfTypeCombobox::setNoneLabel(const QString& v) noexcept {
    }
 }
 void FormsOfTypeCombobox::setFormByID(dovah::bare_form_id_t formID) noexcept {
-   int i = this->findData(formID);
+   if (!formID && !this->_allowNone)
+      formID = this->_defaultFormID;
+   int i = this->findData(formID, Qt::UserRole);
    if (i >= 0)
       this->setCurrentIndex(i);
+}
+void FormsOfTypeCombobox::setDefaultFormID(dovah::bare_form_id_t formID) noexcept {
+   this->_defaultFormID = formID;
 }
 
 /*static*/ void FormsOfTypeCombobox::populate(dovah::form_type_t ft, QVector<FormsOfTypeCombobox*>& widgets) {

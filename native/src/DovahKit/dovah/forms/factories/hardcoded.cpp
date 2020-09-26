@@ -180,7 +180,7 @@ namespace dovah {
       }
       {  // [WATR:018]"DefaultWater"
          auto stub = new form_stub();
-         stub->formID   = 0x018;
+         stub->formID   = hardcoded_form_ids::DefaultWater;
          stub->formType = form_type_info::signature_to_form_type('WATR');
          stub->editorID = "DefaultWater";
          lo._accept_hardcoded_form(stub);

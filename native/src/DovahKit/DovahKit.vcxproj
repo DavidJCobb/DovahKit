@@ -196,6 +196,7 @@
     <ClCompile Include="helpers\strings.cpp" />
     <ClCompile Include="helpers\windows_registry.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
@@ -350,6 +351,8 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <QtMoc Include="ui\form_windows\cell.h" />
+    <ClInclude Include="helpers\qt\spinbox.h" />
     <ClInclude Include="ui\form_windows\_base_cpp.h" />
     <QtMoc Include="ui\generic\impl\_FormsOfTypeComboboxProxy.h" />
     <QtMoc Include="ui\generic\impl\_FormSignatureComboboxProxy.h" />
@@ -399,6 +402,7 @@
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
