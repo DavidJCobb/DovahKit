@@ -30,18 +30,7 @@
 //     - Add a context menu for the cell list and the reference list, allowing the 
 //       user to view Use Info for cells and references.
 //
-//     - Unnamed cells in exterior worldspaces should display as "Unnamed Cell" in 
-//       italics, and should be sorted below all other cells when sorting by cell 
-//       editor ID.
-//
 //     - Implement filtering the reference list by form type and editor/form ID.
-//
-//     - When the Cell View window is enlarged, the jump-to-grid spinboxes should 
-//       not expand to full the column, but rather should remain at a small size 
-//       sufficient for entering any 3-digit number.
-//
-//     - When a cell is selected, change the displayed cell name shown above the 
-//       reference list.
 //
 //     - Implement the "Sort loaded at top" checkbox.
 //

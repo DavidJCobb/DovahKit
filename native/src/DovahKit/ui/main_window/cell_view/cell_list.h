@@ -58,6 +58,12 @@ class CellListModel : public QAbstractTableModel {
       using item_type = CellListModelItem;
       using root_type = CellListModelRoot;
       using form_id_t = item_type::form_id_t;
+      //
+      using role_t = std::underlying_type_t<Qt::ItemDataRole>;
+      static constexpr role_t SortingRole      = Qt::UserRole + 0;
+      static constexpr role_t FilteringRole    = Qt::UserRole + 1;
+      static constexpr role_t SortOverrideRole = Qt::UserRole + 2;
+      //
    protected:
       root_type* root = nullptr;
       //
@@ -93,13 +99,13 @@ class CellListModel : public QAbstractTableModel {
 class CellListModelProxy : public QSortFilterProxyModel {
    Q_OBJECT
    public:
-      CellListModelProxy(QObject* parent = nullptr) : QSortFilterProxyModel(parent) {
-         this->setFilterCaseSensitivity(Qt::CaseInsensitive);
-         this->setFilterRole(Qt::UserRole + 1);
-         this->setFilterKeyColumn(-1);
-         this->setSortCaseSensitivity(Qt::CaseInsensitive);
-         this->setSortRole(Qt::UserRole);
-      }
+      CellListModelProxy(QObject* parent = nullptr);
+      bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
+      //
+      void setSortOverrideRole(Qt::ItemDataRole);
+      //
+   protected:
+      Qt::ItemDataRole _sortOverrideRole = Qt::ItemDataRole::DisplayRole; // 1 = end (ascending); -1 = start (descending)
 };
 
 class CellList : public QTableView {

@@ -53,36 +53,52 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
       return QVariant();
    auto item   = (item_type*)index.internalPointer();
    auto column = index.column();
-   switch (role) {
-      case Qt::DisplayRole:
-         switch (column) {
-            case 0: return item->editorID;
-            case 1: return QString::asprintf("%08X", item->formID);
-            case 2: return item->gridX;
-            case 3: return item->gridY;
+   switch (column) {
+      case 0: // editor ID
+         switch (role) {
+            case Qt::DisplayRole:
+            case SortingRole:
+            case FilteringRole:
+               if (item->editorID.isEmpty())
+                  return tr("Unnamed Cell", "cell view cell list");
+               return item->editorID;
+            case SortOverrideRole:
+               if (item->editorID.isEmpty())
+                  return 1;
+            case Qt::FontRole:
+               if (item->editorID.isEmpty()) {
+                  auto font = QFont();
+                  font.setItalic(true);
+                  return font;
+               }
+               break;
          }
          break;
-      case Qt::DecorationRole:
-         if (column == 0) {
-            //
-            // TODO: icons per form type
-            //
+      case 1: // form ID
+         switch (role) {
+            case Qt::DisplayRole:
+            case FilteringRole:
+               return QString::asprintf("%08X", item->formID);
+            case SortingRole:
+               return item->formID;
          }
          break;
-      case Qt::UserRole: // used for sorting
-         switch (column) {
-            case 0: return item->editorID;
-            case 1: return item->formID;
-            case 2: return item->gridX;
-            case 3: return item->gridY;
+      case 2: // grid X
+         switch (role) {
+            case Qt::DisplayRole:
+            case SortingRole:
+               return item->gridX;
+            case FilteringRole:
+               return QVariant(); // don't allow filtering by the grid coordinates
          }
          break;
-      case Qt::UserRole + 1: // used for filtering
-         switch (column) {
-            case 0: return item->editorID;
-            case 1: return QString::asprintf("%08X", item->formID);
-            case 2:
-            case 3: return QVariant(); // don't allow filtering by the grid coordinates
+      case 3: // grid Y
+         switch (role) {
+            case Qt::DisplayRole:
+            case SortingRole:
+               return item->gridY;
+            case FilteringRole:
+               return QVariant(); // don't allow filtering by the grid coordinates
          }
          break;
    }
@@ -161,6 +177,55 @@ void CellListModel::rebuild(const dovah::form_stub* worldspace) {
    this->endInsertRows();
 }
 #pragma endregion
+
+
+CellListModelProxy::CellListModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {
+   this->setFilterCaseSensitivity(Qt::CaseInsensitive);
+   this->setFilterRole(Qt::UserRole + 1);
+   this->setFilterKeyColumn(-1);
+   this->setSortCaseSensitivity(Qt::CaseInsensitive);
+   this->setSortRole(Qt::UserRole);
+   //
+   this->setSortOverrideRole((Qt::ItemDataRole)CellListModel::SortOverrideRole);
+}
+bool CellListModelProxy::lessThan(const QModelIndex& left, const QModelIndex& right) const {
+   auto source    = this->sourceModel();
+   auto sort_role = this->sortRole();
+   //
+   {
+      auto override_role = this->_sortOverrideRole;
+      if (override_role != Qt::DisplayRole) {
+         auto a = source->data(left,  override_role).toInt();
+         auto b = source->data(right, override_role).toInt();
+         //
+         // The override role can be used to force an item to the start of the list, or to the end. 
+         // If both items are trying to force to the same side of the list, then they should be 
+         // sorted normally; otherwise, the override should be honored.
+         //
+         if ((a | b) && (a * b <= 0)) { // at least one is non-zero; signs are different or one is zero
+            if (a > 0)
+               return false;
+            if (a < 0)
+               return true;
+            //
+            if (b > 0)
+               return true;
+            if (b < 0)
+               return false;
+         }
+      }
+   }
+   //
+   QVariant leftData  = source->data(left,  sort_role);
+   QVariant rightData = source->data(right, sort_role);
+   return QString::localeAwareCompare(leftData.toString(), rightData.toString()) < 0;
+}
+void CellListModelProxy::setSortOverrideRole(Qt::ItemDataRole r) {
+   if (this->_sortOverrideRole == r)
+      return;
+   this->_sortOverrideRole = r;
+   this->sort(this->sortColumn());
+}
 
 #pragma region CellList
 CellList::CellList(QWidget* parent) : QTableView(parent) {
