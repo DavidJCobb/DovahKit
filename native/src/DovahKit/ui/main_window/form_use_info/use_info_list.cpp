@@ -321,19 +321,6 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
 void FormUseInfoListModel::setRelationshipMode(relationship_mode mode) noexcept {
    this->mode = mode;
 }
-void FormUseInfoListModel::updateExistingItem(const dovah::form_stub* stub) {
-   auto& list = this->children;
-   auto  size = list.size();
-   for (size_t i = 0; i < size; ++i) {
-      auto* item = list[i];
-      if (item->otherStub == stub) {
-         item->updateFromStub();
-         auto index = this->index(i, 0, QModelIndex());
-         emit dataChanged(index, index);
-         break;
-      }
-   }
-}
 #pragma endregion
 
 FormUseInfoListModelProxy::FormUseInfoListModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {

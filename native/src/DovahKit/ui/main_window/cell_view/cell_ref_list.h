@@ -19,59 +19,47 @@ class CellRefListModel;
 class CellRefListModelItem {
    friend CellRefListModel;
    public:
-      using form_id_t   = dovah::bare_form_id_t;
+      using bare_form_id_t = dovah::bare_form_id_t;
+      using form_stub      = dovah::form_stub;
+      using form_type_t    = dovah::form_type_t;
       //
-      dovah::form_stub* stub = nullptr;
-      dovah::form_stub* base = nullptr;
-      QString     editorID;
-      form_id_t   formID = 0;
+      const form_stub* stub   = nullptr;
+      const form_stub* base   = nullptr;
+      bare_form_id_t   formID = 0;
+      QString          editorID;
       //
       CellRefListModelItem() {}
-      CellRefListModelItem(dovah::form_stub*);
+      CellRefListModelItem(const form_stub*);
       //
-      dovah::form_type_t formType() const noexcept;
+      form_type_t formType() const noexcept;
       void update();
-};
-class CellRefListModelRoot : public CellRefListModelItem {
-   friend CellRefListModel;
-   protected:
-      std::vector<CellRefListModelItem*> _children;
-   public:
-      inline const std::vector<CellRefListModelItem*>& children() const noexcept { return this->_children; }
-      inline CellRefListModelItem* child(size_t i) const noexcept {
-         if (i < 0 || i >= this->_children.size())
-            return nullptr;
-         return this->_children[i];
-      }
-      inline size_t childCount() const noexcept { return this->_children.size(); }
-      //
-      void clear() {
-         for (auto* p : this->_children)
-            delete p;
-         this->_children.clear();
-      }
 };
 
 class CellRefListModel : public QAbstractTableModel {
    Q_OBJECT
    public:
       using item_type = CellRefListModelItem;
-      using root_type = CellRefListModelRoot;
-      using form_id_t = item_type::form_id_t;
+      using form_stub = dovah::form_stub;
    protected:
-      root_type* root = nullptr;
-      const dovah::form_stub* last_used_cell = nullptr;
+      QVector<item_type*> children;
+      QVector<item_type*> queued_additions;
+      const form_stub* last_used_cell = nullptr;
+      //
+      void _insertItem(const form_stub*, bool queued);
+      //
+   public slots:
+      void clear();
+      //
+   protected slots:
+      void formModified(const form_stub*);
       //
    public:
-      CellRefListModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
-         this->root = new root_type;
-      }
+      CellRefListModel(QObject* parent = nullptr);
       ~CellRefListModel() {
          this->clear();
       }
       //
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-      inline item_type* invisibleRootItem() const noexcept { return this->root; }
       QModelIndex parent(const QModelIndex& index) const;
       int rowCount(const QModelIndex& parent) const override;
       int columnCount(const QModelIndex& item) const override;
@@ -82,10 +70,6 @@ class CellRefListModel : public QAbstractTableModel {
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
       void insertItem(dovah::form_stub*);
-      void updateExistingItem(const dovah::form_stub*);
-      //
-      void clear();
-      //
       void rebuild(const dovah::form_stub* cell);
 };
 

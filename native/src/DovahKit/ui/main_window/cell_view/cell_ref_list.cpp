@@ -5,7 +5,7 @@
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/form_stub_helpers.h"
 
-CellRefListModelItem::CellRefListModelItem(dovah::form_stub* stub) {
+CellRefListModelItem::CellRefListModelItem(const dovah::form_stub* stub) {
    this->stub     = stub;
    this->base     = dovah::form_stub_helpers::get_base_form(stub);
    this->editorID = QString::fromUtf8(stub->get_editor_id());
@@ -30,10 +30,49 @@ void CellRefListModelItem::update() {
 }
 
 #pragma region CellRefListModel
+CellRefListModel::CellRefListModel(QObject* parent) : QAbstractTableModel(parent) {
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &CellRefListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formModified,        this, &CellRefListModel::formModified);
+}
+void CellRefListModel::formModified(const dovah::form_stub* stub) {
+   if (!this->last_used_cell)
+      return;
+   if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
+      return;
+   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+      return;
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == stub) {
+         item->update();
+         auto index = this->index(i, 0, QModelIndex());
+         emit dataChanged(index, index);
+         break;
+      }
+   }
+}
+
+void CellRefListModel::_insertItem(const form_stub* stub, bool queued) {
+   if (!stub)
+      return;
+   auto item = new CellRefListModelItem(stub);
+   if (queued) {
+      this->queued_additions.push_back(item);
+   } else {
+      auto i = this->children.size();
+      this->beginInsertRows(QModelIndex(), i, i);
+      this->children.push_back(item);
+      this->endInsertRows();
+   }
+}
+
 QModelIndex CellRefListModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
-   item_type* childItem = this->root->child(row);
+   item_type* childItem = this->children.value(row);
    if (childItem)
       return this->createIndex(row, column, childItem);
    return QModelIndex();
@@ -44,7 +83,7 @@ QModelIndex CellRefListModel::parent(const QModelIndex& index) const {
 int CellRefListModel::rowCount(const QModelIndex& parent) const {
    if (parent.column() > 0)
       return 0;
-   return this->root->childCount();
+   return this->children.size();
 }
 int CellRefListModel::columnCount(const QModelIndex& item) const {
    return 3;
@@ -92,12 +131,7 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
    return QVariant();
 }
 inline const CellRefListModel::item_type* CellRefListModel::row(int rowIndex) const noexcept {
-   if (!this->root)
-      return nullptr;
-   auto& list = this->root->_children;
-   if (rowIndex < 0 || rowIndex >= list.size())
-      return nullptr;
-   return list[rowIndex];
+   return this->children.value(rowIndex);
 }
 //
 QVariant CellRefListModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -116,31 +150,14 @@ QVariant CellRefListModel::headerData(int section, Qt::Orientation orientation, 
 }
 
 void CellRefListModel::insertItem(dovah::form_stub* stub) {
-   this->root->_children.push_back(new CellRefListModelItem(stub));
-}
-void CellRefListModel::updateExistingItem(const dovah::form_stub* stub) {
-   if (!this->last_used_cell)
-      return;
-   if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
-      return;
-   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
-      return;
-   auto& list = this->root->_children;
-   auto  size = list.size();
-   for (size_t i = 0; i < size; ++i) {
-      auto* item = list[i];
-      if (item->stub == stub) {
-         item->update();
-         auto index = this->index(i, 0, QModelIndex());
-         emit dataChanged(index, index);
-         break;
-      }
-   }
+   this->_insertItem(stub, false);
 }
 
 void CellRefListModel::clear() {
    this->beginResetModel();
-   this->root->clear();
+   for (auto* item : this->children)
+      delete item;
+   this->children.clear();
    this->last_used_cell = nullptr;
    this->endResetModel();
 }
@@ -154,23 +171,28 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
       return;
    //
    this->last_used_cell = cell;
-   QVector<CellRefListModelItem*> additions;
-   dovah::form_stub_helpers::for_each_child_form(cell, [&additions](dovah::form_stub* stub) {
+   dovah::form_stub_helpers::for_each_child_form(cell, [this](dovah::form_stub* stub) {
       if (!dovah::form_type_info::form_type_is_reference(stub->formType))
          return false;
-      additions.push_back(new CellRefListModelItem(stub));
+      this->_insertItem(stub, true);
       return false;
    });
-   if (!additions.size())
+   auto& queue = this->queued_additions;
+   auto  count = queue.size();
+   if (!count)
       return;
-   auto& list = this->root->_children;
-   this->beginInsertRows(QModelIndex(), 0, additions.size() - 1); // we're not passing the count, we're passing the index of the last row. how annoying.
-   for (auto* item : additions)
+   auto& list  = this->children;
+   auto  first = list.size();
+   auto  last  = first + count;
+   this->beginInsertRows(QModelIndex(), first, last);
+   for (auto* item : queue)
       list.push_back(item);
+   queue.clear();
    this->endInsertRows();
 }
 #pragma endregion
 
+#pragma region CellRefListModelProxy
 CellRefListModelProxy::CellRefListModelProxy(QObject* parent) : QSortFilterProxyModel(parent) {
    this->setFilterCaseSensitivity(Qt::CaseInsensitive);
    this->setFilterRole(Qt::UserRole + 1);
@@ -192,6 +214,7 @@ void CellRefListModelProxy::setFormType(dovah::form_type_t ft) {
    this->_formType = ft;
    this->invalidateFilter();
 }
+#pragma endregion
 
 #pragma region CellRefList
 CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
@@ -214,17 +237,12 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(2, QHeaderView::Interactive);
 
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &CellRefList::clear);
-   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-      if (auto model = this->unwrappedModel())
-         model->updateExistingItem(stub);
-   });
    
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
-      auto data = this->_getCurrentItem();
-      if (!data || !data->stub)
+      auto stub = this->formStub();
+      if (!stub)
          return;
-      open_edit_dialog_for_form(data->stub, this);
+      open_edit_dialog_for_form(stub, this);
    });
    
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
@@ -288,7 +306,7 @@ dovah::form_stub* CellRefList::formStub() const noexcept {
    const auto* item = this->_getCurrentItem();
    if (!item || !item->stub)
       return nullptr;
-   return item->stub;
+   return const_cast<dovah::form_stub*>(item->stub);
 }
 void CellRefList::rebuildModel() {
    auto m = this->unwrappedModel();

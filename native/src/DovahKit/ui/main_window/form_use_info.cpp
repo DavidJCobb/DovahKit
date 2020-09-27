@@ -21,7 +21,7 @@ FormUseInfoDialog::FormUseInfoDialog(const dovah::form_stub* stub, QWidget* pare
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
       this->stub = nullptr;
-      //this->rebuild(); // FormUseInfoList does this on its own
+      this->reject();
    });
    //
    this->rebuild();

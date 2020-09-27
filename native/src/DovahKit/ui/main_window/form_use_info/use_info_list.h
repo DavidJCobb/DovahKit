@@ -85,7 +85,6 @@ class FormUseInfoListModel : public QAbstractTableModel {
       void build(const dovah::form_stub* used);
       inline relationship_mode relationshipMode() const noexcept { return this->mode; }
       void setRelationshipMode(relationship_mode) noexcept; // does not rebuild the model
-      void updateExistingItem(const dovah::form_stub*);
       //
    public slots:
       void clear();
