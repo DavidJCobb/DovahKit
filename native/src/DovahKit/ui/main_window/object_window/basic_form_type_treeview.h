@@ -47,7 +47,7 @@ class BasicFormTypeTreeModel : public QAbstractItemModel {
       item_type* root = nullptr;
       //
    public:
-      BasicFormTypeTreeModel() {
+      BasicFormTypeTreeModel(QObject* parent = nullptr) : QAbstractItemModel(parent) {
          this->root = new item_type(QString(""), dovah::form_type::none);
       }
       ~BasicFormTypeTreeModel() {

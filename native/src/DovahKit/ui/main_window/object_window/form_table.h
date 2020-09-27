@@ -64,7 +64,7 @@ class FormTableModel : public QAbstractTableModel {
       QVector<dovah::form_stub*> forms_pending_use_info_update;
       //
    public:
-      FormTableModel() {
+      FormTableModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
          this->root = new root_type;
       }
       ~FormTableModel() {

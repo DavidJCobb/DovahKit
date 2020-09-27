@@ -63,7 +63,7 @@ class CellRefListModel : public QAbstractTableModel {
       const dovah::form_stub* last_used_cell = nullptr;
       //
    public:
-      CellRefListModel() {
+      CellRefListModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
          this->root = new root_type;
       }
       ~CellRefListModel() {

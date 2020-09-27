@@ -63,7 +63,7 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       item_type* active = nullptr;
       //
    public:
-      LoadOrderFileListModel() {
+      LoadOrderFileListModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
          this->root = new root_type;
       }
       ~LoadOrderFileListModel() {

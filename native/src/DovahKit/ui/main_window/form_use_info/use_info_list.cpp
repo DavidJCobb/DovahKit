@@ -54,19 +54,138 @@ void FormUseInfoListModelItem::updateFromStub() {
       }
    }
 }
-
-inline int FormUseInfoListModelRoot::indexOf(item_type* item) const noexcept {
-   int size = this->_children.size();
-   for (int i = 0; i < size; ++i)
-      if (this->_children[i] == item)
-         return i;
-   return -1;
+void FormUseInfoListModelItem::updateUseInfo(const form_stub& used_form) {
+   for (auto& pair : used_form.inbound) {
+      if (pair.first != this->otherID)
+         continue;
+      this->updateUseInfo(pair.second);
+      return;
+   }
+   //
+   // If we get here, then we're no longer even used by (used_form).
+   //
+   this->flags       = 0;
+   this->countPlaced = 0;
+   this->countUsed   = 0;
+}
+void FormUseInfoListModelItem::updateUseInfo(const data_t& source) {
+   bool is_reference = (source.flags & data_t::flag::i_am_base_form_of) != 0;
+   //
+   this->flags       = source.flags;
+   this->countUsed   = source.refcount;
+   this->countPlaced = 0;
+   if (is_reference) {
+      --this->countUsed;
+      ++this->countPlaced;
+   }
 }
 
+FormUseInfoListModel::FormUseInfoListModel(QObject* parent) : QAbstractTableModel(parent) {
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, &FormUseInfoListModel::formModificationImminent);
+   QObject::connect(&editor, &DovahKitCore::formModified,             this, &FormUseInfoListModel::formModified);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &FormUseInfoListModel::clear);
+}
+void FormUseInfoListModel::addUser(const use_info_entry& entry, bool queued) {
+   using _ue_flag = dovah::use_info_entry::flag;
+   //
+   // Do not list child forms as "using" their parents, in the UI:
+   //
+   if (entry.flags & (_ue_flag::i_am_parent_of)) {
+      if (entry.refcount <= 1)
+         return;
+   }
+   //
+   switch (this->mode) {
+      case relationship_mode::general_only:
+         if (entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of))
+            if (entry.refcount <= 1)
+               return;
+         break;
+      case relationship_mode::base_form_only:
+         if (!(entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of)))
+            return;
+         break;
+   }
+   auto item = new item_type(&entry);
+   if (queued) {
+      this->queued_additions.push_back(item);
+   } else {
+      auto first_inserted = this->children.size();
+      auto last_inserted  = first_inserted;
+      this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
+      this->children.push_back(item);
+      this->endInsertRows();
+   }
+}
+void FormUseInfoListModel::removeUser(item_type* item) {
+   QModelIndex parent_index;
+   auto& list  = this->children;
+   auto  index = list.indexOf(item);
+   if (index < 0)
+      return;
+   this->beginRemoveRows(parent_index, index, index);
+   list.removeAt(index);
+   this->endRemoveRows();
+}
+void FormUseInfoListModel::updateUser(item_type* item) {
+   auto& watch = this->potential_severed_uses;
+   auto  index = watch.indexOf(item);
+   if (index >= 0)
+      watch.removeAt(index);
+   //
+   item->updateUseInfo(*this->used);
+   if (item->isNonUse()) {
+      this->removeUser(item);
+      return;
+   }
+   item->updateFromStub();
+   //
+   auto i   = this->children.indexOf(item);
+   auto qmi = this->index(i, 0, QModelIndex());
+   emit dataChanged(qmi, qmi);
+}
+void FormUseInfoListModel::formModificationImminent(const dovah::form_stub* stub) {
+   if (stub == this->used || !this->used)
+      return;
+   for (auto* item : this->children) {
+      if (item->otherStub == stub) {
+         this->potential_severed_uses.push_back(item);
+         break;
+      }
+   }
+}
+void FormUseInfoListModel::formModified(const dovah::form_stub* stub) {
+   if (!this->used)
+      return;
+   if (stub == this->used)
+      return;
+   auto& watch = this->potential_severed_uses;
+   for (int i = 0; i < watch.size(); ++i) {
+      auto* item = watch[i];
+      if (item->otherStub == stub) {
+         //
+         // A known user was altered.
+         //
+         this->updateUser(item);
+         return;
+      }
+   }
+   for (auto& pair : this->used->inbound) {
+      if (pair.first != stub->formID)
+         continue;
+      //
+      // A form was altered to become a user.
+      //
+      this->addUser(pair.second, false);
+      return;
+   }
+}
+//
 QModelIndex FormUseInfoListModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
-   item_type* childItem = this->root->child(row);
+   item_type* childItem = this->children.value(row);
    if (childItem)
       return this->createIndex(row, column, childItem);
    return QModelIndex();
@@ -77,7 +196,7 @@ QModelIndex FormUseInfoListModel::parent(const QModelIndex& index) const {
 int FormUseInfoListModel::rowCount(const QModelIndex& parent) const {
    if (parent.column() > 0)
       return 0;
-   return this->root->childCount();
+   return this->children.size();
 }
 int FormUseInfoListModel::columnCount(const QModelIndex& item) const {
    if (this->mode == relationship_mode::base_form_only) {
@@ -142,12 +261,7 @@ QVariant FormUseInfoListModel::data(const QModelIndex& index, int role) const {
    return QVariant();
 }
 inline const FormUseInfoListModel::item_type* FormUseInfoListModel::row(int rowIndex) const noexcept {
-   if (!this->root)
-      return nullptr;
-   auto& list = this->root->_children;
-   if (rowIndex < 0 || rowIndex >= list.size())
-      return nullptr;
-   return list[rowIndex];
+   return this->children.value(rowIndex);
 }
 //
 QVariant FormUseInfoListModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -176,7 +290,10 @@ QVariant FormUseInfoListModel::headerData(int section, Qt::Orientation orientati
 
 void FormUseInfoListModel::clear() {
    this->beginResetModel();
-   this->root->clear();
+   this->used = nullptr;
+   for (auto* item : this->children)
+      delete item;
+   this->children.clear();
    this->potential_severed_uses.clear();
    this->endResetModel();
 }
@@ -185,47 +302,27 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
    if (!used)
       return;
    //
-   QVector<item_type*> insertions;
+   this->used = used;
+   auto& queued = this->queued_additions;
    //
    using _ue_flag = dovah::use_info_entry::flag;
-   for (auto& pair : used->inbound) {
-      auto& entry = pair.second;
-      //
-      // Do not list child forms as "using" their parents, in the UI:
-      //
-      if (entry.flags & (_ue_flag::i_am_parent_of)) {
-         if (entry.refcount <= 1)
-            continue;
-      }
-      //
-      switch (this->mode) {
-         case relationship_mode::general_only:
-            if (entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of))
-               if (entry.refcount <= 1)
-                  continue;
-            break;
-         case relationship_mode::base_form_only:
-            if (!(entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of)))
-               continue;
-            break;
-      }
-      auto item = new item_type(&entry);
-      insertions.push_back(item);
-   }
-   if (insertions.size() == 0)
+   for (auto& pair : used->inbound)
+      this->addUser(pair.second, true);
+   if (queued.size() == 0)
       return;
-   auto first_inserted = this->root->childCount();
-   auto last_inserted  = first_inserted + insertions.size() - 1;
+   auto first_inserted = this->children.size();
+   auto last_inserted  = first_inserted + queued.size() - 1;
    this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
-   for(auto* item : insertions)
-      this->root->_children.push_back(item);
+   for(auto* item : queued)
+      this->children.push_back(item);
+   queued.clear();
    this->endInsertRows();
 }
 void FormUseInfoListModel::setRelationshipMode(relationship_mode mode) noexcept {
    this->mode = mode;
 }
 void FormUseInfoListModel::updateExistingItem(const dovah::form_stub* stub) {
-   auto& list = this->root->_children;
+   auto& list = this->children;
    auto  size = list.size();
    for (size_t i = 0; i < size; ++i) {
       auto* item = list[i];
@@ -264,7 +361,7 @@ void FormUseInfoListModelProxy::setFormType(dovah::form_type_t ft) {
 #pragma region FormUseInfoList
 FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    {
-      auto model = new model_type;
+      auto model = new model_type(this);
       auto proxy = new FormUseInfoListModelProxy(this);
       proxy->setSourceModel(model);
       this->setModel(proxy);
@@ -296,13 +393,6 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)
          this->refilterModelByText(this->_filter->text());
-   });
-   //
-   auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() { this->setTarget(nullptr); });
-   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-      if (auto model = this->unwrappedModel())
-         model->updateExistingItem(stub);
    });
 };
 FormUseInfoList::relationship_mode FormUseInfoList::relationshipMode() const noexcept {

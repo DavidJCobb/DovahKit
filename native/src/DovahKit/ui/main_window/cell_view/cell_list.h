@@ -68,7 +68,7 @@ class CellListModel : public QAbstractTableModel {
       root_type* root = nullptr;
       //
    public:
-      CellListModel() {
+      CellListModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
          this->root = new root_type;
       }
       ~CellListModel() {
