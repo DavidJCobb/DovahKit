@@ -21,18 +21,11 @@ LoadOrderFileListModelItem::LoadOrderFileListModelItem(const dovah::tes_file_rea
    this->created  = created;
    this->modified = modified;
 }
-inline int LoadOrderFileListModelRoot::indexOf(item_type* item) const noexcept {
-   int size = this->_children.size();
-   for (int i = 0; i < size; ++i)
-      if (this->_children[i] == item)
-         return i;
-   return -1;
-}
 
 QModelIndex LoadOrderFileListModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
-   item_type* childItem = this->root->child(row);
+   item_type* childItem = this->children.value(row);
    if (childItem)
       return this->createIndex(row, column, childItem);
    return QModelIndex();
@@ -43,7 +36,7 @@ QModelIndex LoadOrderFileListModel::parent(const QModelIndex& index) const {
 int LoadOrderFileListModel::rowCount(const QModelIndex& parent) const {
    if (parent.column() > 0)
       return 0;
-   return this->root->childCount();
+   return this->children.size();
 }
 int LoadOrderFileListModel::columnCount(const QModelIndex& item) const {
    return 2;
@@ -128,17 +121,19 @@ QVariant LoadOrderFileListModel::headerData(int section, Qt::Orientation orienta
 void LoadOrderFileListModel::clear() {
    this->beginResetModel();
    this->active = nullptr;
-   this->root->clear();
+   for (auto* item : this->children)
+      delete item;
+   this->children.clear();
    this->endResetModel();
 }
 void LoadOrderFileListModel::insert(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified) {
    auto item = new item_type(header, created, modified);
    //
-   auto first_inserted = this->root->childCount();
+   auto first_inserted = this->children.size();
    auto last_inserted  = first_inserted + 1;
    //
    this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
-   this->root->_children.push_back(item);
+   this->children.push_back(item);
    this->endInsertRows();
 }
 void LoadOrderFileListModel::sortByPluginsTxt() {
@@ -149,7 +144,7 @@ void LoadOrderFileListModel::sortByPluginsTxt() {
    uint8_t i    = 0;
    uint8_t j    = 0;
    int     max  = std::min<int>(255, files.size());
-   auto&   list = this->root->_children;
+   auto&   list = this->children;
    auto    size = list.size();
    for (; i < max; ++i) {
       auto& name = files[i];
@@ -175,12 +170,12 @@ void LoadOrderFileListModel::setActiveFile(item_type* item) noexcept {
    auto previous = this->active;
    this->active = item;
    if (previous) {
-      auto index = this->index(this->root->indexOf(item), 1, QModelIndex());
+      auto index = this->index(this->children.indexOf(item), 1, QModelIndex());
       emit dataChanged(index, index);
    }
    if (item) {
       bool selected = item->selected;
-      auto row      = this->root->indexOf(item);
+      auto row      = this->children.indexOf(item);
       item->selected = true;
       auto index0 = this->index(row, selected ? 1 : 0, QModelIndex());
       auto index1 = this->index(row, 1, QModelIndex());
@@ -189,12 +184,12 @@ void LoadOrderFileListModel::setActiveFile(item_type* item) noexcept {
 }
 void LoadOrderFileListModel::setSelected(item_type* data, bool state) noexcept {
    data->selected = state;
-   auto index = this->index(this->root->indexOf(data), 0, QModelIndex());
+   auto index = this->index(this->children.indexOf(data), 0, QModelIndex());
    emit dataChanged(index, index);
 }
 void LoadOrderFileListModel::toggleSelected(item_type* data) noexcept {
    data->selected = !data->selected;
-   auto index = this->index(this->root->indexOf(data), 0, QModelIndex());
+   auto index = this->index(this->children.indexOf(data), 0, QModelIndex());
    emit dataChanged(index, index);
 }
 #pragma endregion

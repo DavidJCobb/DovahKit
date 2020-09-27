@@ -31,47 +31,23 @@ class LoadOrderFileListModelItem {
       //
       inline const QString& name() const noexcept { return this->filename; }
 };
-class LoadOrderFileListModelRoot : public LoadOrderFileListModelItem {
-   friend LoadOrderFileListModel;
-   public:
-      using item_type = LoadOrderFileListModelItem;
-   protected:
-      std::vector<item_type*> _children;
-      void clear() {
-         for (auto* p : this->_children)
-            delete p;
-         this->_children.clear();
-      }
-   public:
-      inline const std::vector<item_type*>& children() const noexcept { return this->_children; }
-      inline item_type* child(size_t i) const noexcept {
-         if (i < 0 || i >= this->_children.size())
-            return nullptr;
-         return this->_children[i];
-      }
-      inline size_t childCount() const noexcept { return this->_children.size(); }
-      inline int indexOf(item_type*) const noexcept;
-};
 
 class LoadOrderFileListModel : public QAbstractTableModel {
    Q_OBJECT
    public:
       using item_type = LoadOrderFileListModelItem;
-      using root_type = LoadOrderFileListModelRoot;
    protected:
-      root_type* root   = nullptr;
+      QVector<item_type*> children;
       item_type* active = nullptr;
       //
    public:
       LoadOrderFileListModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
-         this->root = new root_type;
       }
       ~LoadOrderFileListModel() {
          this->clear();
       }
       //
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-      inline item_type* invisibleRootItem() const noexcept { return this->root; }
       QModelIndex parent(const QModelIndex& index) const;
       int rowCount(const QModelIndex& parent) const override;
       int columnCount(const QModelIndex& item) const override;
@@ -86,7 +62,7 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       void sortByPluginsTxt();
       //
       inline const item_type* activeFile() const noexcept { return this->active; }
-      inline const std::vector<item_type*>& files() const noexcept { return this->root->children(); }
+      inline const QVector<item_type*>& files() const noexcept { return this->children; }
       //
       void setActiveFile(item_type*) noexcept;
       void setSelected(item_type*, bool) noexcept;
