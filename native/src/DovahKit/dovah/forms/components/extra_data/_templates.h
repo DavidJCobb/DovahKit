@@ -137,7 +137,7 @@ namespace dovah::loaded_forms::components {
             subrecord.read(this->value.data(), size);
             auto length = this->value.find_last_not_of('\0');
             if (length != std::string::npos && length != size)
-               this->value.resize(length);
+               this->value.resize(length + 1);
             return load_result::succeeded;
          }
          virtual void save(tes_record_writer& record) override {

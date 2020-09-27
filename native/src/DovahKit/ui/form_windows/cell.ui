@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -1006,6 +1006,9 @@
          <property name="text">
           <string>Water Environment Map</string>
          </property>
+         <property name="buddy">
+          <cstring>waterEnvironmentMap</cstring>
+         </property>
         </widget>
        </item>
        <item row="5" column="0" colspan="2">
@@ -1016,7 +1019,11 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QWidget" name="waterEnvironmentMap" native="true"/>
+        <widget class="TESFilePicker" name="waterEnvironmentMap" native="true">
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
+        </widget>
        </item>
        <item row="7" column="0" colspan="2">
         <spacer name="verticalSpacer_5">
@@ -1150,6 +1157,12 @@
    <extends>QPushButton</extends>
    <header>../generic/ColorPickerButton.h</header>
   </customwidget>
+  <customwidget>
+   <class>TESFilePicker</class>
+   <extends>QWidget</extends>
+   <header>../generic/TESFilePicker.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>tabs</tabstop>
@@ -1211,6 +1224,7 @@
   <tabstop>directionalAmbientSetFromAmbient</tabstop>
   <tabstop>name</tabstop>
   <tabstop>encounterZone</tabstop>
+  <tabstop>waterEnvironmentMap</tabstop>
   <tabstop>ownerNPC</tabstop>
   <tabstop>ownerFaction</tabstop>
   <tabstop>ownerFactionRequiredRank</tabstop>

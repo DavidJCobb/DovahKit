@@ -253,9 +253,9 @@ void FormDialogCell::_load_impl() {
       #pragma region Interior Data
          this->ui.name->setText(this->form->name.c_str());
          _load_extra_formID<extra::encounter_zone, extra_data_type::encounter_zone>(this->ui.encounterZone, extra);
-         //
-         // TODO: water environment map texture path
-         //
+         if (auto* data = extra.lookup<extra::water_environment_map>(extra_data_type::water_environment_map)) {
+            this->ui.waterEnvironmentMap->setCurrentPath(data->value.c_str());
+         }
          this->ui.ownerFactionRequiredRank->clear();
          if (auto* data = extra.lookup<extra::ownership>(extra_data_type::ownership)) {
             this->working_ownership.form = editor.get_form(data->formID);
@@ -370,9 +370,15 @@ void FormDialogCell::_save_impl() {
       #pragma region Interior Data
          this->form->name = this->ui.name->text().toStdString();
          this->save_extra_form(this->ui.encounterZone->formID(), extra, extra_data_type::encounter_zone);
-         //
-         // TODO: water environment map texture path
-         //
+         {
+            auto path = this->ui.waterEnvironmentMap->currentPath();
+            if (path.isEmpty()) {
+               extra.remove_by_type(extra_data_type::water_environment_map);
+            } else {
+               auto* data = extra.get_or_create<extra::water_environment_map>(extra_data_type::water_environment_map);
+               data->value = path.toStdString();
+            }
+         }
          extra.remove_by_type(extra_data_type::ownership);
          extra.remove_by_type(extra_data_type::rank);
          if (auto* stub = this->working_ownership.form) {

@@ -25,16 +25,6 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
-//  - The Use Info window needs to properly react to forms being changed from the 
-//    rest of the UI. Currently, this is very difficult: model items are build 
-//    directly out of use_info_entry structs, but the formModificationImminent and 
-//    formModified signals work in terms of whole form_stubs.
-//
-//    The only thing I can think of is this: if formModificationImminent refers to 
-//    any stub currently displayed in the use info model, or if formModified refers 
-//    to the stub originally used to build the use info model, then we need to do a 
-//    full model rebuild.
-//
 //  - Cell View
 //
 //     - Implement the "Sort loaded at top" checkbox.
@@ -51,11 +41,6 @@
 //
 //        - We need to be able to load FACT in order to edit ownership required 
 //          rank, as that's based on the ranks that the faction defines.
-//
-//        - Define a custom widget for the water environment map: a texture file 
-//          picker. For now, it should just contain a QLineEdit, but we want to be 
-//          able to add a QPushButton (and custom file browser that can dig into 
-//          loaded BSAs) in the future.
 //
 //     - Test resaving CELL.
 //
