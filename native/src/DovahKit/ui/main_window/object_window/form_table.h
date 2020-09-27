@@ -30,6 +30,7 @@ class FormTableModelItem {
       //
       inline const QString& name() const noexcept { return this->editorID; }
       void update();
+      bool updateUserCount(); // returns true if any changes were made
 };
 class FormTableModelRoot : public FormTableModelItem {
    friend FormTableModel;
@@ -60,6 +61,7 @@ class FormTableModel : public QAbstractTableModel {
       using form_type_set = std::set<dovah::form_type_t>;
    protected:
       root_type* root = nullptr;
+      QVector<dovah::form_stub*> forms_pending_use_info_update;
       //
    public:
       FormTableModel() {
@@ -81,6 +83,8 @@ class FormTableModel : public QAbstractTableModel {
       //
       void insertItem(dovah::form_stub*);
       void updateExistingItem(const dovah::form_stub*);
+      void prepToUpdateUseInfo(const dovah::form_stub* user);
+      void doUseInfoUpdate();
       //
       void clear();
       //

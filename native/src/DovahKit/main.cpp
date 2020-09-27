@@ -25,6 +25,16 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
+//  - The Use Info window needs to properly react to forms being changed from the 
+//    rest of the UI. Currently, this is very difficult: model items are build 
+//    directly out of use_info_entry structs, but the formModificationImminent and 
+//    formModified signals work in terms of whole form_stubs.
+//
+//    The only thing I can think of is this: if formModificationImminent refers to 
+//    any stub currently displayed in the use info model, or if formModified refers 
+//    to the stub originally used to build the use info model, then we need to do a 
+//    full model rebuild.
+//
 //  - Cell View
 //
 //     - Implement the "Sort loaded at top" checkbox.
@@ -56,6 +66,11 @@
 //     - All of the placed projectile records are just direct subclasses of REFR 
 //       and load all of the same things. Implement them the same way we implemented 
 //       ACHR.
+//
+//  - Support for WRLD
+//
+//     - This blocks file-writing: we need to handle WRLD/OFST as a special case, 
+//       and/or strip it out when appropriate.
 //
 // THINGS TO LOOK INTO:
 //

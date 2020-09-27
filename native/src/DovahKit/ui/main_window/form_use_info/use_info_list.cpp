@@ -177,6 +177,7 @@ QVariant FormUseInfoListModel::headerData(int section, Qt::Orientation orientati
 void FormUseInfoListModel::clear() {
    this->beginResetModel();
    this->root->clear();
+   this->potential_severed_uses.clear();
    this->endResetModel();
 }
 void FormUseInfoListModel::build(const dovah::form_stub* used) {

@@ -66,6 +66,7 @@ class FormUseInfoListModel : public QAbstractTableModel {
    protected:
       root_type* root = nullptr;
       relationship_mode mode = relationship_mode::general_only;
+      QVector<item_type*> potential_severed_uses;
       //
    public:
       FormUseInfoListModel() {

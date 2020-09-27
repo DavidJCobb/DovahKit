@@ -11,9 +11,11 @@ void FormDialogBaseTemplate::load() {
 void FormDialogBaseTemplate::save() {
    if (!this->stub)
       return;
+   auto& editor = DovahKitCore::get();
+   emit editor.formModificationImminent(this->stub);
    this->stub->set_edited(true);
    this->_save_impl();
-   emit DovahKitCore::get().formModified(this->stub);
+   emit editor.formModified(this->stub);
 }
 
 void FormDialogBaseTemplate::save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t value) {

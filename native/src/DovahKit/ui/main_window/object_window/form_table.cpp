@@ -17,6 +17,16 @@ void FormTableModelItem::update() {
    this->formID    = stub->formID;
    this->userCount = stub->inbound.size();
 }
+bool FormTableModelItem::updateUserCount() {
+   if (auto* stub = this->stub) {
+      auto updated = stub->inbound.size();
+      if (this->userCount == updated)
+         return false;
+      this->userCount = updated;
+      return true;
+   }
+   return false;
+}
 
 #pragma region FormTableModel
 QModelIndex FormTableModel::index(int row, int column, const QModelIndex& parent) const {
@@ -100,15 +110,32 @@ void FormTableModel::insertItem(dovah::form_stub* stub) {
    this->root->_children.push_back(new FormTableModelItem(stub));
 }
 void FormTableModel::updateExistingItem(const dovah::form_stub* stub) {
+   QVector<dovah::form_stub*> used;
+   for (auto& pair : stub->outbound) {
+      auto* other = pair.second.other;
+      if (other)
+         used.push_back(other);
+   }
+   //
+   auto  parent_index = QModelIndex();
    auto& list = this->root->_children;
    auto  size = list.size();
    for (size_t i = 0; i < size; ++i) {
       auto* item = list[i];
       if (item->stub == stub) {
          item->update();
-         auto index = this->index(i, 0, QModelIndex());
+         auto index = this->index(i, 0, parent_index);
          emit dataChanged(index, index);
          break;
+      } else if (used.contains(item->stub)) {
+         //
+         // Update any other forms that need their use counts used because (stub) was 
+         // changed to use them.
+         //
+         if (item->updateUserCount()) {
+            auto index = this->index(i, 0, parent_index);
+            emit dataChanged(index, index);
+         }
       }
    }
 }
@@ -116,6 +143,7 @@ void FormTableModel::updateExistingItem(const dovah::form_stub* stub) {
 void FormTableModel::clear() {
    this->beginResetModel();
    this->root->clear();
+   this->forms_pending_use_info_update.clear();
    this->endResetModel();
 }
 void FormTableModel::rebuild(const form_type_set& types) {
@@ -136,6 +164,37 @@ void FormTableModel::rebuild(const form_type_set& types) {
    for (auto ft : types)
       editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) { this->insertItem(stub); return false; });
    this->endInsertRows();
+}
+void FormTableModel::prepToUpdateUseInfo(const dovah::form_stub* user) {
+   //
+   // The (user) form is about to be changed, and those changes may result in it no longer 
+   // using some other form. We need to take note of all of the forms that it currently 
+   // uses, so that we can update them after the (user) form is changed.
+   //
+   auto& list = this->forms_pending_use_info_update;
+   for (auto& pair : user->outbound) {
+      auto stub = pair.second.other;
+      if (!stub)
+         continue;
+      if (!list.contains(stub))
+         list.push_back(stub);
+   }
+}
+void FormTableModel::doUseInfoUpdate() {
+   auto  parent_index = QModelIndex();
+   auto& list = this->root->_children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      auto* stub = item->stub;
+      if (this->forms_pending_use_info_update.contains(stub)) {
+         if (item->updateUserCount()) {
+            auto index = this->index(i, 0, parent_index);
+            emit dataChanged(index, index);
+         }
+      }
+   }
+   this->forms_pending_use_info_update.clear();
 }
 #pragma endregion
 
@@ -161,9 +220,15 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &FormTable::clear);
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &FormTable::rebuildModel);
-   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+   QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, [this](dovah::form_stub* user) {
       if (auto model = this->unwrappedModel())
+         model->prepToUpdateUseInfo(user);
+   });
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+      if (auto model = this->unwrappedModel()) {
          model->updateExistingItem(stub);
+         model->doUseInfoUpdate();
+      }
    });
 
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
