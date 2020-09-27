@@ -20,44 +20,24 @@ class CellListModelItem {
    public:
       using form_id_t = dovah::bare_form_id_t;
       //
-      dovah::form_stub* stub = nullptr;
+      const dovah::form_stub* stub = nullptr;
       QString   editorID;
       form_id_t formID    = 0;
       int32_t   gridX     = 0;
       int32_t   gridY     = 0;
       //
       CellListModelItem() {}
-      CellListModelItem(dovah::form_stub*);
+      CellListModelItem(const dovah::form_stub*);
       //
       bool cellIsLoaded(); // TODO: update this when the render window is implemented
       void update();
-};
-class CellListModelRoot : public CellListModelItem {
-   friend CellListModel;
-   protected:
-      std::vector<CellListModelItem*> _children;
-   public:
-      inline const std::vector<CellListModelItem*>& children() const noexcept { return this->_children; }
-      inline CellListModelItem* child(size_t i) const noexcept {
-         if (i < 0 || i >= this->_children.size())
-            return nullptr;
-         return this->_children[i];
-      }
-      inline size_t childCount() const noexcept { return this->_children.size(); }
-      //
-      void clear() {
-         for (auto* p : this->_children)
-            delete p;
-         this->_children.clear();
-      }
 };
 
 class CellListModel : public QAbstractTableModel {
    Q_OBJECT
    public:
       using item_type = CellListModelItem;
-      using root_type = CellListModelRoot;
-      using form_id_t = item_type::form_id_t;
+      using form_stub = dovah::form_stub;
       //
       using role_t = std::underlying_type_t<Qt::ItemDataRole>;
       static constexpr role_t SortingRole      = Qt::UserRole + 0;
@@ -65,18 +45,26 @@ class CellListModel : public QAbstractTableModel {
       static constexpr role_t SortOverrideRole = Qt::UserRole + 2;
       //
    protected:
-      root_type* root = nullptr;
+      QVector<item_type*> children;
+      QVector<item_type*> queued_additions;
+      const form_stub* worldspace = nullptr;
+      //
+      void insertItem(const dovah::form_stub*, bool queued);
+      //
+   protected slots:
+      void formCreated(const dovah::form_stub*);
+      void formModified(const dovah::form_stub*);
+      //
+   public slots:
+      void clear();
       //
    public:
-      CellListModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
-         this->root = new root_type;
-      }
+      CellListModel(QObject* parent = nullptr);
       ~CellListModel() {
          this->clear();
       }
       //
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-      inline item_type* invisibleRootItem() const noexcept { return this->root; }
       QModelIndex parent(const QModelIndex& index) const;
       int rowCount(const QModelIndex& parent) const override;
       int columnCount(const QModelIndex& item) const override;
@@ -84,11 +72,6 @@ class CellListModel : public QAbstractTableModel {
       QVariant data(const QModelIndex& index, int role) const override;
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-      //
-      void insertItem(dovah::form_stub*);
-      void updateExistingItem(const dovah::form_stub*);
-      //
-      void clear();
       //
       void rebuild(const dovah::form_stub* worldspace);
       //

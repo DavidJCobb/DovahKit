@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <vector>
 #include <QAbstractItemModel>
 #include <QLineEdit>
 #include <QSortFilterProxyModel>
@@ -51,6 +50,7 @@ class CellRefListModel : public QAbstractTableModel {
       void clear();
       //
    protected slots:
+      void formCreated(const form_stub*);
       void formModified(const form_stub*);
       //
    public:

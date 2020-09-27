@@ -60,6 +60,7 @@ class DovahKitCore : public QObject {
       //
       void formModificationImminent(dovah::form_stub*); // emit this before changing a form, so that listeners can update any Use Info they are displaying
       void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
+      void formCreated(dovah::form_stub*);
       //
       void dataSaveImminent();
       void dataSaveComplete();

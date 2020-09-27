@@ -33,7 +33,17 @@ void CellRefListModelItem::update() {
 CellRefListModel::CellRefListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &CellRefListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formCreated,         this, &CellRefListModel::formCreated);
    QObject::connect(&editor, &DovahKitCore::formModified,        this, &CellRefListModel::formModified);
+}
+void CellRefListModel::formCreated(const dovah::form_stub* stub) {
+   if (!this->last_used_cell)
+      return;
+   if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
+      return;
+   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+      return;
+   this->_insertItem(stub, false);
 }
 void CellRefListModel::formModified(const dovah::form_stub* stub) {
    if (!this->last_used_cell)
@@ -58,7 +68,7 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
 void CellRefListModel::_insertItem(const form_stub* stub, bool queued) {
    if (!stub)
       return;
-   auto item = new CellRefListModelItem(stub);
+   auto item = new item_type(stub);
    if (queued) {
       this->queued_additions.push_back(item);
    } else {
@@ -183,7 +193,7 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
       return;
    auto& list  = this->children;
    auto  first = list.size();
-   auto  last  = first + count;
+   auto  last  = first + (count - 1);
    this->beginInsertRows(QModelIndex(), first, last);
    for (auto* item : queue)
       list.push_back(item);
@@ -236,8 +246,6 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(1, QHeaderView::Interactive);
    header->setSectionResizeMode(2, QHeaderView::Interactive);
 
-   auto& editor = DovahKitCore::get();
-   
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto stub = this->formStub();
       if (!stub)
