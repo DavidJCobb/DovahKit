@@ -34,10 +34,22 @@
 //          and also update the list model proxy to prioritize that above all other 
 //          sorting.
 //
+//  - Records should not serialize VMAD if they don't have any scripts attached.
+//
 //  - Support for CELL and REFR
 //
-//     - Add a dialog box for editing a cell's properties, so that we can actually 
-//       view a cell's loaded data in the editor.
+//     - Loading CELL/OBND
+//     - Loading CELL/VMAD
+//     - Saving WRLD/OBND if and only if it's present
+//     - Saving WRLD/VMAD
+//
+//     - Loading WRLD/RNAM
+//     - Loading WRLD/VMAD
+//     - Saving WRLD/OBND if and only if it's present
+//     - Saving WRLD/RNAM
+//     - Saving WRLD/VMAD
+//
+//     - CELL-editing dialog
 //
 //        - We need to be able to load FACT in order to edit ownership required 
 //          rank, as that's based on the ranks that the faction defines.
@@ -56,6 +68,12 @@
 //
 //     - This blocks file-writing: we need to handle WRLD/OFST as a special case, 
 //       and/or strip it out when appropriate.
+//
+//     - Lots of pending tasks in WRLD, including reverse-engineering things to see 
+//       whether some fields are padding or part of multi-byte fields. See "TODO" 
+//       notes in Worldspace.h and Worldspace.cpp.
+//
+//     - There is no UI path to view or edit use info or data for worldspaces.
 //
 // THINGS TO LOOK INTO:
 //
@@ -122,8 +140,6 @@
 //
 //        - Write the code to decide when CELL records should be compressed.
 //
-//           - Not possible until we've finished implementing CELL.
-//
 //  - Add a "Windows" menu to the main window. It should list all open windows and 
 //    allow the user to bring them to the front.
 //
@@ -144,7 +160,7 @@
 //       away from frontend code while still being able to display file-specific 
 //       stats (and make those stats available for editing):
 //
-//       a) Define a file_stats struct, which would also appears a field on the 
+//       a) Define a file_stats struct, which would also appear a field on the 
 //          file_reader class. This struct can contain, among other things, stats 
 //          on refhandle usage.
 //
@@ -284,6 +300,11 @@
 //       However, we should still be able to load localized strings just so that you 
 //       can create overrides of forms that contain localized strings, and so you can 
 //       see those strings in the editor.
+//
+//  - BSA loading
+//
+//     - TESFilePicker should allow the user to browse through loose files and files in 
+//       the loaded BSAs.
 //
 //  - If the user has any unsaved changes, the main window should show a confirmation 
 //    prompt on exit. We already override MainWindow::closeEvent; we'll want to do what 

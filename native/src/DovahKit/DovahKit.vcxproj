@@ -179,6 +179,7 @@
     <ClCompile Include="dovah\forms\TopicInfo.cpp" />
     <ClCompile Include="dovah\forms\Voicetype.cpp" />
     <ClCompile Include="dovah\forms\WordOfPower.cpp" />
+    <ClCompile Include="dovah\forms\Worldspace.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_helpers.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />
@@ -329,6 +330,7 @@
     <ClInclude Include="dovah\forms\Actor.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
     <ClInclude Include="dovah\forms\WordOfPower.h" />
+    <ClInclude Include="dovah\forms\Worldspace.h" />
     <ClInclude Include="dovah\forms\_common_cpp.h" />
     <ClInclude Include="dovah\forms\components\bounds.h" />
     <ClInclude Include="dovah\forms\components\container.h" />

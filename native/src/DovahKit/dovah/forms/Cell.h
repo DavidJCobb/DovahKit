@@ -46,26 +46,6 @@ namespace dovah::loaded_forms {
             };
          };
 
-         /*// whoops, this one is for WRLD
-         struct max_height_data_t {
-            struct quad_heights {
-               int8_t sw;
-               int8_t se;
-               int8_t nw;
-               int8_t ne;
-            };
-            //
-            struct {
-               int16_t x;
-               int16_t y;
-            } min;
-            struct {
-               int16_t x;
-               int16_t y;
-            } max;
-            std::vector<quad_heights> cells;
-         };
-         //*/
          struct max_height_data_t {
             float offset;
             std::array<std::array<int8_t, 32>, 32> grid;

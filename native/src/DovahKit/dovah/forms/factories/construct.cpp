@@ -9,6 +9,7 @@
 #include "../Shout.h"
 #include "../Voicetype.h"
 #include "../WordOfPower.h"
+#include "../Worldspace.h"
 
 namespace {
    using namespace dovah;
@@ -29,6 +30,7 @@ namespace {
       { form_type::cell,          _constructAndLoad<loaded_forms::Cell> },
       { form_type::reference,     _constructAndLoad<loaded_forms::ObjectReference> },
       { form_type::actor,         _constructAndLoad<loaded_forms::Actor> },
+      { form_type::worldspace,    _constructAndLoad<loaded_forms::Worldspace> },
       { form_type::quest,         _constructAndLoad<loaded_forms::Quest> },
       { form_type::formlist,      _constructAndLoad<loaded_forms::FormList> },
       { form_type::voicetype,     _constructAndLoad<loaded_forms::Voicetype> },

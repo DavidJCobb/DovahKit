@@ -14,6 +14,7 @@
 #include "../TopicInfo.h"
 #include "../Voicetype.h"
 #include "../WordOfPower.h"
+#include "../Worldspace.h"
 
 namespace {
    using namespace dovah;
@@ -32,6 +33,7 @@ namespace {
       { form_type::cell,          dovah::loaded_forms::Cell::generateUseInfo },
       { form_type::reference,     dovah::loaded_forms::ObjectReference::generateUseInfo },
       { form_type::actor,         dovah::loaded_forms::Actor::generateUseInfo },
+      { form_type::worldspace,    dovah::loaded_forms::Worldspace::generateUseInfo },
       { form_type::topic_info,    dovah::loaded_forms::TopicInfo::generateUseInfo },
       { form_type::quest,         dovah::loaded_forms::Quest::generateUseInfo },
       { form_type::formlist,      dovah::loaded_forms::FormList::generateUseInfo },
