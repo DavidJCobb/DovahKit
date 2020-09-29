@@ -46,9 +46,6 @@
 //     - Saving WRLD/OBND if and only if it's present
 //     - Saving WRLD/VMAD
 //
-//     - Test in the Creation Kit to determine when certain WRLD subrecords are 
-//       written.
-//
 //     - Test resaving CELL.
 //
 //        - Everything of consequence except XWEM has been tested.
@@ -63,10 +60,6 @@
 //
 //     - This blocks file-writing: we need to handle WRLD/OFST as a special case, 
 //       and/or strip it out when appropriate.
-//
-//     - Lots of pending tasks in WRLD, including reverse-engineering things to see 
-//       whether some fields are padding or part of multi-byte fields. See "TODO" 
-//       notes in Worldspace.h and Worldspace.cpp.
 //
 //     - There is no UI path to view or edit use info or data for worldspaces.
 //
@@ -172,6 +165,11 @@
 //
 //        - If the active file has no masters, then use load order prefix 00; if the 
 //          active file has any masters, use load order prefix FF.
+//
+//     - Some form types have default references to hardcoded forms; for example, 
+//       worldspaces use DefaultWater as their NAM2 and NAM3 by default. The Form class 
+//       needs a virtual method that sets these relationships up when the instance is 
+//       created (but only when a new form is created, not on load).
 //
 //     - This includes duplicating forms. We've started some of the work on that; refer 
 //       to loaded_forms::Form::clone(...).

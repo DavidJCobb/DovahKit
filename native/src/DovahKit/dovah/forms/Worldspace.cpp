@@ -1,6 +1,13 @@
 #include "Worldspace.h"
 #include "_common_cpp.h"
 
+namespace {
+   //
+   // xEdit discards this data when saving, since it should only appear in masters.
+   //
+   inline constexpr bool KEEP_WORLDSPACE_LARGE_REFERENCES = false;
+}
+
 namespace dovah::loaded_forms {
    void Worldspace::load(tes_record_reader& record) {
       Form::load(record);
@@ -82,6 +89,12 @@ namespace dovah::loaded_forms {
             case 'DNAM':
                subrecord.read(this->land_data.default_land_height);
                subrecord.read(this->land_data.default_water_height);
+               break;
+            case 'WNAM':
+               subrecord.read(this->parent.form);
+               break;
+            case 'PNAM':
+               subrecord.read(this->parent.flags);
                break;
             case 'ICON':
                subrecord.to_string(this->map_icon);
@@ -165,18 +178,20 @@ namespace dovah::loaded_forms {
    }
    bool Worldspace::_save_impl(tes_record_writer& record) {
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
-      for (auto& entry : this->large_references.entries) {
-         auto& subrecord = record.open_next_subrecord('RNAM');
-         subrecord.write(entry.y);
-         subrecord.write(entry.x);
-         for (auto& ref : entry.refs) {
-            subrecord.write(ref.form);
-            subrecord.write(ref.y);
-            subrecord.write(ref.x);
+      if (KEEP_WORLDSPACE_LARGE_REFERENCES) {
+         for (auto& entry : this->large_references.entries) {
+            auto& subrecord = record.open_next_subrecord('RNAM');
+            subrecord.write(entry.y);
+            subrecord.write(entry.x);
+            for (auto& ref : entry.refs) {
+               subrecord.write(ref.form);
+               subrecord.write(ref.y);
+               subrecord.write(ref.x);
+            }
+            subrecord.close();
          }
-         subrecord.close();
       }
-      if (this->max_height_data.present) { // TODO: this is generated for top-level worldspaces (i.e. those without parents) only?
+      if (this->max_height_data.present) { // under what conditions is this generated?
          auto& MHDT = record.open_next_subrecord('MHDT');
          auto& data = this->max_height_data;
          MHDT.write(data.min.x);
@@ -194,7 +209,7 @@ namespace dovah::loaded_forms {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
-      if (is_fixed_dimensions) { // TODO: test with the CK to see whether it strips this for non-fixed-dimensions worldspaces
+      if (is_fixed_dimensions) {
          auto& WCTR = record.open_next_subrecord('WCTR');
          WCTR.write(this->center_cell_coordinates.x);
          WCTR.write(this->center_cell_coordinates.y);
@@ -212,19 +227,27 @@ namespace dovah::loaded_forms {
          PNAM.write(this->parent.flags);
          PNAM.close();
       }
-      if (this->climate)
-         record.write_formID_subrecord('CNAM', this->climate);
-      if (this->water_type)
-         record.write_formID_subrecord('NAM2', this->water_type);
-      if (this->water_type_lod)
-         record.write_formID_subrecord('NAM3', this->water_type_lod);
-      auto& NAM4 = record.open_next_subrecord('NAM4'); // TODO: this is only written if NAM3 is also written?
-      NAM4.write(this->lod_water_height);
-      NAM4.close();
-      auto& DNAM = record.open_next_subrecord('DNAM'); // TODO: under what circumstances is this NOT written? when both floats are zero?
-      DNAM.write(this->land_data.default_land_height);
-      DNAM.write(this->land_data.default_water_height);
-      DNAM.close();
+      if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_climate)) {
+         if (this->climate)
+            record.write_formID_subrecord('CNAM', this->climate);
+      }
+      if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_water)) {
+         if (this->water_type)
+            record.write_formID_subrecord('NAM2', this->water_type);
+      }
+      if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_lod)) {
+         if (this->water_type_lod)
+            record.write_formID_subrecord('NAM3', this->water_type_lod);
+         auto& NAM4 = record.open_next_subrecord('NAM4');
+         NAM4.write(this->lod_water_height);
+         NAM4.close();
+      }
+      if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_land)) {
+         auto& DNAM = record.open_next_subrecord('DNAM');
+         DNAM.write(this->land_data.default_land_height);
+         DNAM.write(this->land_data.default_water_height);
+         DNAM.close();
+      }
       if (!this->map_icon.empty()) {
          auto& ICON = record.open_next_subrecord('ICON');
          ICON.write(this->map_icon);
@@ -232,7 +255,7 @@ namespace dovah::loaded_forms {
       }
       this->cloud_model.save(record, 'MODL', 'MODT', 'MODS');
       //
-      if (!this->parent.form) { // TODO: verify that this is the condition needed for MNAM to write
+      if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_map)) {
          auto& MNAM = record.open_next_subrecord('MNAM');
          MNAM.write(this->map_data.usable_dimensions.x);
          MNAM.write(this->map_data.usable_dimensions.y);

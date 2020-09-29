@@ -126,23 +126,23 @@ namespace dovah::loaded_forms {
          components::model cloud_model; // MODL and friends
          struct {
             struct {
-               int32_t x;
-               int32_t y;
+               int32_t x = 0;
+               int32_t y = 0;
             } usable_dimensions;
             struct {
                struct {
-                  int16_t x;
-                  int16_t y;
+                  int16_t x = 0;
+                  int16_t y = 0;
                } northwest;
                struct {
-                  int16_t x;
-                  int16_t y;
+                  int16_t x = 0;
+                  int16_t y = 0;
                } southeast;
             } coordinates;
             struct {
-               float height_min;
-               float height_max;
-               float initial_pitch;
+               float height_min    = 50000.0F;
+               float height_max    = 80000.0F;
+               float initial_pitch =    50.0F;
             } camera;
          } map_data; // MNAM
          struct {
@@ -153,9 +153,9 @@ namespace dovah::loaded_forms {
             float scale; // world map scale
             cobb::vector3<float> offset; // offset, measured in world units (i.e. cell grid * 4096)
          } map_offset_data; // ONAM
-         float distant_lod_multiplier; // NAMA
-         uint8_t world_flags; // DATA
-         struct {
+         float   distant_lod_multiplier = 1.0F; // NAMA
+         uint8_t world_flags = 0; // DATA
+         struct { // NOTE: huge values can cause performance hits; xEdit warns if any value is outside of +/- 256
             struct {
                float x;
                float y;
