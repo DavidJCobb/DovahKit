@@ -108,6 +108,8 @@ namespace dovah {
       return false;
    }
    void form_stub::set_edited(bool v) {
+      if (this->is_edited() == v)
+         return;
       cobb::modify_bit(this->flags, flag::is_edited, v);
       if (v)
          this->_get_load_order().stub_flagged_as_edited(this);

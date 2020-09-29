@@ -15,5 +15,9 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
+         //
+      protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
+         virtual bool _save_impl(tes_record_writer& record) override;
    };
 }

@@ -14,40 +14,67 @@
 
 namespace {
    using namespace dovah;
+   using _loader_t    = loaded_form_load_function_t;
+   using _construct_t = loaded_forms::Form*(*)();
+}
+namespace {
+   using namespace dovah;
 
-   template<typename T> loaded_forms::Form* _constructAndLoad(tes_record_reader& record) {
+   template<typename T> loaded_forms::Form* _construct_and_load(tes_record_reader& record) {
       auto instance = new T;
       instance->load(record);
       return (loaded_forms::Form*) instance;
    }
+   template<typename T> loaded_forms::Form* _construct() {
+      return new T;
+   }
 
-   struct _Builder {
-      form_type_t formType;
-      loaded_form_factory_t builder;
+   struct _handlers {
+      _loader_t    builder     = nullptr;
+      _construct_t constructor = nullptr;
 
-      _Builder(form_type_t f, loaded_form_factory_t b) : formType(f), builder(b) {}
+      template<typename T> static _handlers make() {
+         _handlers instance;
+         instance.builder     = _construct_and_load<T>;
+         instance.constructor = _construct<T>;
+         return instance;
+      }
    };
-   _Builder _builders[] = {
-      { form_type::faction,       _constructAndLoad<loaded_forms::Faction> },
-      { form_type::cell,          _constructAndLoad<loaded_forms::Cell> },
-      { form_type::reference,     _constructAndLoad<loaded_forms::ObjectReference> },
-      { form_type::actor,         _constructAndLoad<loaded_forms::Actor> },
-      { form_type::worldspace,    _constructAndLoad<loaded_forms::Worldspace> },
-      { form_type::quest,         _constructAndLoad<loaded_forms::Quest> },
-      { form_type::formlist,      _constructAndLoad<loaded_forms::FormList> },
-      { form_type::voicetype,     _constructAndLoad<loaded_forms::Voicetype> },
-      { form_type::location,      _constructAndLoad<loaded_forms::Location> },
-      { form_type::shout,         _constructAndLoad<loaded_forms::Shout> },
-      { form_type::word_of_power, _constructAndLoad<loaded_forms::WordOfPower> },
-      { form_type::color,         _constructAndLoad<loaded_forms::Color> },
+
+   struct _entry {
+      form_type_t form_type;
+      _handlers   handlers;
+   };
+
+   _entry _builders[] = {
+      { form_type::faction,       _handlers::make<loaded_forms::Faction>() },
+      { form_type::cell,          _handlers::make<loaded_forms::Cell>() },
+      { form_type::reference,     _handlers::make<loaded_forms::ObjectReference>() },
+      { form_type::actor,         _handlers::make<loaded_forms::Actor>() },
+      { form_type::worldspace,    _handlers::make<loaded_forms::Worldspace>() },
+      { form_type::quest,         _handlers::make<loaded_forms::Quest>() },
+      { form_type::formlist,      _handlers::make<loaded_forms::FormList>() },
+      { form_type::voicetype,     _handlers::make<loaded_forms::Voicetype>() },
+      { form_type::location,      _handlers::make<loaded_forms::Location>() },
+      { form_type::shout,         _handlers::make<loaded_forms::Shout>() },
+      { form_type::word_of_power, _handlers::make<loaded_forms::WordOfPower>() },
+      { form_type::color,         _handlers::make<loaded_forms::Color>() },
    };
 }
 namespace dovah {
-   loaded_form_factory_t get_loaded_form_factory_by_type(form_type_t ft) noexcept {
+   loaded_form_load_function_t get_loaded_form_factory_by_type(form_type_t ft) noexcept {
       for (uint32_t i = 0; i < std::extent<decltype(_builders)>::value; i++) {
          auto& b = _builders[i];
-         if (b.formType == ft)
-            return b.builder;
+         if (b.form_type == ft)
+            return b.handlers.builder;
+      }
+      return nullptr;
+   }
+   loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t ft) noexcept {
+      for (uint32_t i = 0; i < std::extent<decltype(_builders)>::value; i++) {
+         auto& b = _builders[i];
+         if (b.form_type == ft)
+            return (b.handlers.constructor)();
       }
       return nullptr;
    }

@@ -34,25 +34,20 @@
 //          and also update the list model proxy to prioritize that above all other 
 //          sorting.
 //
-//  - Records should not serialize VMAD if they don't have any scripts attached.
-//
-//  - Support for CELL and REFR
+//  - Support for CELL, WRLD, and REFR
 //
 //     - Loading CELL/OBND
 //     - Loading CELL/VMAD
-//     - Saving WRLD/OBND if and only if it's present
-//     - Saving WRLD/VMAD
-//
-//     - Loading WRLD/RNAM
+//     - Loading FACT/OBND
+//     - Loading FACT/VMAD
+//     - Saving FACT/OBND
+//     - Saving FACT/VMAD
 //     - Loading WRLD/VMAD
 //     - Saving WRLD/OBND if and only if it's present
-//     - Saving WRLD/RNAM
 //     - Saving WRLD/VMAD
 //
-//     - CELL-editing dialog
-//
-//        - We need to be able to load FACT in order to edit ownership required 
-//          rank, as that's based on the ranks that the faction defines.
+//     - Test in the Creation Kit to determine when certain WRLD subrecords are 
+//       written.
 //
 //     - Test resaving CELL.
 //
@@ -177,6 +172,12 @@
 //
 //        - If the active file has no masters, then use load order prefix 00; if the 
 //          active file has any masters, use load order prefix FF.
+//
+//     - This includes duplicating forms. We've started some of the work on that; refer 
+//       to loaded_forms::Form::clone(...).
+//
+//        - How do we want to handle cloning localized strings? Probably best to give 
+//          them a "clone" member function so we can revise the implementation later on.
 //
 //     - We'll probably want signals for when forms are created, so that UI controls 
 //       that draw lists of forms don't have to rebuild their entire lists/models.

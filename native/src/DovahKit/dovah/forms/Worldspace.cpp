@@ -139,7 +139,7 @@ namespace dovah::loaded_forms {
                break;
             case 'OFST':
                //
-               // TODO
+               // TODO: Loader code.
                //
                break;
          }
@@ -165,9 +165,17 @@ namespace dovah::loaded_forms {
    }
    bool Worldspace::_save_impl(tes_record_writer& record) {
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
-      //
-      // TODO: RNAM
-      //
+      for (auto& entry : this->large_references.entries) {
+         auto& subrecord = record.open_next_subrecord('RNAM');
+         subrecord.write(entry.y);
+         subrecord.write(entry.x);
+         for (auto& ref : entry.refs) {
+            subrecord.write(ref.form);
+            subrecord.write(ref.y);
+            subrecord.write(ref.x);
+         }
+         subrecord.close();
+      }
       if (this->max_height_data.present) { // TODO: this is generated for top-level worldspaces (i.e. those without parents) only?
          auto& MHDT = record.open_next_subrecord('MHDT');
          auto& data = this->max_height_data;
@@ -286,10 +294,11 @@ namespace dovah::loaded_forms {
          subrecord.write(this->water_environment_map);
          subrecord.close();
       }
-      //
-      // And make a point of NOT saving OFST.
-      //
-
+      if (this->offset_data.present) {
+         //
+         // And make a point of NOT saving OFST.
+         //
+      }
       //
       return true;
    }

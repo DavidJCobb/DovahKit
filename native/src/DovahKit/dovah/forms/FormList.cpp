@@ -26,4 +26,19 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   bool FormList::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<FormList*>(out);
+      if (!copy)
+         return false;
+      size_t size = this->contents.size();
+      copy->contents.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         copy->contents[i].set(copy->stub, this->contents[i]);
+      return true;
+   }
+   bool FormList::_save_impl(tes_record_writer& record) {
+      for (auto& entry : this->contents)
+         record.write_formID_subrecord('LNAM', entry);
+      return true;
+   }
 }

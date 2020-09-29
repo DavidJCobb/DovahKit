@@ -49,6 +49,18 @@ namespace {
 FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
    form_dialog_helpers::initialize<FormDialogCell, dovah::loaded_forms::Cell>(*this, stub);
    //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->working_ownership.form = nullptr;
+      this->working_ownership.loaded_faction = nullptr;
+   });
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+      if (stub == this->working_ownership.form) {
+         if (stub->formType == dovah::form_type::faction)
+            this->_update_rank_picker();
+      }
+   });
+   //
    cobb::qt::remove_spinbox_bounds(this->ui.lightingDirectionalFade);
    cobb::qt::remove_spinbox_bounds(this->ui.lightingDirectionalRotationXY);
    cobb::qt::remove_spinbox_bounds(this->ui.lightingDirectionalRotationZ);
@@ -119,11 +131,15 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDi
    });
    //
    this->load();
+   this->_update_ownership_widgets();
+   this->_update_rank_picker();
 }
 void FormDialogCell::_update_ownership_widgets() {
    const auto blocker0 = QSignalBlocker(this->ui.ownerFaction);
    const auto blocker1 = QSignalBlocker(this->ui.ownerFactionRequiredRank);
    const auto blocker2 = QSignalBlocker(this->ui.ownerNPC);
+   //
+   dovah::form_stub* faction_stub = nullptr;
    //
    this->ui.ownerFactionRequiredRank->clear();
    //
@@ -136,18 +152,54 @@ void FormDialogCell::_update_ownership_widgets() {
       if (stub->formType == dovah::form_type::actor_base) {
          this->ui.ownerNPC->setFormByID(stub->formID);
       } else if (stub->formType == dovah::form_type::faction) {
+         faction_stub = stub;
          this->ui.ownerFaction->setFormByID(stub->formID);
       }
       //
       // TODO: faction rank
       //
    }
+   //
+   {
+      dovah::form_stub* prior_stub = nullptr;
+      if (this->working_ownership.loaded_faction)
+         prior_stub = this->working_ownership.loaded_faction->stub;
+      //
+      if (prior_stub != faction_stub) {
+         this->working_ownership.loaded_faction = faction_stub->load().ptr_cast<dovah::loaded_forms::Faction>();
+         this->_update_rank_picker();
+      }
+   }
+   //
    if (this->ui.ownerFaction->formID()) {
       this->ui.ownerNPC->setEnabled(false);
    } else {
-      this->ui.ownerFactionRequiredRank->setEnabled(false);
+      //this->ui.ownerFactionRequiredRank->setEnabled(false);
       if (this->ui.ownerNPC->formID())
          this->ui.ownerFaction->setEnabled(false);
+   }
+}
+void FormDialogCell::_update_rank_picker() {
+   auto* widget = this->ui.ownerFactionRequiredRank;
+   const auto blocker = QSignalBlocker(widget);
+   if (this->working_ownership.loaded_faction) {
+      widget->setEnabled(true);
+      widget->clear();
+      //
+      auto& list = this->working_ownership.loaded_faction->ranks;
+      for (auto& rank : list) {
+         QString fem  = rank.title_fem.c_str();
+         QString masc = rank.title_masc.c_str();
+         //
+         QString text = fem;
+         if (masc != fem) {
+            text = tr(u8"%1 (\x2640) / %2 (\x2642)", "ownership required rank").arg(fem).arg(masc);
+         }
+         widget->addItem(text, rank.id);
+      }
+   } else {
+      widget->setEnabled(false);
+      widget->clear();
    }
 }
 void FormDialogCell::_load_impl() {
