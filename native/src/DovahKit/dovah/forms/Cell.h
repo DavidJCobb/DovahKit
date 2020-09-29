@@ -4,8 +4,10 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "components/bounds.h"
 #include "components/extra_data.h"
 #include "components/interior_lighting.h"
+#include "components/papyrus.h"
 #include "../../helpers/vector3.h"
 
 namespace dovah::loaded_forms {
@@ -81,6 +83,8 @@ namespace dovah::loaded_forms {
             float       height = 0.0F; // XCLW
             std::string noise_texture; // XNAM
          } water;
+         components::object_bounds object_bounds; // OBND. recognized, but probably discarded at run-time.
+         components::papyrus_attachment_data script_data; // VMAD
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);

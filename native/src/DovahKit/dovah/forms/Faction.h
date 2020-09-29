@@ -4,8 +4,10 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "components/bounds.h"
 #include "components/conditions.h"
 #include "components/package_location.h"
+#include "components/papyrus.h"
 
 namespace dovah::loaded_forms {
    class Faction : public Form {
@@ -85,8 +87,8 @@ namespace dovah::loaded_forms {
          } vendor_data;
          components::package_location package_location_vendor;
          std::vector<components::condition> vendor_conditions; // conditions for buying/selling
-         // TODO: OBND
-         // TODO: VMAD
+         components::object_bounds object_bounds; // OBND. recognized, but probably discarded at run-time.
+         components::papyrus_attachment_data script_data; // VMAD
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);

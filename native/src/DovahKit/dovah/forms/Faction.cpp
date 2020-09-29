@@ -99,6 +99,12 @@ namespace dovah::loaded_forms {
                   cnd.read(subrecord.get_containing_record());
                }
                break;
+            case 'OBND':
+               this->object_bounds.load(subrecord);
+               break;
+            case 'VMAD':
+               this->script_data.load(subrecord);
+               break;
          }
       }
    }

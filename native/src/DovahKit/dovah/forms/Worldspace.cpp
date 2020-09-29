@@ -155,6 +155,9 @@ namespace dovah::loaded_forms {
                // TODO: Loader code.
                //
                break;
+            case 'VMAD':
+               this->script_data.load(subrecord);
+               break;
          }
       }
    }

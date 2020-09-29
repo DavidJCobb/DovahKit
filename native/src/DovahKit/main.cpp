@@ -36,13 +36,10 @@
 //
 //  - Support for CELL, WRLD, and REFR
 //
-//     - Loading CELL/OBND
-//     - Loading CELL/VMAD
-//     - Loading FACT/OBND
-//     - Loading FACT/VMAD
-//     - Saving FACT/OBND
+//     - Saving CELL/OBND if and only if it's present
+//     - Saving CELL/VMAD
+//     - Saving FACT/OBND if and only if it's present
 //     - Saving FACT/VMAD
-//     - Loading WRLD/VMAD
 //     - Saving WRLD/OBND if and only if it's present
 //     - Saving WRLD/VMAD
 //
@@ -133,6 +130,19 @@
 //
 //     - This includes Use Info and form-editing dialogs. But what if the user has 
 //       too many of those open?
+//
+//        - One thing's for sure: scrolling menus are a pain. We should see if we 
+//          can force a two-column one when items overflow, instead.
+//
+//     - Should we convert Use Info and form-editing dialogs to QMdiSubWindows?
+//
+//  - UI for editing Papyrus script data
+//
+//     - We have a loader for ACTI; we can write form save code and then build a UI 
+//       for it, and then test Papyrus editing.
+//
+//     - Once this UI is working, retroactively add it to the existing UI (if any) 
+//       for CELL, FACT, and WRLD, respectively.
 //
 // DISTANT TASKS:
 //

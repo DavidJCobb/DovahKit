@@ -7,6 +7,7 @@
 #include "../../helpers/vector3.h"
 #include "components/bounds.h"
 #include "components/model.h"
+#include "components/papyrus.h"
 
 namespace dovah::loaded_forms {
    class Worldspace : public Form {
@@ -100,7 +101,6 @@ namespace dovah::loaded_forms {
 
          // TODO: VMAD
          large_reference_t large_references;
-         components::object_bounds object_bounds; // OBND. recognized, but discarded at run-time.
          localized_string  name; // FULL
          max_height_data_t max_height_data; // MHDT
          struct {
@@ -172,6 +172,8 @@ namespace dovah::loaded_forms {
          std::string hd_lod_normal_texture; // UNAM
          std::string water_environment_map; // XWEM // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
          offset_data_t offset_data; // OFST
+         components::object_bounds object_bounds; // OBND. recognized, but discarded at run-time.
+         components::papyrus_attachment_data script_data; // VMAD
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);

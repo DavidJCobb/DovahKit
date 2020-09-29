@@ -62,6 +62,12 @@ namespace dovah::loaded_forms {
             case 'XNAM':
                subrecord.to_string(this->water.noise_texture);
                break;
+            case 'OBND':
+               this->object_bounds.load(subrecord);
+               break;
+            case 'VMAD':
+               this->script_data.load(subrecord);
+               break;
             default:
                if (this->extra_data.load(record) == components::extra_data_load_result::unrecognized) {
                   //
