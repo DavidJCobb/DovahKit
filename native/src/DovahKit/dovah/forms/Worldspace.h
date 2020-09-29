@@ -48,6 +48,21 @@ namespace dovah::loaded_forms {
             };
          };
 
+         struct large_reference_t { // RNAM (SSE-only); one subrecord per entry
+            struct ref {
+               form_id_t form;
+               int16_t y;
+               int16_t x;
+            };
+            struct entry {
+               int16_t y;
+               int16_t x;
+               std::vector<ref> refs;
+            };
+            //
+            std::vector<entry> entries;
+         };
+
          struct max_height_data_t {
             struct quad_heights {
                int8_t sw;
@@ -84,7 +99,7 @@ namespace dovah::loaded_forms {
          };
 
          // TODO: VMAD
-         // TODO: RNAM
+         large_reference_t large_references;
          components::object_bounds object_bounds; // OBND. recognized, but discarded at run-time.
          localized_string  name; // FULL
          max_height_data_t max_height_data; // MHDT
@@ -104,9 +119,8 @@ namespace dovah::loaded_forms {
             float default_water_height;
          } land_data; // DNAM
          struct {
-            form_id_t form;  // WNAM
-            uint8_t   flags; // PNAM
-            uint8_t   pad05; // PNAM // TODO: verify via reverse-engineering that the flags aren't uint16_t
+            form_id_t form;      // WNAM
+            uint16_t  flags = 0; // PNAM
          } parent;
          std::string map_icon; // ICON
          components::model cloud_model; // MODL and friends

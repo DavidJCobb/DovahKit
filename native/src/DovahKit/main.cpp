@@ -391,6 +391,19 @@
 //  - Handle different locales. Complicated by the fact that ES[LPM] files use various 
 //    system locales instead of UTF-8 or specifying a locale explicitly.
 //
+// STUFF I'M PROBABLY NOT EVER GOING TO BOTHER WITH:
+//
+//  - TESV.exe reacts to a file's endianness. If a file has all endianness swapped, such 
+//    that it begins with a "4SET" record, then TESV.exe will byteswap all fields as 
+//    they're loaded such that the file is still valid. The executable doesn't think in 
+//    terms of "big-endian" versus "little-endian," but rather in terms of "same-endian" 
+//    versus "different-endian:" it compares the signature of the TES4 record to an in-
+//    memory constant; if that doesn't match, the game BSWAPs and tries again; and if 
+//    that matches, then it will BSWAP everything.
+//
+//    This is probably done to account for different endianness on different platforms, 
+//    i.e. the console releases.
+//
 
 int main(int argc, char* argv[]) {
    QApplication a(argc, argv);

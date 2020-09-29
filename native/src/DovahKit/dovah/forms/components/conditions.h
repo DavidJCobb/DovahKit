@@ -88,6 +88,7 @@ namespace dovah::loaded_forms::components {
       //
       bool read(tes_record_reader&); // assumes we've already opened a CTDA subrecord
       static void generateUseInfo(tes_record_reader&, form_stub*);
+      void save(tes_record_writer&); // call with no subrecord open
       //
       void to_string(std::string& out) const;
    };

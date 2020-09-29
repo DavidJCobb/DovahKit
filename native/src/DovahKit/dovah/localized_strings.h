@@ -18,8 +18,9 @@ namespace dovah {
       // string table is in use, LStrings should be considered read-only.
       //
 
-      inline const char* c_str() { return this->value.c_str(); }
-      inline size_t size() { return this->value.size(); }
+      inline const char* c_str() const noexcept { return this->value.c_str(); }
+      inline size_t size() const noexcept { return this->value.size(); }
+      inline bool empty() const noexcept { return this->value.empty(); }
 
       localized_string& operator=(const std::string&) noexcept;
    };

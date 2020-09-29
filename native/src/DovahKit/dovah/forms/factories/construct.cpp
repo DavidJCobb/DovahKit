@@ -2,6 +2,7 @@
 #include "../Actor.h"
 #include "../Cell.h"
 #include "../Color.h"
+#include "../Faction.h"
 #include "../FormList.h"
 #include "../Location.h"
 #include "../ObjectReference.h"
@@ -27,6 +28,7 @@ namespace {
       _Builder(form_type_t f, loaded_form_factory_t b) : formType(f), builder(b) {}
    };
    _Builder _builders[] = {
+      { form_type::faction,       _constructAndLoad<loaded_forms::Faction> },
       { form_type::cell,          _constructAndLoad<loaded_forms::Cell> },
       { form_type::reference,     _constructAndLoad<loaded_forms::ObjectReference> },
       { form_type::actor,         _constructAndLoad<loaded_forms::Actor> },

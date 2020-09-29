@@ -163,8 +163,10 @@
     <ClCompile Include="dovah\forms\components\keyword_list.cpp" />
     <ClCompile Include="dovah\forms\components\model.cpp" />
     <ClCompile Include="dovah\forms\components\package_event_dialogue.cpp" />
+    <ClCompile Include="dovah\forms\components\package_location.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus.cpp" />
     <ClCompile Include="dovah\forms\Container.cpp" />
+    <ClCompile Include="dovah\forms\Faction.cpp" />
     <ClCompile Include="dovah\forms\factories\construct.cpp" />
     <ClCompile Include="dovah\forms\factories\hardcoded.cpp" />
     <ClCompile Include="dovah\forms\factories\use_info.cpp" />
@@ -324,7 +326,9 @@
     <ClInclude Include="dovah\forms\components\extra_data\_unknown.h" />
     <ClInclude Include="dovah\forms\components\interior_lighting.h" />
     <ClInclude Include="dovah\forms\components\keyword_list.h" />
+    <ClInclude Include="dovah\forms\components\package_location.h" />
     <ClInclude Include="dovah\forms\components\package_event_dialogue.h" />
+    <ClInclude Include="dovah\forms\Faction.h" />
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\Actor.h" />

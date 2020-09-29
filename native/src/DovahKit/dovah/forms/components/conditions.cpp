@@ -900,6 +900,47 @@ namespace dovah::loaded_forms::components {
       if (next == 'CIS2')
          record.next_subrecord();
    }
+   void condition::save(tes_record_writer& record) {
+      auto& subrecord = record.open_next_subrecord('CTDA');
+      subrecord.write(this->type);
+      subrecord.skip_bytes(3);
+      if (this->get_flags() & flag::compare_to_global)
+         subrecord.write(this->compare_to_global);
+      else
+         subrecord.write(this->compare_to_constant);
+      subrecord.write(this->function);
+      subrecord.skip_bytes(2);
+      {
+         auto func = condition_info::function::lookup_by_id(this->function);
+         for (int i = 0; i < 2; i++) {
+            if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID)
+               subrecord.write(this->parameters[i].formID);
+            else
+               subrecord.write(this->parameters[i].dword);
+         }
+         if (func && func->uses_event_data) {
+            subrecord.write(this->eventFunction);
+            subrecord.write(this->eventMember);
+            subrecord.write(this->eventFormID);
+         } else {
+            subrecord.write(this->run_on);
+            subrecord.write(this->run_on_reference);
+            subrecord.write(this->run_on_index);
+         }
+      }
+      subrecord.close();
+      //
+      if (this->get_argument_underlying_type(0) == condition_info::arg_underlying_type::string) {
+         auto& CIS1 = record.open_next_subrecord('CIS1');
+         CIS1.write(this->parameters[0].string);
+         CIS1.close();
+      }
+      if (this->get_argument_underlying_type(1) == condition_info::arg_underlying_type::string) {
+         auto& CIS1 = record.open_next_subrecord('CIS2');
+         CIS1.write(this->parameters[1].string);
+         CIS1.close();
+      }
+   }
 
    void condition::to_string(std::string& out) const {
       out.clear();

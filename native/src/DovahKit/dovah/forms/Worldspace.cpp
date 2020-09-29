@@ -8,8 +8,28 @@ namespace dovah::loaded_forms {
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
+            case 'RNAM':
+               {  // SSE-only, but we'll still load it if we see it in a Classic file.
+                  auto& data  = this->large_references;
+                  auto& entry = data.entries.emplace_back();
+                  subrecord.read(entry.y);
+                  subrecord.read(entry.x);
+                  while (subrecord.is_in_bounds(8)) {
+                     auto& ref = entry.refs.emplace_back();
+                     subrecord.unchecked_read(ref.form);
+                     subrecord.unchecked_read(ref.y);
+                     subrecord.unchecked_read(ref.x);
+                  }
+               }
+               break;
             case 'DATA':
-               subrecord.read(this->world_flags);
+               if (subrecord.size() == 4) { // this is how the game does it
+                  uint32_t temporary;
+                  subrecord.unchecked_read(temporary);
+                  this->world_flags = temporary;
+               } else {
+                  subrecord.read(this->world_flags);
+               }
                break;
             case 'MHDT':
                {
@@ -58,6 +78,10 @@ namespace dovah::loaded_forms {
                break;
             case 'NAM4':
                subrecord.read(this->lod_water_height);
+               break;
+            case 'DNAM':
+               subrecord.read(this->land_data.default_land_height);
+               subrecord.read(this->land_data.default_water_height);
                break;
             case 'ICON':
                subrecord.to_string(this->map_icon);
@@ -144,7 +168,7 @@ namespace dovah::loaded_forms {
       //
       // TODO: RNAM
       //
-      if (this->max_height_data.present) {
+      if (this->max_height_data.present) { // TODO: this is generated for top-level worldspaces (i.e. those without parents) only?
          auto& MHDT = record.open_next_subrecord('MHDT');
          auto& data = this->max_height_data;
          MHDT.write(data.min.x);
@@ -178,7 +202,6 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('WNAM', this->parent.form);
          auto& PNAM = record.open_next_subrecord('PNAM');
          PNAM.write(this->parent.flags);
-         PNAM.write(this->parent.pad05);
          PNAM.close();
       }
       if (this->climate)
@@ -201,17 +224,19 @@ namespace dovah::loaded_forms {
       }
       this->cloud_model.save(record, 'MODL', 'MODT', 'MODS');
       //
-      auto& MNAM = record.open_next_subrecord('MNAM'); // TODO: under what circumstances is this NOT written? when both floats are zero?
-      MNAM.write(this->map_data.usable_dimensions.x);
-      MNAM.write(this->map_data.usable_dimensions.y);
-      MNAM.write(this->map_data.coordinates.northwest.x);
-      MNAM.write(this->map_data.coordinates.northwest.y);
-      MNAM.write(this->map_data.coordinates.southeast.x);
-      MNAM.write(this->map_data.coordinates.southeast.y);
-      MNAM.write(this->map_data.camera.height_min);
-      MNAM.write(this->map_data.camera.height_max);
-      MNAM.write(this->map_data.camera.initial_pitch);
-      MNAM.close();
+      if (!this->parent.form) { // TODO: verify that this is the condition needed for MNAM to write
+         auto& MNAM = record.open_next_subrecord('MNAM');
+         MNAM.write(this->map_data.usable_dimensions.x);
+         MNAM.write(this->map_data.usable_dimensions.y);
+         MNAM.write(this->map_data.coordinates.northwest.x);
+         MNAM.write(this->map_data.coordinates.northwest.y);
+         MNAM.write(this->map_data.coordinates.southeast.x);
+         MNAM.write(this->map_data.coordinates.southeast.y);
+         MNAM.write(this->map_data.camera.height_min);
+         MNAM.write(this->map_data.camera.height_max);
+         MNAM.write(this->map_data.camera.initial_pitch);
+         MNAM.close();
+      }
       //
       auto& ONAM = record.open_next_subrecord('ONAM');
       ONAM.write(this->map_offset_data.scale);

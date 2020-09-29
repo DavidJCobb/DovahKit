@@ -5,6 +5,7 @@
 #include "../Cell.h"
 #include "../Color.h"
 #include "../Container.h"
+#include "../Faction.h"
 #include "../FormList.h"
 #include "../Location.h"
 #include "../MagicEffect.h"
@@ -26,6 +27,7 @@ namespace {
       _Builder(form_type_t f, outbound_uses_builder_t b) : form_type(f), builder(b) {}
    };
    _Builder _builders[] = {
+      { form_type::faction,       dovah::loaded_forms::Faction::generateUseInfo },
       { form_type::magic_effect,  dovah::loaded_forms::MagicEffect::generateUseInfo },
       { form_type::activator,     dovah::loaded_forms::Activator::generateUseInfo },
       { form_type::container,     dovah::loaded_forms::Container::generateUseInfo },

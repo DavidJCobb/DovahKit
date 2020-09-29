@@ -1,0 +1,97 @@
+#pragma once
+#include <cstdint>
+#include <string>
+#include <vector>
+#include "Form.h"
+#include "_common.h"
+#include "components/conditions.h"
+#include "components/package_location.h"
+
+namespace dovah::loaded_forms {
+   class Faction : public Form {
+      public:
+         static constexpr form_type_t form_type = form_type::faction;
+         Faction() : Form(form_type) {};
+
+         struct faction_flag {
+            faction_flag() = delete;
+            enum : uint32_t {
+               hidden_from_player                 = 0x00000001,
+               special_combat                     = 0x00000002,
+               track_crime                        = 0x00000040,
+               ignore_murder                      = 0x00000080,
+               ignore_assault                     = 0x00000100,
+               ignore_theft                       = 0x00000200,
+               ignore_trespass                    = 0x00000400,
+               dont_report_crimes_against_members = 0x00000800,
+               crime_gold_is_default              = 0x00001000,
+               ignore_pickpocketing               = 0x00002000,
+               vendor                             = 0x00004000,
+               can_be_owner                       = 0x00008000,
+               ignore_werewolf_transformation     = 0x00010000,
+            };
+         };
+
+         enum alliance_status : int32_t {
+            neutral = 0,
+            enemy   = 1,
+            ally    = 2,
+            Friend  = 3, // keyword ugh
+         };
+
+         struct rank {
+            uint32_t id; // RNAM
+            localized_string title_masc; // MNAM
+            localized_string title_fem;  // FNAM
+         };
+         struct relationship {
+            form_id_t other;
+            int32_t   mod; // unused
+            alliance_status combat = alliance_status::neutral;
+         };
+
+         localized_string name; // FULL
+         std::vector<relationship> relationships; // XNAM, one subrecord per
+         uint32_t  faction_flags; // DATA
+         form_id_t prison_marker; // JAIL
+         form_id_t follower_wait_marker; // WAIT
+         form_id_t evidence_chest; // STOL
+         form_id_t player_belongings_chest; // PLCN
+         form_id_t crime_group; // CRGR
+         form_id_t jail_outfit; // JOUT
+         struct {
+            bool     arrest          = false;
+            bool     attack_on_sight = false;
+            uint16_t murder      = 0;
+            uint16_t assault     = 0;
+            uint16_t trespass    = 0;
+            uint16_t pickpocket  = 0;
+            uint16_t unused      = 0;
+            float    theft_multiplier = 0.0F;
+            uint16_t jail_escape = 0;
+            uint16_t werewolf_transformation = 0;
+         } crime_values; // CRVA
+         std::vector<rank> ranks;
+         form_id_t vendor_list;  // VEND
+         form_id_t vendor_chest; // VENC
+         struct {
+            uint16_t start_hour  = 0;
+            uint16_t end_hour    = 0;
+            uint16_t radius      = 0;
+            uint16_t unused06    = 0;
+            bool     buys_stolen = false;
+            bool     vendor_list_is_blacklist = false;
+            uint16_t unused0A    = 0;
+         } vendor_data;
+         components::package_location package_location_vendor;
+         std::vector<components::condition> vendor_conditions; // conditions for buying/selling
+         // TODO: OBND
+         // TODO: VMAD
+
+         void load(tes_record_reader&);
+         static void generateUseInfo(tes_record_reader&, form_stub*);
+         //
+      protected:
+         virtual bool _save_impl(tes_file_writing::record& record) override;
+   };
+}

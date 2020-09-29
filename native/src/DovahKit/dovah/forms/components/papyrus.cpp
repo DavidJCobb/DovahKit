@@ -72,6 +72,8 @@ namespace dovah::loaded_forms::components::papyrus {
       return true;
    }
    bool script_data::save(tes_record_writer& record) {
+      if (this->scripts.empty() && !this->fragment_data)
+         return true;
       auto& VMAD = record.open_next_subrecord('VMAD');
       auto result = this->save(VMAD);
       VMAD.close();

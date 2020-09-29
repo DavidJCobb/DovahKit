@@ -9,6 +9,7 @@
 #include "../Form.h"
 #include "../FormList.h"
 #include "../Voicetype.h"
+#include "../Worldspace.h"
 
 namespace dovah {
    void add_hardcoded_forms_to_load_order(file_load_order& lo) {
@@ -379,6 +380,10 @@ namespace dovah {
          stub->formType = form_type_info::signature_to_form_type('WRLD');
          stub->editorID = "DefaultWorld";
          lo._accept_hardcoded_form(stub);
+         //
+         auto form = new loaded_forms::Worldspace;
+         form->stub = stub;
+         stub->form = form;
       }
       {  // [CSTY:03D]"DefaultCombatstyle"
          //
