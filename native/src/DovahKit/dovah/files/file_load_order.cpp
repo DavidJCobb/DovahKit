@@ -510,9 +510,18 @@ namespace dovah {
       prefix = prefix << 0x18;
       id    |= prefix;
       bare_form_id_t max = 0x00FFFFFF | prefix;
-      for (; id < max; ++id)
-         if (!cobb::unordered_map_contains(map, id))
+      //
+      auto& reservations = this->form_creation_request_info.reserved_formIDs;
+      auto  guard        = std::lock_guard(this->form_creation_request_info.lock);
+      //
+      for (; id < max; ++id) {
+         if (!cobb::unordered_map_contains(map, id)) {
+            auto it = std::find(reservations.begin(), reservations.end(), id);
+            if (it != reservations.end())
+               continue;
             return id;
+         }
+      }
       return 0;
    }
    bool file_load_order::for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
@@ -589,45 +598,97 @@ namespace dovah {
    }
 
    form_stub* file_load_order::create_form_of_type(form_type_t ft) noexcept {
-      auto guard = std::lock_guard(this->forms.lock);
+      auto request = this->request_form_creation(ft);
+      if (!request.is_valid())
+         return nullptr;
+      return this->commit_form_creation_request(request);
+   }
+   form_creation_request file_load_order::request_form_creation(form_type_t ft) noexcept {
+      form_creation_request result(*this);
+      result.form_type = ft;
       //
-      if (!this->active_file)
-         return nullptr;
-      if (ft >= form_types.size())
-         return nullptr;
+      if (!this->active_file) {
+         result.error = form_creation_request::error_code::no_active_file;
+         return result;
+      }
+      if (ft >= form_types.size()) {
+         result.error = form_creation_request::error_code::bad_form_type_requested;
+         return result;
+      }
       auto  formID = this->active_file->header.nextFormID;
       auto  prefix = this->index_of_active_file();
-      if (prefix == invalid_load_prefix)
-         return nullptr;
+      if (prefix == invalid_load_prefix) {
+         result.error = form_creation_request::error_code::no_active_file;
+         return result;
+      }
       formID = (formID & 0x00FFFFFF) | (prefix << 0x18);
       //
-      if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
-         formID = this->find_first_free_form_id_in_active_file();
-         if (!formID) // no form ID available
-            return nullptr;
+      auto  guard = std::lock_guard(this->form_creation_request_info.lock);
+      auto& list  = this->form_creation_request_info.reserved_formIDs;
+      {
+         auto guard = std::lock_guard(this->forms.lock);
+         if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
+            formID = this->find_first_free_form_id_in_active_file();
+            if (!formID) { // no form ID available
+               result.error = form_creation_request::error_code::no_form_id_available;
+               return result;
+            }
+         }
       }
       //
-      auto* loaded = create_blank_loaded_form_by_type(ft);
-      if (!loaded)
+      list.push_back(formID);
+      result.formID = formID;
+      return result;
+   }
+   form_stub* file_load_order::commit_form_creation_request(form_creation_request& request) noexcept {
+      bare_form_id_t formID = request.formID;
+      if (!formID)
          return nullptr;
+      assert(!cobb::unordered_map_contains(this->forms.forms, formID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+      //
+      auto* loaded = create_blank_loaded_form_by_type(request.form_type);
+      if (!loaded) {
+         request.formID = 0;
+         request.error  = form_creation_request::error_code::unsupported_form_type_requested;
+         return nullptr;
+      }
       auto* stub = new form_stub;
-      stub->formType = ft;
+      stub->formType = request.form_type;
       stub->form     = loaded;
       stub->file     = this->active_file;
       stub->offset   = 0;
       stub->formID   = formID;
+      stub->editorID = request.editorID;
       stub->set_edited(true);
       loaded->stub = stub;
       //
-      this->forms.forms[formID] = stub;
-      this->active_file_forms.forms[formID] = stub;
-      this->active_file_forms_by_type[ft].forms[formID] = stub;
+      {
+         auto guard = std::lock_guard(this->forms.lock);
+         this->forms.forms[formID] = stub;
+         this->active_file_forms.forms[formID] = stub;
+         this->active_file_forms_by_type[stub->formType].forms[formID] = stub;
+      }
       //
-      loaded->setup();
-      cobb::sprintf(stub->editorID, "__NewForm%08X", formID);
+      if (request.clone_of) {
+         //
+         // TODO
+         //
+      } else {
+         loaded->setup();
+      }
       //
-      this->active_file->header.nextFormID = this->find_first_free_form_id_in_active_file(formID);
-      //
+      {
+         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
+         auto& list  = this->form_creation_request_info.reserved_formIDs;
+         //
+         auto it = std::find(list.begin(), list.end(), formID);
+         assert(it != list.end() && "Wait, did we just create a form stub for a form ID that wasn't reserved? That shouldn't have happened!");
+         if (it != list.end())
+            list.erase(it);
+      }
+      request.formID = 0;
+      if (this->on_form_create)
+         (this->on_form_create)(stub);
       return stub;
    }
    
@@ -823,4 +884,41 @@ namespace dovah {
       this->save_error = writer.error;
       return !writer.error.defined();
    }
+
+   #pragma region form_creation_request
+   form_creation_request::form_creation_request(file_load_order& o) : owner(o) {
+   }
+   form_creation_request::form_creation_request(form_creation_request&& other) : owner(other.owner) {
+      this->formID    = other.formID;
+      this->form_type = other.form_type;
+      this->clone_of  = other.clone_of;
+      this->error     = other.error;
+      other.formID = 0;
+   }
+   form_creation_request::~form_creation_request() {
+      if (!this->formID)
+         return;
+      //
+      auto  guard = std::lock_guard(this->owner.form_creation_request_info.lock);
+      auto& list  = this->owner.form_creation_request_info.reserved_formIDs;
+      //
+      auto it = std::find(list.begin(), list.end(), this->formID);
+      if (it != list.end())
+         list.erase(it);
+      //
+      this->formID = 0;
+   }
+   void form_creation_request::queue_clone(form_stub* original) {
+      if (this->clone_of == original)
+         return;
+      if (original) {
+         if (original->formType != this->form_type)
+            return;
+      }
+      this->clone_of = original;
+   }
+   form_stub* form_creation_request::commit() {
+      return this->owner.commit_form_creation_request(*this);
+   }
+   #pragma endregion
 }

@@ -25,12 +25,15 @@ namespace dovah {
       struct write_config;
    }
 
+   class form_creation_request;
+
    class file_load_order {
       //
       // Used to select files to load, and stores all loaded forms after the load process 
       // is complete.
       //
       friend void add_hardcoded_forms_to_load_order(file_load_order&);
+      friend class form_creation_request;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
          using loaded_file   = tes_file_reading::file_reader;
@@ -42,6 +45,8 @@ namespace dovah {
             missing_master,
             null_is_not_allowed,
          };
+         //
+         using form_create_callback_t = void(*)(form_stub*);
          //
       protected:
          struct _form_map {
@@ -63,6 +68,10 @@ namespace dovah {
          _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
          uint8_t           active_file_index = invalid_load_prefix;
+         struct {
+            mutable std::recursive_mutex lock;
+            std::vector<bare_form_id_t> reserved_formIDs; // form IDs reserved for form creation
+         } form_creation_request_info;
          //
          #pragma region State fields for tracking whether and how we are saving and loading
          enum class save_load_type : uint8_t {
@@ -118,9 +127,10 @@ namespace dovah {
                bool allow_suspicious_record_signatures = false;
             } options;
          } queued_load;
-         file_read_error    load_error;
-         file_write_error   save_error;
-         file_write_warning save_warning;
+         file_read_error        load_error;
+         file_write_error       save_error;
+         file_write_warning     save_warning;
+         form_create_callback_t on_form_create = nullptr;
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -173,6 +183,8 @@ namespace dovah {
          bool is_defined_or_overridden_in_active_file(const form_stub* stub) const noexcept;
          //
          form_stub* create_form_of_type(form_type_t) noexcept;
+         form_creation_request request_form_creation(form_type_t) noexcept;
+         form_stub* commit_form_creation_request(form_creation_request&) noexcept;
          //
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
@@ -183,5 +195,58 @@ namespace dovah {
          #pragma endregion
 
          bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg = nullptr);
+   };
+
+   class form_creation_request {
+      friend class file_load_order;
+      //
+      // Instances of this class can be created through the (file_load_order), and allow outside 
+      // code to take actions in between reserving a form ID for use with a new form, and actually 
+      // creating the new form. The use case that drove its creation: being able to have this UI 
+      // flow:
+      //
+      //  - User asks to create a new form. We immediately try to reserve a form ID.
+      //
+      //  - If the reservation fails, we report an error and abort immediately.
+      //
+      //  - We ask the user for the desired editor ID.
+      //
+      //  - We create the form, with that editor ID, all in one go.
+      //
+      public:
+         enum class error_code {
+            none,
+            no_active_file,
+            no_form_id_available,
+            bad_form_type_requested,
+            unsupported_form_type_requested,
+         };
+      protected:
+         file_load_order& owner;
+         form_type_t      form_type = form_type::none;
+         bare_form_id_t   formID    = 0;       // the form ID reserved for the newly-created form. set by the owning load order
+         form_stub*       clone_of  = nullptr; // do we want to create a new form from scratch, or duplicate an existing one?
+         error_code       error     = error_code::none;
+         //
+         // In order to return (form_creation_request) instances from functions that construct them 
+         // without (form_creation_request::~form_creation_request) blowing away all of our data, we 
+         // must: define a move constructor; and delete all copy constructors and copy-assignments. 
+         // Copying shouldn't be allowed for this class anyway, though.
+         //
+         form_creation_request(file_load_order& o);
+         form_creation_request(form_creation_request&&);
+         form_creation_request(const form_creation_request&) = delete;
+         form_creation_request& operator=(const form_creation_request&) = delete;
+         //
+      public:
+         ~form_creation_request();
+         //
+         std::string editorID; // the editor ID to be used for the new form
+         //
+         inline bool is_valid() const noexcept { return this->formID != 0; }
+         inline error_code get_error_code() const noexcept { return this->error; }
+         //
+         void queue_clone(form_stub* original);
+         form_stub* commit();
    };
 }

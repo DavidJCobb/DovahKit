@@ -45,13 +45,15 @@ class DovahKitCore : public QObject {
       DovahKitCore& operator=(DovahKitCore&&) = delete;      // no move
       //
    protected:
-      dovah::file_load_order* load_order = new dovah::file_load_order;
+      dovah::file_load_order* load_order = nullptr; // created in constructor
       bool    loaded  = false;
       bool    loading = false;
       QThread* async_loader = nullptr;
       //
       std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
       std::unordered_map<bare_form_id_t, QDialog*> extant_use_info_dialogs;
+      //
+      void _configure_load_order();
       //
    signals:
       void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption
@@ -108,6 +110,7 @@ class DovahKitCore : public QObject {
       bool form_is_from_active_file(bare_form_id_t) const noexcept;
 
       dovah::form_stub* create_form_of_type(form_type_t);
+      dovah::form_creation_request request_form_creation(form_type_t) noexcept;
 
       bool get_game_path(std::filesystem::path& out) const noexcept;
       bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt

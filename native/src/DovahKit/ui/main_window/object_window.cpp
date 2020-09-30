@@ -22,6 +22,30 @@ namespace {
          return nullptr;
       return data->stub;
    }
+   void _report_form_create_error(QWidget* window, dovah::form_creation_request::error_code ec) {
+      using error_code = dovah::form_creation_request::error_code;
+      //
+      QString text;
+      switch (ec) {
+         case error_code::bad_form_type_requested:
+            text = QObject::tr("An internal program error occurred: DovahKit tried to create a form but supplied a bad form type.");
+            break;
+         case error_code::no_active_file:
+            text = QObject::tr("There is no active file, nor any room in the load order for a new file.");
+            break;
+         case error_code::no_form_id_available:
+            text = QObject::tr("You've used up all of the form IDs available to this file!");
+            break;
+         case error_code::unsupported_form_type_requested:
+            text = QObject::tr("DovahKit does not support editing this form type.");
+            break;
+      }
+      QMessageBox::critical(
+         window,
+         QObject::tr("Error", "create new form error"),
+         QObject::tr("Unable to create new form. %1").arg(text)
+      );
+   }
 }
 
 ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
@@ -38,29 +62,27 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    #pragma region Context menu
    this->_actionCreateForm = new QAction(tr("New form...", "object window form actions"), this->ui.table);
    QObject::connect(this->_actionCreateForm, &QAction::triggered, this, [this]() {
+      using error_code = dovah::form_creation_request::error_code;
+      //
       auto form_types = this->ui.tree->selectedFormTypes();
       if (form_types.size() != 1)
          return;
       //
-      auto& editor = DovahKitCore::get();
-      auto* stub   = editor.create_form_of_type(form_types.back());
-      if (!stub) {
-         QMessageBox::critical(
-            this,
-            tr("Error", "create new form error"),
-            tr("Unable to create new form.")
-         );
+      auto& editor  = DovahKitCore::get();
+      auto  request = editor.request_form_creation(form_types.back());
+      if (request.get_error_code() != dovah::form_creation_request::error_code::none) {
+         _report_form_create_error(this, request.get_error_code());
          return;
       }
       bool    ok        = false;
-      QString editor_id = QInputDialog::getText(this, tr("Set editor ID"), tr("Editor ID:"), QLineEdit::Normal, stub->get_editor_id(), &ok);
-      if (!ok) {
-         //
-         // TODO: delete the form? or don't bother?
-         //
+      QString editor_id = QInputDialog::getText(this, tr("Set editor ID"), tr("Editor ID:"), QLineEdit::Normal, "", &ok);
+      if (!ok)
+         return;
+      request.editorID = editor_id.toStdString();
+      request.commit();
+      if (request.get_error_code() != dovah::form_creation_request::error_code::none) {
+         _report_form_create_error(this, request.get_error_code());
       }
-      stub->editorID = editor_id.toStdString();
-      emit editor.formModified(stub);
    });
    //
    this->_formActionEdit        = new QAction(tr("Edit...", "object window form actions"), this->ui.table);

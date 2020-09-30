@@ -8,8 +8,17 @@
 #include "core_internals/load_task.h"
 #include <QDebug>
 
+namespace {
+   void _on_form_created(dovah::form_stub* stub) {
+      if (stub)
+         emit DovahKitCore::get().formCreated(stub);
+   }
+}
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
+   //
+   this->load_order = new dovah::file_load_order;
+   this->_configure_load_order();
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {
@@ -22,11 +31,15 @@ DovahKitCore::~DovahKitCore() {
    delete this->load_order;
    this->load_order = nullptr;
 }
+void DovahKitCore::_configure_load_order() {
+   this->load_order->on_form_create = &_on_form_created;
+}
 void DovahKitCore::abandon_data() {
    emit dataAbandonImminent();
    delete this->load_order;
    this->loaded     = false;
    this->load_order = new dovah::file_load_order;
+   this->_configure_load_order();
    emit dataAbandonComplete();
 }
 void DovahKitCore::set_load_order_folder(const std::filesystem::path& p) {
@@ -209,9 +222,10 @@ dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type_t ft) {
    if (!this->loaded)
       return nullptr;
    auto* stub = this->load_order->create_form_of_type(ft);
-   if (stub)
-      emit formCreated(stub);
    return stub;
+}
+dovah::form_creation_request DovahKitCore::request_form_creation(dovah::form_type_t ft) noexcept {
+   return this->load_order->request_form_creation(ft);
 }
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
