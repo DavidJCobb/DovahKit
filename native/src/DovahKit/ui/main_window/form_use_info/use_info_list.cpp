@@ -82,6 +82,7 @@ void FormUseInfoListModelItem::updateUseInfo(const data_t& source) {
 
 FormUseInfoListModel::FormUseInfoListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formCreated ,             this, &FormUseInfoListModel::formCreated);
    QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, &FormUseInfoListModel::formModificationImminent);
    QObject::connect(&editor, &DovahKitCore::formModified,             this, &FormUseInfoListModel::formModified);
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &FormUseInfoListModel::clear);
@@ -144,6 +145,22 @@ void FormUseInfoListModel::updateUser(item_type* item) {
    auto i   = this->children.indexOf(item);
    auto qmi = this->index(i, 0, QModelIndex());
    emit dataChanged(qmi, qmi);
+}
+
+void FormUseInfoListModel::formCreated(const dovah::form_stub* stub) {
+   if (!this->used)
+      return;
+   for (auto& pair : this->used->inbound) {
+      if (pair.first != stub->formID)
+         continue;
+      //
+      // A new form was created, and it uses this form (perhaps because it's a duplicate, 
+      // or perhaps because it's a brand new form and the form we're currently viewing use 
+      // info for is a hardcoded form that the new form uses by default).
+      //
+      this->addUser(pair.second, false);
+      return;
+   }
 }
 void FormUseInfoListModel::formModificationImminent(const dovah::form_stub* stub) {
    if (stub == this->used || !this->used)

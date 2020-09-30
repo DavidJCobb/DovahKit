@@ -160,12 +160,6 @@
 //        - How do we want to handle cloning localized strings? Probably best to give 
 //          them a "clone" member function so we can revise the implementation later on.
 //
-//     - We'll probably want signals for when forms are created, so that UI controls 
-//       that draw lists of forms don't have to rebuild their entire lists/models.
-//
-//        - Everything that listens for formModified will probably also need to listen 
-//          for these.
-//
 //  - Code for deleting forms.
 //
 //     - How should we handle the case of a user deleting a form from one of the active 
