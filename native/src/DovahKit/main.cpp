@@ -34,29 +34,17 @@
 //          and also update the list model proxy to prioritize that above all other 
 //          sorting.
 //
-//  - Support for CELL, WRLD, and REFR
+//  - Test resaving CELL, FACT, WRLD, REFR, and ACHR.
 //
-//     - Saving CELL/OBND if and only if it's present
-//     - Saving CELL/VMAD
-//     - Saving FACT/OBND if and only if it's present
-//     - Saving FACT/VMAD
-//     - Saving WRLD/OBND if and only if it's present
-//     - Saving WRLD/VMAD
+//  - Support for CELL, FACT, WRLD, and REFR
 //
 //     - Test resaving CELL.
 //
 //        - Everything of consequence except XWEM has been tested.
 //
-//     - Test resaving CELL/REFR and CELL/ACHR.
-//
 //     - All of the placed projectile records are just direct subclasses of REFR 
 //       and load all of the same things. Implement them the same way we implemented 
 //       ACHR.
-//
-//  - Support for WRLD
-//
-//     - This blocks file-writing: we need to handle WRLD/OFST as a special case, 
-//       and/or strip it out when appropriate.
 //
 //     - There is no UI path to view or edit use info or data for worldspaces.
 //
@@ -115,13 +103,11 @@
 //              - We'd only have to treat the active file as an exception, rather 
 //                than "fully" supporting mixed-game load orders.
 //
-//     - When saving WRLD, the OFST subrecord needs special handling.
-//
-//        - Requires implementing support for WRLD and CELL.
-//
 //     - Record compression
 //
-//        - Test the "threshold" implementation.
+//        - Allow the user to select their desired compression policy.
+//
+//        - Test the "threshold" compression policy.
 //
 //        - Write the code to decide when CELL records should be compressed.
 //
@@ -239,6 +225,17 @@
 //
 //        - Everything that listens for dataAbandonImminent will probably also need to 
 //          listen for these.
+//
+//  - Code for changing a reference's base form
+//
+//     - What do we do if this would lead to a change in the reference's own form type, 
+//       as in the case of converting between REFR and ACHR, or REFR and a PHZD? Should 
+//       we even allow those kinds of changes? We can't simply turn one loaded_form 
+//       instance into an instance of a different class.
+//
+//        - We probably shouldn't allow those sorts of changes, to be honest. Base form 
+//          swaps should not be allowed to change a reference's form type. We'll just 
+//          need to be sure to indicate that in the UI.
 //
 //  - Lua scripting
 //

@@ -63,6 +63,7 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->water.noise_texture);
                break;
             case 'OBND':
+               this->has_object_bounds = true;
                this->object_bounds.load(subrecord);
                break;
             case 'VMAD':
@@ -140,6 +141,13 @@ namespace dovah::loaded_forms {
       XNAM.close();
       //
       this->extra_data.save(record);
+      //
+      if (this->has_object_bounds) {
+         auto& subrecord = record.open_next_subrecord('OBND');
+         this->object_bounds.save(subrecord);
+         subrecord.close();
+      }
+      this->script_data.save(record); // VMAD (won't write anything if no scripts are attached)
       //
       return true;
    }
