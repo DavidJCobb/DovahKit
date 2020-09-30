@@ -192,7 +192,7 @@ namespace dovah {
    }
 
    bool form_stub::has_child_forms() const noexcept {
-      for (auto& pair : this->outbound) {
+      for (auto& pair : this->inbound) {
          auto& entry = pair.second;
          if (entry.flags & use_info_entry::flag::i_am_parent_of)
             return true;
@@ -200,7 +200,7 @@ namespace dovah {
       return false;
    }
    bool form_stub::has_child_forms_of_group(uint8_t gt) const noexcept {
-      for (auto& pair : this->outbound) {
+      for (auto& pair : this->inbound) {
          auto& entry = pair.second;
          if (!entry.other)
             continue;
@@ -227,7 +227,7 @@ namespace dovah {
       if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
          return false;
       }
-      for (auto& pair : this->outbound) {
+      for (auto& pair : this->inbound) {
          auto& entry = pair.second;
          if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
             continue;
@@ -242,7 +242,7 @@ namespace dovah {
          return false;
       }
       auto& owner = this->_get_load_order();
-      for (auto& pair : this->outbound) {
+      for (auto& pair : this->inbound) {
          auto& entry = pair.second;
          if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
             continue;

@@ -97,6 +97,15 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   bool Cell::would_bethesda_compress() const noexcept {
+      if (this->exterior.occlusion_data.present)
+         //
+         // This appears to be literally the only deciding factor in whether Bethesda compresses 
+         // a CELL record. They don't seem to care about the MHDT subrecord; just TVDT.
+         //
+         return true;
+      return false;
+   }
    bool Cell::_save_impl(tes_record_writer& record) {
       bool is_exterior = this->stub->is_exterior_cell();
       //

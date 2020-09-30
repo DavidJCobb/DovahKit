@@ -71,7 +71,7 @@ namespace dovah::loaded_forms {
             form_id_t lighting_template_ID; // LTMP
          } interior;
          struct {
-            occlusion_data_t  occlusion_data;  // TVDT
+            occlusion_data_t  occlusion_data;  // TVDT ("Terrain Visibility Data?")
             max_height_data_t max_height_data; // MHDT
          } exterior;
          struct {
@@ -88,6 +88,8 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
+         //
+         virtual bool would_bethesda_compress() const noexcept override;
          //
       protected:
          virtual bool _save_impl(tes_file_writing::record& record) override;

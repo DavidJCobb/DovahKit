@@ -43,6 +43,8 @@ namespace dovah {
             Form* clone(form_stub& receiving_stub) const noexcept;
 
             bool save(tes_file_writing::record& record); // returns a success bool. will write EDID for you.
+
+            virtual bool would_bethesda_compress() const noexcept { return false; } // provided for CELL
             
          protected:
             virtual bool _clone_impl(Form* out) const noexcept { return false; }; // TODO: implement on existing forms; then, make pure

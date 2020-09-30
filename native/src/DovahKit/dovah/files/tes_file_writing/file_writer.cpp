@@ -66,9 +66,8 @@ namespace dovah::tes_file_writing {
                case form_type::land:
                   return this->compress_state.containing_cell_is_compressed;
                case form_type::cell:
-                  //
-                  // TODO
-                  //
+                  if (stub->form)
+                     return stub->form->would_bethesda_compress();
                   break;
             }
             return false;
@@ -175,7 +174,7 @@ namespace dovah::tes_file_writing {
             write_info.stub   = stub;
             write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
             //
-            if (this->_should_compress_current_record())
+            if (this->_should_compress_current_record(stub))
                record.header.flags |= tes_file_record_header::flag::compressed;
             //
             if (stub->formType == form_type::cell) {
