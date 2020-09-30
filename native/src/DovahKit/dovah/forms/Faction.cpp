@@ -178,7 +178,7 @@ namespace dovah::loaded_forms {
             subrecord.close();
          }
          if (!r.title_fem.empty()) {
-            auto& subrecord = record.open_next_subrecord('MNAM');
+            auto& subrecord = record.open_next_subrecord('FNAM');
             subrecord.write(r.title_fem);
             subrecord.close();
          }

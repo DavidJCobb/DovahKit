@@ -15,8 +15,13 @@ namespace {
 }
 
 namespace dovah::tes_file_writing {
-   file_writer::file_writer(file_load_order& owner, file_reader& source) : owner(owner), source(source), _record(*this), _subrecord(*this) {
-      this->use_string_table = (source.header.flags & tes_file_flag::localized_string_table) != 0;
+   file_writer::file_writer(file_load_order& owner, file_reader& source, const write_config* cfg) : owner(owner), source(source), _record(*this), _subrecord(*this) {
+      if (cfg)
+         this->config = *cfg;
+      //
+      this->use_string_table = (this->source.header.flags & tes_file_flag::localized_string_table) != 0;
+      if (!this->config.record_version)
+         this->config.record_version = this->source.header.record_version;
    }
    file_writer::~file_writer() {
       this->stream.close();
@@ -29,19 +34,19 @@ namespace dovah::tes_file_writing {
          record._close();
       //
       header.signature = signature;
-      header.version   = this->source.header.record_version;
+      header.version   = this->config.record_version;
       header.formID    = formID;
       header.flags     = 0;
-      header.version_control   = this->version_control;
-      header.version_control_2 = this->version_control_2;
+      header.version_control   = this->config.version_control;
+      header.version_control_2 = this->config.version_control_2;
       //
       return record;
    }
    bool file_writer::_should_compress_current_record(form_stub* stub) const noexcept {
-      switch (this->compress_policy) {
-         case compression_policy::never:
+      switch (this->config.record_compression) {
+         case record_compression_policy::never:
             return false;
-         case compression_policy::bethesda:
+         case record_compression_policy::bethesda:
             //
             // Inspection of Skyrim.esm indicates that Bethesda always compresses NPC_ and 
             // NAVM. CELL is compressed if it has a TVDT subrecord (and probably if it has 
@@ -67,15 +72,15 @@ namespace dovah::tes_file_writing {
                   break;
             }
             return false;
-         case compression_policy::threshold:
-            return this->_record.pos >= record_compress_threshold;
+         case record_compression_policy::threshold:
+            return this->_record.pos >= this->config.record_compress_threshold;
       }
       return false;
    }
    void file_writer::_write_header() {
       auto& record = this->_open_next_record('TES4', 0);
       auto& header = record.header;
-      header.flags = this->source.header.flags;
+      header.flags = this->config.file_flags;
       //
       {  // HEDR
          auto& subrecord = record.open_next_subrecord('HEDR');
@@ -434,7 +439,7 @@ namespace dovah::tes_file_writing {
       group.header.label     = label;
       group.header.type      = group_type;
       group.header.unknown   = unknown;
-      group.header.version_control = this->version_control;
+      group.header.version_control = this->config.version_control;
       group.pos = this->get_stream_position();
       this->_write(group.header);
       return group;

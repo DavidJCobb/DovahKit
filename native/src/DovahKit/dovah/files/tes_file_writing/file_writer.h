@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <unordered_map>
+#include "config.h"
 #include "elements.h"
 #include "../file_write_error.h"
 
@@ -22,12 +23,6 @@ namespace dovah {
             using file_offset_t = uint32_t;
             using stream_t      = std::basic_ofstream<uint8_t>;
             static constexpr int max_group_depth = 7;
-            //
-            enum class compression_policy {
-               never,     // never compress records
-               threshold, // compress records that are larger than a certain size
-               bethesda,  // compress NAVM, NPC_, any CELL that has TVDT, and any LAND in a compressed CELL, all regardless of the records' sizes
-            };
             //
             struct form_stub_write_info {
                //
@@ -71,24 +66,13 @@ namespace dovah {
             template<> inline void _write(const tes_file_record_header& v) {
                this->_write_impl(v);
             }
-            //
          public:
-            file_writer(file_load_order&, file_reader&);
+            file_writer(file_load_order&, file_reader&, const write_config* cfg = nullptr);
             ~file_writer();
             //
             #pragma region config
-            union {
-               struct {
-                  uint8_t vc_day;
-                  uint8_t vc_month;
-                  uint8_t vc_last_editor;
-                  uint8_t vc_current_editor;
-               };
-               uint32_t version_control = 0;
-            };
-            uint16_t version_control_2 = 0;
-            bool     use_string_table; // constructor defaults this to whatever the source file did
-            compression_policy compress_policy = compression_policy::never;
+            write_config config;
+            bool use_string_table; // constructor defaults this to whatever the source file did
             #pragma endregion
             //
             file_write_error error;

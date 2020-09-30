@@ -649,7 +649,7 @@ namespace dovah {
       return &this->active_file->header;
    }
 
-   bool file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless) {
+   bool file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg) {
       this->save_error   = file_write_error();
       this->save_warning = file_write_warning();
       if (!this->active_file) {
@@ -687,7 +687,7 @@ namespace dovah {
          }
       }
       //
-      tes_file_writing::file_writer writer(*this, *this->active_file);
+      tes_file_writing::file_writer writer(*this, *this->active_file, cfg);
       writer.open(filename);
       if (writer.write()) {
          //

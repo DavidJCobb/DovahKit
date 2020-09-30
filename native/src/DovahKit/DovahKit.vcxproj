@@ -245,6 +245,7 @@
     <ClInclude Include="dovah\files\tes_file_reading\file.h" />
     <ClInclude Include="dovah\files\tes_file_reading\localized_string_file.h" />
     <ClInclude Include="dovah\files\tes_file_reading\threads.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\config.h" />
     <ClInclude Include="dovah\files\tes_file_writing\elements.h" />
     <ClInclude Include="dovah\files\tes_file_writing\file_writer.h" />
     <ClInclude Include="dovah\files\threaded_load_order_use_info_builder.h" />

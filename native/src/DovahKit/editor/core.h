@@ -10,6 +10,9 @@ namespace dovah {
    class  form_stub;
    class  file_write_error;
    struct tes_file_header;
+   namespace tes_file_writing {
+      struct write_config;
+   }
 }
 namespace DovahKitEditorInternals {
    class load_task;
@@ -82,7 +85,7 @@ class DovahKitCore : public QObject {
       bool active_file_has_name() const noexcept;
       QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;
-      bool save_active_file(std::filesystem::path name_to_use_if_nameless);
+      bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg = nullptr);
       QString get_active_file_author() const noexcept;
       QString get_active_file_description() const noexcept;
       void set_active_file_author(const QString&) const noexcept;

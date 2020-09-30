@@ -21,6 +21,9 @@ namespace dovah {
       class file_reader;
       class file_header_reader;
    }
+   namespace tes_file_writing {
+      struct write_config;
+   }
 
    class file_load_order {
       //
@@ -176,6 +179,6 @@ namespace dovah {
          tes_file_header* get_active_file_header() const noexcept;
          #pragma endregion
 
-         bool save_active_file(std::filesystem::path name_to_use_if_nameless);
+         bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg = nullptr);
    };
 }

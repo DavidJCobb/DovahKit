@@ -124,12 +124,12 @@ QString DovahKitCore::get_active_file_name() const noexcept {
 bool DovahKitCore::has_active_file() const noexcept {
    return this->load_order->index_of_active_file() != dovah::file_load_order::invalid_load_prefix;
 }
-bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless) {
+bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg) {
    //
    // TODO: fail if a save is in progress.
    //
    emit dataSaveImminent();
-   if (this->load_order->save_active_file(name_to_use_if_nameless)) {
+   if (this->load_order->save_active_file(name_to_use_if_nameless, cfg)) {
       emit dataSaveComplete();
       return true;
    }

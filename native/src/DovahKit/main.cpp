@@ -34,19 +34,15 @@
 //          and also update the list model proxy to prioritize that above all other 
 //          sorting.
 //
-//  - Test resaving CELL, FACT, WRLD, REFR, and ACHR.
+//  - There is no UI path to view or edit use info or data for worldspaces.
 //
-//  - Support for CELL, FACT, WRLD, and REFR
+//  - Support for REFR
 //
-//     - Test resaving CELL.
-//
-//        - Everything of consequence except XWEM has been tested.
+//     - Test resaving REFR.
 //
 //     - All of the placed projectile records are just direct subclasses of REFR 
 //       and load all of the same things. Implement them the same way we implemented 
 //       ACHR.
-//
-//     - There is no UI path to view or edit use info or data for worldspaces.
 //
 // THINGS TO LOOK INTO:
 //
@@ -104,8 +100,6 @@
 //                than "fully" supporting mixed-game load orders.
 //
 //     - Record compression
-//
-//        - Allow the user to select their desired compression policy.
 //
 //        - Test the "threshold" compression policy.
 //

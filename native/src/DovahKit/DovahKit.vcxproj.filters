@@ -851,6 +851,9 @@
     <ClInclude Include="dovah\forms\components\package_location.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_writing\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

@@ -1,12 +1,20 @@
 #include "save_window.h"
 #include <QMessageBox>
 #include "../../helpers/filesystem.h"
+#include "../../helpers/miscellaneous.h"
 #include "../../dovah/files/file_header.h"
+#include "../../dovah/files/tes_file_writing/config.h"
 #include "../../editor/core.h"
 #include "../main_window.h"
 
 ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
+   //
+   this->ui.compressionThreshold->setRange(64, std::numeric_limits<decltype(dovah::tes_file_writing::write_config::record_compress_threshold)>::max());
+   QObject::connect(this->ui.compressionPolicy, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+      this->ui.compressionThreshold->setEnabled(index == 1);
+   });
+   this->ui.compressionThreshold->setEnabled(this->ui.compressionPolicy->currentIndex() == 1);
    //
    auto& editor = DovahKitCore::get();
    if (!editor.has_active_file()) {
@@ -114,8 +122,21 @@ void ActiveFileSaveDialog::commit() {
    // TODO: if a file with this name exists, pop a confirmation prompt before just overwriting it
    //
 
+   dovah::tes_file_writing::write_config config;
+   cobb::edit_bit(config.file_flags, dovah::tes_file_flag::light,  this->ui.flagLight->isChecked());
+   cobb::edit_bit(config.file_flags, dovah::tes_file_flag::master, this->ui.flagMaster->isChecked());
    //
-   auto result = editor.save_active_file(fallback_filename);
+   // TODO: We should preserve any flags on the original file, unless they are flags controllable 
+   // from this UI.
+   //
+   switch (this->ui.compressionPolicy->currentIndex()) {
+      case 0: config.record_compression = dovah::tes_file_writing::record_compression_policy::never;     break;
+      case 1: config.record_compression = dovah::tes_file_writing::record_compression_policy::threshold; break;
+      case 2: config.record_compression = dovah::tes_file_writing::record_compression_policy::bethesda;  break;
+   }
+   config.record_compress_threshold = this->ui.compressionThreshold->value();
+   //
+   auto result = editor.save_active_file(fallback_filename, &config);
    if (!result) {
       this->handleLastSaveError();
       this->reject();
