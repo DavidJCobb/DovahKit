@@ -130,9 +130,9 @@ namespace dovah {
    #pragma region subrecords
    struct tes_file_subrecord_header {
       uint32_t signature = 0;
-      uint32_t size      = 0;
+      uint32_t size      = 0; // in an actual file, subrecords use uint16_t, but we use uint32_t in-memory to handle extended subrecords (i.e. those that use the 'XXXX' system)
       //
-      static constexpr int struct_size = sizeof(signature) + sizeof(size);
+      static constexpr int struct_size = sizeof(signature) + 2;
    };
    #pragma endregion
 }

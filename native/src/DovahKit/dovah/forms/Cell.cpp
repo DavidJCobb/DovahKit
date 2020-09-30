@@ -100,8 +100,12 @@ namespace dovah::loaded_forms {
    bool Cell::would_bethesda_compress() const noexcept {
       if (this->exterior.occlusion_data.present)
          //
-         // This appears to be literally the only deciding factor in whether Bethesda compresses 
-         // a CELL record. They don't seem to care about the MHDT subrecord; just TVDT.
+         // Skyrim.esm only seems to compress CELLs if they contain TVDT...
+         //
+         return true;
+      if (this->exterior.max_height_data.present)
+         //
+         // ...but I've seen the Creation Kit compress cells that contain MHDT as well.
          //
          return true;
       return false;
