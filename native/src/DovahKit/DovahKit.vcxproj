@@ -363,6 +363,7 @@
     <QtMoc Include="ui\form_windows\cell.h" />
     <ClInclude Include="helpers\qt\spinbox.h" />
     <ClInclude Include="helpers\qt\vector3.h" />
+    <ClInclude Include="helpers\unordered_map.h" />
     <ClInclude Include="ui\form_windows\_base_cpp.h" />
     <QtMoc Include="ui\generic\impl\_FormsOfTypeComboboxProxy.h" />
     <QtMoc Include="ui\generic\impl\_FormSignatureComboboxProxy.h" />

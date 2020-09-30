@@ -44,6 +44,14 @@ namespace dovah {
 
             bool save(tes_file_writing::record& record); // returns a success bool. will write EDID for you.
 
+            //
+            // === void Form::setup() ============================================================
+            //
+            // Called on newly-created forms. Use this to set up relationships to hardcoded forms, 
+            // e.g. new worldspaces using the DefaultWater water type.
+            //
+            virtual void setup() noexcept {}
+
             virtual bool would_bethesda_compress() const noexcept { return false; } // provided for CELL
             
          protected:

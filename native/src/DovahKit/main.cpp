@@ -145,15 +145,14 @@
 //
 //  - Code for creating new forms.
 //
-//     - We need to update the active file's nextFormID.
-//
-//        - If the active file has no masters, then use load order prefix 00; if the 
-//          active file has any masters, use load order prefix FF.
-//
-//     - Some form types have default references to hardcoded forms; for example, 
-//       worldspaces use DefaultWater as their NAM2 and NAM3 by default. The Form class 
-//       needs a virtual method that sets these relationships up when the instance is 
-//       created (but only when a new form is created, not on load).
+//     = FLOW FOR DUPLICATING A FORM:
+//        - Select form ID automatically
+//           - If no form IDs available, fail with an error
+//        - Request editor ID from user
+//        - Create form
+//        - Call "clone" member function on original form
+//           - If fails, tear down the clone's stub, report error, and abort
+//        - Send formCreated signal
 //
 //     - This includes duplicating forms. We've started some of the work on that; refer 
 //       to loaded_forms::Form::clone(...).

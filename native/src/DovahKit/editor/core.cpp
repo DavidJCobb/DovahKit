@@ -205,6 +205,15 @@ bool DovahKitCore::form_is_from_active_file(bare_form_id_t formID) const noexcep
    return this->load_order->form_is_from_active_file(formID);
 }
 
+dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type_t ft) {
+   if (!this->loaded)
+      return nullptr;
+   auto* stub = this->load_order->create_form_of_type(ft);
+   if (stub)
+      emit formCreated(stub);
+   return stub;
+}
+
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
    std::wstring value(512, 0);
    bool success = cobb::windows_registry::get_string_value(cobb::windows_registry::hkey::local_machine, L"SOFTWARE\\Bethesda Softworks\\Skyrim\\", L"installed path", value);

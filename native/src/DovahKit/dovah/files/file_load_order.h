@@ -164,12 +164,15 @@ namespace dovah {
          bool active_file_has_name() const noexcept;
          uint32_t active_file_form_count() const noexcept;
          bool active_file_has_forms_of_type(form_type_t) const noexcept;
+         bare_form_id_t find_first_free_form_id_in_active_file(bare_form_id_t start_from = 0) const noexcept; // returns 0 if no free IDs
          bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor);
          void get_active_file_name(std::filesystem::path& out) const noexcept;
          uint8_t index_of_active_file() const noexcept;
          bool is_defined_or_overridden_in_active_file(const form_stub* stub) const noexcept;
+         //
+         form_stub* create_form_of_type(form_type_t) noexcept;
          //
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //

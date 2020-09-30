@@ -854,6 +854,9 @@
     <ClInclude Include="dovah\files\tes_file_writing\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\unordered_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

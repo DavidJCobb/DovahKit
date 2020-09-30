@@ -1,11 +1,15 @@
 #include "file_load_order.h"
 #include "threaded_load_order_use_info_builder.h"
+#include "../../helpers/performance.h"
 #include "../../helpers/strings.h"
+#include "../../helpers/unordered_map.h"
 #include "../form_stub.h"
 #include "tes_file_reading/file.h"
 #include "tes_file_reading/file_header.h"
 #include "tes_file_writing/file_writer.h"
+#include "../forms/factories/construct.h"
 #include "../forms/factories/hardcoded.h"
+#include "../forms/Form.h"
 #include "../logging.h"
 
 namespace dovah {
@@ -297,6 +301,11 @@ namespace dovah {
          // TODO: How should we handle file_reader::nextFormID?
          this->files.push_back(file);
       }
+      if (this->active_file) {
+         auto first_free = this->find_first_free_form_id_in_active_file();
+         if (first_free)
+            this->active_file->header.nextFormID = first_free;
+      }
       //
       return !this->load_error.defined();
    }
@@ -487,6 +496,25 @@ namespace dovah {
       }
       return false;
    }
+   bare_form_id_t file_load_order::find_first_free_form_id_in_active_file(bare_form_id_t id) const noexcept {
+      id &= 0x00FFFFFF;
+      if (id < 0x00000800)
+         id = 0x00000800;
+      //
+      bare_form_id_t prefix = this->index_of_active_file();
+      auto& map = this->active_file_forms.forms;
+      if (prefix == invalid_load_prefix)
+         return 0;
+      if (map.size() >= (0x00FFFFFF - 0x00000800)) // no form IDs available
+         return 0;
+      prefix = prefix << 0x18;
+      id    |= prefix;
+      bare_form_id_t max = 0x00FFFFFF | prefix;
+      for (; id < max; ++id)
+         if (!cobb::unordered_map_contains(map, id))
+            return id;
+      return 0;
+   }
    bool file_load_order::for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
       if (form_type < this->active_file_forms_by_type.size()) {
          auto& list = this->active_file_forms_by_type[form_type].forms;
@@ -559,7 +587,50 @@ namespace dovah {
    bool file_load_order::is_defined_or_overridden_in_active_file(const form_stub* stub) const noexcept {
       return stub->file == this->active_file;
    }
-   //
+
+   form_stub* file_load_order::create_form_of_type(form_type_t ft) noexcept {
+      auto guard = std::lock_guard(this->forms.lock);
+      //
+      if (!this->active_file)
+         return nullptr;
+      if (ft >= form_types.size())
+         return nullptr;
+      auto  formID = this->active_file->header.nextFormID;
+      auto  prefix = this->index_of_active_file();
+      if (prefix == invalid_load_prefix)
+         return nullptr;
+      formID = (formID & 0x00FFFFFF) | (prefix << 0x18);
+      //
+      if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
+         formID = this->find_first_free_form_id_in_active_file();
+         if (!formID) // no form ID available
+            return nullptr;
+      }
+      //
+      auto* loaded = create_blank_loaded_form_by_type(ft);
+      if (!loaded)
+         return nullptr;
+      auto* stub = new form_stub;
+      stub->formType = ft;
+      stub->form     = loaded;
+      stub->file     = this->active_file;
+      stub->offset   = 0;
+      stub->formID   = formID;
+      stub->set_edited(true);
+      loaded->stub = stub;
+      //
+      this->forms.forms[formID] = stub;
+      this->active_file_forms.forms[formID] = stub;
+      this->active_file_forms_by_type[ft].forms[formID] = stub;
+      //
+      loaded->setup();
+      cobb::sprintf(stub->editorID, "__NewForm%08X", formID);
+      //
+      this->active_file->header.nextFormID = this->find_first_free_form_id_in_active_file(formID);
+      //
+      return stub;
+   }
+   
    bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) {
       std::filesystem::path filename;
       for (auto* file : this->files) {

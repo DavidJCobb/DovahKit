@@ -107,6 +107,8 @@ class DovahKitCore : public QObject {
       bool form_is_from_active_file(const dovah::form_stub*) const noexcept;
       bool form_is_from_active_file(bare_form_id_t) const noexcept;
 
+      dovah::form_stub* create_form_of_type(form_type_t);
+
       bool get_game_path(std::filesystem::path& out) const noexcept;
       bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt
 };

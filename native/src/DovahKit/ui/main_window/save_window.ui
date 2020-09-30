@@ -72,12 +72,12 @@
        </item>
        <item>
         <property name="text">
-         <string>Threshold</string>
+         <string>Use Threshold</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Bethesda</string>
+         <string>Mimic Skyrim.esm</string>
         </property>
        </item>
       </widget>

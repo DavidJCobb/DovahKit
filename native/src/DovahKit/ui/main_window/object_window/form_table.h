@@ -1,7 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <set>
-#include <vector>
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
 #include <QString>
@@ -56,23 +54,33 @@ class FormTableModel : public QAbstractTableModel {
    Q_OBJECT
    public:
       using item_type = FormTableModelItem;
-      using root_type = FormTableModelRoot;
-      using form_id_t = item_type::form_id_t;
-      using form_type_set = std::set<dovah::form_type_t>;
+      using form_stub = dovah::form_stub;
+      using form_type_set = QVector<dovah::form_type_t>;
+      //
    protected:
-      root_type* root = nullptr;
-      QVector<dovah::form_stub*> forms_pending_use_info_update;
+      form_type_set last_used_form_types;
+      QVector<item_type*> children;
+      QVector<item_type*> pending_additions;
+      QVector<form_stub*> forms_pending_use_info_update;
+      //
+      void doUseInfoUpdate();
+      void insertItem(form_stub*, bool queued);
+      //
+   protected slots:
+      void formCreated(form_stub*);
+      void formModified(const form_stub*);
+      void formModificationImminent(const form_stub*);
+      //
+   public slots:
+      void clear();
       //
    public:
-      FormTableModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
-         this->root = new root_type;
-      }
+      FormTableModel(QObject* parent = nullptr);
       ~FormTableModel() {
          this->clear();
       }
       //
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-      inline item_type* invisibleRootItem() const noexcept { return this->root; }
       QModelIndex parent(const QModelIndex& index) const;
       int rowCount(const QModelIndex& parent) const override;
       int columnCount(const QModelIndex& item) const override;
@@ -81,14 +89,9 @@ class FormTableModel : public QAbstractTableModel {
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
-      void insertItem(dovah::form_stub*);
-      void updateExistingItem(const dovah::form_stub*);
-      void prepToUpdateUseInfo(const dovah::form_stub* user);
-      void doUseInfoUpdate();
-      //
-      void clear();
-      //
+      void rebuild();
       void rebuild(const form_type_set&);
+      void setFormTypes(const form_type_set&);
 };
 
 class FormTableModelProxy : public QSortFilterProxyModel {
@@ -109,7 +112,6 @@ class FormTable : public QTableView {
       FormTable(QWidget* parent);
       using model_type      = FormTableModel;
       using model_item_type = model_type::item_type;
-      using form_type_set   = std::set<dovah::form_type_t>;
       //
       inline model_type* unwrappedModel() const noexcept {
          auto wrapper = (QSortFilterProxyModel*)this->model();
@@ -132,5 +134,4 @@ class FormTable : public QTableView {
       BasicFormTypeTree* _source = nullptr;
       QLineEdit* _filter         = nullptr;
       QTimer*    _filterThrottle = new QTimer(this);
-      form_type_set _currentFormTypes;
 };

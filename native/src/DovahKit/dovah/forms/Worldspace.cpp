@@ -1,5 +1,6 @@
 #include "Worldspace.h"
 #include "_common_cpp.h"
+#include "factories/hardcoded.h"
 
 namespace {
    //
@@ -179,6 +180,10 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+   }
+   void Worldspace::setup() noexcept {
+      this->water_type.set(this->stub, hardcoded_form_ids::DefaultWater);
+      this->water_type_lod.set(this->stub, hardcoded_form_ids::DefaultWater);
    }
    bool Worldspace::_save_impl(tes_record_writer& record) {
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;

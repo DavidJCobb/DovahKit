@@ -28,9 +28,10 @@ void BasicFormTypeTreeModelItem::removeChild(BasicFormTypeTreeModelItem* child) 
    child->_parent = nullptr;
 }
 
-void BasicFormTypeTreeModelItem::addToSet(std::set<dovah::form_type_t>& out) const noexcept {
+void BasicFormTypeTreeModelItem::addToSet(QVector<dovah::form_type_t>& out) const noexcept {
    if (this->form_type != dovah::form_type::none) {
-      out.insert(this->form_type);
+      if (!out.contains(this->form_type))
+         out.push_back(this->form_type);
       return;
    }
    for (auto* child : this->children())
@@ -253,9 +254,8 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
    //
    this->expandAll();
 }
-void BasicFormTypeTree::getSelectedFormTypes(std::set<dovah::form_type_t>& out) const noexcept {
-   out.clear();
-   //
+QVector<dovah::form_type_t> BasicFormTypeTree::selectedFormTypes() const noexcept {
+   QVector<dovah::form_type_t> out;
    auto sel = this->selectionModel();
    auto a   = sel->selection(); // using (sel->selectedRows()) will cause you to act on the previous selection, not the current one. naturally, this isn't bloody documented anywhere
    for (const auto& idx : a.indexes()) {
@@ -270,5 +270,6 @@ void BasicFormTypeTree::getSelectedFormTypes(std::set<dovah::form_type_t>& out) 
       for (auto child : root->children())
          child->addToSet(out);
    }
+   return out;
 }
 #pragma endregion

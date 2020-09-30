@@ -6,7 +6,7 @@ namespace dovah::tes_file_writing {
    enum class record_compression_policy {
       never,     // never compress records
       threshold, // compress records that are larger than a certain size
-      bethesda,  // compress NAVM, NPC_, any CELL that has TVDT, and any LAND in a compressed CELL, all regardless of the records' sizes
+      bethesda,  // mimic Skyrim.esm: compress NAVM, NPC_, any CELL that has TVDT, and any LAND in a compressed CELL, all regardless of the records' sizes
    };
 
    struct write_config {

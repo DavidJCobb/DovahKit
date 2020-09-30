@@ -29,10 +29,71 @@ bool FormTableModelItem::updateUserCount() {
 }
 
 #pragma region FormTableModel
+FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &FormTableModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formCreated,              this, &FormTableModel::formCreated);
+   QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, &FormTableModel::formModificationImminent);
+   QObject::connect(&editor, &DovahKitCore::formModified,             this, &FormTableModel::formModified);
+}
+
+void FormTableModel::formCreated(dovah::form_stub* stub) {
+   if (!this->last_used_form_types.contains(stub->formType))
+      return;
+   this->insertItem(stub, false);
+}
+void FormTableModel::formModificationImminent(const dovah::form_stub* user) {
+   //
+   // The (user) form is about to be changed, and those changes may result in it no longer 
+   // using some other form. We need to take note of all of the forms that it currently 
+   // uses, so that we can update them after the (user) form is changed.
+   //
+   auto& list = this->forms_pending_use_info_update;
+   for (auto& pair : user->outbound) {
+      auto stub = pair.second.other;
+      if (!stub)
+         continue;
+      if (!list.contains(stub))
+         list.push_back(stub);
+   }
+}
+void FormTableModel::formModified(const dovah::form_stub* stub) {
+   QVector<dovah::form_stub*> used;
+   for (auto& pair : stub->outbound) {
+      auto* other = pair.second.other;
+      if (other)
+         used.push_back(other);
+   }
+   //
+   auto  parent_index = QModelIndex();
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == stub) {
+         item->update();
+         auto index = this->index(i, 0, parent_index);
+         emit dataChanged(index, index);
+         break;
+      } else if (used.contains(item->stub)) {
+         //
+         // Update any other forms that need their use counts used because (stub) was 
+         // changed to use them.
+         //
+         if (item->updateUserCount()) {
+            auto index = this->index(i, 0, parent_index);
+            emit dataChanged(index, index);
+         }
+      }
+   }
+   //
+   this->doUseInfoUpdate();
+}
+
 QModelIndex FormTableModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
-   item_type* childItem = this->root->child(row);
+   item_type* childItem = this->children.value(row);
    if (childItem)
       return this->createIndex(row, column, childItem);
    return QModelIndex();
@@ -43,7 +104,7 @@ QModelIndex FormTableModel::parent(const QModelIndex& index) const {
 int FormTableModel::rowCount(const QModelIndex& parent) const {
    if (parent.column() > 0)
       return 0;
-   return this->root->childCount();
+   return this->children.size();
 }
 int FormTableModel::columnCount(const QModelIndex& item) const {
    return 3;
@@ -106,83 +167,9 @@ QVariant FormTableModel::headerData(int section, Qt::Orientation orientation, in
    return QVariant();
 }
 
-void FormTableModel::insertItem(dovah::form_stub* stub) {
-   this->root->_children.push_back(new FormTableModelItem(stub));
-}
-void FormTableModel::updateExistingItem(const dovah::form_stub* stub) {
-   QVector<dovah::form_stub*> used;
-   for (auto& pair : stub->outbound) {
-      auto* other = pair.second.other;
-      if (other)
-         used.push_back(other);
-   }
-   //
-   auto  parent_index = QModelIndex();
-   auto& list = this->root->_children;
-   auto  size = list.size();
-   for (size_t i = 0; i < size; ++i) {
-      auto* item = list[i];
-      if (item->stub == stub) {
-         item->update();
-         auto index = this->index(i, 0, parent_index);
-         emit dataChanged(index, index);
-         break;
-      } else if (used.contains(item->stub)) {
-         //
-         // Update any other forms that need their use counts used because (stub) was 
-         // changed to use them.
-         //
-         if (item->updateUserCount()) {
-            auto index = this->index(i, 0, parent_index);
-            emit dataChanged(index, index);
-         }
-      }
-   }
-}
-
-void FormTableModel::clear() {
-   this->beginResetModel();
-   this->root->clear();
-   this->forms_pending_use_info_update.clear();
-   this->endResetModel();
-}
-void FormTableModel::rebuild(const form_type_set& types) {
-   this->clear();
-   //
-   if (!types.size())
-      return;
-   auto& editor = DovahKitCore::get();
-   if (!editor.has_data())
-      return;
-   //
-   uint32_t total = 0;
-   for (auto ft : types)
-      total += editor.count_forms_of_type(ft);
-   if (!total)
-      return;
-   this->beginInsertRows(QModelIndex(), 0, total - 1); // we're not passing the count, we're passing the index of the last row. how annoying.
-   for (auto ft : types)
-      editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) { this->insertItem(stub); return false; });
-   this->endInsertRows();
-}
-void FormTableModel::prepToUpdateUseInfo(const dovah::form_stub* user) {
-   //
-   // The (user) form is about to be changed, and those changes may result in it no longer 
-   // using some other form. We need to take note of all of the forms that it currently 
-   // uses, so that we can update them after the (user) form is changed.
-   //
-   auto& list = this->forms_pending_use_info_update;
-   for (auto& pair : user->outbound) {
-      auto stub = pair.second.other;
-      if (!stub)
-         continue;
-      if (!list.contains(stub))
-         list.push_back(stub);
-   }
-}
 void FormTableModel::doUseInfoUpdate() {
    auto  parent_index = QModelIndex();
-   auto& list = this->root->_children;
+   auto& list = this->children;
    auto  size = list.size();
    for (size_t i = 0; i < size; ++i) {
       auto* item = list[i];
@@ -195,6 +182,80 @@ void FormTableModel::doUseInfoUpdate() {
       }
    }
    this->forms_pending_use_info_update.clear();
+}
+void FormTableModel::insertItem(dovah::form_stub* stub, bool queued) {
+   auto* item = new item_type(stub);
+   if (queued) {
+      this->pending_additions.push_back(item);
+   } else {
+      auto& list  = this->children;
+      auto  first = list.size();
+      this->beginInsertRows(QModelIndex(), first, first);
+      list.push_back(item);
+      this->endInsertRows();
+   }
+}
+
+void FormTableModel::clear() {
+   this->beginResetModel();
+   for (auto* item : this->children)
+      delete item;
+   this->children.clear();
+   this->pending_additions.clear();
+   this->forms_pending_use_info_update.clear();
+   this->last_used_form_types.clear();
+   this->endResetModel();
+}
+void FormTableModel::rebuild(const form_type_set& types) {
+   this->clear();
+   //
+   this->last_used_form_types = types;
+   this->rebuild();
+}
+void FormTableModel::rebuild() {
+   auto& types = this->last_used_form_types;
+   if (!types.size())
+      return;
+   //
+   auto& editor = DovahKitCore::get();
+   if (!editor.has_data())
+      return;
+   //
+   uint32_t total = 0;
+   for (auto ft : types)
+      total += editor.count_forms_of_type(ft);
+   if (!total)
+      return;
+   for (auto ft : types)
+      editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) { this->insertItem(stub, true); return false; });
+   //
+   auto count = this->pending_additions.size();
+   if (!count)
+      return;
+   auto first = this->children.size();
+   auto last  = first + count - 1;
+   //
+   this->beginInsertRows(QModelIndex(), first, last);
+   for (auto* item : this->pending_additions)
+      this->children.push_back(item);
+   this->pending_additions.clear();
+   this->endInsertRows();
+}
+void FormTableModel::setFormTypes(const form_type_set& list) {
+   auto& prior = this->last_used_form_types;
+   auto  size  = prior.size();
+   if (size == list.size()) {
+      bool same = true;
+      for (int i = 0; i < size; ++i)
+         if (!list.contains(prior[i])) {
+            same = false;
+            break;
+         }
+      if (same)
+         return;
+   }
+   //
+   this->rebuild(list);
 }
 #pragma endregion
 
@@ -218,18 +279,7 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(2, QHeaderView::Interactive);
 
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &FormTable::clear);
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &FormTable::rebuildModel);
-   QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, [this](dovah::form_stub* user) {
-      if (auto model = this->unwrappedModel())
-         model->prepToUpdateUseInfo(user);
-   });
-   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-      if (auto model = this->unwrappedModel()) {
-         model->updateExistingItem(stub);
-         model->doUseInfoUpdate();
-      }
-   });
 
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)
@@ -239,18 +289,14 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
 void FormTable::recheckFormTypes() {
    if (!this->_source)
       return;
-   form_type_set next;
-   this->_source->getSelectedFormTypes(next);
-   if (this->_currentFormTypes == next)
+   auto* model = this->unwrappedModel();
+   if (!model)
       return;
-   this->_currentFormTypes = next;
-   this->rebuildModel();
+   model->setFormTypes(this->_source->selectedFormTypes());
 }
 void FormTable::rebuildModel() {
-   auto m = this->unwrappedModel();
-   if (!m)
-      return;
-   m->rebuild(this->_currentFormTypes);
+   if (auto* model = this->unwrappedModel())
+      model->rebuild();
 }
 void FormTable::refilterModel(const QString& text) {
    auto wrapper = (QSortFilterProxyModel*)this->model();
@@ -270,10 +316,8 @@ void FormTable::filterFinished() {
       this->refilterModel(this->_filter->text());
 }
 void FormTable::clear() {
-   auto m = this->unwrappedModel();
-   if (!m)
-      return;
-   m->clear();
+   if (auto* model = this->unwrappedModel())
+      model->clear();
 }
 void FormTable::setFilter(QLineEdit* field) {
    this->_filterThrottle->stop();
@@ -294,7 +338,7 @@ void FormTable::setSource(BasicFormTypeTree* tree) {
    this->_source = tree;
    if (!tree)
       return;
-   tree->getSelectedFormTypes(this->_currentFormTypes);
    QObject::connect(tree->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormTable::recheckFormTypes);
+   this->recheckFormTypes();
 }
 #pragma endregion

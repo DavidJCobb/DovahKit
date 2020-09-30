@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <set>
 #include <vector>
 #include <QAbstractItemModel>
 #include <QString>
@@ -36,7 +35,7 @@ class BasicFormTypeTreeModelItem { // represents a (sub)category
       inline const QString& name() const noexcept { return this->_name; }
       inline BasicFormTypeTreeModelItem* parent() const noexcept { return this->_parent; }
 
-      void addToSet(std::set<dovah::form_type_t>& out) const noexcept;
+      void addToSet(QVector<dovah::form_type_t>& out) const noexcept;
 };
 
 class BasicFormTypeTreeModel : public QAbstractItemModel {
@@ -74,5 +73,5 @@ class BasicFormTypeTree : public QLinedTreeView {
       using model_type      = BasicFormTypeTreeModel;
       using model_item_type = model_type::item_type;
       //
-      void getSelectedFormTypes(std::set<dovah::form_type_t>& out) const noexcept;
+      QVector<dovah::form_type_t> selectedFormTypes() const noexcept;
 };
