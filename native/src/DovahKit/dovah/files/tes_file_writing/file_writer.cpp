@@ -257,7 +257,6 @@ namespace dovah::tes_file_writing {
             error.file_offset = this->get_stream_position();
             return;
          }
-         record.header.size = compressed_size + sizeof(tes_file_record_header::size);
          int result = compress2((Bytef*)buffer, (uLongf*)&compressed_size, (const Bytef*)record.data.data(), decompressed_size, Z_BEST_COMPRESSION);
          if (result != Z_OK) {
             error.formID      = record.header.formID;
@@ -272,6 +271,7 @@ namespace dovah::tes_file_writing {
                   return;
             }
          }
+         record.header.size = compressed_size + sizeof(decompressed_size);
          this->_write(record.header);
          this->_write(decompressed_size);
          this->stream.write((const uint8_t*)buffer, compressed_size);
@@ -288,32 +288,42 @@ namespace dovah::tes_file_writing {
 
    void file_writer::_write_child_forms_for_cell(form_stub* stub) {
       if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_persistent_children)) {
-         auto& group = this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         bool group_opened = false;
          //
-         form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+         form_stub_helpers::for_each_child_form(stub, [this, &group_opened](form_stub* child) {
             if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_persistent_children)
                return false;
             if (!child->needs_save())
                return false;
+            if (!group_opened) {
+               this->open_group(tes_file_group_type::cell_persistent_children, child->groupInfo.parentFormID, tes_file_group_header::uninitialized_unknown);
+               group_opened = true;
+            }
             this->_write_form(child);
             return false;
          });
          //
-         this->close_current_group();
+         if (group_opened)
+            this->close_current_group();
       }
       if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_temporary_children)) {
-         auto& group = this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         bool group_opened = false;
          //
-         form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+         form_stub_helpers::for_each_child_form(stub, [this, &group_opened](form_stub* child) {
             if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_temporary_children)
                return false;
             if (!child->needs_save())
                return false;
+            if (!group_opened) {
+               this->open_group(tes_file_group_type::cell_temporary_children, child->groupInfo.parentFormID, tes_file_group_header::uninitialized_unknown);
+               group_opened = true;
+            }
             this->_write_form(child);
             return false;
          });
          //
-         this->close_current_group();
+         if (group_opened)
+            this->close_current_group();
       }
    }
    void file_writer::_write_child_forms_for_topic(form_stub* stub) {
@@ -340,19 +350,28 @@ namespace dovah::tes_file_writing {
       };
    }
    void file_writer::_write_child_forms_for_worldspace(form_stub* stub) {
-      auto& group_wc = this->open_group(tes_file_group_type::world_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+      bool group_opened         = false;
+      auto open_group_if_needed = [this, stub, &group_opened]() {
+         if (group_opened)
+            return;
+         this->open_group(tes_file_group_type::world_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         group_opened = true;
+      };
       //
       if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(stub)) {
-         if (cell->needs_save())
+         if (cell->needs_save()) {
+            (open_group_if_needed)();
             this->_write_form(cell);
+         }
       }
       //
       std::map<uint32_t, _cell_block> blocks;
-      form_stub_helpers::for_each_child_form(stub, [&blocks](form_stub* child) {
+      form_stub_helpers::for_each_child_form(stub, [&blocks, &open_group_if_needed](form_stub* child) {
          if (child->formType != form_type::cell)
             return false;
          if (!child->needs_save())
             return false;
+         (open_group_if_needed)();
          auto b  = child->get_cell_block();
          auto sb = child->get_cell_sub_block();
          blocks[b].contents[sb].cells.push_back(child);
@@ -372,7 +391,8 @@ namespace dovah::tes_file_writing {
          this->close_current_group();
       }
       //
-      this->close_current_group();
+      if (group_opened)
+         this->close_current_group();
    }
    void file_writer::_write_interior_cells() {
       this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong('CELL'), 0);

@@ -101,9 +101,12 @@
 //
 //     - Record compression
 //
-//        - Test the "threshold" compression policy.
-//
 //        - Write the code to decide when CELL records should be compressed.
+//
+//        - Test the "bethesda" compression policy.
+//
+//           - Requires either having an exterior CELL override to work with, or 
+//             adding support for saving NPC_.
 //
 //  - Add a "Windows" menu to the main window. It should list all open windows and 
 //    allow the user to bring them to the front.
