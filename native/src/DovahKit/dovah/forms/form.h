@@ -40,7 +40,7 @@ namespace dovah {
             // unless the cloning process fails. If (receiving_stub) already has a non-null form 
             // pointer when passed in, an assertion will fail.
             //
-            Form* clone(form_stub& receiving_stub) const noexcept;
+            Form* clone(form_stub& receiving_stub, bool* out_complete = nullptr) const noexcept;
 
             bool save(tes_file_writing::record& record); // returns a success bool. will write EDID for you.
 

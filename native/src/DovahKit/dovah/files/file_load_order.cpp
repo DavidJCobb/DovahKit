@@ -646,11 +646,14 @@ namespace dovah {
          return nullptr;
       assert(!cobb::unordered_map_contains(this->forms.forms, formID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
       //
-      auto* loaded = create_blank_loaded_form_by_type(request.form_type);
-      if (!loaded) {
-         request.formID = 0;
-         request.error  = form_creation_request::error_code::unsupported_form_type_requested;
-         return nullptr;
+      loaded_forms::Form* loaded = nullptr;
+      if (!request.clone_of) {
+         loaded = create_blank_loaded_form_by_type(request.form_type);
+         if (!loaded) {
+            request.formID = 0;
+            request.error = form_creation_request::error_code::unsupported_form_type_requested;
+            return nullptr;
+         }
       }
       auto* stub = new form_stub;
       stub->formType = request.form_type;
@@ -670,9 +673,13 @@ namespace dovah {
       }
       //
       if (request.clone_of) {
-         //
-         // TODO
-         //
+         auto original = request.clone_of->load();
+         if (original) {
+            bool result = false;
+            loaded = original->clone(*stub, &result);
+            if (!result)
+               request.error = form_creation_request::error_code::form_created_but_clone_failed;
+         }
       } else {
          loaded->setup();
       }

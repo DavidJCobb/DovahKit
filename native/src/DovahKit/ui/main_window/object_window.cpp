@@ -85,7 +85,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       }
    });
    //
-   this->_formActionEdit        = new QAction(tr("Edit...", "object window form actions"), this->ui.table);
+   this->_formActionEdit        = new QAction(tr("Edit...",     "object window form actions"), this->ui.table);
    this->_formActionShowUseInfo = new QAction(tr("Use Info...", "object window form actions"), this->ui.table);
    QObject::connect(this->_formActionEdit, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
@@ -102,13 +102,27 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->ui.table, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
       auto opener = this->ui.table;
       //
-      auto form_types = this->ui.tree->selectedFormTypes();
+      auto* stub       = _get_selected_form(opener);
+      auto  form_types = this->ui.tree->selectedFormTypes();
       this->_actionCreateForm->setEnabled(form_types.size() == 1);
+      this->_formActionEdit->setVisible(stub != nullptr);
+      this->_formActionShowUseInfo->setVisible(stub != nullptr);
       //
       QMenu menu(opener);
       menu.addAction(this->_actionCreateForm);
       menu.addAction(this->_formActionEdit);
       menu.addAction(this->_formActionShowUseInfo);
+      //
+      bool any = false;
+      for (auto* action : menu.actions()) {
+         if (action->isEnabled() && action->isVisible()) {
+            any = true;
+            break;
+         }
+      }
+      if (!any)
+         return; // don't show a menu if all of its contents are disaled or hidden
+      //
       menu.exec(opener->mapToGlobal(pos));
    });
    #pragma endregion

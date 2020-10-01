@@ -11,20 +11,18 @@ namespace dovah::loaded_forms {
    void Form::load(tes_record_reader& record) {
       this->flags = record.flags();
    }
-   Form* Form::clone(form_stub& receiving_stub) const noexcept {
+   Form* Form::clone(form_stub& receiving_stub, bool* out_complete) const noexcept {
       assert(receiving_stub.form == nullptr && "Cannot clone a loaded form into a stub that already has a loaded form.");
       auto instance = create_blank_loaded_form_by_type(this->formType);
       if (instance) {
          receiving_stub.form = instance;
          instance->stub  = &receiving_stub;
          instance->flags = this->flags;
-         if (!this->_clone_impl(instance)) {
-            receiving_stub.form = nullptr;
-            delete instance;
-            instance = nullptr;
-         } else {
-            receiving_stub.set_edited(true);
-         }
+         receiving_stub.set_edited(true);
+         bool result = this->_clone_impl(instance);
+         receiving_stub.set_edited(true);
+         if (out_complete)
+            *out_complete = result;
       }
       return instance;
    }

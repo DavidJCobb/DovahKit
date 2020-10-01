@@ -220,6 +220,7 @@ namespace dovah {
             no_form_id_available,
             bad_form_type_requested,
             unsupported_form_type_requested,
+            form_created_but_clone_failed, // we were able to make a new form, but Form::clone() returned false
          };
       protected:
          file_load_order& owner;
