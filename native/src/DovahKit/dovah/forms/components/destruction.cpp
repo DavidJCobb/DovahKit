@@ -123,4 +123,33 @@ namespace dovah::loaded_forms::components {
          DSTF.close();
       }
    }
+   void destruction_stage_data::clone_from(const destruction_stage_data& other, form_stub& my_owner) noexcept {
+      this->health = other.health;
+      this->flags  = other.flags;
+      //
+      auto*  stub = &my_owner;
+      size_t size = other.stages.size();
+      if (!this->stages.empty()) {
+         for (auto& stage : this->stages) {
+            stage.explosionID.set(stub, bare_form_id_t(0));
+            stage.debrisID.set(stub, bare_form_id_t(0));
+            stage.replacementModel.clear();
+         }
+         this->stages.clear();
+      }
+      this->stages.resize(size);
+      //
+      for (size_t i = 0; i < size; ++i) {
+         auto& stage = this->stages[i];
+         auto& from  = other.stages[i];
+         stage.healthPercent  = from.healthPercent;
+         stage.damageStage    = from.damageStage;
+         stage.flags          = from.flags;
+         stage.selfDamageRate = from.selfDamageRate;
+         stage.explosionID.set(stub, from.explosionID);
+         stage.debrisID.set(stub, from.debrisID);
+         stage.debrisCount    = from.debrisCount;
+         stage.replacementModel.clone_from(from.replacementModel, my_owner);
+      }
+   }
 }

@@ -24,6 +24,15 @@ namespace dovah::loaded_forms {
    /*static*/ void Color::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       return; // this form type does not have any subrecords that contain form IDs
    }
+   bool Color::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<Color*>(out);
+      if (!copy)
+         return false;
+      copy->name  = this->name;
+      copy->color = this->color;
+      copy->color_flags = this->color_flags;
+      return true;
+   }
    bool Color::_save_impl(tes_record_writer& record) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);

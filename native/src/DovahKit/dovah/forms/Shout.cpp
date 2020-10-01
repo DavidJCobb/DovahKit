@@ -51,6 +51,27 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   bool Shout::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<Shout*>(out);
+      if (!copy)
+         return false;
+      // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
+      copy->name        = this->name;
+      copy->description = this->description;
+      copy->menuDisplayObjectID.set(copy->stub, this->menuDisplayObjectID);
+      //
+      size_t size = this->words.size();
+      assert(copy->words.empty() && "We should be working with a newly-created form. If this isn't empty, then we need to clear out the form IDs already inside via (set) calls; simply resizing/clearing the vector and destroying form_id_ts will fail to clean up already-existing use info.");
+      copy->words.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         auto& word = copy->words[i];
+         auto& from = this->words[i];
+         word.wordOfPowerID.set(copy->stub, from.wordOfPowerID);
+         word.spellID.set(copy->stub, from.spellID);
+         word.recoveryTime = from.recoveryTime;
+      }
+      return true;
+   }
    bool Shout::_save_impl(tes_record_writer& record) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);

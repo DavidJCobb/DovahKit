@@ -9,11 +9,9 @@ namespace dovah::loaded_forms::components {
       int32_t   count = 0;
       // COED:
       form_id_t owner;
-      union {
-         form_id_t global;
-         int32_t   factionRank = 0;
-      };
-      float condition;
+      form_id_t global; // for NPC_ owners
+      int32_t   factionRank = 0; // for FACT owners
+      float     condition; // item health
       //
       container_entry() : factionRank(0) {};
    };
@@ -22,5 +20,6 @@ namespace dovah::loaded_forms::components {
       //
       void load(tes_subrecord_reader&);
       static void generateUseInfo(tes_subrecord_reader&, form_stub*);
+      void clone_from(const container_data& original, form_stub& my_owner) noexcept;
    };
 }

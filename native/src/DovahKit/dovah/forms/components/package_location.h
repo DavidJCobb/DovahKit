@@ -36,5 +36,6 @@ namespace dovah::loaded_forms::components {
       void load(tes_subrecord_reader&);
       static void generateUseInfo(tes_subrecord_reader&, form_stub*);
       void save(tes_subrecord_writer&);
+      void clone_from(const package_location& original, form_stub& my_owner) noexcept;
    };
 }

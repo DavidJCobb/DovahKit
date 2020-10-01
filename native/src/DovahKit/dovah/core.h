@@ -220,6 +220,13 @@ namespace dovah {
       // (form_stub) that owns the loaded-form that the form_id_t instance is a member of; and 
       // the form ID or (form_stub) that you want the form_id_t instance to be set to.
       //
+      // Note that this struct DOES NOT have a destructor that severs use info. This is by 
+      // design, so that a loaded form can be unloaded without severing the use info. However, 
+      // that means that if you want to, say, clear a std::vector<form_id_t> on a loaded form 
+      // as part of some modification you are making to that form, then you must first call  
+      // (form_id_t::set) on each form ID in the vector, passing (bare_form_id_t(0)). Naturally, 
+      // this also applies to vectors of structs that have form_id_t members.
+      //
       friend class tes_file_reading::subrecord;
       friend class tes_file_writing::subrecord;
       protected:

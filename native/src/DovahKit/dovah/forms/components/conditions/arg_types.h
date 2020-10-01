@@ -1,5 +1,7 @@
 #pragma once
 #include "arg_value.h"
+#include <string>
+#include <vector>
 
 namespace dovah::loaded_forms::components {
    namespace condition_info {

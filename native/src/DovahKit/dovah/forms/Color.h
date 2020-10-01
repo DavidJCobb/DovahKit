@@ -22,13 +22,14 @@ namespace dovah::loaded_forms {
          Color() : Form(form_type) {};
 
          localized_string name;
-         color_t       color;
-         color_flags_t color_flags = 0;
+         color_t          color;
+         color_flags_t    color_flags = 0;
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
          //
       protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
    };
 }

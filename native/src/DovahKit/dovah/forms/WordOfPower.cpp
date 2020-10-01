@@ -21,6 +21,14 @@ namespace dovah::loaded_forms {
    /*static*/ void WordOfPower::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       return; // this form type does not have any subrecords that contain form IDs
    }
+   bool WordOfPower::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<WordOfPower*>(out);
+      if (!copy)
+         return false;
+      copy->dragon_name = this->dragon_name;
+      copy->human_name  = this->human_name;
+      return true;
+   }
    bool WordOfPower::_save_impl(tes_record_writer& record) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->dragon_name);

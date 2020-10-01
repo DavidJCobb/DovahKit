@@ -8,6 +8,7 @@
 #include "components/keyword_list.h"
 #include "components/model.h"
 #include "components/papyrus.h"
+#include "structs/color_dword.h"
 
 namespace dovah::loaded_forms {
    class Activator : public Form {
@@ -30,12 +31,7 @@ namespace dovah::loaded_forms {
          components::destruction_stage_data destruction_data;
          components::keyword_list keywords;
          localized_string name; // FULL
-         struct {
-            uint8_t r;
-            uint8_t g;
-            uint8_t b;
-            uint8_t alpha; // unused
-         } marker_color; // CNAM
+         color_t   marker_color; // CNAM
          form_id_t looping_sound;
          form_id_t activation_sound;
          form_id_t water_type;

@@ -9,4 +9,10 @@ namespace dovah {
       this->exists = true;
       return *this;
    }
+   localized_string& localized_string::operator=(const localized_string& other) noexcept {
+      this->value  = other.value;
+      this->index  = other.index;
+      this->exists = other.exists;
+      return *this;
+   }
 }

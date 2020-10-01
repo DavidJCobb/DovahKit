@@ -941,6 +941,33 @@ namespace dovah::loaded_forms::components {
          CIS1.close();
       }
    }
+   void condition::clone_from(const condition& other, form_stub& my_owner) noexcept {
+      this->type = other.type;
+      this->compare_to_constant = other.compare_to_constant;
+      this->compare_to_global   = other.compare_to_global;
+      this->function = other.function;
+      //
+      auto func = condition_info::function::lookup_by_id(this->function);
+      for (int i = 0; i < 2; i++) {
+         auto& param = this->parameters[i];
+         auto& from  = other.parameters[i];
+         if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID)
+            param.formID.set(&my_owner, from.formID);
+         else
+            param.dword = from.dword;
+         param.string = from.string;
+      }
+      //
+      this->run_on       = other.run_on;
+      this->run_on_reference.set(&my_owner, other.run_on_reference);
+      this->run_on_index = other.run_on_index;
+      //
+      this->eventFunction = other.eventFunction;
+      this->eventMember   = other.eventMember;
+      if (func && func->uses_event_data) {
+         this->eventFormID.set(&my_owner, other.eventFormID);
+      }
+   }
 
    void condition::to_string(std::string& out) const {
       out.clear();

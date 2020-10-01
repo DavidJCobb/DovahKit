@@ -17,6 +17,7 @@ namespace dovah::loaded_forms::components {
       bool load(tes_record_reader&);
       static void generateUseInfo(tes_record_reader&, form_stub*);
       void save(tes_record_writer&);
+      void clone_from(const package_event_dialogue& original, form_stub& my_owner) noexcept;
 
       bool empty() const noexcept;
    };

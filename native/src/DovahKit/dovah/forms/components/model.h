@@ -30,6 +30,9 @@ namespace dovah::loaded_forms::components {
       void save(tes_subrecord_writer&); // open the subrecord before calling
       void save(tes_record_writer&, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap); // opens the subrecords, etc., for you
       //
+      void clear(form_stub& my_owner);
+      void clone_from(const model& original, form_stub& my_owner) noexcept;
+      //
       inline bool has_texture_hashes() const noexcept { return !this->textureHashes.data.empty(); }
    };
 }

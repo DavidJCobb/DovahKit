@@ -76,4 +76,22 @@ namespace dovah::loaded_forms::components {
          assert(false && "ContainerData::generateUseInfo should only be called for COCT, CNTO, and COED subrecords!");
       #endif
    }
+   void container_data::clone_from(const container_data& other, form_stub& my_owner) noexcept {
+      size_t size = other.entries.size();
+      this->entries.clear();
+      this->entries.resize(size);
+      //
+      auto* stub = &my_owner;
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = this->entries[i];
+         auto& from  = other.entries[i];
+         //
+         entry.item.set(stub, from.item);
+         entry.count = from.count;
+         entry.owner.set(stub, from.owner);
+         entry.factionRank = from.factionRank;
+         entry.global.set(stub, from.global);
+         entry.condition = from.condition;
+      }
+   }
 }

@@ -36,10 +36,7 @@ namespace dovah::loaded_forms {
                this->keywords.load(subrecord);
                break;
             case 'PNAM':
-               subrecord.read(this->marker_color.r);
-               subrecord.read(this->marker_color.g);
-               subrecord.read(this->marker_color.b);
-               subrecord.read(this->marker_color.alpha);
+               this->marker_color.load(subrecord);
                break;
             case 'SNAM':
                subrecord.read(this->looping_sound);

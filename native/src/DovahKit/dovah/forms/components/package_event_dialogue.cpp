@@ -53,6 +53,12 @@ namespace dovah::loaded_forms::components {
       }
       PDTO.close();
    }
+   void package_event_dialogue::clone_from(const package_event_dialogue& other, form_stub& my_owner) noexcept {
+      this->idle.set(&my_owner, other.idle);
+      this->type = other.type;
+      this->topic.set(&my_owner, other.topic);
+      this->topic_subtype = other.topic_subtype;
+   }
 
    bool package_event_dialogue::empty() const noexcept {
       if (this->idle)

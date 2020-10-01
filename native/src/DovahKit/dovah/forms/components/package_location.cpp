@@ -71,4 +71,12 @@ namespace dovah::loaded_forms::components {
       }
       subrecord.write(this->radius);
    }
+   void package_location::clone_from(const package_location& other, form_stub& my_owner) noexcept {
+      this->type = other.type;
+      this->detail.form.set(&my_owner, other.detail.form);
+      this->detail.object_type = other.detail.object_type;
+      this->detail.alias_id    = other.detail.alias_id;
+      this->detail.padding     = other.detail.padding;
+      this->radius = other.radius;
+   }
 }

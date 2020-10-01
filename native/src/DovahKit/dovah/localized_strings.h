@@ -9,13 +9,13 @@ namespace dovah {
       //
       // TODO: We'll need to do one of the following:
       //
-      //  - Add something to this struct to indicate whether we're pulling from a string table.
+      //  - Add something to this struct to indicate whether we're pulling from a string table 
+      //    (and, for that matter, *which* string table).
       //
       //  - Anyplace we want to be able to edit the value of an LString, we first need to check 
       //    whether the containing file uses a string table.
       //
-      // Actually editing string tables is not in-scope for this program, so in cases where a 
-      // string table is in use, LStrings should be considered read-only.
+      // Actually editing string tables is not in-scope for this program, at least not yet.
       //
 
       inline const char* c_str() const noexcept { return this->value.c_str(); }
@@ -23,5 +23,6 @@ namespace dovah {
       inline bool empty() const noexcept { return this->value.empty(); }
 
       localized_string& operator=(const std::string&) noexcept;
+      localized_string& operator=(const localized_string&) noexcept;
    };
 }

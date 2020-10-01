@@ -45,4 +45,16 @@ namespace dovah::loaded_forms::components {
          KWDA.write(k);
       KWDA.close();
    }
+   void keyword_list::clear(form_stub& my_owner) noexcept {
+      for (auto& id : this->forms)
+         id.set(&my_owner, bare_form_id_t(0));
+      this->forms.clear();
+   }
+   void keyword_list::clone_from(const keyword_list& other, form_stub& my_owner) noexcept {
+      size_t size = other.forms.size();
+      this->clear(my_owner);
+      this->forms.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         this->forms[i].set(&my_owner, other.forms[i]);
+   }
 }

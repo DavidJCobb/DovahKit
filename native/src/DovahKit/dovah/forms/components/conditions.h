@@ -78,7 +78,7 @@ namespace dovah::loaded_forms::components {
       //
       uint16_t  eventFunction;
       uint16_t  eventMember;
-      uint32_t  eventFormID;
+      form_id_t eventFormID;
 
       condition_info::arg_type*           get_argument_type(uint8_t index) const noexcept;
       condition_info::arg_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;
@@ -89,6 +89,7 @@ namespace dovah::loaded_forms::components {
       bool read(tes_record_reader&); // assumes we've already opened a CTDA subrecord
       static void generateUseInfo(tes_record_reader&, form_stub*);
       void save(tes_record_writer&); // call with no subrecord open
+      void clone_from(const condition& original, form_stub& my_owner) noexcept;
       //
       void to_string(std::string& out) const;
    };
