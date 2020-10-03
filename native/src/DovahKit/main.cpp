@@ -154,8 +154,59 @@
 //           - If fails, tear down the clone's stub, report error, and abort
 //        - Send formCreated signal
 //
-//     - This includes duplicating forms. We've started some of the work on that; refer 
-//       to loaded_forms::Form::clone(...).
+//     - The form_creation_request class nedes to accept a "parent form" stub or form 
+//       ID, and when creating the form, we should wire up parent/child use info before 
+//       calling the loaded-form initialize/clone functions.
+//
+//        - The request should be able to store a form stub or a form ID, and should 
+//          have a setter that takes each. The idea is that we really only want a form 
+//          ID, but if the caller happens to have a stub on hand, then we should save 
+//          ourselves the trouble of performing a lookup.
+//
+//        - Should we validate the parent form (and the involved form types) to make 
+//          sure that everything makes sense, e.g. prevent a CONT from being a child of 
+//          a VTYP? If we make sure we always have stubs on hand, then this validation 
+//          is trivial.
+//
+//        - When creating a new CELL, the way we initialize it needs to depend on 
+//          whether it is an interior or exterior cell. In practice, we need to override 
+//          Form::setup for the Cell class and have the cell check, through its stub, 
+//          whether it has a parent form.
+//
+//     - Create a form_duplication_request class that has a file_load_order& owner and 
+//       contains: a single form_creation_request for the main form being duplicated; 
+//       and a vector of form_creation_request* for that form's children, which also 
+//       need to be duplicated (this needs to be a vector of heap-allocated requests 
+//       because vectors can't contain references (i.e. foo&) or any class that has 
+//       reference members).
+//
+//        - After creating the "root" form, set the "parent form" stub on the creation 
+//          requests for child forms.
+//
+//        - Add an option that controls whether to duplicate child forms.
+//
+//        - Make it possible to override the parent form used for the duplicate, but 
+//          have it default to the same parent as the original form.
+//
+//           - This would make it possible to "duplicate" an exterior cell to serve as 
+//             an interior, which is... problematic.
+//
+//  - For Use Info, merge the "is base form of" and "is reference of" flags, since we 
+//    can infer which is which just by looking at the form types involved (i.e. CONT is 
+//    always a base form of REFR; the relationship is never reversed). Then, add a Use 
+//    Info flag for "is dialogue system relationship." This flag will be used for: the 
+//    owning QUST of a DIAL; and the linked list of INFOs. It can optionally be used 
+//    for the owning DIAL of an INFO, but that should also use the parent/child flags. 
+//    As with base forms and references, "dialogue system relationships" always have 
+//    the same directionality for any given two form types.
+//
+//     - This will require a subclass of form_id_t similar to what we use for REFR's 
+//       base form ID. Fortunately, we only need one such subclass to handle both the 
+//       QUST/DIAL connection and the INFO/INFO connections.
+//
+//     - We want this as prep for implementing dialogue editing in the future, but we 
+//       also need it for form duplication: duplicating a QUST should give the option 
+//       to also duplicate its contained DIALs.
 //
 //  - Code for deleting forms.
 //
