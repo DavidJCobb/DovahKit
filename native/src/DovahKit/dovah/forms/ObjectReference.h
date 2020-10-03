@@ -58,6 +58,7 @@ namespace dovah::loaded_forms {
       protected:
          ObjectReference(form_type_t ft) : Form(ft) {}; // for subclasses
          //
+         virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
    };
 }

@@ -60,6 +60,20 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   bool ObjectReference::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<ObjectReference*>(out);
+      if (!copy)
+         return false;
+      assert(copy->stub);
+      auto& clone_stub = *copy->stub;
+      copy->extra_data.clone_from(this->extra_data, clone_stub);
+      copy->script_data.clone_from(this->script_data, clone_stub);
+      copy->base_form.set(&clone_stub, this->base_form);
+      copy->is_open = this->is_open;
+      copy->position = this->position;
+      copy->rotation = this->rotation;
+      return true;
+   }
    bool ObjectReference::_save_impl(tes_record_writer& record) {
       this->script_data.save(record);
       //
