@@ -10,7 +10,7 @@ namespace dovah::loaded_forms {
             case 'EDID': // already read by the FormStub
                break;
             case 'VMAD':
-               this->papyrus.load(subrecord);
+               this->script_data.load(subrecord);
                break;
             case 'OBND':
                this->bounds.load(subrecord);
@@ -113,6 +113,38 @@ namespace dovah::loaded_forms {
       copy->interact_keyword.set(copy->stub, this->interact_keyword);
       copy->activation_verb = this->activation_verb;
       copy->activator_flags = this->activator_flags;
+      return true;
+   }
+   bool Activator::_save_impl(tes_record_writer& record) {
+      this->script_data.save(record);
+      auto& OBND = record.open_next_subrecord('OBND');
+      this->bounds.save(OBND);
+      OBND.close();
+      auto& FULL = record.open_next_subrecord('FULL');
+      FULL.write(this->name);
+      FULL.close();
+      this->model.save(record, 'MODL', 'MODT', 'MODS');
+      this->destruction_data.save(record);
+      this->keywords.save(record);
+      auto& PNAM = record.open_next_subrecord('PNAM');
+      this->marker_color.save(PNAM);
+      PNAM.close();
+      if (this->looping_sound)
+         record.write_formID_subrecord('SNAM', this->looping_sound);
+      if (this->activation_sound)
+         record.write_formID_subrecord('VNAM', this->activation_sound);
+      if (this->water_type)
+         record.write_formID_subrecord('WNAM', this->water_type);
+      if (!this->activation_verb.empty()) {
+         auto& RNAM = record.open_next_subrecord('RNAM');
+         RNAM.write(this->activation_verb);
+         RNAM.close();
+      }
+      auto& FNAM = record.open_next_subrecord('FNAM');
+      FNAM.write(this->activator_flags);
+      FNAM.close();
+      if (this->interact_keyword)
+         record.write_formID_subrecord('KNAM', this->interact_keyword);
       return true;
    }
 }

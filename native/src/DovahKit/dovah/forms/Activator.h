@@ -25,11 +25,29 @@ namespace dovah::loaded_forms {
          };
          using activator_flags_t = std::underlying_type_t<activator_flag::type>;
 
-         components::papyrus_attachment_data script_data;
-         components::object_bounds bounds;
-         components::model model;
-         components::destruction_stage_data destruction_data;
-         components::keyword_list keywords;
+         struct record_flag {
+            enum : uint32_t {
+               has_tree_lod              = 0x00000040,
+               must_update_anims         = 0x00000100,
+               hide_from_local_map       = 0x00000200,
+               has_distant_lod           = 0x00008000,
+               random_anim_start         = 0x00010000,
+               dangerous                 = 0x00020000, // for water activators only?
+               ignore_object_interaction = 0x00100000,
+               is_marker                 = 0x00800000,
+               obstacle                  = 0x02000000,
+               navmesh_generation_filter = 0x04000000,
+               navmesh_generation_obb    = 0x08000000,
+               child_can_use             = 0x20000000,
+               navmesh_generation_ground = 0x40000000,
+            };
+         };
+
+         components::papyrus_attachment_data script_data; // VMAD
+         components::object_bounds bounds; // OBND
+         components::model model; // MODL, MODT, MODS
+         components::destruction_stage_data destruction_data; // DEST
+         components::keyword_list keywords; // KSIZ, KWDA
          localized_string name; // FULL
          color_t   marker_color; // CNAM
          form_id_t looping_sound;
@@ -44,5 +62,6 @@ namespace dovah::loaded_forms {
          //
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
+         virtual bool _save_impl(tes_file_writing::record& record) override;
    };
 }
