@@ -154,32 +154,6 @@
 //           - If fails, tear down the clone's stub, report error, and abort
 //        - Send formCreated signal
 //
-//     - The form_creation_request class nedes to accept a "parent form" stub or form 
-//       ID, and when creating the form, we should wire up parent/child use info before 
-//       calling the loaded-form initialize/clone functions.
-//
-//        - The request should be able to store a form stub or a form ID, and should 
-//          have a setter that takes each. The idea is that we really only want a form 
-//          ID, but if the caller happens to have a stub on hand, then we should save 
-//          ourselves the trouble of performing a lookup.
-//
-//        - Should we validate the parent form (and the involved form types) to make 
-//          sure that everything makes sense, e.g. prevent a CONT from being a child of 
-//          a VTYP? If we make sure we always have stubs on hand, then this validation 
-//          is trivial.
-//
-//        - When creating a new CELL, the way we initialize it needs to depend on 
-//          whether it is an interior or exterior cell. In practice, we need to override 
-//          Form::setup for the Cell class and have the cell check, through its stub, 
-//          whether it has a parent form.
-//
-//           - Does form_creation_request need to also accept grid cell coordinates and 
-//             somehow pass those to Form::setup? We may need to create some generic 
-//             struct like form_setup_options that can be passed over.
-//
-//             If we go that route, then whenever we create a cell with a parent form, 
-//             we should assert that grid coordinates were provided.
-//
 //     - Create a form_duplication_request class that has a file_load_order& owner and 
 //       contains: a single form_creation_request for the main form being duplicated; 
 //       and a vector of form_creation_request* for that form's children, which also 
@@ -196,7 +170,12 @@
 //          have it default to the same parent as the original form.
 //
 //           - This would make it possible to "duplicate" an exterior cell to serve as 
-//             an interior, which is... problematic.
+//             an interior, which is... problematic. For now, we should probably assert 
+//             that we aren't switching the cell type between interior and exterior; if 
+//             we ever think of a sensible way to implement that in the future, then we 
+//             can add support then (and in the meantime we can make it clear in code 
+//             comments that clients/frontends should double-check themselves that that 
+//             requirement isn't being broken, since we assert).
 //
 //  - For Use Info, merge the "is base form of" and "is reference of" flags, since we 
 //    can infer which is which just by looking at the form types involved (i.e. CONT is 

@@ -26,7 +26,7 @@ namespace dovah::form_stub_helpers {
       return nullptr;
    }
    form_stub* get_worldspace_persistent_cell(const form_stub* world) {
-      for (auto& pair : world->outbound) {
+      for (auto& pair : world->inbound) {
          auto& entry = pair.second;
          if (entry.flags & use_info_entry::flag::i_am_parent_of) {
             auto* child = entry.other;
@@ -38,6 +38,20 @@ namespace dovah::form_stub_helpers {
                continue;
             return child;
          }
+      }
+      return nullptr;
+   }
+   form_stub* get_worldspace_cell_by_grid(const form_stub* world, int32_t x, int32_t y) {
+      for (auto& pair : world->inbound) {
+         auto& entry = pair.second;
+         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
+            continue;
+         auto* cell = entry.other;
+         if (!cell || cell->formType != form_type::cell)
+            continue;
+         assert(cell->groupInfo.parentFormID == world->formID && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
+         if (cell->groupInfo.gridX == x && cell->groupInfo.gridY == y)
+            return cell;
       }
       return nullptr;
    }

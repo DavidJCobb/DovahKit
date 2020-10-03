@@ -220,12 +220,15 @@ namespace dovah {
             no_form_id_available,
             bad_form_type_requested,
             unsupported_form_type_requested,
+            invalid_parent_child_relationship, // forms of (child_of)'s type cannot have children of type (form_type)
+            exterior_grid_coordinates_already_taken, // cannot create an exterior cell; the desired grid coordinates are used by another cell in the same world
             form_created_but_clone_failed, // we were able to make a new form, but Form::clone() returned false
          };
       protected:
          file_load_order& owner;
          form_type_t      form_type = form_type::none;
          bare_form_id_t   formID    = 0;       // the form ID reserved for the newly-created form. set by the owning load order
+         form_stub*       child_of  = nullptr; // what form should serve as the new form's parent?
          form_stub*       clone_of  = nullptr; // do we want to create a new form from scratch, or duplicate an existing one?
          error_code       error     = error_code::none;
          //
@@ -243,9 +246,16 @@ namespace dovah {
          ~form_creation_request();
          //
          std::string editorID; // the editor ID to be used for the new form
+         struct {
+            int32_t x = 0;
+            int32_t y = 0;
+         } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
          //
          inline bool is_valid() const noexcept { return this->formID != 0; }
          inline error_code get_error_code() const noexcept { return this->error; }
+         //
+         void set_parent_form(form_stub* parent);
+         void set_parent_form(bare_form_id_t parentID);
          //
          void queue_clone(form_stub* original);
          form_stub* commit();

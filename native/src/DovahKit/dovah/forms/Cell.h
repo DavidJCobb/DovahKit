@@ -60,10 +60,6 @@ namespace dovah::loaded_forms {
 
          localized_string name; // FULL
          uint16_t cell_flags = 0; // DATA
-         struct {
-            int32_t x = 0;
-            int32_t y = 0;
-         } grid_coords; // XCLC
          uint32_t land_flags = 0; // XCLC
          components::extra_data_list extra_data;
          struct {
@@ -89,6 +85,7 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
          //
+         virtual void setup() noexcept override;
          virtual bool would_bethesda_compress() const noexcept override;
          //
       protected:

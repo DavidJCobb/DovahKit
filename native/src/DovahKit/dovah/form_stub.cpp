@@ -135,6 +135,16 @@ namespace dovah {
       this->add_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
    }
    void form_stub::send_inbound_refs() noexcept {
+      //
+      // This function takes all outbound connections and creates, for the connected forms, inbound 
+      // connections from this form. It is intended only for use at the tail end of the (file_load_order) 
+      // load process, for building use info for all loaded forms: (add_outbound_reference) is used to 
+      // create single-direction connections, and this function subsequently makes all such connections 
+      // bidirectional.
+      //
+      // If you were to call this function later on, you would end up with redundant inbound connections, 
+      // as already-sent outbound connections would be sent again.
+      //
       for (auto it = this->outbound.begin(); it != this->outbound.end(); ++it) {
          use_info_entry::flags_t flags = use_info_entry::invert_flags(it->second.flags);
          //
@@ -151,6 +161,20 @@ namespace dovah {
    }
 
    void form_stub::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
+      //
+      // This function creates a single-direction connection from (this) to (to_stub), with the understanding 
+      // that a later call to (this->send_inbound_refs()) will make all such connections bidirectional. As 
+      // such, this function should only be used at the tail end of the (file_load_order) load process, for 
+      // building use info for all loaded forms.
+      //
+      // If you need to programmatically create a connection from this form to another, after the initial file 
+      // load, then call (replace_outbound_reference) on this form, passing (bare_form_id_t(0)) as the "old" 
+      // form ID that we want to "replace." This is not strictly intuitive, but then, code outside of the 
+      // backend should not be manipulating form stubs and their use info directly, but rather should be 
+      // working with loaded-form classes. If you're thinking in terms of manipulating form stubs rather than 
+      // in terms of manipulating forms, then you're either thinking in the wrong terms, or you need to make 
+      // sure that you fully understand how form stubs are supposed to work.
+      //
       if (!to_stub)
          return;
       auto& list  = this->outbound;
@@ -163,6 +187,9 @@ namespace dovah {
          entry.flags |= flags;
    }
    void form_stub::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+      //
+      // Please refer to the documentation comments in this function's other overload.
+      //
       if (toFormID == 0)
          return;
       auto& list  = this->outbound;
@@ -302,6 +329,12 @@ namespace dovah {
    }
 
    void form_stub::revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags) {
+      //
+      // Bidirectionally sever a connection from this form to another: this form's outbound 
+      // connection will be severed, and the other form's inbound connection will be severed. 
+      // Note that this is not the same thing as wholly deleting a (use_info_entry), as each 
+      // entry represents all connections from one form to another.
+      //
       auto& target_list = target->inbound;
       for (auto it = target_list.begin(); it != target_list.end(); ++it) {
          auto& pair  = *it;
@@ -326,6 +359,14 @@ namespace dovah {
       }
    }
    void form_stub::replace_outbound_reference(bare_form_id_t old, form_stub* new_stub, use_info_entry::flags_t flags) {
+      //
+      // This function replaces an outbound reference from this form to some other form, while also 
+      // making appropriate changes to that other form's inbound connections.
+      //
+      // This function can also be used to programmatically create a connection from this form to 
+      // the other form. Code outside of the (file_load_order) load process should call this function 
+      // rather than calling (add_outbound_reference); refer to its documentation for details.
+      //
       using outbound_type = use_info_entry::outbound_type;
       using use_flag      = use_info_entry::flag;
       //

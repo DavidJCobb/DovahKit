@@ -4,6 +4,7 @@
 #include "../../helpers/strings.h"
 #include "../../helpers/unordered_map.h"
 #include "../form_stub.h"
+#include "../form_stub_helpers.h"
 #include "tes_file_reading/file.h"
 #include "tes_file_reading/file_header.h"
 #include "tes_file_writing/file_writer.h"
@@ -646,6 +647,37 @@ namespace dovah {
          return nullptr;
       assert(!cobb::unordered_map_contains(this->forms.forms, formID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
       //
+      if (request.child_of) {
+         auto parent_type = request.child_of->formType;
+         auto child_type  = request.form_type;
+         bool error       = false;
+         //
+         if (form_type_info::form_type_is_reference(child_type)) { // validate parent/child relationships
+            error = parent_type != form_type::cell;
+         } else if (child_type == form_type::cell) {
+            error = parent_type != form_type::worldspace;
+         } else if (child_type == form_type::topic_info) {
+            error = parent_type != form_type::topic;
+         } else {
+            error = true;
+         }
+         //
+         if (error) {
+            request.formID = 0;
+            request.error  = form_creation_request::error_code::invalid_parent_child_relationship;
+            return nullptr;
+         }
+         //
+         if (child_type == form_type::cell) { // validate worldspace grid coordinates
+            auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(request.child_of, request.cell_grid_coordinates.x, request.cell_grid_coordinates.y);
+            if (existing) {
+               request.formID = 0;
+               request.error  = form_creation_request::error_code::exterior_grid_coordinates_already_taken;
+               return nullptr;
+            }
+         }
+      }
+      //
       loaded_forms::Form* loaded = nullptr;
       if (!request.clone_of) {
          loaded = create_blank_loaded_form_by_type(request.form_type);
@@ -665,11 +697,20 @@ namespace dovah {
       stub->set_edited(true);
       loaded->stub = stub;
       //
+      stub->groupInfo.gridX = request.cell_grid_coordinates.x;
+      stub->groupInfo.gridY = request.cell_grid_coordinates.y;
+      //
       {
          auto guard = std::lock_guard(this->forms.lock);
          this->forms.forms[formID] = stub;
          this->active_file_forms.forms[formID] = stub;
          this->active_file_forms_by_type[stub->formType].forms[formID] = stub;
+      }
+      //
+      if (request.child_of) {
+         bare_form_id_t parentID = request.child_of->formID;
+         stub->groupInfo.parentFormID = parentID;
+         stub->replace_outbound_reference(bare_form_id_t(0), parentID, use_info_entry::flag::i_am_child_of); // NOT form_stub::add_outbound_reference; see documentation for that function for why
       }
       //
       if (request.clone_of) {
@@ -914,6 +955,16 @@ namespace dovah {
          list.erase(it);
       //
       this->formID = 0;
+   }
+   void form_creation_request::set_parent_form(form_stub* parent) {
+      this->child_of = parent;
+   }
+   void form_creation_request::set_parent_form(bare_form_id_t parentID) {
+      if (!parentID) {
+         this->child_of = nullptr;
+         return;
+      }
+      this->child_of = this->owner.get_form(parentID);
    }
    void form_creation_request::queue_clone(form_stub* original) {
       if (this->clone_of == original)

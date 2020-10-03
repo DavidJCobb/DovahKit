@@ -12,8 +12,8 @@ namespace dovah::loaded_forms {
                subrecord.read(this->cell_flags);
                break;
             case 'XCLC':
-               subrecord.read(this->grid_coords.x);
-               subrecord.read(this->grid_coords.y);
+               subrecord.skip_bytes(sizeof(group_stub::gridX)); // form stubs store this information
+               subrecord.skip_bytes(sizeof(group_stub::gridY)); // form stubs store this information
                subrecord.read(this->land_flags);
                break;
             case 'XCLL':
@@ -97,6 +97,9 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   void Cell::setup() noexcept {
+      cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub->groupInfo.parentFormID == 0);
+   }
    bool Cell::would_bethesda_compress() const noexcept {
       if (this->exterior.occlusion_data.present)
          //
@@ -116,7 +119,6 @@ namespace dovah::loaded_forms {
          return false;
       copy->name = this->name;
       copy->cell_flags = this->cell_flags;
-      copy->grid_coords = this->grid_coords;
       copy->land_flags = this->land_flags;
       copy->extra_data.clone_from(this->extra_data, *copy->stub);
       copy->interior.lighting = this->interior.lighting;
@@ -141,8 +143,9 @@ namespace dovah::loaded_forms {
       DATA.close();
       if (is_exterior) {
          auto& XCLC = record.open_next_subrecord('XCLC');
-         XCLC.write(this->grid_coords.x);
-         XCLC.write(this->grid_coords.y);
+         auto* stub = this->stub;
+         XCLC.write(stub->groupInfo.gridX);
+         XCLC.write(stub->groupInfo.gridY);
          XCLC.write(this->land_flags);
          XCLC.close();
       } else {

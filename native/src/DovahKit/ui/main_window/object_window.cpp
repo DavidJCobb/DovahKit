@@ -39,6 +39,12 @@ namespace {
          case error_code::unsupported_form_type_requested:
             text = QObject::tr("DovahKit does not support editing this form type.");
             break;
+         case error_code::invalid_parent_child_relationship:
+            text = QObject::tr("The specified parent form cannot have a child form of this type. (Wait, what? How did you get the Object Window to try to do that?)");
+            break;
+         case error_code::exterior_grid_coordinates_already_taken:
+            text = QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
+            break;
       }
       QMessageBox::critical(
          window,
