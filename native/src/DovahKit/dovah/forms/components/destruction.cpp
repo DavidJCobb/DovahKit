@@ -133,7 +133,7 @@ namespace dovah::loaded_forms::components {
          for (auto& stage : this->stages) {
             stage.explosionID.set(stub, bare_form_id_t(0));
             stage.debrisID.set(stub, bare_form_id_t(0));
-            stage.replacementModel.clear();
+            stage.replacementModel.clear(my_owner);
          }
          this->stages.clear();
       }

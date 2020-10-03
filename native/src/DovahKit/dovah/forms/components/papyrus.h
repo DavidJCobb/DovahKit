@@ -93,10 +93,12 @@ namespace dovah::loaded_forms::components {
             class property {
                friend script;
                public:
-                  union value_t {
-                     bool        boolean;
-                     float       float32;
-                     int32_t     integer = 0;
+                  struct value_t {
+                     union {
+                        bool    boolean;
+                        float   float32;
+                        int32_t integer = 0;
+                     };
                      std::string string;
                      property_object_value object;
                      //

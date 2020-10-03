@@ -19,4 +19,9 @@ namespace dovah::loaded_forms::components::extra::deprecated {
       subrecord.write(this->value);
       subrecord.close();
    }
+   basic_extra_data* XSED::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new XSED;
+      clone->value = this->value;
+      return clone;
+   }
 }
