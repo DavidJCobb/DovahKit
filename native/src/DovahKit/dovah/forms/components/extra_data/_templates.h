@@ -25,6 +25,12 @@ namespace dovah::loaded_forms::components {
             subrecord.close();
          }
          static void generate_use_info(tes_record_reader&, form_stub*) {}
+         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept {
+            auto* clone = new buffer_extra_data<signature, et, bytecount>();
+            for (int i = 0; i < bytecount; ++i)
+               clone->bytes[i] = this->bytes[i];
+            return clone;
+         }
    };
    template<uint32_t signature, extra_data_type et> class binary_extra_data : public basic_extra_data {
       //
@@ -51,6 +57,14 @@ namespace dovah::loaded_forms::components {
             subrecord.close();
          }
          static void generate_use_info(tes_record_reader&, form_stub*) {}
+         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept {
+            auto* clone = new binary_extra_data<signature, et>();
+            size_t size = this->bytes.size();
+            clone->bytes.resize(size);
+            for (size_t i = 0; i < size; ++i)
+               clone->bytes[i] = this->bytes[i];
+            return clone;
+         }
    };
    template<uint32_t signature, extra_data_type et> class empty_extra_data : public basic_extra_data {
       //
@@ -71,6 +85,10 @@ namespace dovah::loaded_forms::components {
             subrecord.close();
          }
          static void generate_use_info(tes_record_reader&, form_stub*) {}
+         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept {
+            auto* clone = new empty_extra_data<signature, et>();
+            return clone;
+         }
    };
    template<uint32_t signature, extra_data_type et> class float_extra_data : public basic_extra_data {
       public:
@@ -92,6 +110,11 @@ namespace dovah::loaded_forms::components {
             subrecord.close();
          }
          static void generate_use_info(tes_record_reader&, form_stub*) {}
+         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept {
+            auto* clone = new empty_extra_data<signature, et>();
+            clone->value = this->value;
+            return clone;
+         }
    };
    template<uint32_t signature, extra_data_type et> class formID_extra_data : public basic_extra_data {
       public:
@@ -116,6 +139,14 @@ namespace dovah::loaded_forms::components {
             subrecord.read(formID);
             if (formID)
                stub->add_outbound_reference(formID);
+         }
+         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept {
+            auto* clone = new formID_extra_data<signature, et>();
+            clone->formID.set(&clone_owner, this->formID);
+            return clone;
+         }
+         virtual void clear_contained_formIDs(form_stub& my_owner) {
+            this->formID.set(&my_owner, bare_form_id_t(0));
          }
    };
    template<uint32_t signature, extra_data_type et> class string_extra_data : public basic_extra_data {
@@ -146,5 +177,10 @@ namespace dovah::loaded_forms::components {
             subrecord.close();
          }
          static void generate_use_info(tes_record_reader&, form_stub*) {}
+         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept {
+            auto* clone = new empty_extra_data<signature, et>();
+            clone->value = this->value;
+            return clone;
+         }
    };
 }

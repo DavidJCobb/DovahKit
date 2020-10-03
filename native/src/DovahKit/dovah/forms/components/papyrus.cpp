@@ -11,12 +11,6 @@ namespace dovah::loaded_forms::components::papyrus {
             break;
       }
    }
-   script_data::property::~property() {
-      if (this->value) {
-         delete this->value;
-         this->value = nullptr;
-      }
-   }
    //
    bool script_data::load(tes_subrecord_reader& subrecord) {
       if (!subrecord.read(this->version) || !subrecord.read(this->object_format))
@@ -79,6 +73,28 @@ namespace dovah::loaded_forms::components::papyrus {
       VMAD.close();
       return result;
    }
+   void script_data::clone_from(const script_data& other, form_stub& owner_of_clone) noexcept {
+      this->version       = other.version;
+      this->object_format = other.object_format;
+      //
+      for (auto& script : this->scripts) { // clear any outbound use info we may have in here
+         script.clear_properties(owner_of_clone);
+      }
+      this->scripts.clear();
+      //
+      size_t size = other.scripts.size();
+      this->scripts.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         this->scripts[i].clone_from(other.scripts[i], owner_of_clone);
+      //
+      if (this->fragment_data) {
+         this->fragment_data->clear(owner_of_clone);
+         delete this->fragment_data;
+         this->fragment_data = nullptr;
+      }
+      if (other.fragment_data)
+         this->fragment_data = other.fragment_data->clone(owner_of_clone);
+   }
 
    #pragma region Script sub-objects loading
    bool script_data::script::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -116,6 +132,26 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
+   void script_data::script::clear_properties(form_stub& owner) {
+      for (auto& prop : this->properties) {
+         if (prop.type == property_type::object || prop.type == property_type::array_of_object) {
+            for (auto& value : prop.values)
+               value.object.clear(owner);
+         }
+      }
+      this->properties.clear();
+   }
+   void script_data::script::clone_from(const script& other, form_stub& owner_of_clone) noexcept {
+      this->name   = other.name;
+      this->status = other.status;
+      //
+      size_t size = other.properties.size();
+      this->clear_properties(owner_of_clone);
+      this->properties.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         this->properties[i].clone_from(other.properties[i], owner_of_clone);
+      }
+   }
 
    bool script_data::property_object_value::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (!subrecord.is_in_bounds(sizeof(this->always_zero) + sizeof(this->aliasID) + sizeof(this->formID)))
@@ -143,214 +179,160 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
+   void script_data::property_object_value::clone_from(const property_object_value& other, form_stub& owner) noexcept {
+      this->formID.set(&owner, other.formID);
+      this->aliasID     = other.aliasID;
+      this->always_zero = other.always_zero;
+   }
+   void script_data::property_object_value::clear(form_stub& owner) {
+      this->formID.set(&owner, bare_form_id_t(0));
+   }
+
+   bool script_data::property::value_t::load(property_type type, script_data& owner, tes_subrecord_reader& subrecord) {
+      switch (type) {
+            case property_type::object:
+            case property_type::array_of_object:
+               this->object.load(owner, subrecord);
+               break;
+            case property_type::string:
+            case property_type::array_of_string:
+               subrecord.read_length_prefixed_string<2>(this->string);
+               break;
+            case property_type::integer:
+            case property_type::array_of_integer:
+               subrecord.read(this->integer);
+               break;
+            case property_type::float32:
+            case property_type::array_of_float32:
+               subrecord.read(this->float32);
+               break;
+            case property_type::boolean:
+            case property_type::array_of_boolean:
+               static_assert(sizeof(bool) == sizeof(uint8_t), "Bools aren't one byte on your platform. They are in the VMAD data, so rewrite this code accordingly.");
+               subrecord.read(this->boolean);
+               break;
+            default:
+               return false;
+      }
+      return true;
+   }
+   bool script_data::property::value_t::save(property_type type, script_data& owner, tes_subrecord_writer& subrecord) {
+      switch (type) {
+         case property_type::object:
+         case property_type::array_of_object:
+            this->object.save(owner, subrecord);
+            break;
+         case property_type::string:
+         case property_type::array_of_string:
+            subrecord.write_length_prefixed_string<2>(this->string);
+            break;
+         case property_type::integer:
+         case property_type::array_of_integer:
+            subrecord.write(this->integer);
+            break;
+         case property_type::float32:
+         case property_type::array_of_float32:
+            subrecord.write(this->float32);
+            break;
+         case property_type::boolean:
+         case property_type::array_of_boolean:
+            static_assert(sizeof(bool) == sizeof(uint8_t), "Bools aren't one byte on your platform. They are in the VMAD data, so rewrite this code accordingly.");
+            subrecord.write(this->boolean);
+            break;
+         default:
+            return false;
+      }
+      return true;
+   }
+   void script_data::property::value_t::clone_from(property_type type, const value_t& source, form_stub& owner_of_clone) noexcept {
+      switch (type) {
+         case property_type::object:
+         case property_type::array_of_object:
+            this->object.clone_from(source.object, owner_of_clone);
+            break;
+         case property_type::string:
+         case property_type::array_of_string:
+            this->string = source.string;
+            break;
+         case property_type::integer:
+         case property_type::array_of_integer:
+            this->integer = source.integer;
+            break;
+         case property_type::float32:
+         case property_type::array_of_float32:
+            this->float32 = source.float32;
+            break;
+         case property_type::boolean:
+         case property_type::array_of_boolean:
+            this->boolean = source.boolean;
+            break;
+         default:
+            assert(false && "Unable to clone Papyrus property value with an unrecognized type.");
+      }
+   }
 
    bool script_data::property::load(script_data& owner, tes_subrecord_reader& subrecord) {
       subrecord.read_length_prefixed_string<2>(this->name);
       if (!subrecord.is_in_bounds(sizeof(this->type) + sizeof(this->status)))
          return false;
+      //
+      assert(this->values.empty() && "We can't safely clear a Papyrus property's values list without access to the form stub, and we can't access the stub from here. Why is the list non-empty at the start of loading anyway?");
+      //
       subrecord.unchecked_read(this->type);
       subrecord.unchecked_read(this->status);
-      if (this->value) {
-         delete this->value;
-         this->value = nullptr;
-      }
-      if (!property_type_is_array(this->type)) {
-         switch (this->type) {
-            case property_type::object:
-               {
-                  auto v = new property_object_value;
-                  this->value = v;
-                  v->load(owner, subrecord);
-               }
-               break;
-            case property_type::string:
-               {
-                  auto v = new std::string;
-                  this->value = v;
-                  subrecord.read_length_prefixed_string<2>(*v);
-               }
-               break;
-            case property_type::integer:
-               {
-                  auto v = new int32_t;
-                  this->value = v;
-                  subrecord.read(*v);
-               }
-               break;
-            case property_type::float32:
-               {
-                  auto v = new float;
-                  this->value = v;
-                  subrecord.read(*v);
-               }
-               break;
-            case property_type::boolean:
-               {
-                  static_assert(sizeof(bool) == sizeof(uint8_t), "Bools aren't one byte on your platform. They are in the VMAD data, so rewrite this code accordingly.");
-                  auto v = new bool;
-                  this->value = v;
-                  subrecord.read(*v);
-               }
-               break;
-            default:
-               dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
-               assert(false && "bad property type");
-               return false;
-         }
-      } else {
+      if (property_type_is_array(this->type)) {
          uint32_t count;
          if (!subrecord.read(count))
             return false;
-         switch (this->type) {
-            case property_type::array_of_object:
-               {
-                  auto v = new std::vector<property_object_value>;
-                  this->value = v;
-                  //
-                  auto& values = *v;
-                  values.resize(count);
-                  for (uint32_t i = 0; i < count; i++) {
-                     auto& elem = values[i];
-                     elem.load(owner, subrecord);
-                  }
-               }
-               break;
-            case property_type::array_of_string:
-               {
-                  auto v = new std::vector<std::string>;
-                  this->value = v;
-                  //
-                  auto& values = *v;
-                  values.resize(count);
-                  for (uint32_t i = 0; i < count; i++) {
-                     auto& elem = values[i];
-                     subrecord.read_length_prefixed_string<2>(elem);
-                  }
-               }
-               break;
-            case property_type::array_of_integer:
-               {
-                  if (!subrecord.is_in_bounds(sizeof(int32_t) * count))
-                     return false;
-                  auto v = new std::vector<int32_t>;
-                  this->value = v;
-                  //
-                  auto& values = *v;
-                  values.resize(count);
-                  for (uint32_t i = 0; i < count; i++) {
-                     auto& elem = values[i];
-                     subrecord.unchecked_read(elem);
-                  }
-               }
-               break;
-            case property_type::array_of_float32:
-               {
-                  if (!subrecord.is_in_bounds(sizeof(float) * count))
-                     return false;
-                  auto v = new std::vector<float>;
-                  this->value = v;
-                  //
-                  auto& values = *v;
-                  values.resize(count);
-                  for (uint32_t i = 0; i < count; i++) {
-                     auto& elem = values[i];
-                     subrecord.unchecked_read(elem);
-                  }
-               }
-               break;
-            case property_type::array_of_boolean:
-               {
-                  if (!subrecord.is_in_bounds(sizeof(uint8_t) * count))
-                     return false;
-                  auto v = new std::vector<bool>;
-                  this->value = v;
-                  //
-                  auto& values = *v;
-                  values.resize(count);
-                  for (uint32_t i = 0; i < count; i++) {
-                     uint8_t b;
-                     subrecord.unchecked_read(b);
-                     values[i] = (bool)b;
-                  }
-               }
-               break;
-            default:
-               dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
-               return false;
+         this->values.resize(count);
+      } else {
+         this->values.resize(1);
+      }
+      for (auto& value : this->values) {
+         if (!value.load(this->type, owner, subrecord)) {
+            dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
+            assert(false && "bad property type");
+            return false;
          }
       }
+      //
       return true;
-   }
-   namespace {
-      template<typename T> void _property_array_save_helper(script_data& owner, tes_subrecord_writer& subrecord, void* value) {
-         auto& v = *(std::vector<T>*)value;
-         subrecord.write(uint32_t(v.size()));
-         for (auto& entry : v)
-            subrecord.write(entry);
-      }
-      template<> void _property_array_save_helper<script_data::property_object_value>(script_data& owner, tes_subrecord_writer& subrecord, void* value) {
-         auto& v = *(std::vector<script_data::property_object_value>*)value;
-         subrecord.write(uint32_t(v.size()));
-         for (auto& entry : v)
-            entry.save(owner, subrecord);
-      }
-      template<> void _property_array_save_helper<std::string>(script_data& owner, tes_subrecord_writer& subrecord, void* value) {
-         auto& v = *(std::vector<std::string>*)value;
-         subrecord.write(uint32_t(v.size()));
-         for (auto& entry : v)
-            subrecord.write_length_prefixed_string<2>(entry);
-      }
    }
    bool script_data::property::save(script_data& owner, tes_subrecord_writer& subrecord) {
       subrecord.write_length_prefixed_string<2>(this->name);
       subrecord.write(this->type);
       subrecord.write(this->status);
-      if (!property_type_is_array(this->type)) {
-         switch (this->type) {
-            case property_type::object:
-               ((property_object_value*)this->value)->save(owner, subrecord);
-               break;
-            case property_type::string:
-               subrecord.write_length_prefixed_string<2>(*(std::string*)this->value);
-               break;
-            case property_type::integer:
-               subrecord.write(*(int32_t*)this->value);
-               break;
-            case property_type::float32:
-               subrecord.write(*(float*)this->value);
-               break;
-            case property_type::boolean:
-               static_assert(sizeof(bool) == sizeof(uint8_t), "Bools aren't one byte on your platform. They are in the VMAD data, so rewrite this code accordingly.");
-               subrecord.write(*(bool*)this->value);
-               break;
-            default:
-               dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
-               assert(false && "bad property type");
-               return false;
-         }
+      if (property_type_is_array(this->type)) {
+         uint32_t count = this->values.size();
+         subrecord.write(count);
       } else {
-         switch (this->type) {
-            case property_type::array_of_object:
-               _property_array_save_helper<property_object_value>(owner, subrecord, this->value);
-               break;
-            case property_type::array_of_string:
-               _property_array_save_helper<std::string>(owner, subrecord, this->value);
-               break;
-            case property_type::array_of_integer:
-               _property_array_save_helper<int32_t>(owner, subrecord, this->value);
-               break;
-            case property_type::array_of_float32:
-               _property_array_save_helper<float>(owner, subrecord, this->value);
-               break;
-            case property_type::array_of_boolean:
-               _property_array_save_helper<bool>(owner, subrecord, this->value);
-               break;
-            default:
-               dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
-               return false;
+         assert(this->values.size() == 1 && "A non-array Papyrus property should not have more than one value.");
+      }
+      for (auto& value : this->values) {
+         if (!value.save(this->type, owner, subrecord)) {
+            dovah::logging::print_line("Property %s has unrecognized type %d.", this->name.c_str(), this->type);
+            assert(false && "bad property type");
+            return false;
          }
       }
       return true;
+   }
+   void script_data::property::clone_from(const property& source, form_stub& owner_of_clone) noexcept {
+      if (this->type == property_type::object || this->type == property_type::array_of_object) {
+         for (auto& value : this->values)
+            value.object.clear(owner_of_clone);
+      }
+      this->values.clear();
+      //
+      this->name   = source.name;
+      this->type   = source.type;
+      this->status = source.status;
+      //
+      size_t size = source.values.size();
+      this->values.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         this->values[i].clone_from(this->type, source.values[i], owner_of_clone);
+      }
    }
    #pragma endregion
 
@@ -390,6 +372,15 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.script);
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
+   }
+   basic_fragment_data* topic_info_fragment_data::clone(form_stub& stub) const noexcept {
+      auto* copy = new topic_info_fragment_data;
+      copy->unknown  = this->unknown;
+      copy->flags    = this->flags;
+      copy->filename = this->filename;
+      copy->onBeginFragment = this->onBeginFragment;
+      copy->onEndFragment   = this->onEndFragment;
+      return copy;
    }
 
    void package_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -440,6 +431,16 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
    }
+   basic_fragment_data* package_fragment_data::clone(form_stub& stub) const noexcept {
+      auto* copy = new package_fragment_data;
+      copy->unknown  = this->unknown;
+      copy->flags    = this->flags;
+      copy->filename = this->filename;
+      copy->onBeginFragment = this->onBeginFragment;
+      copy->onEndFragment   = this->onEndFragment;
+      copy->onChangeFragment = this->onChangeFragment;
+      return copy;
+   }
 
    void perk_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       subrecord.read(this->unknown);
@@ -473,6 +474,17 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.filename);
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
+   }
+   basic_fragment_data* perk_fragment_data::clone(form_stub& stub) const noexcept {
+      auto* copy = new perk_fragment_data;
+      copy->unknown  = this->unknown;
+      copy->filename = this->filename;
+      size_t size = this->fragments.size();
+      copy->fragments.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         copy->fragments[i] = this->fragments[i];
+      }
+      return copy;
    }
 
    void quest_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -537,6 +549,45 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
+   basic_fragment_data* quest_fragment_data::clone(form_stub& stub) const noexcept {
+      auto* copy = new quest_fragment_data;
+      copy->unknown  = this->unknown;
+      copy->filename = this->filename;
+      //
+      size_t size = this->fragments.size();
+      copy->fragments.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         copy->fragments[i] = this->fragments[i];
+      }
+      //
+      size = this->aliasScriptData.size();
+      copy->aliasScriptData.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = copy->aliasScriptData[i];
+         auto& from  = this->aliasScriptData[i];
+         entry.alias.clone_from(from.alias, stub);
+         entry.version   = from.version;
+         entry.objFormat = from.objFormat;
+         //
+         size_t script_count = from.scripts.size();
+         entry.scripts.resize(script_count);
+         for (size_t j = 0; j < script_count; ++j) {
+            entry.scripts[j].clone_from(from.scripts[j], stub);
+         }
+      }
+      //
+      return copy;
+   }
+   void quest_fragment_data::clear(form_stub& owner) {
+      for (auto& alias : this->aliasScriptData) {
+         alias.alias.clear(owner);
+         for (auto& script : alias.scripts) {
+            script.clear_properties(owner);
+         }
+         alias.scripts.clear();
+      }
+      this->aliasScriptData.clear();
+   }
 
    void scene_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (subrecord.is_in_bounds(2)) {
@@ -596,6 +647,21 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.filename);
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
+   }
+   basic_fragment_data* scene_fragment_data::clone(form_stub& stub) const noexcept {
+      auto* copy = new scene_fragment_data;
+      copy->unknown  = this->unknown;
+      copy->flags    = this->flags;
+      copy->filename = this->filename;
+      copy->onBeginFragment = this->onBeginFragment;
+      copy->onEndFragment   = this->onEndFragment;
+      //
+      size_t size = this->phaseFragments.size();
+      copy->phaseFragments.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         copy->phaseFragments[i] = this->phaseFragments[i];
+      }
+      return copy;
    }
    #pragma endregion
 

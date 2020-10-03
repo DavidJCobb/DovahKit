@@ -35,4 +35,11 @@ namespace dovah::loaded_forms::components::extra {
       TNAM.write(this->type);
       TNAM.close();
    }
+   basic_extra_data* map_marker::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new map_marker;
+      clone->flags = this->flags;
+      clone->name  = this->name;
+      clone->type  = this->type;
+      return clone;
+   }
 }

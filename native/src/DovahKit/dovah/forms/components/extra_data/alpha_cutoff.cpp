@@ -14,4 +14,10 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->base);
       subrecord.close();
    }
+   basic_extra_data* alpha_cutoff::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new alpha_cutoff;
+      clone->cutoff = this->cutoff;
+      clone->base   = this->base;
+      return clone;
+   }
 }

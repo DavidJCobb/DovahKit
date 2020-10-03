@@ -17,4 +17,11 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->unk08);
       subrecord.close();
    }
+   basic_extra_data* distant_data::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new distant_data;
+      clone->unk00 = this->unk00;
+      clone->unk04 = this->unk04;
+      clone->unk08 = this->unk08;
+      return clone;
+   }
 }

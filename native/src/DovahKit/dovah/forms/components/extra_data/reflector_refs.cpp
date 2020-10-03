@@ -25,4 +25,18 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }
+   basic_extra_data* reflector_refs::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new reflector_refs;
+      //
+      size_t size = this->entries.size();
+      clone->entries.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = clone->entries[i];
+         auto& from  = this->entries[i];
+         entry.target.set(&clone_owner, from.target);
+         entry.type = from.type;
+      }
+      //
+      return clone;
+   }
 }

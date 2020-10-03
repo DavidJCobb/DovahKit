@@ -13,4 +13,9 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->value);
       subrecord.close();
    }
+   basic_extra_data* leveled_creature_modifier::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new leveled_creature_modifier;
+      clone->value = this->value;
+      return clone;
+   }
 }

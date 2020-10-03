@@ -64,6 +64,22 @@ namespace dovah::loaded_forms::components {
       for (auto* extra : this->content)
          extra->save(record);
    }
+   void extra_data_list::clone_from(const extra_data_list& source, form_stub& my_owner) {
+      for (auto* extra : this->content)
+         extra->clear_contained_formIDs(my_owner);
+      this->content.clear();
+      //
+      for (auto* extra : source.content) {
+         auto* clone = extra->clone(my_owner);
+         if (!clone) {
+            #if _DEBUG
+               __debugbreak();
+            #endif
+            continue;
+         }
+         this->content.push_back(clone);
+      }
+   }
    /*static*/ extra_data_load_result extra_data_list::generate_use_info(tes_record_reader& record, form_stub* stub) {
       return generate_extra_data_use_info(record, stub);
    }

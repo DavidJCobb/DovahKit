@@ -30,4 +30,10 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.signature() == signature_event)
          package_event_dialogue::generateUseInfo(record, stub);
    }
+   basic_extra_data* patrol_ref_data::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new patrol_ref_data;
+      clone->idle_time = this->idle_time;
+      clone->event.clone_from(this->event, clone_owner);
+      return clone;
+   }
 }

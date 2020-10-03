@@ -37,4 +37,10 @@ namespace dovah::loaded_forms::components::extra {
             stub->add_outbound_reference(formID);
       }
    }
+   basic_extra_data* poison::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new poison;
+      clone->type.set(&clone_owner, this->type);
+      clone->doses = this->doses;
+      return clone;
+   }
 }

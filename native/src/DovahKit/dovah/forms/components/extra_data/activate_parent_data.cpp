@@ -45,4 +45,17 @@ namespace dovah::loaded_forms::components::extra {
             stub->add_outbound_reference(formID);
       }
    }
+   basic_extra_data* activate_parent_data::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new activate_parent_data;
+      clone->flags = this->flags;
+      //
+      size_t size = this->parents.size();
+      clone->parents.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         clone->parents[i].ref.set(&clone_owner, this->parents[i].ref);
+         clone->parents[i].delay = this->parents[i].delay;
+      }
+      //
+      return clone;
+   }
 }

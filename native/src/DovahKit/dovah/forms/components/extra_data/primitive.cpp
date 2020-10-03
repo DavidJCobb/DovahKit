@@ -27,4 +27,12 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->type);
       subrecord.close();
    }
+   basic_extra_data* primitive::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new primitive;
+      clone->bounds  = this->bounds;
+      clone->color   = this->color;
+      clone->unknown = this->unknown;
+      clone->type    = this->type;
+      return clone;
+   }
 }

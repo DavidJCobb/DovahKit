@@ -17,4 +17,9 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->halfwidths.z);
       subrecord.close();
    }
+   basic_extra_data* multibound_bounds::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new multibound_bounds;
+      clone->halfwidths = this->halfwidths;
+      return clone;
+   }
 }

@@ -29,4 +29,14 @@ namespace dovah::loaded_forms::components::extra {
          }
       }
    }
+   basic_extra_data* cell_region_list::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new cell_region_list;
+      //
+      size_t size = this->regions.size();
+      clone->regions.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         clone->regions[i].set(&clone_owner, this->regions[i]);
+      //
+      return clone;
+   }
 }

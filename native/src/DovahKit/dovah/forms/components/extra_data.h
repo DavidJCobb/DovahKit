@@ -14,12 +14,6 @@
 
 namespace dovah::loaded_forms::components {
    enum class extra_data_type {
-      //
-      // As of this writing, this list was just copied directly from the game engine 
-      // with unknown/unseen entries removed. Once we've finished identifying and 
-      // writing code for all extra-data subrecords, we should remove any entries in 
-      // this list that don't correspond to known subrecords.
-      //
       unknown_xcza,
       unknown_xczc,
       unknown_xczr,
@@ -161,6 +155,9 @@ namespace dovah::loaded_forms::components {
          // doesn't need to check the current subrecord's signature.
          //
          static void generate_use_info(tes_record_reader&, form_stub*) = delete;
+         //
+         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept = 0;
+         virtual void clear_contained_formIDs(form_stub& my_owner) {}
    };
    class extra_data_list {
       public:
@@ -179,6 +176,7 @@ namespace dovah::loaded_forms::components {
          //
          load_result load(tes_record_reader&);
          void save(tes_record_writer&);
+         void clone_from(const extra_data_list& source, form_stub& my_owner);
          //
          static extra_data_load_result generate_use_info(tes_record_reader&, form_stub*);
          //

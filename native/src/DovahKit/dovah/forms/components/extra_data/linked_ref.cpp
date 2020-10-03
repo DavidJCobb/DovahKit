@@ -27,4 +27,10 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }
+   basic_extra_data* linked_ref::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new linked_ref;
+      clone->keyword.set(&clone_owner, this->keyword);
+      clone->ref.set(&clone_owner, this->ref);
+      return clone;
+   }
 }

@@ -76,4 +76,19 @@ namespace dovah::loaded_forms::components::extra {
          if (id)
             stub->add_outbound_reference(id);
    }
+   basic_extra_data* room_ref_data::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new room_ref_data;
+      clone->flags = this->flags;
+      clone->pad02 = this->pad02;
+      clone->lighting_template.set(&clone_owner, this->lighting_template);
+      clone->imagespace.set(&clone_owner, this->imagespace);
+      //
+      size_t size = this->linked_rooms.size();
+      clone->linked_rooms.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         clone->linked_rooms[i].set(&clone_owner, this->linked_rooms[i]);
+      clone->linked_room_count = size;
+      //
+      return clone;
+   }
 }

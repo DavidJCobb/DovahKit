@@ -157,9 +157,6 @@
 //     - This includes duplicating forms. We've started some of the work on that; refer 
 //       to loaded_forms::Form::clone(...).
 //
-//        - How do we want to handle cloning localized strings? Probably best to give 
-//          them a "clone" member function so we can revise the implementation later on.
-//
 //  - Code for deleting forms.
 //
 //     - How should we handle the case of a user deleting a form from one of the active 
@@ -296,6 +293,14 @@
 //  - If the user has any unsaved changes, the main window should show a confirmation 
 //    prompt on exit. We already override MainWindow::closeEvent; we'll want to do what 
 //    we need to do in there.
+//
+//  - The (activate_ref) extra-data object has unknown fields, which are likely to 
+//    include at least one form ID.
+//
+//     - Other extra-data types with unknown fields:
+//
+//        - distant_data
+//        - package_start_location
 //
 //  - Render Window
 //

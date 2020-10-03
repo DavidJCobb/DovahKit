@@ -33,4 +33,19 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }
+   basic_extra_data* lock::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new lock;
+      clone->level = this->level;
+      clone->pad01[0] = this->pad01[0];
+      clone->pad01[1] = this->pad01[1];
+      clone->pad01[2] = this->pad01[2];
+      clone->key.set(&clone_owner, this->key);
+      clone->flags = this->flags;
+      clone->pad09[0] = this->pad09[0];
+      clone->pad09[1] = this->pad09[1];
+      clone->pad09[2] = this->pad09[2];
+      clone->unk0C = this->unk0C;
+      clone->unk10 = this->unk10;
+      return clone;
+   }
 }

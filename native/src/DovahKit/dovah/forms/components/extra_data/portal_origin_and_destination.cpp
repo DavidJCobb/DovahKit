@@ -23,4 +23,10 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }
+   basic_extra_data* portal_origin_and_destination::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new portal_origin_and_destination;
+      clone->origin.set(&clone_owner, this->origin);
+      clone->destination.set(&clone_owner, this->destination);
+      return clone;
+   }
 }

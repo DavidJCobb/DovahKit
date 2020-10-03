@@ -47,6 +47,8 @@ namespace dovah::loaded_forms::components {
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) = 0;
             virtual void save(script_data& owner, tes_subrecord_writer&) = 0;
+            virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept = 0;
+            virtual void clear(form_stub& owner) {}
       };
 
       class script_data {
@@ -64,6 +66,7 @@ namespace dovah::loaded_forms::components {
             static void generateUseInfo(tes_subrecord_reader&, form_stub*);
             //
             bool save(tes_record_writer&); // opens VMAD, writes, closes
+            void clone_from(const script_data& source, form_stub& owner_of_clone) noexcept;
             //
             void for_each_script(std::function<bool(script*)>);
             //
@@ -84,19 +87,33 @@ namespace dovah::loaded_forms::components {
                //
                bool load(script_data& owner, tes_subrecord_reader&);
                bool save(script_data& owner, tes_subrecord_writer&);
+               void clone_from(const property_object_value& source, form_stub& owner_of_clone) noexcept;
+               void clear(form_stub& owner);
             };
             class property {
                friend script;
                public:
+                  union value_t {
+                     bool        boolean;
+                     float       float32;
+                     int32_t     integer = 0;
+                     std::string string;
+                     property_object_value object;
+                     //
+                     bool load(property_type, script_data& owner, tes_subrecord_reader&);
+                     bool save(property_type, script_data& owner, tes_subrecord_writer&);
+                     void clone_from(property_type, const value_t& source, form_stub& owner_of_clone) noexcept;
+                  };
+                  //
+               public:
                   std::string     name;
-                  property_type   type;
+                  property_type   type = property_type::integer;
                   property_status status;
-                  void*           value = nullptr;
+                  std::vector<value_t> values;
                   //
                   bool load(script_data& owner, tes_subrecord_reader&);
                   bool save(script_data& owner, tes_subrecord_writer&);
-                  //
-                  ~property();
+                  void clone_from(const property& source, form_stub& owner_of_clone) noexcept;
             };
             class script {
                friend script_data;
@@ -107,6 +124,8 @@ namespace dovah::loaded_forms::components {
                   //
                   bool load(script_data& owner, tes_subrecord_reader&);
                   bool save(script_data& owner, tes_subrecord_writer&);
+                  void clear_properties(form_stub& owner);
+                  void clone_from(const script& source, form_stub& owner_of_clone) noexcept;
             };
       };
       
@@ -132,6 +151,7 @@ namespace dovah::loaded_forms::components {
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
             virtual void save(script_data& owner, tes_subrecord_writer&) override;
+            virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept override;
             //
             uint8_t         unknown = 2;
             fragment_flag_t flags   = 0;
@@ -156,6 +176,7 @@ namespace dovah::loaded_forms::components {
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
             virtual void save(script_data& owner, tes_subrecord_writer&) override;
+            virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept override;
             //
             uint8_t         unknown = 2;
             fragment_flag_t flags = 0;
@@ -177,6 +198,7 @@ namespace dovah::loaded_forms::components {
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
             virtual void save(script_data& owner, tes_subrecord_writer&) override;
+            virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept override;
             //
             uint8_t     unknown = 2;
             std::string filename;
@@ -202,6 +224,8 @@ namespace dovah::loaded_forms::components {
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
             virtual void save(script_data& owner, tes_subrecord_writer&) override;
+            virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept override;
+            virtual void clear(form_stub& owner) override;
             //
             uint8_t     unknown = 2;
             std::string filename;
@@ -231,6 +255,7 @@ namespace dovah::loaded_forms::components {
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
             virtual void save(script_data& owner, tes_subrecord_writer&) override;
+            virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept override;
             //
             uint8_t     unknown = 2;
             uint8_t     flags   = 0;

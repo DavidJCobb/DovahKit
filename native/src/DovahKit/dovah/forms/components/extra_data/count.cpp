@@ -13,4 +13,9 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->value);
       subrecord.close();
    }
+   basic_extra_data* count::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new count;
+      clone->value = this->value;
+      return clone;
+   }
 }

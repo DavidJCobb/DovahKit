@@ -24,4 +24,11 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }
+   basic_extra_data* navmesh_door_portal::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new navmesh_door_portal;
+      clone->navmesh.set(&clone_owner, this->navmesh);
+      clone->triangle = this->triangle;
+      clone->pad06    = this->pad06;
+      return clone;
+   }
 }

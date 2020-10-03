@@ -29,4 +29,12 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->rotation.d);
       subrecord.close();
    }
+   basic_extra_data* occlusion_plane::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new occlusion_plane;
+      clone->width    = this->width;
+      clone->height   = this->height;
+      clone->position = this->position;
+      clone->rotation = this->rotation;
+      return clone;
+   }
 }

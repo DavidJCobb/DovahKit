@@ -34,4 +34,12 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }
+   basic_extra_data* teleport::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new teleport;
+      clone->target_door.set(&clone_owner, this->target_door);
+      clone->position = this->position;
+      clone->rotation = this->rotation;
+      clone->flags    = this->flags;
+      return clone;
+   }
 }

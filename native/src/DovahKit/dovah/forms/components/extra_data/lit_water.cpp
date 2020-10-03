@@ -23,4 +23,14 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }
+   basic_extra_data* lit_water::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new lit_water;
+      //
+      size_t size = this->refs.size();
+      clone->refs.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         clone->refs[i].set(&clone_owner, this->refs[i]);
+      //
+      return clone;
+   }
 }

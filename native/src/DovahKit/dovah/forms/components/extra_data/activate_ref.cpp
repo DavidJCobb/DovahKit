@@ -19,4 +19,14 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->pad09);
       subrecord.close();
    }
+   basic_extra_data* activate_ref::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new activate_ref;
+      clone->unk00 = this->unk00;
+      clone->unk04 = this->unk04;
+      clone->unk08 = this->unk08;
+      clone->pad09[0] = this->pad09[0];
+      clone->pad09[1] = this->pad09[1];
+      clone->pad09[2] = this->pad09[2];
+      return clone;
+   }
 }

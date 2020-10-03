@@ -38,4 +38,10 @@ namespace dovah::loaded_forms::components::extra {
             stub->add_outbound_reference(formID);
       }
    }
+   basic_extra_data* ammo::clone(form_stub& clone_owner) const noexcept {
+      auto* clone = new ammo;
+      clone->type.set(&clone_owner, this->type);
+      clone->count = this->count;
+      return clone;
+   }
 }
