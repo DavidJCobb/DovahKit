@@ -176,7 +176,7 @@ namespace dovah::loaded_forms::components {
          //
          load_result load(tes_record_reader&);
          void save(tes_record_writer&);
-         void clone_from(const extra_data_list& source, form_stub& my_owner);
+         void clone_from(const extra_data_list& source, form_stub& owner_of_clone);
          //
          static extra_data_load_result generate_use_info(tes_record_reader&, form_stub*);
          //

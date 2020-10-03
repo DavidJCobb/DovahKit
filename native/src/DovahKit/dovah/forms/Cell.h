@@ -92,6 +92,7 @@ namespace dovah::loaded_forms {
          virtual bool would_bethesda_compress() const noexcept override;
          //
       protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
    };
 }

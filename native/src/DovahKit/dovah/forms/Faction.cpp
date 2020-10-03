@@ -130,6 +130,51 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   bool Faction::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<Faction*>(out);
+      if (!copy)
+         return false;
+      copy->name = this->name;
+      {
+         size_t size = this->relationships.size();
+         copy->relationships.reserve(size);
+         for (size_t i = 0; i < size; ++i) {
+            auto& entry = copy->relationships[i];
+            auto& from  = this->relationships[i];
+            entry.other.set(copy->stub, from.other);
+            entry.combat = from.combat;
+            entry.mod    = from.mod;
+         }
+      }
+      copy->faction_flags = this->faction_flags;
+      copy->prison_marker.set(copy->stub, this->prison_marker);
+      copy->follower_wait_marker.set(copy->stub, this->follower_wait_marker);
+      copy->evidence_chest.set(copy->stub, this->evidence_chest);
+      copy->player_belongings_chest.set(copy->stub, this->player_belongings_chest);
+      copy->crime_group.set(copy->stub, this->crime_group);
+      copy->jail_outfit.set(copy->stub, this->jail_outfit);
+      copy->crime_values = this->crime_values;
+      {
+         size_t size = this->ranks.size();
+         copy->ranks.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->ranks[i] = this->ranks[i];
+      }
+      copy->vendor_list.set(copy->stub, this->vendor_list);
+      copy->vendor_chest.set(copy->stub, this->vendor_chest);
+      copy->vendor_data = this->vendor_data;
+      copy->package_location_vendor.clone_from(this->package_location_vendor, *copy->stub);
+      {
+         size_t size = this->vendor_conditions.size();
+         copy->vendor_conditions.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->vendor_conditions[i].clone_from(this->vendor_conditions[i], *copy->stub);
+      }
+      copy->has_object_bounds = this->has_object_bounds;
+      copy->object_bounds = this->object_bounds;
+      copy->script_data.clone_from(this->script_data, *copy->stub);
+      return true;
+   }
    bool Faction::_save_impl(tes_record_writer& record) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);

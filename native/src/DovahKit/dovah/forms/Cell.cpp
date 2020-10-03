@@ -110,6 +110,26 @@ namespace dovah::loaded_forms {
          return true;
       return false;
    }
+   bool Cell::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<Cell*>(out);
+      if (!copy)
+         return false;
+      copy->name = this->name;
+      copy->cell_flags = this->cell_flags;
+      copy->grid_coords = this->grid_coords;
+      copy->land_flags = this->land_flags;
+      copy->extra_data.clone_from(this->extra_data, *copy->stub);
+      copy->interior.lighting = this->interior.lighting;
+      copy->interior.lighting_template_ID.set(copy->stub, this->interior.lighting_template_ID);
+      copy->exterior.occlusion_data = this->exterior.occlusion_data;
+      copy->exterior.max_height_data = this->exterior.max_height_data;
+      copy->water.height = this->water.height;
+      copy->water.noise_texture = this->water.noise_texture;
+      copy->has_object_bounds = this->has_object_bounds;
+      copy->object_bounds = this->object_bounds;
+      copy->script_data.clone_from(this->script_data, *copy->stub);
+      return true;
+   }
    bool Cell::_save_impl(tes_record_writer& record) {
       bool is_exterior = this->stub->is_exterior_cell();
       //

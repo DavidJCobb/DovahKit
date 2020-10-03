@@ -62,6 +62,8 @@ namespace dovah::loaded_forms {
             };
             //
             std::vector<entry> entries;
+            //
+            void clone_from(const large_reference_t& original, form_stub& my_owner) noexcept;
          };
 
          struct max_height_data_t {
@@ -186,6 +188,7 @@ namespace dovah::loaded_forms {
          virtual void setup() noexcept override;
          //
       protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
    };
 }

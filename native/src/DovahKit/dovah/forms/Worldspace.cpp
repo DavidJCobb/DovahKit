@@ -185,6 +185,42 @@ namespace dovah::loaded_forms {
       this->water_type.set(this->stub, hardcoded_form_ids::DefaultWater);
       this->water_type_lod.set(this->stub, hardcoded_form_ids::DefaultWater);
    }
+   bool Worldspace::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<Worldspace*>(out);
+      if (!copy)
+         return false;
+      copy->large_references.clone_from(this->large_references, *copy->stub);
+      copy->name = this->name;
+      copy->max_height_data = this->max_height_data;
+      copy->center_cell_coordinates = this->center_cell_coordinates;
+      copy->climate.set(copy->stub, this->climate);
+      copy->lighting_template.set(copy->stub, this->lighting_template);
+      copy->encounter_zone.set(copy->stub, this->encounter_zone);
+      copy->location.set(copy->stub, this->location);
+      copy->water_type.set(copy->stub, this->water_type);
+      copy->water_type_lod.set(copy->stub, this->water_type_lod);
+      copy->lod_water_height = this->lod_water_height;
+      copy->land_data = this->land_data;
+      copy->parent.form.set(copy->stub, this->parent.form);
+      copy->parent.flags = this->parent.flags;
+      copy->map_icon = this->map_icon;
+      copy->cloud_model.clone_from(this->cloud_model, *copy->stub);
+      copy->map_data = this->map_data;
+      copy->map_offset_data = this->map_offset_data;
+      copy->distant_lod_multiplier = this->distant_lod_multiplier;
+      copy->world_flags = this->world_flags;
+      copy->bounds = this->bounds;
+      copy->music.set(copy->stub, this->music);
+      copy->tree_canopy_shadow = this->tree_canopy_shadow;
+      copy->water_noise_texture = this->water_noise_texture;
+      copy->hd_lod_diffuse_texture = this->hd_lod_diffuse_texture;
+      copy->hd_lod_normal_texture = this->hd_lod_normal_texture;
+      copy->offset_data = this->offset_data;
+      copy->has_object_bounds = this->has_object_bounds;
+      copy->object_bounds = this->object_bounds;
+      copy->script_data.clone_from(this->script_data, *copy->stub);
+      return true;
+   }
    bool Worldspace::_save_impl(tes_record_writer& record) {
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
       if (KEEP_WORLDSPACE_LARGE_REFERENCES) {

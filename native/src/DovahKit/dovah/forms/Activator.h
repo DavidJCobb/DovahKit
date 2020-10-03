@@ -25,7 +25,7 @@ namespace dovah::loaded_forms {
          };
          using activator_flags_t = std::underlying_type_t<activator_flag::type>;
 
-         components::papyrus_attachment_data papyrus;
+         components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
          components::model model;
          components::destruction_stage_data destruction_data;
@@ -41,5 +41,8 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
+         //
+      protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
    };
 }

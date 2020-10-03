@@ -10,6 +10,6 @@ namespace dovah::loaded_forms::components {
       void save(tes_record_writer&);
       //
       void clear(form_stub& my_owner) noexcept;
-      void clone_from(const keyword_list& original, form_stub& my_owner) noexcept;
+      void clone_from(const keyword_list& original, form_stub& owner_of_clone) noexcept;
    };
 }

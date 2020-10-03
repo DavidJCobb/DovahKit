@@ -96,4 +96,23 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   bool Activator::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<Activator*>(out);
+      if (!copy)
+         return false;
+      copy->script_data.clone_from(this->script_data, *copy->stub);
+      copy->bounds = this->bounds;
+      copy->model.clone_from(this->model, *copy->stub);
+      copy->destruction_data.clone_from(this->destruction_data, *copy->stub);
+      copy->keywords.clone_from(this->keywords, *copy->stub);
+      copy->name = this->name;
+      copy->marker_color = this->marker_color;
+      copy->looping_sound.set(copy->stub, this->looping_sound);
+      copy->activation_sound.set(copy->stub, this->activation_sound);
+      copy->water_type.set(copy->stub, this->water_type);
+      copy->interact_keyword.set(copy->stub, this->interact_keyword);
+      copy->activation_verb = this->activation_verb;
+      copy->activator_flags = this->activator_flags;
+      return true;
+   }
 }
