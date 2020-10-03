@@ -173,12 +173,19 @@
 //          Form::setup for the Cell class and have the cell check, through its stub, 
 //          whether it has a parent form.
 //
+//           - Does form_creation_request need to also accept grid cell coordinates and 
+//             somehow pass those to Form::setup? We may need to create some generic 
+//             struct like form_setup_options that can be passed over.
+//
+//             If we go that route, then whenever we create a cell with a parent form, 
+//             we should assert that grid coordinates were provided.
+//
 //     - Create a form_duplication_request class that has a file_load_order& owner and 
 //       contains: a single form_creation_request for the main form being duplicated; 
 //       and a vector of form_creation_request* for that form's children, which also 
 //       need to be duplicated (this needs to be a vector of heap-allocated requests 
 //       because vectors can't contain references (i.e. foo&) or any class that has 
-//       reference members).
+//       reference members; remember to document this fact in a comment).
 //
 //        - After creating the "root" form, set the "parent form" stub on the creation 
 //          requests for child forms.
