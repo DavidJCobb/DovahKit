@@ -1087,6 +1087,18 @@ namespace dovah {
       //
       return result;
    }
+   form_duplication_request::error_code form_duplication_request::get_main_form_error_code() const noexcept {
+      if (this->main_request)
+         return this->main_request->error;
+      return error_code::none;
+   }
+   std::vector<form_duplication_request::error_code> form_duplication_request::get_child_form_error_codes() const noexcept {
+      std::vector<form_duplication_request::error_code> out;
+      for (auto* request : this->child_requests)
+         if (request)
+            out.push_back(request->error);
+      return out;
+   }
    std::vector<form_duplication_request::error_code> form_duplication_request::get_error_codes() const noexcept {
       std::vector<form_duplication_request::error_code> out;
       if (this->main_request) {
@@ -1111,6 +1123,11 @@ namespace dovah {
       if (!this->main_request)
          return false;
       return this->main_request->is_valid();
+   }
+   unsigned int form_duplication_request::get_total_form_count() const noexcept {
+      if (!this->main_request)
+         return 0;
+      return 1 + this->child_requests.size();
    }
    #pragma endregion
 }

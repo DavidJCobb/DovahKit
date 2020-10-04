@@ -296,8 +296,11 @@ namespace dovah {
          //
          form_stub* commit();
          //
+         error_code get_main_form_error_code() const noexcept;
+         std::vector<error_code> get_child_form_error_codes() const noexcept;
          std::vector<error_code> get_error_codes() const noexcept;
          bool has_error() const noexcept;
          bool is_valid() const noexcept;
+         unsigned int get_total_form_count() const noexcept;
    };
 }

@@ -80,6 +80,7 @@ class FormTableModel : public QAbstractTableModel {
          this->clear();
       }
       //
+      QModelIndex index(dovah::form_stub*) const;
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
       QModelIndex parent(const QModelIndex& index) const;
       int rowCount(const QModelIndex& parent) const override;
@@ -111,6 +112,7 @@ class FormTable : public QTableView {
    public:
       FormTable(QWidget* parent);
       using model_type      = FormTableModel;
+      using proxy_type      = FormTableModelProxy;
       using model_item_type = model_type::item_type;
       //
       inline model_type* unwrappedModel() const noexcept {
@@ -129,6 +131,8 @@ class FormTable : public QTableView {
       //
       void filterChanged();
       void filterFinished();
+      //
+      void select(dovah::form_stub*);
       //
    protected:
       BasicFormTypeTree* _source = nullptr;

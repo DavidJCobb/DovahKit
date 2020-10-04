@@ -188,6 +188,7 @@
     <ClCompile Include="dovah\logging.cpp" />
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
+    <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -361,6 +362,7 @@
     <ClInclude Include="dovah\logging.h" />
     <QtMoc Include="ui\generic\TESFilePicker.h" />
     <QtMoc Include="ui\form_windows\cell.h" />
+    <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h" />
     <ClInclude Include="helpers\qt\spinbox.h" />
     <ClInclude Include="helpers\qt\vector3.h" />
     <ClInclude Include="helpers\unordered_map.h" />

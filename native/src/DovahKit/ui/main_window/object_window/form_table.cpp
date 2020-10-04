@@ -90,6 +90,16 @@ void FormTableModel::formModified(const dovah::form_stub* stub) {
    this->doUseInfoUpdate();
 }
 
+QModelIndex FormTableModel::index(dovah::form_stub* stub) const {
+   int i    = 0;
+   int size = this->children.size();
+   for (; i < size; ++i)
+      if (this->children[i]->stub == stub)
+         break;
+   if (i >= size)
+      return QModelIndex();
+   return this->index(i, 0, QModelIndex());
+}
 QModelIndex FormTableModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
@@ -318,6 +328,20 @@ void FormTable::filterFinished() {
 void FormTable::clear() {
    if (auto* model = this->unwrappedModel())
       model->clear();
+}
+void FormTable::select(dovah::form_stub* stub) {
+   auto* proxy = (proxy_type*)this->model();
+   if (!proxy)
+      return;
+   auto* model = (model_type*)proxy->sourceModel();
+   if (!model)
+      return;
+   auto  index  = model->index(stub);
+   auto  mapped = proxy->mapFromSource(index);
+   auto* select_model = this->selectionModel();
+   if (!select_model)
+      return;
+   select_model->select(mapped, QItemSelectionModel::ClearAndSelect);
 }
 void FormTable::setFilter(QLineEdit* field) {
    this->_filterThrottle->stop();

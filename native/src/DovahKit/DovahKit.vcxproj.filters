@@ -402,6 +402,9 @@
     <ClCompile Include="dovah\forms\components\package_location.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -855,6 +858,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\unordered_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

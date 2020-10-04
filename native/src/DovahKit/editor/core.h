@@ -113,6 +113,8 @@ class DovahKitCore : public QObject {
       dovah::form_creation_request request_form_creation(form_type_t) noexcept;
       dovah::form_duplication_request request_form_duplication() noexcept;
 
+      dovah::form_stub* duplicate_form(dovah::form_stub& original, QWidget* dialog_parent = nullptr); // handles UI, error reporting, etc., for you
+
       bool get_game_path(std::filesystem::path& out) const noexcept;
       bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt
 };
