@@ -377,7 +377,7 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
    auto metrics = QFontMetrics(this->font());
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
-   header->resizeSection(0, metrics.boundingRect("XXXX").width() * 1.5F + 4);
+   header->resizeSection(0, metrics.boundingRect("XMMX").width() * 1.5F + 4);
    header->resizeSection(1, 4);
    header->resizeSection(3, metrics.boundingRect("Use Count").width() * 1.5F + 4);
    header->setSectionResizeMode(0, QHeaderView::Interactive);

@@ -241,7 +241,7 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
    header->resizeSection(1, metrics.boundingRect("00000000").width() * 1.5F + 4);
-   header->resizeSection(2, metrics.boundingRect("XXXX").width() * 1.5F + 4);
+   header->resizeSection(2, metrics.boundingRect("XMMX").width() * 1.5F + 4);
    header->setSectionResizeMode(0, QHeaderView::Stretch);
    header->setSectionResizeMode(1, QHeaderView::Interactive);
    header->setSectionResizeMode(2, QHeaderView::Interactive);

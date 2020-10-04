@@ -39,4 +39,10 @@ void FormUseInfoDialog::rebuild() {
    this->ui.usesAsBaseForm->setTarget(this->stub);
    this->ui.usesInGeneral->build();
    this->ui.usesAsBaseForm->build();
+   //
+   if (this->stub) {
+      bool is_reference = dovah::form_type_info::form_type_is_reference(this->stub->formType);
+      this->ui.labelUsesAsBaseForm->setVisible(!is_reference);
+      this->ui.usesAsBaseForm->setVisible(!is_reference);
+   }
 }
