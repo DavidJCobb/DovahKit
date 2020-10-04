@@ -68,7 +68,7 @@ class DovahKitCore : public QObject {
       void formCreated(dovah::form_stub*);
       //
       void formDeletionImminent(dovah::form_stub*);
-      void formDeleted(dovah::bare_form_id_t);
+      void formDeletionComplete(dovah::bare_form_id_t);
       //
       void dataSaveImminent();
       void dataSaveComplete();

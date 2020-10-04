@@ -70,6 +70,7 @@ class FormTableModel : public QAbstractTableModel {
       void formCreated(form_stub*);
       void formModified(const form_stub*);
       void formModificationImminent(const form_stub*);
+      void formDeletionImminent(const dovah::form_stub*);
       //
    public slots:
       void clear();

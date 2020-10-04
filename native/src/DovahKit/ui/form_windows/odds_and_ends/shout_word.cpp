@@ -11,6 +11,12 @@ FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
       this->form = nullptr;
       this->stub = nullptr;
    });
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
+      if (stub == this->stub) {
+         this->form = nullptr;
+         this->stub = nullptr;
+      }
+   });
 }
 void FormShoutWordEditor::initialize() {
    this->ui.word->addFormType(dovah::form_type::word_of_power);

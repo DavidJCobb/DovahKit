@@ -32,9 +32,10 @@ void CellRefListModelItem::update() {
 #pragma region CellRefListModel
 CellRefListModel::CellRefListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &CellRefListModel::clear);
-   QObject::connect(&editor, &DovahKitCore::formCreated,         this, &CellRefListModel::formCreated);
-   QObject::connect(&editor, &DovahKitCore::formModified,        this, &CellRefListModel::formModified);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &CellRefListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formCreated,          this, &CellRefListModel::formCreated);
+   QObject::connect(&editor, &DovahKitCore::formModified,         this, &CellRefListModel::formModified);
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &CellRefListModel::formDeletionImminent);
 }
 void CellRefListModel::formCreated(const dovah::form_stub* stub) {
    if (!this->last_used_cell)
@@ -60,6 +61,25 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
          item->update();
          auto index = this->index(i, 0, QModelIndex());
          emit dataChanged(index, index);
+         break;
+      }
+   }
+}
+void CellRefListModel::formDeletionImminent(const dovah::form_stub* stub) {
+   if (!this->last_used_cell)
+      return;
+   if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
+      return;
+   if (!dovah::form_type_info::form_type_is_reference(stub->formType))
+      return;
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == stub) {
+         this->beginRemoveRows(QModelIndex(), i, i);
+         list.remove(i);
+         this->endRemoveRows();
          break;
       }
    }

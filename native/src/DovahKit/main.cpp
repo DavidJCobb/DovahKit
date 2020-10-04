@@ -145,30 +145,25 @@
 //
 //  - Code for deleting forms.
 //
+//     - Add an Object Window context menu item for deletion. Ditto for Cell View.
+//
+//     - DovahKitCore's deletion signals need to adequately convey whether a form is 
+//       (about to be) full-on *deleted* or just *flagged as* deleted. Currently, all 
+//       code which reacts to these signals assumes that the form is going to be erased 
+//       from memory.
+//
+//     - Forms that have been flagged as deleted should remain visible in the UI, and 
+//       should be shown with an indicator. (Showing the indicator is a challenge: the 
+//       record flags are in the loaded form, so we'd have to mirror the flag onto the 
+//       form_stub somewhere. We have a few spare bytes to work with. This, of course, 
+//       then requires that we carefully manage the "deleted" form flag.)
+//
 //     - Test the severing of outbound references to a deleted form.
 //
-//        - Test keyword lists in specific; I'm worried about how the form_id_t members 
-//          are going to behave there. An in-editor test would require a UI for ACTI.
+//        - Test keyword lists in specific.
 //
-//     - ObjectReference needs a "friendly" delete function that moves the reference 
-//       underground and sets itself as an opposite enable state child of the player.
-//
-//        - How would it gain access to the player form?
-//
-//     - DovahKitCore needs to offer signals for deleting forms: onFormDeleteImminent 
-//       and onFormDeleteComplete, the former of which should take a form_stub argument. 
-//       It also needs to offer an accessor that the UI must use to delete forms; the 
-//       accessor should emit those signals. Form-editing dialogs need to listen for 
-//       those signals and abandon their form_stub pointers and their loaded_form_ptrs 
-//       in response to the former.
-//
-//        - We should only fire these signals when deleting forms out of the active file. 
-//          Currently, we fire them for all deletions; in fact, the backend doesn't even 
-//          give any indication as to which forms will be deleted and which forms will 
-//          merely be flagged as deleted.
-//
-//        - Everything that listens for dataAbandonImminent will probably also need to 
-//          listen for these.
+//     - ObjectReference friendly delete question: there are unanswered questions; I've 
+//       made an inquiry on the xEdit Discord.
 //
 //  - Support for DIAL and INFO
 //
@@ -177,6 +172,12 @@
 //
 //     - INFO/PNAM should use dialogue_form_id_t instead of form_id_t. Use info generation 
 //       for this subrecord should use the "dialogue" use info entry flag.
+//
+//  - Form deletion: some form types skip saving some subrecords if the form is flagged as 
+//    deleted. Should we replicate this behavior? We'll want to continue testing in the 
+//    Creation Kit to find all of these, if we care that much.
+//
+//     - REFR/DATA
 //
 //  - form_id_t::set and its overrides on subclasses should take a form_stub&, not a 
 //    form_stub*, as the pointer is not optional.

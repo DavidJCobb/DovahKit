@@ -29,6 +29,13 @@ namespace form_dialog_helpers {
       QObject::connect(&editor, &DovahKitCore::dataSaveImminent, &dialog, [&dialog]() {
          dialog.form = nullptr;
       });
+      QObject::connect(&editor, &DovahKitCore::formDeletionImminent, &dialog, [&dialog](dovah::form_stub* stub) {
+         if (stub == dialog.stub) {
+            dialog.form = nullptr;
+            dialog.stub = nullptr;
+            dialog.reject();
+         }
+      });
       auto _reload = [&dialog]() { dialog.form = dialog.stub->load().ptr_cast<loaded_form_t>(); };
       QObject::connect(&editor, &DovahKitCore::dataSaveComplete, &dialog, _reload);
       QObject::connect(&editor, &DovahKitCore::dataSaveFailed,   &dialog, _reload);

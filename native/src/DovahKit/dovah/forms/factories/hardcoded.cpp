@@ -4,6 +4,7 @@
 #include "../../files/file_load_order.h"
 #include "../../data/actor_values.h"
 #include "../Activator.h"
+#include "../Actor.h"
 #include "../ActorBase.h"
 #include "../Container.h"
 #include "../Form.h"
@@ -90,7 +91,7 @@ namespace dovah {
       }
       {  // [NPC_:007]"Player"
          auto stub = new form_stub();
-         stub->formID   = 0x007;
+         stub->formID   = hardcoded_form_ids::Player;
          stub->formType = form_type_info::signature_to_form_type('NPC_');
          stub->editorID = "Player";
          lo._accept_hardcoded_form(stub);
@@ -151,15 +152,14 @@ namespace dovah {
       }
       {  // [ACHR:014]"PlayerRef"
          auto stub = new form_stub();
-         stub->formID   = 0x014;
+         stub->formID   = hardcoded_form_ids::PlayerRef;
          stub->formType = form_type_info::signature_to_form_type('ACHR');
          stub->editorID = "PlayerRef";
          //
-         /*//auto form = new loaded_forms::Actor;
-         // TODO: set 0x00000007 as the base form
+         auto form = new loaded_forms::Actor;
+         form->base_form.set(stub, hardcoded_form_ids::Player);
          form->stub = stub;
          stub->form = form;
-         //*/
          //
          lo._accept_hardcoded_form(stub);
       }

@@ -85,6 +85,7 @@ FormUseInfoListModel::FormUseInfoListModel(QObject* parent) : QAbstractTableMode
    QObject::connect(&editor, &DovahKitCore::formCreated ,             this, &FormUseInfoListModel::formCreated);
    QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, &FormUseInfoListModel::formModificationImminent);
    QObject::connect(&editor, &DovahKitCore::formModified,             this, &FormUseInfoListModel::formModified);
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent,     this, &FormUseInfoListModel::formDeletionImminent);
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &FormUseInfoListModel::clear);
 }
 void FormUseInfoListModel::addUser(const use_info_entry& entry, bool queued) {
@@ -196,6 +197,21 @@ void FormUseInfoListModel::formModified(const dovah::form_stub* stub) {
       //
       this->addUser(pair.second, false);
       return;
+   }
+}
+void FormUseInfoListModel::formDeletionImminent(const dovah::form_stub* stub) {
+   if (!this->used)
+      return;
+   if (stub == this->used) {
+      this->clear();
+      return;
+   }
+   auto& list = this->children;
+   auto  size = list.size();
+   for (int i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->otherStub == stub)
+         this->removeUser(item);
    }
 }
 //

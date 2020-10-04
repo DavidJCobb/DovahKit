@@ -66,6 +66,7 @@ class FormUseInfoListModel : public QAbstractTableModel {
       void formCreated(const dovah::form_stub*);
       void formModificationImminent(const dovah::form_stub*);
       void formModified(const dovah::form_stub*);
+      void formDeletionImminent(const dovah::form_stub*);
       //
    public:
       FormUseInfoListModel(QObject* parent = nullptr);

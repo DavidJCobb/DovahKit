@@ -17,6 +17,12 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
       this->setDisabled(true);
       this->clear();
    });
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
+      int index = this->findData(stub->formID);
+      if (index < 0)
+         return;
+      this->removeItem(index);
+   });
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
       const auto blocker = QSignalBlocker(this);
       int index = this->findData(stub->formID);

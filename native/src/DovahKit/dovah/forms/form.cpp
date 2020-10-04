@@ -27,6 +27,16 @@ namespace dovah::loaded_forms {
       return instance;
    }
    bool Form::save(tes_record_writer& record) {
+      if (this->flags & form_flag::deleted) {
+         //
+         // Specific form types don't appear to save ANY data -- not even editor IDs -- if they 
+         // are flagged as deleted.
+         //
+         auto& info = form_type_info::lookup(this->formType);
+         if (info.flags & form_type_info::flag::empty_if_deleted)
+            return true;
+      }
+      //
       auto editor_id = this->get_editor_id();
       if (editor_id && editor_id[0])
          record.write_string_subrecord('EDID', editor_id);

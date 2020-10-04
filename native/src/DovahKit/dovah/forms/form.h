@@ -2,6 +2,7 @@
 #include "../core.h"
 
 namespace dovah {
+   class file_load_order;
    class form_stub;
    namespace tes_file_reading {
       class record;

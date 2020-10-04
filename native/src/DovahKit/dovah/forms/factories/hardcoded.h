@@ -9,6 +9,8 @@ namespace dovah {
    void build_hardcoded_form_outbound_refs(form_stub&); // create outbound use info for hardcoded forms that have not been overridden.
 
    namespace hardcoded_form_ids {
+      static constexpr bare_form_id_t Player       = 0x00000007;
+      static constexpr bare_form_id_t PlayerRef    = 0x00000014;
       static constexpr bare_form_id_t DefaultWater = 0x00000018;
    }
 }

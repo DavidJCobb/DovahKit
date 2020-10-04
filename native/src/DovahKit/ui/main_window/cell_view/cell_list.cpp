@@ -29,9 +29,10 @@ void CellListModelItem::update() {
 #pragma region CellListModel
 CellListModel::CellListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &CellListModel::clear);
-   QObject::connect(&editor, &DovahKitCore::formCreated,         this, &CellListModel::formCreated);
-   QObject::connect(&editor, &DovahKitCore::formModified,        this, &CellListModel::formModified);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &CellListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formCreated,          this, &CellListModel::formCreated);
+   QObject::connect(&editor, &DovahKitCore::formModified,         this, &CellListModel::formModified);
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &CellListModel::formDeletionImminent);
 }
 
 void CellListModel::formCreated(const dovah::form_stub* stub) {
@@ -57,6 +58,21 @@ void CellListModel::formModified(const dovah::form_stub* stub) {
          item->update();
          auto index = this->index(i, 0, QModelIndex());
          emit dataChanged(index, index);
+         break;
+      }
+   }
+}
+void CellListModel::formDeletionImminent(const dovah::form_stub* stub) {
+   if (stub->formType != dovah::form_type::cell)
+      return;
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == stub) {
+         this->beginRemoveRows(QModelIndex(), i, i);
+         list.remove(i);
+         this->endRemoveRows();
          break;
       }
    }

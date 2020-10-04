@@ -405,7 +405,7 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
    }
    //
    for (auto id : formIDs)
-      emit this->formDeleted(id);
+      emit this->formDeletionComplete(id);
 }
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {

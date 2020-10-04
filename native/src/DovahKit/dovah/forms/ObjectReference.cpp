@@ -1,5 +1,7 @@
 #include "ObjectReference.h"
 #include "_common_cpp.h"
+#include "factories/hardcoded.h"
+#include "components/extra_data/enable_state_parent.h"
 
 namespace dovah::loaded_forms {
    void ObjectReference::load(tes_record_reader& record) {
@@ -103,5 +105,25 @@ namespace dovah::loaded_forms {
       //
       if (this->base_form == other.formID)
          this->base_form.set(this->stub, nullptr);
+   }
+   bool ObjectReference::_friendly_delete_impl() noexcept {
+      this->flags |= form_flag::disabled;
+      //
+      // Make the reference an opposite enable state child of the PlayerRef.
+      //
+      auto* extra = this->extra_data.get_or_create<components::extra::enable_state_parent>(components::extra_data_type::enable_state_parent);
+      extra->flags = components::extra::enable_state_parent::flag::opposite;
+      extra->ref.set(this->stub, hardcoded_form_ids::PlayerRef);
+
+      //
+      // TODO: xEdit makes these references persistent and uses -30000 as the Z-coordinate. Why 
+      // make them persistent? And don't interior cells reset objects past (+/-)10000 on any 
+      // axis back to the cell origin? I've made some inquiries.
+      //
+
+      //
+      this->position.z = -9999.0F;
+      //
+      return true;
    }
 }

@@ -23,6 +23,12 @@ FormUseInfoDialog::FormUseInfoDialog(const dovah::form_stub* stub, QWidget* pare
       this->stub = nullptr;
       this->reject();
    });
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
+      if (stub == this->stub) {
+         this->stub = nullptr;
+         this->reject();
+      }
+   });
    //
    this->rebuild();
 }

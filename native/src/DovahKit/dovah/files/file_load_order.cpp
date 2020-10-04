@@ -1197,7 +1197,7 @@ namespace dovah {
          }
          //
          if (entry.flags & use_info_entry::flag::i_am_parent_of) {
-            assert(!entry.other->is_hardcoded() && "How is a hardcoded form a descendant of a form that can be deleted (and is being deleted)?");
+            assert(!entry.other->is_hardcoded() && "How is a hardcoded form a descendant of a form that can be deleted (and in fact is currently being deleted)?");
             this->forms_needing_delete.insert(entry.other);
             this->_gather_others(entry.other);
             if (this->result != result_code::pending)
