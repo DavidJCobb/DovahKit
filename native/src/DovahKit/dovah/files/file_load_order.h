@@ -228,6 +228,9 @@ namespace dovah {
             unsupported_form_type_requested,
             invalid_parent_child_relationship, // forms of (child_of)'s type cannot have children of type (form_type)
             exterior_grid_coordinates_already_taken, // cannot create an exterior cell; the desired grid coordinates are used by another cell in the same world
+            cannot_create_reference_with_no_parent_cell,
+            interior_cell_clone_cannot_have_parent,
+            exterior_cell_clone_must_have_parent,
             form_created_but_clone_failed, // we were able to make a new form, but Form::clone() returned false
          };
       protected:
@@ -257,7 +260,7 @@ namespace dovah {
             int32_t y = 0;
          } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
          //
-         inline bool is_valid() const noexcept { return this->formID != 0; } // returns (true) if the request has a reserved ID and has not yet completed/failed
+         inline bool is_valid() const noexcept { return this->formID != 0 && this->error == error_code::none; } // returns (true) if the request has a reserved ID and has not yet completed/failed
          inline error_code get_error_code() const noexcept { return this->error; }
          //
          void set_parent_form(form_stub* parent);

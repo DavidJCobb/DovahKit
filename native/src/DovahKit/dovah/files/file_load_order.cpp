@@ -663,16 +663,32 @@ namespace dovah {
          }
          //
          if (error) {
-            request.formID = 0;
-            request.error  = form_creation_request::error_code::invalid_parent_child_relationship;
+            request.error = form_creation_request::error_code::invalid_parent_child_relationship;
             return nullptr;
          }
          //
          if (child_type == form_type::cell) { // validate worldspace grid coordinates
             auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(request.child_of, request.cell_grid_coordinates.x, request.cell_grid_coordinates.y);
             if (existing) {
-               request.formID = 0;
-               request.error  = form_creation_request::error_code::exterior_grid_coordinates_already_taken;
+               request.error = form_creation_request::error_code::exterior_grid_coordinates_already_taken;
+               return nullptr;
+            }
+         }
+      } else {
+         if (form_type_info::form_type_is_reference(request.form_type)) {
+            request.error = form_creation_request::error_code::cannot_create_reference_with_no_parent_cell;
+            return nullptr;
+         }
+      }
+      if (request.clone_of && request.form_type == form_type::cell) {
+         if (request.child_of) {
+            if (request.clone_of->groupInfo.parentFormID == 0) {
+               request.error = form_creation_request::error_code::interior_cell_clone_cannot_have_parent;
+               return nullptr;
+            }
+         } else {
+            if (request.clone_of->groupInfo.parentFormID != 0) {
+               request.error = form_creation_request::error_code::exterior_cell_clone_must_have_parent;
                return nullptr;
             }
          }
@@ -682,7 +698,6 @@ namespace dovah {
       if (!request.clone_of) {
          loaded = create_blank_loaded_form_by_type(request.form_type);
          if (!loaded) {
-            request.formID = 0;
             request.error = form_creation_request::error_code::unsupported_form_type_requested;
             return nullptr;
          }

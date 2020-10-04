@@ -153,12 +153,6 @@
 //
 //        - Requires a UI for managing cells and worldspaces.
 //
-//     - When duplicating an interior cell, the form_duplication_request should fail if 
-//       a parent form was set. We should not allow any duplication operation that 
-//       would turn an interior cell into an exterior cell or vice versa.
-//
-//        - Actually, this needs to be enforced within form_creation_request.
-//
 //  - For Use Info, merge the "is base form of" and "is reference of" flags, since we 
 //    can infer which is which just by looking at the form types involved (i.e. CONT is 
 //    always a base form of REFR; the relationship is never reversed). Then, add a Use 

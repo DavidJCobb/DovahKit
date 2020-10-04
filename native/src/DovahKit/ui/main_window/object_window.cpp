@@ -45,6 +45,15 @@ namespace {
          case error_code::exterior_grid_coordinates_already_taken:
             text = QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
             break;
+         case error_code::cannot_create_reference_with_no_parent_cell:
+            text = QObject::tr("References cannot be created outside of a cell. (Wait, what? How did you get the Object Window to try and create a reference?)");
+            break;
+         case error_code::interior_cell_clone_cannot_have_parent:
+            text = QObject::tr("Interior cells cannot have a parent worldspace. (Wait, what? How did you get the Object Window to try and create an interior cell?)");
+            break;
+         case error_code::exterior_cell_clone_must_have_parent:
+            text = QObject::tr("Exterior cells must have a parent worldspace. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
+            break;
       }
       QMessageBox::critical(
          window,
