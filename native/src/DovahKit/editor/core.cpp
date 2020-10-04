@@ -227,6 +227,9 @@ dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type_t ft) {
 dovah::form_creation_request DovahKitCore::request_form_creation(dovah::form_type_t ft) noexcept {
    return this->load_order->request_form_creation(ft);
 }
+dovah::form_duplication_request DovahKitCore::request_form_duplication() noexcept {
+   return this->load_order->request_form_duplication();
+}
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
    std::wstring value(512, 0);

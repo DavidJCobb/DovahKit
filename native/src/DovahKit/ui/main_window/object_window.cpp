@@ -92,11 +92,78 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    });
    //
    this->_formActionEdit        = new QAction(tr("Edit...",     "object window form actions"), this->ui.table);
+   this->_formActionDuplicate   = new QAction(tr("Duplicate",   "object window form actions"), this->ui.table);
    this->_formActionShowUseInfo = new QAction(tr("Use Info...", "object window form actions"), this->ui.table);
    QObject::connect(this->_formActionEdit, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub)
          open_edit_dialog_for_form(stub, this->parentWidget());
+   });
+   QObject::connect(this->_formActionDuplicate, &QAction::triggered, this, [this]() {
+      using error_code = dovah::form_duplication_request::error_code;
+      //
+      auto* stub = _get_selected_form(this->ui.table);
+      if (!stub)
+         return;
+      //
+      auto& editor  = DovahKitCore::get();
+      auto  request = editor.request_form_duplication();
+      request.set_target(stub);
+      if (request.has_error()) {
+         auto       errors = request.get_error_codes();
+         error_code error  = error_code::none;
+         for (auto e : errors) {
+            if (e != error_code::none) {
+               error = e;
+               break;
+            }
+         }
+         if (error != error_code::none)
+            _report_form_create_error(this, error);
+         return;
+      }
+      //
+      if (!dovah::form_type_info::form_type_is_reference(stub->formType)) { // shouldn't ever happen for the Object Window, but eh
+         QString default_value = stub->get_editor_id();
+         if (default_value.endsWith("DUPLICATE")) {
+            default_value += QString("001");
+         } else {
+            auto re = QRegExp("DUPLICATE(\\d+)$");
+            if (re.indexIn(default_value) == -1) {
+               default_value += QString("DUPLICATE");
+            } else {
+               auto index  = re.cap(1);
+               bool is_int = false;
+               auto val    = index.toInt(&is_int) + 1;
+               if (is_int) {
+                  default_value.chop(index.size());
+                  default_value += QString("%1").arg(val, index.size(), 10, QChar('0'));
+               } else {
+                  default_value += QString("DUPLICATE");
+               }
+            }
+         }
+         //
+         bool    ok        = false;
+         QString editor_id = QInputDialog::getText(this, tr("Set editor ID"), tr("Editor ID:"), QLineEdit::Normal, default_value, &ok);
+         if (!ok)
+            return;
+         request.editorID = editor_id.toStdString();
+      }
+      request.commit();
+      if (request.has_error()) {
+         auto       errors = request.get_error_codes();
+         error_code error  = error_code::none;
+         for (auto e : errors) {
+            if (e != error_code::none) {
+               error = e;
+               break;
+            }
+         }
+         if (error != error_code::none)
+            _report_form_create_error(this, error);
+         return;
+      }
    });
    QObject::connect(this->_formActionShowUseInfo, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
@@ -112,11 +179,13 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       auto  form_types = this->ui.tree->selectedFormTypes();
       this->_actionCreateForm->setEnabled(form_types.size() == 1);
       this->_formActionEdit->setVisible(stub != nullptr);
+      this->_formActionDuplicate->setVisible(stub != nullptr);
       this->_formActionShowUseInfo->setVisible(stub != nullptr);
       //
       QMenu menu(opener);
       menu.addAction(this->_actionCreateForm);
       menu.addAction(this->_formActionEdit);
+      menu.addAction(this->_formActionDuplicate);
       menu.addAction(this->_formActionShowUseInfo);
       //
       bool any = false;

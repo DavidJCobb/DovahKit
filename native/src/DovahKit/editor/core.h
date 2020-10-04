@@ -111,6 +111,7 @@ class DovahKitCore : public QObject {
 
       dovah::form_stub* create_form_of_type(form_type_t);
       dovah::form_creation_request request_form_creation(form_type_t) noexcept;
+      dovah::form_duplication_request request_form_duplication() noexcept;
 
       bool get_game_path(std::filesystem::path& out) const noexcept;
       bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt

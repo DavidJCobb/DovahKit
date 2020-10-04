@@ -695,7 +695,8 @@ namespace dovah {
       stub->formID   = formID;
       stub->editorID = request.editorID;
       stub->set_edited(true);
-      loaded->stub = stub;
+      if (loaded)
+         loaded->stub = stub;
       //
       stub->groupInfo.gridX = request.cell_grid_coordinates.x;
       stub->groupInfo.gridY = request.cell_grid_coordinates.y;
@@ -738,6 +739,9 @@ namespace dovah {
       if (this->on_form_create)
          (this->on_form_create)(stub);
       return stub;
+   }
+   form_duplication_request file_load_order::request_form_duplication() noexcept {
+      return form_duplication_request(*this);
    }
    
    bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) {
@@ -977,6 +981,113 @@ namespace dovah {
    }
    form_stub* form_creation_request::commit() {
       return this->owner.commit_form_creation_request(*this);
+   }
+   #pragma endregion
+
+   #pragma region form_duplication_request
+   form_duplication_request::form_duplication_request(file_load_order& o) : owner(o) {
+   }
+   form_duplication_request::form_duplication_request(form_duplication_request&& other) : owner(other.owner) {
+      this->main_request = other.main_request;
+      other.main_request = nullptr;
+      //
+      this->child_requests.clear();
+      size_t size = other.child_requests.size();
+      this->child_requests.resize(size);
+      for(size_t i = 0; i < size; ++i) {
+         this->child_requests[i] = other.child_requests[i];
+         other.child_requests[i] = nullptr;
+      }
+   }
+   form_duplication_request::~form_duplication_request() {
+      for (auto* request : this->child_requests)
+         if (request)
+            delete request;
+      this->child_requests.clear();
+   }
+   //
+   void form_duplication_request::set_target(form_stub* original) {
+      if (this->main_request && original == this->main_request->clone_of)
+         return;
+      //
+      for (auto* request : this->child_requests)
+         if (request)
+            delete request;
+      this->child_requests.clear();
+      //
+      if (this->main_request) {
+         delete this->main_request;
+         this->main_request = nullptr;
+      }
+      if (!original)
+         return;
+      //
+      this->main_request = new form_creation_request(this->owner.request_form_creation(original->formType));
+      this->main_request->set_parent_form(this->parent);
+      this->main_request->queue_clone(original);
+      //
+      form_stub_helpers::for_each_child_form(original, [this](form_stub* child) {
+         auto* request = new form_creation_request(this->owner.request_form_creation(child->formType));
+         request->queue_clone(child);
+         this->child_requests.push_back(request);
+         return false;
+      });
+   }
+   //
+   void form_duplication_request::set_parent_form(form_stub* parent) {
+      this->parent = parent;
+      if (this->main_request)
+         this->main_request->set_parent_form(parent);
+   }
+   void form_duplication_request::set_parent_form(bare_form_id_t parentID) {
+      this->parent = this->owner.get_form(parentID);
+      if (this->main_request)
+         this->main_request->set_parent_form(this->parent);
+   }
+   //
+   form_stub* form_duplication_request::commit() {
+      if (!this->main_request)
+         return nullptr;
+      this->main_request->editorID = this->editorID;
+      if (!this->parent) {
+         auto parentID = this->main_request->clone_of->groupInfo.parentFormID;
+         if (parentID)
+            this->main_request->set_parent_form(parentID);
+      }
+      auto* result = this->main_request->commit();
+      if (!result)
+         return nullptr;
+      //
+      for (auto* request : this->child_requests)
+         if (request)
+            request->commit();
+      //
+      return result;
+   }
+   std::vector<form_duplication_request::error_code> form_duplication_request::get_error_codes() const noexcept {
+      std::vector<form_duplication_request::error_code> out;
+      if (this->main_request) {
+         out.push_back(this->main_request->error);
+         for (auto* request : this->child_requests)
+            if (request)
+               out.push_back(request->error);
+      }
+      return out;
+   }
+   bool form_duplication_request::has_error() const noexcept {
+      if (this->main_request) {
+         if (this->main_request->error != error_code::none)
+            return true;
+         for (auto* request : this->child_requests)
+            if (request && request->error != error_code::none)
+               return true;
+      }
+      return false;
+   }
+   bool form_duplication_request::is_valid() const noexcept {
+      if (!this->main_request)
+         return false;
+      return this->main_request->is_valid();
    }
    #pragma endregion
 }

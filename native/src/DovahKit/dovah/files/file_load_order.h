@@ -26,6 +26,7 @@ namespace dovah {
    }
 
    class form_creation_request;
+   class form_duplication_request;
 
    class file_load_order {
       //
@@ -184,7 +185,8 @@ namespace dovah {
          //
          form_stub* create_form_of_type(form_type_t) noexcept;
          form_creation_request request_form_creation(form_type_t) noexcept;
-         form_stub* commit_form_creation_request(form_creation_request&) noexcept;
+         form_stub* commit_form_creation_request(form_creation_request&) noexcept; // you can call this, but you're meant to call form_creation_request::commit instead
+         form_duplication_request request_form_duplication() noexcept;
          //
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
@@ -199,6 +201,7 @@ namespace dovah {
 
    class form_creation_request {
       friend class file_load_order;
+      friend class form_duplication_request;
       //
       // Instances of this class can be created through the (file_load_order), and allow outside 
       // code to take actions in between reserving a form ID for use with a new form, and actually 
@@ -212,6 +215,9 @@ namespace dovah {
       //  - We ask the user for the desired editor ID.
       //
       //  - We create the form, with that editor ID, all in one go.
+      //
+      // This class is capable of creating a new, blank form, or of duplicating a single form. If 
+      // you wish to duplicate a form and its children, then use (form_duplication_request).
       //
       public:
          enum class error_code {
@@ -251,7 +257,7 @@ namespace dovah {
             int32_t y = 0;
          } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
          //
-         inline bool is_valid() const noexcept { return this->formID != 0; }
+         inline bool is_valid() const noexcept { return this->formID != 0; } // returns (true) if the request has a reserved ID and has not yet completed/failed
          inline error_code get_error_code() const noexcept { return this->error; }
          //
          void set_parent_form(form_stub* parent);
@@ -259,5 +265,36 @@ namespace dovah {
          //
          void queue_clone(form_stub* original);
          form_stub* commit();
+   };
+
+   class form_duplication_request {
+      public:
+         using error_code = form_creation_request::error_code;
+      protected:
+         file_load_order& owner;
+         form_creation_request* main_request = nullptr;
+         std::vector<form_creation_request*> child_requests;
+         //
+         form_stub* parent = nullptr; // if the original form has a parent and you want the clone to have a different parent, use this. (nullptr) defaults to same parent.
+         //
+         form_duplication_request(form_duplication_request&&);
+         form_duplication_request(const form_duplication_request&) = delete;
+         form_duplication_request& operator=(const form_duplication_request&) = delete;
+      public:
+         form_duplication_request(file_load_order& o);
+         ~form_duplication_request();
+         //
+         std::string editorID;
+         //
+         void set_target(form_stub* original);
+         //
+         void set_parent_form(form_stub* parent);
+         void set_parent_form(bare_form_id_t parentID);
+         //
+         form_stub* commit();
+         //
+         std::vector<error_code> get_error_codes() const noexcept;
+         bool has_error() const noexcept;
+         bool is_valid() const noexcept;
    };
 }

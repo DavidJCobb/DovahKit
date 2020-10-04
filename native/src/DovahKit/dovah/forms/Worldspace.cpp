@@ -10,6 +10,35 @@ namespace {
 }
 
 namespace dovah::loaded_forms {
+   void Worldspace::large_reference_t::clone_from(const large_reference_t& original, form_stub& my_owner) noexcept {
+      if (!this->entries.empty()) {
+         for (auto& entry : this->entries) {
+            for (auto& ref : entry.refs)
+               ref.form.set(&my_owner, nullptr);
+         }
+         this->entries.clear();
+      }
+      //
+      size_t size = original.entries.size();
+      this->entries.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = this->entries[i];
+         auto& from  = original.entries[i];
+         entry.y = from.y;
+         entry.x = from.x;
+         //
+         size_t rs = from.refs.size();
+         entry.refs.resize(rs);
+         for (size_t j = 0; j < rs; ++j) {
+            auto& ref   = entry.refs[j];
+            auto& other = from.refs[j];
+            ref.form.set(&my_owner, other.form);
+            ref.y = other.y;
+            ref.x = other.x;
+         }
+      }
+   }
+
    void Worldspace::load(tes_record_reader& record) {
       Form::load(record);
       //

@@ -145,37 +145,19 @@
 //
 //  - Code for creating new forms.
 //
-//     = FLOW FOR DUPLICATING A FORM:
-//        - Select form ID automatically
-//           - If no form IDs available, fail with an error
-//        - Request editor ID from user
-//        - Create form
-//        - Call "clone" member function on original form
-//           - If fails, tear down the clone's stub, report error, and abort
-//        - Send formCreated signal
+//     - Test the duplication of cells: ensure that their child forms are also duplicated 
+//       properly and without any crashes, etc..
 //
-//     - Create a form_duplication_request class that has a file_load_order& owner and 
-//       contains: a single form_creation_request for the main form being duplicated; 
-//       and a vector of form_creation_request* for that form's children, which also 
-//       need to be duplicated (this needs to be a vector of heap-allocated requests 
-//       because vectors can't contain references (i.e. foo&) or any class that has 
-//       reference members; remember to document this fact in a comment).
+//        = Duplication of exterior cells within the same world will fail on principle 
+//          due to the grid coordinates being in use by the original. Test an interior.
 //
-//        - After creating the "root" form, set the "parent form" stub on the creation 
-//          requests for child forms.
+//        - Requires a UI for managing cells and worldspaces.
 //
-//        - Add an option that controls whether to duplicate child forms.
+//     - When duplicating an interior cell, the form_duplication_request should fail if 
+//       a parent form was set. We should not allow any duplication operation that 
+//       would turn an interior cell into an exterior cell or vice versa.
 //
-//        - Make it possible to override the parent form used for the duplicate, but 
-//          have it default to the same parent as the original form.
-//
-//           - This would make it possible to "duplicate" an exterior cell to serve as 
-//             an interior, which is... problematic. For now, we should probably assert 
-//             that we aren't switching the cell type between interior and exterior; if 
-//             we ever think of a sensible way to implement that in the future, then we 
-//             can add support then (and in the meantime we can make it clear in code 
-//             comments that clients/frontends should double-check themselves that that 
-//             requirement isn't being broken, since we assert).
+//        - Actually, this needs to be enforced within form_creation_request.
 //
 //  - For Use Info, merge the "is base form of" and "is reference of" flags, since we 
 //    can infer which is which just by looking at the form types involved (i.e. CONT is 
