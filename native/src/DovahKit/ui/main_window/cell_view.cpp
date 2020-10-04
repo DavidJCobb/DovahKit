@@ -45,10 +45,15 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    #pragma region Context menus
       #pragma region Cell
          this->cellContextMenu.edit        = new QAction(tr("Edit...",     "cell view cell actions"), this->ui.cellList);
+         this->cellContextMenu.duplicate   = new QAction(tr("Duplicate",   "cell view cell actions"), this->ui.cellList);
          this->cellContextMenu.showUseInfo = new QAction(tr("Use Info...", "cell view cell actions"), this->ui.cellList);
          QObject::connect(this->cellContextMenu.edit, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
                open_edit_dialog_for_form(stub, this->parentWidget());
+         });
+         QObject::connect(this->cellContextMenu.duplicate, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.cellList->formStub())
+               DovahKitCore::get().duplicate_form(*stub, this);
          });
          QObject::connect(this->cellContextMenu.showUseInfo, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
@@ -59,19 +64,27 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          QObject::connect(this->ui.cellList, &QWidget::customContextMenuRequested, [this](const QPoint& pos) {
             auto  opener = this->ui.cellList;
             auto& items  = this->cellContextMenu;
+            if (!opener->formStub())
+               return;
             //
             QMenu menu(opener);
             menu.addAction(items.edit);
+            menu.addAction(items.duplicate);
             menu.addAction(items.showUseInfo);
             menu.exec(opener->mapToGlobal(pos));
          });
       #pragma endregion
       #pragma region Reference
          this->refContextMenu.edit        = new QAction(tr("Edit...",     "cell view ref actions"), this->ui.referenceList);
+         this->refContextMenu.duplicate   = new QAction(tr("Duplicate",   "cell view ref actions"), this->ui.referenceList);
          this->refContextMenu.showUseInfo = new QAction(tr("Use Info...", "cell view ref actions"), this->ui.referenceList);
          QObject::connect(this->refContextMenu.edit, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())
                open_edit_dialog_for_form(stub, this->parentWidget());
+         });
+         QObject::connect(this->refContextMenu.duplicate, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.referenceList->formStub())
+               DovahKitCore::get().duplicate_form(*stub, this);
          });
          QObject::connect(this->refContextMenu.showUseInfo, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())
@@ -82,9 +95,12 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          QObject::connect(this->ui.referenceList, &QWidget::customContextMenuRequested, [this](const QPoint& pos) {
             auto  opener = this->ui.referenceList;
             auto& items  = this->refContextMenu;
+            if (!opener->formStub())
+               return;
             //
             QMenu menu(opener);
             menu.addAction(items.edit);
+            menu.addAction(items.duplicate);
             menu.addAction(items.showUseInfo);
             menu.exec(opener->mapToGlobal(pos));
          });

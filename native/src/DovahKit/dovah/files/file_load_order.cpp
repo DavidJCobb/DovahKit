@@ -628,6 +628,8 @@ namespace dovah {
       auto& list  = this->form_creation_request_info.reserved_formIDs;
       {
          auto guard = std::lock_guard(this->forms.lock);
+         if (std::find(list.begin(), list.end(), formID) != list.end()) // if the form ID is reserved, then we need to find a new one
+            formID = 0;
          if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
             formID = this->find_first_free_form_id_in_active_file();
             if (!formID) { // no form ID available
@@ -739,6 +741,10 @@ namespace dovah {
          }
       } else {
          loaded->setup();
+      }
+      //
+      if (this->active_file) {
+         this->active_file->header.nextFormID = this->find_first_free_form_id_in_active_file(request.formID + 1);
       }
       //
       {
@@ -958,8 +964,13 @@ namespace dovah {
    form_creation_request::form_creation_request(form_creation_request&& other) : owner(other.owner) {
       this->formID    = other.formID;
       this->form_type = other.form_type;
+      this->child_of  = other.child_of;
       this->clone_of  = other.clone_of;
       this->error     = other.error;
+      //
+      this->editorID  = other.editorID;
+      this->cell_grid_coordinates = other.cell_grid_coordinates;
+      //
       other.formID = 0;
    }
    form_creation_request::~form_creation_request() {
@@ -1081,9 +1092,12 @@ namespace dovah {
       if (!result)
          return nullptr;
       //
-      for (auto* request : this->child_requests)
-         if (request)
-            request->commit();
+      for (auto* request : this->child_requests) {
+         if (!request)
+            continue;
+         request->set_parent_form(result);
+         request->commit();
+      }
       //
       return result;
    }
@@ -1095,7 +1109,7 @@ namespace dovah {
    std::vector<form_duplication_request::error_code> form_duplication_request::get_child_form_error_codes() const noexcept {
       std::vector<form_duplication_request::error_code> out;
       for (auto* request : this->child_requests)
-         if (request)
+         if (request && request->error != error_code::none)
             out.push_back(request->error);
       return out;
    }

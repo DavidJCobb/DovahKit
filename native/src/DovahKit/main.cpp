@@ -143,16 +143,6 @@
 //       the refhandle limit breaks the Creation Kit as well. (Good thing we're not 
 //       using refhandles ourselves!)
 //
-//  - Code for creating new forms.
-//
-//     - Test the duplication of cells: ensure that their child forms are also duplicated 
-//       properly and without any crashes, etc..
-//
-//        = Duplication of exterior cells within the same world will fail on principle 
-//          due to the grid coordinates being in use by the original. Test an interior.
-//
-//        - Requires a UI for managing cells and worldspaces.
-//
 //  - Code for deleting forms.
 //
 //     - How should we handle the case of a user deleting a form from one of the active 

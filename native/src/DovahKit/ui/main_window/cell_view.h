@@ -17,10 +17,12 @@ class CellViewWindow : public QWidget {
       Ui::CellViewWindow ui;
       struct {
          QAction* edit        = nullptr;
+         QAction* duplicate   = nullptr;
          QAction* showUseInfo = nullptr;
       } cellContextMenu;
       struct {
          QAction* edit        = nullptr;
+         QAction* duplicate   = nullptr;
          QAction* showUseInfo = nullptr;
       } refContextMenu;
       //
