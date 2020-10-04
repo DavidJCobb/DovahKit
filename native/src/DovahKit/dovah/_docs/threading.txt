@@ -1,0 +1,10 @@
+
+Currently, DovahKit  only guarantees thread-safety  for its internal  systems, when it is actively 
+using multi-threading; in practice, this means that it only guarantees thread-safety while loading 
+a load order. Some other backend tasks lock in  order to avoid concurrency issues with themselves, 
+but most tasks don't; it is left to the frontend  to ensure thread-safety if it intends to perform 
+multi-threaded operations. DovahKit is only responsible for itself.
+
+As an example: form creations and deletions will use locks to avoid colliding with each other, but 
+form lookups don't bother checking the locks. The only way form creations would occur concurrently 
+with each other or with deletions is if a frontend is requesting them concurrently.

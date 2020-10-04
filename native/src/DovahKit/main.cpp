@@ -150,37 +150,10 @@
 //        - Test keyword lists in specific; I'm worried about how the form_id_t members 
 //          are going to behave there. An in-editor test would require a UI for ACTI.
 //
-//     - How should we handle the case of a user deleting a form from one of the active 
-//       file's masters (whether or not that form is currently overridden in the active 
-//       file)?
+//     - ObjectReference needs a "friendly" delete function that moves the reference 
+//       underground and sets itself as an opposite enable state child of the player.
 //
-//        = Bear in mind that when checking a form's origin, we can't rely on the file 
-//          pointer, because overrides would use the active file as their file pointer. 
-//          We'd have to check the form ID load order prefix to distinguish an active 
-//          file's original forms from its overrides.
-//
-//        - "Deleting" an override doesn't un-override the form; it just overrides the 
-//          form and sets the "deleted" flag.
-//
-//        - "Deleting" a REFR/ACHR/etc. from a master doesn't actually delete it; the 
-//          reference just ends up loading at (0, 0, 0) in its parent world. Since 
-//          this is the literal last thing that people would expect, we shouldn't even 
-//          allow the "deletion" of references; we should offer a shortcut for disabling 
-//          them and moving them underground, as xEdit does (and by "disable" I mean 
-//          "set the player ref as an opposite enable state parent").
-//
-//        - It looks, then, like "deleting" a master record just creates a "delete me" 
-//          override. Is there any case where that's even useful? Should we even allow 
-//          it?
-//
-//           - Test whether deleting a master record allows the form to appear in-game. 
-//             That is, run the test with forms that can be queried via the `help` 
-//             console command: see if they still show up when they're deleted via an 
-//             override.
-//
-//           - If we choose to disallow it by default, then we should have an options 
-//             window with a "Let me do doofy things" option that allows the user to 
-//             do it.
+//        - How would it gain access to the player form?
 //
 //     - DovahKitCore needs to offer signals for deleting forms: onFormDeleteImminent 
 //       and onFormDeleteComplete, the former of which should take a form_stub argument. 
@@ -189,8 +162,10 @@
 //       those signals and abandon their form_stub pointers and their loaded_form_ptrs 
 //       in response to the former.
 //
-//        - Presumably we should only fire these signals when deleting forms out of 
-//          the active file.
+//        - We should only fire these signals when deleting forms out of the active file. 
+//          Currently, we fire them for all deletions; in fact, the backend doesn't even 
+//          give any indication as to which forms will be deleted and which forms will 
+//          merely be flagged as deleted.
 //
 //        - Everything that listens for dataAbandonImminent will probably also need to 
 //          listen for these.

@@ -1,4 +1,155 @@
 
+DovahKit can  be divided into the  "backend" and the  "frontend." The "backend" 
+constitutes everything in the "dovah" folder; these internals manage form data, 
+loading, saving, and similar. The  "frontend" constitutes just about everything 
+else: all of the UI code, as well as the "DovahKitCore" class which bridges the 
+UI to the backend.
+
+---
+
+To understand  DovahKit's  operation, it is worthwhile  to compare  it to other 
+programs.  The  official Creation  Kit and  the community-made  xEdit (commonly 
+known as TES5Edit or SSEEdit; it is  a multi-game editor, and the game it edits 
+is controlled by renaming the executable) are useful points of comparison.
+
+The Creation Kit is a modified build  of Skyrim itself. A significant amount of 
+the game's  own code is  used to load forms and  to manage them  in memory; the 
+Creation Kit is even subject to the game's reference handle limit. The Creation 
+Kit loads all forms'  data, in full, on startup,  and like the game, it retains 
+only the "winning" override or record  for each form. All editing functionality 
+works in  terms of  the data itself -- a  statement  whose meaning  will become 
+clear shortly.
+
+xEdit, by contrast, does not load the full data for every form. Rather, it only 
+indexes forms: it  keeps track of what  forms exist, what  files they exist in, 
+and the offsets of their data within those files; and it may keep track of some 
+pieces of data that are  useful to display in the UI  at all times, like editor 
+IDs; but it  otherwise does not load  and retain form data  on startup. Rather, 
+xEdit loads data on demand and unloads it when it is no longer in use. Further-
+more, xEdit's editing functionality works in terms of the file format. A quest, 
+for example, is seen by the program  not as a thing-in-itself, but rather as an 
+assemblage  of  subrecords  which may  contain structs,  arrays, and  fields of 
+varying types; the game's file  format is not  simply a representation of data, 
+but rather, as far as xEdit is concerned, it is the data itself.
+
+This makes xEdit easy to maintain: the  program's code only needs to be able to 
+work with the individual building blocks in the file format, and each form type 
+can be described just once, in terms of those building blocks; saving, loading, 
+and editing each form type then follows  from saving, loading, and editing each 
+building block. This is  in contrast to the Creation  Kit, where each form must 
+have its own code for loading,  its own code for saving,  and, presumably,  its 
+own code for generating and maintaining use info.
+
+A class definition is a description of a piece of data and its layout; the code 
+to serialize that class definition is  in practice another description, another 
+list of fields; serialization code  is just a restatement. Looking through that 
+lens, xEdit's developers  only have to "describe" each  form type once, whereas 
+Bethesda's developers  must "describe" each form type five  times: once for the 
+class definition; twice more for the loading and saving code; once more for the 
+code to build use info; and once again  for the code to prune use info as forms 
+are deleted. xEdit's design avoids  redundancy and, consequently, opportunities 
+to make a mistake;  xEdit's developers  don't have to keep  nearly half a dozen 
+descriptions of each form type in synch with one another.
+
+Maintainability  does come with  its own costs.  Because xEdit  is only able to 
+think in  terms of the file format, it  is only able to  offer editing tools in 
+terms of the file format. This is one  reason for its spartan spreadsheet-based 
+user interface,  which is well-suited to  precise data editing but,  perhaps, a
+bit daunting to newcomers.  However, the scripting  API is where the effects of 
+this design become  particularly visible:  you can't write  scripts in terms of 
+the data, but  rather only  in terms of the file  format; if, for  example, you 
+want to write a script  that scans over all of the Infos  in a Topic, in order, 
+there is no  built-in functionality  for this; rather, you must  manually write 
+the code to pull  the INFO/PNAM subrecord and treat  it as the link in a linked 
+list. It's certainly possible for xEdit's  developers to write code to abstract 
+away details like this,  but every such code is essentially  an exception being 
+made to its core design -- another thing  to have to maintain; another place to 
+make mistakes. But these limitations  aren't flaws. xEdit's design works; it is 
+one of the most  important editing tools available to the  community, and it is 
+so for a reason. The scripting API,  cumbersome  as it is to work with whenever 
+one tries to  do anything complex, is more  than adequate for its  intended use 
+case: simple batch edits to raw data.
+
+DovahKit, then, takes  something of a hybrid approach.  Like xEdit, it does not 
+fully load forms but rather indexes them for loading on demand. Like Bethesda's 
+Creation Kit, however,  DovahKit does not "think" in  terms of the file format, 
+where forms are  assemblages of individual building blocks,  but rather retains 
+forms as things-in-themselves in memory. This means that DovahKit misses out on 
+xEdit's maintainability; redundantly describing each form five times means that 
+there are five times as many opportunities  to screw up, for each of the game's 
+one hundred and thirty or so form types. However, DovahKit can potentially give 
+more assistance to the user: a scripting API can be interpreted in terms of the 
+game's data rather  than that data's underlying representation;  editing tools, 
+as well, can (and indeed,  must) allow the user to interact  with the data as a 
+thing-in-itself  rather than as  an assemblage  of smaller building  blocks. In 
+practice, there is also a  significant advantage in  speed. DovahKit is able to 
+load form  content marginally  faster than xEdit,  and it is  able to build use 
+info significantly  faster as of December  2019 (on the order of a  full minute 
+saved, when xEdit doesn't have cached  data to rely upon). I can only speculate 
+as to why  that's the  case. My presumption is that  the speed  advantage comes 
+from DovahKit being less "thoughtful."  xEdit relies on one description of each 
+form type, which  it must pore over  and consider and interpret:  xEdit thinks; 
+DovahKit, by contrast,  acts on blind instinct: I did  its thinking in advance.
+
+I also use multithreading. Use info,  however, is built with eight threads, and 
+DovahKit generates it in one second compared  to xEdit's sixty-six seconds. The 
+longest thread of the eight must take one second, which means that for a single-
+threaded approach,  eight seconds would be our worst-case time.  Multithreading 
+alone doesn't seem like it could explain the discrepancy.
+
+Ultimately, xEdit takes a more careful and considered approach, and one that is 
+more maintainable. It is by no means  a laggy program; once all data is loaded, 
+it runs very fast, and once it has cached use info, it can load that cache very 
+fast. The trade-offs  that xEdit makes  are worthwhile to the  vast majority of 
+users, and  they help to  ensure a more  reliable  program. DovahKit  should be 
+viewed, by contrast,  as experimental  and more fragile.  Both programs are, of 
+course, more  efficient under  the hood than  the Creation Kit;  neither has to 
+load every single form into memory, in  full, on startup; neither is encumbered 
+by backend systems that were developed for a game and that hinder a large-scale 
+editor, such as the reference handle system.
+
+(That said, Bethesda's job isn't to  make an editor. It's to make a game. Using 
+the game engine itself as the basis of  the editor is clever, and it also means 
+that "describing" each form type multiple times isn't redundant for them, since 
+they already have to do much of that work just for the game itself. There is no 
+trade-off that anyone in the community could ever make, that would be as useful 
+to us as Bethesda's Creation Kit tradeoffs were to them.)
+
+To summarize the design approaches:
+
+   a) The Creation Kit:
+       - Loads all data in full
+       - Repurposed game engine
+       - Data-focused
+
+   b) xEdit
+       - Loads data on demand
+       - Built from scratch
+       - File-focused
+       
+   c) DovahKit
+       - Loads data on demand
+       - Built from scratch
+       - Data-focused
+
+And to summarize the results of the approaches taken:
+
+   a) The Creation Kit:
+       - Slow
+       - Opportunistic
+       - Accessible
+
+   b) xEdit
+       - Fast
+       - Maintainable
+       - Comprehensive
+
+   c) DovahKit
+       - Lightning fast
+       - Accessible
+
+---
+
 DovahKit doesn't load the full content of ES[LPM] files. Instead, it scans over 
 a file and creates "form stubs."  A form stub is a simplified representation of 
 a form,  containing its form ID, editor ID,  file of origin, and the  offset of 
@@ -20,7 +171,7 @@ and ask it to load the desired files.
 
 ---
 
-Internally, loaded form classes must be capable of four things:
+Internally, loaded form classes must be capable of six things:
 
  - Storing a form's full loaded data, obviously.
 
@@ -31,3 +182,7 @@ Internally, loaded form classes must be capable of four things:
  - Loading a form's data, given a record.
 
  - Saving a form's data back into a file.
+
+ - Copying a form's data, for the sake of duplicating forms.
+
+ - Reacting to the  imminent deletion of a form that they  have a reference to.
