@@ -158,12 +158,41 @@
 //       form_stub somewhere. We have a few spare bytes to work with. This, of course, 
 //       then requires that we carefully manage the "deleted" form flag.)
 //
+//        - We can add getters/setters for the "deleted" flag and declare that direct 
+//          modifications to it are undefined behavior, as we did for the "edited" flag 
+//          on form stubs. Alternatively, we could simply "move" the flag -- have stubs 
+//          copy it over when loading, and only treat the flag on the stub as meaningful, 
+//          with a convenient getter on the Form class (that gets the flag from the stub) 
+//          and with the actual flag bit in Form::form_flag being purposefully ignored 
+//          by the entire backend (and replaced with the stub flag at save time).
+//
+//           - We'd need to swipe the flag from the record header when creating stubs 
+//             during the load process, and whenever form_stub::load produces a new 
+//             loaded form from scratch.
+//
 //     - Test the severing of outbound references to a deleted form.
 //
 //        - Test keyword lists in specific.
 //
 //     - ObjectReference friendly delete question: there are unanswered questions; I've 
 //       made an inquiry on the xEdit Discord.
+//
+//  - Miscellaneous technicalities
+//
+//     - When saving WRLD/CELL/REFR, if the REFR is persistent, then it should be saved 
+//       into the worldspace's persistent cell instead of into a normal exterior cell.
+//
+//        - If a WRLD doesn't have a persistent cell, and it contains any persistent 
+//          REFRs, then a persistent cell must be created.
+//
+//     - REFRs that have the "deleted" flag set at save time need to be subject to the 
+//       undelete-and-disable procedure, as deleted REFRs can crash the game on exit and, 
+//       if subsequently overridden, can reportedly crash when loaded.
+//
+//        - Presumably, deleted NAVMs need to be handled the same way, with the added work 
+//          of making them small or zero-size. However, no one seems to know how to then 
+//          update the associated NAVIs. xEdit's online documentation states that deleted 
+//          navmeshes cannot be automatically corrected and must be fixed manually.
 //
 //  - Support for DIAL and INFO
 //
