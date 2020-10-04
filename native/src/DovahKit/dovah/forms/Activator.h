@@ -25,7 +25,7 @@ namespace dovah::loaded_forms {
          };
          using activator_flags_t = std::underlying_type_t<activator_flag::type>;
 
-         struct record_flag {
+         struct form_flag : public Form::form_flag {
             enum : uint32_t {
                has_tree_lod              = 0x00000040,
                must_update_anims         = 0x00000100,
@@ -63,5 +63,6 @@ namespace dovah::loaded_forms {
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }

@@ -33,4 +33,20 @@ namespace dovah::loaded_forms::components::extra {
       //
       return clone;
    }
+   void lit_water::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      auto& list = this->refs;
+      for (auto& id : list)
+         if (id == target.formID)
+            id.set(&my_owner, bare_form_id_t(0));
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [](form_id_t& id) {
+               return id == bare_form_id_t(0);
+            }
+         ),
+         list.end()
+      );
+   }
 }

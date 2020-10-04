@@ -29,4 +29,10 @@ namespace dovah::loaded_forms::components::extra {
       clone->destination.set(&clone_owner, this->destination);
       return clone;
    }
+   void portal_origin_and_destination::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->origin == target.formID)
+         this->origin.set(&my_owner, nullptr);
+      if (this->destination == target.formID)
+         this->destination.set(&my_owner, nullptr);
+   }
 }

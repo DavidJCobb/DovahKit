@@ -57,4 +57,26 @@ namespace dovah::loaded_forms::components {
       for (size_t i = 0; i < size; ++i)
          this->forms[i].set(&my_owner, other.forms[i]);
    }
+   void keyword_list::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      auto& list  = this->forms;
+      bool  edits = false;
+      for (auto& id : list) {
+         if (id == target.formID) {
+            id.set(&my_owner, nullptr);
+            edits = true;
+         }
+      }
+      if (edits) {
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [](form_id_t& id) {
+                  return id == bare_form_id_t(0);
+               }
+            ),
+            list.end()
+         );
+      }
+   }
 }

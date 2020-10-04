@@ -13,8 +13,7 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::reference;
          ObjectReference() : Form(form_type) {};
 
-         struct form_flag {
-            form_flag() = delete;
+         struct form_flag : public Form::form_flag {
             enum : uint32_t {
                //
                // Some flags' meanings differ depending on the base form's type. If a line comment after a 
@@ -60,5 +59,6 @@ namespace dovah::loaded_forms {
          //
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }

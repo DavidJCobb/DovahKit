@@ -46,6 +46,7 @@ namespace dovah {
          static void generateUseInfo(tes_subrecord_reader&, form_stub*);
          void save(tes_record_writer&);
          void clone_from(const destruction_stage_data& original, form_stub& owner_of_clone) noexcept;
+         void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
       };
    }
 }

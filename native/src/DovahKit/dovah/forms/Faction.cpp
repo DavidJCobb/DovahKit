@@ -259,4 +259,50 @@ namespace dovah::loaded_forms {
       //
       return true;
    }
+   void Faction::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this->stub);
+      this->package_location_vendor.sever_outbound_references_to(other, *this->stub);
+      //
+      bool removals = false;
+      for (auto& entry : this->relationships) {
+         if (entry.other == other.formID) {
+            entry.other.set(this->stub, nullptr);
+            removals = true;
+         }
+      }
+      if (removals) {
+         auto& list = this->relationships;
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [](relationship& entry) {
+                  return entry.other == bare_form_id_t(0);
+               }
+            ),
+            list.end()
+         );
+      }
+      //
+      for (auto& cnd : this->vendor_conditions)
+         cnd.sever_outbound_references_to(other, *this->stub);
+      //
+      auto formID = other.formID;
+      if (this->prison_marker == formID)
+         this->prison_marker.set(this->stub, nullptr);
+      if (this->follower_wait_marker == formID)
+         this->follower_wait_marker.set(this->stub, nullptr);
+      if (this->evidence_chest == formID)
+         this->evidence_chest.set(this->stub, nullptr);
+      if (this->player_belongings_chest == formID)
+         this->player_belongings_chest.set(this->stub, nullptr);
+      if (this->crime_group == formID)
+         this->crime_group.set(this->stub, nullptr);
+      if (this->jail_outfit == formID)
+         this->jail_outfit.set(this->stub, nullptr);
+      if (this->vendor_list == formID)
+         this->vendor_list.set(this->stub, nullptr);
+      if (this->vendor_chest == formID)
+         this->vendor_chest.set(this->stub, nullptr);
+   }
 }

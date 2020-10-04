@@ -127,4 +127,10 @@ namespace dovah::loaded_forms::components {
          entry.textureSet.set(&my_owner, from.textureSet);
       }
    }
+   void model::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      bare_form_id_t formID = target.formID;
+      for (auto& entry : this->textureSwaps)
+         if (entry.textureSet == formID)
+            entry.textureSet.set(&my_owner, nullptr);
+   }
 }

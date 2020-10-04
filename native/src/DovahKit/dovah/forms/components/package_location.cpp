@@ -79,4 +79,8 @@ namespace dovah::loaded_forms::components {
       this->detail.padding     = other.detail.padding;
       this->radius = other.radius;
    }
+   void package_location::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      if (this->detail.form == target.formID)
+         this->detail.form.set(&my_owner, nullptr);
+   }
 }

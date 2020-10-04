@@ -20,5 +20,6 @@ namespace dovah::loaded_forms {
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override {}
    };
 }

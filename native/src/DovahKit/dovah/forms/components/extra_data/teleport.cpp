@@ -16,6 +16,8 @@ namespace dovah::loaded_forms::components::extra {
       return load_result::succeeded;
    }
    void teleport::save(tes_record_writer& record) {
+      if (this->target_door == bare_form_id_t(0))
+         return;
       auto& subrecord = record.open_next_subrecord(signature);
       subrecord.write(this->target_door);
       subrecord.write(this->position.x);
@@ -41,5 +43,9 @@ namespace dovah::loaded_forms::components::extra {
       clone->rotation = this->rotation;
       clone->flags    = this->flags;
       return clone;
+   }
+   void teleport::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->target_door == target.formID)
+         this->target_door.set(&my_owner, nullptr);
    }
 }

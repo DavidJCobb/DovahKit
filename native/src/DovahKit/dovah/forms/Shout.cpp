@@ -91,4 +91,15 @@ namespace dovah::loaded_forms {
       }
       return true;
    }
+   void Shout::_sever_outbound_references_impl(form_stub& other) noexcept {
+      auto formID = other.formID;
+      if (this->menuDisplayObjectID == formID)
+         this->menuDisplayObjectID.set(this->stub, nullptr);
+      for (auto& word : this->words) {
+         if (word.wordOfPowerID == formID)
+            word.wordOfPowerID.set(this->stub, nullptr);
+         if (word.spellID == formID)
+            word.spellID.set(this->stub, nullptr);
+      }
+   }
 }

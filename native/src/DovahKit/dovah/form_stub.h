@@ -254,6 +254,8 @@ namespace dovah {
          void replace_outbound_reference(bare_form_id_t old, form_stub* changeTo, use_info_entry::flags_t flags = 0);
          void replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags = 0);
 
+         void sever_all_outbound_references(); // works bidirectionally; use when deleting a form
+
          //
          // The (add_outbound_reference) functions create a one-way outbound connection between this form and another. 
          // They should only be used by internal code for managing form stubs, and by loaded-form classes' functions 

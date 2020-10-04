@@ -147,4 +147,20 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('KNAM', this->interact_keyword);
       return true;
    }
+   void Activator::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this->stub);
+      this->model.sever_outbound_references_to(other, *this->stub);
+      this->destruction_data.sever_outbound_references_to(other, *this->stub);
+      this->keywords.sever_outbound_references_to(other, *this->stub);
+      //
+      auto formID = other.formID;
+      if (this->looping_sound == formID)
+         this->looping_sound.set(this->stub, nullptr);
+      if (this->activation_sound == formID)
+         this->activation_sound.set(this->stub, nullptr);
+      if (this->water_type == formID)
+         this->water_type.set(this->stub, nullptr);
+      if (this->interact_keyword == formID)
+         this->interact_keyword.set(this->stub, nullptr);
+   }
 }

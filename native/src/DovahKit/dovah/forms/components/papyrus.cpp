@@ -95,6 +95,12 @@ namespace dovah::loaded_forms::components::papyrus {
       if (other.fragment_data)
          this->fragment_data = other.fragment_data->clone(owner_of_clone);
    }
+   void script_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      for (auto& script : this->scripts)
+         script.sever_outbound_references_to(target, my_owner);
+      if (this->fragment_data)
+         this->fragment_data->sever_outbound_references_to(target, my_owner);
+   }
 
    #pragma region Script sub-objects loading
    bool script_data::script::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -152,6 +158,10 @@ namespace dovah::loaded_forms::components::papyrus {
          this->properties[i].clone_from(other.properties[i], owner_of_clone);
       }
    }
+   void script_data::script::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      for (auto& prop : this->properties)
+         prop.sever_outbound_references_to(target, my_owner);
+   }
 
    bool script_data::property_object_value::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (!subrecord.is_in_bounds(sizeof(this->always_zero) + sizeof(this->aliasID) + sizeof(this->formID)))
@@ -186,6 +196,10 @@ namespace dovah::loaded_forms::components::papyrus {
    }
    void script_data::property_object_value::clear(form_stub& owner) {
       this->formID.set(&owner, bare_form_id_t(0));
+   }
+   void script_data::property_object_value::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      if (this->formID == target.formID)
+         this->formID.set(&my_owner, bare_form_id_t(0));
    }
 
    bool script_data::property::value_t::load(property_type type, script_data& owner, tes_subrecord_reader& subrecord) {
@@ -333,6 +347,17 @@ namespace dovah::loaded_forms::components::papyrus {
       for (size_t i = 0; i < size; ++i) {
          this->values[i].clone_from(this->type, source.values[i], owner_of_clone);
       }
+   }
+   void script_data::property::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      switch (this->type) {
+         case property_type::object:
+         case property_type::array_of_object:
+            break;
+         default:
+            return;
+      }
+      for (auto& value : this->values)
+         value.object.sever_outbound_references_to(target, my_owner);
    }
    #pragma endregion
 
@@ -587,6 +612,11 @@ namespace dovah::loaded_forms::components::papyrus {
          alias.scripts.clear();
       }
       this->aliasScriptData.clear();
+   }
+   void quest_fragment_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      for (auto& alias : this->aliasScriptData)
+         for (auto& script : alias.scripts)
+            script.sever_outbound_references_to(target, my_owner);
    }
 
    void scene_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {

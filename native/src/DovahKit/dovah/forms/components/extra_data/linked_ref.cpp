@@ -33,4 +33,10 @@ namespace dovah::loaded_forms::components::extra {
       clone->ref.set(&clone_owner, this->ref);
       return clone;
    }
+   void linked_ref::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->keyword == target.formID)
+         this->keyword.set(&my_owner, nullptr);
+      if (this->ref == target.formID)
+         this->ref.set(&my_owner, nullptr);
+   }
 }

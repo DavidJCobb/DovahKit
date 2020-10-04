@@ -80,6 +80,10 @@ namespace dovah::loaded_forms::components {
          this->content.push_back(clone);
       }
    }
+   void extra_data_list::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      for (auto* extra : this->content)
+         extra->sever_outbound_references_to(target, my_owner);
+   }
    /*static*/ extra_data_load_result extra_data_list::generate_use_info(tes_record_reader& record, form_stub* stub) {
       return generate_extra_data_use_info(record, stub);
    }

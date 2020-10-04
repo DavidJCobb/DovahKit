@@ -15,8 +15,7 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::worldspace;
          Worldspace() : Form(form_type) {};
 
-         struct form_flag {
-            form_flag() = delete;
+         struct form_flag : public Form::form_flag {
             enum : uint32_t {
                cant_wait = 0x00080000,
             };
@@ -64,6 +63,7 @@ namespace dovah::loaded_forms {
             std::vector<entry> entries;
             //
             void clone_from(const large_reference_t& original, form_stub& my_owner) noexcept;
+            void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
          };
 
          struct max_height_data_t {
@@ -190,5 +190,6 @@ namespace dovah::loaded_forms {
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }

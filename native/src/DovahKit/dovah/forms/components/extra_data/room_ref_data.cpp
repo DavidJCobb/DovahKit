@@ -91,4 +91,29 @@ namespace dovah::loaded_forms::components::extra {
       //
       return clone;
    }
+   void room_ref_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->lighting_template == target.formID) {
+         this->lighting_template.set(&my_owner, nullptr);
+         this->flags &= ~flag::has_lighting_template;
+      }
+      if (this->imagespace == target.formID) {
+         this->imagespace.set(&my_owner, nullptr);
+         this->flags &= ~flag::has_imagespace;
+      }
+      //
+      auto& list = this->linked_rooms;
+      for (auto& id : list)
+         if (id == target.formID)
+            id.set(&my_owner, bare_form_id_t(0));
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [](form_id_t& id) {
+               return id == bare_form_id_t(0);
+            }
+         ),
+         list.end()
+      );
+   }
 }

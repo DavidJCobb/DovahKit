@@ -187,4 +187,12 @@ namespace dovah::loaded_forms {
       //
       return true;
    }
+   void Cell::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->extra_data.sever_outbound_references_to(other, *this->stub);
+      this->script_data.sever_outbound_references_to(other, *this->stub);
+      //
+      auto formID = other.formID;
+      if (this->interior.lighting_template_ID == formID)
+         this->interior.lighting_template_ID.set(this->stub, nullptr);
+   }
 }

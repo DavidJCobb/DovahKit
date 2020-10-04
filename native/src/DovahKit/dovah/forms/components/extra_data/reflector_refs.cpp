@@ -39,4 +39,20 @@ namespace dovah::loaded_forms::components::extra {
       //
       return clone;
    }
+   void reflector_refs::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      auto& list = this->entries;
+      for (auto& entry : list)
+         if (entry.target == target.formID)
+            entry.target.set(&my_owner, bare_form_id_t(0));
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [](entry& e) {
+               return e.target == bare_form_id_t(0);
+            }
+         ),
+         list.end()
+      );
+   }
 }

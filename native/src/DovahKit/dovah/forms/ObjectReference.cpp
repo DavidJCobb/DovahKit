@@ -97,4 +97,11 @@ namespace dovah::loaded_forms {
       //
       return true;
    }
+   void ObjectReference::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this->stub);
+      this->extra_data.sever_outbound_references_to(other, *this->stub);
+      //
+      if (this->base_form == other.formID)
+         this->base_form.set(this->stub, nullptr);
+   }
 }

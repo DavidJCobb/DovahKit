@@ -148,6 +148,10 @@ namespace dovah::loaded_forms::components {
          virtual void clear_contained_formIDs(form_stub& my_owner) override {
             this->formID.set(&my_owner, bare_form_id_t(0));
          }
+         virtual void sever_outbound_references_to(form_stub& target, form_stub& my_owner) override {
+            if (this->formID == target.formID)
+               this->formID.set(&my_owner, bare_form_id_t(0));
+         }
    };
    template<uint32_t signature, extra_data_type et> class string_extra_data : public basic_extra_data {
       //

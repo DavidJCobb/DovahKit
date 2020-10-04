@@ -355,6 +355,59 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
    return result;
 }
 
+void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent) {
+   auto request = this->load_order->request_form_deletion(target);
+   auto result  = request.get_result_code();
+   if (result != dovah::form_deletion_request::result_code::pending) {
+      using result_code = dovah::form_deletion_request::result_code;
+      //
+      QString text;
+      switch (result) {
+         case result_code::error_cannot_delete_hardcoded_form:
+            text = tr("The form is hardcoded into the game engine and cannot be deleted.");
+            break;
+         case result_code::error_cannot_load_form:
+            text = tr("DovahKit doesn't currently support this form type, which means that it cannot flag the form as deleted.");
+            break;
+         case result_code::error_cannot_load_user:
+            text = tr("One of the forms that uses this form is of an unsupported type, which means that that use cannot be severed.");
+            break;
+      }
+      QMessageBox::critical(
+         dialog_parent,
+         QObject::tr("Error", "delete form error"),
+         QObject::tr("Unable to delete this form. %1").arg(text)
+      );
+      return;
+   }
+   //
+   std::vector<dovah::bare_form_id_t> formIDs;
+   auto forms = request.get_forms_pending_delete();
+   formIDs.reserve(forms.size());
+   for (auto* stub : forms) {
+      emit this->formDeletionImminent(stub);
+      formIDs.push_back(stub->formID);
+   }
+   //
+   request.commit();
+   //
+   result = request.get_result_code();
+   if (result != dovah::form_deletion_request::result_code::success) {
+      using result_code = dovah::form_deletion_request::result_code;
+      //
+      QString text;
+      QMessageBox::critical(
+         dialog_parent,
+         QObject::tr("Error", "delete form error"),
+         QObject::tr("Unable to delete this form. %1").arg(text)
+      );
+      return;
+   }
+   //
+   for (auto id : formIDs)
+      emit this->formDeleted(id);
+}
+
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
    std::wstring value(512, 0);
    bool success = cobb::windows_registry::get_string_value(cobb::windows_registry::hkey::local_machine, L"SOFTWARE\\Bethesda Softworks\\Skyrim\\", L"installed path", value);

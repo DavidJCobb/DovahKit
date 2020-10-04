@@ -16,8 +16,7 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::cell;
          Cell() : Form(form_type) {};
 
-         struct form_flag {
-            form_flag() = delete;
+         struct form_flag : public Form::form_flag {
             enum : uint32_t {
                persistent = 0x00000400,
                off_limits = 0x00020000,
@@ -91,5 +90,6 @@ namespace dovah::loaded_forms {
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record) override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }

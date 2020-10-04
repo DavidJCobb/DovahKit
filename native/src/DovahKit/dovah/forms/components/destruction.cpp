@@ -152,4 +152,13 @@ namespace dovah::loaded_forms::components {
          stage.replacementModel.clone_from(from.replacementModel, my_owner);
       }
    }
+   void destruction_stage_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      bare_form_id_t formID = target.formID;
+      for (auto& stage : this->stages) {
+         if (stage.explosionID == formID)
+            stage.explosionID.set(&my_owner, nullptr);
+         if (stage.debrisID == formID)
+            stage.debrisID.set(&my_owner, nullptr);
+      }
+   }
 }

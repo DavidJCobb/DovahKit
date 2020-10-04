@@ -944,7 +944,7 @@ namespace dovah::loaded_forms::components {
    void condition::clone_from(const condition& other, form_stub& my_owner) noexcept {
       this->type = other.type;
       this->compare_to_constant = other.compare_to_constant;
-      this->compare_to_global   = other.compare_to_global;
+      this->compare_to_global.set(&my_owner, other.compare_to_global);
       this->function = other.function;
       //
       auto func = condition_info::function::lookup_by_id(this->function);
@@ -967,6 +967,25 @@ namespace dovah::loaded_forms::components {
       if (func && func->uses_event_data) {
          this->eventFormID.set(&my_owner, other.eventFormID);
       }
+   }
+   void condition::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      bare_form_id_t formID = target.formID;
+      if (this->compare_to_global == formID)
+         this->compare_to_global.set(&my_owner, nullptr);
+      //
+      auto func = condition_info::function::lookup_by_id(this->function);
+      for (int i = 0; i < 2; i++) {
+         auto& param = this->parameters[i];
+         if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID) {
+            if (param.formID == formID)
+               param.formID.set(&my_owner, nullptr);
+         }
+      }
+      //
+      if (this->run_on_reference == formID)
+         this->run_on_reference.set(&my_owner, nullptr);
+      if (this->eventFormID == formID)
+         this->eventFormID.set(&my_owner, nullptr);
    }
 
    void condition::to_string(std::string& out) const {

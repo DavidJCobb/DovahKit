@@ -90,6 +90,7 @@ namespace dovah::loaded_forms::components {
       static void generateUseInfo(tes_record_reader&, form_stub*);
       void save(tes_record_writer&); // call with no subrecord open
       void clone_from(const condition& original, form_stub& owner_of_clone) noexcept;
+      void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
       //
       void to_string(std::string& out) const;
    };

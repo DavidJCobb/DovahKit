@@ -48,4 +48,8 @@ namespace dovah::loaded_forms::components::extra {
       clone->unk10 = this->unk10;
       return clone;
    }
+   void lock::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->key == target.formID)
+         this->key.set(&my_owner, nullptr);
+   }
 }

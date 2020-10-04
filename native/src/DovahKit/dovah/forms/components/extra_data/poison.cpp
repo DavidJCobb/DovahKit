@@ -43,4 +43,8 @@ namespace dovah::loaded_forms::components::extra {
       clone->doses = this->doses;
       return clone;
    }
+   void poison::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->type == target.formID)
+         this->type.set(&my_owner, nullptr);
+   }
 }

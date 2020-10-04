@@ -33,4 +33,14 @@ namespace dovah::loaded_forms {
       //
       return this->_save_impl(record);
    }
+   void Form::friendly_delete_override() noexcept {
+      bool flag = !this->_friendly_delete_impl();
+      cobb::edit_bit(this->flags, form_flag::deleted, flag);
+   }
+   void Form::flag_as_deleted() noexcept {
+      cobb::edit_bit(this->flags, form_flag::deleted, true);
+   }
+   void Form::sever_outbound_references_to(form_stub& other) noexcept {
+      this->_sever_outbound_references_impl(other);
+   }
 }

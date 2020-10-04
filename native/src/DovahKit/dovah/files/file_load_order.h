@@ -27,6 +27,7 @@ namespace dovah {
 
    class form_creation_request;
    class form_duplication_request;
+   class form_deletion_request;
 
    class file_load_order {
       //
@@ -35,6 +36,7 @@ namespace dovah {
       //
       friend void add_hardcoded_forms_to_load_order(file_load_order&);
       friend class form_creation_request;
+      friend class form_deletion_request;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
          using loaded_file   = tes_file_reading::file_reader;
@@ -187,6 +189,7 @@ namespace dovah {
          form_creation_request request_form_creation(form_type_t) noexcept;
          form_stub* commit_form_creation_request(form_creation_request&) noexcept; // you can call this, but you're meant to call form_creation_request::commit instead
          form_duplication_request request_form_duplication() noexcept;
+         form_deletion_request request_form_deletion(form_stub&) noexcept;
          //
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
@@ -302,5 +305,40 @@ namespace dovah {
          bool has_error() const noexcept;
          bool is_valid() const noexcept;
          unsigned int get_total_form_count() const noexcept;
+   };
+   
+   class form_deletion_request {
+      friend file_load_order;
+      public:
+         enum class result_code {
+            pending,
+            success,
+            error_cannot_delete_hardcoded_form,
+            error_cannot_load_form, // we could not load the to-be-deleted form to set its "deleted" flag
+            error_cannot_load_user, // unable to sever use info: we could not load a form that uses the to-be-deleted form
+         };
+      protected:
+         file_load_order& owner;
+         form_stub&       target;
+         result_code      result = result_code::pending;
+         //
+         std::set<form_stub*> seen_stubs;
+         std::set<form_stub*> forms_needing_delete;
+         //
+         form_deletion_request(file_load_order& o, form_stub& t);
+         form_deletion_request(form_deletion_request&&);
+         form_deletion_request(const form_deletion_request&) = delete;
+         form_deletion_request& operator=(const form_deletion_request&) = delete;
+         //
+         void _gather_others(form_stub* start = nullptr);
+         void _do_single_deletion(form_stub&);
+         //
+      public:
+         bool force_delete_overrides = false;
+         //
+         std::vector<form_stub*> get_forms_pending_delete() const noexcept;
+         inline result_code get_result_code() const noexcept { return this->result; }
+         //
+         void commit();
    };
 }

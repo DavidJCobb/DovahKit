@@ -36,4 +36,7 @@ namespace dovah::loaded_forms::components::extra {
       clone->event.clone_from(this->event, clone_owner);
       return clone;
    }
+   void patrol_ref_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      this->event.sever_outbound_references_to(target, my_owner);
+   }
 }

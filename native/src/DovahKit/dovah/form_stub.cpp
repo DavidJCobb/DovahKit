@@ -389,6 +389,16 @@ namespace dovah {
       this->replace_outbound_reference(old, new_stub, flags);
    }
 
+   void form_stub::sever_all_outbound_references() {
+      for (auto& pair : this->outbound) {
+         auto& entry  = pair.second;
+         auto& target = *entry.other;
+         //
+         target.inbound.erase(this->formID);
+      }
+      this->outbound.clear();
+   }
+
    /*static*/ void* form_stub::operator new(std::size_t sz) {
       if (sz != sizeof(form_stub))
          return ::operator new(sz);

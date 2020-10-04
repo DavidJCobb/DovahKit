@@ -44,4 +44,8 @@ namespace dovah::loaded_forms::components::extra {
       clone->count = this->count;
       return clone;
    }
+   void ammo::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->type == target.formID)
+         this->type.set(&my_owner, nullptr);
+   }
 }

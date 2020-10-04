@@ -94,4 +94,15 @@ namespace dovah::loaded_forms::components {
          entry.condition = from.condition;
       }
    }
+   void container_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      bare_form_id_t formID = target.formID;
+      for (auto& entry : this->entries) {
+         if (entry.item == formID)
+            entry.item.set(&my_owner, bare_form_id_t(0));
+         if (entry.owner == formID)
+            entry.owner.set(&my_owner, bare_form_id_t(0));
+         if (entry.global == formID)
+            entry.owner.set(&my_owner, bare_form_id_t(0));
+      }
+   }
 }

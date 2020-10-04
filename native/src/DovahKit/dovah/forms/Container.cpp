@@ -10,7 +10,7 @@ namespace dovah::loaded_forms {
             case 'EDID': // already read by the FormStub
                break;
             case 'VMAD':
-               this->papyrus.load(subrecord);
+               this->script_data.load(subrecord);
                break;
             case 'OBND':
                this->bounds.load(subrecord);
@@ -72,5 +72,16 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+   }
+   void Container::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this->stub);
+      this->model.sever_outbound_references_to(other, *this->stub);
+      this->inventory.sever_outbound_references_to(other, *this->stub);
+      //
+      auto formID = other.formID;
+      if (this->open_sound == formID)
+         this->open_sound.set(this->stub, nullptr);
+      if (this->close_sound == formID)
+         this->close_sound.set(this->stub, nullptr);
    }
 }

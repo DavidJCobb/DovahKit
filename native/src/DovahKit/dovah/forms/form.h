@@ -16,6 +16,13 @@ namespace dovah {
             const form_type_t formType;
             Form(form_type_t ft) : formType(ft) {};
             //
+            struct form_flag {
+               form_flag() = delete;
+               enum : uint32_t {
+                  deleted = 0x00000020,
+               };
+            };
+            //
             form_stub* stub  = nullptr;
             uint32_t   flags = 0;
             //
@@ -44,6 +51,10 @@ namespace dovah {
 
             bool save(tes_file_writing::record& record); // returns a success bool. will write EDID for you.
 
+            void friendly_delete_override() noexcept;
+            void flag_as_deleted() noexcept;
+            void sever_outbound_references_to(form_stub& other) noexcept;
+
             //
             // === void Form::setup() ============================================================
             //
@@ -57,6 +68,23 @@ namespace dovah {
          protected:
             virtual bool _clone_impl(Form* out) const noexcept { return false; }; // TODO: implement on existing forms; then, make pure
             virtual bool _save_impl(tes_file_writing::record& record) { return false; }; // TODO: implement on existing forms; then, make pure
+
+            //
+            // === void Form::_friendly_delete_impl() ============================================
+            //
+            // When this function is called, perform any form-specific "friendly deletion" tasks, 
+            // and return (true) if the form's "deleted" flag should NOT be set. As an example, 
+            // carrying out a "friendly delete" on an ObjectReference would entail mimicking the 
+            // behavior of xEdit's "Undelete and Disable Reference" function: move the reference 
+            // underground, set it as an opposite enable state child of the player, and then 
+            // return (true) so that we don't set the "deleted" flag.
+            //
+            // This function should only be called for overrides, not for forms defined in the 
+            // active file.
+            //
+            virtual bool _friendly_delete_impl() noexcept { return false; }
+
+            virtual void _sever_outbound_references_impl(form_stub& other) noexcept {}; // TODO: implement on existing forms; then, make pure
       };
    }
 }

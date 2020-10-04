@@ -145,6 +145,11 @@
 //
 //  - Code for deleting forms.
 //
+//     - Test the severing of outbound references to a deleted form.
+//
+//        - Test keyword lists in specific; I'm worried about how the form_id_t members 
+//          are going to behave there. An in-editor test would require a UI for ACTI.
+//
 //     - How should we handle the case of a user deleting a form from one of the active 
 //       file's masters (whether or not that form is currently overridden in the active 
 //       file)?

@@ -166,6 +166,7 @@ namespace dovah {
    inline constexpr uint32_t hardcoded_form_id_mask = 0x000007FF; // Mask for form IDs that are hardcoded forms.
    inline constexpr uint32_t plugin_form_id_mask    = 0x00FFF800; // Mask for form IDs that are not hardcoded forms.
    inline constexpr uint32_t minimum_plugin_form_id = 0x00000800; // Minimum non-load-order-prefixed form ID for a non-hardcoded form.
+   inline constexpr uint32_t form_id_prefix_mask    = 0xFF000000; // Mask to get the load order prefix of a form ID.
 
    struct form_type_info {
       struct flag {
@@ -219,6 +220,10 @@ namespace dovah {
       // you must call this struct's (set) member function, passing two arguments: the 
       // (form_stub) that owns the loaded-form that the form_id_t instance is a member of; and 
       // the form ID or (form_stub) that you want the form_id_t instance to be set to.
+      //
+      //   [[ NOTE: We can't disable form_id_t::operator=(const form_id_t&), as doing so ]] 
+      //   [[ would make it impossible to pass these things as arguments. Be careful not ]] 
+      //   [[ to assign one form_id_t to another when cloning a form.                    ]]
       //
       // Note that this struct DOES NOT have a destructor that severs use info. This is by 
       // design, so that a loaded form can be unloaded without severing the use info. However, 

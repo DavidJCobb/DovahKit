@@ -59,6 +59,13 @@ namespace dovah::loaded_forms::components {
       this->topic.set(&my_owner, other.topic);
       this->topic_subtype = other.topic_subtype;
    }
+   void package_event_dialogue::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      bare_form_id_t formID = target.formID;
+      if (this->idle == formID)
+         this->idle.set(&my_owner, nullptr);
+      if (this->topic == formID)
+         this->topic.set(&my_owner, nullptr);
+   }
 
    bool package_event_dialogue::empty() const noexcept {
       if (this->idle)

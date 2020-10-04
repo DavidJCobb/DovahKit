@@ -35,4 +35,8 @@ namespace dovah::loaded_forms::components::extra {
       clone->pad05[2] = this->pad05[2];
       return clone;
    }
+   void enable_state_parent::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+      if (this->ref == target.formID)
+         this->ref.set(&my_owner, nullptr);
+   }
 }

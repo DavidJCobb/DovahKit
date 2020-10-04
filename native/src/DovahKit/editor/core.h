@@ -67,6 +67,9 @@ class DovahKitCore : public QObject {
       void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
       void formCreated(dovah::form_stub*);
       //
+      void formDeletionImminent(dovah::form_stub*);
+      void formDeleted(dovah::bare_form_id_t);
+      //
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed(const dovah::file_write_error&);
@@ -114,6 +117,8 @@ class DovahKitCore : public QObject {
       dovah::form_duplication_request request_form_duplication() noexcept;
 
       dovah::form_stub* duplicate_form(dovah::form_stub& original, QWidget* dialog_parent = nullptr); // handles UI, error reporting, etc., for you
+
+      void delete_form(dovah::form_stub& target, QWidget* dialog_parent = nullptr);
 
       bool get_game_path(std::filesystem::path& out) const noexcept;
       bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt

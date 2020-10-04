@@ -41,4 +41,26 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('LNAM', entry);
       return true;
    }
+   void FormList::_sever_outbound_references_impl(form_stub& other) noexcept {
+      auto& list  = this->contents;
+      bool  edits = false;
+      for (auto& id : list) {
+         if (id == other.formID) {
+            id.set(this->stub, nullptr);
+            edits = true;
+         }
+      }
+      if (edits) {
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [](form_id_t& id) {
+                  return id == bare_form_id_t(0);
+               }
+            ),
+            list.end()
+         );
+      }
+   }
 }

@@ -38,6 +38,46 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   void Worldspace::large_reference_t::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+      bool removals_pending = false;
+      for (auto& entry : this->entries) {
+         bool edited = false;
+         for (auto& ref : entry.refs) {
+            if (ref.form == target.formID) {
+               ref.form.set(&my_owner, nullptr);
+               edited = true;
+            }
+         }
+         if (edited) {
+            auto& list = entry.refs;
+            list.erase(
+               std::remove_if(
+                  list.begin(),
+                  list.end(),
+                  [](ref& e) {
+                     return e.form == bare_form_id_t(0);
+                  }
+               ),
+               list.end()
+            );
+            if (list.empty())
+               removals_pending = true;
+         }
+      }
+      if (removals_pending) {
+         auto& list = this->entries;
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [](entry& e) {
+                  return e.refs.empty();
+               }
+            ),
+            list.end()
+         );
+      }
+   }
 
    void Worldspace::load(tes_record_reader& record) {
       Form::load(record);
@@ -405,5 +445,26 @@ namespace dovah::loaded_forms {
       this->script_data.save(record); // VMAD (won't write anything if no scripts are attached)
       //
       return true;
+   }
+   void Worldspace::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this->stub);
+      //
+      auto formID = other.formID;
+      if (this->climate == formID)
+         this->climate.set(this->stub, nullptr);
+      if (this->lighting_template == formID)
+         this->lighting_template.set(this->stub, nullptr);
+      if (this->encounter_zone == formID)
+         this->encounter_zone.set(this->stub, nullptr);
+      if (this->location == formID)
+         this->location.set(this->stub, nullptr);
+      if (this->water_type == formID)
+         this->water_type.set(this->stub, nullptr);
+      if (this->water_type_lod == formID)
+         this->water_type_lod.set(this->stub, nullptr);
+      if (this->parent.form == formID)
+         this->parent.form.set(this->stub, nullptr);
+      if (this->music == formID)
+         this->music.set(this->stub, nullptr);
    }
 }
