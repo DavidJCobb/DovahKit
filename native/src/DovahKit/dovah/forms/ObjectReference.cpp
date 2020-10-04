@@ -44,7 +44,7 @@ namespace dovah::loaded_forms {
                break;
             case 'NAME': // base form (subrecord signature is vestigial from Morrowind, which used editor IDs instead of form IDs)
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID, use_info_entry::flag::i_am_reference_of);
+                  stub->add_outbound_reference(formID, use_info_entry::flag::object_reference);
                break;
             case 'EDID': // editor ID
             case 'ONAM':

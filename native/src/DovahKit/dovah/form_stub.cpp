@@ -12,17 +12,15 @@
 
 namespace dovah {
    /*static*/ use_info_entry::flags_t use_info_entry::invert_flags(use_info_entry::flags_t f) {
-      flags_t flags = 0;
+      using flag = use_info_entry::flag;
       //
+      flags_t flags = f;
+      //
+      flags &= ~(flag::i_am_child_of | flag::i_am_parent_of);
       if (f & use_info_entry::flag::i_am_child_of)
          flags |= use_info_entry::flag::i_am_parent_of;
       else if (f & use_info_entry::flag::i_am_parent_of)
          flags |= use_info_entry::flag::i_am_child_of;
-      //
-      if (f & use_info_entry::flag::i_am_base_form_of)
-         flags |= use_info_entry::flag::i_am_reference_of;
-      else if (f & use_info_entry::flag::i_am_reference_of)
-         flags |= use_info_entry::flag::i_am_base_form_of;
       //
       return flags;
    }

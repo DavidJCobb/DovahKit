@@ -415,13 +415,26 @@ namespace dovah {
    void base_form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
       if (this->value == set_to)
          return;
-      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::i_am_reference_of);
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::object_reference);
       this->value = set_to;
    }
    void base_form_id_t::set(form_stub* owner, form_stub* set_to) {
       if (this->value == set_to->formID)
          return;
-      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::i_am_reference_of);
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::object_reference);
+      this->value = set_to->formID;
+   }
+
+   void dialogue_form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
+      if (this->value == set_to)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::dialogue);
+      this->value = set_to;
+   }
+   void dialogue_form_id_t::set(form_stub* owner, form_stub* set_to) {
+      if (this->value == set_to->formID)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::dialogue);
       this->value = set_to->formID;
    }
    #pragma endregion

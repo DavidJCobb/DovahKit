@@ -98,7 +98,7 @@ namespace dovah {
 
    struct group_stub {
       bare_form_id_t parentFormID = 0; // 0 for interior cells
-      uint8_t type;
+      int8_t  type  = -1; // init to tes_file_group_type::none
       // we have 3 padding bytes here
       int32_t gridX = 0; // exterior cells only; taken from CELL/XCLC. size of these fields is significant; CELL load/save code uses these fields directly.
       int32_t gridY = 0; // exterior cells only; taken from CELL/XCLC.
@@ -135,10 +135,10 @@ namespace dovah {
       struct flag {
          flag() = delete;
          enum type : uint8_t {
-            i_am_child_of     = 0x01, // (this) is the child of (other)
-            i_am_parent_of    = 0x02, // (other) is the child of (this)
-            i_am_base_form_of = 0x04, // (this) is the base form of (other)
-            i_am_reference_of = 0x08, // (other) is the base form of (this)
+            i_am_child_of    = 0x01, // (this) is the child of (other)
+            i_am_parent_of   = 0x02, // (other) is the child of (this)
+            object_reference = 0x04, // one of the forms is the other's base form; check form types to know which is which
+            dialogue         = 0x08, // DIAL/QNAM: topic owning quest; INFO/PNAM: info linked list
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;

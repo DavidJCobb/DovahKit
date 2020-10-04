@@ -7,7 +7,7 @@
 
 #pragma region FormUseInfoListModel
 FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* source) {
-   bool is_reference = (source->flags & data_t::flag::i_am_base_form_of) != 0;
+   bool is_reference = (source->flags & data_t::flag::object_reference) != 0;
    //
    this->flags       = source->flags;
    this->countUsed   = source->refcount;
@@ -22,7 +22,7 @@ FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* 
    }
 }
 void FormUseInfoListModelItem::updateFromStub() {
-   bool is_reference = (this->flags & data_t::flag::i_am_base_form_of) != 0;
+   bool is_reference = (this->flags & data_t::flag::object_reference) != 0;
    auto stub = this->otherStub;
    //
    this->otherID   = stub->formID;
@@ -43,7 +43,7 @@ void FormUseInfoListModelItem::updateFromStub() {
             this->parentCell += name;
          } else {
             auto world = parent->get_parent_form();
-            assert(parent->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
+            assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
             if (world) {
                auto    id   = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
                QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
@@ -69,7 +69,7 @@ void FormUseInfoListModelItem::updateUseInfo(const form_stub& used_form) {
    this->countUsed   = 0;
 }
 void FormUseInfoListModelItem::updateUseInfo(const data_t& source) {
-   bool is_reference = (source.flags & data_t::flag::i_am_base_form_of) != 0;
+   bool is_reference = (source.flags & data_t::flag::object_reference) != 0;
    //
    this->flags       = source.flags;
    this->countUsed   = source.refcount;
@@ -99,12 +99,12 @@ void FormUseInfoListModel::addUser(const use_info_entry& entry, bool queued) {
    //
    switch (this->mode) {
       case relationship_mode::general_only:
-         if (entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of))
+         if (entry.flags & _ue_flag::object_reference)
             if (entry.refcount <= 1)
                return;
          break;
       case relationship_mode::base_form_only:
-         if (!(entry.flags & (_ue_flag::i_am_base_form_of | _ue_flag::i_am_reference_of)))
+         if (!(entry.flags & _ue_flag::object_reference))
             return;
          break;
    }

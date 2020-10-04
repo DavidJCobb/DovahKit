@@ -267,6 +267,15 @@ namespace dovah {
          void set(form_stub* owner, bare_form_id_t set_to);
          void set(form_stub* owner, form_stub* set_to);
    };
+   struct dialogue_form_id_t : form_id_t {
+      //
+      // This is a special-case subclass of form_id_t which should be used for DIAL/QNAM 
+      // and INFO/PNAM.
+      //
+      public:
+         void set(form_stub* owner, bare_form_id_t set_to);
+         void set(form_stub* owner, form_stub* set_to);
+   };
    struct struct_form_id_t : form_id_t {
       //
       // In some cases, the game reads entire structs from the file by blindly copying bytes. 

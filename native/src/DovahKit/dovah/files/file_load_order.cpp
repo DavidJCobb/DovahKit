@@ -1047,6 +1047,14 @@ namespace dovah {
          this->child_requests.push_back(request);
          return false;
       });
+      if (original->formType == form_type::quest) {
+         form_stub_helpers::for_each_quest_topic(original, [this](form_stub* child) {
+            auto* request = new form_creation_request(this->owner.request_form_creation(child->formType));
+            request->queue_clone(child);
+            this->child_requests.push_back(request);
+            return false;
+         });
+      }
    }
    //
    void form_duplication_request::set_parent_form(form_stub* parent) {

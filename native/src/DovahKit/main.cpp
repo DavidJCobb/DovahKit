@@ -153,23 +153,6 @@
 //
 //        - Requires a UI for managing cells and worldspaces.
 //
-//  - For Use Info, merge the "is base form of" and "is reference of" flags, since we 
-//    can infer which is which just by looking at the form types involved (i.e. CONT is 
-//    always a base form of REFR; the relationship is never reversed). Then, add a Use 
-//    Info flag for "is dialogue system relationship." This flag will be used for: the 
-//    owning QUST of a DIAL; and the linked list of INFOs. It can optionally be used 
-//    for the owning DIAL of an INFO, but that should also use the parent/child flags. 
-//    As with base forms and references, "dialogue system relationships" always have 
-//    the same directionality for any given two form types.
-//
-//     - This will require a subclass of form_id_t similar to what we use for REFR's 
-//       base form ID. Fortunately, we only need one such subclass to handle both the 
-//       QUST/DIAL connection and the INFO/INFO connections.
-//
-//     - We want this as prep for implementing dialogue editing in the future, but we 
-//       also need it for form duplication: duplicating a QUST should give the option 
-//       to also duplicate its contained DIALs.
-//
 //  - Code for deleting forms.
 //
 //     - How should we handle the case of a user deleting a form from one of the active 
@@ -216,6 +199,17 @@
 //
 //        - Everything that listens for dataAbandonImminent will probably also need to 
 //          listen for these.
+//
+//  - Support for DIAL and INFO
+//
+//     - DIAL/QNAM should use dialogue_form_id_t instead of form_id_t. Use info generation 
+//       for this subrecord should use the "dialogue" use info entry flag.
+//
+//     - INFO/PNAM should use dialogue_form_id_t instead of form_id_t. Use info generation 
+//       for this subrecord should use the "dialogue" use info entry flag.
+//
+//  - form_id_t::set and its overrides on subclasses should take a form_stub&, not a 
+//    form_stub*, as the pointer is not optional.
 //
 //  - Code for changing a reference's base form
 //

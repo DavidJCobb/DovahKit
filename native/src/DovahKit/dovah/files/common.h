@@ -59,6 +59,8 @@ namespace dovah {
    ///
    //*/
    enum class tes_file_group_type : int32_t {
+      none = -1,
+      //
       forms_of_type            = 0,
       world_children           = 1,
       interior_cell_block      = 2,
