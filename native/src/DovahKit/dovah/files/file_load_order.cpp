@@ -765,7 +765,7 @@ namespace dovah {
    form_duplication_request file_load_order::request_form_duplication() noexcept {
       return form_duplication_request(*this);
    }
-   form_deletion_request file_load_order::request_form_deletion(form_stub& target) {
+   form_deletion_request file_load_order::request_form_deletion(form_stub& target) noexcept {
       return form_deletion_request(*this, target);
    }
    
