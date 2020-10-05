@@ -386,9 +386,7 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
       // Show a confirmation prompt.
       //
       auto* confirm = new DeleteFormDialog(dialog_parent);
-      //
-      // TODO: populate the confirmation prompt with information on the deletion request, or else pass the request to it.
-      //
+      confirm->updateFromDeletionRequest(request);
       auto  result = confirm->exec();
       delete confirm;
       if (result == QDialog::Rejected)

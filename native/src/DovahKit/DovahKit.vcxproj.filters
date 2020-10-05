@@ -411,6 +411,9 @@
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\delete_form_dialog\delete_form_table.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1012,6 +1015,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\DelayedAvailabilityButton.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

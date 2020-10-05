@@ -223,6 +223,7 @@
     <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
     <ClCompile Include="ui\main_window\cell_view\cell_ref_list.cpp" />
     <ClCompile Include="ui\main_window\delete_form_dialog.cpp" />
+    <ClCompile Include="ui\main_window\delete_form_dialog\delete_form_table.cpp" />
     <ClCompile Include="ui\main_window\file_metadata_window.cpp" />
     <ClCompile Include="ui\main_window\form_use_info.cpp" />
     <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp" />
@@ -362,6 +363,7 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h" />
     <QtMoc Include="ui\generic\DelayedAvailabilityButton.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog.h" />
     <QtMoc Include="ui\generic\TESFilePicker.h" />

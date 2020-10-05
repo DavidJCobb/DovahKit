@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>498</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,7 +39,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="formsPendingDelete"/>
+    <widget class="DeleteFormDialogList" name="formsPendingDelete">
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="cornerButtonEnabled">
+      <bool>false</bool>
+     </property>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+    </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_3">
@@ -52,7 +62,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="formsPendingUpdate"/>
+    <widget class="DeleteFormDialogList" name="formsPendingUpdate">
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="cornerButtonEnabled">
+      <bool>false</bool>
+     </property>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+    </widget>
    </item>
    <item>
     <widget class="Line" name="line">
@@ -115,6 +135,11 @@
    <class>DelayedAvailabilityButton</class>
    <extends>QPushButton</extends>
    <header>../generic/DelayedAvailabilityButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DeleteFormDialogList</class>
+   <extends>QTableView</extends>
+   <header>delete_form_dialog/delete_form_table.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
