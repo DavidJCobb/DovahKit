@@ -11,7 +11,7 @@ FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
       this->form = nullptr;
       this->stub = nullptr;
    });
-   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool just_being_flagged) {
       if (stub == this->stub) {
          this->form = nullptr;
          this->stub = nullptr;

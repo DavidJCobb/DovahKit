@@ -147,28 +147,8 @@
 //
 //     - Add an Object Window context menu item for deletion. Ditto for Cell View.
 //
-//     - DovahKitCore's deletion signals need to adequately convey whether a form is 
-//       (about to be) full-on *deleted* or just *flagged as* deleted. Currently, all 
-//       code which reacts to these signals assumes that the form is going to be erased 
-//       from memory.
-//
 //     - Forms that have been flagged as deleted should remain visible in the UI, and 
-//       should be shown with an indicator. (Showing the indicator is a challenge: the 
-//       record flags are in the loaded form, so we'd have to mirror the flag onto the 
-//       form_stub somewhere. We have a few spare bytes to work with. This, of course, 
-//       then requires that we carefully manage the "deleted" form flag.)
-//
-//        - We can add getters/setters for the "deleted" flag and declare that direct 
-//          modifications to it are undefined behavior, as we did for the "edited" flag 
-//          on form stubs. Alternatively, we could simply "move" the flag -- have stubs 
-//          copy it over when loading, and only treat the flag on the stub as meaningful, 
-//          with a convenient getter on the Form class (that gets the flag from the stub) 
-//          and with the actual flag bit in Form::form_flag being purposefully ignored 
-//          by the entire backend (and replaced with the stub flag at save time).
-//
-//           - We'd need to swipe the flag from the record header when creating stubs 
-//             during the load process, and whenever form_stub::load produces a new 
-//             loaded form from scratch.
+//       should be shown with an indicator.
 //
 //     - Test the severing of outbound references to a deleted form.
 //

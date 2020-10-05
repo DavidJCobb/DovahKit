@@ -19,11 +19,13 @@ class CellViewWindow : public QWidget {
          QAction* edit        = nullptr;
          QAction* duplicate   = nullptr;
          QAction* showUseInfo = nullptr;
+         QAction* deleteForm  = nullptr;
       } cellContextMenu;
       struct {
          QAction* edit        = nullptr;
          QAction* duplicate   = nullptr;
          QAction* showUseInfo = nullptr;
+         QAction* deleteForm  = nullptr;
       } refContextMenu;
       //
       void _setupContextMenu(QTableView*);

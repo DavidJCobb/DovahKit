@@ -29,7 +29,7 @@ namespace form_dialog_helpers {
       QObject::connect(&editor, &DovahKitCore::dataSaveImminent, &dialog, [&dialog]() {
          dialog.form = nullptr;
       });
-      QObject::connect(&editor, &DovahKitCore::formDeletionImminent, &dialog, [&dialog](dovah::form_stub* stub) {
+      QObject::connect(&editor, &DovahKitCore::formDeletionImminent, &dialog, [&dialog](dovah::form_stub* stub, bool just_being_flagged) {
          if (stub == dialog.stub) {
             dialog.form = nullptr;
             dialog.stub = nullptr;

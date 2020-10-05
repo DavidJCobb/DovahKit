@@ -65,7 +65,7 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
       }
    }
 }
-void CellRefListModel::formDeletionImminent(const dovah::form_stub* stub) {
+void CellRefListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    if (!this->last_used_cell)
       return;
    if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
@@ -77,6 +77,11 @@ void CellRefListModel::formDeletionImminent(const dovah::form_stub* stub) {
    for (size_t i = 0; i < size; ++i) {
       auto* item = list[i];
       if (item->stub == stub) {
+         if (is_just_flagged) {
+            auto index = this->index(i, 0, QModelIndex());
+            emit dataChanged(index, index);
+            break;
+         }
          this->beginRemoveRows(QModelIndex(), i, i);
          list.remove(i);
          this->endRemoveRows();
@@ -126,14 +131,21 @@ Qt::ItemFlags CellRefListModel::flags(const QModelIndex& index) const {
 QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
       return QVariant();
-   auto item   = (item_type*)index.internalPointer();
-   auto column = index.column();
+   auto item    = (item_type*)index.internalPointer();
+   auto column  = index.column();
+   bool edited  = (item->stub && item->stub->is_edited());
+   bool deleted = (item->stub && item->stub->is_deleted());
    switch (role) {
       case Qt::DisplayRole:
          switch (column) {
-            case 0: return item->editorID;
-            case 1: return QString::asprintf("%08X", item->formID);
-            case 2: return cobb::qt::four_cc_to_string( dovah::form_type_info::lookup(item->formType()).signature );
+            case 0:
+               return tr("%1%2")
+                  .arg(item->editorID)
+                  .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
+            case 1:
+               return QString::asprintf("%08X", item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+            case 2:
+               return cobb::qt::four_cc_to_string( dovah::form_type_info::lookup(item->formType()).signature );
          }
          break;
       case Qt::DecorationRole:

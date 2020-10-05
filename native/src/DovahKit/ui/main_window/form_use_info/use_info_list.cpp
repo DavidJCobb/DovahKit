@@ -199,7 +199,7 @@ void FormUseInfoListModel::formModified(const dovah::form_stub* stub) {
       return;
    }
 }
-void FormUseInfoListModel::formDeletionImminent(const dovah::form_stub* stub) {
+void FormUseInfoListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    if (!this->used)
       return;
    if (stub == this->used) {
@@ -210,8 +210,13 @@ void FormUseInfoListModel::formDeletionImminent(const dovah::form_stub* stub) {
    auto  size = list.size();
    for (int i = 0; i < size; ++i) {
       auto* item = list[i];
-      if (item->otherStub == stub)
+      if (item->otherStub == stub) {
+         if (is_just_flagged) {
+            this->updateUser(item);
+            continue;
+         }
          this->removeUser(item);
+      }
    }
 }
 //

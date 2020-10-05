@@ -52,7 +52,7 @@ class CellRefListModel : public QAbstractTableModel {
    protected slots:
       void formCreated(const form_stub*);
       void formModified(const form_stub*);
-      void formDeletionImminent(const dovah::form_stub*);
+      void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       //
    public:
       CellRefListModel(QObject* parent = nullptr);

@@ -54,7 +54,7 @@ class CellListModel : public QAbstractTableModel {
    protected slots:
       void formCreated(const dovah::form_stub*);
       void formModified(const dovah::form_stub*);
-      void formDeletionImminent(const dovah::form_stub*);
+      void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       //
    public slots:
       void clear();

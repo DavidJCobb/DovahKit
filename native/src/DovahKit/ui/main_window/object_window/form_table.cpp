@@ -90,14 +90,17 @@ void FormTableModel::formModified(const dovah::form_stub* stub) {
    //
    this->doUseInfoUpdate();
 }
-void FormTableModel::formDeletionImminent(const dovah::form_stub* stub) {
-   if (stub->formType != dovah::form_type::cell)
-      return;
+void FormTableModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    auto& list = this->children;
    auto  size = list.size();
    for (size_t i = 0; i < size; ++i) {
       auto* item = list[i];
       if (item->stub == stub) {
+         if (is_just_flagged) {
+            auto index = this->index(i, 0, QModelIndex());
+            emit dataChanged(index, index); // force a redraw, which will show the "deleted" flag
+            break;
+         }
          this->beginRemoveRows(QModelIndex(), i, i);
          list.remove(i);
          this->endRemoveRows();
@@ -143,14 +146,21 @@ Qt::ItemFlags FormTableModel::flags(const QModelIndex& index) const {
 QVariant FormTableModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
       return QVariant();
-   auto item   = (item_type*)index.internalPointer();
-   auto column = index.column();
+   auto item    = (item_type*)index.internalPointer();
+   auto column  = index.column();
+   bool edited  = (item->stub && item->stub->is_edited());
+   bool deleted = (item->stub && item->stub->is_deleted());
    switch (role) {
       case Qt::DisplayRole:
          switch (column) {
-            case 0: return item->name();
-            case 1: return QString::asprintf("%08X", item->formID);
-            case 2: return item->userCount;
+            case 0:
+               return tr("%1%2")
+                  .arg(item->editorID)
+                  .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
+            case 1:
+               return QString::asprintf("%08X", item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+            case 2:
+               return item->userCount;
          }
          break;
       case Qt::DecorationRole:
@@ -162,14 +172,14 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
          break;
       case Qt::UserRole:
          switch (column) {
-            case 0: return item->name();
+            case 0: return item->editorID;
             case 1: return item->formID;
             case 2: return item->userCount;
          }
          break;
       case Qt::UserRole + 1: // used for filtering
          switch (column) {
-            case 0: return item->name();
+            case 0: return item->editorID;
             case 1: return QString::asprintf("%08X", item->formID);
             case 2: return QVariant(); // don't allow filtering by the use count
          }

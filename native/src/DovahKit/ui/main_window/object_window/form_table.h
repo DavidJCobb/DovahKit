@@ -30,25 +30,6 @@ class FormTableModelItem {
       void update();
       bool updateUserCount(); // returns true if any changes were made
 };
-class FormTableModelRoot : public FormTableModelItem {
-   friend FormTableModel;
-   protected:
-      std::vector<FormTableModelItem*> _children;
-   public:
-      inline const std::vector<FormTableModelItem*>& children() const noexcept { return this->_children; }
-      inline FormTableModelItem* child(size_t i) const noexcept {
-         if (i < 0 || i >= this->_children.size())
-            return nullptr;
-         return this->_children[i];
-      }
-      inline size_t childCount() const noexcept { return this->_children.size(); }
-      //
-      void clear() {
-         for (auto* p : this->_children)
-            delete p;
-         this->_children.clear();
-      }
-};
 
 class FormTableModel : public QAbstractTableModel {
    Q_OBJECT
@@ -70,7 +51,7 @@ class FormTableModel : public QAbstractTableModel {
       void formCreated(form_stub*);
       void formModified(const form_stub*);
       void formModificationImminent(const form_stub*);
-      void formDeletionImminent(const dovah::form_stub*);
+      void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       //
    public slots:
       void clear();

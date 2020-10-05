@@ -17,6 +17,10 @@ namespace dovah {
       //
       // TODO: Add loaded form objects for objects below as we implement more loaded form classes.
       //
+      // NOTE: You must create and configure the loaded form object after the load order has 
+      //       accepted the stub, as only then will it be safe to set up references between 
+      //       hardcoded forms (e.g. PlayerRef -> Player).
+      //
       // NOTE: Some forms below are listed as being hardcoded into the CK but not the game. This 
       //       is an educated guess; I have not reverse-engineered the CK to verify this. These 
       //       IDs are in the range reserved for hardcoded forms, but it's equally possible that 
@@ -156,12 +160,12 @@ namespace dovah {
          stub->formType = form_type_info::signature_to_form_type('ACHR');
          stub->editorID = "PlayerRef";
          //
+         lo._accept_hardcoded_form(stub);
+         //
          auto form = new loaded_forms::Actor;
          form->base_form.set(stub, hardcoded_form_ids::Player);
          form->stub = stub;
          stub->form = form;
-         //
-         lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:015]"MultiBoundMarker"
          auto stub = new form_stub();
@@ -282,6 +286,7 @@ namespace dovah {
          stub->formID   = 0x02D;
          stub->formType = form_type_info::signature_to_form_type('VTYP');
          stub->editorID = "AdultMaleVoice1";
+         //
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::Voicetype;
@@ -293,6 +298,7 @@ namespace dovah {
          stub->formID   = 0x02E;
          stub->formType = form_type_info::signature_to_form_type('VTYP');
          stub->editorID = "AdultFemaleVoice1";
+         //
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::Voicetype;
@@ -379,6 +385,7 @@ namespace dovah {
          stub->formID   = 0x03C;
          stub->formType = form_type_info::signature_to_form_type('WRLD');
          stub->editorID = "DefaultWorld";
+         //
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::Worldspace;
@@ -550,6 +557,7 @@ namespace dovah {
          stub->formID   = 0x163;
          stub->formType = form_type_info::signature_to_form_type('FLST');
          stub->editorID = "HelpManualPC";
+         //
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::FormList;
@@ -568,6 +576,7 @@ namespace dovah {
          stub->formID   = 0x165;
          stub->formType = form_type_info::signature_to_form_type('FLST');
          stub->editorID = "HelpManualXBox";
+         //
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::FormList;
@@ -721,6 +730,7 @@ namespace dovah {
          stub->formID   = 0x1F3;
          stub->formType = form_type_info::signature_to_form_type('FLST');
          stub->editorID = "HairColorListDoNotUse";
+         //
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::FormList;

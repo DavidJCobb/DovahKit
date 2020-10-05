@@ -27,7 +27,7 @@ namespace dovah::loaded_forms {
       return instance;
    }
    bool Form::save(tes_record_writer& record) {
-      if (this->flags & form_flag::deleted) {
+      if (this->stub->is_deleted()) {
          //
          // Specific form types don't appear to save ANY data -- not even editor IDs -- if they 
          // are flagged as deleted.

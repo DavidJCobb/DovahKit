@@ -106,6 +106,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    this->_formActionEdit        = new QAction(tr("Edit...",     "object window form actions"), this->ui.table);
    this->_formActionDuplicate   = new QAction(tr("Duplicate",   "object window form actions"), this->ui.table);
    this->_formActionShowUseInfo = new QAction(tr("Use Info...", "object window form actions"), this->ui.table);
+   this->_formActionDelete      = new QAction(tr("Delete",      "object window form actions"), this->ui.table);
    QObject::connect(this->_formActionEdit, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub)
@@ -118,8 +119,8 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       if (!stub)
          return;
       //
-      auto& editor  = DovahKitCore::get();
-      auto result = editor.duplicate_form(*stub, this);
+      auto& editor = DovahKitCore::get();
+      auto result  = editor.duplicate_form(*stub, this);
       if (result)
          this->ui.table->select(result);
    });
@@ -127,6 +128,12 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub)
          open_use_info_dialog_for_form(stub, this->parentWidget());
+   });
+   QObject::connect(this->_formActionDelete, &QAction::triggered, this, [this]() {
+      auto* stub = _get_selected_form(this->ui.table);
+      if (!stub)
+         return;
+      DovahKitCore::get().delete_form(*stub, this);
    });
    //
    this->ui.table->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -139,12 +146,14 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       this->_formActionEdit->setVisible(stub != nullptr);
       this->_formActionDuplicate->setVisible(stub != nullptr);
       this->_formActionShowUseInfo->setVisible(stub != nullptr);
+      this->_formActionDelete->setVisible(stub != nullptr);
       //
       QMenu menu(opener);
       menu.addAction(this->_actionCreateForm);
       menu.addAction(this->_formActionEdit);
       menu.addAction(this->_formActionDuplicate);
       menu.addAction(this->_formActionShowUseInfo);
+      menu.addAction(this->_formActionDelete);
       //
       bool any = false;
       for (auto* action : menu.actions()) {
@@ -154,7 +163,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          }
       }
       if (!any)
-         return; // don't show a menu if all of its contents are disaled or hidden
+         return; // don't show a menu if all of its contents are disabled or hidden
       //
       menu.exec(opener->mapToGlobal(pos));
    });

@@ -116,9 +116,8 @@ namespace dovah::loaded_forms {
       extra->ref.set(this->stub, hardcoded_form_ids::PlayerRef);
 
       //
-      // TODO: xEdit makes these references persistent and uses -30000 as the Z-coordinate. Why 
-      // make them persistent? And don't interior cells reset objects past (+/-)10000 on any 
-      // axis back to the cell origin? I've made some inquiries.
+      // TODO: xEdit uses -30000 as its preferred Z-coordinate, and it makes any actors that 
+      // this procedure is applied to persistent. Why the latter?
       //
 
       //

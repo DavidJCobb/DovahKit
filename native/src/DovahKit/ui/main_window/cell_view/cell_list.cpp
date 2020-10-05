@@ -62,7 +62,7 @@ void CellListModel::formModified(const dovah::form_stub* stub) {
       }
    }
 }
-void CellListModel::formDeletionImminent(const dovah::form_stub* stub) {
+void CellListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    if (stub->formType != dovah::form_type::cell)
       return;
    auto& list = this->children;
@@ -70,6 +70,11 @@ void CellListModel::formDeletionImminent(const dovah::form_stub* stub) {
    for (size_t i = 0; i < size; ++i) {
       auto* item = list[i];
       if (item->stub == stub) {
+         if (is_just_flagged) {
+            //
+            // TODO: Do we want to even display cells that were flagged as deleted?
+            //
+         }
          this->beginRemoveRows(QModelIndex(), i, i);
          list.remove(i);
          this->endRemoveRows();
@@ -105,17 +110,24 @@ Qt::ItemFlags CellListModel::flags(const QModelIndex& index) const {
 QVariant CellListModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
       return QVariant();
-   auto item   = (item_type*)index.internalPointer();
-   auto column = index.column();
+   auto item    = (item_type*)index.internalPointer();
+   auto column  = index.column();
+   bool edited  = (item->stub && item->stub->is_edited());
+   bool deleted = (item->stub && item->stub->is_deleted());
    switch (column) {
       case 0: // editor ID
          switch (role) {
             case Qt::DisplayRole:
             case SortingRole:
             case FilteringRole:
-               if (item->editorID.isEmpty())
-                  return tr("Unnamed Cell", "cell view cell list");
-               return item->editorID;
+               {
+                  QString text = item->editorID;
+                  if (text.isEmpty())
+                     text = tr("Unnamed Cell", "cell view cell list");
+                  if (deleted && role == Qt::DisplayRole)
+                     text += tr(" * ", "edited form ID marker");
+                  return text;
+               }
             case SortOverrideRole:
                if (item->editorID.isEmpty())
                   return 1;
@@ -131,6 +143,7 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
       case 1: // form ID
          switch (role) {
             case Qt::DisplayRole:
+               return QString::asprintf("%08X", item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
             case FilteringRole:
                return QString::asprintf("%08X", item->formID);
             case SortingRole:

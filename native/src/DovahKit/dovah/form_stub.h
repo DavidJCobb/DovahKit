@@ -237,6 +237,7 @@ namespace dovah {
          inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
          inline bool        has_usable_source_file() const noexcept { return this->offset != 0; }
          inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
+         inline bool        is_deleted()   const noexcept { return (bool)(this->flags & flag::flagged_as_deleted); };
          inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
          inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
          bool is_non_overridden_hardcoded_form() const noexcept;

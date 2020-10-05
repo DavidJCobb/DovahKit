@@ -356,6 +356,9 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
 }
 
 void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent) {
+   //
+   // TODO: Confirmation message
+   //
    auto request = this->load_order->request_form_deletion(target);
    auto result  = request.get_result_code();
    if (result != dovah::form_deletion_request::result_code::pending) {
@@ -386,7 +389,7 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
       bool flagged;
    };
    std::vector<_entry> formIDs;
-   auto forms_d = request.get_forms_pending_delete();
+   auto forms_d = request.get_forms_pending_delete(false);
    auto forms_f = request.get_forms_pending_flagging();
    formIDs.reserve(forms_d.size() + forms_f.size());
    for (auto* stub : forms_d) {

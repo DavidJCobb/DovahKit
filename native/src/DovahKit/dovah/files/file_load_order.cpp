@@ -1155,11 +1155,15 @@ namespace dovah {
          this->result = result_code::error_cannot_delete_hardcoded_form;
          return;
       }
-      this->forms_needing_delete.insert(&this->target);
+      this->active_file_index = this->owner.index_of_active_file();
+      //
+      if (_form_should_be_flagged(this->target)) {
+         this->forms_needing_flag.insert(&this->target);
+      } else {
+         this->forms_needing_delete.insert(&this->target);
+      }
       this->seen_stubs.insert(&this->target);
       this->_gather_others(&this->target);
-      //
-      this->active_file_index = this->owner.index_of_active_file();
    }
    form_deletion_request::form_deletion_request(form_deletion_request&& other) : owner(other.owner), target(other.target) {
       this->result = other.result;
@@ -1173,6 +1177,8 @@ namespace dovah {
    bool form_deletion_request::_form_should_be_flagged(form_stub& stub) {
       if (this->force_delete_overrides)
          return false;
+      if (stub.is_hardcoded()) // we don't currently allow any kind of deletion of hardcoded forms, but it never hurts to be prepared for what might change
+         return true;
       if ((stub.formID >> 0x18) != this->active_file_index)
          return true;
       return false;
@@ -1249,15 +1255,24 @@ namespace dovah {
       return out;
    }
    void form_deletion_request::commit() {
+      auto* file = owner.active_file;
+      bare_form_id_t lowestID = 0xFFFFFFFF;
       for (auto* stub : this->forms_needing_delete) {
          this->_prep_for_delete(*stub);
          //
-         this->owner.forms.forms.erase(stub->formID);
-         this->owner.forms_by_type[stub->formType].forms.erase(stub->formID);
-         this->owner.active_file_forms.forms.erase(stub->formID);
-         this->owner.active_file_forms_by_type[stub->formType].forms.erase(stub->formID);
+         auto formID = stub->formID;
+         if (formID < lowestID)
+            lowestID = formID;
+         this->owner.forms.forms.erase(formID);
+         this->owner.forms_by_type[stub->formType].forms.erase(formID);
+         this->owner.active_file_forms.forms.erase(formID);
+         this->owner.active_file_forms_by_type[stub->formType].forms.erase(formID);
          //
          delete stub;
+      }
+      if (auto* file = owner.active_file) {
+         if (file->header.nextFormID > lowestID)
+            file->header.nextFormID = lowestID;
       }
       for (auto* stub : this->forms_needing_flag) {
          this->_prep_for_delete(*stub);

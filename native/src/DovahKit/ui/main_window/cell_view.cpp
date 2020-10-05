@@ -47,6 +47,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          this->cellContextMenu.edit        = new QAction(tr("Edit...",     "cell view cell actions"), this->ui.cellList);
          this->cellContextMenu.duplicate   = new QAction(tr("Duplicate",   "cell view cell actions"), this->ui.cellList);
          this->cellContextMenu.showUseInfo = new QAction(tr("Use Info...", "cell view cell actions"), this->ui.cellList);
+         this->cellContextMenu.deleteForm  = new QAction(tr("Delete",      "cell view cell actions"), this->ui.cellList);
          QObject::connect(this->cellContextMenu.edit, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
                open_edit_dialog_for_form(stub, this->parentWidget());
@@ -58,6 +59,10 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          QObject::connect(this->cellContextMenu.showUseInfo, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
                open_use_info_dialog_for_form(stub, this->parentWidget());
+         });
+         QObject::connect(this->cellContextMenu.deleteForm, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.cellList->formStub())
+               DovahKitCore::get().delete_form(*stub, this);
          });
          //
          this->ui.cellList->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -71,6 +76,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
             menu.addAction(items.edit);
             menu.addAction(items.duplicate);
             menu.addAction(items.showUseInfo);
+            menu.addAction(items.deleteForm);
             menu.exec(opener->mapToGlobal(pos));
          });
       #pragma endregion
@@ -78,6 +84,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          this->refContextMenu.edit        = new QAction(tr("Edit...",     "cell view ref actions"), this->ui.referenceList);
          this->refContextMenu.duplicate   = new QAction(tr("Duplicate",   "cell view ref actions"), this->ui.referenceList);
          this->refContextMenu.showUseInfo = new QAction(tr("Use Info...", "cell view ref actions"), this->ui.referenceList);
+         this->refContextMenu.deleteForm  = new QAction(tr("Delete",      "cell view ref actions"), this->ui.referenceList);
          QObject::connect(this->refContextMenu.edit, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())
                open_edit_dialog_for_form(stub, this->parentWidget());
@@ -89,6 +96,10 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          QObject::connect(this->refContextMenu.showUseInfo, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())
                open_use_info_dialog_for_form(stub, this->parentWidget());
+         });
+         QObject::connect(this->refContextMenu.deleteForm, &QAction::triggered, [this]() {
+            if (auto* stub = this->ui.referenceList->formStub())
+               DovahKitCore::get().delete_form(*stub, this);
          });
          //
          this->ui.referenceList->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -102,6 +113,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
             menu.addAction(items.edit);
             menu.addAction(items.duplicate);
             menu.addAction(items.showUseInfo);
+            menu.addAction(items.deleteForm);
             menu.exec(opener->mapToGlobal(pos));
          });
       #pragma endregion
