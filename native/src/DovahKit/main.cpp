@@ -147,9 +147,6 @@
 //
 //     - Add an Object Window context menu item for deletion. Ditto for Cell View.
 //
-//     - Forms that have been flagged as deleted should remain visible in the UI, and 
-//       should be shown with an indicator.
-//
 //     - Test the severing of outbound references to a deleted form.
 //
 //        - Test keyword lists in specific.

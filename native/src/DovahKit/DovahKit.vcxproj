@@ -208,6 +208,7 @@
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
+    <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -221,6 +222,7 @@
     <ClCompile Include="ui\main_window\cell_view.cpp" />
     <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
     <ClCompile Include="ui\main_window\cell_view\cell_ref_list.cpp" />
+    <ClCompile Include="ui\main_window\delete_form_dialog.cpp" />
     <ClCompile Include="ui\main_window\file_metadata_window.cpp" />
     <ClCompile Include="ui\main_window\form_use_info.cpp" />
     <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp" />
@@ -360,6 +362,8 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <QtMoc Include="ui\generic\DelayedAvailabilityButton.h" />
+    <QtMoc Include="ui\main_window\delete_form_dialog.h" />
     <QtMoc Include="ui\generic\TESFilePicker.h" />
     <QtMoc Include="ui\form_windows\cell.h" />
     <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h" />
@@ -425,6 +429,7 @@
     <QtUic Include="ui\generic\TESFilePicker.ui" />
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\cell_view.ui" />
+    <QtUic Include="ui\main_window\delete_form_dialog.ui" />
     <QtUic Include="ui\main_window\file_metadata_window.ui" />
     <QtUic Include="ui\main_window\form_use_info.ui" />
     <QtUic Include="ui\main_window\load_window.ui" />

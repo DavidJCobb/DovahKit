@@ -405,6 +405,12 @@
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\delete_form_dialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -910,6 +916,9 @@
     <QtUic Include="ui\generic\TESFilePicker.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\main_window\delete_form_dialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -997,6 +1006,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\TESFilePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\delete_form_dialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\DelayedAvailabilityButton.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

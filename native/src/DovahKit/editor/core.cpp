@@ -10,6 +10,7 @@
 #include "../dovah/files/tes_file_reading/file.h"
 #include "core_internals/load_task.h"
 #include "helpers/make_editor_id_for_duplicate.h"
+#include "../ui/main_window/delete_form_dialog.h"
 #include <QDebug>
 
 namespace {
@@ -356,9 +357,6 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
 }
 
 void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent) {
-   //
-   // TODO: Confirmation message
-   //
    auto request = this->load_order->request_form_deletion(target);
    auto result  = request.get_result_code();
    if (result != dovah::form_deletion_request::result_code::pending) {
@@ -382,6 +380,19 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
          QObject::tr("Unable to delete this form. %1").arg(text)
       );
       return;
+   }
+   if (dialog_parent) {
+      //
+      // Show a confirmation prompt.
+      //
+      auto* confirm = new DeleteFormDialog(dialog_parent);
+      //
+      // TODO: populate the confirmation prompt with information on the deletion request, or else pass the request to it.
+      //
+      auto  result = confirm->exec();
+      delete confirm;
+      if (result == QDialog::Rejected)
+         return;
    }
    //
    struct _entry {

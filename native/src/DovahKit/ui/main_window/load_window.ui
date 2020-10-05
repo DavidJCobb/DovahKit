@@ -161,6 +161,9 @@
        <property name="text">
         <string>Set as Active File</string>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item>
