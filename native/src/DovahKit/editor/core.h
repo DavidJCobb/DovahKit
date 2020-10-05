@@ -67,8 +67,8 @@ class DovahKitCore : public QObject {
       void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
       void formCreated(dovah::form_stub*);
       //
-      void formDeletionImminent(dovah::form_stub*);
-      void formDeletionComplete(dovah::bare_form_id_t);
+      void formDeletionImminent(dovah::form_stub*, bool will_be_flagged);
+      void formDeletionComplete(dovah::bare_form_id_t, bool will_be_flagged);
       //
       void dataSaveImminent();
       void dataSaveComplete();

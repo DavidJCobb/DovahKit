@@ -315,6 +315,8 @@ namespace dovah::tes_file_reading {
       stub->offset   = record.head_pos;
       stub->formID   = record.formID();
       stub->formType = form_type_info::signature_to_form_type(record.signature());
+      if (record.header.flags & tes_file_record_header::flag::deleted)
+         stub->flags |= form_stub::flag::flagged_as_deleted;
       return stub;
    }
    void basic_reader::extract_high_value_subrecords_for_stub(form_stub* stub) {
@@ -343,6 +345,7 @@ namespace dovah::tes_file_reading {
                subrecord.to_string(stub->editorID);
                break;
             case 'XCLC':
+               state |= _state::found_cell_coords;
                subrecord.read(stub->groupInfo.gridX);
                subrecord.read(stub->groupInfo.gridY);
                break;

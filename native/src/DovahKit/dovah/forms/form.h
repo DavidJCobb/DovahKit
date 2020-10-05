@@ -20,7 +20,7 @@ namespace dovah {
             struct form_flag {
                form_flag() = delete;
                enum : uint32_t {
-                  deleted = 0x00000020,
+                  deleted = 0x00000020, // working with this flag directly is undefined behavior. use the (flagged_as_deleted) flag on (form_stub) instead.
                };
             };
             //

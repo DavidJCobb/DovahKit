@@ -381,12 +381,21 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
       return;
    }
    //
-   std::vector<dovah::bare_form_id_t> formIDs;
-   auto forms = request.get_forms_pending_delete();
-   formIDs.reserve(forms.size());
-   for (auto* stub : forms) {
-      emit this->formDeletionImminent(stub);
-      formIDs.push_back(stub->formID);
+   struct _entry {
+      dovah::bare_form_id_t id;
+      bool flagged;
+   };
+   std::vector<_entry> formIDs;
+   auto forms_d = request.get_forms_pending_delete();
+   auto forms_f = request.get_forms_pending_flagging();
+   formIDs.reserve(forms_d.size() + forms_f.size());
+   for (auto* stub : forms_d) {
+      emit this->formDeletionImminent(stub, false);
+      formIDs.push_back({ stub->formID, false });
+   }
+   for (auto* stub : forms_f) {
+      emit this->formDeletionImminent(stub, true);
+      formIDs.push_back({ stub->formID, true });
    }
    //
    request.commit();
@@ -404,8 +413,8 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
       return;
    }
    //
-   for (auto id : formIDs)
-      emit this->formDeletionComplete(id);
+   for (auto& entry : formIDs)
+      emit this->formDeletionComplete(entry.id, entry.flagged);
 }
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {

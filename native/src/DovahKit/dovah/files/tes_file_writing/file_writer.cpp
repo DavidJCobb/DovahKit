@@ -169,6 +169,7 @@ namespace dovah::tes_file_writing {
          assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
          record.header.flags = loaded->flags & ~tes_file_record_header::non_data_flags;
+         cobb::edit_bit(record.header.flags, tes_file_record_header::flag::deleted, (stub->flags & form_stub::flag::flagged_as_deleted));
          if (loaded->save(record)) {
             auto& write_info = this->fixup_data.form_stubs[stub->formID];
             write_info.stub   = stub;

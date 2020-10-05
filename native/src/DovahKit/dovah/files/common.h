@@ -102,6 +102,7 @@ namespace dovah {
       struct flag {
          flag() = delete;
          enum {
+            deleted    = 0x00000020,
             compressed = 0x00040000,
          };
       };

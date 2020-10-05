@@ -321,22 +321,26 @@ namespace dovah {
          file_load_order& owner;
          form_stub&       target;
          result_code      result = result_code::pending;
+         uint8_t          active_file_index = file_load_order::invalid_load_prefix; // cached for faster checks
          //
          std::set<form_stub*> seen_stubs;
          std::set<form_stub*> forms_needing_delete;
+         std::set<form_stub*> forms_needing_flag;
          //
          form_deletion_request(file_load_order& o, form_stub& t);
          form_deletion_request(form_deletion_request&&);
          form_deletion_request(const form_deletion_request&) = delete;
          form_deletion_request& operator=(const form_deletion_request&) = delete;
          //
+         bool _form_should_be_flagged(form_stub&);
          void _gather_others(form_stub* start = nullptr);
-         void _do_single_deletion(form_stub&);
+         void _prep_for_delete(form_stub&); // use for deletion and for flagging as deleted
          //
       public:
-         bool force_delete_overrides = false;
+         bool force_delete_overrides = false; // if (true), then we will straight-up delete ALL forms. if (false), then forms outside the active file are overridden and FLAGGED AS deleted.
          //
-         std::vector<form_stub*> get_forms_pending_delete() const noexcept;
+         std::vector<form_stub*> get_forms_pending_delete(bool include_flagged = true) const noexcept;
+         std::vector<form_stub*> get_forms_pending_flagging() const noexcept;
          inline result_code get_result_code() const noexcept { return this->result; }
          //
          void commit();

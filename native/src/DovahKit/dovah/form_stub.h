@@ -193,6 +193,11 @@ namespace dovah {
                // a file to even get this to happen.
                //
                missing_coordinates = 0x04,
+               //
+               // (flagged_as_deleted)
+               // Indicates that the form is flagged as deleted.
+               //
+               flagged_as_deleted = 0x08,
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;

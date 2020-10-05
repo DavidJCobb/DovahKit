@@ -1158,6 +1158,8 @@ namespace dovah {
       this->forms_needing_delete.insert(&this->target);
       this->seen_stubs.insert(&this->target);
       this->_gather_others(&this->target);
+      //
+      this->active_file_index = this->owner.index_of_active_file();
    }
    form_deletion_request::form_deletion_request(form_deletion_request&& other) : owner(other.owner), target(other.target) {
       this->result = other.result;
@@ -1165,6 +1167,15 @@ namespace dovah {
       std::swap(this->seen_stubs, other.seen_stubs);
       //
       this->force_delete_overrides = other.force_delete_overrides;
+      //
+      this->active_file_index = this->owner.index_of_active_file();
+   }
+   bool form_deletion_request::_form_should_be_flagged(form_stub& stub) {
+      if (this->force_delete_overrides)
+         return false;
+      if ((stub.formID >> 0x18) != this->active_file_index)
+         return true;
+      return false;
    }
    void form_deletion_request::_gather_others(form_stub* start) {
       //
@@ -1187,8 +1198,6 @@ namespace dovah {
          auto* other = entry.other;
          if (this->seen_stubs.find(other) != this->seen_stubs.end())
             continue;
-         if (this->forms_needing_delete.find(other) != this->forms_needing_delete.end())
-            continue;
          this->seen_stubs.insert(entry.other);
          //
          if (!entry.other->load()) {
@@ -1198,47 +1207,64 @@ namespace dovah {
          //
          if (entry.flags & use_info_entry::flag::i_am_parent_of) {
             assert(!entry.other->is_hardcoded() && "How is a hardcoded form a descendant of a form that can be deleted (and in fact is currently being deleted)?");
-            this->forms_needing_delete.insert(entry.other);
+            if (_form_should_be_flagged(*entry.other)) {
+               this->forms_needing_flag.insert(entry.other);
+            } else {
+               this->forms_needing_delete.insert(entry.other);
+            }
             this->_gather_others(entry.other);
             if (this->result != result_code::pending)
                return;
          }
       }
    }
-   void form_deletion_request::_do_single_deletion(form_stub& stub) {
+   void form_deletion_request::_prep_for_delete(form_stub& stub) {
       stub.sever_all_outbound_references();
       for (auto& pair : stub.inbound) {
          auto& entry = pair.second;
          auto* other = entry.other;
-         auto  form  = other->load();
+         auto  form = other->load();
          form->sever_outbound_references_to(stub);
          other->set_edited(true);
       }
-      if (!this->force_delete_overrides) {
-         auto prefix = this->owner.index_of_active_file();
-         if ((stub.formID >> 0x18) != prefix) {
-            stub.load()->friendly_delete_override();
-            stub.set_edited(true);
-            return;
-         }
-      }
-      this->owner.forms.forms.erase(stub.formID);
-      this->owner.forms_by_type[stub.formType].forms.erase(stub.formID);
-      this->owner.active_file_forms.forms.erase(stub.formID);
-      this->owner.active_file_forms_by_type[stub.formType].forms.erase(stub.formID);
-      //
-      delete (&stub);
    }
-   std::vector<form_stub*> form_deletion_request::get_forms_pending_delete() const noexcept {
+   std::vector<form_stub*> form_deletion_request::get_forms_pending_delete(bool include_flagged) const noexcept {
       std::vector<form_stub*> out;
-      out.reserve(this->forms_needing_delete.size());
+      if (include_flagged)
+         out.reserve(this->forms_needing_delete.size() + this->forms_needing_flag.size());
+      else
+         out.reserve(this->forms_needing_delete.size());
       for (auto* stub : this->forms_needing_delete)
+         out.push_back(stub);
+      if (include_flagged)
+         for (auto* stub : this->forms_needing_flag)
+            out.push_back(stub);
+      return out;
+   }
+   std::vector<form_stub*> form_deletion_request::get_forms_pending_flagging() const noexcept {
+      std::vector<form_stub*> out;
+      out.reserve(this->forms_needing_flag.size());
+      for (auto* stub : this->forms_needing_flag)
          out.push_back(stub);
       return out;
    }
    void form_deletion_request::commit() {
-      for (auto* stub : this->forms_needing_delete)
-         this->_do_single_deletion(*stub);
+      for (auto* stub : this->forms_needing_delete) {
+         this->_prep_for_delete(*stub);
+         //
+         this->owner.forms.forms.erase(stub->formID);
+         this->owner.forms_by_type[stub->formType].forms.erase(stub->formID);
+         this->owner.active_file_forms.forms.erase(stub->formID);
+         this->owner.active_file_forms_by_type[stub->formType].forms.erase(stub->formID);
+         //
+         delete stub;
+      }
+      for (auto* stub : this->forms_needing_flag) {
+         this->_prep_for_delete(*stub);
+         //
+         stub->load()->friendly_delete_override();
+         stub->set_edited(true);
+      }
       this->result = result_code::success;
    }
    #pragma endregion
