@@ -34,6 +34,15 @@
 //          and also update the list model proxy to prioritize that above all other 
 //          sorting.
 //
+//  - Code for deleting forms.
+//
+//     - Test the severing of outbound references to a deleted form.
+//
+//        - Test keyword lists in specific.
+//
+//     - ObjectReference friendly delete question: there are unanswered questions; I've 
+//       made an inquiry on the xEdit Discord.
+//
 //  - There is no UI path to view or edit use info or data for worldspaces.
 //
 //  - Support for REFR
@@ -120,9 +129,152 @@
 //
 // DISTANT TASKS:
 //
+//  - BSA support
+//
+//     - BSA data should be stored in a (bsa_load_order). We can take two basic 
+//       approaches to BSAs, and we should implement and benchmark each:
+//
+//        - FAST LOADING: We load and index every BSA file separately, using multiple 
+//          threads. Lookups require checking for a loose file followed by searching 
+//          every loaded BSA in order from last-loaded to first-loaded. Since all BSAs 
+//          are separate, this could even allow for features and functionality where 
+//          the user can pick which BSA a file is pulled from, e.g. for comparisons of 
+//          texture overrides in a model preview window.
+//
+//        - FAST LOOKUPS: The (bsa_load_order) maintains the index of all files in BSAs, 
+//          and each index entry identifies the mapped file it originated from. Loading 
+//          can still use multiple threads, but insertions into the (bsa_load_order) 
+//          must lock, and the threads must identify which file they're inserting from 
+//          (so that files earlier in the load order don't overwrite entries for files 
+//          later in the load order). Lookups, however, only require searching one index 
+//          of files -- all BSAs are essentially "merged" at run-time.
+//
+//     - The (bsa_load_order) must include the base game BSAs, which are included by INI 
+//       setting rather than by filename.
+//
+//     - A (file_load_order) instance should be able to "adopt" a (bsa_load_order). It 
+//       will rely on that (bsa_load_order) for help with finding localized string files.
+//
+//  - Localized string support
+//
+//     - Each TES file that uses localized strings needs a LocalizedStringStore created 
+//       for it. The LocalizedStringStore should act as the interface for loading the 
+//       content of a localized string for any given language. LocalizedStringStore 
+//       should be able to pull localization files from a supplied (bsa_load_order). It 
+//       should be able to retain these files' contents in memory, closing them when 
+//       asked to. (Essentially, you should be able to tell it when to load and unload 
+//       any given language's file.)
+//
+//     - The relevant classes will look something like this:
+//
+//          struct LocalizedStringStore::entry {
+//             std::array<std::string, 10> strings; // don't remember offhand how many languages; guessed 10
+//             uint16_t availability = 0; // flags-mask indicating which languages are loaded
+//          }
+//
+//       If you ask the LocalizedStringStore to supply an entry in a language whose file 
+//       isn't open, then it should open that file. (Essentially, if it doesn't have the 
+//       German file open and you ask it for a string in German, it should open that file 
+//       and grab the string. You can then tell it to close German, and it will close the 
+//       file while retaining any strings it has already loaded. You don't need to open 
+//       every file in advance; it "knows," on a per-string basis, what it has loaded.)
+//
+//     - To retrieve the content of a (localized_string) for any given language, you must 
+//       retrieve the (form_stub)'s TES file and then grab the LocalizedStringStore for 
+//       that file.
+//
+//        - When a form is overridden, its stub's file pointer isn't changed immediately 
+//          but rather gets changed during saving. At this time, we must either update 
+//          all STRINGS files for the active file, or we must flag the active file as 
+//          not using localized strings.
+//
+//           - And of course, this means that if the active file is not using STRINGS 
+//             files, then at save time, all (localized_string)s need to have content 
+//             available in whatever language the user is saving in. We can avoid the 
+//             need for yet another virtual handler on loaded_forms::Form if we just 
+//             have subrecord::read(localized_string&) look up the localized text for 
+//             the user's language so that it's pre-filled by the time we save.
+//
+//     - We should consider adding a "View" menu to the editor with an "Encoding" option. 
+//       This option would control the encoding used for all files that aren't relying on 
+//       STRINGS files. (Already-open form-editing dialogs don't need to update their 
+//       content when this changes; just focus on everything else.) The default encoding 
+//       should be set based on the user's language as indicated in Skyrim's INI.
+//
+//        - Perhaps it'd be better to have this only affect the active file, or to have 
+//          it only affect non-DLC files, if for no other reason than to prevent all 
+//          editor IDs in the base game from showing up as illegible mojibake. I think 
+//          limiting it to the active file would be more intuitive.
+//
+//           - We also need to control the encoding used for editing, so maybe we should 
+//             make this active-file-only and put it under "Edit," not "View."
+//
+//        - Reportedly, Skyrim Special TES files use UTF-8 for all languages except 
+//          English, which is Win-1252. I need to download the SSE CK and save some 
+//          files with non-ASCII Win-1252 characters, along with non-Win-1252 Unicode 
+//          characters, and test that. If English doesn't use UTF-8, then the non-ASCII 
+//          Win-1252 characters will have character codes inconsistent with Unicode, 
+//          while the non-Win-1252 Unicode characters will be stripped or become 
+//          mojibake. I would of course need to use a hex editor to check for the former.
+//
+//     - The UI needs to physically prevent the user from entering glyphs that are not 
+//       available in the current language. Alternatively, textboxes with bad glyphs 
+//       should be given a red outline, and the "OK" button should be greyed out.
+//
+//        - If the user clicks inside such a textbox, a speech bubble should appear 
+//          listing the bad glyphs. ("You are editing a [LANGUAGE] file. The following 
+//          symbols are not available in [LANGUAGE]: a L 7 Q v")
+//
+//     - We need to create a custom promoted widget for editing localized strings, so 
+//       that if we implement STRINGS file editing in the future, we can add a "..." 
+//       button that the user can click to edit localized string content.
+//
+//     - If we wanted to implement STRINGS file editing in the future, that would entail 
+//       creating a LocalizedStringStore for the active file if one does not exist, and 
+//       writing code to export localized strings into multiple files. A newly-created 
+//       localized string would just have the same content in all languages, since all 
+//       languages (except Czech, apparently?!) use UTF-8 unless invalid byte sequences 
+//       are encountered. So for example if an English-speaker creates a new string that
+//       says "Apple", we'd pre-fill the other languages with "Apple" as well.
+//
+//        - The benefit to this approach is that the STRINGS files could then later be 
+//          edited to contain the correct content for other languages.
+//
+//        - This could help in the case of overriding forms from files that also use 
+//          localized strings, e.g. overriding Skyrim.esm forms, but only if the user 
+//          has *all* STRINGS files for those TES files on hand. If the user is missing 
+//          the file for that particular language, then we'd still generate a placeholder 
+//          string for that language. A user could purposely avoid language mishaps with 
+//          overrides of base-game content if they're careful to grab the STRINGS files 
+//          for all languages. Whether that's easy to do, and whether Bethesda would 
+//          allow users to circulate that content among themselves otherwise, is unclear.
+//
+//        - The downside to this approach is that Skyrim does not use internationalized 
+//          fonts. Each localization only ships the glyphs that its language needs. This 
+//          means that while TES files might show mojibake for unsupported languages, 
+//          I'm pretty sure that STRINGS files would show nothing at all, which may or 
+//          may not be worse.
+//
+//          If we take "there isn't even any localization" as a failure mode, then it can 
+//          certainly be said that when Bethesda's localization systems fail, they do not 
+//          fail even a little bit gracefully.
+//
 //  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
 //    they want to open files from. Currently, we just always use the Skyrim Classic 
 //    install path.
+//
+//     - We need a bool on file_load_order indicating whether it's dealing with Classic 
+//       or Special. This will affect whether it respects the "light" flag in file 
+//       headers, whether it reserves a load order slot for ESL forms, and so on.
+//
+//        - This bool need to be flipped to "Special" if the user loads files for 
+//          Classic and chooses to save the current active file as an SSE file. If 
+//          the current load order has 254 files in it, then the save operation 
+//          should fail (as the 0xFE slot would then conflict).
+//
+//        - Form loading/saving will still depend on each given file's version.
+//
+//     - We need to support ESLs.
 //
 //  - Refhandle usage tracking: the number of persistent references in ESMs, and the 
 //    number of all references in non-ESMs, should be tracked and stored on each 
@@ -143,21 +295,16 @@
 //       the refhandle limit breaks the Creation Kit as well. (Good thing we're not 
 //       using refhandles ourselves!)
 //
-//  - Code for deleting forms.
-//
-//     - Add an Object Window context menu item for deletion. Ditto for Cell View.
-//
-//     - Test the severing of outbound references to a deleted form.
-//
-//        - Test keyword lists in specific.
-//
-//     - ObjectReference friendly delete question: there are unanswered questions; I've 
-//       made an inquiry on the xEdit Discord.
-//
 //  - Miscellaneous technicalities
 //
 //     - When saving WRLD/CELL/REFR, if the REFR is persistent, then it should be saved 
 //       into the worldspace's persistent cell instead of into a normal exterior cell.
+//
+//        - Are we sure? On what basis does the CK itself do this? Test flagging a REFR 
+//          (in a normal exterior cell) as persistent in xEdit and see whether the CK 
+//          moves it when resaving. Test whether this occurs even when there isn't a 
+//          persistent cell to start with, and test whether the CK always generates a 
+//          persistent cell even when there are no persistent refs in the worldspace.
 //
 //        - If a WRLD doesn't have a persistent cell, and it contains any persistent 
 //          REFRs, then a persistent cell must be created.
