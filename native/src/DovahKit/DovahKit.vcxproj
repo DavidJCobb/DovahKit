@@ -237,6 +237,7 @@
   <ItemGroup>
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
+    <ClInclude Include="dovah\files\bsa\bsa_load_order.h" />
     <ClInclude Include="dovah\files\common.h" />
     <ClInclude Include="dovah\files\file_header.h" />
     <ClInclude Include="dovah\files\file_load_order_normalizer.h" />

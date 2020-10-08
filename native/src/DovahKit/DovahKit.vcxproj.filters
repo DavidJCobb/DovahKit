@@ -872,6 +872,9 @@
     <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\bsa\bsa_load_order.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

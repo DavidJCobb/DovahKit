@@ -14,6 +14,9 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
+//  - The frontend should not allow users to set the game's built-in files or 
+//    official DLCs (i.e. the high-res texture packs) as the active file.
+//
 //  - If the load order has been configured to load Skyrim Special Edition files, 
 //    then the load order should be capped at 253 entries, not 254.
 //
@@ -40,8 +43,14 @@
 //
 //        - Test keyword lists in specific.
 //
-//     - ObjectReference friendly delete question: there are unanswered questions; I've 
-//       made an inquiry on the xEdit Discord.
+//     - ObjectReference friendly delete question: why are actors that are "deleted" 
+//       in this manner flagged as persistent?
+//
+//        - Someone used git blame and found that it dates back to the initial Github 
+//          commit, i.e. when xEdit was migrated from an older source control system.
+//
+//        - REFRs defined in ESP files are de facto persistent, so this would have to 
+//          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
 //
 //  - There is no UI path to view or edit use info or data for worldspaces.
 //
@@ -131,29 +140,7 @@
 //
 //  - BSA support
 //
-//     - BSA data should be stored in a (bsa_load_order). We can take two basic 
-//       approaches to BSAs, and we should implement and benchmark each:
-//
-//        - FAST LOADING: We load and index every BSA file separately, using multiple 
-//          threads. Lookups require checking for a loose file followed by searching 
-//          every loaded BSA in order from last-loaded to first-loaded. Since all BSAs 
-//          are separate, this could even allow for features and functionality where 
-//          the user can pick which BSA a file is pulled from, e.g. for comparisons of 
-//          texture overrides in a model preview window.
-//
-//        - FAST LOOKUPS: The (bsa_load_order) maintains the index of all files in BSAs, 
-//          and each index entry identifies the mapped file it originated from. Loading 
-//          can still use multiple threads, but insertions into the (bsa_load_order) 
-//          must lock, and the threads must identify which file they're inserting from 
-//          (so that files earlier in the load order don't overwrite entries for files 
-//          later in the load order). Lookups, however, only require searching one index 
-//          of files -- all BSAs are essentially "merged" at run-time.
-//
-//     - The (bsa_load_order) must include the base game BSAs, which are included by INI 
-//       setting rather than by filename.
-//
-//     - A (file_load_order) instance should be able to "adopt" a (bsa_load_order). It 
-//       will rely on that (bsa_load_order) for help with finding localized string files.
+//     - Refer to bsa_load_order.h for plans.
 //
 //  - Localized string support
 //
@@ -178,6 +165,13 @@
 //       and grab the string. You can then tell it to close German, and it will close the 
 //       file while retaining any strings it has already loaded. You don't need to open 
 //       every file in advance; it "knows," on a per-string basis, what it has loaded.)
+//
+//        - Actually, the strings should be an unordered_map of language names to text. 
+//          Why? Because Skyrim specifies its language name as a string. No reason to 
+//          believe it limits the values.
+//
+//           - Means the LocalizedStringStore also needs to remember what language names 
+//             are available (i.e. have files) for its corresponding ES[LPM] file.
 //
 //     - To retrieve the content of a (localized_string) for any given language, you must 
 //       retrieve the (form_stub)'s TES file and then grab the LocalizedStringStore for 
