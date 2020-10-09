@@ -190,6 +190,7 @@
     <ClCompile Include="dovah\form_stub_helpers.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />
     <ClCompile Include="dovah\logging.cpp" />
+    <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
@@ -203,6 +204,8 @@
     <ClCompile Include="helpers\qt\strings.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
     <ClCompile Include="helpers\strings.cpp" />
+    <ClCompile Include="helpers\windows_environment.cpp" />
+    <ClCompile Include="helpers\windows_ini.cpp" />
     <ClCompile Include="helpers\windows_registry.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
@@ -240,6 +243,7 @@
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\bs_hash.h" />
@@ -375,8 +379,12 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
+    <ClInclude Include="helpers\windows_environment.h" />
+    <ClInclude Include="helpers\windows_ini.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h" />
     <QtMoc Include="ui\generic\DelayedAvailabilityButton.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog.h" />

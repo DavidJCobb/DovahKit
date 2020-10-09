@@ -134,6 +134,10 @@ namespace dovah {
    }
    #pragma endregion
 
+   bool bsa_archive::is_open() const noexcept {
+      return this->mapping.data() != nullptr;
+   }
+
    #pragma region File lookup and retrieval
    const bsa_archive::file_entry* bsa_archive::folder_entry::find_file(const bs_hash& file_hash, const std::string& file_name) const noexcept {
       for (auto& file : this->files) {

@@ -12,6 +12,9 @@
 #include "../forms/factories/hardcoded.h"
 #include "../forms/Form.h"
 #include "../logging.h"
+#include "bsa/bsa_load_order.h"
+#include "../utils/get_ini_defined_bsa_list.h"
+#include <fstream>
 
 namespace dovah {
    file_load_order::~file_load_order() {
@@ -39,6 +42,11 @@ namespace dovah {
          delete file;
          this->hardcoded_forms_file = nullptr;
       }
+      //
+      if (this->archives) {
+         delete this->archives;
+         this->archives = nullptr;
+      }
    }
 
    file_load_order::_save_load_lock_guard::_save_load_lock_guard(file_load_order& o, file_load_order::save_load_type desired) : owner(o) {
@@ -51,6 +59,10 @@ namespace dovah {
    file_load_order::_save_load_lock_guard::~_save_load_lock_guard() {
       if (this->success)
          owner.save_load_state.type = save_load_type::none;
+   }
+
+   void file_load_order::adopt_archive_list(bsa_load_order& list) noexcept {
+      this->archives = &list;
    }
 
    #pragma region File loading
@@ -216,6 +228,42 @@ namespace dovah {
          list->erase(it);
          list->push_back(header);
       }
+      if (this->archives) {
+         this->archives->set_base_path(this->base_path);
+         //
+         auto list = utils::get_ini_defined_bsa_list();
+         for (auto& path : list)
+            this->archives->prepend_archive(path);
+         //
+         for (auto* header : this->normalizer.masters) {
+            if (header->name.empty())
+               continue;
+            std::filesystem::path name = header->name;
+            name.replace_extension(".bsa");
+            {
+               std::filesystem::path path = this->archives->get_base_path() / name;
+               std::ifstream stream(path);
+               if (!stream.good())
+                  continue;
+            }
+            this->archives->prepend_archive(name);
+         }
+         for (auto* header : this->normalizer.plugins) {
+            if (header->name.empty())
+               continue;
+            std::filesystem::path name = header->name;
+            name.replace_extension(".bsa");
+            {
+               std::filesystem::path path = this->archives->get_base_path() / name;
+               std::ifstream stream(path);
+               if (!stream.good())
+                  continue;
+            }
+            this->archives->prepend_archive(name);
+         }
+         //
+         this->archives->load_archives();
+      }
       this->_make_hardcoded_forms();
       {  // Ensure enough space to store all forms without reallocating
          uint32_t total = 0;
@@ -250,6 +298,8 @@ namespace dovah {
                this->load_error.code    = file_read_error::error_code::unknown_error;
                this->load_error.message = "Failed to load a master.";
             }
+            if (this->archives)
+               this->archives->abort_archive_load();
             return false;
          }
          //
@@ -279,6 +329,8 @@ namespace dovah {
                this->load_error.code    = file_read_error::error_code::unknown_error;
                this->load_error.message = "Failed to load a master.";
             }
+            if (this->archives)
+               this->archives->abort_archive_load();
             return false;
          }
          //
@@ -307,6 +359,9 @@ namespace dovah {
          if (first_free)
             this->active_file->header.nextFormID = first_free;
       }
+      //
+      if (this->archives)
+         this->archives->wait_for_archive_load_to_finish();
       //
       return !this->load_error.defined();
    }

@@ -247,6 +247,53 @@ namespace cobb {
       return subject;
    };
    std::string& trim(std::string& subject) {
-      return rtrim(ltrim(subject));
+      auto left =std::find_if(
+         subject.begin(),
+         subject.end(),
+         [](int c) { return !std::isspace(c); }
+      );
+      auto right = std::find_if(
+         subject.rbegin(),
+         subject.rend(),
+         [](int c) { return !std::isspace(c); }
+      ).base();
+      subject = std::string(left, right);
+      return subject;
    };
+   std::wstring& ltrim(std::wstring& subject) {
+      subject.erase(
+         subject.begin(),
+         std::find_if(
+            subject.begin(),
+            subject.end(),
+            [](int c) { return !std::isspace(c); }
+         )
+      );
+      return subject;
+   };
+   std::wstring& rtrim(std::wstring& subject) {
+      subject.erase(
+         std::find_if(
+            subject.rbegin(),
+            subject.rend(),
+            [](int c) { return !std::isspace(c); }
+         ).base(),
+         subject.end()
+      );
+      return subject;
+   };
+   std::wstring& trim(std::wstring& subject) {
+      auto left = std::find_if(
+         subject.begin(),
+         subject.end(),
+         [](int c) { return !std::isspace(c); }
+      );
+      auto right = std::find_if(
+         subject.rbegin(),
+         subject.rend(),
+         [](int c) { return !std::isspace(c); }
+      ).base();
+      subject = std::wstring(left, right);
+      return subject;
+   }
 }

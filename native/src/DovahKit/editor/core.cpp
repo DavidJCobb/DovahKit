@@ -7,6 +7,7 @@
 #include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
 #include "../dovah/form_stub.h"
+#include "../dovah/files/bsa/bsa_load_order.h"
 #include "../dovah/files/tes_file_reading/file.h"
 #include "core_internals/load_task.h"
 #include "helpers/make_editor_id_for_duplicate.h"
@@ -38,6 +39,7 @@ DovahKitCore::~DovahKitCore() {
 }
 void DovahKitCore::_configure_load_order() {
    this->load_order->on_form_create = &_on_form_created;
+   this->load_order->adopt_archive_list(*(new dovah::bsa_load_order));
 }
 void DovahKitCore::abandon_data() {
    emit dataAbandonImminent();
@@ -427,6 +429,13 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
    //
    for (auto& entry : formIDs)
       emit this->formDeletionComplete(entry.id, entry.flagged);
+}
+
+dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::string& path) {
+   auto* archives = this->load_order->get_archive_list();
+   if (!archives)
+      return nullptr;
+   return archives->lookup_file(path, true);
 }
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {

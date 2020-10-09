@@ -49,4 +49,7 @@ namespace cobb {
    extern std::string& ltrim(std::string& subject);
    extern std::string& rtrim(std::string& subject);
    extern std::string& trim(std::string& subject);
+   extern std::wstring& ltrim(std::wstring& subject);
+   extern std::wstring& rtrim(std::wstring& subject);
+   extern std::wstring& trim(std::wstring& subject);
 }

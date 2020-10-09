@@ -6,7 +6,7 @@
 #include <QFile>
 
 namespace DovahKitDebug {
-   void enumerate_bsa_contents(const std::filesystem::path& bsa, const std::string& target, const std::filesystem::path& extract_to) {
+   void extract_bsa_file(const std::filesystem::path& bsa, const std::string& target, const std::filesystem::path& extract_to) {
       dovah::bsa_archive archive;
       archive.open(bsa);
       if (archive.has_error()) {

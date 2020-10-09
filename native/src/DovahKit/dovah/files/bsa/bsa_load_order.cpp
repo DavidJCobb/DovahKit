@@ -1,6 +1,8 @@
 #include "bsa_load_order.h"
 #include "bsa_archive.h"
+#include "bsa_archived_file.h"
 #include "threads.h"
+#include <fstream>
 
 namespace dovah {
    bsa_load_order::~bsa_load_order() {
@@ -20,6 +22,9 @@ namespace dovah {
          archive->set_path(combined);
       }
       return archive;
+   }
+   void bsa_load_order::set_base_path(const std::filesystem::path& path) {
+      this->base_path = path;
    }
    void bsa_load_order::append_archive(const std::filesystem::path& name) {
       auto* archive = this->_make_archive(name);
@@ -104,5 +109,37 @@ namespace dovah {
          if (!loader->is_complete())
             return;
       this->loading = false;
+   }
+
+   bsa_archived_file* bsa_load_order::lookup_file(const std::string& path_and_name, bool check_for_loose_file) {
+      if (check_for_loose_file && !this->base_path.empty()) {
+         std::filesystem::path target = this->base_path;
+         target /= path_and_name;
+         //
+         std::ifstream stream(target, std::ios_base::in | std::ios_base::binary | std::ios_base::ate);
+         if (stream.is_open()) {
+            auto eof = stream.tellg();
+            stream.seekg(0);
+            //
+            auto* file = new bsa_archived_file;
+            file->owned.resize(eof);
+            stream.read((char*)file->owned.data(), eof);
+            return file;
+         }
+         //
+         // If we get here, then there was no (usable) loose file. Fall through to 
+         // scanning the BSAs.
+         //
+      }
+      auto& list = this->archives;
+      for (auto it = list.rbegin(); it != list.rend(); ++it) {
+         auto* archive = *it;
+         if (!archive || !archive->is_open())
+            continue;
+         auto* result = archive->lookup_file(path_and_name);
+         if (result)
+            return result;
+      }
+      return nullptr;
    }
 }

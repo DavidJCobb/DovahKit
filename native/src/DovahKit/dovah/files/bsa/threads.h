@@ -14,7 +14,7 @@ namespace dovah {
          std::vector<bsa_archive*> archives;
          std::atomic<bool> complete = false;
          //
-         static void _exec(bsa_threaded_reader&);
+         static void _exec(bsa_threaded_reader*);
          //
       public:
          bsa_threaded_reader(bsa_load_order&);

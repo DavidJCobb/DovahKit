@@ -109,6 +109,8 @@ namespace dovah {
          
          bsa_archived_file* lookup_file(const std::string& path_and_name, bool check_for_loose_file = true);
          
+         inline const std::filesystem::path& get_base_path() const noexcept { return this->base_path; }
+         void set_base_path(const std::filesystem::path&);
          void append_archive(const std::filesystem::path& name);
          void prepend_archive(const std::filesystem::path& name);
 

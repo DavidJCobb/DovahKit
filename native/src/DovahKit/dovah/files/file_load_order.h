@@ -15,6 +15,7 @@ namespace dovah {
    class form_stub;
    using map_of_forms = std::unordered_map<bare_form_id_t, form_stub*>;
 
+   class  bsa_load_order;
    struct tes_file_header;
    class  threaded_load_order_use_info_builder;
    namespace tes_file_reading {
@@ -63,6 +64,7 @@ namespace dovah {
          std::array<threaded_load_order_use_info_builder*, 8> use_info_build_threads{};
          mutable std::mutex use_info_build_threads_lock;
          //
+         bsa_load_order*   archives             = nullptr;
          std::vector<loaded_file*> files;
          loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
          loaded_file*      active_file          = nullptr;
@@ -156,6 +158,11 @@ namespace dovah {
          // Notably NOT used for the initial load of hardcoded forms; see _accept_hardcoded_form.
          //
          form_id_status accept_form_stub(form_stub*) noexcept;
+         #pragma endregion
+
+         #pragma region content related to BSAs
+         void adopt_archive_list(bsa_load_order&) noexcept; // takes ownership of the given list
+         inline bsa_load_order* get_archive_list() const noexcept { return this->archives; }
          #pragma endregion
 
          float assess_load_progress() const noexcept;

@@ -17,6 +17,7 @@
 #include <QInputDialog>
 #include "main_window/_debug_hooks/enumerate_bsa_contents.h"
 #include "main_window/_debug_hooks/extract_bsa_file.h"
+#include "main_window/_debug_hooks/lookup_bsa_file_from_bsa_load_order.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -147,7 +148,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       auto to = QFileDialog::getSaveFileName(this, tr("Select target file", "debug"));
       if (to.isEmpty())
          return;
-      DovahKitDebug::enumerate_bsa_contents(name.toStdString(), entry.toStdString(), to.toStdString());
+      DovahKitDebug::extract_bsa_file(name.toStdString(), entry.toStdString(), to.toStdString());
+   });
+   QObject::connect(this->ui.actionDebugLookupBSAFile, &QAction::triggered, this, [this]() {
+      DovahKitDebug::lookup_bsa_file_from_bsa_load_order(this);
    });
    #pragma endregion
 }

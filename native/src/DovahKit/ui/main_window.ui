@@ -56,6 +56,7 @@
     <addaction name="actionDebugGetRecordSizeStats"/>
     <addaction name="actionDebugLogBSAContents"/>
     <addaction name="actionDebugExtractBSAFile"/>
+    <addaction name="actionDebugLookupBSAFile"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDebug"/>
@@ -99,6 +100,11 @@
   <action name="actionDebugExtractBSAFile">
    <property name="text">
     <string>Extract single file from BSA</string>
+   </property>
+  </action>
+  <action name="actionDebugLookupBSAFile">
+   <property name="text">
+    <string>Lookup single file from loaded BSAs</string>
    </property>
   </action>
  </widget>

@@ -6,7 +6,8 @@ namespace dovah {
    bsa_threaded_reader::bsa_threaded_reader(bsa_load_order& o) : owner(o) {
    }
 
-   /*static*/ void bsa_threaded_reader::_exec(bsa_threaded_reader& self) {
+   /*static*/ void bsa_threaded_reader::_exec(bsa_threaded_reader* instance) {
+      auto& self = *instance;
       for (auto* archive : self.archives) {
          if (!archive)
             return;
@@ -23,7 +24,7 @@ namespace dovah {
    }
    
    void bsa_threaded_reader::start() {
-      this->thread = std::thread(_exec, *this);
+      this->thread = std::thread(_exec, this);
    }
    void bsa_threaded_reader::wait_for() {
       this->thread.join();

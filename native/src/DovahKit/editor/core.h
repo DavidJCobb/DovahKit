@@ -7,6 +7,7 @@
 #include "../dovah/files/file_load_order.h"
 
 namespace dovah {
+   class  bsa_archived_file;
    class  form_stub;
    class  file_write_error;
    struct tes_file_header;
@@ -119,6 +120,8 @@ class DovahKitCore : public QObject {
       dovah::form_stub* duplicate_form(dovah::form_stub& original, QWidget* dialog_parent = nullptr); // handles UI, error reporting, etc., for you
 
       void delete_form(dovah::form_stub& target, QWidget* dialog_parent = nullptr);
+
+      dovah::bsa_archived_file* lookup_game_asset(const std::string&); // path should be relative to, and should not include, the Data directory
 
       bool get_game_path(std::filesystem::path& out) const noexcept;
       bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt

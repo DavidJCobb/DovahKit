@@ -3,9 +3,11 @@
 
 namespace dovah {
    class bsa_archive;
+   class bsa_load_order;
 
    class bsa_archived_file {
       friend class bsa_archive;
+      friend class bsa_load_order;
       public:
          enum class error_code {
             none,
