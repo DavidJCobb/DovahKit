@@ -9,7 +9,7 @@ namespace dovah {
       //
       bs_hash() {}
       bs_hash(uint64_t v) : value(v) {}
-      bs_hash(const char* filename_or_folder_path, const char* extension);
+      bs_hash(const char* filename_or_folder_path, const char* extension); // NOTE: folder paths should not have redundant, leading, or trailing slashes, nor the leading "data" folder. example: `sound\voice\skyrim.esm\maleuniqueesbern`
       //
       inline operator uint64_t() const noexcept { return this->value; }
    };

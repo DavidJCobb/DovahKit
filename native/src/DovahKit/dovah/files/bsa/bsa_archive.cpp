@@ -32,6 +32,7 @@ namespace dovah {
          this->_read(folder.padding);
          this->_read(folder.offset);
       }
+      folder.offset -= this->header.total_filename_length; // weird that we have to do this, but we do
       //
       auto pos = this->stream_position;
       //
@@ -50,7 +51,7 @@ namespace dovah {
       //
       this->stream_position = pos;
    }
-   void bsa_archive::_read(file_entry& file) {
+   void bsa_archive::_read(bsa_archive::file_entry& file) {
       this->_read(file.hash);
       this->_read(file.size_and_flags);
       this->_read(file.offset);
@@ -62,8 +63,19 @@ namespace dovah {
          uint8_t length;
          this->_read(length);
          this->_read_non_null_terminated_string(file.name, length);
+         //
+         // TODO: The path we've just read is a full filepath and name, not just the name. We need to 
+         // trim it down to just the name.
+         //
+      } else if (this->header.flags & bsa_header::flag::include_filenames) {
+         uint64_t start = this->filename_blob_offset + this->last_filename_offset;
+         this->stream_position = start;
+         this->_read(file.name);
+         this->last_filename_offset += (this->stream_position - start);
       }
       this->stream_position = pos;
+      //
+      ++this->current_file_index;
    }
    void bsa_archive::open(const std::filesystem::path& path) {
       this->mapping.open(path.c_str());
@@ -90,6 +102,7 @@ namespace dovah {
       this->needs_endianness_flip = this->header.flags & bsa_header::flag::big_endian;
       if (cobb::endian::native == cobb::endian::big)
          this->needs_endianness_flip = !this->needs_endianness_flip;
+      this->filename_blob_offset = this->header.expected_filename_blob_position();
       //
       for (uint32_t i = 0; i < this->header.folder_count; ++i) {
          auto& folder = this->folders.emplace_back();

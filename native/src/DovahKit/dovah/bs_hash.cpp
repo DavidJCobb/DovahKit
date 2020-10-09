@@ -1,5 +1,6 @@
 #include "bs_hash.h"
 #include <array>
+#include <cassert>
 #include <string>
 
 //
@@ -34,8 +35,8 @@ namespace {
 }
 namespace dovah {
    bs_hash::bs_hash(const char* name, const char* extension) {
-      auto    length   = strlen(name) + 1;
-      uint8_t length_b = length; // the length, truncated to a byte, is used frequently. some community code optimizes with (strnlen_s) but Oblivion itself truncates, not clamps, the length
+      uint8_t length_b = strlen(name); // the length, truncated to a byte, is used frequently. some community code optimizes with (strnlen_s) but Oblivion itself truncates, not clamps, the length
+      assert(length_b > 0 && "Oblivion's logic doesn't handle the case of hashing a zero-length string.");
       this->bytes[2] = length_b;
       this->bytes[3] = tolower((int32_t)name[0]);
       this->bytes[0] = tolower((int32_t)name[length_b - 1]);
@@ -45,7 +46,7 @@ namespace dovah {
       //
       if (!extension)
          return;
-      this->dwords[1] += _hash_string(extension, strlen(extension) + 1);
+      this->dwords[1] += _hash_string(extension, strlen(extension));
       for (int i = 0; i < _extensions.size(); ++i) {
          auto& ext = _extensions[i];
          if (_stricmp(ext.c_str(), extension) == 0) {

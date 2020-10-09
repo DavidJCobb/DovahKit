@@ -62,6 +62,47 @@ namespace dovah {
       uint32_t total_folder_name_length = 0; // total length of all folder names, including null-terminators but not including length prefix bytes
       uint32_t total_filename_length    = 0; // total length of all filenames, including null-terminators
       uint32_t filetypes = 0;
+      //
+      static constexpr int size_of_header = 0x24;
+      
+      //
+      // The typical file layout is:
+      //  - Header
+      //  - Folder metadata
+      //     - Folder [array]
+      //        - Name hash
+      //        - Count
+      //        - Offset(s)
+      //  - Folder data
+      //     - Folder name (if "include_directory_names" flag is set)
+      //     - File metadata [array]
+      //        - Name hash
+      //        - Size and flags
+      //        - Offset
+      //  - Filename blob (if "include_filenames" flag is set)
+      //     - Blob of filenames, matched to files by index (all folders and files are sorted by hash)
+      //  - Files
+      //     - Full path and filename, if "embed_filenames" flag is set
+      //     - Raw file data
+      //
+
+      inline uint32_t folder_metadata_total_size() const noexcept {
+         int folder_size = 16;
+         if (this->version >= version::skyrim_special)
+            folder_size += 8;
+         return folder_size * this->folder_count;
+      }
+      inline uint32_t folder_data_total_size() const noexcept {
+         int file_metadata_size = 16;
+         return (file_metadata_size * this->file_count) + this->total_folder_name_length + this->folder_count; // add the folder count to account for folder names' length prefix bytes
+      }
+
+      inline uint32_t expected_folder_data_position() const noexcept {
+         return this->folder_offset + this->folder_metadata_total_size();
+      }
+      inline uint32_t expected_filename_blob_position() const noexcept {
+         return this->expected_folder_data_position() + this->folder_data_total_size();
+      }
    };
 
    class bsa_archive {
@@ -94,9 +135,17 @@ namespace dovah {
          cobb::mapped_file mapping;
          std::vector<folder_entry> folders; // must be sorted by folder hash
          //
+         // General loading-state fields:
+         //
          read_error_code read_error = read_error_code::none;
          uint64_t stream_position       = 0;
          bool     needs_endianness_flip = false;
+         //
+         // Fields for retrieving filenames from the filename blob:
+         //
+         uint32_t current_file_index    = 0;
+         uint64_t filename_blob_offset  = 0;
+         uint64_t last_filename_offset  = 0;
          //
          void _read(void* target, size_t size);
          template<typename T> void _read(T& out) {
@@ -114,6 +163,7 @@ namespace dovah {
          void open(const std::filesystem::path&);
          void close();
          //
-         bsa_archived_file* lookup_file(const std::string& path_and_name, bool check_for_loose_file = true);
+         bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file);
+         bsa_archived_file* lookup_file(const std::string& path_and_name);
    };
 }
