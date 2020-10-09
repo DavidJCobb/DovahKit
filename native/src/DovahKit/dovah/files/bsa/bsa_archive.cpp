@@ -4,7 +4,7 @@
 #include "bsa_archived_file.h"
 extern "C" {
    #include "../../../zlib/zlib.h"
-   #include "../../../lz4/lz4.h"
+   #include "../../../lz4/lz4frame.h"
 }
 
 namespace dovah {
@@ -191,16 +191,29 @@ namespace dovah {
                }
             } else {
                //
-               // As of FO4/SSE, BSA files use LZ4.
+               // As of FO4/SSE, BSA files use LZ4 frames (as opposed to simple LZ4 blocks).
                //
-               const int decompressed_size = LZ4_decompress_safe((const char*)input, (char*)out->owned.data(), input_size, out->owned.size());
-               if (decompressed_size < 0) {
-                  dovah::logging::print_line("LZ4-decompression of a BSA-archived file failed with error code %d.", decompressed_size);
+               LZ4F_dctx* context;
+               auto status = LZ4F_createDecompressionContext(&context, LZ4F_VERSION);
+               if (LZ4F_isError(status)) {
+                  dovah::logging::print_line("LZ4-decompression of a BSA-archived file failed to initialize context; error code %d.", status);
                   out->error = bsa_archived_file::error_code::lz4_error;
                   out->owned.clear();
-               } else if (decompressed_size != out->owned.size()) {
-                  dovah::logging::print_line("Size mismatch for LZ4-decompressed BSA file with contents at %08X! Expected final size %08X, got size %08X.", input_pos, decompressed_size, out->owned.size());
+               } else {
+                  LZ4F_decompressOptions_t options = { 0, 0, 0, 0 };
+                  //
+                  size_t destination_size = out->owned.size();
+                  size_t source_size      = input_size;
+                  auto result = LZ4F_decompress(context, out->owned.data(), &destination_size, input, &source_size, &options);
+                  if (LZ4F_isError(result)) {
+                     dovah::logging::print_line("LZ4-decompression of a BSA-archived file failed to initialize context; error code %d.", result);
+                     out->error = bsa_archived_file::error_code::lz4_error;
+                     out->owned.clear();
+                  } else if (result) {
+                     dovah::logging::print_line("Size mismatch for LZ4-decompressed BSA file with contents at %08X? Remaining bytecount is roughly %08X.", input_pos, result);
+                  }
                }
+               LZ4F_freeDecompressionContext(context);
             }
          }
          //
