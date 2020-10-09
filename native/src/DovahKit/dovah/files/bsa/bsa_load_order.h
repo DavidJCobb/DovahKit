@@ -1,11 +1,13 @@
 #pragma once
 #include <filesystem>
+#include <mutex>
 #include <string>
 #include <vector>
 
 namespace dovah {
    class bsa_archive; // a single BSA file
    class bsa_archived_file; // a single file IN a BSA
+   class bsa_threaded_reader;
 
    //
    // NOTES:
@@ -83,6 +85,7 @@ namespace dovah {
       public:
          using archive_list = std::vector<bsa_archive*>;
          struct load_options_t {
+            int  thread_count                = 4;     // number of threads to use
             bool abort_all_on_any_error      = true;  // if any archive fails to load, abort all loading
             bool missing_archive_is_an_error = false; // control whether a BSA not being present counts as an error
          };
@@ -92,7 +95,12 @@ namespace dovah {
          std::filesystem::path base_path; // compare to file_load_order::base_path
          load_options_t        working_load_options; // copy of (load_options) created at the start of the load process, so that other threads can't screw with the options mid-load
          //
+         std::vector<bsa_threaded_reader*> threads;
+         std::mutex completion_check_lock;
+         bool loading = false;
          bool aborted = false; // gets set to (true) if the load process is aborted; threaded readers will need to check this periodically
+         //
+         bsa_archive* _make_archive(const std::filesystem::path& name);
          //
       public:
          ~bsa_load_order(); // TODO: should assert if a load is still in progress; should delete archives
@@ -101,8 +109,8 @@ namespace dovah {
          
          bsa_archived_file* lookup_file(const std::string& path_and_name, bool check_for_loose_file = true);
          
-         void append_archive(const std::string& name);
-         void prepend_archive(const std::string& name);
+         void append_archive(const std::filesystem::path& name);
+         void prepend_archive(const std::filesystem::path& name);
 
          //
          // Remove an archive if it hasn't loaded yet or if (even_if_loaded) is (true). If 
@@ -113,7 +121,7 @@ namespace dovah {
          // If a removed archive is returned instead of deleted, then the BSA load order 
          // has relinquished ownership of that archive and all its contents.
          //
-         bsa_archived_file* remove_archive(const std::string& name, bool even_if_loaded, bool delete_archive);
+         bsa_archive* remove_archive(const std::filesystem::path& name, bool even_if_loaded, bool delete_archive);
          
          inline const archive_list& get_archive_list() const noexcept { return this->archives; }
          
@@ -122,5 +130,7 @@ namespace dovah {
          void abort_archive_load();
          bool is_archive_load_aborted() const noexcept;
          bool is_archive_load_in_progress() const noexcept; // if an abort is called, this returns true until all threads have reacted to that abort
+
+         void on_thread_complete(bsa_threaded_reader&);
    };
 }

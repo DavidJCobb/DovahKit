@@ -429,6 +429,12 @@
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\bsa\threads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -906,6 +912,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\bsa\threads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

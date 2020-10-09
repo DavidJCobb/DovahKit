@@ -134,8 +134,9 @@ namespace dovah {
          };
          //
       protected:
-         bsa_header        header;
-         cobb::mapped_file mapping;
+         std::filesystem::path path;
+         bsa_header            header;
+         cobb::mapped_file     mapping;
          std::vector<folder_entry> folders; // must be sorted by folder hash
          //
          // General loading-state fields:
@@ -173,9 +174,15 @@ namespace dovah {
          bsa_archived_file* retrieve_entry(const file_entry&);
          //
       public:
+         void set_path(const std::filesystem::path&); // only works if a file is not open
+         //
+         void open();
          void open(const std::filesystem::path&);
          inline read_error_code get_error() const noexcept { return this->read_error; }
          inline bool has_error() const noexcept { return this->read_error != read_error_code::none; }
+         //
+         inline const std::filesystem::path& get_path() const noexcept { return this->path; }
+         bool is_open() const noexcept;
          //
          bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file);
          bsa_archived_file* lookup_file(const std::string& path_and_name);

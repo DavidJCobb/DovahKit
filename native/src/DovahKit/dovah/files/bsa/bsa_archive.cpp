@@ -89,7 +89,18 @@ namespace dovah {
       //
       ++this->current_file_index;
    }
+   void bsa_archive::set_path(const std::filesystem::path& path) {
+      if (this->mapping.data())
+         return;
+      this->path = path;
+   }
+   void bsa_archive::open() {
+      if (this->path.empty())
+         return;
+      this->open(this->path);
+   }
    void bsa_archive::open(const std::filesystem::path& path) {
+      this->path = path;
       this->mapping.open(path.c_str());
       this->folders.clear();
       this->stream_position = 0;

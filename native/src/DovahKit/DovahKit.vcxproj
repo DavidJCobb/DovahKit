@@ -102,6 +102,8 @@
     <ClCompile Include="dovah\core.cpp" />
     <ClCompile Include="dovah\data\actor_values.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
+    <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
+    <ClCompile Include="dovah\files\bsa\threads.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp" />
     <ClCompile Include="dovah\files\file_load_order.cpp" />
     <ClCompile Include="dovah\files\file_load_order_normalizer.cpp" />
@@ -246,6 +248,7 @@
     <ClInclude Include="dovah\files\bsa\bsa_archive.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archived_file.h" />
     <ClInclude Include="dovah\files\bsa\bsa_load_order.h" />
+    <ClInclude Include="dovah\files\bsa\threads.h" />
     <ClInclude Include="dovah\files\common.h" />
     <ClInclude Include="dovah\files\file_header.h" />
     <ClInclude Include="dovah\files\file_load_order_normalizer.h" />
