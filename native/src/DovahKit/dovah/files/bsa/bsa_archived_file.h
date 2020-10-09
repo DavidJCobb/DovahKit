@@ -26,6 +26,11 @@ namespace dovah {
                d = this->shared.data;
             return d;
          }
+         inline uint64_t size() const noexcept {
+            if (this->owned.data())
+               return this->owned.size();
+            return this->shared.size;
+         }
          inline error_code get_error() const noexcept { return this->error; }
          inline bool has_error() const noexcept { return this->error != error_code::none; }
    };

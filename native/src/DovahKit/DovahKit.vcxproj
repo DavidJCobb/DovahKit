@@ -236,6 +236,8 @@
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
     <ClCompile Include="ui\main_window\save_window.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\bs_hash.h" />
@@ -370,6 +372,8 @@
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h" />
     <QtMoc Include="ui\generic\DelayedAvailabilityButton.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog.h" />

@@ -13,6 +13,11 @@
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
 
+#include <QFileDialog>
+#include <QInputDialog>
+#include "main_window/_debug_hooks/enumerate_bsa_contents.h"
+#include "main_window/_debug_hooks/extract_bsa_file.h"
+
 namespace {
    MainWindow* _window = nullptr;
 }
@@ -125,6 +130,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          tr("Compressed records:<br/>%1<br/><br/>Uncompressed records:<br/>%2").arg(compressed.report()).arg(uncompressed.report()),
          QMessageBox::Ok
       );
+   });
+   QObject::connect(this->ui.actionDebugLogBSAContents, &QAction::triggered, this, [this]() {
+      auto name = QFileDialog::getOpenFileName(this, tr("Select BSA file", "debug"), "", "Bethesda Softworks Archives (*.bsa *.ba2)");
+      if (name.isEmpty())
+         return;
+      DovahKitDebug::enumerate_bsa_contents(name.toStdString());
+   });
+   QObject::connect(this->ui.actionDebugExtractBSAFile, &QAction::triggered, this, [this]() {
+      auto name = QFileDialog::getOpenFileName(this, tr("Select BSA file", "debug"), "", "Bethesda Softworks Archives (*.bsa *.ba2)");
+      if (name.isEmpty())
+         return;
+      auto entry = QInputDialog::getText(this, tr("Path of file to extract? Do not specify a Data prefix.", "debug"), tr("Path:"));
+      if (entry.isEmpty())
+         return;
+      auto to = QFileDialog::getSaveFileName(this, tr("Select target file", "debug"));
+      if (to.isEmpty())
+         return;
+      DovahKitDebug::enumerate_bsa_contents(name.toStdString(), entry.toStdString(), to.toStdString());
    });
    #pragma endregion
 }

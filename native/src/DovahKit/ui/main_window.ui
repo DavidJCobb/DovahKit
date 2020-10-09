@@ -54,6 +54,8 @@
      <string>Debug</string>
     </property>
     <addaction name="actionDebugGetRecordSizeStats"/>
+    <addaction name="actionDebugLogBSAContents"/>
+    <addaction name="actionDebugExtractBSAFile"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDebug"/>
@@ -87,6 +89,16 @@
   <action name="actionDebugGetRecordSizeStats">
    <property name="text">
     <string>Get record size stats</string>
+   </property>
+  </action>
+  <action name="actionDebugLogBSAContents">
+   <property name="text">
+    <string>Log BSA contents</string>
+   </property>
+  </action>
+  <action name="actionDebugExtractBSAFile">
+   <property name="text">
+    <string>Extract single file from BSA</string>
    </property>
   </action>
  </widget>

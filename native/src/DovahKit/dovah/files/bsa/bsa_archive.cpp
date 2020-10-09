@@ -13,6 +13,12 @@ namespace dovah {
       if (!this->mapping)
          return;
       memcpy(target, (const uint8_t*)this->mapping.data() + this->stream_position, size);
+      this->stream_position += size;
+   }
+   void bsa_archive::_read_at(void* target, size_t size, uint64_t offset) {
+      if (!this->mapping)
+         return;
+      memcpy(target, (const uint8_t*)this->mapping.data() + offset, size);
    }
    void bsa_archive::_read(std::string& out) {
       char c = 0;
@@ -255,4 +261,24 @@ namespace dovah {
       return this->retrieve_entry(*entry);
    }
    #pragma endregion
+
+   bool bsa_archive::for_each_folder(std::function<bool(const folder_entry&)> functor) {
+      for (auto& folder : this->folders)
+         if (functor(folder))
+            return true;
+      return false;
+   }
+   bool bsa_archive::for_each_file_in_folder(const folder_entry& folder, std::function<bool(const folder_entry&, const file_entry&)> functor) {
+      for (auto& file : folder.files)
+         if (functor(folder, file))
+            return true;
+      return false;
+   }
+
+   bool bsa_archive::file_is_compressed(const file_entry& file) const noexcept {
+      bool result = file.non_default_compression();
+      if (this->header.flags & bsa_header::flag::compressed_by_default)
+         result = !result;
+      return result;
+   }
 }

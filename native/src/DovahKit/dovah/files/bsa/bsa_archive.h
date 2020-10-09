@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <map>
 #include <vector>
@@ -112,7 +113,6 @@ namespace dovah {
             bad_header_sentinel, // the header sentinel was not 'B' 'S' 'A' '\0'
          };
          //
-      protected:
          struct file_entry {
             bs_hash     hash;
             std::string name; // present only if the BSA uses the (include_filenames) flag
@@ -133,6 +133,7 @@ namespace dovah {
             const file_entry* find_file(const bs_hash& file_hash, const std::string& file_name) const noexcept; // if string args are non-empty and the archive contains strings, then args are used to verify hash correctness
          };
          //
+      protected:
          bsa_header        header;
          cobb::mapped_file mapping;
          std::vector<folder_entry> folders; // must be sorted by folder hash
@@ -161,7 +162,7 @@ namespace dovah {
          //
          void _read_at(void* target, size_t size, uint64_t offset);
          template<typename T> void _read_at(T& out, uint64_t offset) {
-            this->_read(&out, sizeof(T), offset);
+            this->_read_at(&out, sizeof(T), offset);
             if (this->needs_endianness_flip)
                out = cobb::byteswap(out);
          }
@@ -173,8 +174,15 @@ namespace dovah {
          //
       public:
          void open(const std::filesystem::path&);
+         inline read_error_code get_error() const noexcept { return this->read_error; }
+         inline bool has_error() const noexcept { return this->read_error != read_error_code::none; }
          //
          bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file);
          bsa_archived_file* lookup_file(const std::string& path_and_name);
+         //
+         bool for_each_folder(std::function<bool(const folder_entry&)> functor);
+         bool for_each_file_in_folder(const folder_entry&, std::function<bool(const folder_entry&, const file_entry&)> functor);
+         //
+         bool file_is_compressed(const file_entry&) const noexcept;
    };
 }
