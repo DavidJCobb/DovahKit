@@ -2,7 +2,7 @@
 
 A work-in-progress tool for editing Skyrim ESM/ESP files. The name is a pun on "Creation Kit" and "*Dovahkiin*," which means "Dragonborn" in the Dragon language.
 
-This tool was built using Visual Studio 2019. It dynamically links Qt, which was licensed under LGPLv3. Zlib is used as well; see zlib.h for its license terms.
+This tool was built using Visual Studio 2019. It dynamically links Qt, which was licensed under LGPLv3. Zlib and LZ4 are used as well; see zlib.h for its license terms, and refer to the LICENSE file in the LZ4 directory for its license terms.
 
 ## Build environment
 
@@ -10,4 +10,4 @@ This program was built using Microsoft Visual Studio Community 2019 with the [Qt
 
 ## License
 
-Qt and its components have their own license; as does zlib. My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain, etc.).
+Qt and its components have their own license; as do zlib and LZ4. My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain, etc.).

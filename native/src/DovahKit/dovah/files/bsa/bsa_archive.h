@@ -129,6 +129,8 @@ namespace dovah {
             uint64_t    offset  = 0; // is uint32_t in Classic and a uint64_t in Special
             uint32_t    padding = 0; // Special adds a uint64_t to the end of the struct, so the legacy offset field becomes padding
             std::vector<file_entry> files; // must be sorted by file hash
+            //
+            const file_entry* find_file(const bs_hash& file_hash, const std::string& file_name) const noexcept; // if string args are non-empty and the archive contains strings, then args are used to verify hash correctness
          };
          //
          bsa_header        header;
@@ -157,11 +159,20 @@ namespace dovah {
          void _read(folder_entry&);
          void _read(file_entry&);
          //
+         void _read_at(void* target, size_t size, uint64_t offset);
+         template<typename T> void _read_at(T& out, uint64_t offset) {
+            this->_read(&out, sizeof(T), offset);
+            if (this->needs_endianness_flip)
+               out = cobb::byteswap(out);
+         }
+         //
          void _read_non_null_terminated_string(std::string&, size_t length);
+         //
+         const file_entry* find_file(const bs_hash& folder_hash, const bs_hash& file_hash, const std::string& folder_name, const std::string& file_name) const noexcept; // if string args are non-empty and the archive contains strings, then args are used to verify hash correctness
+         bsa_archived_file* retrieve_entry(const file_entry&);
          //
       public:
          void open(const std::filesystem::path&);
-         void close();
          //
          bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file);
          bsa_archived_file* lookup_file(const std::string& path_and_name);

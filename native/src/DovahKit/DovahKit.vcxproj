@@ -242,6 +242,7 @@
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archive.h" />
+    <ClInclude Include="dovah\files\bsa\bsa_archived_file.h" />
     <ClInclude Include="dovah\files\bsa\bsa_load_order.h" />
     <ClInclude Include="dovah\files\common.h" />
     <ClInclude Include="dovah\files\file_header.h" />
@@ -451,6 +452,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\DovahKitSln\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lz4\lz4.vcxproj">
+      <Project>{02c8f0a9-3325-46e7-8857-9fd6d7332bce}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
