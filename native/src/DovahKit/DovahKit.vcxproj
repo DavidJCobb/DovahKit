@@ -98,8 +98,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
     <ClCompile Include="dovah\data\actor_values.cpp" />
+    <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp" />
     <ClCompile Include="dovah\files\file_load_order.cpp" />
     <ClCompile Include="dovah\files\file_load_order_normalizer.cpp" />
@@ -191,6 +193,7 @@
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
+    <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
@@ -235,8 +238,10 @@
     <ClCompile Include="ui\main_window\save_window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\bs_hash.h" />
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
+    <ClInclude Include="dovah\files\bsa\bsa_archive.h" />
     <ClInclude Include="dovah\files\bsa\bsa_load_order.h" />
     <ClInclude Include="dovah\files\common.h" />
     <ClInclude Include="dovah\files\file_header.h" />
@@ -370,6 +375,7 @@
     <QtMoc Include="ui\generic\TESFilePicker.h" />
     <QtMoc Include="ui\form_windows\cell.h" />
     <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h" />
+    <ClInclude Include="helpers\endianness.h" />
     <ClInclude Include="helpers\qt\spinbox.h" />
     <ClInclude Include="helpers\qt\vector3.h" />
     <ClInclude Include="helpers\unordered_map.h" />

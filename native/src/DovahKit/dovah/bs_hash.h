@@ -1,0 +1,16 @@
+#pragma once
+#include <cstdint>
+
+namespace dovah {
+   union bs_hash {
+      uint8_t  bytes[8];
+      uint32_t dwords[2];
+      uint64_t value = 0;
+      //
+      bs_hash() {}
+      bs_hash(uint64_t v) : value(v) {}
+      bs_hash(const char* filename_or_folder_path, const char* extension);
+      //
+      inline operator uint64_t() const noexcept { return this->value; }
+   };
+}
