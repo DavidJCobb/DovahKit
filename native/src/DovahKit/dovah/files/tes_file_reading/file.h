@@ -9,6 +9,7 @@
 
 namespace dovah {
    class form_stub;
+   class localized_string_store;
    namespace tes_file_writing {
       class file_writer;
    }
@@ -74,7 +75,6 @@ namespace dovah {
                std::array<threads::interior_cell,                       threads_for_interior_cell_load>   interior_cell;
                std::array<threads::worldspace_sub_block,                threads_for_worldspace_load>      worldspace;
                std::array<threads::worldspace_persistent_cell_children, threads_for_worldspace_cell_load> world_cell;
-               threads::localized_strings localized_strings;
                //
                _readers(file_reader&);
                void start();
@@ -91,11 +91,7 @@ namespace dovah {
             file_load_order& load_order;
             file_read_error  error; // if the load process was aborted, what error, if any, did we encounter?
             tes_file_header  header;
-            struct {
-               localized_string_file* common    = nullptr;
-               localized_string_file* journal   = nullptr;
-               localized_string_file* subtitles = nullptr;
-            } localization_files;
+            localized_string_store* localization_data = nullptr; // owned
             //
             inline const std::string& get_filename() const noexcept { return this->name; }
             inline const std::filesystem::path& get_path() const noexcept { return this->path; }

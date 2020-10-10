@@ -188,9 +188,11 @@
     <ClCompile Include="dovah\forms\Worldspace.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_helpers.cpp" />
+    <ClCompile Include="dovah\localization\localized_string_store.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />
     <ClCompile Include="dovah\logging.cpp" />
     <ClCompile Include="dovah\utils\get_ini_defined_bsa_list.cpp" />
+    <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
@@ -377,9 +379,12 @@
     <ClInclude Include="dovah\form_stub.h" />
     <ClInclude Include="dovah\form_stub_heap.h" />
     <ClInclude Include="dovah\form_stub_helpers.h" />
+    <ClInclude Include="dovah\localization\common.h" />
+    <ClInclude Include="dovah\localization\localized_string_store.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
+    <ClInclude Include="dovah\utils\get_user_language_name.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />

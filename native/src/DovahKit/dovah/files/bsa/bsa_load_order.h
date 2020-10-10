@@ -15,17 +15,6 @@ namespace dovah {
    //  - (bsa_archive) represents a single BSA file. That file need not have actually been loaded 
    //    yet and need not even have been confirmed to exist; compare to (file_reader).
    //
-   //     - (bsa_archive) should contain a (cobb::mapped_file) and use that to access the content 
-   //       of its BSA.
-   //
-   //     - (bsa_archive) should contain an unordered map of paths, each of which should itself 
-   //       contain a map of files. A "path" in this context is the full path up to and not 
-   //       including the filename, i.e. the file "foo/bar/baz.nif" is in path "foo/bar", while 
-   //       the file "foo/bork.dds" is in the path "foo". Paths are not nested.
-   //
-   //        - Path and file names should be coerced to lowercase when stored, to aid with case-
-   //          insensitive lookups.
-   //
    //  - Skyrim uses single-byte-encoded strings for file paths and names, so we do as well.
    //
    //  - (bsa_archived_file) is the interface for a file that has been loaded from a BSA, ready 
@@ -47,14 +36,8 @@ namespace dovah {
    //    It only needs to know if it's sharing its buffer with that owner, so that it knows 
    //    whether to delete its buffer during teardown.
    //
-   //  - (bsa_load_order) should contain multiple structs, each of which manages a single thread. 
-   //    Multiple threads should be used to load all of the queued BSA files.
-   //
-   //     - Heap-allocate them, and then use their presence or absence to determine whether an 
-   //       archive load is in progress.
-   //
-   //  - It should be possible for a (file_load_order) to "adopt" a (bsa_load_order). The file 
-   //    load order should contain a private pointer to a BSA load order which defaults to null. 
+   //  - It is possible for a (file_load_order) to "adopt" a (bsa_load_order). The file load 
+   //    order should contain a private pointer to a BSA load order which defaults to null. 
    //    When a BSA load order is adopted, the following things should happen:
    //
    //     - At the start of the ES[LPM] load process, the file_load_order prepends all needed 

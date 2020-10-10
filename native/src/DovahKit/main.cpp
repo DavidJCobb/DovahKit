@@ -52,6 +52,54 @@
 //        - REFRs defined in ESP files are de facto persistent, so this would have to 
 //          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
 //
+//  - Localized string support
+//
+//     - We need to support different text encodings.
+//
+//        - When no STRINGS files are present, a localized_string uses a variable 
+//          encoding.
+//
+//        - When a STRINGS file is present, a localized_string uses UTF-8 if possible, 
+//          but falls back to an encoding (a specific one per language) if there are 
+//          any invalid byte sequences present.
+//
+//        = UI code can potentially check whether a localized_string comes from a 
+//          STRINGS file by checking its (localized) bool.
+//
+//     - We should consider adding a "View" menu to the editor with an "Encoding" option. 
+//       This option would control the encoding used for all files that aren't relying on 
+//       STRINGS files. (Already-open form-editing dialogs don't need to update their 
+//       content when this changes; just focus on everything else.) The default encoding 
+//       should be set based on the user's language as indicated in Skyrim's INI.
+//
+//        - Perhaps it'd be better to have this only affect the active file, or to have 
+//          it only affect non-DLC files, if for no other reason than to prevent all 
+//          editor IDs in the base game from showing up as illegible mojibake. I think 
+//          limiting it to the active file would be more intuitive.
+//
+//           - We also need to control the encoding used for editing, so maybe we should 
+//             make this active-file-only and put it under "Edit," not "View."
+//
+//        - Reportedly, Skyrim Special TES files use UTF-8 for all languages except 
+//          English, which is Win-1252. I need to download the SSE CK and save some 
+//          files with non-ASCII Win-1252 characters, along with non-Win-1252 Unicode 
+//          characters, and test that. If English doesn't use UTF-8, then the non-ASCII 
+//          Win-1252 characters will have character codes inconsistent with Unicode, 
+//          while the non-Win-1252 Unicode characters will be stripped or become 
+//          mojibake. I would of course need to use a hex editor to check for the former.
+//
+//     - The UI needs to physically prevent the user from entering glyphs that are not 
+//       available in the current language. Alternatively, textboxes with bad glyphs 
+//       should be given a red outline, and the "OK" button should be greyed out.
+//
+//        - If the user clicks inside such a textbox, a speech bubble should appear 
+//          listing the bad glyphs. ("You are editing a [LANGUAGE] file. The following 
+//          symbols are not available in [LANGUAGE]: a L 7 Q v")
+//
+//     - We should create a custom promoted widget for editing localized strings, so 
+//       that if we implement STRINGS file editing in the future, we can add a "..." 
+//       button that the user can click to edit localized string content.
+//
 //  - There is no UI path to view or edit use info or data for worldspaces.
 //
 //  - Support for REFR
@@ -61,6 +109,35 @@
 //     - All of the placed projectile records are just direct subclasses of REFR 
 //       and load all of the same things. Implement them the same way we implemented 
 //       ACHR.
+//
+//  - Support for Skyrim Special Edition.
+//
+//     - Bool on (file_load_order) indicating whether to handle SSE files or not, i.e. 
+//       whether to respect the ESL flag and whether to reserve slot 0xFE.
+//
+//     - The backend should allow loading multiple ESLs; however, saving should fail 
+//       if any of the active file's masters would be an ESL.
+//
+//     - Form ID resolution needs to handle ESLs separately.
+//
+//        - This in turn requires having ESLs in a separate list than (files), which 
+//          in turn requires that we basically audit every piece of code that uses 
+//          the (files) vector.
+//
+//     - When saving, form IDs need to be fixed up.
+//
+//        - If the active file is a light plug-in, fix-up is required.
+//
+//     - Option to save an Special active file as a Classic file and vice versa.
+//
+//     - Option to save an active ESL as a non-ESL, vice versa.
+//
+//     = NEEDED RESEARCH:
+//
+//        - Do forms created in an ESL use the 0xFE prefix, or do they use the same 
+//          prefix they would if created in a non-ESL file?
+//
+//        - How does the SSE CK display an active ESL's form IDs?
 //
 // THINGS TO LOOK INTO:
 //
@@ -138,101 +215,11 @@
 //
 // DISTANT TASKS:
 //
-//  - BSA support
-//
-//     - Refer to bsa_load_order.h for plans.
-//
 //  - Localized string support
 //
-//     - Each TES file that uses localized strings needs a LocalizedStringStore created 
-//       for it. The LocalizedStringStore should act as the interface for loading the 
-//       content of a localized string for any given language. LocalizedStringStore 
-//       should be able to pull localization files from a supplied (bsa_load_order). It 
-//       should be able to retain these files' contents in memory, closing them when 
-//       asked to. (Essentially, you should be able to tell it when to load and unload 
-//       any given language's file.)
-//
-//     - The relevant classes will look something like this:
-//
-//          struct LocalizedStringStore::entry {
-//             std::array<std::string, 10> strings; // don't remember offhand how many languages; guessed 10
-//             uint16_t availability = 0; // flags-mask indicating which languages are loaded
-//          }
-//
-//       If you ask the LocalizedStringStore to supply an entry in a language whose file 
-//       isn't open, then it should open that file. (Essentially, if it doesn't have the 
-//       German file open and you ask it for a string in German, it should open that file 
-//       and grab the string. You can then tell it to close German, and it will close the 
-//       file while retaining any strings it has already loaded. You don't need to open 
-//       every file in advance; it "knows," on a per-string basis, what it has loaded.)
-//
-//        - Actually, the strings should be an unordered_map of language names to text. 
-//          Why? Because Skyrim specifies its language name as a string. No reason to 
-//          believe it limits the values.
-//
-//           - Means the LocalizedStringStore also needs to remember what language names 
-//             are available (i.e. have files) for its corresponding ES[LPM] file.
-//
-//     - To retrieve the content of a (localized_string) for any given language, you must 
-//       retrieve the (form_stub)'s TES file and then grab the LocalizedStringStore for 
-//       that file.
-//
-//        - When a form is overridden, its stub's file pointer isn't changed immediately 
-//          but rather gets changed during saving. At this time, we must either update 
-//          all STRINGS files for the active file, or we must flag the active file as 
-//          not using localized strings.
-//
-//           - And of course, this means that if the active file is not using STRINGS 
-//             files, then at save time, all (localized_string)s need to have content 
-//             available in whatever language the user is saving in. We can avoid the 
-//             need for yet another virtual handler on loaded_forms::Form if we just 
-//             have subrecord::read(localized_string&) look up the localized text for 
-//             the user's language so that it's pre-filled by the time we save.
-//
-//     - We should consider adding a "View" menu to the editor with an "Encoding" option. 
-//       This option would control the encoding used for all files that aren't relying on 
-//       STRINGS files. (Already-open form-editing dialogs don't need to update their 
-//       content when this changes; just focus on everything else.) The default encoding 
-//       should be set based on the user's language as indicated in Skyrim's INI.
-//
-//        - Perhaps it'd be better to have this only affect the active file, or to have 
-//          it only affect non-DLC files, if for no other reason than to prevent all 
-//          editor IDs in the base game from showing up as illegible mojibake. I think 
-//          limiting it to the active file would be more intuitive.
-//
-//           - We also need to control the encoding used for editing, so maybe we should 
-//             make this active-file-only and put it under "Edit," not "View."
-//
-//        - Reportedly, Skyrim Special TES files use UTF-8 for all languages except 
-//          English, which is Win-1252. I need to download the SSE CK and save some 
-//          files with non-ASCII Win-1252 characters, along with non-Win-1252 Unicode 
-//          characters, and test that. If English doesn't use UTF-8, then the non-ASCII 
-//          Win-1252 characters will have character codes inconsistent with Unicode, 
-//          while the non-Win-1252 Unicode characters will be stripped or become 
-//          mojibake. I would of course need to use a hex editor to check for the former.
-//
-//     - The UI needs to physically prevent the user from entering glyphs that are not 
-//       available in the current language. Alternatively, textboxes with bad glyphs 
-//       should be given a red outline, and the "OK" button should be greyed out.
-//
-//        - If the user clicks inside such a textbox, a speech bubble should appear 
-//          listing the bad glyphs. ("You are editing a [LANGUAGE] file. The following 
-//          symbols are not available in [LANGUAGE]: a L 7 Q v")
-//
-//     - We need to create a custom promoted widget for editing localized strings, so 
-//       that if we implement STRINGS file editing in the future, we can add a "..." 
-//       button that the user can click to edit localized string content.
-//
 //     - If we wanted to implement STRINGS file editing in the future, that would entail 
-//       creating a LocalizedStringStore for the active file if one does not exist, and 
-//       writing code to export localized strings into multiple files. A newly-created 
-//       localized string would just have the same content in all languages, since all 
-//       languages (except Czech, apparently?!) use UTF-8 unless invalid byte sequences 
-//       are encountered. So for example if an English-speaker creates a new string that
-//       says "Apple", we'd pre-fill the other languages with "Apple" as well.
-//
-//        - The benefit to this approach is that the STRINGS files could then later be 
-//          edited to contain the correct content for other languages.
+//       creating a localized_string_store for the active file if one does not exist, and 
+//       writing code to export localized strings into multiple files.
 //
 //        - This could help in the case of overriding forms from files that also use 
 //          localized strings, e.g. overriding Skyrim.esm forms, but only if the user 
@@ -248,10 +235,6 @@
 //          means that while TES files might show mojibake for unsupported languages, 
 //          I'm pretty sure that STRINGS files would show nothing at all, which may or 
 //          may not be worse.
-//
-//          If we take "there isn't even any localization" as a failure mode, then it can 
-//          certainly be said that when Bethesda's localization systems fail, they do not 
-//          fail even a little bit gracefully.
 //
 //  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
 //    they want to open files from. Currently, we just always use the Skyrim Classic 

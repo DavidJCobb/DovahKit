@@ -55,6 +55,9 @@ namespace dovah {
          this->_read(length);
          folder.name.reserve(length);
          this->_read(folder.name);
+         //
+         for (auto& c : folder.name)
+            c = tolower(c, std::locale());
       }
       for (uint32_t i = 0; i < count; ++i) {
          auto& file = folder.files.emplace_back();
@@ -72,18 +75,29 @@ namespace dovah {
       if (this->header.flags & bsa_header::flag::embed_filenames) {
          this->stream_position = file.offset;
          //
-         uint8_t length;
+         uint8_t     length;
+         std::string full_path;
          this->_read(length);
-         this->_read_non_null_terminated_string(file.name, length);
+         this->_read_non_null_terminated_string(full_path, length);
          //
-         // TODO: The path we've just read is a full filepath and name, not just the name. We need to 
-         // trim it down to just the name.
+         // The path we've just read is a full filepath and name. We need to trim it down to just 
+         // the filename.
          //
+         file.name.reserve(length);
+         auto index = full_path.find_last_of("/\\");
+         if (index == std::string::npos)
+            file.name = full_path;
+         else
+            file.name = full_path.substr(index + 1);
       } else if (this->header.flags & bsa_header::flag::include_filenames) {
          uint64_t start = this->filename_blob_offset + this->last_filename_offset;
          this->stream_position = start;
          this->_read(file.name);
          this->last_filename_offset += (this->stream_position - start);
+      }
+      if (!file.name.empty()) {
+         for (auto& c : file.name)
+            c = tolower(c, std::locale());
       }
       this->stream_position = pos;
       //
@@ -253,6 +267,7 @@ namespace dovah {
       //
       std::string folder_name;
       std::string file_name;
+      std::locale c_locale;
       //
       size_t size = path_and_name.size();
       char   last = '\0';
@@ -266,7 +281,7 @@ namespace dovah {
             folder_name += file_name;
             file_name.clear();
          } else {
-            file_name += c;
+            file_name += tolower(c, c_locale);
          }
       }
       if (folder_name.empty() || file_name.empty())

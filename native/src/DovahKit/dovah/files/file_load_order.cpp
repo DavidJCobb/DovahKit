@@ -14,6 +14,8 @@
 #include "../logging.h"
 #include "bsa/bsa_load_order.h"
 #include "../utils/get_ini_defined_bsa_list.h"
+#include "../utils/get_user_language_name.h"
+#include "../localization/localized_string_store.h"
 #include <fstream>
 
 namespace dovah {
@@ -360,8 +362,18 @@ namespace dovah {
             this->active_file->header.nextFormID = first_free;
       }
       //
-      if (this->archives)
+      if (this->archives) {
          this->archives->wait_for_archive_load_to_finish();
+         //
+         auto language = utils::get_user_language_name();
+         for (auto* file : this->files) {
+            if (!file || (file->header.flags & tes_file_flag::localized_string_table) == 0)
+               continue;
+            file->localization_data = new localized_string_store(*this->archives, file->get_filename());
+            file->localization_data->default_language = language;
+            file->localization_data->open_language_files(language);
+         }
+      }
       //
       return !this->load_error.defined();
    }

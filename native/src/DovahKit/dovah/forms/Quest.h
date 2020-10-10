@@ -153,7 +153,7 @@ namespace dovah::loaded_forms {
          struct LogEntry {
             uint8_t flags;
             std::vector<components::condition> conditions;
-            localized_string journalText;
+            localized_string journalText = localized_string(localized_string_type::description);
             uint32_t nextQuestID;
             // TODO: SCHR
             //

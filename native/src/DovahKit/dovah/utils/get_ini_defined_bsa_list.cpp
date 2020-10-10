@@ -28,6 +28,7 @@ namespace dovah::utils {
       }
       if (!raw.empty())
          out.push_back(raw);
+      //
       raw = cobb::read_single_ini_string_setting(filepath.c_str(), L"Archive", L"sResourceArchiveList2");
       while ((pos = raw.find(',')) != std::string::npos) {
          out.push_back(cobb::trim(raw.substr(0, pos)));

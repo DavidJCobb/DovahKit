@@ -1,6 +1,7 @@
 #include "bs_hash.h"
 #include <array>
 #include <cassert>
+#include <locale>
 #include <string>
 
 //
@@ -20,7 +21,7 @@ namespace {
          if (c == '/')
             result += (int32_t)'\\';
          else
-            result += tolower(c);
+            result += tolower(c, std::locale());
       }
       return result;
    }
@@ -35,12 +36,14 @@ namespace {
 }
 namespace dovah {
    bs_hash::bs_hash(const char* name, const char* extension) {
+      const auto c_locale = std::locale();
+      //
       uint8_t length_b = strlen(name); // the length, truncated to a byte, is used frequently. some community code optimizes with (strnlen_s) but Oblivion itself truncates, not clamps, the length
       assert(length_b > 0 && "Oblivion's logic doesn't handle the case of hashing a zero-length string.");
       this->bytes[2] = length_b;
-      this->bytes[3] = tolower((int32_t)name[0]);
-      this->bytes[0] = tolower((int32_t)name[length_b - 1]);
-      this->bytes[1] = (length_b > 2) ? tolower((int32_t)name[length_b - 2]) : 0;
+      this->bytes[3] = tolower((int32_t)name[0], c_locale);
+      this->bytes[0] = tolower((int32_t)name[length_b - 1], c_locale);
+      this->bytes[1] = (length_b > 2) ? tolower((int32_t)name[length_b - 2], c_locale) : 0;
       if (length_b > 3)
          this->dwords[1] = _hash_string(name + 1, length_b - 3);
       //

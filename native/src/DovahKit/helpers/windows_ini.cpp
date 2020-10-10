@@ -13,6 +13,11 @@ namespace cobb {
          out.resize(out.size() + 256);
          count = GetPrivateProfileStringA(category.c_str(), key.c_str(), nullptr, out.data(), out.size(), fileA.c_str());
       }
+      //
+      auto end = out.find_last_not_of('\0');
+      if (end != std::string::npos)
+         out.resize(end + 1);
+      //
       return out;
    }
    std::wstring read_single_ini_string_setting(const std::filesystem::path& file, const std::wstring& category, const std::wstring& key) {
@@ -20,16 +25,15 @@ namespace cobb {
       std::wstring out;
       out.resize(256);
       DWORD count = GetPrivateProfileStringW(category.c_str(), key.c_str(), nullptr, out.data(), out.size(), fileW.c_str());
-      #if _DEBUG
-      if (out[0] == '\0') {
-         auto error = GetLastError();
-         __debugbreak();
-      }
-      #endif
       while (count == out.size() - 1) {
          out.resize(out.size() + 256);
          count = GetPrivateProfileStringW(category.c_str(), key.c_str(), nullptr, out.data(), out.size(), fileW.c_str());
       }
+      //
+      auto end = out.find_last_not_of(L'\0');
+      if (end != std::string::npos)
+         out.resize(end + 1);
+      //
       return out;
    }
 }

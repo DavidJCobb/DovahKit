@@ -2,17 +2,17 @@
 
 namespace dovah {
    localized_string& localized_string::operator=(const std::string& other) noexcept {
-      //
-      // TODO: fail silently if we are in a strings file
-      //
-      this->value  = other;
-      this->exists = true;
+      this->value     = other;
+      this->exists    = true;
+      this->localized = false;
       return *this;
    }
    localized_string& localized_string::operator=(const localized_string& other) noexcept {
-      this->value  = other.value;
-      this->index  = other.index;
-      this->exists = other.exists;
+      this->value     = other.value;
+      this->index     = other.index;
+      this->localized = other.localized;
+      this->exists    = other.exists;
+      this->type      = other.type;
       return *this;
    }
 }

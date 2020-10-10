@@ -9,6 +9,7 @@
 #include "../../localized_strings.h"
 #include "../../logging.h"
 #include "../file_load_order.h"
+#include "../../localization/localized_string_store.h"
 
 namespace dovah {
    namespace tes_file_reading {
@@ -180,11 +181,14 @@ namespace dovah {
       bool subrecord::to_string(localized_string& field) {
          field.value.clear();
          if (this->owner.uses_string_table) {
+            field.localized = true;
             bool result = this->read(field.index);
             //
-            // TODO: implement reading from the string table
-            //
-            field.value = "<THE LOADING OF LSTRINGS IS NOT YET IMPLEMENTED>";
+            field.value = "<LOAD FAILED>";
+            if (auto* base = this->owner.as_file()) {
+               if (auto* store = base->localization_data)
+                  field.value = store->lookup(field.type, field.index);
+            }
             //
             field.exists = true;
             return result;

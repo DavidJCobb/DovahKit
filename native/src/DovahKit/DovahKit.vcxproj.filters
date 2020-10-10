@@ -447,6 +447,12 @@
     <ClCompile Include="helpers\windows_environment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\localization\localized_string_store.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\utils\get_user_language_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -939,6 +945,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\windows_environment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\localization\localized_string_store.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\get_user_language_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\localization\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

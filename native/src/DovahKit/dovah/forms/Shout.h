@@ -26,8 +26,8 @@ namespace dovah::loaded_forms {
             float     recoveryTime = 0.0F;
          };
 
-         localized_string name; // FULL
-         localized_string description; // DESC
+         localized_string name        = localized_string(localized_string_type::common);      // FULL
+         localized_string description = localized_string(localized_string_type::description); // DESC
          form_id_t menuDisplayObjectID; // MDOB
          std::vector<Word> words; // SNAM // a shout should always have exactly 3 of these, but we want to account for cases where they do not
 

@@ -101,7 +101,6 @@ namespace dovah::loaded_forms {
             std::vector<uint32_t> offsets; // single-dimensional array
          };
 
-         // TODO: VMAD
          large_reference_t large_references;
          localized_string  name; // FULL
          max_height_data_t max_height_data; // MHDT

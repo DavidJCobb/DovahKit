@@ -35,5 +35,20 @@ namespace dovah {
          }
          inline error_code get_error() const noexcept { return this->error; }
          inline bool has_error() const noexcept { return this->error != error_code::none; }
+         //
+         void read(size_t offset, void* value, size_t size) const noexcept {
+            if (!this->data())
+               return;
+            memcpy(value, (const uint8_t*)this->data() + offset, size);
+         }
+         template<typename T> void read(size_t offset, T& value) const noexcept {
+            if (!this->data()) {
+               value = T();
+               return;
+            }
+            memcpy(&value, (const uint8_t*)this->data() + offset, sizeof(T));
+         }
+         template<> void read(size_t offset, std::string& value) const noexcept = delete;
+         template<> void read(size_t offset, std::wstring& value) const noexcept = delete;
    };
 }
