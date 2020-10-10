@@ -79,4 +79,21 @@ namespace dovah::loaded_forms::components {
          );
       }
    }
+   void keyword_list::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      for (auto& id : this->forms)
+         out.push_back(const_cast<form_id_t*>(&id));
+   }
+   void keyword_list::collapse() noexcept {
+      auto& list = this->forms;
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [](form_id_t& id) {
+               return id == bare_form_id_t(0);
+            }
+         ),
+         list.end()
+      );
+   }
 }

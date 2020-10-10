@@ -55,4 +55,28 @@ namespace dovah::loaded_forms::components::extra {
          list.end()
       );
    }
+   void reflector_refs::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      for (auto& entry : this->entries)
+         out.push_back(const_cast<form_id_t*>(&entry.target));
+   }
+   void reflector_refs::on_after_delete() noexcept {
+      this->collapse();
+   }
+   bool reflector_refs::is_empty() const noexcept {
+      return this->entries.empty();
+   }
+   //
+   void reflector_refs::collapse() noexcept {
+      auto& list = this->entries;
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [](entry& entry) {
+               return entry.target == bare_form_id_t(0);
+            }
+         ),
+         list.end()
+      );
+   }
 }

@@ -39,4 +39,7 @@ namespace dovah::loaded_forms::components::extra {
       if (this->ref == target.formID)
          this->ref.set(&my_owner, nullptr);
    }
+   void enable_state_parent::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      out.push_back(const_cast<form_id_t*>(&this->ref));
+   }
 }

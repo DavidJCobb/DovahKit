@@ -105,4 +105,24 @@ namespace dovah::loaded_forms::components {
             entry.owner.set(&my_owner, bare_form_id_t(0));
       }
    }
+   void container_data::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      for (auto& entry : this->entries) {
+         out.push_back(const_cast<form_id_t*>(&entry.item));
+         out.push_back(const_cast<form_id_t*>(&entry.owner));
+         out.push_back(const_cast<form_id_t*>(&entry.global));
+      }
+   }
+   void container_data::collapse() noexcept {
+      auto& list = this->entries;
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [](container_entry& entry) {
+               return entry.item == bare_form_id_t(0);
+            }
+         ),
+         list.end()
+      );
+   }
 }

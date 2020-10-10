@@ -84,6 +84,7 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
          //
+         virtual void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept override;
          virtual void setup() noexcept override;
          virtual bool would_bethesda_compress() const noexcept override;
          //

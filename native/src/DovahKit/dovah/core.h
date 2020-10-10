@@ -236,7 +236,18 @@ namespace dovah {
       friend class tes_file_reading::subrecord;
       friend class tes_file_writing::subrecord;
       protected:
+         enum class type_t {
+            normal,
+            base_form,
+            dialogue,
+         };
+      protected:
+         type_t   type  = type_t::normal;
          uint32_t value = 0;
+         //
+         form_id_t(type_t t) : type(t) {}
+         form_id_t(type_t t, uint32_t v) : type(t), value(v) {}
+         //
       public:
          form_id_t() {};
          form_id_t(uint32_t i) : value(i) {};
@@ -270,8 +281,8 @@ namespace dovah {
       // a.k.a. a reference's, uh, reference to its base form.
       //
       public:
-         void set(form_stub* owner, bare_form_id_t set_to);
-         void set(form_stub* owner, form_stub* set_to);
+         base_form_id_t() : form_id_t(type_t::base_form) {}
+         base_form_id_t(uint32_t i) : form_id_t(type_t::base_form, i) {}
    };
    struct dialogue_form_id_t : form_id_t {
       //
@@ -279,8 +290,8 @@ namespace dovah {
       // and INFO/PNAM.
       //
       public:
-         void set(form_stub* owner, bare_form_id_t set_to);
-         void set(form_stub* owner, form_stub* set_to);
+         dialogue_form_id_t() : form_id_t(type_t::dialogue) {}
+         dialogue_form_id_t(uint32_t i) : form_id_t(type_t::dialogue, i) {}
    };
    struct struct_form_id_t : form_id_t {
       //

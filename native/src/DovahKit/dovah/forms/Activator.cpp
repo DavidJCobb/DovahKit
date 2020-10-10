@@ -96,6 +96,22 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   void Activator::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      auto& self = *const_cast<Activator*>(this);
+      //
+      this->script_data.get_outbound_formIDs(out);
+      this->model.get_outbound_formIDs(out);
+      this->destruction_data.get_outbound_formIDs(out);
+      this->keywords.get_outbound_formIDs(out);
+      out.push_back(&self.looping_sound);
+      out.push_back(&self.activation_sound);
+      out.push_back(&self.water_type);
+      out.push_back(&self.interact_keyword);
+   }
+   void Activator::on_after_delete() noexcept {
+      this->keywords.collapse();
+   }
+   //
    bool Activator::_clone_impl(Form* out) const noexcept {
       auto copy = dynamic_cast<Activator*>(out);
       if (!copy)

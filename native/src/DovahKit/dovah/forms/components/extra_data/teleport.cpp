@@ -48,4 +48,10 @@ namespace dovah::loaded_forms::components::extra {
       if (this->target_door == target.formID)
          this->target_door.set(&my_owner, nullptr);
    }
+   void teleport::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      out.push_back(const_cast<form_id_t*>(&this->target_door));
+   }
+   bool teleport::is_empty() const noexcept {
+      return this->target_door == bare_form_id_t(0);
+   }
 }

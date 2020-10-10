@@ -66,6 +66,10 @@ namespace dovah::loaded_forms::components {
       if (this->topic == formID)
          this->topic.set(&my_owner, nullptr);
    }
+   void package_event_dialogue::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      out.push_back(const_cast<form_id_t*>(&this->idle));
+      out.push_back(const_cast<form_id_t*>(&this->topic));
+   }
 
    bool package_event_dialogue::empty() const noexcept {
       if (this->idle)

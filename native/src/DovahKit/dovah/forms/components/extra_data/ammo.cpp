@@ -48,4 +48,10 @@ namespace dovah::loaded_forms::components::extra {
       if (this->type == target.formID)
          this->type.set(&my_owner, nullptr);
    }
+   void ammo::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      out.push_back(const_cast<form_id_t*>(&this->type));
+   }
+   bool ammo::is_empty() const noexcept {
+      return this->type == bare_form_id_t(0);
+   }
 }

@@ -101,6 +101,12 @@ namespace dovah::loaded_forms::components::papyrus {
       if (this->fragment_data)
          this->fragment_data->sever_outbound_references_to(target, my_owner);
    }
+   void script_data::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      for (auto& script : this->scripts)
+         script.get_outbound_formIDs(out);
+      if (this->fragment_data)
+         this->fragment_data->get_outbound_formIDs(out);
+   }
 
    #pragma region Script sub-objects loading
    bool script_data::script::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -162,6 +168,10 @@ namespace dovah::loaded_forms::components::papyrus {
       for (auto& prop : this->properties)
          prop.sever_outbound_references_to(target, my_owner);
    }
+   void script_data::script::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      for (auto& prop : this->properties)
+         prop.get_outbound_formIDs(out);
+   }
 
    bool script_data::property_object_value::load(script_data& owner, tes_subrecord_reader& subrecord) {
       if (!subrecord.is_in_bounds(sizeof(this->always_zero) + sizeof(this->aliasID) + sizeof(this->formID)))
@@ -200,6 +210,9 @@ namespace dovah::loaded_forms::components::papyrus {
    void script_data::property_object_value::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
       if (this->formID == target.formID)
          this->formID.set(&my_owner, bare_form_id_t(0));
+   }
+   void script_data::property_object_value::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      out.push_back(const_cast<form_id_t*>(&this->formID));
    }
 
    bool script_data::property::value_t::load(property_type type, script_data& owner, tes_subrecord_reader& subrecord) {
@@ -358,6 +371,17 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       for (auto& value : this->values)
          value.object.sever_outbound_references_to(target, my_owner);
+   }
+   void script_data::property::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      switch (this->type) {
+         case property_type::object:
+         case property_type::array_of_object:
+            break;
+         default:
+            return;
+      }
+      for (auto& value : this->values)
+         value.object.get_outbound_formIDs(out);
    }
    #pragma endregion
 
@@ -617,6 +641,11 @@ namespace dovah::loaded_forms::components::papyrus {
       for (auto& alias : this->aliasScriptData)
          for (auto& script : alias.scripts)
             script.sever_outbound_references_to(target, my_owner);
+   }
+   void quest_fragment_data::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      for (auto& alias : this->aliasScriptData)
+         for (auto& script : alias.scripts)
+            script.get_outbound_formIDs(out);
    }
 
    void scene_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {

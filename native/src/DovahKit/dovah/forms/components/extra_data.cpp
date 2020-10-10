@@ -84,6 +84,25 @@ namespace dovah::loaded_forms::components {
       for (auto* extra : this->content)
          extra->sever_outbound_references_to(target, my_owner);
    }
+   void extra_data_list::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
+      for (auto* extra : this->content)
+         extra->get_outbound_formIDs(out);
+   }
+   void extra_data_list::on_after_delete() noexcept {
+      auto& list = this->content;
+      for (auto* extra : list)
+         extra->on_after_delete();
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [](const basic_extra_data* data) {
+               return data->is_empty();
+            }
+         ),
+         list.end()
+      );
+   }
    /*static*/ extra_data_load_result extra_data_list::generate_use_info(tes_record_reader& record, form_stub* stub) {
       return generate_extra_data_use_info(record, stub);
    }

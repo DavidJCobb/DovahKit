@@ -33,6 +33,7 @@ namespace dovah::loaded_forms::components {
       void clear(form_stub& my_owner);
       void clone_from(const model& original, form_stub& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+      void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept;
       //
       inline bool has_texture_hashes() const noexcept { return !this->textureHashes.data.empty(); }
    };

@@ -96,6 +96,19 @@
 //           - The form deletion process will then loop over that vector and set the 
 //             form IDs to 0.
 //
+//           = SMALL PROBLEM. Sometimes, we have lists of form IDs (possibly with 
+//             associated data) and if we're removing a list entry, then we need to 
+//             be able to remove the gaps from these lists. Keyword lists are an 
+//             example. If we're using Form::get_outbound_formIDs, then we're gonna 
+//             have to add a Form::on_after_delete method to allow for this kind of 
+//             cleanup.
+//
+//              - Added an (on_after_delete) method to Form and a few other things; 
+//                we'll just need to override that to call similar member functions 
+//                on any form components that need us to. In practice that'll be 
+//                extra-data, keyword lists, and maybe models (for texture swaps -- 
+//                cleanup for those isn't implemented yet).
+//
 //        - Implement form renumbering:
 //
 //           - Form renumbering should only be allowed for forms defined in the active 
