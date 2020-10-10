@@ -1,0 +1,41 @@
+
+== All forms ==
+ - The same form is overridden by two or more later-loading files.
+ - Non-unique editor ID (the Creation Kit renames later-loading affected forms e.g. "SameEditorIDDUPLICATE001").
+ - Papyrus property is pointing at an invalid object.
+
+== ACHR ==
+ - A unique actor has more than one placed reference in the world. "Data access when unloaded may not work correctly."
+
+== ARMO ==
+ - The armor uses an invalid biped slot for its race.
+
+== CELL ==
+ - Cell contains more than one water current marker.
+    - Example: [CELL:0000954C] (-12, 3) in [WRLD:0000003C]Tamriel
+ - Cell contains more than one COC marker.
+    - Example: [CELL:xx00362A]testFalmer in Dawnguard
+
+== IDLE ==
+ - Idle has no parent and is not an action root.
+    - Example: Dawnguard [IDLE:xx0023E4]DraugrSummonedStartRoot
+ - Multiple next idles.
+ - Invalid prev idle.
+
+== INFO ==
+ - An INFO is missing its previous INFO.
+ - Info passes for a voicetype, but the shared info from which it draws its response data does not.
+
+== PACK ==
+ - Unable to find package target reference. (Occurs if the reference is [NONE:00000000].)
+
+== REFR ==
+ - Occlusion box has < 16.0 half-extent and should be switched to a plane.
+    - Example: Dawnguard REFR xx014641 in CELL DLC1DawnguardHQ01
+ - Reference attached to wrong cell for its location.
+    - Example: unknown ref in Dawnguard CELL xx0028B9 in DLC01SoulCairn
+ - Unable to find attach ref. Attach ref data will be removed.
+
+=== DOOR ===
+ - Automatic load door '<BaseEditorID>' (<RefFormID>) [<num> units] in cell '<CellEditorID>' has its teleport marker too close to the linked door.
+    - Example: 00015E1D
