@@ -987,17 +987,6 @@ namespace dovah::loaded_forms::components {
       if (this->eventFormID == formID)
          this->eventFormID.set(&my_owner, nullptr);
    }
-   void condition::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      out.push_back(const_cast<form_id_t*>(&this->compare_to_global));
-      //
-      auto func = condition_info::function::lookup_by_id(this->function);
-      for (int i = 0; i < 2; i++)
-         if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID)
-            out.push_back(const_cast<form_id_t*>(&this->parameters[i].formID));
-      //
-      out.push_back(const_cast<form_id_t*>(&this->run_on_reference));
-      out.push_back(const_cast<form_id_t*>(&this->eventFormID));
-   }
 
    void condition::to_string(std::string& out) const {
       out.clear();

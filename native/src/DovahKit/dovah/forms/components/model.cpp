@@ -133,8 +133,4 @@ namespace dovah::loaded_forms::components {
          if (entry.textureSet == formID)
             entry.textureSet.set(&my_owner, nullptr);
    }
-   void model::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      for (auto& entry : this->textureSwaps)
-         out.push_back(const_cast<form_id_t*>(&entry.textureSet));
-   }
 }

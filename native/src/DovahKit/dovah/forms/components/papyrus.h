@@ -50,7 +50,6 @@ namespace dovah::loaded_forms::components {
             virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept = 0;
             virtual void clear(form_stub& owner) {}
             virtual void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {}
-            virtual void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept {}
       };
 
       class script_data {
@@ -70,7 +69,6 @@ namespace dovah::loaded_forms::components {
             bool save(tes_record_writer&); // opens VMAD, writes, closes
             void clone_from(const script_data& source, form_stub& owner_of_clone) noexcept;
             void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
-            void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept;
             //
             void for_each_script(std::function<bool(script*)>);
             //
@@ -94,7 +92,6 @@ namespace dovah::loaded_forms::components {
                void clone_from(const property_object_value& source, form_stub& owner_of_clone) noexcept;
                void clear(form_stub& owner);
                void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
-               void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept;
             };
             class property {
                friend script;
@@ -123,7 +120,6 @@ namespace dovah::loaded_forms::components {
                   bool save(script_data& owner, tes_subrecord_writer&);
                   void clone_from(const property& source, form_stub& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
-                  void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept;
             };
             class script {
                friend script_data;
@@ -137,7 +133,6 @@ namespace dovah::loaded_forms::components {
                   void clear_properties(form_stub& owner);
                   void clone_from(const script& source, form_stub& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
-                  void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept;
             };
       };
       
@@ -239,7 +234,6 @@ namespace dovah::loaded_forms::components {
             virtual basic_fragment_data* clone(form_stub& owner_of_clone) const noexcept override;
             virtual void clear(form_stub& owner) override;
             virtual void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept override;
-            virtual void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept override;
             //
             uint8_t     unknown = 2;
             std::string filename;

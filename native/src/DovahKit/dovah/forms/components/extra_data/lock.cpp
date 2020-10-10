@@ -52,7 +52,4 @@ namespace dovah::loaded_forms::components::extra {
       if (this->key == target.formID)
          this->key.set(&my_owner, nullptr);
    }
-   void lock::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      out.push_back(const_cast<form_id_t*>(&this->key));
-   }
 }

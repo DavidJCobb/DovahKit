@@ -39,7 +39,4 @@ namespace dovah::loaded_forms::components::extra {
    void patrol_ref_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
       this->event.sever_outbound_references_to(target, my_owner);
    }
-   void patrol_ref_data::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      this->event.get_outbound_formIDs(out);
-   }
 }

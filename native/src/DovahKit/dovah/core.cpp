@@ -402,13 +402,7 @@ namespace dovah {
    void form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
       if (this->value == set_to)
          return;
-      //
-      use_info_entry::flags_t flags = 0;
-      switch (this->type) {
-         case type_t::base_form: flags |= use_info_entry::flag::object_reference; break;
-         case type_t::dialogue:  flags |= use_info_entry::flag::dialogue;         break;
-      }
-      owner->replace_outbound_reference(this->value, set_to, flags);
+      owner->replace_outbound_reference(this->value, set_to);
       this->value = set_to;
    }
    void form_id_t::set(form_stub* owner, form_stub* set_to) {
@@ -418,13 +412,45 @@ namespace dovah {
       }
       if (this->value == set_to->formID)
          return;
-      //
-      use_info_entry::flags_t flags = 0;
-      switch (this->type) {
-         case type_t::base_form: flags |= use_info_entry::flag::object_reference; break;
-         case type_t::dialogue:  flags |= use_info_entry::flag::dialogue;         break;
+      owner->replace_outbound_reference(this->value, set_to);
+      this->value = set_to->formID;
+   }
+
+   void base_form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
+      if (!set_to) {
+         this->set(owner, bare_form_id_t(0));
+         return;
       }
-      owner->replace_outbound_reference(this->value, set_to, flags);
+      if (this->value == set_to)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::object_reference);
+      this->value = set_to;
+   }
+   void base_form_id_t::set(form_stub* owner, form_stub* set_to) {
+      if (this->value == set_to->formID)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::object_reference);
+      this->value = set_to->formID;
+   }
+
+   void dialogue_form_id_t::set(form_stub* owner, bare_form_id_t set_to) {
+      if (!set_to) {
+         this->set(owner, bare_form_id_t(0));
+         return;
+      }
+      if (this->value == set_to)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::dialogue);
+      this->value = set_to;
+   }
+   void dialogue_form_id_t::set(form_stub* owner, form_stub* set_to) {
+      if (!set_to) {
+         this->set(owner, bare_form_id_t(0));
+         return;
+      }
+      if (this->value == set_to->formID)
+         return;
+      owner->replace_outbound_reference(this->value, set_to, use_info_entry::flag::dialogue);
       this->value = set_to->formID;
    }
    #pragma endregion

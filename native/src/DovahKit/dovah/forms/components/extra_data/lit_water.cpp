@@ -49,28 +49,4 @@ namespace dovah::loaded_forms::components::extra {
          list.end()
       );
    }
-   void lit_water::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      for (auto& id : this->refs)
-         out.push_back(const_cast<form_id_t*>(&id));
-   }
-   void lit_water::on_after_delete() noexcept {
-      this->collapse();
-   }
-   bool lit_water::is_empty() const noexcept {
-      return this->refs.empty();
-   }
-   //
-   void lit_water::collapse() noexcept {
-      auto& list = this->refs;
-      list.erase(
-         std::remove_if(
-            list.begin(),
-            list.end(),
-            [](form_id_t& id) {
-               return id == bare_form_id_t(0);
-            }
-         ),
-         list.end()
-      );
-   }
 }

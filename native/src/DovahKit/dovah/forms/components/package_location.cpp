@@ -83,7 +83,4 @@ namespace dovah::loaded_forms::components {
       if (this->detail.form == target.formID)
          this->detail.form.set(&my_owner, nullptr);
    }
-   void package_location::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      out.push_back(const_cast<form_id_t*>(&this->detail.form));
-   }
 }

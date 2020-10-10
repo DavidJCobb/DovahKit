@@ -161,10 +161,4 @@ namespace dovah::loaded_forms::components {
             stage.debrisID.set(&my_owner, nullptr);
       }
    }
-   void destruction_stage_data::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      for (auto& stage : this->stages) {
-         out.push_back(const_cast<form_id_t*>(&stage.explosionID));
-         out.push_back(const_cast<form_id_t*>(&stage.debrisID));
-      }
-   }
 }

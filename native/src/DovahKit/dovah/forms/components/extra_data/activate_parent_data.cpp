@@ -74,25 +74,4 @@ namespace dovah::loaded_forms::components::extra {
          list.end()
       );
    }
-   void activate_parent_data::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      for (auto& entry : this->parents)
-         out.push_back(const_cast<form_id_t*>(&entry.ref));
-   }
-   void activate_parent_data::on_after_delete() noexcept {
-      this->collapse();
-   }
-   //
-   void activate_parent_data::collapse() noexcept {
-      auto& list = this->parents;
-      list.erase(
-         std::remove_if(
-            list.begin(),
-            list.end(),
-            [](parent& entry) {
-               return entry.ref == bare_form_id_t(0);
-            }
-         ),
-         list.end()
-      );
-   }
 }

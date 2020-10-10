@@ -59,8 +59,6 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
-         virtual void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept override;
-         virtual void on_after_delete() noexcept override;
          //
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

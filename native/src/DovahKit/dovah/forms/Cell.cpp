@@ -97,12 +97,6 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   //
-   void Cell::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      this->extra_data.get_outbound_formIDs(out);
-      this->script_data.get_outbound_formIDs(out);
-      out.push_back(const_cast<form_id_t*>(&this->interior.lighting_template_ID));
-   }
    void Cell::setup() noexcept {
       cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub->groupInfo.parentFormID == 0);
    }

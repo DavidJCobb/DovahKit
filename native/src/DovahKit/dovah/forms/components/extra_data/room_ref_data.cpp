@@ -116,28 +116,4 @@ namespace dovah::loaded_forms::components::extra {
          list.end()
       );
    }
-   void room_ref_data::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      out.push_back(const_cast<form_id_t*>(&this->lighting_template));
-      out.push_back(const_cast<form_id_t*>(&this->imagespace));
-      for (auto& id : this->linked_rooms)
-         out.push_back(const_cast<form_id_t*>(&id));
-   }
-   void room_ref_data::on_after_delete() noexcept {
-      this->collapse();
-   }
-   //
-   void room_ref_data::collapse() noexcept {
-      auto& list = this->linked_rooms;
-      list.erase(
-         std::remove_if(
-            list.begin(),
-            list.end(),
-            [](form_id_t& id) {
-               return id == bare_form_id_t(0);
-            }
-         ),
-         list.end()
-      );
-      this->linked_room_count = list.size();
-   }
 }

@@ -35,8 +35,4 @@ namespace dovah::loaded_forms::components::extra {
       if (this->destination == target.formID)
          this->destination.set(&my_owner, nullptr);
    }
-   void portal_origin_and_destination::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      out.push_back(const_cast<form_id_t*>(&this->origin));
-      out.push_back(const_cast<form_id_t*>(&this->destination));
-   }
 }

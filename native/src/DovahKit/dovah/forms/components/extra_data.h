@@ -159,9 +159,6 @@ namespace dovah::loaded_forms::components {
          virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept = 0;
          virtual void clear_contained_formIDs(form_stub& my_owner) {}
          virtual void sever_outbound_references_to(form_stub& target, form_stub& my_owner) {}
-         virtual void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept {}
-         virtual void on_after_delete() noexcept {}
-         virtual bool is_empty() const noexcept { return false; } // return (true) if the extra-data has no meaningful data and should be discarded
    };
    class extra_data_list {
       public:
@@ -182,8 +179,6 @@ namespace dovah::loaded_forms::components {
          void save(tes_record_writer&);
          void clone_from(const extra_data_list& source, form_stub& owner_of_clone);
          void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
-         void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept;
-         void on_after_delete() noexcept;
          //
          static extra_data_load_result generate_use_info(tes_record_reader&, form_stub*);
          //

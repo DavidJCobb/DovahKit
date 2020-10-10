@@ -152,12 +152,6 @@ namespace dovah::loaded_forms::components {
             if (this->formID == target.formID)
                this->formID.set(&my_owner, bare_form_id_t(0));
          }
-         virtual void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept override {
-            out.push_back(const_cast<form_id_t*>(&this->formID));
-         }
-         virtual bool is_empty() const noexcept override {
-            return this->formID == bare_form_id_t(0);
-         }
    };
    template<uint32_t signature, extra_data_type et> class string_extra_data : public basic_extra_data {
       //

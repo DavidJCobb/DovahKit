@@ -35,7 +35,4 @@ namespace dovah::loaded_forms::components::extra {
       if (this->navmesh == target.formID)
          this->navmesh.set(&my_owner, nullptr);
    }
-   void navmesh_door_portal::get_outbound_formIDs(std::vector<form_id_t*>& out) const noexcept {
-      out.push_back(const_cast<form_id_t*>(&this->navmesh));
-   }
 }

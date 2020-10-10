@@ -1,6 +1,5 @@
 #pragma once
 #include "../core.h"
-#include <vector>
 
 namespace dovah {
    class file_load_order;
@@ -56,10 +55,6 @@ namespace dovah {
             void friendly_delete_override() noexcept;
             void flag_as_deleted() noexcept;
             void sever_outbound_references_to(form_stub& other) noexcept;
-
-            virtual void get_outbound_formIDs(std::vector<form_id_t*>&) const noexcept {}; // TODO: implement on existing forms; then, make pure
-
-            virtual void on_after_delete() noexcept {}
 
             //
             // === void Form::setup() ============================================================
