@@ -62,6 +62,9 @@
 //          listing the bad glyphs. ("You are editing a [LANGUAGE] file. The following 
 //          symbols are not available in [LANGUAGE]: a L 7 Q v")
 //
+//        - I've written QTextEncodingValidator, but it may not be entirely sufficient 
+//          for this. Or maybe it may. Hm.
+//
 //     - We should create a custom promoted widget for editing localized strings, so 
 //       that if we implement STRINGS file editing in the future, we can add a "..." 
 //       button that the user can click to edit localized string content.
@@ -81,7 +84,8 @@
 //     - Bool on (file_load_order) indicating whether to handle SSE files or not, i.e. 
 //       whether to respect the ESL flag and whether to reserve slot 0xFE.
 //
-//        - Needs to be accessible (read and write) to DovahKitCore.
+//        - Needs to be accessible (read and write) to DovahKitCore, so that the editor 
+//          can handle localized_strings properly.
 //
 //     - The backend should allow loading multiple ESLs; however, saving should fail 
 //       if any of the active file's masters would be an ESL.
@@ -292,6 +296,51 @@
 //          need to be sure to indicate that in the UI.
 //
 //  - Lua scripting
+//
+//     - The Lua VM should be started up when the script begins, and should be killed 
+//       after the script has run to completion and all script-spawned windows (if any) 
+//       have closed.
+//
+//     - Scripts should be able to spawn UI windows and widgets, and to register Lua 
+//       functions to run in response to Qt signals on these widgets.
+//
+//        - There should be a cap on how many windows a script can spawn.
+//
+//        - There should be a cap on how quickly a script can spawn windows.
+//
+//        - All script windows should have a modeless relationship with DovahKit, so 
+//          that scripts cannot block access to the editor UI.
+//
+//        - We'll probably want to provide generic table, list, and tree views to Lua.
+//
+//        = Lua-spawned windows must exist on the main thread (QWidgets can only 
+//          function there), which means that in order to allow Lua to influence and 
+//          be influenced by the UI, we must pass messages across threads. This, of 
+//          course, introduces the issue of concurrency -- of what to do with a signal 
+//          that Qt emits while Lua is already processing another signal.
+//
+//          The only reliable way to prevent these sorts of issues is to just straight-
+//          up disable all script-spawned windows while processing a Lua event (and if 
+//          we don't want them showing the disabled graphics, then we can disable their 
+//          repaints via QWidget::setUpdatesEnabled as well). That means that we'll 
+//          need to be very selective about what signals we make available to Lua; 
+//          specifically, we can only allow Lua to respond to an event if disabling the 
+//          UI during that response would not interrupt the user. As an example, Lua 
+//          cannot respond to each individual keypress in a QLineEdit (as would happen 
+//          with the built-in QLineEdit::textEdited signal), but rather must be given a 
+//          custom "change" event that fires when the widget loses focus after having 
+//          been edited (compare to JS "onchange").
+//
+//     - Scripts should be able to include Greasemonkey-style comments at the top of 
+//       the file as a way of specifying extended configuration options. Options that 
+//       we could support can include:
+//
+//        - [[readonly]]: The script will not be allowed to modify any loaded forms. 
+//          This will affect the editor's messaging surrounding the script; for example, 
+//          the user will not need to be warned about terminating the script early, 
+//          because doing so cannot leave the active file in an inconsistent state 
+//          (since the script isn't doing anything). This attribute is advised for 
+//          scripts that are just examining, searching, or otherwise analyzing data.
 //
 //     - Scripts should run in a second thread, and the user should have the option to 
 //       forcibly terminate the script early, as a way of dealing with scripts that 

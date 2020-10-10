@@ -228,6 +228,7 @@
     </ClCompile>
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
+    <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
     <ClCompile Include="ui\generic\TESFilePicker.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
     <ClCompile Include="ui\main_window\cell_view.cpp" />
@@ -388,6 +389,7 @@
     <ClInclude Include="dovah\utils\get_user_language_name.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
+    <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />
