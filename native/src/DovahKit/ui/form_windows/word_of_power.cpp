@@ -8,12 +8,16 @@ FormDialogWordOfPower::FormDialogWordOfPower(dovah::form_stub* stub, QWidget* pa
    this->load();
 }
 void FormDialogWordOfPower::_load_impl() {
+   auto& editor = DovahKitCore::get();
+   //
    this->ui.editorID->setText(QString::fromStdString(this->form->stub->get_editor_id()));
-   this->ui.dragonName->setText(QString::fromStdString(this->form->dragon_name.c_str()));
-   this->ui.humanName->setText(QString::fromStdString(this->form->human_name.c_str()));
+   this->ui.dragonName->setText(editor.convert_localized_string(this->form->dragon_name));
+   this->ui.humanName->setText(editor.convert_localized_string(this->form->human_name));
 }
 void FormDialogWordOfPower::_save_impl() {
+   auto& editor = DovahKitCore::get();
+   //
    this->stub->set_edited(true);
-   this->form->dragon_name = this->ui.dragonName->text().toStdString();
-   this->form->human_name  = this->ui.humanName->text().toStdString();
+   editor.assign_localized_string(this->form->dragon_name, this->ui.dragonName->text());
+   editor.assign_localized_string(this->form->human_name,  this->ui.humanName->text());
 }

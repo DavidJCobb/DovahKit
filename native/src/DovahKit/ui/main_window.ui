@@ -58,7 +58,26 @@
     <addaction name="actionDebugExtractBSAFile"/>
     <addaction name="actionDebugLookupBSAFile"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <widget class="QMenu" name="menuTextEncoding">
+     <property name="title">
+      <string>Editor Text Encoding</string>
+     </property>
+     <addaction name="actionSetEncodingWin1250"/>
+     <addaction name="actionSetEncodingWin1251"/>
+     <addaction name="actionSetEncodingWin1252"/>
+     <addaction name="actionSetEncodingWin1253"/>
+     <addaction name="actionSetEncodingWin1254"/>
+     <addaction name="actionSetEncodingWin1256"/>
+     <addaction name="actionSetEncodingUTF8"/>
+    </widget>
+    <addaction name="menuTextEncoding"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -105,6 +124,41 @@
   <action name="actionDebugLookupBSAFile">
    <property name="text">
     <string>Lookup single file from loaded BSAs</string>
+   </property>
+  </action>
+  <action name="actionSetEncodingWin1250">
+   <property name="text">
+    <string>Windows-1250</string>
+   </property>
+  </action>
+  <action name="actionSetEncodingWin1251">
+   <property name="text">
+    <string>Windows-1251 (Cyrillic)</string>
+   </property>
+  </action>
+  <action name="actionSetEncodingWin1252">
+   <property name="text">
+    <string>Windows-1252</string>
+   </property>
+  </action>
+  <action name="actionSetEncodingWin1253">
+   <property name="text">
+    <string>Windows-1253 (Greek)</string>
+   </property>
+  </action>
+  <action name="actionSetEncodingWin1254">
+   <property name="text">
+    <string>Windows-1254 (Turkish)</string>
+   </property>
+  </action>
+  <action name="actionSetEncodingWin1256">
+   <property name="text">
+    <string>Windows-1256 (Arabic)</string>
+   </property>
+  </action>
+  <action name="actionSetEncodingUTF8">
+   <property name="text">
+    <string>UTF-8</string>
    </property>
   </action>
  </widget>

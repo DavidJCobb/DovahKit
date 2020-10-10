@@ -10,8 +10,10 @@ FormDialogColor::FormDialogColor(dovah::form_stub* stub, QWidget* parent) : Form
    this->load();
 }
 void FormDialogColor::_load_impl() {
+   auto& editor = DovahKitCore::get();
+   //
    this->ui.editorID->setText(QString::fromStdString(this->form->stub->get_editor_id()));
-   this->ui.name->setText(QString::fromStdString(this->form->name.c_str()));
+   this->ui.name->setText(editor.convert_localized_string(this->form->name));
    //
    QColor color{ this->form->color.r, this->form->color.g, this->form->color.b, this->form->color.unused };
    this->ui.colorPicker->setColor(color);
@@ -19,8 +21,10 @@ void FormDialogColor::_load_impl() {
    this->ui.playable->setChecked((this->form->color_flags & dovah::loaded_forms::Color::color_flag::playable) != 0);
 }
 void FormDialogColor::_save_impl() {
+   auto& editor = DovahKitCore::get();
+   //
    this->stub->editorID = this->ui.editorID->text().toStdString();
-   this->form->name = this->ui.name->text().toStdString();
+   editor.assign_localized_string(this->form->name, this->ui.name->text());
    //
    auto color = this->ui.colorPicker->color();
    this->form->color.r = color.red();

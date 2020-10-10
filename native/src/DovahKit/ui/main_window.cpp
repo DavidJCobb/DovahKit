@@ -89,6 +89,32 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       modal->setModal(true);
       modal->exec();
    });
+   #pragma region Menu items to set editor encoding
+      this->ui.actionSetEncodingWin1250->setData("Windows-1250");
+      this->ui.actionSetEncodingWin1251->setData("Windows-1251");
+      this->ui.actionSetEncodingWin1252->setData("Windows-1252");
+      this->ui.actionSetEncodingWin1253->setData("Windows-1253");
+      this->ui.actionSetEncodingWin1254->setData("Windows-1254");
+      this->ui.actionSetEncodingWin1256->setData("Windows-1256");
+      this->ui.actionSetEncodingUTF8->setData("UTF-8");
+      for (auto* action : this->ui.menuTextEncoding->actions()) {
+         action->setCheckable(true);
+         action->setChecked(false);
+         QObject::connect(action, &QAction::triggered, this, [action]() {
+            DovahKitCore::get().set_encoding(action->data().toString().toStdString());
+         });
+      }
+      QObject::connect(this->ui.menuTextEncoding, &QMenu::aboutToShow, this, [this]() {
+         auto* menu     = this->ui.menuTextEncoding;
+         auto& editor   = DovahKitCore::get();
+         auto  encoding = QString::fromStdString(editor.get_encoding());
+         //
+         for (auto* action : menu->actions()) {
+            QString n = action->data().toString();
+            action->setChecked(n == encoding);
+         }
+      });
+   #pragma endregion
 
    #pragma region Debugging
    QObject::connect(this->ui.actionDebugGetRecordSizeStats, &QAction::triggered, this, [this]() {

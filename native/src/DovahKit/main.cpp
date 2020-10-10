@@ -59,34 +59,18 @@
 //        - When no STRINGS files are present, a localized_string uses a variable 
 //          encoding.
 //
+//           - IMPLEMENTED
+//
 //        - When a STRINGS file is present, a localized_string uses UTF-8 if possible, 
 //          but falls back to an encoding (a specific one per language) if there are 
 //          any invalid byte sequences present.
 //
+//           - Requires that the localized_string instance store an enum representing 
+//             the language it loaded from, so we can identify the fallback encoding 
+//             to use.
+//
 //        = UI code can potentially check whether a localized_string comes from a 
 //          STRINGS file by checking its (localized) bool.
-//
-//     - We should consider adding a "View" menu to the editor with an "Encoding" option. 
-//       This option would control the encoding used for all files that aren't relying on 
-//       STRINGS files. (Already-open form-editing dialogs don't need to update their 
-//       content when this changes; just focus on everything else.) The default encoding 
-//       should be set based on the user's language as indicated in Skyrim's INI.
-//
-//        - Perhaps it'd be better to have this only affect the active file, or to have 
-//          it only affect non-DLC files, if for no other reason than to prevent all 
-//          editor IDs in the base game from showing up as illegible mojibake. I think 
-//          limiting it to the active file would be more intuitive.
-//
-//           - We also need to control the encoding used for editing, so maybe we should 
-//             make this active-file-only and put it under "Edit," not "View."
-//
-//        - Reportedly, Skyrim Special TES files use UTF-8 for all languages except 
-//          English, which is Win-1252. I need to download the SSE CK and save some 
-//          files with non-ASCII Win-1252 characters, along with non-Win-1252 Unicode 
-//          characters, and test that. If English doesn't use UTF-8, then the non-ASCII 
-//          Win-1252 characters will have character codes inconsistent with Unicode, 
-//          while the non-Win-1252 Unicode characters will be stripped or become 
-//          mojibake. I would of course need to use a hex editor to check for the former.
 //
 //     - The UI needs to physically prevent the user from entering glyphs that are not 
 //       available in the current language. Alternatively, textboxes with bad glyphs 
@@ -114,6 +98,8 @@
 //
 //     - Bool on (file_load_order) indicating whether to handle SSE files or not, i.e. 
 //       whether to respect the ESL flag and whether to reserve slot 0xFE.
+//
+//        - Needs to be accessible (read and write) to DovahKitCore.
 //
 //     - The backend should allow loading multiple ESLs; however, saving should fail 
 //       if any of the active file's masters would be an ESL.

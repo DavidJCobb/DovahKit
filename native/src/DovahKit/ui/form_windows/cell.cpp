@@ -303,7 +303,7 @@ void FormDialogCell::_load_impl() {
          this->ui.directionalAmbColorZNeg->setColor(_form_color_to_q(lighting.directional_ambient_colors.z_neg));
       #pragma endregion
       #pragma region Interior Data
-         this->ui.name->setText(this->form->name.c_str());
+         this->ui.name->setText(editor.convert_localized_string(this->form->name));
          _load_extra_formID<extra::encounter_zone, extra_data_type::encounter_zone>(this->ui.encounterZone, extra);
          if (auto* data = extra.lookup<extra::water_environment_map>(extra_data_type::water_environment_map)) {
             this->ui.waterEnvironmentMap->setCurrentPath(data->value.c_str());
@@ -420,7 +420,7 @@ void FormDialogCell::_save_impl() {
          _q_color_to_form(lighting.directional_ambient_colors.z_neg, this->ui.directionalAmbColorZNeg->color());
       #pragma endregion
       #pragma region Interior Data
-         this->form->name = this->ui.name->text().toStdString();
+         editor.assign_localized_string(this->form->name, this->ui.name->text());
          this->save_extra_form(this->ui.encounterZone->formID(), extra, extra_data_type::encounter_zone);
          {
             auto path = this->ui.waterEnvironmentMap->currentPath();

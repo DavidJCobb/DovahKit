@@ -3,12 +3,15 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QProcessEnvironment>
+#include <QTextCodec>
 #include <QThread>
 #include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
 #include "../dovah/form_stub.h"
+#include "../dovah/localized_strings.h"
 #include "../dovah/files/bsa/bsa_load_order.h"
 #include "../dovah/files/tes_file_reading/file.h"
+#include "../dovah/utils/get_user_language_name.h"
 #include "core_internals/load_task.h"
 #include "helpers/make_editor_id_for_duplicate.h"
 #include "../ui/main_window/delete_form_dialog.h"
@@ -25,6 +28,8 @@ DovahKitCore::DovahKitCore() {
    //
    this->load_order = new dovah::file_load_order;
    this->_configure_load_order();
+   //
+   this->set_encoding();
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {
@@ -436,6 +441,76 @@ dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::string& pat
    if (!archives)
       return nullptr;
    return archives->lookup_file(path, true);
+}
+
+namespace {
+   struct _language_to_encoding {
+      const char* language = ""; // must be lowercase
+      const char* encoding = "";
+   };
+   std::array< _language_to_encoding, 19> _language_to_encoding_map = {{
+      { "arabic",    "Windows-1256" },
+      { "chinese",   "UTF-8" },
+      { "czech",     "Windows-1250" },
+      { "danish",    "Windows-1252" },
+      { "english",   "Windows-1252" },
+      { "finnish",   "Windows-1252" },
+      { "french",    "Windows-1252" },
+      { "german",    "Windows-1252" },
+      { "greek",     "Windows-1253" },
+      { "hungarian", "Windows-1250" },
+      { "italian",   "Windows-1252" },
+      { "japanese",  "UTF-8" },
+      { "norwegian", "Windows-1252" },
+      { "polish",    "Windows-1250" },
+      { "portugese", "Windows-1252" },
+      { "russian",   "Windows-1251" },
+      { "italian",   "Windows-1252" },
+      { "swedish",   "Windows-1252" },
+      { "turkish",   "Windows-1254" },
+   }};
+}
+void DovahKitCore::set_encoding(const std::string& name) noexcept {
+   auto prior = this->encoding;
+   this->encoding = name;
+   emit editorEncodingChanged(prior, this->encoding);
+}
+void DovahKitCore::set_encoding() {
+   auto language = dovah::utils::get_user_language_name();
+   for (auto& c : language)
+      c = tolower(c);
+   for (auto& entry : _language_to_encoding_map) {
+      if (language == entry.language) {
+         this->set_encoding(entry.encoding);
+         return;
+      }
+   }
+}
+
+QString DovahKitCore::convert_localized_string(const dovah::localized_string& s) const noexcept {
+   if (s.localized) {
+      //
+      // TODO: If the content contains any invalid UTF-8 byte sequences, then we need to read it using the 
+      // fallback encoding, but... how could we check the fallback encoding? We'd need to know what language 
+      // the string was in, and it doesn't store that information.
+      //
+      return QString::fromUtf8(s.c_str());
+   }
+   QTextCodec* codec = nullptr;
+   if (!this->encoding.empty())
+      codec = QTextCodec::codecForName(this->encoding.c_str());
+   if (!codec)
+      codec = QTextCodec::codecForName("Windows-1252");
+   return codec->toUnicode(s.c_str());
+}
+void DovahKitCore::assign_localized_string(dovah::localized_string& s, const QString& value) const noexcept {
+   QTextCodec* codec = nullptr;
+   if (!this->encoding.empty())
+      codec = QTextCodec::codecForName(this->encoding.c_str());
+   if (!codec)
+      codec = QTextCodec::codecForName("Windows-1252");
+   s.value     = codec->fromUnicode(value);
+   s.localized = false;
 }
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {

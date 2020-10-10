@@ -14,8 +14,10 @@ FormDialogShout::FormDialogShout(dovah::form_stub* stub, QWidget* parent) : Form
    this->load();
 }
 void FormDialogShout::_load_impl() {
+   auto& editor = DovahKitCore::get();
+   //
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-   this->ui.name->setText(this->form->name.c_str());
+   this->ui.name->setText(editor.convert_localized_string(this->form->name));
    this->ui.treatAsPower->setChecked(this->form->treat_as_power());
    this->ui.menuDisplayObject->setFormByID(this->form->menuDisplayObjectID);
    this->ui.description->setPlainText(this->form->description.c_str());
@@ -24,8 +26,10 @@ void FormDialogShout::_load_impl() {
    this->ui.word2->load();
 }
 void FormDialogShout::_save_impl() {
+   auto& editor = DovahKitCore::get();
+   //
    this->stub->editorID = this->ui.editorID->text().toStdString();
-   this->form->name = this->ui.name->text().toStdString();
+   editor.assign_localized_string(this->form->name, this->ui.name->text());
    this->form->treat_as_power(this->ui.treatAsPower->isChecked());
    this->save_form_id(this->form->menuDisplayObjectID, this->ui.menuDisplayObject->formID());
    this->form->description = this->ui.description->toPlainText().toStdString();

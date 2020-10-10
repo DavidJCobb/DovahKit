@@ -10,6 +10,7 @@ namespace dovah {
    class  bsa_archived_file;
    class  form_stub;
    class  file_write_error;
+   struct localized_string;
    struct tes_file_header;
    namespace tes_file_writing {
       struct write_config;
@@ -50,6 +51,8 @@ class DovahKitCore : public QObject {
       bool    loaded  = false;
       bool    loading = false;
       QThread* async_loader = nullptr;
+      std::string encoding;
+      std::string language_name;
       //
       std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
       std::unordered_map<bare_form_id_t, QDialog*> extant_use_info_dialogs;
@@ -74,6 +77,8 @@ class DovahKitCore : public QObject {
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed(const dovah::file_write_error&);
+      //
+      void editorEncodingChanged(const std::string& prior, const std::string& after);
       //
    public:
       void abandon_data();
@@ -122,6 +127,13 @@ class DovahKitCore : public QObject {
       void delete_form(dovah::form_stub& target, QWidget* dialog_parent = nullptr);
 
       dovah::bsa_archived_file* lookup_game_asset(const std::string&); // path should be relative to, and should not include, the Data directory
+
+      inline const std::string& get_encoding() const noexcept { return this->encoding; }
+      void set_encoding(const std::string& name) noexcept; // use the Qt names
+      void set_encoding(); // pulls the language name from Skyrim.ini and uses that to decide
+
+      QString convert_localized_string(const dovah::localized_string&) const noexcept;
+      void assign_localized_string(dovah::localized_string&, const QString&) const noexcept; // sets the localized_string's contained std::string, i.e. only suitable for when saving something with no STRINGS files
 
       bool get_game_path(std::filesystem::path& out) const noexcept;
       bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt
