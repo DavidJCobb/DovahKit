@@ -109,6 +109,14 @@
 //                extra-data, keyword lists, and maybe models (for texture swaps -- 
 //                cleanup for those isn't implemented yet).
 //
+//              = OKAY, NO, THIS IS GETTING SILLY. WHAT IS STOPPING US FROM REPLACING 
+//                (form_id_t*) WITH (form_stub*) OR, ALTERNATIVELY, A STRUCT THAT 
+//                CONTAINS A (form_stub*) AND USE INFO INFORMATION (SIMILAR TO WHAT 
+//                WE JUST ADDED TO (form_id_t))? IF WE DID THAT, THEN RENUMBERING 
+//                FORM IDS WOULDN'T REQUIRE ANY EXTRA WORK, AND WE COULD KEEP OUR 
+//                EXISTING CODE FOR HANDLING FORM DELETION (WHICH IN TURN SPARES US 
+//                THE NEED FOR A SEPARATE CLEANUP STEP).
+//
 //        - Implement form renumbering:
 //
 //           - Form renumbering should only be allowed for forms defined in the active 
