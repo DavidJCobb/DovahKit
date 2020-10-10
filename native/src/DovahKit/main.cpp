@@ -117,6 +117,43 @@
 //                EXISTING CODE FOR HANDLING FORM DELETION (WHICH IN TURN SPARES US 
 //                THE NEED FOR A SEPARATE CLEANUP STEP).
 //
+//                 - Okay. Here's how we're gonna do it. We're going to define a struct 
+//                   consisting of a form_stub pointer and a basic type (corresponding 
+//                   to the current form_id_t::type_t). We're going to replace ALL 
+//                   occurrences of (form_id_t) with this struct. This will require 
+//                   rewriting all Form::sever_outbound_references code.
+//
+//                   With that done, we're going to modify (subrecord::read): when it 
+//                   reads a form ID, it will fetch the stub from the (file_load_order) 
+//                   and store the stub pointer. If there is no stub (i.e. a dangling 
+//                   form reference), then it will rely on the (file_load_order) to log 
+//                   a warning (currently, we have no way to report warnings to the 
+//                   frontend, whether they occur during the initial load or later, 
+//                   when loading a form's data; we'll need to come up with something) 
+//                   and it will store a nullptr stub pointer.
+//
+//                   Once that's done, form renumbering will no longer require any 
+//                   interaction with any loaded forms other than this: said forms 
+//                   need to be loaded and flagged as edited, if they aren't already. 
+//                   (I'm not yet sure how we'll work that out when mass-renumbering 
+//                   an entire active file's forms in response to it gaining or losing 
+//                   ESL status. I'll need to give that some thought. But right now, 
+//                   the prerequisite to that is being able to renumber forms at all, 
+//                   which is also a useful editing function and which would be the 
+//                   basis of a form ID compaction function.)
+//
+//                   Ultimately, we'll require the same amount of boilerplate as before 
+//                   I made my more recent changes (just Form::sever_outbound_references; 
+//                   no need for anything else) while also being able to renumber forms 
+//                   basically for free.
+//
+//                   Once that's in place (or maybe sooner), we'll also want to tear down 
+//                   basically all of the newest changes. If we roll back to before the 
+//                   "Started work on Form::get_outbound_formIDs" repo commit, then we 
+//                   can just proceed from there.
+//
+//                    = THIS IS OUR CURRENT TASK.
+//
 //        - Implement form renumbering:
 //
 //           - Form renumbering should only be allowed for forms defined in the active 
