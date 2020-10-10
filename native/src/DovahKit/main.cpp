@@ -52,6 +52,9 @@
 //        - REFRs defined in ESP files are de facto persistent, so this would have to 
 //          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
 //
+//  - The TESFilePicker widget should allow the user to browse through loose files and 
+//    files in the loaded BSAs.
+//
 //  - Localized string support
 //
 //     - The UI needs to physically prevent the user from entering glyphs that are not 
@@ -80,6 +83,68 @@
 //       ACHR.
 //
 //  - Support for Skyrim Special Edition.
+//
+//     = CURRENT GAME PLAN:
+//
+//        - Modify (form_id_t) to have a member which indicates what use info flags to 
+//          apply.
+//
+//        - Replace (Form::sever_outbound_references) with (...::get_all_formIDs). The 
+//          new function will take a (presumably empty) vector as a reference arg and 
+//          fill it with pointers to the loaded form's (form_id_t)s.
+//
+//           - The form deletion process will then loop over that vector and set the 
+//             form IDs to 0.
+//
+//        - Implement form renumbering:
+//
+//           - Form renumbering should only be allowed for forms defined in the active 
+//             file, and not for overrides or forms outside of the active file.
+//
+//           - Double-check that the target form ID is not in use, and then reserve it.
+//
+//           - Double-check that all of the form's users can be loaded, as we do with 
+//             deletion.
+//
+//           - Change the form stub's form ID, and move it within the (file_load_order)'s 
+//             form maps.
+//
+//           - Update the form ID keys in all relevant (use_info_list)s.
+//
+//           - Use (Form::get_all_formIDs) on all users to instantly replace the old 
+//             form ID (where it appears) with the new form ID.
+//
+//           - Once the renumber operation is complete, un-reserve the target form ID.
+//
+//           - DovahKitCore should offer an API for renumbering a single form, and 
+//             should send signals before and after.
+//
+//        - Implement ESL support.
+//
+//           - ESLs need to be stored in a separate vector from non-ESLs, which means 
+//             that we need to audit all uses of (file_load_order::files).
+//
+//           - Saving needs to fail if the total number of files, including the active 
+//             file, exceeds 0xFE, such that the active file would use prefix 0xFF.
+//
+//           - Saving needs to fail if any active file forms lie past the max form ID 
+//             for ESLs.
+//
+//           - When converting the active file to or from an ESL, we need to perform a 
+//             mass form renumbering.
+//
+//              - We need to be able to check that all renumber operations will succeed 
+//                before performing any of them.
+//
+//              - DovahKitCore should check for an imminent change in flags and if one 
+//                will occur, should emit "onMassFormRenumberImminent" and "...Complete" 
+//                signals before and after the save operation.
+//
+//           - When saving, we need to perform a fixup step for form IDs.
+//
+//           = We do not need to support converting a Skyrim Classic file to an SSE ESL. 
+//             It is reasonable to require that the user convert it to SSE, reload it, 
+//             and then ESLify it.
 //
 //     = Within an ESL file, forms defined by the ESL file do not use the 0xFE prefix. 
 //       If an ESL has four masters (such that the last of them is prefixed 0x03), then 
@@ -233,7 +298,46 @@
 //
 // DISTANT TASKS:
 //
-//  - Localized string support
+//  - Refhandle usage tracking: the number of persistent references in ESMs, and the 
+//    number of all references in non-ESMs, should be tracked and stored on each 
+//    file_reader. This information should be accessible to UI code.
+//
+//     - We may want to do a few things, so that we can isolate file_reader objects 
+//       away from frontend code while still being able to display file-specific 
+//       stats (and make those stats available for editing):
+//
+//       a) Define a file_stats struct, which would also appear a field on the 
+//          file_reader class. This struct can contain, among other things, stats 
+//          on refhandle usage.
+//
+//       b) Give DovahKitCore an accessor that returns const file_stats&.
+//
+//     - If the load order exceeds the game's refhandle limit, we should display 
+//       appropriate warnings to the user; we should also point out that exceeding 
+//       the refhandle limit breaks the Creation Kit as well. (Good thing we're not 
+//       using refhandles ourselves!)
+//
+//        - We don't have a warnings dialog at present, and that's something that 
+//          would be valuable to have just in general.
+//
+//  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
+//    they want to open files from. Currently, we just always use the Skyrim Classic 
+//    install path.
+//
+//     - We need a bool on file_load_order indicating whether it's dealing with Classic 
+//       or Special. This will affect whether it respects the "light" flag in file 
+//       headers, whether it reserves a load order slot for ESL forms, and so on.
+//
+//        - This bool need to be flipped to "Special" if the user loads files for 
+//          Classic and chooses to save the current active file as an SSE file. If 
+//          the current load order has 254 files in it, then the save operation 
+//          should fail (as the 0xFE slot would then conflict).
+//
+//        - Form loading/saving will still depend on each given file's version.
+//
+//     - We need to support ESLs.
+//
+//  - Localized string editing support
 //
 //     - If we wanted to implement STRINGS file editing in the future, that would entail 
 //       creating a localized_string_store for the active file if one does not exist, and 
@@ -253,42 +357,6 @@
 //          means that while TES files might show mojibake for unsupported languages, 
 //          I'm pretty sure that STRINGS files would show nothing at all, which may or 
 //          may not be worse.
-//
-//  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
-//    they want to open files from. Currently, we just always use the Skyrim Classic 
-//    install path.
-//
-//     - We need a bool on file_load_order indicating whether it's dealing with Classic 
-//       or Special. This will affect whether it respects the "light" flag in file 
-//       headers, whether it reserves a load order slot for ESL forms, and so on.
-//
-//        - This bool need to be flipped to "Special" if the user loads files for 
-//          Classic and chooses to save the current active file as an SSE file. If 
-//          the current load order has 254 files in it, then the save operation 
-//          should fail (as the 0xFE slot would then conflict).
-//
-//        - Form loading/saving will still depend on each given file's version.
-//
-//     - We need to support ESLs.
-//
-//  - Refhandle usage tracking: the number of persistent references in ESMs, and the 
-//    number of all references in non-ESMs, should be tracked and stored on each 
-//    file_reader. This information should be accessible to UI code.
-//
-//     - We may want to do a few things, so that we can isolate file_reader objects 
-//       away from frontend code while still being able to display file-specific 
-//       stats (and make those stats available for editing):
-//
-//       a) Define a file_stats struct, which would also appear a field on the 
-//          file_reader class. This struct can contain, among other things, stats 
-//          on refhandle usage.
-//
-//       b) Give DovahKitCore an accessor that returns const file_stats&.
-//
-//     - If the load order exceeds the game's refhandle limit, we should display 
-//       appropriate warnings to the user; we should also point out that exceeding 
-//       the refhandle limit breaks the Creation Kit as well. (Good thing we're not 
-//       using refhandles ourselves!)
 //
 //  - Miscellaneous technicalities
 //
@@ -456,11 +524,6 @@
 //       can create overrides of forms that contain localized strings, and so you can 
 //       see those strings in the editor.
 //
-//  - BSA loading
-//
-//     - TESFilePicker should allow the user to browse through loose files and files in 
-//       the loaded BSAs.
-//
 //  - If the user has any unsaved changes, the main window should show a confirmation 
 //    prompt on exit. We already override MainWindow::closeEvent; we'll want to do what 
 //    we need to do in there.
@@ -548,6 +611,16 @@
 //
 //     - Requires being able to warn the user about data loss in cases where fields 
 //       don't exist in the target version.
+//
+//  - Mod merging could be useful, particularly if we write a co-save file that describes 
+//    the mapping of forms from the source files to the destination file (so that later 
+//    re-merges produce consistent results).
+//
+//     - Being able to selectively merge in content, instead of merging all content in 
+//       all source files, could also be useful. OpusGlass accomplishes this by using 
+//       xEdit's "copy as new record into" function, though they acknowledge that this 
+//       is suboptimal in that it doesn't allow you to merge in updates to the source 
+//       files after the fact; it's a one-time thing only.
 //
 // FINALIZING TASKS:
 //
