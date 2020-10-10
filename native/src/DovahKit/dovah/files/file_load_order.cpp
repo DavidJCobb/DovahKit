@@ -370,7 +370,7 @@ namespace dovah {
             if (!file || (file->header.flags & tes_file_flag::localized_string_table) == 0)
                continue;
             file->localization_data = new localized_string_store(*this->archives, file->get_filename());
-            file->localization_data->default_language = language;
+            file->localization_data->set_default_language(language);
             file->localization_data->open_language_files(language);
          }
       }

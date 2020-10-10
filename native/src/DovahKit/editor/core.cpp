@@ -465,7 +465,7 @@ namespace {
       { "polish",    "Windows-1250" },
       { "portugese", "Windows-1252" },
       { "russian",   "Windows-1251" },
-      { "italian",   "Windows-1252" },
+      { "spanish",   "Windows-1252" },
       { "swedish",   "Windows-1252" },
       { "turkish",   "Windows-1254" },
    }};
@@ -487,14 +487,42 @@ void DovahKitCore::set_encoding() {
    }
 }
 
+namespace {
+   const char* _fallback_encoding_name_for_language(dovah::localization_language l) {
+      switch (l) {
+         case dovah::localization_language::arabic:     return "Windows-1256";
+         case dovah::localization_language::chinese:    return "UTF-8";
+         case dovah::localization_language::czech:      return "Windows-1250";
+         case dovah::localization_language::danish:     return "Windows-1252";
+         case dovah::localization_language::english:    return "Windows-1252";
+         case dovah::localization_language::finnish:    return "Windows-1252";
+         case dovah::localization_language::french:     return "Windows-1252";
+         case dovah::localization_language::german:     return "Windows-1252";
+         case dovah::localization_language::greek:      return "Windows-1253";
+         case dovah::localization_language::hungarian:  return "Windows-1250";
+         case dovah::localization_language::italian:    return "Windows-1252";
+         case dovah::localization_language::japanese:   return "UTF-8";
+         case dovah::localization_language::norwegian:  return "Windows-1252";
+         case dovah::localization_language::polish:     return "Windows-1250";
+         case dovah::localization_language::portugese:  return "Windows-1252";
+         case dovah::localization_language::russian:    return "Windows-1251";
+         case dovah::localization_language::spanish:    return "Windows-1252";
+         case dovah::localization_language::swedish:    return "Windows-1252";
+         case dovah::localization_language::turkish:    return "Windows-1254";
+      }
+      return "Windows-1252";
+   }
+}
 QString DovahKitCore::convert_localized_string(const dovah::localized_string& s) const noexcept {
-   if (s.localized) {
-      //
-      // TODO: If the content contains any invalid UTF-8 byte sequences, then we need to read it using the 
-      // fallback encoding, but... how could we check the fallback encoding? We'd need to know what language 
-      // the string was in, and it doesn't store that information.
-      //
-      return QString::fromUtf8(s.c_str());
+   if (s.localized != dovah::localization_language::none) {
+      QTextCodec::ConverterState state;
+      auto*   codec = QTextCodec::codecForName("UTF-8");
+      QString text  = codec->toUnicode(s.c_str());
+      if (state.invalidChars > 0) {
+         codec = QTextCodec::codecForName(_fallback_encoding_name_for_language(s.localized));
+         text  = codec->toUnicode(s.c_str());
+      }
+      return text;
    }
    QTextCodec* codec = nullptr;
    if (!this->encoding.empty())
@@ -510,7 +538,7 @@ void DovahKitCore::assign_localized_string(dovah::localized_string& s, const QSt
    if (!codec)
       codec = QTextCodec::codecForName("Windows-1252");
    s.value     = codec->fromUnicode(value);
-   s.localized = false;
+   s.localized = dovah::localization_language::none;
 }
 
 bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {

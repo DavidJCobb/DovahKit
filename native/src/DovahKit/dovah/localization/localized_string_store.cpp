@@ -12,6 +12,11 @@ namespace dovah {
    localized_string_store::~localized_string_store() {
    }
 
+   void localized_string_store::set_default_language(const language_name_t& n) {
+      this->default_language      = n;
+      this->default_language_enum = language_name_to_localization_enum(n.c_str());
+   }
+
    localized_string_store::language_t::entry_map_t& localized_string_store::language_t::entries_by_type(file_type type) {
       switch (type) {
          case file_type::common:      return entries.common;

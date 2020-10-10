@@ -6,9 +6,9 @@ namespace dovah {
    struct localized_string { // a string that may or may not have its value stored in a "STRINGS" string table file
       uint32_t    index = 0;
       std::string value;
-      bool        localized = false; // (true) if the content was pulled from a *STRINGS file
       bool        exists    = false; // (false) if the subrecord wasn't present in the containing form
-      localized_string_type type = localized_string_type::common;
+      localization_language localized = localization_language::none; // uses "none" if the content wasn't pulled from a STRINGS file
+      localized_string_type type      = localized_string_type::common;
 
       localized_string() {}
       localized_string(localized_string_type t) : type(t) {}

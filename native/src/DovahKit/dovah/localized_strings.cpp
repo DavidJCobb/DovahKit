@@ -4,7 +4,7 @@ namespace dovah {
    localized_string& localized_string::operator=(const std::string& other) noexcept {
       this->value     = other;
       this->exists    = true;
-      this->localized = false;
+      this->localized = localization_language::none;
       return *this;
    }
    localized_string& localized_string::operator=(const localized_string& other) noexcept {

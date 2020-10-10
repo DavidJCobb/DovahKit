@@ -38,12 +38,16 @@ namespace dovah {
          std::filesystem::path tes_filename; // name of the ES[LPM] file
          bsa_load_order&       file_source;
          std::unordered_map<language_name_t, language_t> content_by_language;
+         language_name_t       default_language;
+         localization_language default_language_enum = localization_language::unknown;
          //
       public:
          localized_string_store(bsa_load_order&, const std::filesystem::path& tes_filename);
          ~localized_string_store();
          //
-         language_name_t default_language;
+         void set_default_language(const language_name_t&);
+         inline const language_name_t& get_default_language() const noexcept { return this->default_language; }
+         inline localization_language get_default_language_enum() const noexcept { return this->default_language_enum; }
          //
          void open_language_files(const language_name_t&);
          const content_t& lookup(file_type, const language_name_t&, id_t);

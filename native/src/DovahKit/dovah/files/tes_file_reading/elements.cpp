@@ -181,13 +181,15 @@ namespace dovah {
       bool subrecord::to_string(localized_string& field) {
          field.value.clear();
          if (this->owner.uses_string_table) {
-            field.localized = true;
+            field.localized = localization_language::unknown;
             bool result = this->read(field.index);
             //
             field.value = "<LOAD FAILED>";
             if (auto* base = this->owner.as_file()) {
-               if (auto* store = base->localization_data)
-                  field.value = store->lookup(field.type, field.index);
+               if (auto* store = base->localization_data) {
+                  field.value     = store->lookup(field.type, field.index);
+                  field.localized = store->get_default_language_enum();
+               }
             }
             //
             field.exists = true;

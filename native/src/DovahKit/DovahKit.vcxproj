@@ -188,6 +188,7 @@
     <ClCompile Include="dovah\forms\Worldspace.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_helpers.cpp" />
+    <ClCompile Include="dovah\localization\common.cpp" />
     <ClCompile Include="dovah\localization\localized_string_store.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />
     <ClCompile Include="dovah\logging.cpp" />

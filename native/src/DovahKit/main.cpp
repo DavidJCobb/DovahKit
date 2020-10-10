@@ -54,24 +54,6 @@
 //
 //  - Localized string support
 //
-//     - We need to support different text encodings.
-//
-//        - When no STRINGS files are present, a localized_string uses a variable 
-//          encoding.
-//
-//           - IMPLEMENTED
-//
-//        - When a STRINGS file is present, a localized_string uses UTF-8 if possible, 
-//          but falls back to an encoding (a specific one per language) if there are 
-//          any invalid byte sequences present.
-//
-//           - Requires that the localized_string instance store an enum representing 
-//             the language it loaded from, so we can identify the fallback encoding 
-//             to use.
-//
-//        = UI code can potentially check whether a localized_string comes from a 
-//          STRINGS file by checking its (localized) bool.
-//
 //     - The UI needs to physically prevent the user from entering glyphs that are not 
 //       available in the current language. Alternatively, textboxes with bad glyphs 
 //       should be given a red outline, and the "OK" button should be greyed out.
