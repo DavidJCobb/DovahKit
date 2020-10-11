@@ -96,13 +96,14 @@
 //           - Double-check that all of the form's users can be loaded, as we do with 
 //             deletion.
 //
+//           - Load all users and flag them as edited. No other changes are necessary -- 
+//             they'll refer to the target form by its stub -- but they need to already 
+//             be referring to the target form before its form ID changes.
+//
 //           - Change the form stub's form ID, and move it within the (file_load_order)'s 
 //             form maps.
 //
 //           - Update the form ID keys in all relevant (use_info_list)s.
-//
-//           - Use (Form::get_all_formIDs) on all users to instantly replace the old 
-//             form ID (where it appears) with the new form ID.
 //
 //           - Once the renumber operation is complete, un-reserve the target form ID.
 //
