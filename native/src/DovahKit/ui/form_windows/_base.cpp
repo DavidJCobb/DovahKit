@@ -38,3 +38,14 @@ void FormDialogBaseTemplate::save_extra_form(dovah::bare_form_id_t formID, extra
       extra.remove_by_type(et);
    }
 }
+void FormDialogBaseTemplate::save_extra_form(dovah::form_stub* stub, extra_data_list& extra, extra_data_type et, bool remove_if_no_form) {
+   using dummy_t = dovah::loaded_forms::components::formID_extra_data<0, extra_data_type::action>;
+   //
+   if (stub || !remove_if_no_form) {
+      auto* data = extra.get_or_create_by_type(et);
+      if (data)
+         this->save_form_id(((dummy_t*)data)->form, stub);
+   } else {
+      extra.remove_by_type(et);
+   }
+}

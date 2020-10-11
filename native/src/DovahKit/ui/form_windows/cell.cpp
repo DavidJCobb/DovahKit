@@ -121,12 +121,12 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDi
    this->ui.interiorLockList->populate();
    QObject::connect(this->ui.ownerFaction, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
       auto& editor = DovahKitCore::get();
-      this->working_ownership.form = editor.get_form(this->ui.ownerFaction->formID());
+      this->working_ownership.form = this->ui.ownerFaction->formStub();
       this->_update_ownership_widgets();
    });
    QObject::connect(this->ui.ownerNPC, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
       auto& editor = DovahKitCore::get();
-      this->working_ownership.form = editor.get_form(this->ui.ownerNPC->formID());
+      this->working_ownership.form = this->ui.ownerNPC->formStub();
       this->_update_ownership_widgets();
    });
    //
@@ -333,18 +333,18 @@ void FormDialogCell::_save_impl() {
    #pragma region General
       this->stub->editorID = this->ui.editorID->text().toStdString();
       //
-      this->save_extra_form(this->ui.location->formID(), extra, extra_data_type::location);
+      this->save_extra_form(this->ui.location->formStub(), extra, extra_data_type::location);
       cobb::edit_bit(this->form->cell_flags, cell_flag::cant_travel_from_here, this->ui.flagCantTravel->isChecked());
       cobb::edit_bit(this->form->cell_flags, cell_flag::hand_changed,          this->ui.flagHandChanged->isChecked());
-      this->save_extra_form(this->ui.acousticSpace->formID(), extra, extra_data_type::cell_acoustic_space);
-      this->save_extra_form(this->ui.imagespace->formID(),    extra, extra_data_type::cell_imagespace);
-      this->save_extra_form(this->ui.musicType->formID(),     extra, extra_data_type::cell_music_override);
+      this->save_extra_form(this->ui.acousticSpace->formStub(), extra, extra_data_type::cell_acoustic_space);
+      this->save_extra_form(this->ui.imagespace->formStub(),    extra, extra_data_type::cell_imagespace);
+      this->save_extra_form(this->ui.musicType->formStub(),     extra, extra_data_type::cell_music_override);
       //
       bool has_water = is_exterior || this->ui.waterEnabled->isChecked();
       cobb::edit_bit(this->form->cell_flags, cell_flag::has_water,    has_water);
       cobb::edit_bit(this->form->cell_flags, cell_flag::no_lod_water, this->ui.flagNoLODWater->isChecked());
       if (has_water) {
-         this->save_extra_form(this->ui.waterType->formID(), extra, extra_data_type::cell_water_type);
+         this->save_extra_form(this->ui.waterType->formStub(), extra, extra_data_type::cell_water_type);
          this->form->water.height = this->ui.waterHeight->value();
          //
          auto* data = extra.get_or_create<extra::water_data>(extra_data_type::water_data);
@@ -377,7 +377,7 @@ void FormDialogCell::_save_impl() {
    #pragma endregion
    if (!is_exterior) {
       #pragma region Lighting
-         this->save_form_id(this->form->interior.lighting_template_ID, this->ui.lightingTemplate->formID());
+         this->save_form_id(this->form->interior.lighting_template_ID, this->ui.lightingTemplate->formStub());
          //
          cobb::edit_bit(lighting.inherit_flags, inherit_flag::ambient,              this->ui.inheritAmbient->isChecked());
          cobb::edit_bit(lighting.inherit_flags, inherit_flag::directional,          this->ui.inheritDirectionalColor->isChecked());
@@ -406,7 +406,7 @@ void FormDialogCell::_save_impl() {
          //
          cobb::edit_bit(this->form->cell_flags, cell_flag::show_sky,         this->ui.skyVisible->isChecked());
          cobb::edit_bit(this->form->cell_flags, cell_flag::use_sky_lighting, this->ui.skyLighting->isChecked());
-         this->save_extra_form(this->ui.skyRegion->formID(), extra, extra_data_type::cell_climate);
+         this->save_extra_form(this->ui.skyRegion->formStub(), extra, extra_data_type::cell_climate);
          //
          lighting.light_fade_distance.start = this->ui.lightingFadeDistanceStart->value();
          lighting.light_fade_distance.end   = this->ui.lightingFadeDistanceEnd->value();
@@ -421,7 +421,7 @@ void FormDialogCell::_save_impl() {
       #pragma endregion
       #pragma region Interior Data
          editor.assign_localized_string(this->form->name, this->ui.name->text());
-         this->save_extra_form(this->ui.encounterZone->formID(), extra, extra_data_type::encounter_zone);
+         this->save_extra_form(this->ui.encounterZone->formStub(), extra, extra_data_type::encounter_zone);
          {
             auto path = this->ui.waterEnvironmentMap->currentPath();
             if (path.isEmpty()) {
@@ -443,7 +443,7 @@ void FormDialogCell::_save_impl() {
                }
             }
          }
-         this->save_extra_form(this->ui.interiorLockList->formID(), extra, extra_data_type::interior_lock_list);
+         this->save_extra_form(this->ui.interiorLockList->formStub(), extra, extra_data_type::interior_lock_list);
          cobb::edit_bit(this->form->cell_flags, cell_flag::public_area, this->ui.flagPublicArea->isChecked());
          cobb::edit_bit(this->form->flags,      form_flag::off_limits,  this->ui.flagOffLimits->isChecked());
          cobb::edit_bit(this->form->flags,      form_flag::cant_wait,   this->ui.flagCantWait->isChecked());
@@ -453,7 +453,7 @@ void FormDialogCell::_save_impl() {
       // Strip interior-specific data off of this exterior cell.
       //
       #pragma region Lighting
-         this->save_form_id(this->form->interior.lighting_template_ID, dovah::bare_form_id_t(0));
+         this->save_form_id(this->form->interior.lighting_template_ID, nullptr);
          cobb::edit_bit(this->form->cell_flags, cell_flag::show_sky,         false);
          cobb::edit_bit(this->form->cell_flags, cell_flag::use_sky_lighting, false);
          extra.remove_by_type(extra_data_type::cell_climate);

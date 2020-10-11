@@ -52,7 +52,10 @@ class FormDialogBaseTemplate : public QDialog {
       //
       void save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t);
       void save_form_id(dovah::form_reference_t& target, dovah::form_stub*);
-      //
+      
+      // helper/shortcut function ONLY suitable for instances of formID_extra_data
       void save_extra_form(dovah::bare_form_id_t, extra_data_list&, extra_data_type, bool remove_if_no_form = true);
+      // helper/shortcut function ONLY suitable for instances of formID_extra_data
+      void save_extra_form(dovah::form_stub*,     extra_data_list&, extra_data_type, bool remove_if_no_form = true);
 };
 #define DOVAHKIT_FORM_EDIT_DIALOG template<class _dialog_t, typename loaded_form_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog, dovah::form_stub* stub);
