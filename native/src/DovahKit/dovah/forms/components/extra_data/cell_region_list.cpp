@@ -12,6 +12,8 @@ namespace dovah::loaded_forms::components::extra {
       return load_result::succeeded;
    }
    void cell_region_list::save(tes_record_writer& record) {
+      if (this->regions.empty())
+         return;
       auto& subrecord = record.open_next_subrecord(signature);
       for (auto id : this->regions)
          subrecord.write(id);

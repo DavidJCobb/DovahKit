@@ -10,6 +10,8 @@ namespace dovah::loaded_forms::components::extra {
       return load_result::succeeded;
    }
    void linked_ref::save(tes_record_writer& record) {
+      if (!this->ref)
+         return;
       auto& subrecord = record.open_next_subrecord(signature);
       if (this->keyword)
          subrecord.write(this->keyword);

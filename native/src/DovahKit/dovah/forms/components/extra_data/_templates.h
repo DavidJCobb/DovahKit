@@ -142,7 +142,7 @@ namespace dovah::loaded_forms::components {
          }
          virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept override {
             auto* clone = new formID_extra_data<signature, et>();
-            clone->formID.set(clone_owner, this->form);
+            clone->form.set(clone_owner, this->form);
             return clone;
          }
          virtual void clear_contained_formIDs(form_stub& my_owner) override {

@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components::extra {
    /*static*/ void lock::generate_use_info(tes_record_reader& record, form_stub* stub) {
       auto& subrecord = record.get_current_subrecord();
       subrecord.skip_bytes(sizeof(level) + sizeof(pad01));
-      struct_form_id_t formID;
+      form_id_t formID;
       if (subrecord.read(formID) && formID)
          stub->add_outbound_reference(formID);
    }

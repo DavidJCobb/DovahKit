@@ -105,14 +105,16 @@ namespace dovah::loaded_forms {
       //
       this->base_form.clear_if(*this->stub, other);
    }
-   bool ObjectReference::_friendly_delete_impl() noexcept {
+   bool ObjectReference::_friendly_delete_impl(const file_load_order& load_order) noexcept {
       this->flags |= form_flag::disabled;
       //
       // Make the reference an opposite enable state child of the PlayerRef.
       //
+      auto* player_ref = load_order.get_form(hardcoded_form_ids::PlayerRef);
+      assert(player_ref && "ObjectReference::_friendly_delete_impl: Why is the PlayerRef form not reachable by ID?");
       auto* extra = this->extra_data.get_or_create<components::extra::enable_state_parent>(components::extra_data_type::enable_state_parent);
       extra->flags = components::extra::enable_state_parent::flag::opposite;
-      extra->ref.set(this->stub, hardcoded_form_ids::PlayerRef);
+      extra->ref.set(*this->stub, player_ref);
 
       //
       // TODO: xEdit uses -30000 as its preferred Z-coordinate, and it makes any actors that 

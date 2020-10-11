@@ -17,13 +17,8 @@ namespace dovah::loaded_forms::components::extra {
       return load_result::succeeded;
    }
    void ammo::save(tes_record_writer& record) {
-      //
-      // NOTE: We should write our subrecords even if the values match the defaults, 
-      // because we can't tell whether we're writing to a new form or to an override. 
-      // If the user wants to overwrite a record that has non-default poison settings 
-      // in order to return them to their defaults, then we need to make sure that 
-      // that works.
-      //
+      if (!this->type)
+         return;
       record.write_formID_subrecord(signature_type, this->type);
       auto& XPSC = record.open_next_subrecord(signature_count);
       XPSC.write(this->count);

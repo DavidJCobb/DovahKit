@@ -11,6 +11,8 @@ namespace dovah::loaded_forms::components::extra {
       return load_result::succeeded;
    }
    void reflector_refs::save(tes_record_writer& record) {
+      if (this->entries.empty())
+         return;
       for (auto& entry : this->entries) {
          auto& subrecord = record.open_next_subrecord(signature);
          subrecord.write(entry.target);

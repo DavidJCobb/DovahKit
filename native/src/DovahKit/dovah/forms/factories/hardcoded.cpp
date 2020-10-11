@@ -27,6 +27,7 @@ namespace dovah {
       //       they *were* hardcoded at some point during early development and remained inside 
       //       of Skyrim.esm as leftovers after being removed from both the game *and* the CK.
       //
+      form_stub* Player = nullptr;
       {  // Actor values
          auto& list = data::actor_Value_info_list::get();
          for (uint16_t i = 0; i < list.count; i++) {
@@ -163,7 +164,7 @@ namespace dovah {
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::Actor;
-         form->base_form.set(stub, hardcoded_form_ids::Player);
+         form->base_form.set(*stub, Player);
          form->stub = stub;
          stub->form = form;
       }

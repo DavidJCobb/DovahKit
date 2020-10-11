@@ -10,6 +10,8 @@ namespace dovah::loaded_forms::components::extra {
       return load_result::succeeded;
    }
    void lit_water::save(tes_record_writer& record) {
+      if (this->refs.empty())
+         return;
       for (auto ref : this->refs) {
          auto& subrecord = record.open_next_subrecord(signature);
          subrecord.write(ref);

@@ -209,7 +209,7 @@ namespace dovah::loaded_forms {
          std::vector<Stage> stages;
          std::vector<Objective> objectives;
          std::vector<Alias*> aliases;
-         std::vector<form_id_t> textDisplayGlobalIDs;
+         std::vector<form_reference_t> textDisplayGlobalIDs;
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);

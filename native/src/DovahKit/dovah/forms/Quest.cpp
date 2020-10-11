@@ -356,7 +356,7 @@ namespace dovah::loaded_forms {
                break;
             case 'QTGL':
                {
-                  uint32_t id;
+                  form_reference_t id;
                   if (subrecord.read(id) && id)
                      this->textDisplayGlobalIDs.push_back(id);
                }

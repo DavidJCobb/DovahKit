@@ -43,8 +43,8 @@ namespace dovah::loaded_forms {
       //
       return this->_save_impl(record);
    }
-   void Form::friendly_delete_override() noexcept {
-      bool flag = !this->_friendly_delete_impl();
+   void Form::friendly_delete_override(const file_load_order& load_order) noexcept {
+      bool flag = !this->_friendly_delete_impl(load_order);
       cobb::edit_bit(this->flags,       form_flag::deleted, flag);
       cobb::edit_bit(this->stub->flags, form_stub::flag::flagged_as_deleted, flag);
    }

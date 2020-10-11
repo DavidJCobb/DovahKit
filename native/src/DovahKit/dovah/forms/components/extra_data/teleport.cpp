@@ -16,7 +16,7 @@ namespace dovah::loaded_forms::components::extra {
       return load_result::succeeded;
    }
    void teleport::save(tes_record_writer& record) {
-      if (this->target_door == bare_form_id_t(0))
+      if (!this->target_door)
          return;
       auto& subrecord = record.open_next_subrecord(signature);
       subrecord.write(this->target_door);

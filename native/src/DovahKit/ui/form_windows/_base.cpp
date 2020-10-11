@@ -33,7 +33,7 @@ void FormDialogBaseTemplate::save_extra_form(dovah::bare_form_id_t formID, extra
    if (formID || !remove_if_no_form) {
       auto* data = extra.get_or_create_by_type(et);
       if (data)
-         this->save_form_id(((dummy_t*)data)->formID, formID);
+         this->save_form_id(((dummy_t*)data)->form, formID);
    } else {
       extra.remove_by_type(et);
    }

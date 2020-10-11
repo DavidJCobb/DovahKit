@@ -52,7 +52,7 @@ namespace dovah {
 
             bool save(tes_file_writing::record& record); // returns a success bool. will write EDID for you.
 
-            void friendly_delete_override() noexcept;
+            void friendly_delete_override(const file_load_order&) noexcept;
             void flag_as_deleted() noexcept;
             void sever_outbound_references_to(form_stub& other) noexcept;
 
@@ -83,7 +83,7 @@ namespace dovah {
             // This function should only be called for overrides, not for forms defined in the 
             // active file.
             //
-            virtual bool _friendly_delete_impl() noexcept { return false; }
+            virtual bool _friendly_delete_impl(const file_load_order&) noexcept { return false; }
 
             virtual void _sever_outbound_references_impl(form_stub& other) noexcept {}; // TODO: implement on existing forms; then, make pure
       };

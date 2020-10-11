@@ -127,13 +127,6 @@ namespace dovah {
          }
          return false;
       }
-      bool subrecord::_read_form_id(struct_form_id_t& field) const noexcept {
-         if (this->is_in_bounds(this->is_skyrim_special() ? 8 : 4)) {
-            this->unchecked_read(field);
-            return true;
-         }
-         return false;
-      }
       bool subrecord::_read_form_reference(form_reference_t& field) const noexcept {
          bare_form_id_t id;
          if (!this->read(id)) {
@@ -142,11 +135,7 @@ namespace dovah {
          }
          if (id) {
             this->_fixupFormID(id);
-            //
-            auto* file  = this->owner.as_file();
-            assert(file);
-            auto& order = file->load_order;
-            field.stub = order.get_form(id);
+            field.stub = this->lookup_form_by_id(id);
             if (!field.stub) {
                //
                // TODO: subrecord refers to a non-existent form; generate a warning.
@@ -166,25 +155,15 @@ namespace dovah {
          return false;
       }
       void subrecord::_unchecked_read_form_id(form_id_t& field) const noexcept {
-         this->get_containing_record().unchecked_read(field.value);
+         this->unchecked_read(field.value);
          this->_fixupFormID(field.value);
-      }
-      void subrecord::_unchecked_read_form_id(struct_form_id_t& field) const noexcept {
-         this->get_containing_record().unchecked_read(field.value);
-         this->_fixupFormID(field.value);
-         if (this->is_skyrim_special())
-            this->get_containing_record().unchecked_read(field.padding);
       }
       void subrecord::_unchecked_read_form_reference(form_reference_t& field) const noexcept {
          bare_form_id_t id;
          this->unchecked_read(id);
          if (id) {
             this->_fixupFormID(id);
-            //
-            auto* file = this->owner.as_file();
-            assert(file);
-            auto& order = file->load_order;
-            field.stub = order.get_form(id);
+            field.stub = this->lookup_form_by_id(id);
             if (!field.stub) {
                //
                // TODO: subrecord refers to a non-existent form; generate a warning.

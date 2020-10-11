@@ -31,7 +31,7 @@ namespace {
 
    template<class ec, extra_data_type et> void _load_extra_formID(FormsOfTypeCombobox* widget, dovah::loaded_forms::components::extra_data_list& extra) {
       if (auto* data = extra.lookup<ec>(et)) {
-         widget->setFormByID(data->formID);
+         widget->setFormByID(data->form.formID());
       } else {
          widget->setFormByID(0);
       }
@@ -220,7 +220,7 @@ void FormDialogCell::_load_impl() {
       _load_extra_formID<extra::cell_acoustic_space, extra_data_type::cell_acoustic_space>(this->ui.acousticSpace, extra);
       _load_extra_formID<extra::cell_imagespace,     extra_data_type::cell_imagespace>    (this->ui.imagespace, extra);
       if (auto* data = extra.lookup<extra::cell_music_override>(extra_data_type::cell_music_override)) {
-         this->ui.musicType->setFormByID(data->formID);
+         this->ui.musicType->setFormByID(data->form.formID());
       } else {
          this->ui.musicType->setToUndefined();
       }
@@ -310,7 +310,7 @@ void FormDialogCell::_load_impl() {
          }
          this->ui.ownerFactionRequiredRank->clear();
          if (auto* data = extra.lookup<extra::ownership>(extra_data_type::ownership)) {
-            this->working_ownership.form = editor.get_form(data->formID);
+            this->working_ownership.form = data->form.get_form_stub();
          }
          if (auto* data = extra.lookup<extra::rank>(extra_data_type::rank)) {
             this->working_ownership.rank = data->value;
@@ -436,7 +436,7 @@ void FormDialogCell::_save_impl() {
          if (auto* stub = this->working_ownership.form) {
             auto* data = extra.get_or_create<extra::ownership>(extra_data_type::ownership);
             if (data) {
-               this->save_form_id(data->formID, stub);
+               this->save_form_id(data->form, stub);
                if (stub->formType == dovah::form_type::faction) {
                   auto* data = extra.get_or_create<extra::rank>(extra_data_type::rank);
                   data->value = this->working_ownership.rank;

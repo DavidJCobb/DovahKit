@@ -110,14 +110,6 @@ namespace dovah::tes_file_writing {
       if (this->is_skyrim_special())
          this->write(ref.padding);
    }
-   void subrecord::_write_impl(const form_id_t& formID) {
-      this->write(uint32_t(formID));
-   }
-   void subrecord::_write_impl(const struct_form_id_t& formID) {
-      this->_write_impl((form_id_t)formID);
-      if (this->is_skyrim_special())
-         this->write(formID.padding);
-   }
    void subrecord::_write_impl(const localized_string& field) {
       if (this->owner.use_string_table) {
          this->write(field.index);

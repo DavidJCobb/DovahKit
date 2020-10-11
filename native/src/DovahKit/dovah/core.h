@@ -218,7 +218,8 @@ namespace dovah {
          form_reference_t() {}
          form_reference_t(form_stub* s) : stub(s) {}
          //
-         inline bare_form_id_t formID() const noexcept { return this->stub ? this->stub->formID : 0; }
+         bare_form_id_t formID() const noexcept;
+         inline form_stub* get_form_stub() const noexcept { return this->stub; }
          //
          void clear_if(form_stub& owner, form_stub& clear_if);
          void set(form_stub& owner, form_stub* set_to);
@@ -262,35 +263,11 @@ namespace dovah {
 
    struct form_id_t {
       //
-      // This struct exists for a few reasons:
+      // This struct exists in order to allow the "read"/"write" functions for file I/O to be 
+      // templated on form IDs, to automate form ID fixup.
       //
-      //  - For file I/O, the subrecord-reading and -writing classes can have "read" functions 
-      //    templated on this struct, in order to automate form ID fixup.
-      //
-      //  - When working with loaded forms, this struct can automate the task of fixing up use 
-      //    info when assigning to form IDs.
-      //
-      // Accordingly, this struct should be used in the following situations only:
-      //
-      //  - When reading form IDs from a file, or saving them to a file.
-      //
-      //  - For all form ID members on a loaded-form class.
-      //
-      // When you wish to change the form ID's value (e.g. to make changes to a loaded form), 
-      // you must call this struct's (set) member function, passing two arguments: the 
-      // (form_stub) that owns the loaded-form that the form_id_t instance is a member of; and 
-      // the form ID or (form_stub) that you want the form_id_t instance to be set to.
-      //
-      //   [[ NOTE: We can't disable form_id_t::operator=(const form_id_t&), as doing so ]] 
-      //   [[ would make it impossible to pass these things as arguments. Be careful not ]] 
-      //   [[ to assign one form_id_t to another when cloning a form.                    ]]
-      //
-      // Note that this struct DOES NOT have a destructor that severs use info. This is by 
-      // design, so that a loaded form can be unloaded without severing the use info. However, 
-      // that means that if you want to, say, clear a std::vector<form_id_t> on a loaded form 
-      // as part of some modification you are making to that form, then you must first call  
-      // (form_id_t::set) on each form ID in the vector, passing (bare_form_id_t(0)). Naturally, 
-      // this also applies to vectors of structs that have form_id_t members.
+      // Loaded forms should not use this struct as a member. It should only be used for 
+      // generating use info, i.e. when you need to load a form ID but not retain it.
       //
       friend class tes_file_reading::subrecord;
       friend class tes_file_writing::subrecord;
@@ -315,45 +292,6 @@ namespace dovah {
          inline bool operator<=(const form_id_t& other) { return this->value <= other.value; };
          inline bool operator==(const form_id_t& other) { return this->value == other.value; };
          inline bool operator!=(const form_id_t& other) { return this->value != other.value; };
-         //
-         void set(form_stub* owner, bare_form_id_t set_to); // set (this->value) and update use info for the old and new forms
-         void set(form_stub* owner, form_stub* set_to);     // set (this->value) and update use info for the old and new forms
-         //
-      protected:
-         inline form_id_t& operator=(const uint32_t& other) { this->value = other; return *this; };
-         inline form_id_t& operator=(const int& other) { this->value = other; return *this; };
-   };
-   struct base_form_id_t : form_id_t {
-      //
-      // This is a special-case subclass of form_id_t which should be used for REFR/NAME, 
-      // a.k.a. a reference's, uh, reference to its base form.
-      //
-      public:
-         void set(form_stub* owner, bare_form_id_t set_to);
-         void set(form_stub* owner, form_stub* set_to);
-   };
-   struct dialogue_form_id_t : form_id_t {
-      //
-      // This is a special-case subclass of form_id_t which should be used for DIAL/QNAM 
-      // and INFO/PNAM.
-      //
-      public:
-         void set(form_stub* owner, bare_form_id_t set_to);
-         void set(form_stub* owner, form_stub* set_to);
-   };
-   struct struct_form_id_t : form_id_t {
-      //
-      // In some cases, the game reads entire structs from the file by blindly copying bytes. 
-      // If these structs contain form IDs, then they will differ in Skyrim Special. Skyrim 
-      // treats references from one form to another as unions of form IDs and form pointers; 
-      // loading happens in two stages, with the first stage pulling form IDs into the places 
-      // where the pointers would be, and the second stage replacing all form IDs with pointers. 
-      // Skyrim Special is 64-bit, so its pointers are eight bytes instead of four bytes; as 
-      // such, structs that are blindly copied will have their layouts change, with four 
-      // padding bytes following each four-byte form ID.
-      //
-      public:
-         uint32_t padding = 0;
    };
 
    namespace loaded_forms {

@@ -147,11 +147,9 @@ namespace dovah {
             //
             void _fixupFormID(uint32_t& id) const noexcept;
             bool _read_form_id(form_id_t& field) const noexcept;
-            bool _read_form_id(struct_form_id_t& field) const noexcept;
             bool _read_form_reference(form_reference_t&) const noexcept;
             bool _read_form_reference(struct_form_reference_t&) const noexcept;
             void _unchecked_read_form_id(form_id_t& field) const noexcept;
-            void _unchecked_read_form_id(struct_form_id_t& field) const noexcept;
             void _unchecked_read_form_reference(form_reference_t&) const noexcept;
             void _unchecked_read_form_reference(struct_form_reference_t&) const noexcept;
             //
@@ -201,7 +199,6 @@ namespace dovah {
             template<> inline bool read(form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
             template<> inline bool read(struct_form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
             template<> inline bool read(form_id_t& field) const { return this->_read_form_id(field); }
-            template<> inline bool read(struct_form_id_t& field) const { return this->_read_form_id(field); }
             #pragma endregion
             //
             #pragma region unchecked_read
@@ -227,7 +224,6 @@ namespace dovah {
             template<> inline void unchecked_read(form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
             template<> inline void unchecked_read(struct_form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
             template<> inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }
-            template<> inline void unchecked_read(struct_form_id_t& field) const { this->_unchecked_read_form_id(field); }
             #pragma endregion
             //
             bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator

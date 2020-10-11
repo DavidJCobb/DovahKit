@@ -103,7 +103,6 @@ namespace dovah {
             void _write_impl(const form_reference_t&);
             void _write_impl(const struct_form_reference_t&);
             void _write_impl(const form_id_t&);
-            void _write_impl(const struct_form_id_t&);
             void _write_impl(const localized_string&);
             //
          public:
@@ -137,8 +136,6 @@ namespace dovah {
             }
             template<> inline void write(const form_reference_t& field) { return this->_write_impl(field); }
             template<> inline void write(const struct_form_reference_t& field) { return this->_write_impl(field); }
-            template<> inline void write(const form_id_t& field) { return this->_write_impl(field); }
-            template<> inline void write(const struct_form_id_t& field) { return this->_write_impl(field); }
             template<> inline void write(const localized_string& field) { return this->_write_impl(field); }
             template<> inline void write(const tes_file_group_header& v) = delete;
             template<> inline void write(const tes_file_record_header& v) = delete;

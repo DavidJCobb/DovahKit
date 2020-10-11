@@ -1344,7 +1344,7 @@ namespace dovah {
       for (auto* stub : this->forms_needing_flag) {
          this->_prep_for_delete(*stub);
          //
-         stub->load()->friendly_delete_override();
+         stub->load()->friendly_delete_override(this->owner);
          stub->set_edited(true);
       }
       this->result = result_code::success;
