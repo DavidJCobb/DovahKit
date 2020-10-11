@@ -377,6 +377,8 @@ namespace dovah {
          if (old_stub)
             this->revoke_outbound_reference(old_stub, flags);
       }
+      if (!new_stub)
+         return;
       //
       this->add_outbound_reference(new_stub, flags);
       new_stub->receive_inbound_ref(this, use_info_entry::invert_flags(flags));
@@ -384,8 +386,6 @@ namespace dovah {
    void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {
       auto& lo       = this->_get_load_order();
       auto* new_stub = lo.get_form(change_to);
-      if (!new_stub)
-         return;
       this->replace_outbound_reference(old, new_stub, flags);
    }
 

@@ -1293,12 +1293,19 @@ namespace dovah {
    }
    void form_deletion_request::_prep_for_delete(form_stub& stub) {
       stub.sever_all_outbound_references();
+      //
+      std::vector<form_stub*> pending;
+      //
       for (auto& pair : stub.inbound) {
          auto& entry = pair.second;
          auto* other = entry.other;
          auto  form = other->load();
-         form->sever_outbound_references_to(stub);
+         pending.push_back(other); // gather forms to process later. we don't want to sever refs now, as that will change use info and potentially invalidate iterators during the loop
          other->set_edited(true);
+      }
+      for (auto* user : pending) {
+         auto form = user->load();
+         form->sever_outbound_references_to(stub);
       }
    }
    std::vector<form_stub*> form_deletion_request::get_forms_pending_delete(bool include_flagged) const noexcept {
