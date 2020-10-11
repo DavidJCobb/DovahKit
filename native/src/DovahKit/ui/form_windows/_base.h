@@ -50,8 +50,8 @@ class FormDialogBaseTemplate : public QDialog {
       virtual void _load_impl() = 0; // pull data from a loaded form into the UI
       virtual void _save_impl() = 0; // save data from the UI into a loaded form
       //
-      void save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t);
-      void save_form_id(dovah::form_id_t& target, dovah::form_stub*);
+      void save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t);
+      void save_form_id(dovah::form_reference_t& target, dovah::form_stub*);
       //
       void save_extra_form(dovah::bare_form_id_t, extra_data_list&, extra_data_type, bool remove_if_no_form = true);
 };

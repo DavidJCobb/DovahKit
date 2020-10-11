@@ -6,7 +6,7 @@ namespace dovah::loaded_forms::components {
       bool arg_type::load_value(condition_arg_value& out, tes_subrecord_reader& subrecord) const noexcept {
          switch (this->underlying) {
             case arg_underlying_type::formID:
-               return subrecord.read(out.formID);
+               return subrecord.read(out.form);
             default:
                return subrecord.read(out.dword);
          }
@@ -25,7 +25,7 @@ namespace dovah::loaded_forms::components {
          }
          switch (this->underlying) {
             case arg_underlying_type::formID:
-               cobb::sprintf(out, "[FORM:%08X]", value.formID);
+               cobb::sprintf(out, "[FORM:%08X]", value.form.formID());
                return;
             case arg_underlying_type::float32:
                cobb::sprintf(out, "%f", value.float32);

@@ -50,7 +50,7 @@ namespace dovah::loaded_forms {
 
          struct large_reference_t { // RNAM (SSE-only); one subrecord per entry
             struct ref {
-               form_id_t form;
+               form_reference_t form;
                int16_t y;
                int16_t x;
             };
@@ -108,20 +108,21 @@ namespace dovah::loaded_forms {
             int16_t x = 0;
             int16_t y = 0;
          } center_cell_coordinates; // WCTR // for fixed-dimension worldspaces only?
-         form_id_t climate;           // CNAM
-         form_id_t lighting_template; // LTMP
-         form_id_t encounter_zone;    // XEZN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
-         form_id_t location;          // XLCN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
-         form_id_t water_type;        // NAM2
-         form_id_t water_type_lod;    // NAM3
-         float     lod_water_height;  // NAM4
+         form_reference_t climate;           // CNAM
+         form_reference_t lighting_template; // LTMP
+         form_reference_t encounter_zone;    // XEZN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
+         form_reference_t location;          // XLCN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
+         form_reference_t music;             // ZNAM
+         form_reference_t water_type;        // NAM2
+         form_reference_t water_type_lod;    // NAM3
+         float            lod_water_height;  // NAM4
          struct {
             float default_land_height;
             float default_water_height;
          } land_data; // DNAM
          struct {
-            form_id_t form;      // WNAM
-            uint16_t  flags = 0; // PNAM
+            form_reference_t form; // WNAM
+            uint16_t flags = 0; // PNAM
          } parent;
          std::string map_icon; // ICON
          components::model cloud_model; // MODL and friends
@@ -166,7 +167,6 @@ namespace dovah::loaded_forms {
                float y;
             } max; // NAM9
          } bounds;
-         form_id_t music; // ZNAM
          std::string tree_canopy_shadow; // NNAM // unused
          std::string water_noise_texture; // XNAM
          std::string hd_lod_diffuse_texture; // TNAM
@@ -184,7 +184,7 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
          //
-         virtual void setup() noexcept override;
+         virtual void setup(const file_load_order&) noexcept override;
          //
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

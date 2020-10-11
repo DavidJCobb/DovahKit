@@ -16,14 +16,14 @@ namespace dovah::loaded_forms::components {
       //
    };
    struct model_texture_swap { // MODS
-      std::string nifBlockName;
-      form_id_t   textureSet;
-      uint32_t    nifBlockIndex;
+      std::string      nif_block_name;
+      form_reference_t texture_set;
+      uint32_t         nif_block_index;
    };
    struct model { // MODL
-      std::string modelPath;
-      model_texture_hash textureHashes;
-      std::vector<model_texture_swap> textureSwaps;
+      std::string model_path;
+      model_texture_hash texture_hashes;
+      std::vector<model_texture_swap> texture_swaps;
       //
       void load(tes_subrecord_reader&);
       static void generateUseInfo(tes_subrecord_reader&, form_stub*);
@@ -34,6 +34,6 @@ namespace dovah::loaded_forms::components {
       void clone_from(const model& original, form_stub& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
       //
-      inline bool has_texture_hashes() const noexcept { return !this->textureHashes.data.empty(); }
+      inline bool has_texture_hashes() const noexcept { return !this->texture_hashes.data.empty(); }
    };
 }

@@ -141,18 +141,18 @@ namespace dovah::loaded_forms {
          for (size_t i = 0; i < size; ++i) {
             auto& entry = copy->relationships[i];
             auto& from  = this->relationships[i];
-            entry.other.set(copy->stub, from.other);
+            entry.other.set(*copy->stub, from.other);
             entry.combat = from.combat;
             entry.mod    = from.mod;
          }
       }
       copy->faction_flags = this->faction_flags;
-      copy->prison_marker.set(copy->stub, this->prison_marker);
-      copy->follower_wait_marker.set(copy->stub, this->follower_wait_marker);
-      copy->evidence_chest.set(copy->stub, this->evidence_chest);
-      copy->player_belongings_chest.set(copy->stub, this->player_belongings_chest);
-      copy->crime_group.set(copy->stub, this->crime_group);
-      copy->jail_outfit.set(copy->stub, this->jail_outfit);
+      copy->prison_marker.set(*copy->stub, this->prison_marker);
+      copy->follower_wait_marker.set(*copy->stub, this->follower_wait_marker);
+      copy->evidence_chest.set(*copy->stub, this->evidence_chest);
+      copy->player_belongings_chest.set(*copy->stub, this->player_belongings_chest);
+      copy->crime_group.set(*copy->stub, this->crime_group);
+      copy->jail_outfit.set(*copy->stub, this->jail_outfit);
       copy->crime_values = this->crime_values;
       {
          size_t size = this->ranks.size();
@@ -160,8 +160,8 @@ namespace dovah::loaded_forms {
          for (size_t i = 0; i < size; ++i)
             copy->ranks[i] = this->ranks[i];
       }
-      copy->vendor_list.set(copy->stub, this->vendor_list);
-      copy->vendor_chest.set(copy->stub, this->vendor_chest);
+      copy->vendor_list.set(*copy->stub, this->vendor_list);
+      copy->vendor_chest.set(*copy->stub, this->vendor_chest);
       copy->vendor_data = this->vendor_data;
       copy->package_location_vendor.clone_from(this->package_location_vendor, *copy->stub);
       {
@@ -265,8 +265,8 @@ namespace dovah::loaded_forms {
       //
       bool removals = false;
       for (auto& entry : this->relationships) {
-         if (entry.other == other.formID) {
-            entry.other.set(this->stub, nullptr);
+         if (entry.other == &other) {
+            entry.other.set(*this->stub, nullptr);
             removals = true;
          }
       }
@@ -277,7 +277,7 @@ namespace dovah::loaded_forms {
                list.begin(),
                list.end(),
                [](relationship& entry) {
-                  return entry.other == bare_form_id_t(0);
+                  return entry.other == nullptr;
                }
             ),
             list.end()
@@ -287,22 +287,13 @@ namespace dovah::loaded_forms {
       for (auto& cnd : this->vendor_conditions)
          cnd.sever_outbound_references_to(other, *this->stub);
       //
-      auto formID = other.formID;
-      if (this->prison_marker == formID)
-         this->prison_marker.set(this->stub, nullptr);
-      if (this->follower_wait_marker == formID)
-         this->follower_wait_marker.set(this->stub, nullptr);
-      if (this->evidence_chest == formID)
-         this->evidence_chest.set(this->stub, nullptr);
-      if (this->player_belongings_chest == formID)
-         this->player_belongings_chest.set(this->stub, nullptr);
-      if (this->crime_group == formID)
-         this->crime_group.set(this->stub, nullptr);
-      if (this->jail_outfit == formID)
-         this->jail_outfit.set(this->stub, nullptr);
-      if (this->vendor_list == formID)
-         this->vendor_list.set(this->stub, nullptr);
-      if (this->vendor_chest == formID)
-         this->vendor_chest.set(this->stub, nullptr);
+      this->prison_marker.clear_if(*this->stub, other);
+      this->follower_wait_marker.clear_if(*this->stub, other);
+      this->evidence_chest.clear_if(*this->stub, other);
+      this->player_belongings_chest.clear_if(*this->stub, other);
+      this->crime_group.clear_if(*this->stub, other);
+      this->jail_outfit.clear_if(*this->stub, other);
+      this->vendor_list.clear_if(*this->stub, other);
+      this->vendor_chest.clear_if(*this->stub, other);
    }
 }

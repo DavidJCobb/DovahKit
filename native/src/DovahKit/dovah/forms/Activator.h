@@ -48,12 +48,12 @@ namespace dovah::loaded_forms {
          components::model model; // MODL, MODT, MODS
          components::destruction_stage_data destruction_data; // DEST
          components::keyword_list keywords; // KSIZ, KWDA
-         localized_string name; // FULL
-         color_t   marker_color; // CNAM
-         form_id_t looping_sound;
-         form_id_t activation_sound;
-         form_id_t water_type;
-         form_id_t interact_keyword;
+         localized_string  name; // FULL
+         color_t           marker_color; // CNAM
+         form_reference_t  looping_sound;
+         form_reference_t  activation_sound;
+         form_reference_t  water_type;
+         form_reference_t  interact_keyword;
          localized_string  activation_verb;
          activator_flags_t activator_flags;
 

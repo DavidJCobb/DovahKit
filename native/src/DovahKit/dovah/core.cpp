@@ -397,6 +397,34 @@ namespace dovah {
       return false;
    }
    #pragma endregion
+
+   #pragma region form_reference_t
+   void form_reference_t::clear_if(form_stub& owner, form_stub& clear_if) {
+      if (this->stub == &clear_if)
+         this->set(owner, nullptr);
+   }
+   void form_reference_t::set(form_stub& owner, form_stub* set_to) {
+      if (this->stub == set_to)
+         return;
+      bare_form_id_t old = this->stub ? this->stub->formID : 0;
+      owner.replace_outbound_reference(old, set_to, this->use_info_flags);
+      this->stub = set_to;
+   }
+   void form_reference_t::set(form_stub& owner, const form_reference_t& set_to) {
+      this->set(owner, set_to.stub);
+   }
+   //
+   base_form_reference_t::base_form_reference_t() : form_reference_t(use_info_entry::flag::object_reference) {};
+   base_form_reference_t::base_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::object_reference, s) {};
+   //
+   dialogue_form_reference_t::dialogue_form_reference_t() : form_reference_t(use_info_entry::flag::dialogue) {};
+   dialogue_form_reference_t::dialogue_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue, s) {};
+   //
+   void struct_form_reference_t::set(form_stub& owner, const struct_form_reference_t& set_to) {
+      form_reference_t::set(owner, set_to.stub);
+      this->padding = set_to.padding;
+   }
+   #pragma endregion
    
    #pragma region form_id_t and friends
    void form_id_t::set(form_stub* owner, bare_form_id_t set_to) {

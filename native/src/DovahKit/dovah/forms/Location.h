@@ -4,6 +4,7 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "components/keyword_list.h"
 
 class TESPluginRecord;
 
@@ -27,51 +28,51 @@ namespace dovah::loaded_forms {
          using subrecord_flags_t = std::underlying_type_t<subrecord_flag::type>;
 
          struct PopulationRef {
-            form_id_t actorRefID;
-            form_id_t cellOrWorldID;
-            int16_t   gridY;
-            int16_t   gridX;
+            form_reference_t actor; // ACHR
+            form_reference_t cell_or_world;
+            int16_t          grid_y;
+            int16_t          grid_x;
          };
          struct UniqueRef {
-            form_id_t actorBaseID;
-            form_id_t actorRefID;
-            form_id_t locationID; // usually self
+            form_reference_t actor_base;
+            form_reference_t actor;
+            form_reference_t location; // usually self
          };
          struct StaticRef {
-            form_id_t locRefTypeID;
-            form_id_t refID;
-            form_id_t cellOrWorldID;
-            uint16_t  unk0C;
-            uint16_t  unk0E;
+            form_reference_t ref_type; // LocRefType
+            form_reference_t reference;
+            form_reference_t cell_or_world;
+            uint16_t         unk0C;
+            uint16_t         unk0E;
          };
          struct Encounter { // unverified
-            form_id_t worldID;
+            form_reference_t worldID;
             std::vector<uint32_t> ints; // actually pairs of (u?)int16_t
          };
          struct EnablePoint { // cell enable point
-            form_id_t actorID;
-            form_id_t refID;
-            int16_t   gridY;
-            int16_t   gridX;
+            form_reference_t actor;
+            form_reference_t reference;
+            int16_t          grid_y;
+            int16_t          grid_x;
          };
 
+         components::keyword_list keywords;
          subrecord_flags_t subrecordFlags = 0; // whether we're using Axxx subrecords or Lxxx subrecords
          std::vector<PopulationRef> population; // ACPR/LCPR
-         std::vector<form_id_t> populationActors; // RCPR // Dawnguard only?
+         std::vector<form_reference_t> populationActors; // RCPR // Dawnguard only?
          std::vector<UniqueRef> uniques; // ACUN/LCUN
-         std::vector<form_id_t> uniques_R; // RCUN
+         std::vector<form_reference_t> uniques_R; // RCUN
          std::vector<StaticRef> statics; // ACSR/LCSR
          std::vector<Encounter> encounters; // ACEC/LCEC
          std::vector<EnablePoint> enablePoints; // ACEP/LCEP
-         std::vector<form_id_t> acid; // ACID/LCID - xEdit says "cell marker reference?"
+         std::vector<form_reference_t> acid; // ACID/LCID - xEdit says "cell marker reference?"
          localized_string name; // FULL
-         std::vector<form_id_t> keywords; // KSIZ+KWDA[]
-         form_id_t parentLocationID; // PNAM
-         form_id_t musicID; // NAM1
-         form_id_t unreportedCrimeFactionID; // FNAM
-         form_id_t marker; // MNAM
-         float radius; // RNAM
-         form_id_t horseMarkerRefID; // NAM0
+         form_reference_t parent_location; // PNAM
+         form_reference_t music; // NAM1
+         form_reference_t unreported_crime_faction; // FNAM
+         form_reference_t marker; // MNAM
+         float            radius; // RNAM
+         form_reference_t horse_marker; // NAM0
          struct { // VERIFY ME
             uint8_t r;
             uint8_t g;

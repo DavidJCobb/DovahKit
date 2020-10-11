@@ -35,21 +35,20 @@ namespace dovah::loaded_forms::components::extra {
       size_t size = this->regions.size();
       clone->regions.resize(size);
       for (size_t i = 0; i < size; ++i)
-         clone->regions[i].set(&clone_owner, this->regions[i]);
+         clone->regions[i].set(clone_owner, this->regions[i]);
       //
       return clone;
    }
    void cell_region_list::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
       auto& list = this->regions;
       for (auto& id : list)
-         if (id == target.formID)
-            id.set(&my_owner, bare_form_id_t(0));
+         id.clear_if(my_owner, target);
       list.erase(
          std::remove_if(
             list.begin(),
             list.end(),
-            [](form_id_t& id) {
-               return id == bare_form_id_t(0);
+            [](form_reference_t& id) {
+               return id == nullptr;
             }
          ),
          list.end()

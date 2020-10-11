@@ -201,6 +201,65 @@ namespace dovah {
    extern std::array<form_type_info, 140> form_types;
    extern std::array<uint32_t,       120> group_sequence_list; // the order in which record groups appear
 
+   class form_reference_t {
+      //
+      // Loaded forms should use this class or its subclasses to refer to other forms.
+      //
+      friend class tes_file_reading::subrecord;
+      friend class tes_file_writing::subrecord;
+      protected:
+         form_stub* stub           = nullptr;
+         uint8_t    use_info_flags = 0;
+         //
+         form_reference_t(uint8_t f) : use_info_flags(f) {}
+         form_reference_t(uint8_t f, form_stub* s) : use_info_flags(f), stub(s) {}
+         //
+      public:
+         form_reference_t() {}
+         form_reference_t(form_stub* s) : stub(s) {}
+         //
+         inline bare_form_id_t formID() const noexcept { return this->stub ? this->stub->formID : 0; }
+         //
+         void clear_if(form_stub& owner, form_stub& clear_if);
+         void set(form_stub& owner, form_stub* set_to);
+         void set(form_stub& owner, const form_reference_t& set_to);
+         //
+         inline operator bool() const noexcept { return this->stub != nullptr; }
+         inline bool operator==(const form_reference_t& other) const noexcept { return this->stub == other.stub; };
+         inline bool operator!=(const form_reference_t& other) const noexcept { return this->stub != other.stub; };
+         inline bool operator==(const form_stub* other) const noexcept { return this->stub == other; }
+         inline bool operator!=(const form_stub* other) const noexcept { return this->stub != other; }
+         //
+      protected:
+         inline form_reference_t& operator=(form_stub* other) { this->stub = other; return *this; };
+   };
+   class base_form_reference_t : public form_reference_t {
+      public:
+         base_form_reference_t();
+         base_form_reference_t(form_stub* s);
+   };
+   class dialogue_form_reference_t : public form_reference_t {
+      public:
+         dialogue_form_reference_t();
+         dialogue_form_reference_t(form_stub* s);
+   };
+   class struct_form_reference_t : public form_reference_t {
+      //
+      // In some cases, the game reads entire structs from the file by blindly copying bytes. 
+      // If these structs contain form IDs, then they will differ in Skyrim Special. Skyrim 
+      // treats references from one form to another as unions of form IDs and form pointers; 
+      // loading happens in two stages, with the first stage pulling form IDs into the places 
+      // where the pointers would be, and the second stage replacing all form IDs with pointers. 
+      // Skyrim Special is 64-bit, so its pointers are eight bytes instead of four bytes; as 
+      // such, structs that are blindly copied will have their layouts change, with four 
+      // padding bytes following each four-byte form ID.
+      //
+      public:
+         uint32_t padding = 0;
+         //
+         void set(form_stub& owner, const struct_form_reference_t& set_to);
+   };
+
    struct form_id_t {
       //
       // This struct exists for a few reasons:

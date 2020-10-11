@@ -107,10 +107,10 @@ namespace dovah::loaded_forms {
       copy->keywords.clone_from(this->keywords, *copy->stub);
       copy->name = this->name;
       copy->marker_color = this->marker_color;
-      copy->looping_sound.set(copy->stub, this->looping_sound);
-      copy->activation_sound.set(copy->stub, this->activation_sound);
-      copy->water_type.set(copy->stub, this->water_type);
-      copy->interact_keyword.set(copy->stub, this->interact_keyword);
+      copy->looping_sound.set(*copy->stub, this->looping_sound);
+      copy->activation_sound.set(*copy->stub, this->activation_sound);
+      copy->water_type.set(*copy->stub, this->water_type);
+      copy->interact_keyword.set(*copy->stub, this->interact_keyword);
       copy->activation_verb = this->activation_verb;
       copy->activator_flags = this->activator_flags;
       return true;
@@ -129,12 +129,9 @@ namespace dovah::loaded_forms {
       auto& PNAM = record.open_next_subrecord('PNAM');
       this->marker_color.save(PNAM);
       PNAM.close();
-      if (this->looping_sound)
-         record.write_formID_subrecord('SNAM', this->looping_sound);
-      if (this->activation_sound)
-         record.write_formID_subrecord('VNAM', this->activation_sound);
-      if (this->water_type)
-         record.write_formID_subrecord('WNAM', this->water_type);
+      record.write_formID_subrecord('SNAM', this->looping_sound, true);
+      record.write_formID_subrecord('VNAM', this->activation_sound, true);
+      record.write_formID_subrecord('WNAM', this->water_type, true);
       if (!this->activation_verb.empty()) {
          auto& RNAM = record.open_next_subrecord('RNAM');
          RNAM.write(this->activation_verb);
@@ -143,8 +140,7 @@ namespace dovah::loaded_forms {
       auto& FNAM = record.open_next_subrecord('FNAM');
       FNAM.write(this->activator_flags);
       FNAM.close();
-      if (this->interact_keyword)
-         record.write_formID_subrecord('KNAM', this->interact_keyword);
+      record.write_formID_subrecord('KNAM', this->interact_keyword, true);
       return true;
    }
    void Activator::_sever_outbound_references_impl(form_stub& other) noexcept {
@@ -153,14 +149,9 @@ namespace dovah::loaded_forms {
       this->destruction_data.sever_outbound_references_to(other, *this->stub);
       this->keywords.sever_outbound_references_to(other, *this->stub);
       //
-      auto formID = other.formID;
-      if (this->looping_sound == formID)
-         this->looping_sound.set(this->stub, nullptr);
-      if (this->activation_sound == formID)
-         this->activation_sound.set(this->stub, nullptr);
-      if (this->water_type == formID)
-         this->water_type.set(this->stub, nullptr);
-      if (this->interact_keyword == formID)
-         this->interact_keyword.set(this->stub, nullptr);
+      this->looping_sound.clear_if(*this->stub, other);
+      this->activation_sound.clear_if(*this->stub, other);
+      this->water_type.clear_if(*this->stub, other);
+      this->interact_keyword.clear_if(*this->stub, other);
    }
 }

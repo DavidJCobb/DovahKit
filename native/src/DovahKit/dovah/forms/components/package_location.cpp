@@ -73,14 +73,13 @@ namespace dovah::loaded_forms::components {
    }
    void package_location::clone_from(const package_location& other, form_stub& my_owner) noexcept {
       this->type = other.type;
-      this->detail.form.set(&my_owner, other.detail.form);
+      this->detail.form.set(my_owner, other.detail.form);
       this->detail.object_type = other.detail.object_type;
       this->detail.alias_id    = other.detail.alias_id;
       this->detail.padding     = other.detail.padding;
       this->radius = other.radius;
    }
    void package_location::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
-      if (this->detail.form == target.formID)
-         this->detail.form.set(&my_owner, nullptr);
+      this->detail.form.clear_if(my_owner, target);
    }
 }

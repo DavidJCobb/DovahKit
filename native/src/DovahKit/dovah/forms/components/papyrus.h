@@ -83,9 +83,9 @@ namespace dovah::loaded_forms::components {
                removed = 3,
             };
             struct property_object_value { // if object_format == 2, then the order of fields is reversed in the file
-               form_id_t formID;
-               uint16_t  aliasID;
-               uint16_t  always_zero = 0;
+               form_reference_t form;
+               uint16_t aliasID;
+               uint16_t always_zero = 0;
                //
                bool load(script_data& owner, tes_subrecord_reader&);
                bool save(script_data& owner, tes_subrecord_writer&);

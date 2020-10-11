@@ -81,6 +81,7 @@ namespace dovah {
             //
             inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
             //
+            void write_formID_subrecord(uint32_t signature, const form_reference_t&, bool only_if_non_empty = false);
             void write_formID_subrecord(uint32_t signature, form_id_t);
             void write_string_subrecord(uint32_t signature, const char* s);
             void write_string_subrecord(uint32_t signature, const std::string& s);
@@ -99,6 +100,8 @@ namespace dovah {
             uint32_t pos = 0;
             cobb::generic_buffer data; // record body (uncompressed)
             //
+            void _write_impl(const form_reference_t&);
+            void _write_impl(const struct_form_reference_t&);
             void _write_impl(const form_id_t&);
             void _write_impl(const struct_form_id_t&);
             void _write_impl(const localized_string&);
@@ -132,6 +135,8 @@ namespace dovah {
             template<> inline void write(const cobb::generic_buffer& v) {
                this->write(v.data(), v.size());
             }
+            template<> inline void write(const form_reference_t& field) { return this->_write_impl(field); }
+            template<> inline void write(const struct_form_reference_t& field) { return this->_write_impl(field); }
             template<> inline void write(const form_id_t& field) { return this->_write_impl(field); }
             template<> inline void write(const struct_form_id_t& field) { return this->_write_impl(field); }
             template<> inline void write(const localized_string& field) { return this->_write_impl(field); }

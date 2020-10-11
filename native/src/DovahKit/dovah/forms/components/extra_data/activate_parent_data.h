@@ -13,8 +13,8 @@ namespace dovah::loaded_forms::components::extra {
             };
          };
          struct parent {
-            form_id_t ref;
-            float     delay;
+            form_reference_t ref;
+            float delay;
          };
          //
          uint8_t flags = 0;

@@ -4,9 +4,9 @@
 namespace dovah::loaded_forms::components {
    struct condition_arg_value {
       union {
-         uint32_t  dword = 0;
-         float     float32;
-         form_id_t formID;
+         uint32_t dword = 0;
+         float    float32;
+         form_reference_t form;
       };
       std::string string;
 

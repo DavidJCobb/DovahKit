@@ -69,16 +69,16 @@ namespace dovah::loaded_forms::components {
 
       uint8_t   type; // flags | (operator << 5)
       float     compare_to_constant;
-      form_id_t compare_to_global;
+      form_reference_t compare_to_global;
       uint16_t  function;
       condition_arg_value parameters[2];
       run_on_t  run_on;
-      form_id_t run_on_reference;
+      form_reference_t run_on_reference;
       int32_t   run_on_index; // xEdit calls this "Parameter 3." If (run_on == run_on_t::package_data), then this is the Package Data index (within the PACK containing this condition) to run on, and -1 means "NONE."
       //
       uint16_t  eventFunction;
       uint16_t  eventMember;
-      form_id_t eventFormID;
+      form_reference_t eventFormID;
 
       condition_info::arg_type*           get_argument_type(uint8_t index) const noexcept;
       condition_info::arg_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;

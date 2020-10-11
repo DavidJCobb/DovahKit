@@ -803,7 +803,7 @@ namespace dovah::loaded_forms::components {
          auto func = condition_info::function::lookup_by_id(this->function);
          for (int i = 0; i < 2; i++) {
             if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID)
-               subrecord.unchecked_read(this->parameters[i].formID);
+               subrecord.unchecked_read(this->parameters[i].form);
             else
                subrecord.unchecked_read(this->parameters[i].dword);
          }
@@ -914,7 +914,7 @@ namespace dovah::loaded_forms::components {
          auto func = condition_info::function::lookup_by_id(this->function);
          for (int i = 0; i < 2; i++) {
             if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID)
-               subrecord.write(this->parameters[i].formID);
+               subrecord.write(this->parameters[i].form);
             else
                subrecord.write(this->parameters[i].dword);
          }
@@ -944,7 +944,7 @@ namespace dovah::loaded_forms::components {
    void condition::clone_from(const condition& other, form_stub& my_owner) noexcept {
       this->type = other.type;
       this->compare_to_constant = other.compare_to_constant;
-      this->compare_to_global.set(&my_owner, other.compare_to_global);
+      this->compare_to_global.set(my_owner, other.compare_to_global);
       this->function = other.function;
       //
       auto func = condition_info::function::lookup_by_id(this->function);
@@ -952,40 +952,35 @@ namespace dovah::loaded_forms::components {
          auto& param = this->parameters[i];
          auto& from  = other.parameters[i];
          if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID)
-            param.formID.set(&my_owner, from.formID);
+            param.form.set(my_owner, from.form);
          else
             param.dword = from.dword;
          param.string = from.string;
       }
       //
       this->run_on       = other.run_on;
-      this->run_on_reference.set(&my_owner, other.run_on_reference);
+      this->run_on_reference.set(my_owner, other.run_on_reference);
       this->run_on_index = other.run_on_index;
       //
       this->eventFunction = other.eventFunction;
       this->eventMember   = other.eventMember;
       if (func && func->uses_event_data) {
-         this->eventFormID.set(&my_owner, other.eventFormID);
+         this->eventFormID.set(my_owner, other.eventFormID);
       }
    }
    void condition::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
-      bare_form_id_t formID = target.formID;
-      if (this->compare_to_global == formID)
-         this->compare_to_global.set(&my_owner, nullptr);
+      this->compare_to_global.clear_if(my_owner, target);
       //
       auto func = condition_info::function::lookup_by_id(this->function);
       for (int i = 0; i < 2; i++) {
          auto& param = this->parameters[i];
          if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID) {
-            if (param.formID == formID)
-               param.formID.set(&my_owner, nullptr);
+            param.form.clear_if(my_owner, target);
          }
       }
       //
-      if (this->run_on_reference == formID)
-         this->run_on_reference.set(&my_owner, nullptr);
-      if (this->eventFormID == formID)
-         this->eventFormID.set(&my_owner, nullptr);
+      this->run_on_reference.clear_if(my_owner, target);
+      this->eventFormID.clear_if(my_owner, target);
    }
 
    void condition::to_string(std::string& out) const {
@@ -1061,7 +1056,7 @@ namespace dovah::loaded_forms::components {
       out += ' ';
       if (this->get_flags() & flag::compare_to_global) {
          std::string glob;
-         cobb::sprintf(glob, "[GLOB:%08X]", this->compare_to_global);
+         cobb::sprintf(glob, "[GLOB:%08X]", this->compare_to_global.formID());
          out += glob;
       } else {
          out += std::to_string(this->compare_to_constant);

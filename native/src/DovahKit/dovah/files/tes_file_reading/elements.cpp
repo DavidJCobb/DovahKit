@@ -134,6 +134,37 @@ namespace dovah {
          }
          return false;
       }
+      bool subrecord::_read_form_reference(form_reference_t& field) const noexcept {
+         bare_form_id_t id;
+         if (!this->read(id)) {
+            field.stub = nullptr;
+            return false;
+         }
+         if (id) {
+            this->_fixupFormID(id);
+            //
+            auto* file  = this->owner.as_file();
+            assert(file);
+            auto& order = file->load_order;
+            field.stub = order.get_form(id);
+            if (!field.stub) {
+               //
+               // TODO: subrecord refers to a non-existent form; generate a warning.
+               //
+            }
+         } else
+            field.stub = nullptr;
+         return true;
+      }
+      bool subrecord::_read_form_reference(struct_form_reference_t& field) const noexcept {
+         form_reference_t& base = *(form_reference_t*)&field;
+         if (this->_read_form_reference(base)) {
+            if (this->is_skyrim_special())
+               return this->read(field.padding);
+            return true;
+         }
+         return false;
+      }
       void subrecord::_unchecked_read_form_id(form_id_t& field) const noexcept {
          this->get_containing_record().unchecked_read(field.value);
          this->_fixupFormID(field.value);
@@ -143,6 +174,30 @@ namespace dovah {
          this->_fixupFormID(field.value);
          if (this->is_skyrim_special())
             this->get_containing_record().unchecked_read(field.padding);
+      }
+      void subrecord::_unchecked_read_form_reference(form_reference_t& field) const noexcept {
+         bare_form_id_t id;
+         this->unchecked_read(id);
+         if (id) {
+            this->_fixupFormID(id);
+            //
+            auto* file = this->owner.as_file();
+            assert(file);
+            auto& order = file->load_order;
+            field.stub = order.get_form(id);
+            if (!field.stub) {
+               //
+               // TODO: subrecord refers to a non-existent form; generate a warning.
+               //
+            }
+         } else
+            field.stub = nullptr;
+      }
+      void subrecord::_unchecked_read_form_reference(struct_form_reference_t& field) const noexcept {
+         form_reference_t& base = *(form_reference_t*)&field;
+         this->_unchecked_read_form_reference(base);
+         if (this->is_skyrim_special())
+            this->unchecked_read(field.padding);
       }
       //
       record& subrecord::get_containing_record() const {

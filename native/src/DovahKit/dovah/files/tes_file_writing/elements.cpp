@@ -76,6 +76,13 @@ namespace dovah::tes_file_writing {
       return subrecord;
    }
 
+   void record::write_formID_subrecord(uint32_t signature, const form_reference_t& ref, bool only_if_non_empty) {
+      if (only_if_non_empty && !ref)
+         return;
+      auto& subrecord = this->open_next_subrecord(signature);
+      subrecord.write(ref.formID());
+      subrecord.close();
+   }
    void record::write_formID_subrecord(uint32_t signature, form_id_t formID) {
       auto& subrecord = this->open_next_subrecord(signature);
       subrecord.write(formID);
@@ -95,13 +102,21 @@ namespace dovah::tes_file_writing {
    }
 
    #pragma region subrecord
+   void subrecord::_write_impl(const form_reference_t& ref) {
+      this->write(bare_form_id_t(ref.formID()));
+   }
+   void subrecord::_write_impl(const struct_form_reference_t& ref) {
+      this->write(bare_form_id_t(ref.formID()));
+      if (this->is_skyrim_special())
+         this->write(ref.padding);
+   }
    void subrecord::_write_impl(const form_id_t& formID) {
       this->write(uint32_t(formID));
    }
    void subrecord::_write_impl(const struct_form_id_t& formID) {
       this->_write_impl((form_id_t)formID);
       if (this->is_skyrim_special())
-         this->_write_impl(formID.padding);
+         this->write(formID.padding);
    }
    void subrecord::_write_impl(const localized_string& field) {
       if (this->owner.use_string_table) {

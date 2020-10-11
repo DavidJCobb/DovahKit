@@ -808,7 +808,7 @@ namespace dovah {
                request.error = form_creation_request::error_code::form_created_but_clone_failed;
          }
       } else {
-         loaded->setup();
+         loaded->setup(*this);
       }
       //
       if (this->active_file) {

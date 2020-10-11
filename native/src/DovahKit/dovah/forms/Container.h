@@ -30,9 +30,9 @@ namespace dovah::loaded_forms {
          localized_string name; // FULL
          components::container_data inventory;
          container_flags_t container_flags = 0;
-         float weight = 0.0F;
-         form_id_t open_sound;
-         form_id_t close_sound;
+         float             weight          = 0.0F;
+         form_reference_t  open_sound;
+         form_reference_t  close_sound;
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);

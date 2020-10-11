@@ -3,8 +3,8 @@
 
 namespace dovah::loaded_forms::components {
    void keyword_list::load(tes_subrecord_reader& subrecord) {
-      uint32_t  keywordSize = 0;
-      form_id_t formID;
+      uint32_t keywordSize = 0;
+      form_reference_t formID;
       switch (subrecord.signature()) {
          case 'KSIZ':
             if (subrecord.read(keywordSize))
@@ -47,7 +47,7 @@ namespace dovah::loaded_forms::components {
    }
    void keyword_list::clear(form_stub& my_owner) noexcept {
       for (auto& id : this->forms)
-         id.set(&my_owner, bare_form_id_t(0));
+         id.set(my_owner, nullptr);
       this->forms.clear();
    }
    void keyword_list::clone_from(const keyword_list& other, form_stub& my_owner) noexcept {
@@ -55,14 +55,14 @@ namespace dovah::loaded_forms::components {
       this->clear(my_owner);
       this->forms.resize(size);
       for (size_t i = 0; i < size; ++i)
-         this->forms[i].set(&my_owner, other.forms[i]);
+         this->forms[i].set(my_owner, other.forms[i]);
    }
    void keyword_list::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
       auto& list  = this->forms;
       bool  edits = false;
       for (auto& id : list) {
-         if (id == target.formID) {
-            id.set(&my_owner, nullptr);
+         if (id == &target) {
+            id.set(my_owner, nullptr);
             edits = true;
          }
       }
@@ -71,8 +71,8 @@ namespace dovah::loaded_forms::components {
             std::remove_if(
                list.begin(),
                list.end(),
-               [](form_id_t& id) {
-                  return id == bare_form_id_t(0);
+               [](form_reference_t& id) {
+                  return id == nullptr;
                }
             ),
             list.end()

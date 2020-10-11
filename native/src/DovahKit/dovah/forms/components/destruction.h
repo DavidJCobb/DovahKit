@@ -28,14 +28,14 @@ namespace dovah {
          using stage_flags_t = std::underlying_type_t<stage_flag::type>;
 
          struct Stage {
-            uint16_t      healthPercent;
-            uint8_t       damageStage;
-            stage_flags_t flags;
-            uint32_t      selfDamageRate; // the object inflicts this much damage on itself per second (i.e. health decay)
-            form_id_t     explosionID;
-            form_id_t     debrisID;
-            uint32_t      debrisCount;
-            model         replacementModel;
+            uint16_t         healthPercent;
+            uint8_t          damageStage;
+            stage_flags_t    flags;
+            uint32_t         selfDamageRate; // the object inflicts this much damage on itself per second (i.e. health decay)
+            form_reference_t explosion;
+            form_reference_t debris;
+            uint32_t         debrisCount;
+            model            replacementModel;
          };
          //
          uint32_t     health;

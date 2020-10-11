@@ -36,8 +36,8 @@ void FormShoutWordEditor::load() {
    if (list.size() <= this->which_word)
       return;
    auto& word = list[this->which_word];
-   this->ui.word->setFormByID(word.wordOfPowerID);
-   this->ui.spell->setFormByID(word.spellID);
+   this->ui.word->setFormByID(word.word_of_power.formID());
+   this->ui.spell->setFormByID(word.spell.formID());
    this->ui.recoveryTime->setValue(word.recoveryTime);
 }
 void FormShoutWordEditor::save() {
@@ -47,8 +47,8 @@ void FormShoutWordEditor::save() {
    if (list.size() <= this->which_word)
       return;
    auto& word = list[this->which_word];
-   this->save_form_id(word.wordOfPowerID, this->ui.word->formID());
-   this->save_form_id(word.spellID,       this->ui.spell->formID());
+   this->save_form_id(word.word_of_power, this->ui.word->formID());
+   this->save_form_id(word.spell,       this->ui.spell->formID());
    word.recoveryTime  = this->ui.recoveryTime->value();
 }
 void FormShoutWordEditor::linkToForm(int which_word, dovah::form_stub* stub) {
@@ -61,9 +61,11 @@ void FormShoutWordEditor::linkToForm(int which_word, dovah::form_stub* stub) {
       this->stub = nullptr;
    }
 }
-void FormShoutWordEditor::save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t value) {
-   target.set(this->stub, value);
+void FormShoutWordEditor::save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t id) {
+   auto& editor = DovahKitCore::get();
+   auto* value  = editor.get_form(id);
+   this->save_form_id(target, value);
 }
-void FormShoutWordEditor::save_form_id(dovah::form_id_t& target, dovah::form_stub* value) {
-   target.set(this->stub, value);
+void FormShoutWordEditor::save_form_id(dovah::form_reference_t& target, dovah::form_stub* value) {
+   target.set(*this->stub, value);
 }

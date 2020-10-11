@@ -5,7 +5,7 @@ namespace dovah::loaded_forms {
    void FormList::load(tes_record_reader& record) {
       Form::load(record);
       //
-      form_id_t formID;
+      form_reference_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'LNAM': // list entry
@@ -33,7 +33,7 @@ namespace dovah::loaded_forms {
       size_t size = this->contents.size();
       copy->contents.resize(size);
       for (size_t i = 0; i < size; ++i)
-         copy->contents[i].set(copy->stub, this->contents[i]);
+         copy->contents[i].set(*copy->stub, this->contents[i]);
       return true;
    }
    bool FormList::_save_impl(tes_record_writer& record) {
@@ -45,8 +45,8 @@ namespace dovah::loaded_forms {
       auto& list  = this->contents;
       bool  edits = false;
       for (auto& id : list) {
-         if (id == other.formID) {
-            id.set(this->stub, nullptr);
+         if (id == &other) {
+            id.set(*this->stub, nullptr);
             edits = true;
          }
       }
@@ -55,8 +55,8 @@ namespace dovah::loaded_forms {
             std::remove_if(
                list.begin(),
                list.end(),
-               [](form_id_t& id) {
-                  return id == bare_form_id_t(0);
+               [](form_reference_t& id) {
+                  return id == nullptr;
                }
             ),
             list.end()

@@ -7,8 +7,8 @@ namespace dovah::loaded_forms::components::extra {
          static constexpr uint32_t signature_type = 'XPSN';
          static constexpr uint32_t signature_dose = 'XPSC';
          //
-         form_id_t type;      // XPSN subrecord; value is ALCH
-         uint32_t  doses = 1; // XPSC subrecord
+         form_reference_t type;      // XPSN subrecord; value is ALCH
+         uint32_t         doses = 1; // XPSC subrecord
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::poison; };
          virtual load_result load(tes_subrecord_reader&) override;

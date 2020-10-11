@@ -62,7 +62,7 @@ namespace dovah {
             // Called on newly-created forms. Use this to set up relationships to hardcoded forms, 
             // e.g. new worldspaces using the DefaultWater water type.
             //
-            virtual void setup() noexcept {}
+            virtual void setup(const file_load_order&) noexcept {}
 
             virtual bool would_bethesda_compress() const noexcept { return false; } // provided for CELL
             

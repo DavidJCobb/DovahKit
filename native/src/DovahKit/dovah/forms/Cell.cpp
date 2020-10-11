@@ -28,22 +28,6 @@ namespace dovah::loaded_forms {
                subrecord.read(this->exterior.occlusion_data.bytes.data(), subrecord.size());
                break;
             case 'MHDT':
-               /*// whoops, this is for WRLD
-               {
-                  auto& mhdt = this->exterior.max_height_data;
-                  subrecord.read(mhdt.min.x);
-                  subrecord.read(mhdt.min.y);
-                  subrecord.read(mhdt.max.x);
-                  subrecord.read(mhdt.max.y);
-                  while (subrecord.is_in_bounds(4)) {
-                     auto& entry = mhdt.cells.emplace_back();
-                     subrecord.unchecked_read(entry.sw);
-                     subrecord.unchecked_read(entry.se);
-                     subrecord.unchecked_read(entry.nw);
-                     subrecord.unchecked_read(entry.ne);
-                  }
-               }
-               //*/
                if (subrecord.is_in_bounds(sizeof(float) + 32 * 32)) {
                   auto& mhdt = this->exterior.max_height_data;
                   subrecord.unchecked_read(mhdt.offset);
@@ -97,7 +81,7 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   void Cell::setup() noexcept {
+   void Cell::setup(const file_load_order& load_order) noexcept {
       cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub->groupInfo.parentFormID == 0);
    }
    bool Cell::would_bethesda_compress() const noexcept {
@@ -122,7 +106,7 @@ namespace dovah::loaded_forms {
       copy->land_flags = this->land_flags;
       copy->extra_data.clone_from(this->extra_data, *copy->stub);
       copy->interior.lighting = this->interior.lighting;
-      copy->interior.lighting_template_ID.set(copy->stub, this->interior.lighting_template_ID);
+      copy->interior.lighting_template_ID.set(*copy->stub, this->interior.lighting_template_ID);
       copy->exterior.occlusion_data = this->exterior.occlusion_data;
       copy->exterior.max_height_data = this->exterior.max_height_data;
       copy->water.height = this->water.height;
@@ -191,8 +175,6 @@ namespace dovah::loaded_forms {
       this->extra_data.sever_outbound_references_to(other, *this->stub);
       this->script_data.sever_outbound_references_to(other, *this->stub);
       //
-      auto formID = other.formID;
-      if (this->interior.lighting_template_ID == formID)
-         this->interior.lighting_template_ID.set(this->stub, nullptr);
+      this->interior.lighting_template_ID.clear_if(*this->stub, other);
    }
 }

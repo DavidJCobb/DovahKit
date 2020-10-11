@@ -78,10 +78,7 @@ namespace dovah::loaded_forms {
       this->model.sever_outbound_references_to(other, *this->stub);
       this->inventory.sever_outbound_references_to(other, *this->stub);
       //
-      auto formID = other.formID;
-      if (this->open_sound == formID)
-         this->open_sound.set(this->stub, nullptr);
-      if (this->close_sound == formID)
-         this->close_sound.set(this->stub, nullptr);
+      this->open_sound.clear_if(*this->stub, other);
+      this->close_sound.clear_if(*this->stub, other);
    }
 }

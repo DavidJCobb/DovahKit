@@ -9,10 +9,10 @@ namespace dovah::loaded_forms::components {
          subtype = 1,
       };
       //
-      form_id_t  idle;
-      topic_type type;
-      form_id_t  topic;             // this and the next field are union'd in the file based on (type)
-      uint32_t   topic_subtype = 0; // signature
+      form_reference_t idle;
+      topic_type       type;
+      form_reference_t topic;             // this and the next field are union'd in the file based on (type)
+      uint32_t         topic_subtype = 0; // signature
       //
       bool load(tes_record_reader&);
       static void generateUseInfo(tes_record_reader&, form_stub*);

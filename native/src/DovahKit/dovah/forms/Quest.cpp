@@ -29,9 +29,9 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ALFD':
-               subrecord.read(this->fillFromEventData);
-               if (this->fillFromEvent == -1)
-                  this->fillFromEventData = -1;
+               subrecord.read(this->fill_from_event_data);
+               if (this->fill_from_event == -1)
+                  this->fill_from_event_data = -1;
                else {
                   //
                   // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291.
@@ -39,8 +39,8 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ALFE':
-               subrecord.read(this->fillFromEvent);
-               this->fillType = fill_type_t::from_event;
+               subrecord.read(this->fill_from_event);
+               this->fill_type = fill_type_t::from_event;
                break;
             case 'ALID':
                subrecord.to_string(this->name);
@@ -55,25 +55,25 @@ namespace dovah::loaded_forms {
                this->hiddenFlags |= 1;
                break;
             case 'ALFL':
-               subrecord.read(this->fillFromLocationID);
-               this->fillType = fill_type_t::preset;
+               subrecord.read(this->fill_from_location);
+               this->fill_type = fill_type_t::preset;
                break;
             case 'KNAM':
-               subrecord.read(this->fillFromLocationKeywordID);
+               subrecord.read(this->fill_from_location_keyword);
                break;
             case 'ALEQ':
-               subrecord.read(this->fillFromQuestID);
-               this->fillType = fill_type_t::other_alias_in_other_quest;
+               subrecord.read(this->fill_from_quest);
+               this->fill_type = fill_type_t::other_alias_in_other_quest;
                break;
             case 'ONAM':
                this->hiddenFlags |= 2;
                break;
          }
       }
-      if (this->fillType == fill_type_t::other_alias_in_other_quest)
-         this->fillFromAliasID = externalAliasID;
-      else if (this->fillType == fill_type_t::other_alias_in_same_quest)
-         this->fillFromAliasID = internalAliasID;
+      if (this->fill_type == fill_type_t::other_alias_in_other_quest)
+         this->fill_from_alias = externalAliasID;
+      else if (this->fill_type == fill_type_t::other_alias_in_same_quest)
+         this->fill_from_alias = internalAliasID;
    }
    void ReferenceAlias::load(tes_record_reader& record) {
       auto& subrecord = record.get_current_subrecord();
@@ -82,9 +82,9 @@ namespace dovah::loaded_forms {
       //
       if (!record.next_subrecord())
          return;
-      uint32_t  perkListSize  = 0;
-      uint32_t  inventorySize = 0;
-      form_id_t formID;
+      uint32_t perkListSize  = 0;
+      uint32_t inventorySize = 0;
+      form_reference_t formID;
       for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'ALID':
@@ -120,15 +120,15 @@ namespace dovah::loaded_forms {
             case 'COCT':
             case 'CNTO':
             case 'COED':
-               this->inventoryChanges.load(subrecord);
+               this->inventory.load(subrecord);
                break;
             case 'PRKZ':
                if (subrecord.read(perkListSize))
-                  this->perkIDs.reserve(perkListSize);
+                  this->perks.reserve(perkListSize);
                break;
             case 'PRKR':
                if (subrecord.read(formID))
-                  this->perkIDs.push_back(formID);
+                  this->perks.push_back(formID);
                break;
             case 'SCOR':
                subrecord.read(this->spectatorOverridePackageListID);
@@ -179,15 +179,15 @@ namespace dovah::loaded_forms {
                break;
             case 'ALPC':
                if (subrecord.read(formID))
-                  this->packageIDs.push_back(formID);
+                  this->packages.push_back(formID);
                break;
             case 'ALFC':
                if (subrecord.read(formID))
-                  this->factionIDs.push_back(formID);
+                  this->factions.push_back(formID);
                break;
             case 'ALSP':
                if (subrecord.read(formID))
-                  this->spellIDs.push_back(formID);
+                  this->spells.push_back(formID);
                break;
             case 'ALUA':
                this->fillType = fill_type_t::preset_unique_actor;
@@ -195,12 +195,12 @@ namespace dovah::loaded_forms {
                break;
             case 'ALFE':
                this->fillType = fill_type_t::from_event;
-               subrecord.read(this->fillFromEvent);
+               subrecord.read(this->fill_from_event);
                break;
             case 'ALFD':
-               subrecord.read(this->fillFromEventData);
-               if (this->fillFromEvent == -1)
-                  this->fillFromEventData = -1;
+               subrecord.read(this->fill_from_event_data);
+               if (this->fill_from_event == -1)
+                  this->fill_from_event_data = -1;
                else {
                   //
                   // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291. 

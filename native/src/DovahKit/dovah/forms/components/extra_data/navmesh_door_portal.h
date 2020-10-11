@@ -6,9 +6,9 @@ namespace dovah::loaded_forms::components::extra {
       public:
          static constexpr uint32_t signature = 'XNDP';
          //
-         form_id_t navmesh;
-         int16_t   triangle;
-         uint16_t  pad06;
+         form_reference_t navmesh;
+         int16_t  triangle;
+         uint16_t pad06;
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::navmesh_door_portal; };
          virtual load_result load(tes_subrecord_reader&) override;

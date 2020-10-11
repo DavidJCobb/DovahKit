@@ -63,7 +63,7 @@ namespace dovah::loaded_forms {
          components::extra_data_list extra_data;
          struct {
             components::interior_lighting lighting; // XCLL (LNAM overrides the inherit flags specifically)
-            form_id_t lighting_template_ID; // LTMP
+            form_reference_t lighting_template_ID; // LTMP
          } interior;
          struct {
             occlusion_data_t  occlusion_data;  // TVDT ("Terrain Visibility Data?")
@@ -84,7 +84,7 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
          //
-         virtual void setup() noexcept override;
+         virtual void setup(const file_load_order&) noexcept override;
          virtual bool would_bethesda_compress() const noexcept override;
          //
       protected:

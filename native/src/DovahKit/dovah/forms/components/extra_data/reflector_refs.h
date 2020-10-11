@@ -10,8 +10,8 @@ namespace dovah::loaded_forms::components::extra {
             refraction,
          };
          struct entry {
-            form_id_t target;
-            type      type;
+            form_reference_t target;
+            type type;
          };
          //
          std::vector<entry> entries;

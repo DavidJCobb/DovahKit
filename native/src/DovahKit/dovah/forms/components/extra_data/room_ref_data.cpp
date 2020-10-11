@@ -80,37 +80,34 @@ namespace dovah::loaded_forms::components::extra {
       auto* clone = new room_ref_data;
       clone->flags = this->flags;
       clone->pad02 = this->pad02;
-      clone->lighting_template.set(&clone_owner, this->lighting_template);
-      clone->imagespace.set(&clone_owner, this->imagespace);
+      clone->lighting_template.set(clone_owner, this->lighting_template);
+      clone->imagespace.set(clone_owner, this->imagespace);
       //
       size_t size = this->linked_rooms.size();
       clone->linked_rooms.resize(size);
       for (size_t i = 0; i < size; ++i)
-         clone->linked_rooms[i].set(&clone_owner, this->linked_rooms[i]);
+         clone->linked_rooms[i].set(clone_owner, this->linked_rooms[i]);
       clone->linked_room_count = size;
       //
       return clone;
    }
    void room_ref_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
-      if (this->lighting_template == target.formID) {
-         this->lighting_template.set(&my_owner, nullptr);
+      this->lighting_template.clear_if(my_owner, target);
+      this->imagespace.clear_if(my_owner, target);
+      if (!this->lighting_template)
          this->flags &= ~flag::has_lighting_template;
-      }
-      if (this->imagespace == target.formID) {
-         this->imagespace.set(&my_owner, nullptr);
+      if (!this->imagespace)
          this->flags &= ~flag::has_imagespace;
-      }
       //
       auto& list = this->linked_rooms;
       for (auto& id : list)
-         if (id == target.formID)
-            id.set(&my_owner, bare_form_id_t(0));
+         id.clear_if(my_owner, target);
       list.erase(
          std::remove_if(
             list.begin(),
             list.end(),
-            [](form_id_t& id) {
-               return id == bare_form_id_t(0);
+            [](form_reference_t& id) {
+               return id == nullptr;
             }
          ),
          list.end()

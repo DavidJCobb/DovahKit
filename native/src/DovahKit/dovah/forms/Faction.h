@@ -47,20 +47,20 @@ namespace dovah::loaded_forms {
             localized_string title_fem;  // FNAM
          };
          struct relationship {
-            form_id_t other;
-            int32_t   mod; // unused
-            alliance_status combat = alliance_status::neutral;
+            form_reference_t other;
+            int32_t          mod; // unused
+            alliance_status  combat = alliance_status::neutral;
          };
 
          localized_string name; // FULL
          std::vector<relationship> relationships; // XNAM, one subrecord per
-         uint32_t  faction_flags; // DATA
-         form_id_t prison_marker; // JAIL
-         form_id_t follower_wait_marker; // WAIT
-         form_id_t evidence_chest; // STOL
-         form_id_t player_belongings_chest; // PLCN
-         form_id_t crime_group; // CRGR
-         form_id_t jail_outfit; // JOUT
+         uint32_t         faction_flags; // DATA
+         form_reference_t prison_marker; // JAIL
+         form_reference_t follower_wait_marker; // WAIT
+         form_reference_t evidence_chest; // STOL
+         form_reference_t player_belongings_chest; // PLCN
+         form_reference_t crime_group; // CRGR
+         form_reference_t jail_outfit; // JOUT
          struct {
             bool     arrest          = false;
             bool     attack_on_sight = false;
@@ -74,8 +74,8 @@ namespace dovah::loaded_forms {
             uint16_t werewolf_transformation = 0;
          } crime_values; // CRVA
          std::vector<rank> ranks;
-         form_id_t vendor_list;  // VEND
-         form_id_t vendor_chest; // VENC
+         form_reference_t  vendor_list;  // VEND
+         form_reference_t  vendor_chest; // VENC
          struct {
             uint16_t start_hour  = 0;
             uint16_t end_hour    = 0;

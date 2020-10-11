@@ -148,8 +148,12 @@ namespace dovah {
             void _fixupFormID(uint32_t& id) const noexcept;
             bool _read_form_id(form_id_t& field) const noexcept;
             bool _read_form_id(struct_form_id_t& field) const noexcept;
+            bool _read_form_reference(form_reference_t&) const noexcept;
+            bool _read_form_reference(struct_form_reference_t&) const noexcept;
             void _unchecked_read_form_id(form_id_t& field) const noexcept;
             void _unchecked_read_form_id(struct_form_id_t& field) const noexcept;
+            void _unchecked_read_form_reference(form_reference_t&) const noexcept;
+            void _unchecked_read_form_reference(struct_form_reference_t&) const noexcept;
             //
          public:
             subrecord& operator=(const subrecord& other) = delete; // no copy
@@ -194,6 +198,8 @@ namespace dovah {
             template<typename T> inline bool read(T& field) const {
                return this->get_containing_record().read(field);
             }
+            template<> inline bool read(form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
+            template<> inline bool read(struct_form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
             template<> inline bool read(form_id_t& field) const { return this->_read_form_id(field); }
             template<> inline bool read(struct_form_id_t& field) const { return this->_read_form_id(field); }
             #pragma endregion
@@ -218,6 +224,8 @@ namespace dovah {
             template<typename T> inline void unchecked_read(T& field) const {
                this->get_containing_record().unchecked_read(field);
             }
+            template<> inline void unchecked_read(form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
+            template<> inline void unchecked_read(struct_form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
             template<> inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }
             template<> inline void unchecked_read(struct_form_id_t& field) const { this->_unchecked_read_form_id(field); }
             #pragma endregion

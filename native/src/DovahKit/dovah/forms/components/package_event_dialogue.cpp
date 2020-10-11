@@ -54,17 +54,14 @@ namespace dovah::loaded_forms::components {
       PDTO.close();
    }
    void package_event_dialogue::clone_from(const package_event_dialogue& other, form_stub& my_owner) noexcept {
-      this->idle.set(&my_owner, other.idle);
+      this->idle.set(my_owner, other.idle);
       this->type = other.type;
-      this->topic.set(&my_owner, other.topic);
+      this->topic.set(my_owner, other.topic);
       this->topic_subtype = other.topic_subtype;
    }
    void package_event_dialogue::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
-      bare_form_id_t formID = target.formID;
-      if (this->idle == formID)
-         this->idle.set(&my_owner, nullptr);
-      if (this->topic == formID)
-         this->topic.set(&my_owner, nullptr);
+      this->idle.clear_if(my_owner, target);
+      this->topic.clear_if(my_owner, target);
    }
 
    bool package_event_dialogue::empty() const noexcept {

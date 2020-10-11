@@ -46,8 +46,8 @@ namespace dovah::loaded_forms {
 
          components::extra_data_list         extra_data;
          components::papyrus_attachment_data script_data; // VMAD
-         base_form_id_t base_form;       // NAME
-         bool           is_open = false; // ONAM (empty record; acts as sentinel)
+         base_form_reference_t base_form; // NAME
+         bool is_open = false; // ONAM (empty record; acts as sentinel)
          cobb::vector3<float> position; // DATA
          cobb::vector3<float> rotation; // DATA // radians
 

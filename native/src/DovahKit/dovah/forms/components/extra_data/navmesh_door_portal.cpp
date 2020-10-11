@@ -26,13 +26,12 @@ namespace dovah::loaded_forms::components::extra {
    }
    basic_extra_data* navmesh_door_portal::clone(form_stub& clone_owner) const noexcept {
       auto* clone = new navmesh_door_portal;
-      clone->navmesh.set(&clone_owner, this->navmesh);
+      clone->navmesh.set(clone_owner, this->navmesh);
       clone->triangle = this->triangle;
       clone->pad06    = this->pad06;
       return clone;
    }
    void navmesh_door_portal::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
-      if (this->navmesh == target.formID)
-         this->navmesh.set(&my_owner, nullptr);
+      this->navmesh.clear_if(my_owner, target);
    }
 }

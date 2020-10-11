@@ -19,7 +19,7 @@ void FormDialogShout::_load_impl() {
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
    this->ui.name->setText(editor.convert_localized_string(this->form->name));
    this->ui.treatAsPower->setChecked(this->form->treat_as_power());
-   this->ui.menuDisplayObject->setFormByID(this->form->menuDisplayObjectID);
+   this->ui.menuDisplayObject->setFormByID(this->form->menu_display_object.formID());
    this->ui.description->setPlainText(this->form->description.c_str());
    this->ui.word0->load();
    this->ui.word1->load();
@@ -31,7 +31,7 @@ void FormDialogShout::_save_impl() {
    this->stub->editorID = this->ui.editorID->text().toStdString();
    editor.assign_localized_string(this->form->name, this->ui.name->text());
    this->form->treat_as_power(this->ui.treatAsPower->isChecked());
-   this->save_form_id(this->form->menuDisplayObjectID, this->ui.menuDisplayObject->formID());
+   this->save_form_id(this->form->menu_display_object, this->ui.menuDisplayObject->formID());
    this->form->description = this->ui.description->toPlainText().toStdString();
    this->ui.word0->save();
    this->ui.word1->save();

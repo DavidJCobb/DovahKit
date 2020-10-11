@@ -25,8 +25,8 @@ class FormShoutWordEditor : public QWidget {
       dovah::form_stub* stub = nullptr;
       dovah::loaded_form_ptr<dovah::loaded_forms::Shout> form;
       //
-      void save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t);
-      void save_form_id(dovah::form_id_t& target, dovah::form_stub*);
+      void save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t);
+      void save_form_id(dovah::form_reference_t& target, dovah::form_stub*);
       //
    public:
       void linkToForm(int which_word, dovah::form_stub*);

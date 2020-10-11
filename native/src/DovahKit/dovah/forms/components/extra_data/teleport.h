@@ -13,10 +13,10 @@ namespace dovah::loaded_forms::components::extra {
             };
          };
          //
-         form_id_t target_door;
+         form_reference_t     target_door;
          cobb::vector3<float> position;
-         cobb::vector3<float> rotation; // radians
-         uint32_t  flags = 0; // the game only keeps the low byte
+         cobb::vector3<float> rotation;  // radians
+         uint32_t             flags = 0; // the game only keeps the low byte
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::teleport; };
          virtual load_result load(tes_subrecord_reader&) override;

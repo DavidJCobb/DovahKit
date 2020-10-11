@@ -70,7 +70,7 @@ namespace dovah::loaded_forms {
       auto& clone_stub = *copy->stub;
       copy->extra_data.clone_from(this->extra_data, clone_stub);
       copy->script_data.clone_from(this->script_data, clone_stub);
-      copy->base_form.set(&clone_stub, this->base_form);
+      copy->base_form.set(clone_stub, this->base_form);
       copy->is_open = this->is_open;
       copy->position = this->position;
       copy->rotation = this->rotation;
@@ -103,8 +103,7 @@ namespace dovah::loaded_forms {
       this->script_data.sever_outbound_references_to(other, *this->stub);
       this->extra_data.sever_outbound_references_to(other, *this->stub);
       //
-      if (this->base_form == other.formID)
-         this->base_form.set(this->stub, nullptr);
+      this->base_form.clear_if(*this->stub, other);
    }
    bool ObjectReference::_friendly_delete_impl() noexcept {
       this->flags |= form_flag::disabled;

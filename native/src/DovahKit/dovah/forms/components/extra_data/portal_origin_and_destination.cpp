@@ -25,14 +25,12 @@ namespace dovah::loaded_forms::components::extra {
    }
    basic_extra_data* portal_origin_and_destination::clone(form_stub& clone_owner) const noexcept {
       auto* clone = new portal_origin_and_destination;
-      clone->origin.set(&clone_owner, this->origin);
-      clone->destination.set(&clone_owner, this->destination);
+      clone->origin.set(clone_owner, this->origin);
+      clone->destination.set(clone_owner, this->destination);
       return clone;
    }
    void portal_origin_and_destination::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
-      if (this->origin == target.formID)
-         this->origin.set(&my_owner, nullptr);
-      if (this->destination == target.formID)
-         this->destination.set(&my_owner, nullptr);
+      this->origin.clear_if(my_owner, target);
+      this->destination.clear_if(my_owner, target);
    }
 }

@@ -5,13 +5,13 @@
 namespace dovah::loaded_forms::components {
    struct container_entry {
       // CNTO:
-      form_id_t item;
-      int32_t   count = 0;
+      form_reference_t item;
+      int32_t count = 0;
       // COED:
-      form_id_t owner;
-      form_id_t global; // for NPC_ owners
-      int32_t   factionRank = 0; // for FACT owners
-      float     condition; // item health
+      form_reference_t owner;
+      form_reference_t global; // for NPC_ owners
+      int32_t factionRank = 0; // for FACT owners
+      float   condition; // item health
       //
       container_entry() : factionRank(0) {};
    };

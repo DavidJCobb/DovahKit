@@ -120,18 +120,18 @@ namespace dovah::loaded_forms::components {
       public:
          static constexpr uint32_t signature = signature;
          //
-         form_id_t formID;
+         form_reference_t form;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
          virtual load_result load(tes_subrecord_reader& subrecord) override {
             if (subrecord.signature() == signature) {
-               subrecord.read(this->formID);
+               subrecord.read(this->form);
                return load_result::succeeded;
             }
             return load_result::unrecognized;
          }
          virtual void save(tes_record_writer& record) override {
-            record.write_formID_subrecord(signature, this->formID);
+            record.write_formID_subrecord(signature, this->form);
          }
          static void generate_use_info(tes_record_reader& record, form_stub* stub) {
             auto&     subrecord = record.get_current_subrecord();
@@ -142,15 +142,14 @@ namespace dovah::loaded_forms::components {
          }
          virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept override {
             auto* clone = new formID_extra_data<signature, et>();
-            clone->formID.set(&clone_owner, this->formID);
+            clone->formID.set(clone_owner, this->form);
             return clone;
          }
          virtual void clear_contained_formIDs(form_stub& my_owner) override {
-            this->formID.set(&my_owner, bare_form_id_t(0));
+            this->form.set(my_owner, nullptr);
          }
          virtual void sever_outbound_references_to(form_stub& target, form_stub& my_owner) override {
-            if (this->formID == target.formID)
-               this->formID.set(&my_owner, bare_form_id_t(0));
+            this->form.clear_if(my_owner, target);
          }
    };
    template<uint32_t signature, extra_data_type et> class string_extra_data : public basic_extra_data {

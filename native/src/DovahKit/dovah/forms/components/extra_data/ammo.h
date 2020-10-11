@@ -10,8 +10,8 @@ namespace dovah::loaded_forms::components::extra {
          static constexpr uint32_t signature_type  = 'XAMT';
          static constexpr uint32_t signature_count = 'XAMC';
          //
-         form_id_t type;  // XAMT
-         uint32_t  count; // XAMC (loads only after XAMT)
+         form_reference_t type;  // XAMT
+         uint32_t         count; // XAMC (loads only after XAMT)
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::ammo; };
          virtual load_result load(tes_subrecord_reader&) override;

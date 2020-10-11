@@ -52,7 +52,7 @@ namespace dovah::loaded_forms::components::extra {
       size_t size = this->parents.size();
       clone->parents.resize(size);
       for (size_t i = 0; i < size; ++i) {
-         clone->parents[i].ref.set(&clone_owner, this->parents[i].ref);
+         clone->parents[i].ref.set(clone_owner, this->parents[i].ref);
          clone->parents[i].delay = this->parents[i].delay;
       }
       //
@@ -61,14 +61,13 @@ namespace dovah::loaded_forms::components::extra {
    void activate_parent_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
       auto& list = this->parents;
       for (auto& entry : list)
-         if (entry.ref == target.formID)
-            entry.ref.set(&my_owner, bare_form_id_t(0));
+         entry.ref.clear_if(my_owner, target);
       list.erase(
          std::remove_if(
             list.begin(),
             list.end(),
             [](parent& entry) {
-               return entry.ref == bare_form_id_t(0);
+               return entry.ref == nullptr;
             }
          ),
          list.end()

@@ -7,16 +7,16 @@ namespace dovah::loaded_forms::components {
          case 'MODL':
          case 'MOD2':
          case 'DMDL': // for destruction stages
-            subrecord.to_string(this->modelPath);
+            subrecord.to_string(this->model_path);
             break;
          case 'MODT':
          case 'MO2T':
          case 'DMDT': // for destruction stages
             {
                auto s = subrecord.size();
-               this->textureHashes.data.resize(s);
+               this->texture_hashes.data.resize(s);
                for (uint32_t i = 0; i < s; i++)
-                  subrecord.read(this->textureHashes.data[i]);
+                  subrecord.read(this->texture_hashes.data[i]);
             }
             break;
          case 'MODS':
@@ -26,10 +26,10 @@ namespace dovah::loaded_forms::components {
                uint32_t count;
                if (subrecord.read(count)) {
                   for (uint32_t i = 0; i < count; i++) {
-                     auto& entry = this->textureSwaps.emplace_back();
-                     subrecord.read_length_prefixed_string<4>(entry.nifBlockName);
-                     subrecord.read(entry.textureSet);
-                     subrecord.read(entry.nifBlockIndex);
+                     auto& entry = this->texture_swaps.emplace_back();
+                     subrecord.read_length_prefixed_string<4>(entry.nif_block_name);
+                     subrecord.read(entry.texture_set);
+                     subrecord.read(entry.nif_block_index);
                      if (!subrecord.is_in_bounds())
                         break;
                   }
@@ -73,64 +73,62 @@ namespace dovah::loaded_forms::components {
          case 'MODL':
          case 'MOD2':
          case 'DMDL': // for destruction stages
-            subrecord.write(this->modelPath);
+            subrecord.write(this->model_path);
             break;
          case 'MODT':
          case 'MO2T':
          case 'DMDT': // for destruction stages
-            for (auto& byte : this->textureHashes.data) {
+            for (auto& byte : this->texture_hashes.data) {
                subrecord.write(byte);
             }
             break;
          case 'MODS':
          case 'MO2S':
          case 'DMDS': // for destruction stages
-            subrecord.write(uint32_t(this->textureSwaps.size()));
-            for (auto& entry : this->textureSwaps) {
-               subrecord.write_length_prefixed_string<4>(entry.nifBlockName);
-               subrecord.write(entry.textureSet);
-               subrecord.write(entry.nifBlockIndex);
+            subrecord.write(uint32_t(this->texture_swaps.size()));
+            for (auto& entry : this->texture_swaps) {
+               subrecord.write_length_prefixed_string<4>(entry.nif_block_name);
+               subrecord.write(entry.texture_set);
+               subrecord.write(entry.nif_block_index);
             }
             break;
       }
    }
    void model::save(tes_record_writer& record, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap) {
-      if (!this->modelPath.empty())
+      if (!this->model_path.empty())
          this->save(record.open_next_subrecord(signature_path));
       if (this->has_texture_hashes())
          this->save(record.open_next_subrecord(signature_hash));
-      if (!this->textureSwaps.empty())
+      if (!this->texture_swaps.empty())
          this->save(record.open_next_subrecord(signature_swap));
    }
    void model::clear(form_stub& my_owner) {
-      this->modelPath.clear();
-      this->textureHashes.data.clear();
-      for (auto& entry : this->textureSwaps)
-         entry.textureSet.set(&my_owner, bare_form_id_t(0));
+      this->model_path.clear();
+      this->texture_hashes.data.clear();
+      for (auto& entry : this->texture_swaps)
+         entry.texture_set.set(my_owner, nullptr);
    }
    void model::clone_from(const model& other, form_stub& my_owner) noexcept {
-      this->modelPath     = other.modelPath;
-      this->textureHashes = other.textureHashes;
+      this->model_path     = other.model_path;
+      this->texture_hashes = other.texture_hashes;
       //
-      size_t size = other.textureSwaps.size();
-      if (!this->textureSwaps.empty()) {
-         for (auto& entry : this->textureSwaps)
-            entry.textureSet.set(&my_owner, bare_form_id_t(0));
-         this->textureSwaps.clear();
+      size_t size = other.texture_swaps.size();
+      if (!this->texture_swaps.empty()) {
+         for (auto& entry : this->texture_swaps)
+            entry.texture_set.set(my_owner, nullptr);
+         this->texture_swaps.clear();
       }
-      this->textureSwaps.resize(size);
+      this->texture_swaps.resize(size);
       for (size_t i = 0; i < size; ++i) {
-         auto& entry = this->textureSwaps[i];
-         auto& from  = other.textureSwaps[i];
-         entry.nifBlockName  = from.nifBlockName;
-         entry.nifBlockIndex = from.nifBlockIndex;
-         entry.textureSet.set(&my_owner, from.textureSet);
+         auto& entry = this->texture_swaps[i];
+         auto& from  = other.texture_swaps[i];
+         entry.nif_block_name  = from.nif_block_name;
+         entry.nif_block_index = from.nif_block_index;
+         entry.texture_set.set(my_owner, from.texture_set);
       }
    }
    void model::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
-      bare_form_id_t formID = target.formID;
-      for (auto& entry : this->textureSwaps)
-         if (entry.textureSet == formID)
-            entry.textureSet.set(&my_owner, nullptr);
+      for (auto& entry : this->texture_swaps)
+         entry.texture_set.clear_if(my_owner, target);
    }
 }

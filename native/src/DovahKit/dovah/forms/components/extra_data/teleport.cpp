@@ -38,14 +38,13 @@ namespace dovah::loaded_forms::components::extra {
    }
    basic_extra_data* teleport::clone(form_stub& clone_owner) const noexcept {
       auto* clone = new teleport;
-      clone->target_door.set(&clone_owner, this->target_door);
+      clone->target_door.set(clone_owner, this->target_door);
       clone->position = this->position;
       clone->rotation = this->rotation;
       clone->flags    = this->flags;
       return clone;
    }
    void teleport::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
-      if (this->target_door == target.formID)
-         this->target_door.set(&my_owner, nullptr);
+      this->target_door.clear_if(my_owner, target);
    }
 }

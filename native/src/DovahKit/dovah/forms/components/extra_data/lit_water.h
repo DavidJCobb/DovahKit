@@ -6,7 +6,7 @@ namespace dovah::loaded_forms::components::extra {
       public:
          static constexpr uint32_t signature = 'XLTW';
          //
-         std::vector<form_id_t> refs;
+         std::vector<form_reference_t> refs;
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::lit_water; };
          virtual load_result load(tes_subrecord_reader&) override;

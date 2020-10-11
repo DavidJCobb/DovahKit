@@ -26,10 +26,10 @@ namespace dovah::loaded_forms::components {
          // doing literally nothing. Only implicit constructors can be "trivial" (even foo() = default doesn't 
          // work), and those only get generated if a struct has *no* constructors. Ugh.
          //
-         form_id_t form;
-         uint32_t  object_type = 0;
-         int32_t   alias_id    = 0;
-         uint32_t  padding     = 0;
+         form_reference_t form;
+         uint32_t object_type = 0;
+         int32_t  alias_id    = 0;
+         uint32_t padding     = 0;
       } detail;
       int32_t radius = 0;
       //

@@ -33,7 +33,7 @@ namespace dovah::loaded_forms::components::extra {
       for (size_t i = 0; i < size; ++i) {
          auto& entry = clone->entries[i];
          auto& from  = this->entries[i];
-         entry.target.set(&clone_owner, from.target);
+         entry.target.set(clone_owner, from.target);
          entry.type = from.type;
       }
       //
@@ -42,14 +42,13 @@ namespace dovah::loaded_forms::components::extra {
    void reflector_refs::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
       auto& list = this->entries;
       for (auto& entry : list)
-         if (entry.target == target.formID)
-            entry.target.set(&my_owner, bare_form_id_t(0));
+         entry.target.clear_if(my_owner, target);
       list.erase(
          std::remove_if(
             list.begin(),
             list.end(),
             [](entry& e) {
-               return e.target == bare_form_id_t(0);
+               return e.target == nullptr;
             }
          ),
          list.end()

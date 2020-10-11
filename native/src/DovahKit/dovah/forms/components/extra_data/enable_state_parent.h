@@ -13,9 +13,9 @@ namespace dovah::loaded_forms::components::extra {
             };
          };
          //
-         form_id_t ref;
-         uint8_t   flags = 0;
-         uint8_t   pad05[3];
+         form_reference_t ref;
+         uint8_t flags = 0;
+         uint8_t pad05[3];
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::enable_state_parent; };
          virtual load_result load(tes_subrecord_reader&) override;

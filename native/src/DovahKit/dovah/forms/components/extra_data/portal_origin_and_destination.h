@@ -6,8 +6,8 @@ namespace dovah::loaded_forms::components::extra {
       public:
          static constexpr uint32_t signature = 'XPOD';
          //
-         form_id_t origin;      // REFR
-         form_id_t destination; // REFR
+         form_reference_t origin;      // REFR
+         form_reference_t destination; // REFR
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::portal_origin_and_destination; };
          virtual extra_data_load_result load(tes_subrecord_reader&) override;

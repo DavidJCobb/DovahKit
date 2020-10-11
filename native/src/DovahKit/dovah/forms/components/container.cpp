@@ -81,28 +81,24 @@ namespace dovah::loaded_forms::components {
       this->entries.clear();
       this->entries.resize(size);
       //
-      auto* stub = &my_owner;
       for (size_t i = 0; i < size; ++i) {
          auto& entry = this->entries[i];
          auto& from  = other.entries[i];
          //
-         entry.item.set(stub, from.item);
+         entry.item.set(my_owner, from.item);
          entry.count = from.count;
-         entry.owner.set(stub, from.owner);
+         entry.owner.set(my_owner, from.owner);
          entry.factionRank = from.factionRank;
-         entry.global.set(stub, from.global);
+         entry.global.set(my_owner, from.global);
          entry.condition = from.condition;
       }
    }
    void container_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
       bare_form_id_t formID = target.formID;
       for (auto& entry : this->entries) {
-         if (entry.item == formID)
-            entry.item.set(&my_owner, bare_form_id_t(0));
-         if (entry.owner == formID)
-            entry.owner.set(&my_owner, bare_form_id_t(0));
-         if (entry.global == formID)
-            entry.owner.set(&my_owner, bare_form_id_t(0));
+         entry.item.clear_if(my_owner, target);
+         entry.owner.clear_if(my_owner, target);
+         entry.global.clear_if(my_owner, target);
       }
    }
 }

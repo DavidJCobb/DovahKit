@@ -39,7 +39,7 @@ namespace dovah::loaded_forms::components::extra {
       clone->pad01[0] = this->pad01[0];
       clone->pad01[1] = this->pad01[1];
       clone->pad01[2] = this->pad01[2];
-      clone->key.set(&clone_owner, this->key);
+      clone->key.set(clone_owner, this->key);
       clone->flags = this->flags;
       clone->pad09[0] = this->pad09[0];
       clone->pad09[1] = this->pad09[1];
@@ -49,7 +49,6 @@ namespace dovah::loaded_forms::components::extra {
       return clone;
    }
    void lock::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
-      if (this->key == target.formID)
-         this->key.set(&my_owner, nullptr);
+      this->key.clear_if(my_owner, target);
    }
 }

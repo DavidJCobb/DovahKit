@@ -18,11 +18,13 @@ void FormDialogBaseTemplate::save() {
    emit editor.formModified(this->stub);
 }
 
-void FormDialogBaseTemplate::save_form_id(dovah::form_id_t& target, dovah::bare_form_id_t value) {
-   target.set(this->stub, value);
+void FormDialogBaseTemplate::save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t id) {
+   auto& editor = DovahKitCore::get();
+   auto* value  = editor.get_form(id);
+   this->save_form_id(target, value);
 }
-void FormDialogBaseTemplate::save_form_id(dovah::form_id_t& target, dovah::form_stub* value) {
-   target.set(this->stub, value);
+void FormDialogBaseTemplate::save_form_id(dovah::form_reference_t& target, dovah::form_stub* value) {
+   target.set(*this->stub, value);
 }
 
 void FormDialogBaseTemplate::save_extra_form(dovah::bare_form_id_t formID, extra_data_list& extra, extra_data_type et, bool remove_if_no_form) {

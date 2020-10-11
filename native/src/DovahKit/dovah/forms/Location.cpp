@@ -6,7 +6,7 @@ namespace dovah::loaded_forms {
       Form::load(record);
       //
       this->subrecordFlags = 0;
-      form_id_t formID;
+      form_reference_t formID;
       uint32_t  keywordCount = 0;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -16,10 +16,10 @@ namespace dovah::loaded_forms {
             case 'LCPR':
                while (subrecord.is_in_bounds(12)) {
                   auto& pop = this->population.emplace_back();
-                  subrecord.unchecked_read(pop.actorRefID);
-                  subrecord.unchecked_read(pop.cellOrWorldID);
-                  subrecord.unchecked_read(pop.gridY);
-                  subrecord.unchecked_read(pop.gridX);
+                  subrecord.unchecked_read(pop.actor);
+                  subrecord.unchecked_read(pop.cell_or_world);
+                  subrecord.unchecked_read(pop.grid_y);
+                  subrecord.unchecked_read(pop.grid_x);
                }
                break;
             case 'RCPR':
@@ -33,9 +33,9 @@ namespace dovah::loaded_forms {
             case 'LCUN':
                while (subrecord.is_in_bounds(12)) {
                   auto& unique = this->uniques.emplace_back();
-                  subrecord.unchecked_read(unique.actorBaseID);
-                  subrecord.unchecked_read(unique.actorRefID);
-                  subrecord.unchecked_read(unique.locationID);
+                  subrecord.unchecked_read(unique.actor_base);
+                  subrecord.unchecked_read(unique.actor);
+                  subrecord.unchecked_read(unique.location);
                }
                break;
             case 'RCUN':
@@ -49,9 +49,9 @@ namespace dovah::loaded_forms {
             case 'LCSR':
                while (subrecord.is_in_bounds(16)) {
                   auto& stat = this->statics.emplace_back();
-                  subrecord.unchecked_read(stat.locRefTypeID);
-                  subrecord.unchecked_read(stat.refID);
-                  subrecord.unchecked_read(stat.cellOrWorldID);
+                  subrecord.unchecked_read(stat.ref_type);
+                  subrecord.unchecked_read(stat.reference);
+                  subrecord.unchecked_read(stat.cell_or_world);
                   subrecord.unchecked_read(stat.unk0C);
                   subrecord.unchecked_read(stat.unk0E);
                }
@@ -77,10 +77,10 @@ namespace dovah::loaded_forms {
             case 'LCEP':
                while (subrecord.is_in_bounds(12)) {
                   auto& ep = this->enablePoints.emplace_back();
-                  subrecord.unchecked_read(ep.actorID);
-                  subrecord.unchecked_read(ep.refID);
-                  subrecord.unchecked_read(ep.gridY);
-                  subrecord.unchecked_read(ep.gridX);
+                  subrecord.unchecked_read(ep.actor);
+                  subrecord.unchecked_read(ep.reference);
+                  subrecord.unchecked_read(ep.grid_y);
+                  subrecord.unchecked_read(ep.grid_x);
                }
                break;
             case 'ACID':
@@ -92,23 +92,17 @@ namespace dovah::loaded_forms {
                      this->populationActors.push_back(formID);
                break;
             case 'KSIZ':
-               subrecord.read(keywordCount);
-               break;
             case 'KWDA':
-               if (!keywordCount)
-                  keywordCount = subrecord.size() / 4;
-               for (uint32_t i = 0; i < keywordCount; i++)
-                  if (subrecord.read(formID))
-                     stub->add_outbound_reference(formID);
+               this->keywords.load(subrecord);
                break;
             case 'PNAM':
-               subrecord.read(this->parentLocationID);
+               subrecord.read(this->parent_location);
                break;
             case 'NAM1':
-               subrecord.read(this->musicID);
+               subrecord.read(this->music);
                break;
             case 'FNAM':
-               subrecord.read(this->unreportedCrimeFactionID);
+               subrecord.read(this->unreported_crime_faction);
                break;
             case 'MNAM':
                subrecord.read(this->marker);
@@ -117,7 +111,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->radius);
                break;
             case 'NAM0':
-               subrecord.read(this->horseMarkerRefID);
+               subrecord.read(this->horse_marker);
                break;
             case 'CNAM':
                subrecord.read(this->color.r);

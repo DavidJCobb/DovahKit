@@ -21,14 +21,14 @@ namespace dovah::loaded_forms {
          };
 
          struct Word {
-            form_id_t wordOfPowerID;
-            form_id_t spellID;
-            float     recoveryTime = 0.0F;
+            form_reference_t word_of_power;
+            form_reference_t spell;
+            float recoveryTime = 0.0F;
          };
 
          localized_string name        = localized_string(localized_string_type::common);      // FULL
          localized_string description = localized_string(localized_string_type::description); // DESC
-         form_id_t menuDisplayObjectID; // MDOB
+         form_reference_t menu_display_object; // MDOB
          std::vector<Word> words; // SNAM // a shout should always have exactly 3 of these, but we want to account for cases where they do not
 
          void load(tes_record_reader&);

@@ -14,7 +14,7 @@ namespace dovah::loaded_forms {
       if (!this->entries.empty()) {
          for (auto& entry : this->entries) {
             for (auto& ref : entry.refs)
-               ref.form.set(&my_owner, nullptr);
+               ref.form.set(my_owner, nullptr);
          }
          this->entries.clear();
       }
@@ -32,7 +32,7 @@ namespace dovah::loaded_forms {
          for (size_t j = 0; j < rs; ++j) {
             auto& ref   = entry.refs[j];
             auto& other = from.refs[j];
-            ref.form.set(&my_owner, other.form);
+            ref.form.set(my_owner, other.form);
             ref.y = other.y;
             ref.x = other.x;
          }
@@ -43,8 +43,8 @@ namespace dovah::loaded_forms {
       for (auto& entry : this->entries) {
          bool edited = false;
          for (auto& ref : entry.refs) {
-            if (ref.form == target.formID) {
-               ref.form.set(&my_owner, nullptr);
+            if (ref.form == &target) {
+               ref.form.set(my_owner, nullptr);
                edited = true;
             }
          }
@@ -55,7 +55,7 @@ namespace dovah::loaded_forms {
                   list.begin(),
                   list.end(),
                   [](ref& e) {
-                     return e.form == bare_form_id_t(0);
+                     return e.form == nullptr;
                   }
                ),
                list.end()
@@ -250,44 +250,47 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   void Worldspace::setup() noexcept {
-      this->water_type.set(this->stub, hardcoded_form_ids::DefaultWater);
-      this->water_type_lod.set(this->stub, hardcoded_form_ids::DefaultWater);
+   void Worldspace::setup(const file_load_order& load_order) noexcept {
+      auto* default_water = load_order.get_form(hardcoded_form_ids::DefaultWater);
+      //
+      this->water_type.set(*this->stub, default_water);
+      this->water_type_lod.set(*this->stub, default_water);
    }
    bool Worldspace::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<Worldspace*>(out);
+      auto* copy = dynamic_cast<Worldspace*>(out);
       if (!copy)
          return false;
-      copy->large_references.clone_from(this->large_references, *copy->stub);
-      copy->name = this->name;
-      copy->max_height_data = this->max_height_data;
-      copy->center_cell_coordinates = this->center_cell_coordinates;
-      copy->climate.set(copy->stub, this->climate);
-      copy->lighting_template.set(copy->stub, this->lighting_template);
-      copy->encounter_zone.set(copy->stub, this->encounter_zone);
-      copy->location.set(copy->stub, this->location);
-      copy->water_type.set(copy->stub, this->water_type);
-      copy->water_type_lod.set(copy->stub, this->water_type_lod);
-      copy->lod_water_height = this->lod_water_height;
-      copy->land_data = this->land_data;
-      copy->parent.form.set(copy->stub, this->parent.form);
-      copy->parent.flags = this->parent.flags;
-      copy->map_icon = this->map_icon;
-      copy->cloud_model.clone_from(this->cloud_model, *copy->stub);
-      copy->map_data = this->map_data;
-      copy->map_offset_data = this->map_offset_data;
-      copy->distant_lod_multiplier = this->distant_lod_multiplier;
-      copy->world_flags = this->world_flags;
-      copy->bounds = this->bounds;
-      copy->music.set(copy->stub, this->music);
-      copy->tree_canopy_shadow = this->tree_canopy_shadow;
-      copy->water_noise_texture = this->water_noise_texture;
-      copy->hd_lod_diffuse_texture = this->hd_lod_diffuse_texture;
-      copy->hd_lod_normal_texture = this->hd_lod_normal_texture;
-      copy->offset_data = this->offset_data;
-      copy->has_object_bounds = this->has_object_bounds;
-      copy->object_bounds = this->object_bounds;
-      copy->script_data.clone_from(this->script_data, *copy->stub);
+      auto& clone = *copy;
+      clone.large_references.clone_from(this->large_references, *clone.stub);
+      clone.name = this->name;
+      clone.max_height_data = this->max_height_data;
+      clone.center_cell_coordinates = this->center_cell_coordinates;
+      clone.climate.set(*clone.stub, this->climate);
+      clone.lighting_template.set(*clone.stub, this->lighting_template);
+      clone.encounter_zone.set(*clone.stub, this->encounter_zone);
+      clone.location.set(*clone.stub, this->location);
+      clone.water_type.set(*clone.stub, this->water_type);
+      clone.water_type_lod.set(*clone.stub, this->water_type_lod);
+      clone.lod_water_height = this->lod_water_height;
+      clone.land_data = this->land_data;
+      clone.parent.form.set(*clone.stub, this->parent.form);
+      clone.parent.flags = this->parent.flags;
+      clone.map_icon = this->map_icon;
+      clone.cloud_model.clone_from(this->cloud_model, *clone.stub);
+      clone.map_data = this->map_data;
+      clone.map_offset_data = this->map_offset_data;
+      clone.distant_lod_multiplier = this->distant_lod_multiplier;
+      clone.world_flags = this->world_flags;
+      clone.bounds = this->bounds;
+      clone.music.set(*clone.stub, this->music);
+      clone.tree_canopy_shadow = this->tree_canopy_shadow;
+      clone.water_noise_texture = this->water_noise_texture;
+      clone.hd_lod_diffuse_texture = this->hd_lod_diffuse_texture;
+      clone.hd_lod_normal_texture = this->hd_lod_normal_texture;
+      clone.offset_data = this->offset_data;
+      clone.has_object_bounds = this->has_object_bounds;
+      clone.object_bounds = this->object_bounds;
+      clone.script_data.clone_from(this->script_data, *clone.stub);
       return true;
    }
    bool Worldspace::_save_impl(tes_record_writer& record) {
@@ -449,22 +452,15 @@ namespace dovah::loaded_forms {
    void Worldspace::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this->stub);
       //
-      auto formID = other.formID;
-      if (this->climate == formID)
-         this->climate.set(this->stub, nullptr);
-      if (this->lighting_template == formID)
-         this->lighting_template.set(this->stub, nullptr);
-      if (this->encounter_zone == formID)
-         this->encounter_zone.set(this->stub, nullptr);
-      if (this->location == formID)
-         this->location.set(this->stub, nullptr);
-      if (this->water_type == formID)
-         this->water_type.set(this->stub, nullptr);
-      if (this->water_type_lod == formID)
-         this->water_type_lod.set(this->stub, nullptr);
-      if (this->parent.form == formID)
-         this->parent.form.set(this->stub, nullptr);
-      if (this->music == formID)
-         this->music.set(this->stub, nullptr);
+      this->climate.clear_if(*this->stub, other);
+      this->lighting_template.clear_if(*this->stub, other);
+      this->encounter_zone.clear_if(*this->stub, other);
+      this->location.clear_if(*this->stub, other);
+      this->water_type.clear_if(*this->stub, other);
+      this->water_type_lod.clear_if(*this->stub, other);
+      this->parent.form.clear_if(*this->stub, other);
+      this->music.clear_if(*this->stub, other);
+      this->climate.clear_if(*this->stub, other);
+      this->climate.clear_if(*this->stub, other);
    }
 }

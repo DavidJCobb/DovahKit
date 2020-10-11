@@ -11,7 +11,7 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->name);
                break;
             case 'MDOB':
-               subrecord.read(this->menuDisplayObjectID);
+               subrecord.read(this->menu_display_object);
                break;
             case 'DESC':
                subrecord.to_string(this->description);
@@ -19,8 +19,8 @@ namespace dovah::loaded_forms {
             case 'SNAM':
                {
                   Word& entry = this->words.emplace_back();
-                  subrecord.read(entry.wordOfPowerID);
-                  subrecord.read(entry.spellID);
+                  subrecord.read(entry.word_of_power);
+                  subrecord.read(entry.spell);
                   subrecord.read(entry.recoveryTime);
                }
                break;
@@ -58,7 +58,7 @@ namespace dovah::loaded_forms {
       // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
       copy->name        = this->name;
       copy->description = this->description;
-      copy->menuDisplayObjectID.set(copy->stub, this->menuDisplayObjectID);
+      copy->menu_display_object.set(*copy->stub, this->menu_display_object);
       //
       size_t size = this->words.size();
       assert(copy->words.empty() && "We should be working with a newly-created form. If this isn't empty, then we need to clear out the form IDs already inside via (set) calls; simply resizing/clearing the vector and destroying form_id_ts will fail to clean up already-existing use info.");
@@ -66,8 +66,8 @@ namespace dovah::loaded_forms {
       for (size_t i = 0; i < size; ++i) {
          auto& word = copy->words[i];
          auto& from = this->words[i];
-         word.wordOfPowerID.set(copy->stub, from.wordOfPowerID);
-         word.spellID.set(copy->stub, from.spellID);
+         word.word_of_power.set(*copy->stub, from.word_of_power);
+         word.spell.set(*copy->stub, from.spell);
          word.recoveryTime = from.recoveryTime;
       }
       return true;
@@ -77,29 +77,25 @@ namespace dovah::loaded_forms {
       FULL.write(this->name);
       FULL.close();
       auto& MDOB = record.open_next_subrecord('MDOB');
-      MDOB.write(this->menuDisplayObjectID);
+      MDOB.write(this->menu_display_object);
       MDOB.close();
       auto& DESC = record.open_next_subrecord('DESC');
       DESC.write(this->description);
       DESC.close();
       for (auto& word : this->words) {
          auto& SNAM = record.open_next_subrecord('SNAM');
-         SNAM.write(word.wordOfPowerID);
-         SNAM.write(word.spellID);
+         SNAM.write(word.word_of_power);
+         SNAM.write(word.spell);
          SNAM.write(word.recoveryTime);
          SNAM.close();
       }
       return true;
    }
    void Shout::_sever_outbound_references_impl(form_stub& other) noexcept {
-      auto formID = other.formID;
-      if (this->menuDisplayObjectID == formID)
-         this->menuDisplayObjectID.set(this->stub, nullptr);
+      this->menu_display_object.clear_if(*this->stub, other);
       for (auto& word : this->words) {
-         if (word.wordOfPowerID == formID)
-            word.wordOfPowerID.set(this->stub, nullptr);
-         if (word.spellID == formID)
-            word.spellID.set(this->stub, nullptr);
+         word.word_of_power.clear_if(*this->stub, other);
+         word.spell.clear_if(*this->stub, other);
       }
    }
 }

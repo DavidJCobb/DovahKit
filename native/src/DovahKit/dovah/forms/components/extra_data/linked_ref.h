@@ -6,8 +6,8 @@ namespace dovah::loaded_forms::components::extra {
       public:
          static constexpr uint32_t signature = 'XLKR';
          //
-         form_id_t keyword; // optional; struct can be 8 bytes (KYWD, ref) or 4 bytes (ref)
-         form_id_t ref;
+         form_reference_t keyword; // optional; struct can be 8 bytes (KYWD, ref) or 4 bytes (ref)
+         form_reference_t ref;
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::linked_ref; };
          virtual extra_data_load_result load(tes_subrecord_reader&) override;

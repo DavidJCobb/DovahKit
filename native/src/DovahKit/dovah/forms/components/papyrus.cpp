@@ -164,14 +164,14 @@ namespace dovah::loaded_forms::components::papyrus {
    }
 
    bool script_data::property_object_value::load(script_data& owner, tes_subrecord_reader& subrecord) {
-      if (!subrecord.is_in_bounds(sizeof(this->always_zero) + sizeof(this->aliasID) + sizeof(this->formID)))
+      if (!subrecord.is_in_bounds(sizeof(this->always_zero) + sizeof(this->aliasID) + sizeof(bare_form_id_t)))
          return false;
       if (owner.object_format == 2) {
          subrecord.unchecked_read(this->always_zero);
          subrecord.unchecked_read(this->aliasID);
-         subrecord.unchecked_read(this->formID);
+         subrecord.unchecked_read(this->form);
       } else {
-         subrecord.unchecked_read(this->formID);
+         subrecord.unchecked_read(this->form);
          subrecord.unchecked_read(this->aliasID);
          subrecord.unchecked_read(this->always_zero);
       }
@@ -181,25 +181,24 @@ namespace dovah::loaded_forms::components::papyrus {
       if (owner.object_format == 2) {
          subrecord.write(this->always_zero);
          subrecord.write(this->aliasID);
-         subrecord.write(this->formID);
+         subrecord.write(this->form);
       } else {
-         subrecord.write(this->formID);
+         subrecord.write(this->form);
          subrecord.write(this->aliasID);
          subrecord.write(this->always_zero);
       }
       return true;
    }
    void script_data::property_object_value::clone_from(const property_object_value& other, form_stub& owner) noexcept {
-      this->formID.set(&owner, other.formID);
+      this->form.set(owner, other.form);
       this->aliasID     = other.aliasID;
       this->always_zero = other.always_zero;
    }
    void script_data::property_object_value::clear(form_stub& owner) {
-      this->formID.set(&owner, bare_form_id_t(0));
+      this->form.set(owner, nullptr);
    }
    void script_data::property_object_value::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
-      if (this->formID == target.formID)
-         this->formID.set(&my_owner, bare_form_id_t(0));
+      this->form.clear_if(my_owner, target);
    }
 
    bool script_data::property::value_t::load(property_type type, script_data& owner, tes_subrecord_reader& subrecord) {

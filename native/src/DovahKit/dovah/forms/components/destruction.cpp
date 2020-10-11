@@ -24,8 +24,8 @@ namespace dovah::loaded_forms::components {
                      subrecord.read(stage.damageStage);
                      subrecord.read(stage.flags);
                      subrecord.read(stage.selfDamageRate);
-                     subrecord.read(stage.explosionID);
-                     subrecord.read(stage.debrisID);
+                     subrecord.read(stage.explosion);
+                     subrecord.read(stage.debris);
                      subrecord.read(stage.debrisCount);
                   }
                   break;
@@ -56,8 +56,8 @@ namespace dovah::loaded_forms::components {
                   subrecord.read(stage.damageStage);
                   subrecord.read(stage.flags);
                   subrecord.read(stage.selfDamageRate);
-                  subrecord.read(stage.explosionID);
-                  subrecord.read(stage.debrisID);
+                  subrecord.read(stage.explosion);
+                  subrecord.read(stage.debris);
                   subrecord.read(stage.debrisCount);
                }
                break;
@@ -110,8 +110,8 @@ namespace dovah::loaded_forms::components {
          DSTD.write(stage.damageStage);
          DSTD.write(stage.flags);
          DSTD.write(stage.selfDamageRate);
-         DSTD.write(stage.explosionID);
-         DSTD.write(stage.debrisID);
+         DSTD.write(stage.explosion);
+         DSTD.write(stage.debris);
          DSTD.write(stage.debrisCount);
          DSTD.close();
          //
@@ -127,12 +127,11 @@ namespace dovah::loaded_forms::components {
       this->health = other.health;
       this->flags  = other.flags;
       //
-      auto*  stub = &my_owner;
       size_t size = other.stages.size();
       if (!this->stages.empty()) {
          for (auto& stage : this->stages) {
-            stage.explosionID.set(stub, bare_form_id_t(0));
-            stage.debrisID.set(stub, bare_form_id_t(0));
+            stage.explosion.set(my_owner, nullptr);
+            stage.debris.set(my_owner, nullptr);
             stage.replacementModel.clear(my_owner);
          }
          this->stages.clear();
@@ -146,19 +145,16 @@ namespace dovah::loaded_forms::components {
          stage.damageStage    = from.damageStage;
          stage.flags          = from.flags;
          stage.selfDamageRate = from.selfDamageRate;
-         stage.explosionID.set(stub, from.explosionID);
-         stage.debrisID.set(stub, from.debrisID);
+         stage.explosion.set(my_owner, from.explosion);
+         stage.debris.set(my_owner, from.debris);
          stage.debrisCount    = from.debrisCount;
          stage.replacementModel.clone_from(from.replacementModel, my_owner);
       }
    }
    void destruction_stage_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
-      bare_form_id_t formID = target.formID;
       for (auto& stage : this->stages) {
-         if (stage.explosionID == formID)
-            stage.explosionID.set(&my_owner, nullptr);
-         if (stage.debrisID == formID)
-            stage.debrisID.set(&my_owner, nullptr);
+         stage.debris.clear_if(my_owner, target);
+         stage.explosion.clear_if(my_owner, target);
       }
    }
 }
