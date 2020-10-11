@@ -985,6 +985,24 @@ namespace dovah {
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
          } else {
+            //
+            // Update the active file's masters.
+            //
+            auto& header = this->active_file->header;
+            header.masters.clear();
+            this->for_each_load_order_filename([&header](std::filesystem::path name, bool is_active_file) { // MAST, DATA
+               if (is_active_file)
+                  return false;
+               //
+               auto& entry  = header.masters.emplace_back();
+               entry.master = name.string();
+               entry.data   = 0;
+               //
+               return false;
+            });
+            //
+            // Reopen the active file.
+            //
             reopen_result = this->active_file->open_mapped_file();
          }
          if (!reopen_result) {

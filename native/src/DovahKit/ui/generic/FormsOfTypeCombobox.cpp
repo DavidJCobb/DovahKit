@@ -42,7 +42,13 @@ dovah::bare_form_id_t FormsOfTypeCombobox::formID() const noexcept {
    int i = this->currentIndex();
    if (i < 0)
       return 0;
-   return this->currentData().value<quint32>();
+   return this->currentData(FormIDRole).value<quint32>();
+}
+dovah::form_stub* FormsOfTypeCombobox::formStub() const noexcept {
+   int i = this->currentIndex();
+   if (i < 0)
+      return nullptr;
+   return (dovah::form_stub*)this->currentData(FormStubRole).value<void*>();
 }
 void FormsOfTypeCombobox::populate() {
    const auto blocker = QSignalBlocker(this);
@@ -56,7 +62,8 @@ void FormsOfTypeCombobox::populate() {
    for (auto ft : this->_formTypes) {
       editor.for_each_form_of_type(ft, [model](dovah::form_stub* stub) {
          auto* item = new QStandardItem(QString::fromStdString(stub->get_editor_id()));
-         item->setData(stub->formID, Qt::UserRole);
+         item->setData(stub->formID, FormIDRole);
+         item->setData(QVariant::fromValue((void*)stub), FormStubRole);
          model->appendRow(item);
          return false;
       });
@@ -66,8 +73,9 @@ void FormsOfTypeCombobox::populate() {
       if (text.isEmpty())
          text = tr("UNDEFINED");
       auto* item = new QStandardItem(text);
-      item->setData(0, Qt::UserRole);
-      item->setData(1, undefined_role);
+      item->setData(0, FormIDRole);
+      item->setData(1, UndefinedRole);
+      item->setData(QVariant::fromValue(nullptr), FormStubRole);
       model->appendRow(item);
    }
    if (this->_allowNone) {
@@ -75,7 +83,8 @@ void FormsOfTypeCombobox::populate() {
       if (text.isEmpty())
          text = tr("NONE");
       auto* item = new QStandardItem(text);
-      item->setData(0, Qt::UserRole);
+      item->setData(0, FormIDRole);
+      item->setData(QVariant::fromValue(nullptr), FormStubRole);
       model->appendRow(item);
    }
    //
@@ -85,13 +94,13 @@ void FormsOfTypeCombobox::populate() {
    this->setModel(proxy);
    proxy->sort(0);
    //
-   int index = this->findData(previous_selection, Qt::UserRole);
+   int index = this->findData(previous_selection, FormIDRole);
    if (index >= 0)
       this->setCurrentIndex(index);
    else {
       index = -1;
       if (this->_allowNone)
-         index = this->findData(0, Qt::UserRole);
+         index = this->findData(0, FormIDRole);
       this->setCurrentIndex(index);
    }
    //
@@ -132,9 +141,9 @@ void FormsOfTypeCombobox::setAllowUndefined(bool s) noexcept {
       if (text.isEmpty())
          text = tr("UNDEFINED");
       this->addItem(text, 0);
-      this->setItemData(this->count() - 1, 1, undefined_role); // using the model here feels safer, but Qt crashes when we try
+      this->setItemData(this->count() - 1, 1, UndefinedRole); // using the model here feels safer, but Qt crashes when we try
    } else {
-      int i = this->findData(1, undefined_role);
+      int i = this->findData(1, UndefinedRole);
       if (i >= 0)
          this->removeItem(i);
    }
@@ -142,7 +151,7 @@ void FormsOfTypeCombobox::setAllowUndefined(bool s) noexcept {
 void FormsOfTypeCombobox::setUndefinedLabel(const QString& v) noexcept {
    this->_undefinedLabel = v;
    if (this->_allowUndefined) {
-      int index = this->findData(1, undefined_role);
+      int index = this->findData(1, UndefinedRole);
       if (index < 0)
          return;
       this->setItemText(index, this->_undefinedLabel);
@@ -151,12 +160,12 @@ void FormsOfTypeCombobox::setUndefinedLabel(const QString& v) noexcept {
 bool FormsOfTypeCombobox::isUndefined() const noexcept {
    if (!this->_allowUndefined)
       return false;
-   return this->currentData(undefined_role).toInt() != 0;
+   return this->currentData(UndefinedRole).toInt() != 0;
 }
 void FormsOfTypeCombobox::setToUndefined() noexcept {
    if (!this->_allowUndefined)
       return;
-   int index = this->findData(1, undefined_role);
+   int index = this->findData(1, UndefinedRole);
    if (index < 0)
       return;
    this->setCurrentIndex(index);

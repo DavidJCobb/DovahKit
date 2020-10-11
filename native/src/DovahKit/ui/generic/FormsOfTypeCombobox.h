@@ -5,7 +5,9 @@
 class FormsOfTypeCombobox : public QComboBox {
    Q_OBJECT
    protected:
-      static const Qt::ItemDataRole undefined_role = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      static constexpr Qt::ItemDataRole FormIDRole    = (Qt::ItemDataRole)Qt::UserRole;
+      static constexpr Qt::ItemDataRole FormStubRole  = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      static constexpr Qt::ItemDataRole UndefinedRole = (Qt::ItemDataRole)(Qt::UserRole + 2);
       //
    public:
       FormsOfTypeCombobox(QWidget* parent = nullptr);
@@ -14,6 +16,7 @@ class FormsOfTypeCombobox : public QComboBox {
       inline bool allowNone() const noexcept { return this->_allowNone; }
       bool allowsFormType(dovah::form_type_t) const noexcept;
       dovah::bare_form_id_t formID() const noexcept;
+      dovah::form_stub* formStub() const noexcept;
       void populate();
       //
       void setAllowNone(bool) noexcept; // set whether a "NONE" option appears

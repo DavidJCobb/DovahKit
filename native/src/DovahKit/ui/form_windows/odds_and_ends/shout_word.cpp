@@ -47,8 +47,8 @@ void FormShoutWordEditor::save() {
    if (list.size() <= this->which_word)
       return;
    auto& word = list[this->which_word];
-   this->save_form_id(word.word_of_power, this->ui.word->formID());
-   this->save_form_id(word.spell,       this->ui.spell->formID());
+   this->save_form_id(word.word_of_power, this->ui.word->formStub());
+   this->save_form_id(word.spell,         this->ui.spell->formStub());
    word.recoveryTime  = this->ui.recoveryTime->value();
 }
 void FormShoutWordEditor::linkToForm(int which_word, dovah::form_stub* stub) {
