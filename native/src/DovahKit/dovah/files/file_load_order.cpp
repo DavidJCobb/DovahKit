@@ -271,7 +271,6 @@ namespace dovah {
          this->files.push_back(file);
          if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
             this->active_file = file;
-            this->active_file_index = this->save_load_state.loading_index;
          }
          if (!file->load(path.c_str())) {
             auto fn = header->name;
@@ -302,7 +301,6 @@ namespace dovah {
          this->files.push_back(file);
          if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
             this->active_file = file;
-            this->active_file_index = this->save_load_state.loading_index;
          }
          if (!file->load(path.c_str())) {
             auto fn = header->name;
@@ -389,10 +387,18 @@ namespace dovah {
       //
       stub->formID = formID;
       //
-      if (this->active_file && (stub->file == this->active_file || (formID >> 0x18) == this->active_file_index)) {
-         this->active_file_forms.forms[formID] = stub;
-         auto& at = this->active_file_forms_by_type[stub->formType];
-         at.forms[formID] = stub;
+      if (this->active_file) {
+         bool store = stub->file == this->active_file;
+         if (!store) {
+            auto active_prefix = this->active_file_prefix();
+            if (active_prefix.contains_form_id(formID))
+               store = true;
+         }
+         if (store) {
+            this->active_file_forms.forms[formID] = stub;
+            auto& at = this->active_file_forms_by_type[stub->formType];
+            at.forms[formID] = stub;
+         }
       }
       //
       return form_id_status::valid;
@@ -485,6 +491,54 @@ namespace dovah {
    }
    #pragma endregion
 
+   bool file_load_order::_set_light_plugin_support_enabled(bool state, bool because_we_are_changing_whether_the_active_file_is_light) {
+      if (state == this->light_plugin_support_enabled)
+         return true;
+      //
+      if (state) {
+         //
+         // Try to enable light plug-in support.
+         //
+         if (this->files.size() == 0xFF) {
+            //
+            // The last loaded file is index 0xFE.
+            //
+            if (!because_we_are_changing_whether_the_active_file_is_light)
+               return false;
+            if (this->files[0xFE] != this->active_file)
+               return false;
+         }
+      } else {
+         //
+         // Try to disable light plug-in support.
+         //
+         if (!because_we_are_changing_whether_the_active_file_is_light) {
+            if (this->active_file && this->active_file->header.flags & tes_file_flag::light)
+               return false;
+         }
+         //
+         // You cannot disable light plug-in support if there are any light files besides the active file.
+         //
+         bool any_light_inactive = false;
+         for (auto* file : this->files) {
+            if (file == this->active_file)
+               continue;
+            if (file->header.flags & tes_file_flag::light)
+               return false;
+         }
+      }
+      this->light_plugin_support_enabled = state;
+      return true;
+   }
+   bool file_load_order::is_light_plugin_support_enabled() const noexcept {
+      return this->light_plugin_support_enabled;
+   }
+   bool file_load_order::set_light_plugin_support_enabled(bool state) noexcept {
+      if (this->is_loading() || this->files.size())
+         return false;
+      return this->_set_light_plugin_support_enabled(state, false);
+   }
+
    float file_load_order::assess_load_progress() const noexcept {
       constexpr float use_info_proportion = 0.2F;
       //
@@ -542,7 +596,7 @@ namespace dovah {
       uint8_t  heavy = 0xFF;
       uint16_t light = 0xFFFF;
       for (auto* f : this->files) {
-         bool is_light = (f->header.flags & tes_file_flag::light);
+         bool is_light = this->light_plugin_support_enabled && (f->header.flags & tes_file_flag::light);
          bool is_equal = f->get_filename() == filename;
          if (is_light) {
             ++light;
@@ -560,7 +614,7 @@ namespace dovah {
       uint8_t  heavy = 0xFF;
       uint16_t light = 0xFFFF;
       for (auto* f : this->files) {
-         bool is_light = (f->header.flags & tes_file_flag::light);
+         bool is_light = this->light_plugin_support_enabled && (f->header.flags & tes_file_flag::light);
          bool is_equal = f == &file;
          if (is_light) {
             ++light;

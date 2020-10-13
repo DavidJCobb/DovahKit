@@ -20,8 +20,10 @@ namespace {
    }
 }
 
-LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
+LoadOrderOpenDialog::LoadOrderOpenDialog(bool is_skyrim_classic, QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
+   //
+   this->ui.fileList->listFiles(is_skyrim_classic);
    //
    this->_load_poller.setSingleShot(false);
    this->_load_poller.setInterval(100); // ms
@@ -176,7 +178,8 @@ void LoadOrderOpenDialog::commit() {
    editor.abandon_data();
    //
    std::filesystem::path install_path;
-   editor.get_game_path(install_path);
+   bool is_skyrim_classic = this->ui.fileList->isSkyrimClassic();
+   editor.get_game_path(install_path, is_skyrim_classic);
    install_path.append("Data");
    editor.set_load_order_folder(install_path);
    //

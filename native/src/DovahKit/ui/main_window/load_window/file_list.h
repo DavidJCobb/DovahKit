@@ -39,6 +39,7 @@ class LoadOrderFileListModel : public QAbstractTableModel {
    protected:
       QVector<item_type*> children;
       item_type* active = nullptr;
+      bool is_skyrim_classic = false;
       //
    public:
       LoadOrderFileListModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {
@@ -58,6 +59,7 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
       void clear();
+      void setGame(bool skyrim_classic);
       void insert(const dovah::tes_file_reading::file_header_reader&, const QDateTime& created, const QDateTime& modified);
       void sortByPluginsTxt();
       //
@@ -67,6 +69,8 @@ class LoadOrderFileListModel : public QAbstractTableModel {
       void setActiveFile(item_type*) noexcept;
       void setSelected(item_type*, bool) noexcept;
       void toggleSelected(item_type*) noexcept;
+      //
+      inline bool isSkyrimClassic() const noexcept { return this->is_skyrim_classic; }
 };
 
 class LoadOrderFileList : public QTableView {
@@ -80,6 +84,13 @@ class LoadOrderFileList : public QTableView {
          return (model_type*)this->model();
       }
       //
-   public slots:
+      inline bool isSkyrimClassic() const noexcept {
+         auto model = this->unwrappedModel();
+         if (model)
+            return model->isSkyrimClassic();
+         return false;
+      }
       //
+   public slots:
+      void listFiles(bool skyrim_classic);
 };

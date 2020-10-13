@@ -114,7 +114,7 @@ void ActiveFileSaveDialog::commit() {
    }
    //
    std::filesystem::path install_path;
-   editor.get_game_path(install_path);
+   editor.get_game_path(install_path, true); // TODO: let the user pick which game to save for
    install_path.append("Data");
    editor.set_load_order_folder(install_path); // in case the user never actually loaded a file and is making a file with no masters
 

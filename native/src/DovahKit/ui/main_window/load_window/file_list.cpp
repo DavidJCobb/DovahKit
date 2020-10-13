@@ -73,6 +73,7 @@ QVariant LoadOrderFileListModel::data(const QModelIndex& index, int role) const 
          }
          break;
       case Qt::DisplayRole:
+      case Qt::ToolTipRole:
          switch (column) {
             case 0:
                return item->name();
@@ -126,6 +127,12 @@ void LoadOrderFileListModel::clear() {
    this->children.clear();
    this->endResetModel();
 }
+void LoadOrderFileListModel::setGame(bool skyrim_classic) {
+   if (this->is_skyrim_classic == skyrim_classic)
+      return;
+   this->clear();
+   this->is_skyrim_classic = skyrim_classic;
+}
 void LoadOrderFileListModel::insert(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified) {
    auto item = new item_type(header, created, modified);
    //
@@ -138,7 +145,7 @@ void LoadOrderFileListModel::insert(const dovah::tes_file_reading::file_header_r
 }
 void LoadOrderFileListModel::sortByPluginsTxt() {
    std::vector<QString> files;
-   DovahKitCore::get().get_game_plugins(files);
+   DovahKitCore::get().get_game_plugins(files, this->is_skyrim_classic);
    if (files.empty())
       return;
    uint8_t i    = 0;
@@ -215,16 +222,21 @@ LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
          model->toggleSelected(data);
       }
    });
+};
+void LoadOrderFileList::listFiles(bool skyrim_classic) {
+   auto* model = (model_type*)this->model();
+   model->clear();
+   //
+   model->setGame(skyrim_classic);
    //
    auto& editor = DovahKitCore::get();
    std::filesystem::path install_path;
-   if (!editor.get_game_path(install_path)) {
+   if (!editor.get_game_path(install_path, skyrim_classic)) {
       //
       // TODO: display error
       //
       return;
    }
-   auto model = (model_type*)this->model();
    dovah::tes_file_reading::file_header_reader fh;
    QDateTime created;
    QDateTime modified;
@@ -244,5 +256,5 @@ LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
    }
    //
    model->sortByPluginsTxt();
-};
+}
 #pragma endregion

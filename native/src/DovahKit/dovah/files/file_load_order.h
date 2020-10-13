@@ -76,7 +76,7 @@ namespace dovah {
          _form_map_by_type forms_by_type;
          _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
-         uint8_t           active_file_index = invalid_load_prefix;
+         bool              light_plugin_support_enabled = true;
          struct {
             mutable std::recursive_mutex lock;
             std::vector<bare_form_id_t> reserved_formIDs; // form IDs reserved for form creation or form renumbering
@@ -118,11 +118,21 @@ namespace dovah {
          void _make_hardcoded_forms();
          void _accept_hardcoded_form(form_stub*) noexcept;
          void _build_use_info();
-         //
+         
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
+         
          //
+         // Try to change whether light plug-in support is enabled. This can be done before files are loaded, or it 
+         // can be done when saving (i.e. when converting a Skyrim Classic file to a Skyrim Special ESL, or when 
+         // converting a Skyrim Special file to a Skyrim Classic file.)
+         //
+         bool _set_light_plugin_support_enabled(bool state, bool because_we_are_changing_whether_the_active_file_is_light);
+         
       public:
          ~file_load_order();
+         //
+         bool is_light_plugin_support_enabled() const noexcept;
+         bool set_light_plugin_support_enabled(bool) noexcept; // this can fail; it returns (true) on success.
          //
          #pragma region Content related to loading
          std::string base_path; // used for loading and saving. changing this between loading files and saving them back out is undefined behavior.

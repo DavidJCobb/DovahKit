@@ -89,6 +89,7 @@ class DovahKitCore : public QObject {
       void set_load_order_folder(const std::filesystem::path&);
       void queue_load_order_file(const std::filesystem::path&);
       void unqueue_load_order_file(const std::filesystem::path&);
+      void set_load_queued_game(bool skyrim_classic);
       void set_queued_active_file(const std::filesystem::path&);
       bool acquire_load_order_data(bool async = false);
 
@@ -136,8 +137,8 @@ class DovahKitCore : public QObject {
       QString convert_localized_string(const dovah::localized_string&) const noexcept;
       void assign_localized_string(dovah::localized_string&, const QString&) const noexcept; // sets the localized_string's contained std::string, i.e. only suitable for when saving something with no STRINGS files
 
-      bool get_game_path(std::filesystem::path& out) const noexcept;
-      bool get_game_plugins(std::vector<QString>& out) const noexcept; // plugins.txt
+      bool get_game_path(std::filesystem::path& out, bool skyrim_classic) const noexcept;
+      bool get_game_plugins(std::vector<QString>& out, bool skyrim_classic) const noexcept; // plugins.txt
 };
 
 // IntelliSense doesn't like Q_DECLARE_METATYPE; ignore errors here unless they're compiler errors:

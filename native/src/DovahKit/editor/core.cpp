@@ -67,6 +67,9 @@ void DovahKitCore::queue_load_order_file(const std::filesystem::path& p) {
 void DovahKitCore::unqueue_load_order_file(const std::filesystem::path& p) {
    this->load_order->unqueue_file(p.string());
 }
+void DovahKitCore::set_load_queued_game(bool skyrim_classic) {
+   this->load_order->set_light_plugin_support_enabled(!skyrim_classic);
+}
 void DovahKitCore::set_queued_active_file(const std::filesystem::path& p) {
    this->load_order->queue_active_file(p.string());
 }
@@ -538,9 +541,15 @@ void DovahKitCore::assign_localized_string(dovah::localized_string& s, const QSt
    s.localized = dovah::localization_language::none;
 }
 
-bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
+bool DovahKitCore::get_game_path(std::filesystem::path& out, bool skyrim_classic) const noexcept {
    std::wstring value(512, 0);
-   bool success = cobb::windows_registry::get_string_value(cobb::windows_registry::hkey::local_machine, L"SOFTWARE\\Bethesda Softworks\\Skyrim\\", L"installed path", value);
+   const wchar_t* key;
+   if (skyrim_classic) {
+      key = L"SOFTWARE\\Bethesda Softworks\\Skyrim\\";
+   } else {
+      key = L"SOFTWARE\\Bethesda Softworks\\Skyrim Special Edition\\";
+   }
+   bool success = cobb::windows_registry::get_string_value(cobb::windows_registry::hkey::local_machine, key, L"installed path", value);
    if (success) {
       out = value;
       return true;
@@ -548,21 +557,31 @@ bool DovahKitCore::get_game_path(std::filesystem::path& out) const noexcept {
    out.clear();
    return false;
 }
-bool DovahKitCore::get_game_plugins(std::vector<QString>& out) const noexcept {
+bool DovahKitCore::get_game_plugins(std::vector<QString>& out, bool skyrim_classic) const noexcept {
    out.clear();
    //
    auto env  = QProcessEnvironment::systemEnvironment();
-   auto file = QFile(env.value("LOCALAPPDATA") + "\\Skyrim\\plugins.txt");
+   QString path;
+   if (skyrim_classic) {
+      path = env.value("LOCALAPPDATA") + "\\Skyrim\\plugins.txt";
+   } else {
+      path = env.value("LOCALAPPDATA") + "\\Skyrim Special Edition\\plugins.txt";
+   }
+   auto file = QFile(path);
    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
       return false;
    //
    out.push_back("Skyrim.esm"); // game forces this to be 00, and it is not present in plugins.txt
    out.push_back("Update.esm"); // game forces this to be 01, and it is not present in plugins.txt
-   //
-   // TODO: Apparently Skyrim Special also hardcodes the DLCs and omits them from plugins.txt. 
-   // If we want the SSE plugins.txt (we need an argument for that), then we should pull from 
-   // the right game's directory and for SSE, hardcode the DLCs both at this spot and in the 
-   // loop below.
+   if (!skyrim_classic) {
+      //
+      // Skyrim Special also omits the DLCs and Creation Club content from plugins.txt. Reportedly 
+      // it enforces load order for both, but I'm not going to bother to add the CC filenames here.
+      //
+      out.push_back("Dawnguard.esm");
+      out.push_back("HearthFires.esm");
+      out.push_back("Dragonborn.esm");
+   }
    //
    while (!file.atEnd()) {
       auto line = file.readLine();

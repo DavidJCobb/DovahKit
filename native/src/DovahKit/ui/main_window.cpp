@@ -54,11 +54,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    //
    this->ui.actionEditFileMetadata->setDisabled(true);
    this->ui.actionSave->setDisabled(true);
-   QObject::connect(this->ui.actionOpen, &QAction::triggered, this, [this]() {
-      auto modal = new LoadOrderOpenDialog(this);
-      modal->setModal(true);
-      modal->open();
-   });
+   //
+   this->ui.actionLoadDataClassic->setData(true);
+   this->ui.actionLoadDataSpecial->setData(false);
+   for (auto* action : this->ui.menuLoadData->actions()) {
+      QObject::connect(action, &QAction::triggered, this, [action, this]() {
+         auto modal = new LoadOrderOpenDialog(action->data().toBool(), this);
+         modal->setModal(true);
+         modal->open();
+      });
+   }
+   //
    QObject::connect(this->ui.actionEditFileMetadata, &QAction::triggered, this, [this]() {
       if (auto dialog = this->metadata_window) {
          dialog->raise();

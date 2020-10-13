@@ -8,7 +8,7 @@ class LoadOrderOpenDialog : public QDialog {
    Q_OBJECT
    //
    public:
-      LoadOrderOpenDialog(QWidget* parent = Q_NULLPTR);
+      LoadOrderOpenDialog(bool is_skyrim_classic, QWidget* parent = Q_NULLPTR);
       //
    private slots:
       void loadPoll();

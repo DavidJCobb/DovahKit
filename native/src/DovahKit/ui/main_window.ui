@@ -45,7 +45,14 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionOpen"/>
+    <widget class="QMenu" name="menuLoadData">
+     <property name="title">
+      <string>Load Data...</string>
+     </property>
+     <addaction name="actionLoadDataClassic"/>
+     <addaction name="actionLoadDataSpecial"/>
+    </widget>
+    <addaction name="menuLoadData"/>
     <addaction name="actionEditFileMetadata"/>
     <addaction name="actionSave"/>
    </widget>
@@ -81,11 +88,6 @@
    <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionOpen">
-   <property name="text">
-    <string>Load Data...</string>
-   </property>
-  </action>
   <action name="actionDebugLoadDawnguard">
    <property name="text">
     <string>Load Dawnguard.esm</string>
@@ -159,6 +161,16 @@
   <action name="actionSetEncodingUTF8">
    <property name="text">
     <string>UTF-8</string>
+   </property>
+  </action>
+  <action name="actionLoadDataClassic">
+   <property name="text">
+    <string>Skyrim Classic</string>
+   </property>
+  </action>
+  <action name="actionLoadDataSpecial">
+   <property name="text">
+    <string>Skyrim Special</string>
    </property>
   </action>
  </widget>

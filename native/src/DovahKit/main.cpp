@@ -80,19 +80,10 @@
 //
 //        - Implement ESL support.
 //
-//           - ESLs can appear anywhere in the load order, but always use load order 
-//             prefix 0xFE. This means that (file_load_order::files) needs to be split 
-//             into "files", a list of all files; "light_files", a list of only ESLs; 
-//             and "heavy_files", a list of only non-ESLs; or else we need a dedicated 
-//             getter for a file's load order prefix versus its light order prefix.
+//           - Test loading ESLs.
 //
-//              - I think a single list with dedicated getters would be safer.
-//
-//              - All uses of the (files) list need to be audited. Skyrim Classic code 
-//                assumes that a file's index in the list is its load order prefix; this 
-//                assumption does not hold for Skyrim Special, so we need dedicated 
-//                getters for the "load order prefix" (CCxxxxxx) and the "light order 
-//                prefix" (xxCCCxxx).
+//              = BLOCKED: We need to implement Skyrim Special's new form types. They 
+//                appear in the official masters.
 //
 //           - The max file count is enforced in (file_load_order_normalizer). We need 
 //             to move the check to (file_load_order), and only enforce it if an active 
@@ -112,8 +103,9 @@
 //           - Saving needs to fail if the total number of files, including the active 
 //             file, exceeds 0xFE, such that the active file would use prefix 0xFF.
 //
-//           - Saving needs to fail if any active file forms lie past the max form ID 
-//             for ESLs.
+//           - Saving an ESL needs to fail if any active file forms lie past the max form 
+//             ID for ESLs. If we're trying to convert a non-ESL active file to ESL, then 
+//             this needs to be checked before that conversion.
 //
 //           - When converting the active file to or from an ESL, we need to perform a 
 //             mass form renumbering.
@@ -121,15 +113,28 @@
 //              - We need to be able to check that all renumber operations will succeed 
 //                before performing any of them.
 //
+//              - The mass renumbering should only occur if saving succeeds. Do it after 
+//                updating the in-memory active file master list.
+//
 //              - DovahKitCore should check for an imminent change in flags and if one 
 //                will occur, should emit "onMassFormRenumberImminent" and "...Complete" 
 //                signals before and after the save operation.
 //
-//           - When saving, we need to perform a fixup step for form IDs.
+//        - Implement letting the user choose what game to save for, so that they can 
+//          convert files across games. Currently, save_window.cpp line 117 always gets 
+//          the install path for Skyrim Classic.
 //
-//           = We do not need to support converting a Skyrim Classic file to an SSE ESL. 
-//             It is reasonable to require that the user convert it to SSE, reload it, 
-//             and then ESLify it.
+//           - The default selection should be based on what we loaded for.
+//
+//           - Converting to Skyrim Classic should fail if any of the active file's 
+//             masters are ESLs.
+//
+//           - Converting to Skyrim Classic should warn if the active file contains any 
+//             form types that don't exist in Skyrim Special.
+//
+//              - Ideally we'd warn if ANY data would be lost, but then we'd have to 
+//                make it possible to interrupt the save process, because we can really 
+//                only check that as we write individual forms.
 //
 //     = Within an ESL file, forms defined by the ESL file do not use the 0xFE prefix. 
 //       If an ESL has four masters (such that the last of them is prefixed 0x03), then 
@@ -144,10 +149,6 @@
 //       masters. If a file has one non-light master and one light master, then forms 
 //       from the light master will use load order prefix 0x01, and can be referenced 
 //       and overridden. An additional light master would use prefix 0x02.
-//
-//     - Option to save an Special active file as a Classic file and vice versa.
-//
-//     - Option to save an active ESL as a non-ESL, vice versa.
 //
 //  - Code for deleting forms.
 //
