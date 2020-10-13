@@ -18,6 +18,10 @@
 #include "../localization/localized_string_store.h"
 #include <fstream>
 
+namespace {
+   constexpr bool ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE = false;
+}
+
 namespace dovah {
    file_load_order::~file_load_order() {
       this->normalizer.delete_contents();
@@ -763,6 +767,7 @@ namespace dovah {
       return (id >> 0x18) == prefix;
    }
 
+   #pragma region Load order code for various form modification requests
    form_stub* file_load_order::create_form_of_type(form_type_t ft) noexcept {
       auto request = this->request_form_creation(ft);
       if (!request.is_valid())
@@ -941,6 +946,14 @@ namespace dovah {
          result.error = form_renumber_request::error_code::is_hardcoded_form;
          return result;
       }
+      if (desiredID == 0) {
+         result.error = form_renumber_request::error_code::desired_id_is_none;
+         return result;
+      }
+      if ((desiredID & plugin_form_id_mask) == 0) {
+         result.error = form_renumber_request::error_code::desired_id_is_hardcoded;
+         return result;
+      }
       if (!this->is_defined_in_active_file(stub)) {
          result.error = form_renumber_request::error_code::is_not_active_file_form;
          return result;
@@ -969,6 +982,11 @@ namespace dovah {
       return result;
    }
    void file_load_order::commit_form_renumber_request(form_renumber_request& request) noexcept {
+      constexpr auto no_error = form_renumber_request::error_code::none;
+      //
+      if (request.error != no_error)
+         return;
+      //
       bare_form_id_t desiredID = request.desiredID;
       bare_form_id_t oldID     = request.target.formID;
       if (!desiredID)
@@ -976,18 +994,23 @@ namespace dovah {
       assert(!this->has_form(desiredID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
       //
       auto& stub = request.target;
-      for (auto& pair : stub.inbound) {
-         auto& entry = pair.second;
-         auto* other = entry.other;
-         if (!entry.other->load()) {
-            request.error = form_renumber_request::error_code::cannot_load_user;
-            return;
+      if (ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE == false) {
+         for (auto& pair : stub.inbound) { // Check to ensure we can load all users.
+            auto& entry = pair.second;
+            auto* other = entry.other;
+            if (!entry.other->load()) {
+               request.error = form_renumber_request::error_code::cannot_load_user;
+               break;
+            }
          }
       }
+      if (request.error == no_error) {
+         this->_renumber_form(stub, desiredID, true);
+      }
       //
-      this->_renumber_form(stub, desiredID, true);
+      // Un-reserve the form ID:
       //
-      {  // Un-reserve the form ID.
+      {
          auto  guard = std::lock_guard(this->form_creation_request_info.lock);
          auto& list  = this->form_creation_request_info.reserved_formIDs;
          auto  it    = std::find(list.begin(), list.end(), desiredID);
@@ -995,11 +1018,13 @@ namespace dovah {
             list.erase(it);
       }
       //
-      request.desiredID = 0;
-      if (this->on_form_renumber)
-         (this->on_form_renumber)(stub, oldID, desiredID);
-      return;
+      if (request.error == no_error) {
+         request.desiredID = 0;
+         if (this->on_form_renumber)
+            (this->on_form_renumber)(stub, oldID, desiredID);
+      }
    }
+   #pragma endregion
    
    bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) {
       std::filesystem::path filename;
@@ -1456,7 +1481,7 @@ namespace dovah {
             continue;
          this->seen_stubs.insert(entry.other);
          //
-         if (!entry.other->load()) {
+         if (!ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE && !entry.other->load()) { // Check to ensure we can load all users.
             this->result = result_code::error_cannot_load_user;
             return;
          }

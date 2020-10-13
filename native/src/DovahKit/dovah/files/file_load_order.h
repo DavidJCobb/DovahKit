@@ -374,6 +374,8 @@ namespace dovah {
             is_not_active_file_form, // you can't renumber forms that don't originate from the active file
             is_not_active_file_id,   // the desired form ID must be within the active file's form ID range
             desired_id_is_taken,
+            desired_id_is_hardcoded, // you can't use IDs in the range reserved for hardcoded forms
+            desired_id_is_none,      // you can't use 00000000 as a form ID
             cannot_load_user,        // unable to update a user form
          };
       protected:

@@ -76,6 +76,12 @@ namespace {
          case error_code::is_hardcoded_form:
             text = QObject::tr("You can't renumber hardcoded forms.");
             break;
+         case error_code::desired_id_is_hardcoded:
+            text = QObject::tr("The desired form ID cannot be used; all IDs in the range xx000001 to xx0007FF are reserved for hardcoded forms.");
+            break;
+         case error_code::desired_id_is_none:
+            text = QObject::tr("A form cannot have the form ID 00000000.");
+            break;
          case error_code::desired_id_is_taken:
             text = QObject::tr("The desired form ID is already in use.");
             break;

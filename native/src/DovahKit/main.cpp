@@ -86,30 +86,6 @@
 //
 //     = CURRENT GAME PLAN:
 //
-//        - Implement form renumbering:
-//
-//           - Form renumbering should only be allowed for forms defined in the active 
-//             file, and not for overrides or forms outside of the active file.
-//
-//           - Double-check that the target form ID is not in use, and then reserve it.
-//
-//           - Double-check that all of the form's users can be loaded, as we do with 
-//             deletion.
-//
-//           - Load all users and flag them as edited. No other changes are necessary -- 
-//             they'll refer to the target form by its stub -- but they need to already 
-//             be referring to the target form before its form ID changes.
-//
-//           - Change the form stub's form ID, and move it within the (file_load_order)'s 
-//             form maps.
-//
-//           - Update the form ID keys in all relevant (use_info_list)s.
-//
-//           - Once the renumber operation is complete, un-reserve the target form ID.
-//
-//           - DovahKitCore should offer an API for renumbering a single form, and 
-//             should send signals before and after.
-//
 //        - Implement ESL support.
 //
 //           - ESLs can appear anywhere in the load order, but always use load order 
