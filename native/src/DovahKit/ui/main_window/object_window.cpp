@@ -165,7 +165,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       if (!stub)
          return;
       bool    ok   = false;
-      QString text = QInputDialog::getText(this, tr("Choose form ID"), tr("What form ID do you want this form to use?"), QLineEdit::Normal, "", &ok);
+      QString text = QInputDialog::getText(this, tr("Choose form ID"), tr("What form ID do you want this form to use?"), QLineEdit::Normal, QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper(), &ok);
       if (!ok)
          return;
       dovah::bare_form_id_t id = text.toUInt(&ok, 16);
@@ -174,6 +174,14 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
             this,
             QObject::tr("Error", "renumber form error"),
             QObject::tr("\"%1\" is not a valid form ID. A form ID is an eight-digit hexadecimal number (that is, each digit is between 0-9 or A-F, inclusive).").arg(text)
+         );
+         return;
+      }
+      if (id == stub->formID) {
+         QMessageBox::critical(
+            this,
+            QObject::tr("Error", "renumber form error"),
+            QObject::tr("That form's ID is already %1.").arg(QString("%1").arg(id, 8, 16, QChar('0')).toUpper())
          );
          return;
       }

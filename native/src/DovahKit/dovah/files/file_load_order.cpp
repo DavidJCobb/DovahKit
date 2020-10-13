@@ -482,6 +482,10 @@ namespace dovah {
          other.outbound.insert(std::move(node));
       }
       //
+      // Update the stub itself to refer to the new form ID.
+      //
+      stub.formID = new_id;
+      //
       // Now move the form stub within the load order's maps.
       //
       auto _extract = [this, old_id, new_id](_form_map& map) {
