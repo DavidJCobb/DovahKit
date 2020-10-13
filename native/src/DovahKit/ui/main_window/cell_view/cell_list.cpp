@@ -33,6 +33,7 @@ CellListModel::CellListModel(QObject* parent) : QAbstractTableModel(parent) {
    QObject::connect(&editor, &DovahKitCore::formCreated,          this, &CellListModel::formCreated);
    QObject::connect(&editor, &DovahKitCore::formModified,         this, &CellListModel::formModified);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &CellListModel::formDeletionImminent);
+   QObject::connect(&editor, &DovahKitCore::formRenumbered,       this, &CellListModel::formRenumbered);
 }
 
 void CellListModel::formCreated(const dovah::form_stub* stub) {
@@ -79,6 +80,19 @@ void CellListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_j
          list.remove(i);
          this->endRemoveRows();
          break;
+      }
+   }
+}
+void CellListModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == stub) {
+         item->update();
+         auto index = this->index(i, 0, QModelIndex());
+         emit dataChanged(index, index);
+         return;
       }
    }
 }

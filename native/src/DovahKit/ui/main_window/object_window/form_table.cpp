@@ -36,6 +36,7 @@ FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
    QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, &FormTableModel::formModificationImminent);
    QObject::connect(&editor, &DovahKitCore::formModified,             this, &FormTableModel::formModified);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent,     this, &FormTableModel::formDeletionImminent);
+   QObject::connect(&editor, &DovahKitCore::formRenumbered,           this, &FormTableModel::formRenumbered);
 }
 
 void FormTableModel::formCreated(dovah::form_stub* stub) {
@@ -105,6 +106,19 @@ void FormTableModel::formDeletionImminent(const dovah::form_stub* stub, bool is_
          list.remove(i);
          this->endRemoveRows();
          break;
+      }
+   }
+}
+void FormTableModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub == stub) {
+         item->update();
+         auto index = this->index(i, 0, QModelIndex());
+         emit dataChanged(index, index);
+         return;
       }
    }
 }

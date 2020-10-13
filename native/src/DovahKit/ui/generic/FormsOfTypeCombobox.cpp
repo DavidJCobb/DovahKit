@@ -38,6 +38,13 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
          return;
       this->setItemText(index, stub->get_editor_id());
    });
+   QObject::connect(&editor, &DovahKitCore::formRenumbered, this, [this](dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
+      const auto blocker = QSignalBlocker(this);
+      int index = this->findData(QVariant::fromValue((void*)stub), FormStubRole);
+      if (index < 0)
+         return;
+      this->setItemData(index, newID, FormIDRole);
+   });
 };
 
 void FormsOfTypeCombobox::addFormType(dovah::form_type_t ft) {

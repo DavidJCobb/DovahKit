@@ -52,6 +52,7 @@ class FormTableModel : public QAbstractTableModel {
       void formModified(const form_stub*);
       void formModificationImminent(const form_stub*);
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
+      void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
       //
    public slots:
       void clear();

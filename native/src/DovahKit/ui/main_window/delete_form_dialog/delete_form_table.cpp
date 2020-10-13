@@ -43,6 +43,7 @@ DeleteFormDialogListModel::DeleteFormDialogListModel(QObject* parent) : QAbstrac
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::formModified,             this, &DeleteFormDialogListModel::formModified);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent,     this, &DeleteFormDialogListModel::formDeletionImminent);
+   QObject::connect(&editor, &DovahKitCore::formRenumbered,           this, &DeleteFormDialogListModel::formRenumbered);
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &DeleteFormDialogListModel::clear);
 }
 
@@ -61,6 +62,19 @@ void DeleteFormDialogListModel::formModified(const dovah::form_stub* stub) {
 }
 void DeleteFormDialogListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    this->remove(*stub);
+}
+void DeleteFormDialogListModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
+   auto& list = this->children;
+   auto  size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (&item->stub == stub) {
+         item->updateFromStub();
+         auto index = this->index(i, 0, QModelIndex());
+         emit dataChanged(index, index);
+         return;
+      }
+   }
 }
 //
 QModelIndex DeleteFormDialogListModel::index(int row, int column, const QModelIndex& parent) const {
