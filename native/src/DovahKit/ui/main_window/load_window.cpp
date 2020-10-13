@@ -1,7 +1,24 @@
 #include "load_window.h"
+#include <array>
 #include <QErrorMessage>
 #include "../../editor/core.h"
 #include "../main_window.h"
+
+namespace {
+   static std::array<QString, 5> _official_content = {{
+      "Skyrim.esm",
+      "Update.esm",
+      "Dawnguard.esm",
+      "HearthFires.esm",
+      "Dragonborn.esm",
+   }};
+   bool _is_official_content(const QString& filename) {
+      for (auto& official : _official_content)
+         if (official.compare(filename, Qt::CaseInsensitive) == 0)
+            return true;
+      return false;
+   }
+}
 
 LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
@@ -43,6 +60,11 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
             } else {
                this->ui.buttonSetActiveFile->setText(tr("Set as Active File"));
             }
+            //
+            // Grey out the "set as active file" button if an official game file is selected:
+            //
+            bool is_official = _is_official_content(item->filename);
+            this->ui.buttonSetActiveFile->setDisabled(is_official);
          }
       }
    });
@@ -54,6 +76,16 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(QWidget* parent) : QDialog(parent) {
          auto& idx  = select[0];
          auto* item = (LoadOrderFileList::model_item_type*)idx.internalPointer();
          if (item) {
+            //
+            // Do not allow the user to set official content as the active file. (This should never 
+            // be possible -- the button should be greyed out if an official file is selected -- but 
+            // it never hurts to be careful.)
+            //
+            if (_is_official_content(item->filename)) {
+               QApplication::beep(); // beep, just so the user knows that we're actively rejecting their input rather than simply not handling it
+               return;
+            }
+            //
             if (item == model->activeFile()) {
                model->setActiveFile(nullptr);
                this->ui.buttonSetActiveFile->setText(tr("Set as Active File"));

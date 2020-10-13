@@ -14,9 +14,6 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - The frontend should not allow users to set the game's built-in files or 
-//    official DLCs (i.e. the high-res texture packs) as the active file.
-//
 //  - If the load order has been configured to load Skyrim Special Edition files, 
 //    then the load order should be capped at 253 entries, not 254.
 //
@@ -37,23 +34,18 @@
 //          and also update the list model proxy to prioritize that above all other 
 //          sorting.
 //
-//  - Code for deleting forms.
-//
-//     - Test the severing of outbound references to a deleted form.
-//
-//        - Test keyword lists in specific.
-//
-//     - ObjectReference friendly delete question: why are actors that are "deleted" 
-//       in this manner flagged as persistent?
-//
-//        - Someone used git blame and found that it dates back to the initial Github 
-//          commit, i.e. when xEdit was migrated from an older source control system.
-//
-//        - REFRs defined in ESP files are de facto persistent, so this would have to 
-//          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
-//
 //  - The TESFilePicker widget should allow the user to browse through loose files and 
 //    files in the loaded BSAs.
+//
+//  - When saving a new file, if the user enters the name of an existing file, then we 
+//    should prompt for permission to overwrite. If the name that the user enters is 
+//    the same name as one of the already-loaded files, we should fail.
+//
+//     - If the user converts a file across games, and the existing file's name also 
+//       exists for the target game, then we should prompt to overwrite as well.
+//
+//        - Really, we should make it possible for the user to save an existing file 
+//          with a new name (i.e. save-as).
 //
 //  - Localized string support
 //
@@ -94,6 +86,12 @@
 //             and "heavy_files", a list of only non-ESLs; or else we need a dedicated 
 //             getter for a file's load order prefix versus its light order prefix.
 //
+//              - All uses of the (files) list need to be audited. Skyrim Classic code 
+//                assumes that a file's index in the list is its load order prefix; this 
+//                assumption does not hold for Skyrim Special, so we need dedicated 
+//                getters for the "load order prefix" (CCxxxxxx) and the "light order 
+//                prefix" (xxCCCxxx).
+//
 //           - Saving needs to fail if the total number of files, including the active 
 //             file, exceeds 0xFE, such that the active file would use prefix 0xFF.
 //
@@ -130,67 +128,24 @@
 //       from the light master will use load order prefix 0x01, and can be referenced 
 //       and overridden. An additional light master would use prefix 0x02.
 //
-//     = So there's two approaches we can take, then. The first is to allow the frontend 
-//       to decide whether (file_load_order) honors light plugins or just treats them as 
-//       non-light plugins; our particular frontend, being intended for editing, would 
-//       opt out of supporting light-plugins, just as the Creation Kit does.
-//
-//       The second approach is to make the backend support light plugins for all tasks, 
-//       and have it mass renumber the active file's form IDs when the active file gains 
-//       or loses "light" status during a save. If we do this, then we need a lot of 
-//       error checking and a lot of form ID fixup on save:
-//
-//        - A save operation needs to fail if the active file would end up with too many 
-//          masters (non-light and light total).
-//
-//        - Light plug-in IDs need to be converted from 0xFE to master-list-relative; 
-//          the file format's own handling of form IDs doesn't support light plug-ins.
-//
-//        - When the active file's "light" flag changes, we need to mass renumber all of 
-//          its form IDs in memory, to change their load order prefix.
-//
-//       Mass renumbering is a particular pain point because that's even more boilerplate 
-//       that needs to be added to every loaded form class. However, we could potentially 
-//       combine it with the existing boilerplate for handling form deletion, if we allow 
-//       loaded forms to return a vector of pointers to their form_id_t members. (Note, 
-//       however, that there are form_id_t subclasses that override setter behavior, and 
-//       they do so entirely on type -- they're not virtual and they have no internal 
-//       members to disambiguate their types -- so we'd need multiple getters for each 
-//       form_id_t type, or we'd need to add type information to form_id_t.)
-//
-//       It's also worth noting that we need mass form renumbering anyway if we want to 
-//       offer the option to compact form IDs in preparation for saving an ESL, and that 
-//       being able to renumber single forms would give us some parity with xEdit.
-//
-//        - If we want to implement editing, then making form_id_t retain type information 
-//          (i.e. information indicating what use info flags should be applied as the ID 
-//          is changed) is the best approach. Then, we can modify the loaded form hooks -- 
-//          replace (Form::sever_outbound_references_to) with (Form::get_all_form_IDs) 
-//          which would return (std::vector<form_id_t*>). The code for deleting forms 
-//          could blindly loop over those IDs and call (form_id_t::set), while the code 
-//          for renumbering form IDs could directly overwrite them (in addition to 
-//          updating use info entries' keys, moving the form_stub within the file_load_order 
-//          form maps, and so on).
-//
-//        - Renumbering forms should send DovahKitCore signals:
-//
-//           - void onFormRenumberImminent(form_stub*, uint32_t oldID, uint32_t newID);
-//           - void onFormRenumberComplete(form_stub*, uint32_t oldID, uint32_t newID);
-//
-//          UI code needs to react responsibly to these.
-//
-//     = As such: when the backend is not being used for editing, it should be able to 
-//       load an arbitrary number of ESLs (subject to the limit on those) and properly 
-//       remap their form IDs during load. The question is whether we should support ESLs 
-//       during editing, given that the file format itself does not.
-//
-//     = Proper ESL form ID mapping would require storing ESL files in a separate list 
-//       from non-ESL files. This in turn requires that we audit every piece of code that 
-//       accesses the (file_load_order::files) vector.
-//
 //     - Option to save an Special active file as a Classic file and vice versa.
 //
 //     - Option to save an active ESL as a non-ESL, vice versa.
+//
+//  - Code for deleting forms.
+//
+//     - Test the severing of outbound references to a deleted form.
+//
+//        - Test keyword lists in specific.
+//
+//     - ObjectReference friendly delete question: why are actors that are "deleted" 
+//       in this manner flagged as persistent?
+//
+//        - Someone used git blame and found that it dates back to the initial Github 
+//          commit, i.e. when xEdit was migrated from an older source control system.
+//
+//        - REFRs defined in ESP files are de facto persistent, so this would have to 
+//          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
 //
 // THINGS TO LOOK INTO:
 //
