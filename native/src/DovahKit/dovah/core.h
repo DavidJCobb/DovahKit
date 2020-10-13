@@ -13,6 +13,82 @@ namespace dovah {
 
    using bare_form_id_t = uint32_t;
 
+   struct file_prefix {
+      public:
+         struct flag {
+            flag() = delete;
+            enum : uint16_t {
+               is_light = 0x1000,
+            };
+         };
+         static constexpr uint16_t undefined = 0xFFFF & ~flag::is_light;
+         //
+      public:
+         uint16_t value_and_flags = undefined;
+         //
+         file_prefix() {}
+         static file_prefix make_light(uint16_t l) {
+            file_prefix out;
+            out.set_light_prefix(l);
+            return out;
+         }
+         static file_prefix make_heavy(uint8_t l) {
+            file_prefix out;
+            out.set_load_prefix(l);
+            return out;
+         }
+         //
+         inline bool is_undefined() const noexcept { return this->value_and_flags == undefined; }
+         inline bool is_light() const noexcept { return this->value_and_flags & flag::is_light; }
+         inline uint8_t load_prefix() const noexcept {
+            if (this->is_light())
+               return 0xFE;
+            return this->value_and_flags & 0xFF;
+         }
+         inline uint16_t light_prefix() const noexcept {
+            if (!this->is_light())
+               return 0;
+            return this->value_and_flags & 0x0FFF;
+         }
+         //
+         inline void set_load_prefix(uint8_t v) noexcept { this->value_and_flags = v; }
+         inline void set_light_prefix(uint16_t v) noexcept { this->value_and_flags = (v & 0x0FFF) | flag::is_light; }
+         //
+         inline bare_form_id_t min_form_id() const noexcept {
+            bare_form_id_t id = (bare_form_id_t)this->load_prefix() << 0x18;
+            id |= (bare_form_id_t)this->light_prefix() << 0x0C;
+            id |= 0x800;
+            return id;
+         }
+         inline bare_form_id_t max_form_id() const noexcept {
+            bare_form_id_t id = this->min_form_id();
+            if (this->is_light())
+               id |= 0x00000FFF;
+            else
+               id |= 0x00FFFFFF;
+            return id;
+         }
+         bare_form_id_t coerce_form_id(bare_form_id_t id) const noexcept {
+            id &= ~0xFF000000;
+            if (this->is_light())
+               id &= ~0xFFFFF000;
+            if (id < 0x800)
+               id = 0x800;
+            id |= (bare_form_id_t)this->load_prefix()  << 0x18;
+            id |= (bare_form_id_t)this->light_prefix() << 0x0C;
+            return id;
+         }
+         inline bool contains_form_id(bare_form_id_t id) const noexcept {
+            if (id < this->min_form_id())
+               return false;
+            if (id > this->max_form_id())
+               return false;
+            return true;
+         }
+         //
+         inline operator uint16_t() const noexcept { return this->value_and_flags; }
+   };
+
    struct form_type {
       form_type() = delete;
       enum type : uint8_t {

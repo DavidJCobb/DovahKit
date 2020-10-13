@@ -106,7 +106,7 @@ class DovahKitCore : public QObject {
       const dovah::tes_file_header* get_active_file_header() const noexcept;
 
       bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
-      int load_order_index_of_file(const std::filesystem::path& filename);
+      bool load_order_has_file(const std::filesystem::path& filename) const noexcept;
 
       const dovah::file_write_error& get_last_write_error() const noexcept;
       const dovah::file_write_warning& get_write_warning() const noexcept;
@@ -117,8 +117,6 @@ class DovahKitCore : public QObject {
       dovah::form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
       bool for_each_form(std::function<bool(dovah::form_stub*)>);
       bool for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
-      bool form_is_from_active_file(const dovah::form_stub*) const noexcept;
-      bool form_is_from_active_file(bare_form_id_t) const noexcept;
 
       dovah::form_stub* create_form_of_type(form_type_t);
       dovah::form_creation_request request_form_creation(form_type_t) noexcept;

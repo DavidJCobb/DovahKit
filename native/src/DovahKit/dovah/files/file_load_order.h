@@ -119,9 +119,6 @@ namespace dovah {
          void _accept_hardcoded_form(form_stub*) noexcept;
          void _build_use_info();
          //
-         uint8_t load_order_prefix_for(const loaded_file*) const noexcept;
-         uint8_t guided_load_order_prefix_for(const loaded_file*) const noexcept; // a version of (load_order_prefix_for) that's faster when called while loading the specified file
-         //
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
          //
       public:
@@ -175,18 +172,35 @@ namespace dovah {
          float assess_load_progress() const noexcept;
 
          bool is_form_loading_blocked(const form_stub*) const noexcept;
+
+         #pragma region Finding files
+         file_prefix file_prefix_for(const std::filesystem::path& filename) const noexcept;
+         file_prefix file_prefix_for(const loaded_file& file) const noexcept;
+         inline uint8_t load_prefix_for(const std::filesystem::path& f) const noexcept {
+            return this->file_prefix_for(f).load_prefix();
+         }
+         inline uint8_t load_prefix_for(const loaded_file& f) const noexcept {
+            return this->file_prefix_for(f).load_prefix();
+         }
+         inline uint8_t light_prefix_for(const std::filesystem::path& f) const noexcept {
+            return this->file_prefix_for(f).light_prefix();
+         }
+         inline uint8_t light_prefix_for(const loaded_file& f) const noexcept {
+            return this->file_prefix_for(f).light_prefix();
+         }
+         file_prefix active_file_prefix() const noexcept;
+         //
+         bool has_file(const std::filesystem::path& filename) const noexcept;
+         #pragma endregion
          
          #pragma region Content related to already-loaded data
          uint32_t count_forms_of_type(form_type_t) const noexcept;
          inline uint8_t file_count() const noexcept { return this->files.size(); }
          bool has_form(bare_form_id_t formID) const noexcept;
-         uint8_t index_of_loaded_file(const std::string& filename) const noexcept;
          form_stub* get_form(bare_form_id_t formID) const noexcept;
          form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
          form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
          bool for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
-         bool form_is_from_active_file(const form_stub*) const noexcept;
-         bool form_is_from_active_file(bare_form_id_t) const noexcept;
          //
          bool active_file_has_name() const noexcept;
          uint32_t active_file_form_count() const noexcept;
@@ -196,7 +210,7 @@ namespace dovah {
          bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor);
          void get_active_file_name(std::filesystem::path& out) const noexcept;
-         uint8_t index_of_active_file() const noexcept;
+         bool has_active_file() const noexcept;
          bool is_defined_in_active_file(const form_stub& stub) const noexcept;
          bool is_defined_or_overridden_in_active_file(const form_stub& stub) const noexcept;
          bool is_active_file_formID(bare_form_id_t) const noexcept;
@@ -339,7 +353,7 @@ namespace dovah {
          file_load_order& owner;
          form_stub&       target;
          result_code      result = result_code::pending;
-         uint8_t          active_file_index = file_load_order::invalid_load_prefix; // cached for faster checks
+         file_prefix      active_file_prefix; // cached for faster checks
          //
          std::set<form_stub*> seen_stubs;
          std::set<form_stub*> forms_needing_delete;

@@ -34,6 +34,15 @@ namespace dovah {
       auto* archive = this->_make_archive(name);
       this->archives.insert(this->archives.begin(), archive);
    }
+   void bsa_load_order::insert_archive(int index, const std::filesystem::path& name) {
+      size_t size = this->archives.size();
+      if (index < 0)
+         index += size;
+      else if (index > size)
+         index = size;
+      auto* archive = this->_make_archive(name);
+      this->archives.insert(this->archives.begin() + index, archive);
+   }
    bsa_archive* bsa_load_order::remove_archive(const std::filesystem::path& name, bool even_if_loaded, bool delete_archive) {
       std::filesystem::path resolved = name;
       if (!resolved.is_absolute())

@@ -96,6 +96,7 @@ namespace dovah {
          void set_base_path(const std::filesystem::path&);
          void append_archive(const std::filesystem::path& name);
          void prepend_archive(const std::filesystem::path& name);
+         void insert_archive(int index, const std::filesystem::path& name); // negative indices are relative to the end of the list
 
          //
          // Remove an archive if it hasn't loaded yet or if (even_if_loaded) is (true). If 

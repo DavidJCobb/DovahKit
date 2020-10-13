@@ -66,7 +66,7 @@ void ActiveFileSaveDialog::commit() {
          return;
       }
       fallback_filename = text.toStdWString();
-      if (editor.load_order_index_of_file(fallback_filename) != dovah::file_load_order::invalid_load_prefix) {
+      if (editor.load_order_has_file(fallback_filename)) {
          QMessageBox::critical(
             this,
             tr("Error", "save error"),

@@ -151,7 +151,7 @@ QString DovahKitCore::get_active_file_name() const noexcept {
    return QString::fromStdWString(out.wstring());
 }
 bool DovahKitCore::has_active_file() const noexcept {
-   return this->load_order->index_of_active_file() != dovah::file_load_order::invalid_load_prefix;
+   return this->load_order->has_active_file();
 }
 bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg) {
    //
@@ -190,8 +190,8 @@ const dovah::tes_file_header* DovahKitCore::get_active_file_header() const noexc
 bool DovahKitCore::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept {
    return this->load_order->for_each_load_order_filename(functor);
 }
-int DovahKitCore::load_order_index_of_file(const std::filesystem::path& filename) {
-   return this->load_order->index_of_loaded_file(filename.string());
+bool DovahKitCore::load_order_has_file(const std::filesystem::path& filename) const noexcept {
+   return this->load_order->has_file(filename);
 }
 
 const dovah::file_write_error& DovahKitCore::get_last_write_error() const noexcept {
@@ -222,16 +222,6 @@ bool DovahKitCore::for_each_form(std::function<bool(dovah::form_stub*)> functor)
 }
 bool DovahKitCore::for_each_form_of_type(form_type_t ft, std::function<bool(dovah::form_stub*)> functor) {
    return this->load_order->for_each_form_of_type(ft, functor);
-}
-bool DovahKitCore::form_is_from_active_file(const dovah::form_stub* stub) const noexcept {
-   if (!this->loaded)
-      return false;
-   return this->load_order->form_is_from_active_file(stub);
-}
-bool DovahKitCore::form_is_from_active_file(bare_form_id_t formID) const noexcept {
-   if (!this->loaded)
-      return false;
-   return this->load_order->form_is_from_active_file(formID);
 }
 
 dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type_t ft) {

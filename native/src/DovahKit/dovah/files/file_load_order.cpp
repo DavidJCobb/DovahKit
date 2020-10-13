@@ -132,35 +132,6 @@ namespace dovah {
       }
    }
 
-   uint8_t file_load_order::load_order_prefix_for(const loaded_file* file) const noexcept {
-      if (file == this->hardcoded_forms_file)
-         return 0;
-      uint8_t size = this->files.size();
-      for (uint8_t i = 0; i < size; i++)
-         if (file == this->files[i])
-            return i;
-      return invalid_load_prefix;
-   }
-   uint8_t file_load_order::guided_load_order_prefix_for(const loaded_file* file) const noexcept {
-      //
-      // Intended for use during loading. If (this->loadingIndex) is non-zero, then it's the 
-      // index of the file currently being loaded; we check that index in the load order first 
-      // before searching the full load order. (If we're currently loading file 00, then we 
-      // start at zero, which is the same as searching the full load order anyway.)
-      //
-      if (file == this->hardcoded_forms_file)
-         return 0;
-      uint8_t size = this->files.size();
-      uint8_t li   = this->save_load_state.loading_index;
-      if (li && li < size)
-         if (file == this->files[li])
-            return li;
-      for (uint8_t i = 0; i < size; i++)
-         if (file == this->files[i])
-            return i;
-      return invalid_load_prefix;
-   }
-
    void file_load_order::queue_file(const std::string& name) {
       auto& list = this->queued_load.files;
       auto it = std::find(list.begin(), list.end(), name);
@@ -235,11 +206,18 @@ namespace dovah {
          list->push_back(header);
       }
       if (this->archives) {
+         //
+         // If we have a (bsa_load_order), then prepend the Skyrim.ini-specified BSAs followed by the 
+         // BSAs for each loaded file. We add to the start of the BSA list in order to allow a frontend 
+         // to load additional BSAs that override the INI and file ones.
+         //
          this->archives->set_base_path(this->base_path);
+         //
+         uint32_t count = 0;
          //
          auto list = utils::get_ini_defined_bsa_list();
          for (auto& path : list)
-            this->archives->prepend_archive(path);
+            this->archives->insert_archive(count++, path);
          //
          for (auto* header : this->normalizer.masters) {
             if (header->name.empty())
@@ -252,7 +230,7 @@ namespace dovah {
                if (!stream.good())
                   continue;
             }
-            this->archives->prepend_archive(name);
+            this->archives->insert_archive(count++, name);
          }
          for (auto* header : this->normalizer.plugins) {
             if (header->name.empty())
@@ -265,7 +243,7 @@ namespace dovah {
                if (!stream.good())
                   continue;
             }
-            this->archives->prepend_archive(name);
+            this->archives->insert_archive(count++, name);
          }
          //
          this->archives->load_archives();
@@ -357,7 +335,6 @@ namespace dovah {
       if (!this->active_file && this->files.size() < 254) { // TODO: the cutoff should be 253 if any of the loaded files are ESLs or SSE files
          auto file = new tes_file_reading::file_reader(*this);
          this->active_file = file;
-         // TODO: How should we handle file_reader::nextFormID?
          this->files.push_back(file);
       }
       if (this->active_file) {
@@ -560,6 +537,57 @@ namespace dovah {
       return false;
    }
 
+   #pragma region Finding files
+   file_prefix file_load_order::file_prefix_for(const std::filesystem::path& filename) const noexcept {
+      uint8_t  heavy = 0xFF;
+      uint16_t light = 0xFFFF;
+      for (auto* f : this->files) {
+         bool is_light = (f->header.flags & tes_file_flag::light);
+         bool is_equal = f->get_filename() == filename;
+         if (is_light) {
+            ++light;
+            if (is_equal)
+               return file_prefix::make_light(light);
+         } else {
+            ++heavy;
+            if (is_equal)
+               return file_prefix::make_heavy(heavy);
+         }
+      }
+      return file_prefix();
+   }
+   file_prefix file_load_order::file_prefix_for(const loaded_file& file) const noexcept {
+      uint8_t  heavy = 0xFF;
+      uint16_t light = 0xFFFF;
+      for (auto* f : this->files) {
+         bool is_light = (f->header.flags & tes_file_flag::light);
+         bool is_equal = f == &file;
+         if (is_light) {
+            ++light;
+            if (is_equal)
+               return file_prefix::make_light(light);
+         } else {
+            ++heavy;
+            if (is_equal)
+               return file_prefix::make_heavy(heavy);
+         }
+      }
+      return file_prefix();
+   }
+   file_prefix file_load_order::active_file_prefix() const noexcept {
+      if (this->active_file)
+         return this->file_prefix_for(*this->active_file);
+      return file_prefix();
+   }
+   //
+   bool file_load_order::has_file(const std::filesystem::path& filename) const noexcept {
+      for (auto* f : this->files)
+         if (f->get_filename() == filename)
+            return true;
+      return false;
+   }
+   #pragma endregion
+
    uint32_t file_load_order::count_forms_of_type(form_type_t ft) const noexcept {
       if (ft < this->forms_by_type.size()) {
          auto& list = this->forms_by_type[ft].forms;
@@ -571,15 +599,6 @@ namespace dovah {
       if (formID == 0)
          return false;
       return cobb::unordered_map_contains(this->forms.forms, formID);
-   }
-   uint8_t file_load_order::index_of_loaded_file(const std::string& filename) const noexcept {
-      auto size = this->files.size();
-      for (uint8_t i = 0; i < size; i++) {
-         auto& name = this->files[i]->get_filename();
-         if (cobb::strieq(name, filename))
-            return i;
-      }
-      return invalid_load_prefix;
    }
    form_stub* file_load_order::get_form(bare_form_id_t formID) const noexcept {
       if (formID == 0)
@@ -622,15 +641,6 @@ namespace dovah {
       }
       return false;
    }
-   bool file_load_order::form_is_from_active_file(const form_stub* stub) const noexcept {
-      if (stub->is_edited())
-         return true;
-      return stub->file == this->active_file;
-   }
-   bool file_load_order::form_is_from_active_file(bare_form_id_t formID) const noexcept {
-      auto stub = this->get_form(formID);
-      return this->form_is_from_active_file(stub);
-   }
 
    bool file_load_order::active_file_has_name() const noexcept {
       if (!this->active_file)
@@ -653,24 +663,21 @@ namespace dovah {
       return false;
    }
    bare_form_id_t file_load_order::find_first_free_form_id_in_active_file(bare_form_id_t id) const noexcept {
-      id &= 0x00FFFFFF;
-      if (id < 0x00000800)
-         id = 0x00000800;
+      auto active_prefix = this->active_file_prefix();
+      if (active_prefix.is_undefined())
+         return 0;
+      auto min_id = active_prefix.min_form_id();
+      auto max_id = active_prefix.max_form_id();
+      id = active_prefix.coerce_form_id(id);
       //
-      bare_form_id_t prefix = this->index_of_active_file();
       auto& map = this->active_file_forms.forms;
-      if (prefix == invalid_load_prefix)
+      if (map.size() >= (max_id - min_id)) // no form IDs available
          return 0;
-      if (map.size() >= (0x00FFFFFF - 0x00000800)) // no form IDs available
-         return 0;
-      prefix = prefix << 0x18;
-      id    |= prefix;
-      bare_form_id_t max = 0x00FFFFFF | prefix;
       //
       auto& reservations = this->form_creation_request_info.reserved_formIDs;
       auto  guard        = std::lock_guard(this->form_creation_request_info.lock);
       //
-      for (; id < max; ++id) {
+      for (; id < max_id; ++id) {
          if (!cobb::unordered_map_contains(map, id)) {
             auto it = std::find(reservations.begin(), reservations.end(), id);
             if (it != reservations.end())
@@ -693,11 +700,18 @@ namespace dovah {
    bool file_load_order::for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
       if (form_type >= this->active_file_forms_by_type.size())
          return false;
-      auto  prefix = this->index_of_active_file();
-      auto& list   = this->active_file_forms_by_type[form_type].forms;
-      for (auto it = list.begin(); it != list.end(); ++it) {
-         auto stub = it->second;
-         if ((stub->formID >> 0x18) == prefix)
+      //
+      auto active_prefix = this->active_file_prefix();
+      if (active_prefix.is_undefined())
+         return false;
+      auto min_id = active_prefix.min_form_id();
+      auto max_id = active_prefix.max_form_id();
+      //
+      auto& list = this->active_file_forms_by_type[form_type].forms;
+      for (auto& pair : list) {
+         auto id   = pair.first;
+         auto stub = pair.second;
+         if (id < min_id || id > max_id)
             continue;
          if (functor(stub))
             return true;
@@ -741,13 +755,8 @@ namespace dovah {
       if (this->active_file)
          out = this->active_file->get_filename();
    }
-   uint8_t file_load_order::index_of_active_file() const noexcept {
-      auto size = this->files.size();
-      for (uint8_t i = 0; i < size; i++) {
-         if (this->files[i] == this->active_file)
-            return i;
-      }
-      return invalid_load_prefix;
+   bool file_load_order::has_active_file() const noexcept {
+      return this->active_file != nullptr;
    }
    bool file_load_order::is_defined_in_active_file(const form_stub& stub) const noexcept {
       if (stub.file != this->active_file)
@@ -758,13 +767,12 @@ namespace dovah {
       return stub.file == this->active_file;
    }
    bool file_load_order::is_active_file_formID(bare_form_id_t id) const noexcept {
-      auto prefix = this->index_of_active_file();
-      if (prefix == invalid_load_prefix)
+      auto active_prefix = this->active_file_prefix();
+      if (active_prefix.is_undefined())
          return false;
-      //
-      // TODO: if we're in SSE mode and (prefix == light_load_prefix), then apply additional logic
-      //
-      return (id >> 0x18) == prefix;
+      auto min_id = active_prefix.min_form_id();
+      auto max_id = active_prefix.max_form_id();
+      return id >= min_id && id <= max_id;
    }
 
    #pragma region Load order code for various form modification requests
@@ -778,21 +786,17 @@ namespace dovah {
       form_creation_request result(*this);
       result.form_type = ft;
       //
-      if (!this->active_file) {
-         result.error = form_creation_request::error_code::no_active_file;
-         return result;
-      }
       if (ft >= form_types.size()) {
          result.error = form_creation_request::error_code::bad_form_type_requested;
          return result;
       }
-      auto  formID = this->active_file->header.nextFormID;
-      auto  prefix = this->index_of_active_file();
-      if (prefix == invalid_load_prefix) {
+      auto prefix = this->active_file_prefix();
+      if (prefix.is_undefined()) {
          result.error = form_creation_request::error_code::no_active_file;
          return result;
       }
-      formID = (formID & 0x00FFFFFF) | (prefix << 0x18);
+      assert(this->active_file && "How were we able to get the index of the active file when the pointer has been lost?"); // in case any code changes in the future
+      auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
       //
       auto  guard = std::lock_guard(this->form_creation_request_info.lock);
       auto& list  = this->form_creation_request_info.reserved_formIDs;
@@ -1054,20 +1058,21 @@ namespace dovah {
       uint8_t local  = file->header.masters.size();
       uint8_t prefix = id >> 0x18;
       if (prefix == local) {
-         id = id & 0x00FFFFFF | (this->guided_load_order_prefix_for(file) << 0x18);
+         auto file_prefix = this->file_prefix_for(*file);
+         id = file_prefix.coerce_form_id(id);
          return form_id_status::valid;
       }
       if (prefix > local) {
          id = 0;
          return form_id_status::out_of_bounds;
       }
-      auto&   name = file->header.masters[prefix].master;
-      uint8_t j    = this->index_of_loaded_file(name);
-      if (j == invalid_load_prefix) {
+      auto& name        = file->header.masters[prefix].master;
+      auto  file_prefix = this->file_prefix_for(name);
+      if (file_prefix.is_undefined()) {
          id = 0;
          return form_id_status::missing_master;
       }
-      id = id & 0x00FFFFFF | (j << 0x18);
+      id = file_prefix.coerce_form_id(id);
       return form_id_status::valid;
    }
    file_load_order::form_id_status file_load_order::local_formID_to_global_formID(form_stub* stub, uint32_t& out) const {
@@ -1088,24 +1093,25 @@ namespace dovah {
          out = stub->formID & 0x00FFFFFF;
          return form_id_status::valid;
       }
-      auto    file = stub->file;
-      uint8_t local = file->header.masters.size();
+      auto    file   = stub->file;
+      uint8_t local  = file->header.masters.size();
       uint8_t prefix = stub->formID >> 0x18;
       if (prefix == local) {
-         out = stub->formID & 0x00FFFFFF | (this->guided_load_order_prefix_for(file) << 0x18);
+         auto file_prefix = this->file_prefix_for(*file);
+         out = file_prefix.coerce_form_id(stub->formID);
          return form_id_status::valid;
       }
       if (prefix > local) {
          out = 0;
          return form_id_status::out_of_bounds;
       }
-      auto& name = file->header.masters[prefix].master;
-      uint8_t j = this->index_of_loaded_file(name);
-      if (j == invalid_load_prefix) {
+      auto& name        = file->header.masters[prefix].master;
+      auto  file_prefix = this->file_prefix_for(name);
+      if (file_prefix.is_undefined()) {
          out = 0;
          return form_id_status::missing_master;
       }
-      out = stub->formID & 0x00FFFFFF | (j << 0x18);
+      out = file_prefix.coerce_form_id(stub->formID);
       return form_id_status::valid;
    }
 
@@ -1430,7 +1436,7 @@ namespace dovah {
          this->result = result_code::error_cannot_delete_hardcoded_form;
          return;
       }
-      this->active_file_index = this->owner.index_of_active_file();
+      this->active_file_prefix = this->owner.active_file_prefix();
       //
       if (_form_should_be_flagged(this->target)) {
          this->forms_needing_flag.insert(&this->target);
@@ -1447,14 +1453,14 @@ namespace dovah {
       //
       this->force_delete_overrides = other.force_delete_overrides;
       //
-      this->active_file_index = this->owner.index_of_active_file();
+      this->active_file_prefix = this->owner.active_file_prefix();
    }
    bool form_deletion_request::_form_should_be_flagged(form_stub& stub) {
       if (this->force_delete_overrides)
          return false;
       if (stub.is_hardcoded()) // we don't currently allow any kind of deletion of hardcoded forms, but it never hurts to be prepared for what might change
          return true;
-      if ((stub.formID >> 0x18) != this->active_file_index)
+      if (!this->active_file_prefix.contains_form_id(stub.formID))
          return true;
       return false;
    }

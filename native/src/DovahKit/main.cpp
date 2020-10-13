@@ -86,11 +86,28 @@
 //             and "heavy_files", a list of only non-ESLs; or else we need a dedicated 
 //             getter for a file's load order prefix versus its light order prefix.
 //
+//              - I think a single list with dedicated getters would be safer.
+//
 //              - All uses of the (files) list need to be audited. Skyrim Classic code 
 //                assumes that a file's index in the list is its load order prefix; this 
 //                assumption does not hold for Skyrim Special, so we need dedicated 
 //                getters for the "load order prefix" (CCxxxxxx) and the "light order 
 //                prefix" (xxCCCxxx).
+//
+//           - The max file count is enforced in (file_load_order_normalizer). We need 
+//             to move the check to (file_load_order), and only enforce it if an active 
+//             file is set.
+//
+//              - Skyrim Classic loads should always fail if we have 255 files i.e. if 
+//                we break into slot 0xFF.
+//
+//              - Skyrim Special loads should always fail if we have 254 non-light files 
+//                i.e. if they break into slot 0xFE, or if we have 4096 light files i.e. 
+//                if they exceed the light slot range.
+//
+//              - Loads should always fail if there is an active file and more than 254 
+//                files prior to it such that the active file would encode its own forms 
+//                as 0xFF when saved. This should be enforced regardless of game.
 //
 //           - Saving needs to fail if the total number of files, including the active 
 //             file, exceeds 0xFE, such that the active file would use prefix 0xFF.
