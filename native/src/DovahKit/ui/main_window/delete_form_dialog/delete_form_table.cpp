@@ -54,8 +54,10 @@ void DeleteFormDialogListModel::formModified(const dovah::form_stub* stub) {
       auto* item = list[i];
       if (&item->stub == stub) {
          item->updateFromStub();
-         auto qmi = this->index(i, 0, QModelIndex());
-         emit dataChanged(qmi, qmi);
+         auto root  = QModelIndex();
+         auto start = this->index(i, 0, root);
+         auto end   = this->index(i, this->columnCount(root), root);
+         emit dataChanged(start, end);
          return;
       }
    }
@@ -70,7 +72,7 @@ void DeleteFormDialogListModel::formRenumbered(const dovah::form_stub* stub, dov
       auto* item = list[i];
       if (&item->stub == stub) {
          item->updateFromStub();
-         auto index = this->index(i, 0, QModelIndex());
+         auto index = this->index(i, 1, QModelIndex());
          emit dataChanged(index, index);
          return;
       }

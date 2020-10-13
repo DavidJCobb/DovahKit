@@ -74,8 +74,10 @@ void FormTableModel::formModified(const dovah::form_stub* stub) {
       auto* item = list[i];
       if (item->stub == stub) {
          item->update();
-         auto index = this->index(i, 0, parent_index);
-         emit dataChanged(index, index);
+         auto root  = QModelIndex();
+         auto start = this->index(i, 0, root);
+         auto end   = this->index(i, this->columnCount(root), root);
+         emit dataChanged(start, end);
          break;
       } else if (used.contains(item->stub)) {
          //
@@ -83,8 +85,10 @@ void FormTableModel::formModified(const dovah::form_stub* stub) {
          // changed to use them.
          //
          if (item->updateUserCount()) {
-            auto index = this->index(i, 0, parent_index);
-            emit dataChanged(index, index);
+            auto root  = QModelIndex();
+            auto start = this->index(i, 0, root);
+            auto end   = this->index(i, this->columnCount(root), root);
+            emit dataChanged(start, end);
          }
       }
    }
@@ -116,8 +120,10 @@ void FormTableModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_fo
       auto* item = list[i];
       if (item->stub == stub) {
          item->update();
-         auto index = this->index(i, 0, QModelIndex());
-         emit dataChanged(index, index);
+         auto root  = QModelIndex();
+         auto start = this->index(i, 0, root);
+         auto end   = this->index(i, this->columnCount(root), root);
+         emit dataChanged(start, end);
          return;
       }
    }

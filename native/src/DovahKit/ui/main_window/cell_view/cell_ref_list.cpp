@@ -60,8 +60,10 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
       auto* item = list[i];
       if (item->stub == stub) {
          item->update();
-         auto index = this->index(i, 0, QModelIndex());
-         emit dataChanged(index, index);
+         auto root  = QModelIndex();
+         auto start = this->index(i, 0, root);
+         auto end   = this->index(i, this->columnCount(root), root);
+         emit dataChanged(start, end);
          break;
       }
    }
@@ -97,7 +99,7 @@ void CellRefListModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_
       auto* item = list[i];
       if (item->stub == stub) {
          item->update();
-         auto index = this->index(i, 0, QModelIndex());
+         auto index = this->index(i, 1, QModelIndex());
          emit dataChanged(index, index);
          return;
       }

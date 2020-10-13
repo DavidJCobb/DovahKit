@@ -144,9 +144,11 @@ void FormUseInfoListModel::updateUser(item_type* item) {
    }
    item->updateFromStub();
    //
-   auto i   = this->children.indexOf(item);
-   auto qmi = this->index(i, 0, QModelIndex());
-   emit dataChanged(qmi, qmi);
+   auto i     = this->children.indexOf(item);
+   auto root  = QModelIndex();
+   auto start = this->index(i, 0, root);
+   auto end   = this->index(i, this->columnCount(root), root);
+   emit dataChanged(start, end);
 }
 
 void FormUseInfoListModel::formCreated(const dovah::form_stub* stub) {
@@ -227,7 +229,7 @@ void FormUseInfoListModel::formRenumbered(const dovah::form_stub* stub, dovah::b
       auto* item = list[i];
       if (item->otherStub == stub) {
          item->updateFromStub();
-         auto index = this->index(i, 0, QModelIndex());
+         auto index = this->index(i, 1, QModelIndex());
          emit dataChanged(index, index);
          return;
       }

@@ -26,6 +26,8 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      if (this->words.size() < 3) // enforce minimum word count
+         this->words.resize(3);
    }
    /*static*/ void Shout::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       form_id_t formID;
@@ -50,6 +52,9 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+   }
+   void Shout::setup(const file_load_order& load_order) noexcept {
+      this->words.resize(3);
    }
    bool Shout::_clone_impl(Form* out) const noexcept {
       auto copy = dynamic_cast<Shout*>(out);

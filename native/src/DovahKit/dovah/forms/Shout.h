@@ -33,6 +33,8 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);
+         //
+         virtual void setup(const file_load_order&) noexcept override;
 
          inline bool treat_as_power() const noexcept { return (this->flags & form_flag::treat_as_power) != 0; }
          inline void treat_as_power(bool v) noexcept { cobb::modify_bit(this->flags, form_flag::treat_as_power, v); }
