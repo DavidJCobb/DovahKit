@@ -74,6 +74,8 @@ class DovahKitCore : public QObject {
       void formDeletionImminent(dovah::form_stub*, bool will_be_flagged);
       void formDeletionComplete(dovah::bare_form_id_t, bool will_be_flagged);
       //
+      void formRenumbered(dovah::form_stub*, bare_form_id_t oldID, bare_form_id_t newID);
+      //
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed(const dovah::file_write_error&);
@@ -121,6 +123,7 @@ class DovahKitCore : public QObject {
       dovah::form_stub* create_form_of_type(form_type_t);
       dovah::form_creation_request request_form_creation(form_type_t) noexcept;
       dovah::form_duplication_request request_form_duplication() noexcept;
+      dovah::form_renumber_request request_form_renumber(dovah::form_stub& stub, bare_form_id_t desiredID) noexcept;
 
       dovah::form_stub* duplicate_form(dovah::form_stub& original, QWidget* dialog_parent = nullptr); // handles UI, error reporting, etc., for you
 

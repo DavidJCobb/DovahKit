@@ -22,6 +22,9 @@ namespace {
       if (stub)
          emit DovahKitCore::get().formCreated(stub);
    }
+   void _on_form_renumber(dovah::form_stub& stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
+      emit DovahKitCore::get().formRenumbered(&stub, oldID, newID);
+   }
 }
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
@@ -43,7 +46,8 @@ DovahKitCore::~DovahKitCore() {
    this->load_order = nullptr;
 }
 void DovahKitCore::_configure_load_order() {
-   this->load_order->on_form_create = &_on_form_created;
+   this->load_order->on_form_create   = &_on_form_created;
+   this->load_order->on_form_renumber = &_on_form_renumber;
    this->load_order->adopt_archive_list(*(new dovah::bsa_load_order));
 }
 void DovahKitCore::abandon_data() {
@@ -241,6 +245,9 @@ dovah::form_creation_request DovahKitCore::request_form_creation(dovah::form_typ
 }
 dovah::form_duplication_request DovahKitCore::request_form_duplication() noexcept {
    return this->load_order->request_form_duplication();
+}
+dovah::form_renumber_request DovahKitCore::request_form_renumber(dovah::form_stub& stub, bare_form_id_t desiredID) noexcept {
+   return this->load_order->request_form_renumber(stub, desiredID);
 }
 
 namespace {

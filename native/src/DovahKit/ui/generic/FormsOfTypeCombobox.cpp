@@ -8,6 +8,14 @@
 // These can incur a performance hit in Debug, but they're mostly fine in Release.
 //
 
+//
+// The "undefined" option allows you to have a different "no form" state from "none," 
+// but is not currently used. It arose from a misunderstanding on my part regarding 
+// cell music types: the Creation Kit gives you a "DEFAULT" option and a "NONE" 
+// option. What I didn't realize is that "NONE" is actually a music type. Bethesda 
+// literally created a music type form and named it "NONE."
+//
+
 FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
    this->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon); // needed for performance with large data sets
    //

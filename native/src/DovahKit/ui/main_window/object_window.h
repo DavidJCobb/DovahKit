@@ -18,5 +18,6 @@ class ObjectWindow : public QWidget {
       QAction* _formActionEdit        = nullptr;
       QAction* _formActionDuplicate   = nullptr;
       QAction* _formActionShowUseInfo = nullptr;
+      QAction* _formActionRenumber    = nullptr;
       QAction* _formActionDelete      = nullptr;
 };

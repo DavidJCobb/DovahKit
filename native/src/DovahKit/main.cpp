@@ -112,8 +112,11 @@
 //
 //        - Implement ESL support.
 //
-//           - ESLs need to be stored in a separate vector from non-ESLs, which means 
-//             that we need to audit all uses of (file_load_order::files).
+//           - ESLs can appear anywhere in the load order, but always use load order 
+//             prefix 0xFE. This means that (file_load_order::files) needs to be split 
+//             into "files", a list of all files; "light_files", a list of only ESLs; 
+//             and "heavy_files", a list of only non-ESLs; or else we need a dedicated 
+//             getter for a file's load order prefix versus its light order prefix.
 //
 //           - Saving needs to fail if the total number of files, including the active 
 //             file, exceeds 0xFE, such that the active file would use prefix 0xFF.

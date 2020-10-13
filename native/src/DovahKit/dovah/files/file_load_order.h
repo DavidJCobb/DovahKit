@@ -29,6 +29,7 @@ namespace dovah {
    class form_creation_request;
    class form_duplication_request;
    class form_deletion_request;
+   class form_renumber_request;
 
    class file_load_order {
       //
@@ -38,8 +39,10 @@ namespace dovah {
       friend void add_hardcoded_forms_to_load_order(file_load_order&);
       friend class form_creation_request;
       friend class form_deletion_request;
+      friend class form_renumber_request;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
+         static constexpr uint8_t light_load_prefix   = 0xFE;
          using loaded_file   = tes_file_reading::file_reader;
          using loaded_header = tes_file_reading::file_header_reader;
          //
@@ -51,6 +54,7 @@ namespace dovah {
          };
          //
          using form_create_callback_t = void(*)(form_stub*);
+         using form_renumber_callback_t = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
          //
       protected:
          struct _form_map {
@@ -75,7 +79,7 @@ namespace dovah {
          uint8_t           active_file_index = invalid_load_prefix;
          struct {
             mutable std::recursive_mutex lock;
-            std::vector<bare_form_id_t> reserved_formIDs; // form IDs reserved for form creation
+            std::vector<bare_form_id_t> reserved_formIDs; // form IDs reserved for form creation or form renumbering
          } form_creation_request_info;
          //
          #pragma region State fields for tracking whether and how we are saving and loading
@@ -118,6 +122,8 @@ namespace dovah {
          uint8_t load_order_prefix_for(const loaded_file*) const noexcept;
          uint8_t guided_load_order_prefix_for(const loaded_file*) const noexcept; // a version of (load_order_prefix_for) that's faster when called while loading the specified file
          //
+         void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
+         //
       public:
          ~file_load_order();
          //
@@ -132,10 +138,11 @@ namespace dovah {
                bool allow_suspicious_record_signatures = false;
             } options;
          } queued_load;
-         file_read_error        load_error;
-         file_write_error       save_error;
-         file_write_warning     save_warning;
-         form_create_callback_t on_form_create = nullptr;
+         file_read_error          load_error;
+         file_write_error         save_error;
+         file_write_warning       save_warning;
+         form_create_callback_t   on_form_create   = nullptr;
+         form_renumber_callback_t on_form_renumber = nullptr;
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -190,13 +197,17 @@ namespace dovah {
          bool for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor);
          void get_active_file_name(std::filesystem::path& out) const noexcept;
          uint8_t index_of_active_file() const noexcept;
-         bool is_defined_or_overridden_in_active_file(const form_stub* stub) const noexcept;
+         bool is_defined_in_active_file(const form_stub& stub) const noexcept;
+         bool is_defined_or_overridden_in_active_file(const form_stub& stub) const noexcept;
+         bool is_active_file_formID(bare_form_id_t) const noexcept;
          //
          form_stub* create_form_of_type(form_type_t) noexcept;
          form_creation_request request_form_creation(form_type_t) noexcept;
          form_stub* commit_form_creation_request(form_creation_request&) noexcept; // you can call this, but you're meant to call form_creation_request::commit instead
          form_duplication_request request_form_duplication() noexcept;
          form_deletion_request request_form_deletion(form_stub&) noexcept;
+         form_renumber_request request_form_renumber(form_stub&, bare_form_id_t desiredID) noexcept;
+         void commit_form_renumber_request(form_renumber_request&) noexcept; // you can call this, but you're meant to call form_renumber_request::commit instead
          //
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
@@ -351,5 +362,36 @@ namespace dovah {
          inline result_code get_result_code() const noexcept { return this->result; }
          //
          void commit();
+   };
+
+   class form_renumber_request {
+      friend class file_load_order;
+      public:
+         enum class error_code {
+            none,
+            no_active_file,
+            is_hardcoded_form,       // you can't renumber hardcoded forms
+            is_not_active_file_form, // you can't renumber forms that don't originate from the active file
+            is_not_active_file_id,   // the desired form ID must be within the active file's form ID range
+            desired_id_is_taken,
+            cannot_load_user,        // unable to update a user form
+         };
+      protected:
+         file_load_order& owner;
+         form_stub&       target;
+         bare_form_id_t   desiredID = 0;
+         error_code       error     = error_code::none;
+         //
+         form_renumber_request(file_load_order& o, form_stub& target);
+         form_renumber_request(form_renumber_request&&);
+         form_renumber_request(const form_renumber_request&) = delete;
+         form_renumber_request& operator=(const form_renumber_request&) = delete;
+         //
+      public:
+         ~form_renumber_request();
+         //
+         inline error_code get_error_code() const noexcept { return this->error; }
+         //
+         bool commit();
    };
 }

@@ -62,6 +62,36 @@ namespace {
          QObject::tr("Unable to create new form. %1").arg(text)
       );
    }
+   void _report_form_renumber_error(QWidget* window, dovah::form_renumber_request::error_code ec) {
+      using error_code = dovah::form_renumber_request::error_code;
+      //
+      QString text;
+      switch (ec) {
+         case error_code::is_not_active_file_form:
+            text = QObject::tr("You can't renumber forms that do not originate from the active file.");
+            break;
+         case error_code::is_not_active_file_id:
+            text = QObject::tr("You can't renumber a form out of the active file's form ID space.");
+            break;
+         case error_code::is_hardcoded_form:
+            text = QObject::tr("You can't renumber hardcoded forms.");
+            break;
+         case error_code::desired_id_is_taken:
+            text = QObject::tr("The desired form ID is already in use.");
+            break;
+         case error_code::cannot_load_user:
+            text = QObject::tr("DovahKit cannot renumber a form unless it supports editing all of the forms that use the target form.");
+            break;
+         case error_code::no_active_file:
+            text = QObject::tr("There is no active file, nor any room in the load order for a new file.");
+            break;
+      }
+      QMessageBox::critical(
+         window,
+         QObject::tr("Error", "renumber form error"),
+         QObject::tr("Unable to change this form's ID. %1").arg(text)
+      );
+   }
 }
 
 ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
@@ -103,10 +133,11 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          this->ui.table->select(result);
    });
    //
-   this->_formActionEdit        = new QAction(tr("Edit...",     "object window form actions"), this->ui.table);
-   this->_formActionDuplicate   = new QAction(tr("Duplicate",   "object window form actions"), this->ui.table);
-   this->_formActionShowUseInfo = new QAction(tr("Use Info...", "object window form actions"), this->ui.table);
-   this->_formActionDelete      = new QAction(tr("Delete",      "object window form actions"), this->ui.table);
+   this->_formActionEdit        = new QAction(tr("Edit...",           "object window form actions"), this->ui.table);
+   this->_formActionDuplicate   = new QAction(tr("Duplicate",         "object window form actions"), this->ui.table);
+   this->_formActionShowUseInfo = new QAction(tr("Use Info...",       "object window form actions"), this->ui.table);
+   this->_formActionRenumber    = new QAction(tr("Change form ID...", "object window form actions"), this->ui.table);
+   this->_formActionDelete      = new QAction(tr("Delete",            "object window form actions"), this->ui.table);
    QObject::connect(this->_formActionEdit, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub)
@@ -129,6 +160,36 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       if (stub)
          open_use_info_dialog_for_form(stub, this->parentWidget());
    });
+   QObject::connect(this->_formActionRenumber, &QAction::triggered, this, [this]() {
+      auto* stub = _get_selected_form(this->ui.table);
+      if (!stub)
+         return;
+      bool    ok   = false;
+      QString text = QInputDialog::getText(this, tr("Choose form ID"), tr("What form ID do you want this form to use?"), QLineEdit::Normal, "", &ok);
+      if (!ok)
+         return;
+      dovah::bare_form_id_t id = text.toUInt(&ok, 16);
+      if (!ok) {
+         QMessageBox::critical(
+            this,
+            QObject::tr("Error", "renumber form error"),
+            QObject::tr("\"%1\" is not a valid form ID. A form ID is an eight-digit hexadecimal number (that is, each digit is between 0-9 or A-F, inclusive).").arg(text)
+         );
+         return;
+      }
+      //
+      auto& editor  = DovahKitCore::get();
+      auto  request = editor.request_form_renumber(*stub, id);
+      if (request.get_error_code() != dovah::form_renumber_request::error_code::none) {
+         _report_form_renumber_error(this, request.get_error_code());
+         return;
+      }
+      if (!request.commit()) {
+         _report_form_renumber_error(this, request.get_error_code());
+         return;
+      }
+      this->ui.table->select(stub);
+   });
    QObject::connect(this->_formActionDelete, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (!stub)
@@ -146,6 +207,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       this->_formActionEdit->setVisible(stub != nullptr);
       this->_formActionDuplicate->setVisible(stub != nullptr);
       this->_formActionShowUseInfo->setVisible(stub != nullptr);
+      this->_formActionRenumber->setVisible(stub != nullptr);
       this->_formActionDelete->setVisible(stub != nullptr);
       //
       QMenu menu(opener);
@@ -153,6 +215,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       menu.addAction(this->_formActionEdit);
       menu.addAction(this->_formActionDuplicate);
       menu.addAction(this->_formActionShowUseInfo);
+      menu.addAction(this->_formActionRenumber);
       menu.addAction(this->_formActionDelete);
       //
       bool any = false;

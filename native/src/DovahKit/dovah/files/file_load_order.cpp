@@ -418,6 +418,88 @@ namespace dovah {
    }
    #pragma endregion
 
+   #pragma region Form renumbering
+   void file_load_order::_renumber_form(form_stub& stub, bare_form_id_t new_id, bool update_users) {
+      //
+      // This function is intended for internal use only. It carries out the core tasks needed to change 
+      // a form stub's form ID. This is something you might do for two reasons:
+      //
+      //   a) As an editing operation, to renumber an individual form's form ID. Such an operation is 
+      //      only valid when carried out for forms that originate from the active file.
+      //
+      //   b) As in-memory bookkeeping, when a file's position in the load order has changed after all 
+      //      form stubs have been generated. Generally speaking, this would only occur immediately 
+      //      after a successful save operation, and only if the active file has just gained or lost 
+      //      the Skyrim Special-exclusive "light plug-in" flag.
+      //
+      // In the former case, you'd want to pass (true) for (update_users). In the latter case, you'd 
+      // want to pass (false).
+      //
+      if (update_users) {
+         //
+         // When a form is being renumbered as an actual editing operation (as opposed to in-memory 
+         // bookkeeping, of the kind that would occur after saving a file with a changed ESL flag), 
+         // we must ensure that all of the form's users remain able to refer to the form. In practice, 
+         // we need to load the users and then flag them as edited, and we need to do this before 
+         // renumbering the target form. Why? Because if they aren't already loaded, then they will 
+         // refer to the target form by its old ID. We need to load them so that they have a reference 
+         // to the target form, and then we flag them as edited so that they don't unload (and lose 
+         // that reference) until they are saved (at which time they will be updated to use the target's 
+         // new form ID).
+         //
+         // We don't actually need to do anything with the loaded forms; we just need to ensure that 
+         // they *are* loaded, so that user forms have pointers to the used forms rather than the old 
+         // form ID in the file data.
+         //
+         for (auto& pair : stub.inbound) {
+            auto& entry = pair.second;
+            auto  form  = entry.other->load();
+            entry.other->set_edited(true);
+         }
+      }
+      bare_form_id_t old_id = stub.formID;
+      //
+      // Update use info to refer to the new form ID.
+      //
+      for (auto& pair : stub.outbound) {
+         auto& entry = pair.second;
+         auto& other = *entry.other;
+         //
+         auto node = other.inbound.extract(old_id);
+         if (node.empty())
+            continue;
+         node.key() = new_id;
+         other.inbound.insert(std::move(node));
+      }
+      for (auto& pair : stub.inbound) {
+         auto& entry = pair.second;
+         auto& other = *entry.other;
+         //
+         auto node = other.outbound.extract(old_id);
+         if (node.empty())
+            continue;
+         node.key() = new_id;
+         other.outbound.insert(std::move(node));
+      }
+      //
+      // Now move the form stub within the load order's maps.
+      //
+      auto _extract = [this, old_id, new_id](_form_map& map) {
+         auto guard = std::lock_guard(map.lock);
+         auto node  = map.forms.extract(old_id);
+         if (node.empty())
+            return;
+         node.key() = new_id;
+         map.forms.insert(std::move(node));
+      };
+      auto form_type = stub.formType;
+      _extract(this->forms);
+      _extract(this->forms_by_type[form_type]);
+      _extract(this->active_file_forms);
+      _extract(this->active_file_forms_by_type[form_type]);
+   }
+   #pragma endregion
+
    float file_load_order::assess_load_progress() const noexcept {
       constexpr float use_info_proportion = 0.2F;
       //
@@ -480,9 +562,7 @@ namespace dovah {
    bool file_load_order::has_form(bare_form_id_t formID) const noexcept {
       if (formID == 0)
          return false;
-      auto& list = this->forms.forms;
-      auto  it   = list.find(formID);
-      return (it != list.end());
+      return cobb::unordered_map_contains(this->forms.forms, formID);
    }
    uint8_t file_load_order::index_of_loaded_file(const std::string& filename) const noexcept {
       auto size = this->files.size();
@@ -661,8 +741,22 @@ namespace dovah {
       }
       return invalid_load_prefix;
    }
-   bool file_load_order::is_defined_or_overridden_in_active_file(const form_stub* stub) const noexcept {
-      return stub->file == this->active_file;
+   bool file_load_order::is_defined_in_active_file(const form_stub& stub) const noexcept {
+      if (stub.file != this->active_file)
+         return false;
+      return this->is_active_file_formID(stub.formID);
+   }
+   bool file_load_order::is_defined_or_overridden_in_active_file(const form_stub& stub) const noexcept {
+      return stub.file == this->active_file;
+   }
+   bool file_load_order::is_active_file_formID(bare_form_id_t id) const noexcept {
+      auto prefix = this->index_of_active_file();
+      if (prefix == invalid_load_prefix)
+         return false;
+      //
+      // TODO: if we're in SSE mode and (prefix == light_load_prefix), then apply additional logic
+      //
+      return (id >> 0x18) == prefix;
    }
 
    form_stub* file_load_order::create_form_of_type(form_type_t ft) noexcept {
@@ -834,6 +928,73 @@ namespace dovah {
    }
    form_deletion_request file_load_order::request_form_deletion(form_stub& target) noexcept {
       return form_deletion_request(*this, target);
+   }
+   form_renumber_request file_load_order::request_form_renumber(form_stub& stub, bare_form_id_t desiredID) noexcept {
+      form_renumber_request result(*this, stub);
+      result.desiredID = desiredID;
+      //
+      if (stub.is_hardcoded()) {
+         result.error = form_renumber_request::error_code::is_hardcoded_form;
+         return result;
+      }
+      if (!this->is_defined_in_active_file(stub)) {
+         result.error = form_renumber_request::error_code::is_not_active_file_form;
+         return result;
+      }
+      if (!this->is_active_file_formID(desiredID)) {
+         result.error = form_renumber_request::error_code::is_not_active_file_id;
+         return result;
+      }
+      //
+      if (!this->active_file) {
+         result.error = form_renumber_request::error_code::no_active_file;
+         return result;
+      }
+      auto guard1 = std::lock_guard(this->forms.lock);
+      auto guard2 = std::lock_guard(this->form_creation_request_info.lock);
+      if (this->has_form(desiredID)) {
+         result.error = form_renumber_request::error_code::desired_id_is_taken;
+         return result;
+      }
+      auto& list = this->form_creation_request_info.reserved_formIDs;
+      if (std::find(list.begin(), list.end(), desiredID) != list.end()) {
+         result.error = form_renumber_request::error_code::desired_id_is_taken;
+         return result;
+      }
+      list.push_back(desiredID);
+      return result;
+   }
+   void file_load_order::commit_form_renumber_request(form_renumber_request& request) noexcept {
+      bare_form_id_t desiredID = request.desiredID;
+      bare_form_id_t oldID     = request.target.formID;
+      if (!desiredID)
+         return;
+      assert(!this->has_form(desiredID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+      //
+      auto& stub = request.target;
+      for (auto& pair : stub.inbound) {
+         auto& entry = pair.second;
+         auto* other = entry.other;
+         if (!entry.other->load()) {
+            request.error = form_renumber_request::error_code::cannot_load_user;
+            return;
+         }
+      }
+      //
+      this->_renumber_form(stub, desiredID, true);
+      //
+      {  // Un-reserve the form ID.
+         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
+         auto& list  = this->form_creation_request_info.reserved_formIDs;
+         auto  it    = std::find(list.begin(), list.end(), desiredID);
+         if (it != list.end())
+            list.erase(it);
+      }
+      //
+      request.desiredID = 0;
+      if (this->on_form_renumber)
+         (this->on_form_renumber)(stub, oldID, desiredID);
+      return;
    }
    
    bool file_load_order::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) {
@@ -1373,6 +1534,32 @@ namespace dovah {
          stub->set_edited(true);
       }
       this->result = result_code::success;
+   }
+   #pragma endregion
+
+   #pragma region form_renumber_request
+   form_renumber_request::form_renumber_request(file_load_order& o, form_stub& t) : owner(o), target(t) {
+   }
+   form_renumber_request::form_renumber_request(form_renumber_request&& other) : owner(other.owner), target(other.target) {
+      this->error     = other.error;
+      this->desiredID = other.desiredID;
+   }
+   form_renumber_request::~form_renumber_request() {
+      if (!this->desiredID)
+         return;
+      //
+      auto  guard = std::lock_guard(this->owner.form_creation_request_info.lock);
+      auto& list = this->owner.form_creation_request_info.reserved_formIDs;
+      //
+      auto it = std::find(list.begin(), list.end(), this->desiredID);
+      if (it != list.end())
+         list.erase(it);
+      //
+      this->desiredID = 0;
+   }
+   bool form_renumber_request::commit() {
+      this->owner.commit_form_renumber_request(*this);
+      return this->error == error_code::none;
    }
    #pragma endregion
 }

@@ -272,7 +272,7 @@ namespace dovah {
          if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
             continue;
          auto stub = entry.other;
-         if (owner.is_defined_or_overridden_in_active_file(stub))
+         if (owner.is_defined_or_overridden_in_active_file(*stub))
             return true;
          if (stub->is_edited() || stub->does_descendant_form_need_save())
             return true;
@@ -283,7 +283,7 @@ namespace dovah {
       if (this->is_edited())
          return true;
       auto& owner = this->_get_load_order();
-      if (owner.is_defined_or_overridden_in_active_file(this))
+      if (owner.is_defined_or_overridden_in_active_file(*this))
          return true;
       return this->does_descendant_form_need_save();
    }
