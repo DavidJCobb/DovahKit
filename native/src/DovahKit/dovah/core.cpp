@@ -3,7 +3,7 @@
 
 namespace dovah {
    #pragma region huge arrays
-   std::array<form_type_info, 140> form_types = {{
+   std::array<form_type_info, 138> form_types = {{
       { 'NONE', form_type::none, "None/Unknown", form_type_info::flag::no_editor_id }, // form types not in this list are effectively 'NONE'
       { 'TES4', form_type::file_header, "File Header", form_type_info::flag::no_connections },
       { 'GRUP', form_type::file_record_group, "File Record Group", form_type_info::flag::no_connections },
@@ -141,6 +141,11 @@ namespace dovah {
       { 'COLL', form_type::collision_layer, "Collision Layer" }, // BGSCollisionLayer
       { 'CLFM', form_type::color, "Color" },
       { 'REVB', form_type::reverb_parameters, "Reverb Parameters" },
+      //
+      // New to Skyrim Special:
+      //
+      { 'LENS', form_type::lens_flare, "Lens Flare", form_type_info::flag::is_skyrim_special },
+      { 'VOLI', form_type::volumetric_lighting, "Volumetric Lighting Information", form_type_info::flag::is_skyrim_special },
    }};
    std::array<uint32_t, 120> group_sequence_list = {{
       'GMST',

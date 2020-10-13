@@ -80,11 +80,6 @@
 //
 //        - Implement ESL support.
 //
-//           - Test loading ESLs.
-//
-//              = BLOCKED: We need to implement Skyrim Special's new form types. They 
-//                appear in the official masters.
-//
 //           - The max file count is enforced in (file_load_order_normalizer). We need 
 //             to move the check to (file_load_order), and only enforce it if an active 
 //             file is set.
@@ -99,6 +94,11 @@
 //              - Loads should always fail if there is an active file and more than 254 
 //                files prior to it such that the active file would encode its own forms 
 //                as 0xFF when saved. This should be enforced regardless of game.
+//
+//           - The subrecord writer class needs to perform fixup when writing form IDs. 
+//             This means that the (file_load_order) class needs a function that can take 
+//             a "global" form ID and convert it to a form ID "local" to the active file 
+//             (i.e. light form IDs need to be normalized for save).
 //
 //           - Saving needs to fail if the total number of files, including the active 
 //             file, exceeds 0xFE, such that the active file would use prefix 0xFF.

@@ -231,6 +231,14 @@ namespace dovah {
          color,                    // CLFM: BGSColorForm
          reverb_parameters,        // REVB: BGSReverbParameters
          unk87,                    // 
+         //
+         // New to Skyrim Special:
+         //
+         lens_flare,               // LENS: 
+         volumetric_lighting,      // VOLI: 
+         //
+         // Not forms, but some game systems reserve form-type values for them:
+         //
          alias,                    //       BGSBaseAlias
          reference_alias,          //       BGSRefAlias
          location_alias,           //       BGSLocAlias
@@ -253,6 +261,7 @@ namespace dovah {
             no_connections    = 0x02, // Forms of this type cannot refer to or be referred to by other forms.
             can_have_children = 0x04, // Forms of this type can have child forms. (Used to optimize saving.)
             empty_if_deleted  = 0x08, // Forms of this type don't save any subrecords if they're flagged as deleted.
+            is_skyrim_special = 0x10, // Forms of this type don't exist in Skyrim Classic.
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
@@ -274,7 +283,7 @@ namespace dovah {
 
       inline bool is_reference() const noexcept { return form_type_is_reference(this->formType); }
    };
-   extern std::array<form_type_info, 140> form_types;
+   extern std::array<form_type_info, 138> form_types;
    extern std::array<uint32_t,       120> group_sequence_list; // the order in which record groups appear
 
    class form_reference_t {

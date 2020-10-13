@@ -190,10 +190,14 @@ namespace dovah {
             //
             #pragma region read
             inline bool read(void* buffer, uint32_t size) const {
+               if (!this->is_in_bounds(size))
+                  return false;
                return this->get_containing_record().read(buffer, size);
             }
             inline bool read(char* buffer, uint32_t size) { return this->read((void*)buffer, size); }
             template<typename T> inline bool read(T& field) const {
+               if (!this->is_in_bounds(sizeof(field)))
+                  return false;
                return this->get_containing_record().read(field);
             }
             template<> inline bool read(form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
