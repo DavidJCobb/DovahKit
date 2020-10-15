@@ -259,16 +259,15 @@ void FormTableModel::clear() {
    this->children.clear();
    this->pending_additions.clear();
    this->forms_pending_use_info_update.clear();
-   this->last_used_form_types.clear();
    this->endResetModel();
 }
 void FormTableModel::rebuild(const form_type_set& types) {
-   this->clear();
-   //
    this->last_used_form_types = types;
    this->rebuild();
 }
 void FormTableModel::rebuild() {
+   this->clear();
+   //
    auto& types = this->last_used_form_types;
    if (!types.size())
       return;
@@ -335,7 +334,8 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(2, QHeaderView::Interactive);
 
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &FormTable::rebuildModel);
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,    this, &FormTable::rebuildModel);
+   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, &FormTable::rebuildModel);
 
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)

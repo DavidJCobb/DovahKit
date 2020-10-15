@@ -76,6 +76,8 @@ class DovahKitCore : public QObject {
       //
       void formRenumbered(dovah::form_stub*, bare_form_id_t oldID, bare_form_id_t newID);
       //
+      void formsRenumberedEnMasse();
+      //
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed(const dovah::file_write_error&);
@@ -107,10 +109,13 @@ class DovahKitCore : public QObject {
       const dovah::tes_file_header* get_active_file_header() const noexcept;
 
       bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
-      bool load_order_has_file(const std::filesystem::path& filename) const noexcept;
+      bool load_order_has_file(const std::filesystem::path& filename, bool ignore_if_active_file = false) const noexcept;
 
       const dovah::file_write_error& get_last_write_error() const noexcept;
       const dovah::file_write_warning& get_write_warning() const noexcept;
+
+      bool is_light_plugin_support_enabled() const noexcept;
+      bool set_light_plugin_support_enabled(bool); // only allowed before load. when saving and converting between games, this is handled automatically by (file_load_order)
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;

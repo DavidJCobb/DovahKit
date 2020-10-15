@@ -108,6 +108,7 @@ namespace dovah {
 
             void open(std::filesystem::path);
             bool write();
+            void update_source_file_header();
             void close();
       };
    }

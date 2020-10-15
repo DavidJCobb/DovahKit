@@ -100,6 +100,7 @@ namespace dovah {
             uint32_t pos = 0;
             cobb::generic_buffer data; // record body (uncompressed)
             //
+            void _fixup_form_id(bare_form_id_t& id) const noexcept;
             void _write_impl(const form_reference_t&);
             void _write_impl(const struct_form_reference_t&);
             void _write_impl(const form_id_t&);

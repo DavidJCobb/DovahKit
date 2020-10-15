@@ -37,6 +37,7 @@ CellRefListModel::CellRefListModel(QObject* parent) : QAbstractTableModel(parent
    QObject::connect(&editor, &DovahKitCore::formModified,         this, &CellRefListModel::formModified);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &CellRefListModel::formDeletionImminent);
    QObject::connect(&editor, &DovahKitCore::formRenumbered,       this, &CellRefListModel::formRenumbered);
+   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, [this]() { this->rebuild(this->last_used_cell); });
 }
 void CellRefListModel::formCreated(const dovah::form_stub* stub) {
    if (!this->last_used_cell)

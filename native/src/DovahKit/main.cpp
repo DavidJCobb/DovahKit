@@ -107,6 +107,17 @@
 //             ID for ESLs. If we're trying to convert a non-ESL active file to ESL, then 
 //             this needs to be checked before that conversion.
 //
+//           - Saving an ESL should warn if the active file would have any CELL records, 
+//             whether they be new forms or overrides. Reportedly, CELLs in ESLs have 
+//             issues, though I don't know the source or the specific problems offhand.
+//
+//              - GamerPoets here <https://youtu.be/g_urrHrGQOY?t=299> recommends against 
+//                ESL-flagging files that have interior cells, but gives no explanation 
+//                as to why. Per aers, CELLs in ESLs are always loaded as if they're in 
+//                0xFE000xxx, and per Parapets there is some issue that occurs if an ESL 
+//                edits a CELL that originates from another ESL. We'll probably want to 
+//                only warn when saving an ESL that overrides another ESL's cells.
+//
 //           - When converting the active file to or from an ESL, we need to perform a 
 //             mass form renumbering.
 //

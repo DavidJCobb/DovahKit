@@ -330,6 +330,18 @@ namespace dovah {
       this->_build_use_info();
       this->save_load_state.flags |= save_load_flag::use_info_build_is_complete;
       //
+      if (!this->light_plugin_support_enabled) {
+         //
+         // If the user chooses to save a Skyrim Classic file as a Skyrim Special file, then we will 
+         // at that time (attempt to) enable light plug-in support. If any already-loaded files were 
+         // wrongfully flagged, then doing so will cause tons of errors: we'll retroactively honor 
+         // their "light" flag, but without having moved their forms to the 0xFE range. The solution? 
+         // Clear the flag for all files during a Classic-only load.
+         //
+         for (auto* file : this->files)
+            file->header.flags &= ~tes_file_flag::light;
+      }
+      //
       if (!this->active_file && this->files.size() < 254) { // TODO: the cutoff should be 253 if any of the loaded files are ESLs or SSE files
          auto file = new tes_file_reading::file_reader(*this);
          this->active_file = file;
@@ -356,6 +368,10 @@ namespace dovah {
       //
       return !this->load_error.defined();
    }
+   //
+   bool file_load_order::is_loading() const noexcept {
+      return this->save_load_state.type == save_load_type::is_loading;
+   };
 
    file_load_order::form_id_status file_load_order::accept_form_stub(form_stub* stub) noexcept {
       auto& type = this->forms_by_type[stub->formType];
@@ -491,7 +507,7 @@ namespace dovah {
    }
    #pragma endregion
 
-   bool file_load_order::_set_light_plugin_support_enabled(bool state, bool because_we_are_changing_whether_the_active_file_is_light) {
+   bool file_load_order::_can_modify_light_plugin_support(bool state, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept {
       if (state == this->light_plugin_support_enabled)
          return true;
       //
@@ -527,11 +543,21 @@ namespace dovah {
                return false;
          }
       }
+      return true;
+   }
+   bool file_load_order::_set_light_plugin_support_enabled(bool state, bool because_we_are_changing_whether_the_active_file_is_light) {
+      if (!this->_can_modify_light_plugin_support(state, because_we_are_changing_whether_the_active_file_is_light))
+         return false;
       this->light_plugin_support_enabled = state;
       return true;
    }
    bool file_load_order::is_light_plugin_support_enabled() const noexcept {
       return this->light_plugin_support_enabled;
+   }
+   bool file_load_order::can_modify_light_plugin_support(bool state) const noexcept {
+      if (this->is_loading() || this->files.size())
+         return false;
+      return this->_can_modify_light_plugin_support(state, false);
    }
    bool file_load_order::set_light_plugin_support_enabled(bool state) noexcept {
       if (this->is_loading() || this->files.size())
@@ -628,10 +654,58 @@ namespace dovah {
       }
       return file_prefix();
    }
+   file_prefix file_load_order::file_prefix_for(const loaded_file& file, bool pretend_is_or_isnt_light) const noexcept {
+      uint8_t  heavy = 0xFF;
+      uint16_t light = 0xFFFF;
+      for (auto* f : this->files) {
+         bool is_light = this->light_plugin_support_enabled && (f->header.flags & tes_file_flag::light);
+         bool is_equal = f == &file;
+         if (is_equal)
+            is_light = pretend_is_or_isnt_light;
+         if (is_light) {
+            ++light;
+            if (is_equal)
+               return file_prefix::make_light(light);
+         } else {
+            ++heavy;
+            if (is_equal)
+               return file_prefix::make_heavy(heavy);
+         }
+      }
+      return file_prefix();
+   }
    file_prefix file_load_order::active_file_prefix() const noexcept {
       if (this->active_file)
          return this->file_prefix_for(*this->active_file);
       return file_prefix();
+   }
+   //
+   int file_load_order::index_of_prefix(file_prefix prefix) const noexcept {
+      if (prefix.is_undefined())
+         return -1;
+      size_t size = this->files.size();
+      if (prefix.is_light()) {
+         uint16_t target = prefix.light_prefix();
+         uint16_t count  = -1;
+         for (size_t i = 0; i < size; ++i) {
+            auto* file = this->files[i];
+            if (file->header.flags & tes_file_flag::light) {
+               if (++count == target)
+                  return i;
+            }
+         }
+         return -1;
+      }
+      uint8_t target = prefix.load_prefix();
+      uint8_t count  = -1;
+      for (size_t i = 0; i < size; ++i) {
+         auto* file = this->files[i];
+         if (!(file->header.flags & tes_file_flag::light)) {
+            if (++count == target)
+               return i;
+         }
+      }
+      return -1;
    }
    //
    bool file_load_order::has_file(const std::filesystem::path& filename) const noexcept {
@@ -639,6 +713,12 @@ namespace dovah {
          if (f->get_filename() == filename)
             return true;
       return false;
+   }
+   bool file_load_order::has_non_active_file(const std::filesystem::path& filename) const noexcept {
+      if (auto* f = this->active_file)
+         if (f->get_filename() == filename)
+            return false;
+      return this->has_file(filename);
    }
    #pragma endregion
 
@@ -740,6 +820,13 @@ namespace dovah {
          }
       }
       return 0;
+   }
+   bool file_load_order::for_each_active_file_form(std::function<bool(form_stub*)> functor) {
+      auto& list = this->active_file_forms.forms;
+      for (auto& pair : list)
+         if (functor(pair.second))
+            return true;
+      return false;
    }
    bool file_load_order::for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
       if (form_type < this->active_file_forms_by_type.size()) {
@@ -1168,6 +1255,21 @@ namespace dovah {
       out = file_prefix.coerce_form_id(stub->formID);
       return form_id_status::valid;
    }
+   bare_form_id_t file_load_order::remap_formID_for_save(bare_form_id_t id) const noexcept {
+      auto prefix = file_prefix::from_form_id(id, !this->light_plugin_support_enabled);
+      if (prefix.is_undefined())
+         return 0;
+      auto index = this->index_of_prefix(prefix);
+      if (index < 0 || index >= 0xFF)
+         return 0;
+      bare_form_id_t result = 0;
+      if (prefix.is_light()) {
+         result = (id & 0x00000FFF) | (index << 0x18);
+      } else {
+         result = (id & 0x00FFFFFF) | (index << 0x18);
+      }
+      return result;
+   }
 
    tes_file_header* file_load_order::get_active_file_header() const noexcept {
       if (!this->active_file)
@@ -1175,7 +1277,92 @@ namespace dovah {
       return &this->active_file->header;
    }
 
-   bool file_load_order::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg) {
+   bool file_load_order::save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config* cfg) {
+      //
+      // The process of saving an active file is somewhat complex, due to the need to support 
+      // both Skyrim Classic  and Skyrim Special,  as well as the  need to support converting 
+      // files from either game to the other.
+      //
+      // To start with, we need to weed out the obvious errors: there must be an active file; 
+      // another save or load operation can't currently be in progress; if the active file is 
+      // implicit, then it needs a filename; and the active file can't have enough masters to 
+      // shove its forms into the 0xFF slot.
+      //
+      // After that, we need to run  a few additional checks  centered around ESLs and cross-
+      // game conversion. ESL save operations need to fail if any form IDs are outside of the 
+      // valid range for ESLs. Cross-game conversion  needs to fail if the current load order 
+      // is impossible in the target game:  conversions from Classic to Special would fail if 
+      // the number of  masters is high enough for  the full load  order to overflow into the 
+      // 0xFE slot; the reverse conversion would fail if the active file has any ESL masters.
+      //
+      // Once we've decided that we can save the  file, we need to perform several tasks, but 
+      // the order in which  we perform them is very  important.  The list, first without any 
+      // consideration given to order:
+      //
+      //  - We need to actually write out data to a temporary *.TES file.
+      //
+      //  - We need to close the active file's mapped view, so we can gain write access.
+      //
+      //  - We need to rename the *.TES file to overwrite any *.ES* file that may be present.
+      //
+      //  - We need to toggle whether the load order  supports ESLs, based on what game we're 
+      //    saving content for.
+      //
+      //  - If we're changing whether the active file is an ESL, then we need to renumber all 
+      //    of its forms in-memory, moving them from or to the 0xFE slot.
+      //
+      //  - We need to update  the active file's  in-memory header data,  such as its list of 
+      //    dependencies.
+      //
+      //  - We need to attempt to  reopen the active file's mapped  view, so that editing can 
+      //    continue.
+      //
+      //  - We need to update the file  offsets of all form_stubs  for forms that are defined 
+      //    or overridden in the active file.
+      //
+      // There are a lot  of moving parts that we  need to be mindful of.  For example, if we 
+      // are converting an ESL file to Skyrim  Classic, we can't disable the load order's ESL 
+      // support straightaway, as that would cause  form ID prefix checks to fail: the checks 
+      // would stop accounting for ESLs and thus treat active file form IDs as if they belong 
+      // to the 255th file in the load order, since they're in slot 0xFE. Similarly, toggling 
+      // ESL support would prevent us from getting  the active file's load order prefix prior 
+      // to the save operation,  which would interfere with mass-renumbering  forms in memory 
+      // if that's necessary;  as such, we need to  make sure that we  grab the active file's 
+      // load order  prefix (for use in  distinguishing the active  file's new forms from its 
+      // overrides) beforehand.
+      //
+      // In practice, the full save process is as follows:
+      //
+      //  - Check for obvious errors and fail if needed.
+      //
+      //  - If we're  converting across games,  check whether  we can toggle  ESL support and 
+      //    fail if we can't.
+      //
+      //  - Grab the active file's current (file_prefix).
+      //
+      //  - Write to a temporary file.
+      //
+      //  - Toggle ESL support.
+      //
+      //  - Close the active file's mapped view, so that the existing file can be overwritten 
+      //    if need be (i.e. saving changes to a file for the same game),  and so that we can 
+      //    open the view to  a different file if  need be (i.e.  converting across games, or 
+      //    simply saving-as-new).
+      //
+      //  - Rename the temporary file, overwriting any existing file.
+      //
+      //  - If we changed whether the  active file was an ESL,  then mass renumber all of its 
+      //    forms. Use the (file_prefix) that we grabbed earlier to tell overrides apart from 
+      //    forms that are actually created in the active file.
+      //
+      //  - Update the active file's in-memory header data.
+      //
+      //  - Reopen the mapped view for the active file. If this fails, then tell the frontend 
+      //    that the save operation succeeded, but that editing cannot continue.
+      //
+      //  - If we were able to open the mapped file view, then update the file offsets on all 
+      //    form_stubs for forms defined or overridden in the active file.
+      //
       this->save_error   = file_write_error();
       this->save_warning = file_write_warning();
       if (!this->active_file) {
@@ -1189,13 +1376,17 @@ namespace dovah {
       }
       //
       std::filesystem::path filename = this->active_file->get_filename();
+      if (!replacement_filename.empty())
+         filename = replacement_filename;
       if (filename.empty()) {
-         filename = name_to_use_if_nameless;
-         if (filename.empty()) {
-            this->save_error.code = file_write_error::error_code::no_filename_specified;
-            return false;
-         }
-         this->active_file->set_path(std::filesystem::path(this->base_path) / filename);
+         this->save_error.code = file_write_error::error_code::no_filename_specified;
+         return false;
+      }
+      this->active_file->set_path(std::filesystem::path(this->base_path) / filename);
+      //
+      if (this->files.size() > 0xFE) {
+         this->save_error.code = file_write_error::error_code::too_many_dependencies;
+         return false;
       }
       //
       filename = std::filesystem::path(this->base_path) / filename;
@@ -1213,6 +1404,40 @@ namespace dovah {
          }
       }
       //
+      auto old_active_file_prefix = this->file_prefix_for(*this->active_file);
+      bool is_skyrim_special      = cfg ? (cfg->game == tes_file_writing::write_config::game_t::skyrim_special) : false;
+      bool convert_across_games   = false;
+      bool was_originally_light   = this->active_file->header.flags & tes_file_flag::light;
+      bool save_as_light_plugin   = was_originally_light;
+      if (cfg) {
+         save_as_light_plugin = cfg->file_flags & tes_file_flag::light;
+         //
+         if (this->light_plugin_support_enabled != is_skyrim_special)
+            convert_across_games = true;
+      }
+      if (!is_skyrim_special)
+         save_as_light_plugin = false;
+      if (save_as_light_plugin && !was_originally_light) {
+         //
+         // Double-check to make sure that saving as an ESL should even be possible.
+         //
+         for (auto& pair : this->active_file_forms.forms) {
+            auto id = pair.second->formID;
+            if (id & 0x00FFF000) {
+               this->save_error.code = file_write_error::error_code::forms_out_of_esl_range;
+               return false;
+            }
+         }
+      }
+      if (convert_across_games) {
+         if (!this->_can_modify_light_plugin_support(is_skyrim_special, true)) {
+            this->save_error.code = file_write_error::error_code::cannot_enable_esl_support;
+            if (!is_skyrim_special)
+               this->save_error.code = file_write_error::error_code::cannot_disable_esl_support;
+            return false;
+         }
+      }
+      //
       tes_file_writing::file_writer writer(*this, *this->active_file, cfg);
       writer.open(filename);
       if (writer.write()) {
@@ -1226,6 +1451,8 @@ namespace dovah {
          writer.close(); // so we can move the new file
          this->active_file->close(); // so we can replace the old file
          //
+         this->_set_light_plugin_support_enabled(is_skyrim_special, true);
+         //
          std::error_code code;
          std::filesystem::rename(filename, this->active_file->get_path(), code);
          bool reopen_result = false;
@@ -1235,21 +1462,25 @@ namespace dovah {
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
          } else {
-            //
-            // Update the active file's masters.
-            //
-            auto& header = this->active_file->header;
-            header.masters.clear();
-            this->for_each_load_order_filename([&header](std::filesystem::path name, bool is_active_file) { // MAST, DATA
-               if (is_active_file)
-                  return false;
+            if (was_originally_light != save_as_light_plugin) {
                //
-               auto& entry  = header.masters.emplace_back();
-               entry.master = name.string();
-               entry.data   = 0;
+               // We have changed whether the active file is a light plug-in, so we need to change all 
+               // of its form IDs in memory.
                //
-               return false;
-            });
+               auto new_prefix = this->file_prefix_for(*this->active_file, save_as_light_plugin);
+               //
+               std::vector<form_stub*> stubs;
+               for (auto& pair : this->active_file_forms.forms) {
+                  auto* stub = pair.second;
+                  auto  id   = stub->formID;
+                  if (old_active_file_prefix.contains_form_id(id))
+                     stubs.push_back(stub);
+               }
+               for (auto* stub : stubs) {
+                  this->_renumber_form(*stub, new_prefix.coerce_form_id(stub->formID), false);
+               }
+            }
+            writer.update_source_file_header();
             //
             // Reopen the active file.
             //
@@ -1287,11 +1518,15 @@ namespace dovah {
             stub->set_edited(false);
          }
          #if _DEBUG
-            for (auto& pair : this->active_file_forms.forms) {
+            for (auto& pair : this->active_file_forms.forms) { // this isn't actually a problem i ran into. i've put this check here in case future development uncovers or causes any issues.
                auto* stub = pair.second;
                assert(!stub->is_edited() && "Somehow we didn't fully commit changes to an active file form stub after a save operation.");
             }
          #endif
+         if (was_originally_light != save_as_light_plugin) {
+            if (this->on_mass_renumber)
+               (this->on_mass_renumber)();
+         }
       }
       this->save_error = writer.error;
       return !writer.error.defined();

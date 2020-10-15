@@ -10,6 +10,11 @@ namespace dovah::tes_file_writing {
    };
 
    struct write_config {
+      enum class game_t {
+         skyrim_classic,
+         skyrim_special,
+      };
+      //
       record_compression_policy record_compression = record_compression_policy::never;
       uint32_t file_flags     = 0;
       uint16_t record_version = 0; // 0 = same as source file
@@ -24,6 +29,7 @@ namespace dovah::tes_file_writing {
          uint32_t version_control = 0;
       };
       uint16_t version_control_2 = 0;
+      game_t   game = game_t::skyrim_classic;
    };
 
 }

@@ -271,6 +271,15 @@ namespace dovah {
    }};
    #pragma endregion
 
+   /*static*/ file_prefix file_prefix::from_form_id(bare_form_id_t id, bool is_skyrim_classic) noexcept {
+      if (!id)
+         return file_prefix();
+      uint8_t prefix = id >> 0x18;
+      if (is_skyrim_classic || prefix != 0xFE)
+         return file_prefix::make_heavy(prefix);
+      return file_prefix::make_light((id >> 0xC) & 0xFFF);
+   }
+
    #pragma region form_type_info
    /*static*/ const form_type_info& form_type_info::lookup(form_type_t ft) noexcept {
       for (uint8_t i = 0; i < form_types.size(); i++) {

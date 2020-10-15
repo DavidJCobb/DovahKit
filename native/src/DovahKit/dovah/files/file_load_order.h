@@ -53,8 +53,9 @@ namespace dovah {
             null_is_not_allowed,
          };
          //
-         using form_create_callback_t = void(*)(form_stub*);
+         using form_create_callback_t   = void(*)(form_stub*);
          using form_renumber_callback_t = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
+         using generic_callback_t       = void(*)();
          //
       protected:
          struct _form_map {
@@ -127,11 +128,13 @@ namespace dovah {
          // converting a Skyrim Special file to a Skyrim Classic file.)
          //
          bool _set_light_plugin_support_enabled(bool state, bool because_we_are_changing_whether_the_active_file_is_light);
+         bool _can_modify_light_plugin_support(bool state, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept;
          
       public:
          ~file_load_order();
          //
          bool is_light_plugin_support_enabled() const noexcept;
+         bool can_modify_light_plugin_support(bool) const noexcept;
          bool set_light_plugin_support_enabled(bool) noexcept; // this can fail; it returns (true) on success.
          //
          #pragma region Content related to loading
@@ -150,19 +153,18 @@ namespace dovah {
          file_write_warning       save_warning;
          form_create_callback_t   on_form_create   = nullptr;
          form_renumber_callback_t on_form_renumber = nullptr;
+         generic_callback_t       on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
          void queue_active_file(const std::string& name); // TODO
          bool load_queued_files();
          //
-         inline bool is_loading() const noexcept {
-            constexpr save_load_flags_t test = save_load_flag::loading_is_complete | save_load_flag::use_info_build_is_complete;
-            return (this->save_load_state.flags & test) != test;
-         };
+         bool is_loading() const noexcept;
          
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
+         bare_form_id_t remap_formID_for_save(bare_form_id_t) const noexcept;
 
          // (acceptFormStub)
          // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 
@@ -186,6 +188,7 @@ namespace dovah {
          #pragma region Finding files
          file_prefix file_prefix_for(const std::filesystem::path& filename) const noexcept;
          file_prefix file_prefix_for(const loaded_file& file) const noexcept;
+         file_prefix file_prefix_for(const loaded_file& file, bool pretend_is_or_isnt_light) const noexcept;
          inline uint8_t load_prefix_for(const std::filesystem::path& f) const noexcept {
             return this->file_prefix_for(f).load_prefix();
          }
@@ -200,7 +203,10 @@ namespace dovah {
          }
          file_prefix active_file_prefix() const noexcept;
          //
+         int index_of_prefix(file_prefix) const noexcept;
+         //
          bool has_file(const std::filesystem::path& filename) const noexcept;
+         bool has_non_active_file(const std::filesystem::path& filename) const noexcept;
          #pragma endregion
          
          #pragma region Content related to already-loaded data
@@ -216,6 +222,7 @@ namespace dovah {
          uint32_t active_file_form_count() const noexcept;
          bool active_file_has_forms_of_type(form_type_t) const noexcept;
          bare_form_id_t find_first_free_form_id_in_active_file(bare_form_id_t start_from = 0) const noexcept; // returns 0 if no free IDs
+         bool for_each_active_file_form(std::function<bool(form_stub*)> functor);
          bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor);
@@ -241,7 +248,7 @@ namespace dovah {
          tes_file_header* get_active_file_header() const noexcept;
          #pragma endregion
 
-         bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg = nullptr);
+         bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config* cfg = nullptr);
    };
 
    class form_creation_request {

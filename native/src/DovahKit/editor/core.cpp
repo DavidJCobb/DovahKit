@@ -25,6 +25,9 @@ namespace {
    void _on_form_renumber(dovah::form_stub& stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
       emit DovahKitCore::get().formRenumbered(&stub, oldID, newID);
    }
+   void _on_mass_renumber() {
+      emit DovahKitCore::get().formsRenumberedEnMasse();
+   }
 }
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
@@ -48,6 +51,7 @@ DovahKitCore::~DovahKitCore() {
 void DovahKitCore::_configure_load_order() {
    this->load_order->on_form_create   = &_on_form_created;
    this->load_order->on_form_renumber = &_on_form_renumber;
+   this->load_order->on_mass_renumber = &_on_mass_renumber;
    this->load_order->adopt_archive_list(*(new dovah::bsa_load_order));
 }
 void DovahKitCore::abandon_data() {
@@ -193,7 +197,9 @@ const dovah::tes_file_header* DovahKitCore::get_active_file_header() const noexc
 bool DovahKitCore::for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept {
    return this->load_order->for_each_load_order_filename(functor);
 }
-bool DovahKitCore::load_order_has_file(const std::filesystem::path& filename) const noexcept {
+bool DovahKitCore::load_order_has_file(const std::filesystem::path& filename, bool ignore_if_active_file) const noexcept {
+   if (ignore_if_active_file)
+      return this->load_order->has_non_active_file(filename);
    return this->load_order->has_file(filename);
 }
 
@@ -202,6 +208,13 @@ const dovah::file_write_error& DovahKitCore::get_last_write_error() const noexce
 }
 const dovah::file_write_warning& DovahKitCore::get_write_warning() const noexcept {
    return this->load_order->save_warning;
+}
+
+bool DovahKitCore::is_light_plugin_support_enabled() const noexcept {
+   return this->load_order->is_light_plugin_support_enabled();
+}
+bool DovahKitCore::set_light_plugin_support_enabled(bool state) {
+   return this->load_order->set_light_plugin_support_enabled(state);
 }
 
 uint32_t DovahKitCore::count_forms_of_type(form_type_t ft) const noexcept {

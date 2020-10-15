@@ -435,6 +435,9 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
       if (this->_filter)
          this->refilterModelByText(this->_filter->text());
    });
+   //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, &FormUseInfoList::build);
 };
 FormUseInfoList::relationship_mode FormUseInfoList::relationshipMode() const noexcept {
    auto model = (model_type*)this->unwrappedModel();

@@ -35,7 +35,7 @@ namespace dovah::tes_file_writing {
       //
       header.signature = signature;
       header.version   = this->config.record_version;
-      header.formID    = formID;
+      header.formID    = this->owner.remap_formID_for_save(formID);
       header.flags     = 0;
       header.version_control   = this->config.version_control;
       header.version_control_2 = this->config.version_control_2;
@@ -534,6 +534,24 @@ namespace dovah::tes_file_writing {
       this->set_stream_position(pos);
       //
       return !this->error.defined();
+   }
+   void file_writer::update_source_file_header() {
+      auto& header = this->source.header;
+      //
+      header.flags = this->config.file_flags;
+      cobb::edit_bit(header.flags, tes_file_flag::localized_string_table, this->use_string_table);
+      //
+      header.masters.clear();
+      this->owner.for_each_load_order_filename([&header](std::filesystem::path name, bool is_active_file) { // MAST, DATA
+         if (is_active_file)
+            return false;
+         //
+         auto& entry  = header.masters.emplace_back();
+         entry.master = name.string();
+         entry.data   = 0;
+         //
+         return false;
+      });
    }
    void file_writer::close() {
       this->stream.close();

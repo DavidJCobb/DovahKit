@@ -37,6 +37,7 @@ namespace dovah {
             out.set_load_prefix(l);
             return out;
          }
+         static file_prefix from_form_id(bare_form_id_t, bool is_skyrim_classic) noexcept;
          //
          inline bool is_undefined() const noexcept { return this->value_and_flags == undefined; }
          inline bool is_light() const noexcept { return this->value_and_flags & flag::is_light; }

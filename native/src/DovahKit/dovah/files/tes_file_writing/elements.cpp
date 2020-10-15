@@ -1,6 +1,7 @@
 #include "elements.h"
 #include "file_writer.h"
 #include "../../localized_strings.h"
+#include "../file_load_order.h"
 
 namespace dovah::tes_file_writing {
    void record::_write_impl(const void* source, uint32_t size) {
@@ -102,13 +103,26 @@ namespace dovah::tes_file_writing {
    }
 
    #pragma region subrecord
+   void subrecord::_fixup_form_id(bare_form_id_t& id) const noexcept {
+      if (!id)
+         return;
+      id = this->owner.owner.remap_formID_for_save(id);
+      assert(id);
+   }
    void subrecord::_write_impl(const form_reference_t& ref) {
-      this->write(bare_form_id_t(ref.formID()));
+      bare_form_id_t id = ref.formID();
+      this->_fixup_form_id(id);
+      this->write(id);
    }
    void subrecord::_write_impl(const struct_form_reference_t& ref) {
-      this->write(bare_form_id_t(ref.formID()));
+      this->_write_impl(*(form_reference_t*)&ref);
       if (this->is_skyrim_special())
          this->write(ref.padding);
+   }
+   void subrecord::_write_impl(const form_id_t& id) {
+      bare_form_id_t bare = id.value;
+      this->_fixup_form_id(bare);
+      this->write(bare);
    }
    void subrecord::_write_impl(const localized_string& field) {
       if (this->owner.use_string_table) {

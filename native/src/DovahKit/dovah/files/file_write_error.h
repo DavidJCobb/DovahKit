@@ -71,6 +71,32 @@ namespace dovah {
                //
                zlib_memory_error,
                zlib_buffer_error,
+               //
+               // (forms_out_of_esl_range)
+               // There is at least one form in the active file that is outside of the range of 
+               // form IDs supported for ESLs.
+               //
+               forms_out_of_esl_range,
+               //
+               // (too_many_dependencies)
+               // It is impossible to save the active file because the total number of dependencies 
+               // (ESL and non-ESL) is more than 253 (Special) or 254 (Classic).
+               //
+               too_many_dependencies,
+               //
+               // (cannot_enable_esl_support)
+               // The current load order would not be possible if ESL support were enabled. This 
+               // would typically happen if the number of loaded non-ESL files (besides the active 
+               // file) is high enough to overflow into the 0xFE load order slot.
+               //
+               cannot_enable_esl_support,
+               //
+               // (cannot_disable_esl_support)
+               // The current load order would not be possible if ESL support were disabled. This 
+               // would typically happen if the load order contains any ESL files (besides the active 
+               // file).
+               //
+               cannot_disable_esl_support,
             };
          };
          using error_code_t = std::underlying_type_t<error_code::type>;
