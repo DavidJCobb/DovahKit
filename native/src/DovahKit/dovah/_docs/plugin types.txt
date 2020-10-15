@@ -1,0 +1,54 @@
+
+Skyrim's game data is defined in what are commonly called "plug-in" files. Such 
+files can come in three basic types, which are not (all) mutually exclusive.
+
+"Masters" are used by Bethesda for  finished works suitable for public release; 
+compare to "master recordings" in audio. In practice, the Creation Kit that was 
+shipped to the public does  not allow the editing  or saving of masters, so the 
+modding community has generally avoided saving files as masters unless doing so 
+was necessary for the file to function properly in-game.
+
+"Plug-ins" appear to  be intended as  work-in-progress files,  but because they 
+have long been  the only files that  the Creation Kit could edit  or save, they 
+are the de-facto standard for virtually all mods.  This is not purely semantic; 
+the game does treat  masters and  plug-ins differently,  with the  most notable 
+such difference being that ObjectReferences (REFRs and similar)  defined inside 
+of a plug-in are permanently persistent  regardless of whether they are flagged 
+or encoded as such within the file.  (This is believed to have been intended as 
+a debugging aid, but in practice, it means that plug-ins contribute more to the 
+ref handle limit than they need to; especially large mods must be masters.)  In 
+addition, the Creation Kit doesn't allow files to use plug-ins as dependencies, 
+though the game engine itself does not enforce any such limitation.
+
+"Light" files were introduced with Skyrim Special Edition, and exist as a means 
+of cramming a larger amount  of content into a  smaller load order. Light files 
+share the  0xFE load order  slot at run-time,  with the next  three hexadecimal 
+digits indicating  which light file a  form originates  from. Both masters  and 
+plug-ins can be light.
+
+A file's type is indicated by both its file extension and the flags in its file 
+header, with the choice of extension overriding any flags:
+
+ - *.ESM files are always masters (Elder Scrolls Master).
+ - *.ESL files are always light masters (Elder Scrolls Light).
+ - *.ESP files' types depend on the file header flags.
+
+In various places the term "master" is also used as a synonym for "dependency," 
+with a file's contained list of dependencies being called its "master list." In 
+these contexts,  there is no  antonym to "master,"  just as there  is no direct
+antonym to "dependency."
+
+
+===  Miscellaneous information on light files =================================
+
+Light files' "shared load order slot"  behavior isn't actually supported within 
+the file format itself, or within the Creation Kit. Within a file, form IDs are 
+always encoded  as if neither  the file nor its  dependencies are  light. As an 
+example, a light file with two non-light  dependencies and one light dependency 
+would use load order prefix 03 for its forms, with its light master having load 
+order prefix 02.  The Creation Kit  treats form  IDs the same way,  most likely 
+because doing so is much easier.
+
+DovahKit will load light files' forms into the 0xFE slot at run-time in mimicry 
+of the actual game.  DovahKit is not alone in this regard; xEdit does the same.
+

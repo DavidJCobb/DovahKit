@@ -95,18 +95,6 @@
 //                files prior to it such that the active file would encode its own forms 
 //                as 0xFF when saved. This should be enforced regardless of game.
 //
-//           - The subrecord writer class needs to perform fixup when writing form IDs. 
-//             This means that the (file_load_order) class needs a function that can take 
-//             a "global" form ID and convert it to a form ID "local" to the active file 
-//             (i.e. light form IDs need to be normalized for save).
-//
-//           - Saving needs to fail if the total number of files, including the active 
-//             file, exceeds 0xFE, such that the active file would use prefix 0xFF.
-//
-//           - Saving an ESL needs to fail if any active file forms lie past the max form 
-//             ID for ESLs. If we're trying to convert a non-ESL active file to ESL, then 
-//             this needs to be checked before that conversion.
-//
 //           - Saving an ESL should warn if the active file would have any CELL records, 
 //             whether they be new forms or overrides. Reportedly, CELLs in ESLs have 
 //             issues, though I don't know the source or the specific problems offhand.
@@ -118,48 +106,12 @@
 //                edits a CELL that originates from another ESL. We'll probably want to 
 //                only warn when saving an ESL that overrides another ESL's cells.
 //
-//           - When converting the active file to or from an ESL, we need to perform a 
-//             mass form renumbering.
+//        - Converting to Skyrim Classic should warn if the active file contains any 
+//          form types that don't exist in Skyrim Special.
 //
-//              - We need to be able to check that all renumber operations will succeed 
-//                before performing any of them.
-//
-//              - The mass renumbering should only occur if saving succeeds. Do it after 
-//                updating the in-memory active file master list.
-//
-//              - DovahKitCore should check for an imminent change in flags and if one 
-//                will occur, should emit "onMassFormRenumberImminent" and "...Complete" 
-//                signals before and after the save operation.
-//
-//        - Implement letting the user choose what game to save for, so that they can 
-//          convert files across games. Currently, save_window.cpp line 117 always gets 
-//          the install path for Skyrim Classic.
-//
-//           - The default selection should be based on what we loaded for.
-//
-//           - Converting to Skyrim Classic should fail if any of the active file's 
-//             masters are ESLs.
-//
-//           - Converting to Skyrim Classic should warn if the active file contains any 
-//             form types that don't exist in Skyrim Special.
-//
-//              - Ideally we'd warn if ANY data would be lost, but then we'd have to 
-//                make it possible to interrupt the save process, because we can really 
-//                only check that as we write individual forms.
-//
-//     = Within an ESL file, forms defined by the ESL file do not use the 0xFE prefix. 
-//       If an ESL has four masters (such that the last of them is prefixed 0x03), then 
-//       the ESL's own forms will use prefix 0x04. (xEdit will display the prefix as 
-//       0xFE; you must hex-edit the file to see the true prefix.)
-//
-//        = When the Creation Kit loads ESL files, it does not place them in slot 0xFE, 
-//          but rather gives them the same load order prefix as a non-ESL. This occurs 
-//          whether loading a single ESL or multiple.
-//
-//     = A file can have ESLs as masters, and will number them the same as non-ESL 
-//       masters. If a file has one non-light master and one light master, then forms 
-//       from the light master will use load order prefix 0x01, and can be referenced 
-//       and overridden. An additional light master would use prefix 0x02.
+//           - Ideally we'd warn if ANY data would be lost, but then we'd have to make 
+//             it possible to interrupt the save process, because we can really only 
+//             check that as we write individual forms.
 //
 //  - Code for deleting forms.
 //
