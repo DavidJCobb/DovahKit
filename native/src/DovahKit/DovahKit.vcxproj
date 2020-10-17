@@ -486,6 +486,7 @@
   <ItemGroup>
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\list of SSE CK warnings (non-exhaustive).txt" />
+    <Text Include="dovah\_docs\plugin types.txt" />
     <Text Include="dovah\_docs\reading files.txt" />
     <Text Include="dovah\_docs\threading.txt" />
   </ItemGroup>

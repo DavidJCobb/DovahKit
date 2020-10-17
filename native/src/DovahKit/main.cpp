@@ -44,9 +44,6 @@
 //     - If the user converts a file across games, and the existing file's name also 
 //       exists for the target game, then we should prompt to overwrite as well.
 //
-//        - Really, we should make it possible for the user to save an existing file 
-//          with a new name (i.e. save-as).
-//
 //  - Localized string support
 //
 //     - The UI needs to physically prevent the user from entering glyphs that are not 
@@ -74,6 +71,115 @@
 //       and load all of the same things. Implement them the same way we implemented 
 //       ACHR.
 //
+//  - Clean up the save process.
+//
+//     - The (file_load_order) class should not have a bool member which indicates 
+//       that ESL support is enabled; rather, it should have an enum indicating which 
+//       game the current load order is for, and ESL support should be a property 
+//       deducible from that game. We don't really need to change anything else here; 
+//       toggling whether ESL support is enabled basically is the exact same operation 
+//       as toggling what game we're processing for.
+//
+//        - Let's define a game enum in core.h.
+//
+//        - This will also simplify, somewhat, the process by which the frontend 
+//          keeps track of what game it's currently operating on.
+//
+//        - In general, the entire save process needs to be reoriented around saving 
+//          content for X game or Y game. It should still be possible for a frontend 
+//          to specify individual options (e.g. form version) if it wants to, but the 
+//          default -- the path of least resistance -- should be to just pick a game 
+//          and then have all sensible configuration for that game set up automatically.
+//
+//           - This also means that the "write_config" struct used for saving needs to 
+//             be made mandatory.
+//
+//     - If the user is converting the active file between games, and the active file 
+//       contains any forms or overrides whose types don't exist in the target game, 
+//       then DovahKit should show an additional confirmation prompt warning of this 
+//       before saving.
+//
+//        - This, and all other warnings encountered during a save operation, should 
+//          be listed in a log window and written to a log file.
+//
+//        - The warning should show a full list of affected forms, with access to 
+//          their use info. In turn, the log file should list all users of these 
+//          forms as well, and it should specify that those users may log their own 
+//          errors.
+//
+//     - If the user is converting the active file between games, then the code for 
+//       serializing a (form_reference_t) needs to check the form type of the form 
+//       stub being referenced. If the referenced stub is of a type that doesn't 
+//       exist in the target game, then we need to write form ID 0 instead.
+//
+//        - Consider the case of a VOLI form referenced by a FormList, in a file that 
+//          we are converting from Skyrim Special to Skyrim Classic. We're not going 
+//          to be serializing the VOLI itself, so we shouldn't leave a dangling form 
+//          ID in the FormList. Serializing none isn't ideal (it might be better to 
+//          skip the entire entirely) but it is technically valid and it's the easiest 
+//          thing to implement.
+//
+//        - Don't bother implementing an automatic warning for this. The warning for 
+//          the referenced forms themselves (i.e. the warning that they'll be deleted) 
+//          oughta be enough.
+//
+//     - If the user is converting the active file between games, and the active file 
+//       contains any forms or overrides whose types don't exist in the target game, 
+//       then those forms' stubs need to be deleted from memory after a successful 
+//       save operation. This will also entail severing references to them -- pretty 
+//       much the same as if a user voluntarily deletes a form.
+//
+//        - The warning shown to the user needs to make it clear that we will not 
+//          only skip these forms during saving, but also remove them from memory 
+//          if the save operation completes successfully.
+//
+//        - Let's think in more general terms: any form_stub that wasn't serialized 
+//          to the file (i.e. has no fixup data in the file_writer after a successful 
+//          save) needs to be deleted.
+//
+//        = This needs to happen because after a successful save operation, we swap 
+//          out the active file -- so, form data is unloaded (unless something else 
+//          was already using it) and will be loaded from the newly-saved file next 
+//          time it's requested. This means that forms that are not saved to the 
+//          file can no longer be loaded for further editing.
+//
+//     - If the user is converting the active file between games, and a loaded form 
+//       contains data that cannot be serialized in the target game, then it needs 
+//       some way to report a warning. Form::save and Form::_save_impl should receive 
+//       a second argument: a file_save_process& that can be used to log warnings. 
+//       (The name is generic so that we can give it other duties in the future if we 
+//       need to.) It would be perfectly acceptable for this to just be a wrapper or 
+//       interface to file_writer.
+//
+//        - I don't want the backend to have to localize its error strings, but any 
+//          strings that need to be shown to the user need to be localizable. Let's 
+//          implement a WinAPI-style error code enum. I want this to also cover 
+//          warnings, so we'll call it a "notice code." We'll define it in two parts:
+//
+//           - We'll use (using notice_code_t = uint32_t) in a common header, and all 
+//             functions that send or receive notice codes will use that type.
+//
+//           - The actual (notice_code) enum will be a scoped enum defined in another 
+//             file, which uses (notice_code_t) as its underlying type. This file will 
+//             only be included directly in places that are returning specific values 
+//             or checking for specific values.
+//
+//           - Let's use the high bit of the notice code to differentiate warnings 
+//             from errors.
+//
+//          Doing things this way means that we can add new notice codes without 
+//          having to recompile *quite* everything within ten square miles of the 
+//          notice code type.
+//
+//        - What we want, then, is for forms to be able to log warnings; each warning 
+//          should be a struct with a notice code and some optional generic details 
+//          about the warning (e.g. other form IDs, etc.).
+//
+//           - Form IDs in this struct should be listed in both "global" and "remapped" 
+//             format, i.e. the IDs as they exist in memory and the IDs as they would 
+//             exist in the saved file. In fact, let's take that approach for all of 
+//             the warnings we log, yeah?
+//
 //  - Support for Skyrim Special Edition.
 //
 //     = CURRENT GAME PLAN:
@@ -88,7 +194,7 @@
 //                we break into slot 0xFF.
 //
 //              - Skyrim Special loads should always fail if we have 254 non-light files 
-//                i.e. if they break into slot 0xFE, or if we have 4096 light files i.e. 
+//                i.e. if they break into slot 0xFE, or if we have 4097+ light files i.e. 
 //                if they exceed the light slot range.
 //
 //              - Loads should always fail if there is an active file and more than 254 
@@ -105,13 +211,6 @@
 //                0xFE000xxx, and per Parapets there is some issue that occurs if an ESL 
 //                edits a CELL that originates from another ESL. We'll probably want to 
 //                only warn when saving an ESL that overrides another ESL's cells.
-//
-//        - Converting to Skyrim Classic should warn if the active file contains any 
-//          form types that don't exist in Skyrim Special.
-//
-//           - Ideally we'd warn if ANY data would be lost, but then we'd have to make 
-//             it possible to interrupt the save process, because we can really only 
-//             check that as we write individual forms.
 //
 //  - Code for deleting forms.
 //
