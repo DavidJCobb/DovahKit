@@ -44,33 +44,6 @@
 //     - If the user converts a file across games, and the existing file's name also 
 //       exists for the target game, then we should prompt to overwrite as well.
 //
-//  - Localized string support
-//
-//     - The UI needs to physically prevent the user from entering glyphs that are not 
-//       available in the current language. Alternatively, textboxes with bad glyphs 
-//       should be given a red outline, and the "OK" button should be greyed out.
-//
-//        - If the user clicks inside such a textbox, a speech bubble should appear 
-//          listing the bad glyphs. ("You are editing a [LANGUAGE] file. The following 
-//          symbols are not available in [LANGUAGE]: a L 7 Q v")
-//
-//        - I've written QTextEncodingValidator, but it may not be entirely sufficient 
-//          for this. Or maybe it may. Hm.
-//
-//     - We should create a custom promoted widget for editing localized strings, so 
-//       that if we implement STRINGS file editing in the future, we can add a "..." 
-//       button that the user can click to edit localized string content.
-//
-//  - There is no UI path to view or edit use info or data for worldspaces.
-//
-//  - Support for REFR
-//
-//     - Test resaving REFR.
-//
-//     - All of the placed projectile records are just direct subclasses of REFR 
-//       and load all of the same things. Implement them the same way we implemented 
-//       ACHR.
-//
 //  - Clean up the save process.
 //
 //     - The (file_load_order) class should not have a bool member which indicates 
@@ -180,37 +153,62 @@
 //             exist in the saved file. In fact, let's take that approach for all of 
 //             the warnings we log, yeah?
 //
-//  - Support for Skyrim Special Edition.
+//  - Finalize for Skyrim Special Edition.
 //
-//     = CURRENT GAME PLAN:
+//     - Implement ESL support.
 //
-//        - Implement ESL support.
+//        - The max file count is enforced in (file_load_order_normalizer). We need 
+//          to move the check to (file_load_order), and only enforce it if an active 
+//          file is set.
 //
-//           - The max file count is enforced in (file_load_order_normalizer). We need 
-//             to move the check to (file_load_order), and only enforce it if an active 
-//             file is set.
+//           - Skyrim Classic loads should always fail if we have 255 files i.e. if 
+//             we break into slot 0xFF.
 //
-//              - Skyrim Classic loads should always fail if we have 255 files i.e. if 
-//                we break into slot 0xFF.
+//           - Skyrim Special loads should always fail if we have 254 non-light files 
+//             i.e. if they break into slot 0xFE, or if we have 4097+ light files i.e. 
+//             if they exceed the light slot range.
 //
-//              - Skyrim Special loads should always fail if we have 254 non-light files 
-//                i.e. if they break into slot 0xFE, or if we have 4097+ light files i.e. 
-//                if they exceed the light slot range.
+//           - Loads should always fail if there is an active file and more than 254 
+//             files prior to it such that the active file would encode its own forms 
+//             as 0xFF when saved. This should be enforced regardless of game.
 //
-//              - Loads should always fail if there is an active file and more than 254 
-//                files prior to it such that the active file would encode its own forms 
-//                as 0xFF when saved. This should be enforced regardless of game.
+//        - Saving an ESL should warn if the active file would have any CELL records, 
+//          whether they be new forms or overrides. Reportedly, CELLs in ESLs have 
+//          issues, though I don't know the source or the specific problems offhand.
 //
-//           - Saving an ESL should warn if the active file would have any CELL records, 
-//             whether they be new forms or overrides. Reportedly, CELLs in ESLs have 
-//             issues, though I don't know the source or the specific problems offhand.
+//           - GamerPoets here <https://youtu.be/g_urrHrGQOY?t=299> recommends against 
+//             ESL-flagging files that have interior cells, but gives no explanation 
+//             as to why. Per aers, CELLs in ESLs are always loaded as if they're in 
+//             0xFE000xxx, and per Parapets there is some issue that occurs if an ESL 
+//             edits a CELL that originates from another ESL. We'll probably want to 
+//             only warn when saving an ESL that overrides another ESL's cells.
 //
-//              - GamerPoets here <https://youtu.be/g_urrHrGQOY?t=299> recommends against 
-//                ESL-flagging files that have interior cells, but gives no explanation 
-//                as to why. Per aers, CELLs in ESLs are always loaded as if they're in 
-//                0xFE000xxx, and per Parapets there is some issue that occurs if an ESL 
-//                edits a CELL that originates from another ESL. We'll probably want to 
-//                only warn when saving an ESL that overrides another ESL's cells.
+//  - Localized string support
+//
+//     - The UI needs to physically prevent the user from entering glyphs that are not 
+//       available in the current language. Alternatively, textboxes with bad glyphs 
+//       should be given a red outline, and the "OK" button should be greyed out.
+//
+//        - If the user clicks inside such a textbox, a speech bubble should appear 
+//          listing the bad glyphs. ("You are editing a [LANGUAGE] file. The following 
+//          symbols are not available in [LANGUAGE]: a L 7 Q v")
+//
+//        - I've written QTextEncodingValidator, but it may not be entirely sufficient 
+//          for this. Or maybe it may. Hm.
+//
+//     - We should create a custom promoted widget for editing localized strings, so 
+//       that if we implement STRINGS file editing in the future, we can add a "..." 
+//       button that the user can click to edit localized string content.
+//
+//  - There is no UI path to view or edit use info or data for worldspaces.
+//
+//  - Support for REFR
+//
+//     - Test resaving REFR.
+//
+//     - All of the placed projectile records are just direct subclasses of REFR 
+//       and load all of the same things. Implement them the same way we implemented 
+//       ACHR.
 //
 //  - Code for deleting forms.
 //
@@ -266,21 +264,6 @@
 //       of before. For now, let's just try to stay alert for this.
 //
 // UPCOMING TASKS:
-//
-//  - Code to save the current active file.
-//
-//     - File-save dialog
-//
-//        - Allow the user to select which game (Classic/Special) to save for.
-//
-//           - If they save for a different game than they loaded for, then where 
-//             should we put the new file?
-//
-//           - If they save for a different game than they loaded for, then editing 
-//             can't continue unless we support mixed Classic/Special load orders.
-//
-//              - We'd only have to treat the active file as an exception, rather 
-//                than "fully" supporting mixed-game load orders.
 //
 //  - Add a "Windows" menu to the main window. It should list all open windows and 
 //    allow the user to bring them to the front.
@@ -342,27 +325,6 @@
 //
 //     - We need to support ESLs.
 //
-//  - Localized string editing support
-//
-//     - If we wanted to implement STRINGS file editing in the future, that would entail 
-//       creating a localized_string_store for the active file if one does not exist, and 
-//       writing code to export localized strings into multiple files.
-//
-//        - This could help in the case of overriding forms from files that also use 
-//          localized strings, e.g. overriding Skyrim.esm forms, but only if the user 
-//          has *all* STRINGS files for those TES files on hand. If the user is missing 
-//          the file for that particular language, then we'd still generate a placeholder 
-//          string for that language. A user could purposely avoid language mishaps with 
-//          overrides of base-game content if they're careful to grab the STRINGS files 
-//          for all languages. Whether that's easy to do, and whether Bethesda would 
-//          allow users to circulate that content among themselves otherwise, is unclear.
-//
-//        - The downside to this approach is that Skyrim does not use internationalized 
-//          fonts. Each localization only ships the glyphs that its language needs. This 
-//          means that while TES files might show mojibake for unsupported languages, 
-//          I'm pretty sure that STRINGS files would show nothing at all, which may or 
-//          may not be worse.
-//
 //  - Miscellaneous technicalities
 //
 //     - When saving WRLD/CELL/REFR, if the REFR is persistent, then it should be saved 
@@ -416,50 +378,33 @@
 //
 //  - Lua scripting
 //
+//     = DEVELOPMENT ROADMAP
+//
+//        - PHASE 1: BASIC ENVIRONMENT
+//          Lua scripts should run in a separate thread and should exchange messages 
+//          with the main thread. The script thread may be made to wait on an operation 
+//          occurring in the main thread, but the main thread should never wait on the 
+//          script thread. The user should be presented with a modal window that acts 
+//          as the root UI for scripts; this should include a button to forcibly kill 
+//          the script early.
+//
+//        - PHASE 2: FORM ACCESS
+//          Lua scripts need to be able to refer not only to forms, but to individual 
+//          parts of forms. Scripts should not use form IDs as the sole identifier of a 
+//          form, as a form ID could be reused if a form is deleted and then a new form 
+//          is created (or an existing form is renumbered). Additionally, variables that 
+//          point to parts of a form (e.g. a particular property on a particular script 
+//          attached to a particular form) need to be properly managed.
+//
+//        - PHASE 3: UI ACCESS
+//          Lua scripts should be able to spawn windows and widgets, and should be able 
+//          to manipulate them and respond to important events by way of Qt signals and 
+//          slots. The Lua VM should not be killed until after the script has run to 
+//          completion and all script-spawned windows (that have been shown) have closed.
+//
 //     - The Lua VM should be started up when the script begins, and should be killed 
 //       after the script has run to completion and all script-spawned windows (if any) 
 //       have closed.
-//
-//     - Scripts should be able to spawn UI windows and widgets, and to register Lua 
-//       functions to run in response to Qt signals on these widgets.
-//
-//        - There should be a cap on how many windows a script can spawn.
-//
-//        - There should be a cap on how quickly a script can spawn windows.
-//
-//        - All script windows should have a modeless relationship with DovahKit, so 
-//          that scripts cannot block access to the editor UI.
-//
-//        - We'll probably want to provide generic table, list, and tree views to Lua.
-//
-//        = Lua-spawned windows must exist on the main thread (QWidgets can only 
-//          function there), which means that in order to allow Lua to influence and 
-//          be influenced by the UI, we must pass messages across threads. This, of 
-//          course, introduces the issue of concurrency -- of what to do with a signal 
-//          that Qt emits while Lua is already processing another signal.
-//
-//          The only reliable way to prevent these sorts of issues is to just straight-
-//          up disable all script-spawned windows while processing a Lua event (and if 
-//          we don't want them showing the disabled graphics, then we can disable their 
-//          repaints via QWidget::setUpdatesEnabled as well). That means that we'll 
-//          need to be very selective about what signals we make available to Lua; 
-//          specifically, we can only allow Lua to respond to an event if disabling the 
-//          UI during that response would not interrupt the user. As an example, Lua 
-//          cannot respond to each individual keypress in a QLineEdit (as would happen 
-//          with the built-in QLineEdit::textEdited signal), but rather must be given a 
-//          custom "change" event that fires when the widget loses focus after having 
-//          been edited (compare to JS "onchange").
-//
-//     - Scripts should be able to include Greasemonkey-style comments at the top of 
-//       the file as a way of specifying extended configuration options. Options that 
-//       we could support can include:
-//
-//        - [[readonly]]: The script will not be allowed to modify any loaded forms. 
-//          This will affect the editor's messaging surrounding the script; for example, 
-//          the user will not need to be warned about terminating the script early, 
-//          because doing so cannot leave the active file in an inconsistent state 
-//          (since the script isn't doing anything). This attribute is advised for 
-//          scripts that are just examining, searching, or otherwise analyzing data.
 //
 //     - Scripts should run in a second thread, and the user should have the option to 
 //       forcibly terminate the script early, as a way of dealing with scripts that 
@@ -506,6 +451,48 @@
 //        - If we really want to go the extra mile, we can have a log panel that 
 //          shows *every* call into any of the script APIs that we provide.
 //
+//     - Lua variables cannot be allowed to point directly to form_stubs or to data in 
+//       loaded forms, as we can't (easily) update all Lua variables as form data is 
+//       modified. Instead, the script singleton should retain a map of "handles" to 
+//       form information, and Lua variables should hold handles.
+//
+//       Handles should NOT include a form's ID, because forms can be renumbered, and 
+//       because two different forms could have the same ID if they exist at separate 
+//       points in time. Form IDs (as well as form_stub pointers) should only be kept 
+//       in the form information that a handle maps to.
+//
+//        - The backend doesn't allow you to delete a form_stub if its form is loaded, 
+//          so the script singleton will need to abandon all loaded_form_ptrs before 
+//          deleting a form.
+//
+//        - It also needs to be possible for a Lua variable to refer to an individual 
+//          part of a form, such as a Papyrus property or a quest alias. This, too, 
+//          needs to rely on handles rather than absolute indices or alias IDs, for 
+//          similar reasons to form IDs. (This is along with the added complication 
+//          that Papyrus properties are sequential. If variable `foo` refers to the 
+//          zeroth Papyrus property and `bar` refers to the first, and a separate 
+//          piece of code deletes the zeroth Papyrus property, then the property that 
+//          `foo` referred to will cease to exist and the property that `bar` referred 
+//          to will become the zeroth property. In this situation, `foo` needs to test 
+//          as referring to nothing, and `bar` needs to test as still referring to the 
+//          formerly-first, now-zeroth property.)
+//
+//           - This needs to be designed in a generic way, so that individual form 
+//             classes have executive authority over their parts. I don't want to have 
+//             to hardcode every form part (words in a shout, aliases or stages in a 
+//             quest, attack data entries in a race, and so on) into the script core.
+//
+//     - Scripts should be able to include Greasemonkey-style comments at the top of 
+//       the file as a way of specifying extended configuration options. Options that 
+//       we could support can include:
+//
+//        - [[readonly]]: The script will not be allowed to modify any loaded forms. 
+//          This will affect the editor's messaging surrounding the script; for example, 
+//          the user will not need to be warned about terminating the script early, 
+//          because doing so cannot leave the active file in an inconsistent state 
+//          (since the script isn't doing anything). This attribute is advised for 
+//          scripts that are just examining, searching, or otherwise analyzing data.
+//
 //     - Since we don't reveal every single form through a unified interface as xEdit 
 //       does, it will need to be possible for scripts to define forms (as in sheets 
 //       of values, not as in game data) that the user can fill out to provide values 
@@ -515,23 +502,42 @@
 //       arguments" could work better but would require us to account for every 
 //       possible case. Bad trade-off either way, it looks like.
 //
-//  - Support for loading the contents of localized strings.
+//     - Scripts should be able to spawn UI windows and widgets, and to register Lua 
+//       functions to run in response to Qt signals on these widgets.
 //
-//     - BLOCKED by BSA loading: Skyrim stores its localized string files inside of 
-//       Interface.bsa. We have a rough-draft class for localized_string_file and 
-//       commented-out integration in file_reader, but that rough-draft class needs 
-//       to be revised to store the localized string data persistently (since we 
-//       can't just rely on a mapped_file anymore).
+//        - There should be a cap on how many windows a script can spawn.
 //
-//     - We should not allow you to set something as the active file if it uses 
-//       a localized string file, since we don't have the means to edit those yet. 
-//       However, we should still be able to load localized strings just so that you 
-//       can create overrides of forms that contain localized strings, and so you can 
-//       see those strings in the editor.
+//        - There should be a cap on how quickly a script can spawn windows.
+//
+//        - All script windows should have a modeless relationship with DovahKit, so 
+//          that scripts cannot block access to the editor UI.
+//
+//        - We'll probably want to provide generic table, list, and tree views to Lua.
+//
+//        = Lua-spawned windows must exist on the main thread (QWidgets can only 
+//          function there), which means that in order to allow Lua to influence and 
+//          be influenced by the UI, we must pass messages across threads. This, of 
+//          course, introduces the issue of concurrency -- of what to do with a signal 
+//          that Qt emits while Lua is already processing another signal.
+//
+//          The only reliable way to prevent these sorts of issues is to just straight-
+//          up disable all script-spawned windows while processing a Lua event (and if 
+//          we don't want them showing the disabled graphics, then we can disable their 
+//          repaints via QWidget::setUpdatesEnabled as well). That means that we'll 
+//          need to be very selective about what signals we make available to Lua; 
+//          specifically, we can only allow Lua to respond to an event if disabling the 
+//          UI during that response would not interrupt the user. As an example, Lua 
+//          cannot respond to each individual keypress in a QLineEdit (as would happen 
+//          with the built-in QLineEdit::textEdited signal), but rather must be given a 
+//          custom "change" event that fires when the widget loses focus after having 
+//          been edited (compare to JS "onchange").
 //
 //  - If the user has any unsaved changes, the main window should show a confirmation 
 //    prompt on exit. We already override MainWindow::closeEvent; we'll want to do what 
 //    we need to do in there.
+//
+//     - Checking for unsaved changes is easy: just see if any active file forms are 
+//       flagged as edited.
 //
 //  - The (activate_ref) extra-data object has unknown fields, which are likely to 
 //    include at least one form ID.
@@ -612,11 +618,6 @@
 //
 // HORIZON TASKS:
 //
-//  - Ability to convert files bidirectionally between Skyrim Special and Skyrim Classic.
-//
-//     - Requires being able to warn the user about data loss in cases where fields 
-//       don't exist in the target version.
-//
 //  - Mod merging could be useful, particularly if we write a co-save file that describes 
 //    the mapping of forms from the source files to the destination file (so that later 
 //    re-merges produce consistent results).
@@ -626,6 +627,27 @@
 //       xEdit's "copy as new record into" function, though they acknowledge that this 
 //       is suboptimal in that it doesn't allow you to merge in updates to the source 
 //       files after the fact; it's a one-time thing only.
+//
+//  - Localized string editing support
+//
+//     - If we wanted to implement STRINGS file editing in the future, that would entail 
+//       creating a localized_string_store for the active file if one does not exist, and 
+//       writing code to export localized strings into multiple files.
+//
+//        - This could help in the case of overriding forms from files that also use 
+//          localized strings, e.g. overriding Skyrim.esm forms, but only if the user 
+//          has *all* STRINGS files for those TES files on hand. If the user is missing 
+//          the file for that particular language, then we'd still generate a placeholder 
+//          string for that language. A user could purposely avoid language mishaps with 
+//          overrides of base-game content if they're careful to grab the STRINGS files 
+//          for all languages. Whether that's easy to do, and whether Bethesda would 
+//          allow users to circulate that content among themselves otherwise, is unclear.
+//
+//        - The downside to this approach is that Skyrim does not use internationalized 
+//          fonts. Each localization only ships the glyphs that its language needs. This 
+//          means that while TES files might show mojibake for unsupported languages, 
+//          I'm pretty sure that STRINGS files would show nothing at all, which may or 
+//          may not be worse.
 //
 // FINALIZING TASKS:
 //
