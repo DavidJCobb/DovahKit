@@ -104,22 +104,57 @@ namespace dovah {
          }
       }
       //
-      // And now that we know all of (header)'s masters are in the load order, add (header) itself.
+      // We now know for sure that all of (header)'s masters are in the load order. Let's wrap this 
+      // up.
+      //
+      this->seen.erase(header->name);
+      //
+      if (!this->active_file.empty() && this->size() > 255) {
+         error.code    = file_read_error::error_code::too_many_files;
+         error.file    = name;
+         error.message = "If an active file is selected, then the load order cannot contain more than 255 files (even if some of them are ESLs). When the active file is saved, all loaded files will be encoded as its masters, and the file format doesn't actually support ESL functionality when encoding form IDs, so loading this many files would cause form IDs in the active file to overflow into the 0xFF slot after saving.";
+      }
+      if (!game_supports_light_plugins(this->target_game)) {
+         if (this->size() > 254) {
+            error.code    = file_read_error::error_code::too_many_files;
+            error.file    = name;
+            error.message = "The load order is too long.";
+         }
+      } else {
+         int16_t light_count = -1;
+         int16_t heavy_count = -1;
+         for (auto& header : this->masters) {
+            if (header->is_light())
+               ++light_count;
+            else
+               ++heavy_count;
+         }
+         for (auto& header : this->plugins) {
+            if (header->is_light())
+               ++light_count;
+            else
+               ++heavy_count;
+         }
+         if (light_count > 4096) {
+            error.code    = file_read_error::error_code::too_many_files;
+            error.file    = name;
+            error.message = "The load order contains too many light files.";
+         }
+         if (heavy_count > 255) {
+            error.code    = file_read_error::error_code::too_many_files;
+            error.file    = name;
+            error.message = "The load order contains too many non-light files.";
+         }
+      }
+      if (error.code != file_read_error::error_code::none) {
+         delete header;
+         return false;
+      }
       //
       if (must_be_master)
          this->masters.push_back(header);
       else
          this->plugins.push_back(header);
-      this->seen.erase(header->name);
-      //
-      if (this->size() > 254) {
-         error.code    = file_read_error::error_code::too_many_files;
-         error.file    = name;
-         error.message = "The load order is too long.";
-         this->seen.erase(header->name);
-         delete header;
-         return false;
-      }
       return true;
    }
    bool file_load_order_normalizer::contains(const std::string& name) const noexcept {

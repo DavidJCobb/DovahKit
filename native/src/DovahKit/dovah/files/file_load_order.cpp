@@ -166,6 +166,7 @@ namespace dovah {
       //
       this->normalizer.base_path   = this->base_path;
       this->normalizer.active_file = this->queued_load.active_file;
+      this->normalizer.target_game = this->current_game;
       for (auto it = this->queued_load.files.begin(); it != this->queued_load.files.end(); ++it) {
          if (!this->normalizer.add(this->load_error, *it))
             return false;

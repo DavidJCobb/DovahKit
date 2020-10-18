@@ -18,6 +18,11 @@ class LoadOrderOpenDialog : public QDialog {
       bool   _loading = false;
       QTimer _load_poller;
 
+      struct {
+         QAction* check   = nullptr;
+         QAction* uncheck = nullptr;
+      } file_list_actions;
+
       void blockUI();
       void commit(); // load the selected files. this is async; listen for DovahKitCore's dataAcquireComplete and dataAcquireFailed
 };

@@ -2,6 +2,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "../core.h"
 #include "file_read_error.h"
 
 namespace dovah {
@@ -35,6 +36,7 @@ namespace dovah {
          std::vector<file_header_reader*> plugins;
          std::string base_path;
          std::string active_file;
+         game        target_game = game::skyrim_special;
          //
          bool has_master(const std::string& filename) const;
          bool has_plugin(const std::string& filename) const;

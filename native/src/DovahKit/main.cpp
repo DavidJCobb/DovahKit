@@ -54,6 +54,13 @@
 //        - The confirmation prompt should be a custom window that lists each of the 
 //          relevant forms, along with access to their use info.
 //
+//           - IIRC the save window is modal, in part to prevent the user from making 
+//             further edits during saving, so if we do this, then we need to make it 
+//             possible to configure the use info dialog so that it doesn't allow the 
+//             user to actually access/edit the listed forms. We'll want to block off 
+//             that access when the use info dialog is opened from this particular  
+//             confirmation prompt.
+//
 //        - If the user proceeds with the save operation, then the full warning 
 //          should be written to a log window and to a log file. The log file should 
 //          also list all users of these forms, and it should specify that those 
@@ -66,26 +73,6 @@
 //       (The name is generic so that we can give it other duties in the future if we 
 //       need to.) It would be perfectly acceptable for this to just be a wrapper or 
 //       interface to file_writer.
-//
-//        - I don't want the backend to have to localize its error strings, but any 
-//          strings that need to be shown to the user need to be localizable. Let's 
-//          implement a WinAPI-style error code enum. I want this to also cover 
-//          warnings, so we'll call it a "notice code." We'll define it in two parts:
-//
-//           - We'll use (using notice_code_t = uint32_t) in a common header, and all 
-//             functions that send or receive notice codes will use that type.
-//
-//           - The actual (notice_code) enum will be a scoped enum defined in another 
-//             file, which uses (notice_code_t) as its underlying type. This file will 
-//             only be included directly in places that are returning specific values 
-//             or checking for specific values.
-//
-//           - Let's use the high bit of the notice code to differentiate warnings 
-//             from errors.
-//
-//          Doing things this way means that we can add new notice codes without 
-//          having to recompile *quite* everything within ten square miles of the 
-//          notice code type.
 //
 //        - What we want, then, is for forms to be able to log warnings; each warning 
 //          should be a struct with a notice code and some optional generic details 

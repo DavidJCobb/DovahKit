@@ -44,10 +44,10 @@ namespace cobb {
          static constexpr uint32_t count_per_block = count_per_block;
          //
       protected:
-         struct Block;
-         struct BlockInfo {
-            Block*   prev      = nullptr;
-            Block*   next      = nullptr;
+         struct block_t;
+         struct block_info {
+            block_t* prev      = nullptr;
+            block_t* next      = nullptr;
             uint32_t remaining = count_per_block; // optimization for large block sizes
             uint32_t startFrom = 0; // optimization for large block sizes
             cobb::bitset<count_per_block> presence;
@@ -64,13 +64,13 @@ namespace cobb {
                   this->startFrom = index;
             }
          };
-         struct Block {
-            BlockInfo info;
-            uint8_t   buffer[count_per_block * element_size];
+         struct block_t {
+            block_info info;
+            uint8_t    buffer[count_per_block * element_size];
             //
-            ~Block() {
-               auto p = this->info.prev;
-               auto n = this->info.next;
+            inline ~block_t() {
+               auto* p = this->info.prev;
+               auto* n = this->info.next;
                if (p)
                   p->info.next = n;
                if (n)
@@ -85,13 +85,13 @@ namespace cobb {
                auto i = this->info.presence.find_first_clear_from(this->info.startFrom);
                if (i < 0)
                   return nullptr;
-               std::ptrdiff_t start = (std::ptrdiff_t) & this->buffer;
+               std::ptrdiff_t start = (std::ptrdiff_t) &this->buffer;
                std::ptrdiff_t addr  = start + (element_size * i);
                this->info.on_allocate(i);
                return (void*)addr;
             }
             bool  try_free(void* mem) noexcept { // function to be called on the head block only. frees a single element (and if that leaves a non-head block empty, free that entire block)
-               auto block = this;
+               auto* block = this;
                do {
                   std::ptrdiff_t m_addr  = (std::ptrdiff_t)mem;
                   std::ptrdiff_t b_start = (std::ptrdiff_t) & block->buffer;
@@ -116,15 +116,15 @@ namespace cobb {
                return false;
             }
             //
-            Block* get_end() noexcept {
-               auto block = this;
+            inline block_t* get_end() noexcept {
+               auto* block = this;
                while (block->info.next)
                   block = block->info.next;
                return block;
             }
             uint32_t count() const noexcept {
                uint32_t count = 1;
-               auto block = this;
+               auto* block = this;
                while (block->info.next) {
                   block = block->info.next;
                   ++count;
@@ -133,8 +133,8 @@ namespace cobb {
             }
             //
             void prune() noexcept { // removes all empty blocks after this one
-               auto n = this->info.next;
-               for (auto block = n; block; block = n) {
+               auto* n = this->info.next;
+               for (auto* block = n; block; block = n) {
                   n = block->info.next;
                   if (!block->has_any_slots_used())
                      delete block;
@@ -175,63 +175,64 @@ namespace cobb {
             }
             #pragma endregion
          };
-         struct Subheap {
-            Block* first = new Block;
+         struct subheap {
+            block_t* first = new block_t;
             #if _DEBUG
                std::thread::id threadID; // just so you can see the thread that owns this Subheap in a debugger
             #endif
          };
 
          struct State {
-            std::vector<Subheap*> subheaps;
+            std::vector<subheap*> subheaps; // nullptr not allowed
             std::mutex subheapsLock;
-            Block*     unowned     = nullptr;
+            block_t*   unowned     = nullptr;
             std::mutex unownedLock;
             //
-            void register_subheap(Subheap* sub) noexcept {
-               std::lock_guard<std::mutex> guard(this->subheapsLock);
-               for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
-                  Subheap* s = *it;
+            void register_subheap(subheap& sub) noexcept {
+               std::lock_guard guard(this->subheapsLock);
+               for (auto*& s : this->subheaps) {
                   if (!s->first) {
-                     *it = sub;
+                     delete s;
+                     s = &sub;
                      return;
                   }
                }
-               this->subheaps.push_back(sub);
+               this->subheaps.push_back(&sub);
             }
-            void take_over_subheap(Subheap* sub) noexcept {
-               assert(sub->first && "This subheap was already taken over. How did it get here again?");
-               auto block = sub->first;
+            void take_over_subheap(subheap& sub) noexcept {
+               assert(sub.first && "This subheap was already taken over. How did it get here again?");
+               std::lock_guard guard_1(this->subheapsLock);
+               auto* block = sub.first;
                block->prune();
-               if (!sub->first->has_any_slots_used()) {
-                  auto n = block->info.next;
+               if (!block->has_any_slots_used()) {
+                  auto* n = block->info.next;
                   delete block;
-                  sub->first = nullptr;
+                  sub.first = nullptr;
                   block = n;
                   if (!block)
                      return;
                }
-               std::lock_guard<std::mutex> guard(this->unownedLock);
+               std::lock_guard guard_2(this->unownedLock);
                if (!this->unowned) {
                   this->unowned = block;
                } else {
-                  auto appendTo = this->unowned->get_end();
+                  auto* appendTo = this->unowned->get_end();
                   appendTo->info.next = block;
                   block->info.prev = appendTo;
                }
-               sub->first = nullptr;
+               sub.first = nullptr;
             }
             void free(void* mem) noexcept {
                {
-                  std::lock_guard<std::mutex> guard(this->subheapsLock);
-                  for (auto it = this->subheaps.begin(); it != this->subheaps.end(); ++it) {
-                     auto block = (*it)->first;
+                  std::lock_guard guard(this->subheapsLock);
+                  for (auto* s : this->subheaps) {
+                     auto* block = s->first;
                      if (block && block->try_free(mem))
                         return;
                   }
                }
                {
-                  std::lock_guard<std::mutex> guard(this->unownedLock);
+                  std::lock_guard guard(this->unownedLock);
                   if (this->unowned && this->unowned->try_free(mem))
                      return;
                }
@@ -262,43 +263,44 @@ namespace cobb {
             return instance;
          }
 
-         struct SubheapHandle {
-            Subheap* data;
+         struct subheap_handle {
+            subheap* data;
             //
-            SubheapHandle() {
-               this->data = new Subheap;
+            subheap_handle() {
+               this->data = new subheap;
                #if _DEBUG
                   this->data->threadID = std::this_thread::get_id();
                #endif
                auto& state = multiheap::_get_state();
-               state.register_subheap(this->data);
+               state.register_subheap(*this->data);
                //
                // Take the unowned block lists if possible:
                //
                {
-                  std::lock_guard<std::mutex> guard(state.unownedLock);
+                  std::lock_guard guard(state.unownedLock);
                   if (state.unowned) {
+                     assert(state.unowned != this->data->first);
                      delete this->data->first;
                      this->data->first = state.unowned;
                      state.unowned = nullptr;
                   }
                }
             }
-            ~SubheapHandle() {
-               if (this->data) {
-                  #if _DEBUG
-                     this->data->threadID = std::thread::id();
-                  #endif
-                  multiheap::_get_state().take_over_subheap(this->data);
-                  this->data = nullptr; // Don't free (this->data); the heap state owns it.
-               }
+            ~subheap_handle() {
+               if (!this->data)
+                  return;
+               #if _DEBUG
+                //  this->data->threadID = std::thread::id();
+               #endif
+               multiheap::_get_state().take_over_subheap(*this->data);
+               this->data = nullptr; // Don't free (this->data); the heap state owns it.
             }
-            inline Subheap* get() const noexcept { return this->data; }
+            inline subheap* get() const noexcept { return this->data; }
          };
          //
-         inline thread_local static SubheapHandle current_thread;
+         inline thread_local static subheap_handle current_thread;
          //
-         static Subheap* _get_subheap() {
+         static subheap* _get_subheap() {
             return current_thread.get();
          }
          //
@@ -307,8 +309,8 @@ namespace cobb {
             auto t = multiheap::_get_subheap();
             assert(t        && "Failed to get/create subheap?");
             assert(t->first && "The subheap has no block?");
-            Block* block = t->first;
-            Block* last  = block;
+            block_t* block = t->first;
+            block_t* last  = block;
             void* out = block->try_allocate();
             while (!out) {
                block = block->info.next;
@@ -322,7 +324,7 @@ namespace cobb {
                return out;
             if (!block) {
                assert(last && "Couldn't figure out how to create a new block.");
-               auto next = new Block;
+               auto next = new block_t;
                last->info.next = next;
                next->info.prev = last;
                out = next->try_allocate();

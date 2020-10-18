@@ -29,6 +29,44 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(bool is_skyrim_classic, QWidget* parent
    this->_load_poller.setInterval(100); // ms
    QObject::connect(&this->_load_poller, &QTimer::timeout, this, &LoadOrderOpenDialog::loadPoll);
    //
+   #pragma region Context menu for file list
+      this->file_list_actions.check   = new QAction(tr("Check all selected"), this->ui.fileList);
+      this->file_list_actions.uncheck = new QAction(tr("Uncheck all selected"), this->ui.fileList);
+      QObject::connect(this->file_list_actions.check, &QAction::triggered, this, [this]() {
+         auto widget = this->ui.fileList;
+         auto model  = (LoadOrderFileList::model_type*)widget->model();
+         auto select = widget->selectionModel()->selection().indexes();
+         //
+         for (auto& idx : select) {
+            auto* item = (LoadOrderFileList::model_item_type*)idx.internalPointer();
+            model->setSelected(item, true);
+         }
+      });
+      QObject::connect(this->file_list_actions.uncheck, &QAction::triggered, this, [this]() {
+         auto widget = this->ui.fileList;
+         auto model  = (LoadOrderFileList::model_type*)widget->model();
+         auto select = widget->selectionModel()->selection().indexes();
+         //
+         for (auto& idx : select) {
+            auto* item = (LoadOrderFileList::model_item_type*)idx.internalPointer();
+            model->setSelected(item, false);
+         }
+      });
+      this->ui.fileList->setContextMenuPolicy(Qt::CustomContextMenu);
+      QObject::connect(this->ui.fileList, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+         auto widget = this->ui.fileList;
+         auto select = widget->selectionModel()->selection().indexes();
+         if (!select.size())
+            return;
+         //
+         QMenu menu(widget);
+         menu.addAction(this->file_list_actions.check);
+         menu.addAction(this->file_list_actions.uncheck);
+         //
+         menu.exec(widget->mapToGlobal(pos));
+      });
+   #pragma endregion
+   //
    this->ui.dateCreated->setText("");
    this->ui.dateModified->setText("");
    QObject::connect(this->ui.fileList->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
@@ -43,7 +81,8 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(bool is_skyrim_classic, QWidget* parent
       auto active = model->activeFile();
       auto select = widget->selectionModel()->selection().indexes();
       if (select.size() > 0) {
-         auto& idx = select[0];
+         //auto& idx = select[0];
+         const auto  idx  = widget->selectionModel()->currentIndex();
          const auto* item = (LoadOrderFileList::model_item_type*)idx.internalPointer();
          if (item) {
             this->ui.author->setText(item->author);
