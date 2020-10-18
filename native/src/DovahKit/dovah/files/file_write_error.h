@@ -13,24 +13,10 @@
 namespace dovah {
    class file_write_warning {
       public:
-         struct warning_code {
-            warning_code() = delete;
-            enum type {
-               none = 0,
-               //
-               // (save_complete_but_to_temporary_file)
-               // DovahKit was able to save a temporary file, but was unable to swap the old 
-               // active file out.
-               //
-               save_complete_but_to_temporary_file,
-            };
-         };
-         using warning_code_t = std::underlying_type_t<warning_code::type>;
-         //
-         warning_code_t code = warning_code::none;
+         notice_code_t code = 0;
          std::filesystem::path filename;
          //
-         inline bool defined() const noexcept { return this->code != warning_code::none; }
+         inline bool defined() const noexcept { return this->code; }
    };
    class file_write_error {
       public:

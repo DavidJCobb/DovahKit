@@ -82,7 +82,6 @@ namespace dovah {
             inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
             //
             void write_formID_subrecord(uint32_t signature, const form_reference_t&, bool only_if_non_empty = false);
-            void write_formID_subrecord(uint32_t signature, form_id_t);
             void write_string_subrecord(uint32_t signature, const char* s);
             void write_string_subrecord(uint32_t signature, const std::string& s);
       };
@@ -103,7 +102,6 @@ namespace dovah {
             void _fixup_form_id(bare_form_id_t& id) const noexcept;
             void _write_impl(const form_reference_t&);
             void _write_impl(const struct_form_reference_t&);
-            void _write_impl(const form_id_t&);
             void _write_impl(const localized_string&);
             //
          public:
@@ -141,6 +139,7 @@ namespace dovah {
             template<> inline void write(const tes_file_group_header& v) = delete;
             template<> inline void write(const tes_file_record_header& v) = delete;
             template<> inline void write(const tes_file_subrecord_header& v) = delete;
+            template<> inline void write(const form_id_t& v) = delete;
             //
             template<int length_bytes> void write_length_prefixed_string(const std::string& v) {
                using int_t = cobb::bytecount_to_int_t<length_bytes>;

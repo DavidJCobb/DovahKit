@@ -22,6 +22,9 @@ namespace {
       if (stub)
          emit DovahKitCore::get().formCreated(stub);
    }
+   void _on_form_loss(dovah::form_stub& stub) {
+      emit DovahKitCore::get().formDeletionComplete(stub.formID, false);
+   }
    void _on_form_renumber(dovah::form_stub& stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
       emit DovahKitCore::get().formRenumbered(&stub, oldID, newID);
    }
@@ -50,6 +53,7 @@ DovahKitCore::~DovahKitCore() {
 }
 void DovahKitCore::_configure_load_order() {
    this->load_order->on_form_create   = &_on_form_created;
+   this->load_order->on_form_loss     = &_on_form_loss;
    this->load_order->on_form_renumber = &_on_form_renumber;
    this->load_order->on_mass_renumber = &_on_mass_renumber;
    this->load_order->adopt_archive_list(*(new dovah::bsa_load_order));

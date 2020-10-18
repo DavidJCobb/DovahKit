@@ -46,15 +46,6 @@
 //
 //  - Clean up the save process.
 //
-//     - The (file_load_order) class should not have a bool member which indicates 
-//       that ESL support is enabled; rather, it should have an enum indicating which 
-//       game the current load order is for, and ESL support should be a property 
-//       deducible from that game. We don't really need to change anything else here; 
-//       toggling whether ESL support is enabled basically is the exact same operation 
-//       as toggling what game we're processing for.
-//
-//        - Remaining work is in DovahKitCore.
-//
 //     - If the user is converting the active file between games, and the active file 
 //       contains any forms or overrides whose types don't exist in the target game, 
 //       then DovahKit should show an additional confirmation prompt warning of this 
@@ -68,41 +59,9 @@
 //          forms as well, and it should specify that those users may log their own 
 //          errors.
 //
-//     - If the user is converting the active file between games, then the code for 
-//       serializing a (form_reference_t) needs to check the form type of the form 
-//       stub being referenced. If the referenced stub is of a type that doesn't 
-//       exist in the target game, then we need to write form ID 0 instead.
-//
-//        - Consider the case of a VOLI form referenced by a FormList, in a file that 
-//          we are converting from Skyrim Special to Skyrim Classic. We're not going 
-//          to be serializing the VOLI itself, so we shouldn't leave a dangling form 
-//          ID in the FormList. Serializing none isn't ideal (it might be better to 
-//          skip the entire entirely) but it is technically valid and it's the easiest 
-//          thing to implement.
-//
-//        - Don't bother implementing an automatic warning for this. The warning for 
-//          the referenced forms themselves (i.e. the warning that they'll be deleted) 
-//          oughta be enough.
-//
-//     - If the user is converting the active file between games, and the active file 
-//       contains any forms or overrides whose types don't exist in the target game, 
-//       then those forms' stubs need to be deleted from memory after a successful 
-//       save operation. This will also entail severing references to them -- pretty 
-//       much the same as if a user voluntarily deletes a form.
-//
 //        - The warning shown to the user needs to make it clear that we will not 
 //          only skip these forms during saving, but also remove them from memory 
 //          if the save operation completes successfully.
-//
-//        - Let's think in more general terms: any form_stub that wasn't serialized 
-//          to the file (i.e. has no fixup data in the file_writer after a successful 
-//          save) needs to be deleted.
-//
-//        = This needs to happen because after a successful save operation, we swap 
-//          out the active file -- so, form data is unloaded (unless something else 
-//          was already using it) and will be loaded from the newly-saved file next 
-//          time it's requested. This means that forms that are not saved to the 
-//          file can no longer be loaded for further editing.
 //
 //     - If the user is converting the active file between games, and a loaded form 
 //       contains data that cannot be serialized in the target game, then it needs 

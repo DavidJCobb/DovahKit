@@ -450,6 +450,17 @@ namespace dovah::tes_file_writing {
       this->_write(header.version_control_2);
    }
 
+   bool file_writer::_can_serialize_form(const form_stub* stub) const noexcept {
+      if (!stub)
+         return true;
+      if (this->config.output_game != game::skyrim_special) {
+         auto& info = form_type_info::lookup(stub->formType);
+         if (info.flags & form_type_info::flag::is_skyrim_special)
+            return false;
+      }
+      return true;
+   }
+
    group& file_writer::open_group(tes_file_group_type group_type, uint32_t label, uint32_t unknown) {
       int32_t parent = -1;
       for (uint32_t i = 0; i < this->_groups.size(); i++) {

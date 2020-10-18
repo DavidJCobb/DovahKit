@@ -55,6 +55,7 @@ namespace dovah {
          };
          //
          using form_create_callback_t   = void(*)(form_stub*);
+         using form_loss_callback_t     = void(*)(form_stub&);
          using form_renumber_callback_t = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
          using generic_callback_t       = void(*)();
          //
@@ -79,7 +80,6 @@ namespace dovah {
          _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
          game              current_game = game::skyrim_special; // TODO: put this to use
-         bool              light_plugin_support_enabled = true;
          struct {
             mutable std::recursive_mutex lock;
             std::vector<bare_form_id_t> reserved_formIDs; // form IDs reserved for form creation or form renumbering
@@ -157,6 +157,7 @@ namespace dovah {
          file_write_error         save_error;
          file_write_warning       save_warning;
          form_create_callback_t   on_form_create   = nullptr;
+         form_loss_callback_t     on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
          form_renumber_callback_t on_form_renumber = nullptr;
          generic_callback_t       on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
          //

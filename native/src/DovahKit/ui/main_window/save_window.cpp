@@ -152,7 +152,7 @@ void ActiveFileSaveDialog::commit() {
       this->reject();
    } else {
       auto& warning = editor.get_write_warning();
-      if (warning.code == dovah::file_write_warning::warning_code::save_complete_but_to_temporary_file) {
+      if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
          QString message = tr("A minor problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
          QMessageBox::critical(
             this,
@@ -183,7 +183,7 @@ void ActiveFileSaveDialog::handleLastSaveError() {
          break;
       case dovah::notice_code::save_complete_but_reopen_failed:
          message = tr("The file was successfully saved, but could not be reopened for editing after the save. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
-         if (warning.code == dovah::file_write_warning::warning_code::save_complete_but_to_temporary_file) {
+         if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
             message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
          }
          break;
@@ -207,6 +207,12 @@ void ActiveFileSaveDialog::handleLastSaveError() {
          break;
       case dovah::notice_code::load_order_contains_light_files:
          message = tr("The current load order would not be possible in Skyrim Classic. The load order contains ESL files (besides the active file).", "write error");
+         break;
+      case dovah::notice_code::game_conversion_form_cleanup_failed:
+         message = tr("The file was saved successfully, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+         if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
+            message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
+         }
          break;
       default:
          message = tr("Unknown error.", "write error");

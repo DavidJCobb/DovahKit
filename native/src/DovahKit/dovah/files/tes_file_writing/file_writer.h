@@ -66,6 +66,9 @@ namespace dovah {
             template<> inline void _write(const tes_file_record_header& v) {
                this->_write_impl(v);
             }
+            //
+            bool _can_serialize_form(const form_stub*) const noexcept;
+            //
          public:
             file_writer(file_load_order&, file_reader&, const write_config& cfg);
             ~file_writer();

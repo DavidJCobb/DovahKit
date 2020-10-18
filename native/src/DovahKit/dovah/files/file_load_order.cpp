@@ -331,7 +331,7 @@ namespace dovah {
       this->_build_use_info();
       this->save_load_state.flags |= save_load_flag::use_info_build_is_complete;
       //
-      if (!this->light_plugin_support_enabled) {
+      if (!this->is_light_plugin_support_enabled()) {
          //
          // If the user chooses to save a Skyrim Classic file as a Skyrim Special file, then we will 
          // at that time (attempt to) enable light plug-in support. If any already-loaded files were 
@@ -624,7 +624,7 @@ namespace dovah {
       uint8_t  heavy = 0xFF;
       uint16_t light = 0xFFFF;
       for (auto* f : this->files) {
-         bool is_light = this->light_plugin_support_enabled && (f->header.flags & tes_file_flag::light);
+         bool is_light = this->is_light_plugin_support_enabled() && (f->header.flags & tes_file_flag::light);
          bool is_equal = f->get_filename() == filename;
          if (is_light) {
             ++light;
@@ -642,7 +642,7 @@ namespace dovah {
       uint8_t  heavy = 0xFF;
       uint16_t light = 0xFFFF;
       for (auto* f : this->files) {
-         bool is_light = this->light_plugin_support_enabled && (f->header.flags & tes_file_flag::light);
+         bool is_light = this->is_light_plugin_support_enabled() && (f->header.flags & tes_file_flag::light);
          bool is_equal = f == &file;
          if (is_light) {
             ++light;
@@ -660,7 +660,7 @@ namespace dovah {
       uint8_t  heavy = 0xFF;
       uint16_t light = 0xFFFF;
       for (auto* f : this->files) {
-         bool is_light = this->light_plugin_support_enabled && (f->header.flags & tes_file_flag::light);
+         bool is_light = this->is_light_plugin_support_enabled() && (f->header.flags & tes_file_flag::light);
          bool is_equal = f == &file;
          if (is_equal)
             is_light = pretend_is_or_isnt_light;
@@ -1258,7 +1258,7 @@ namespace dovah {
       return form_id_status::valid;
    }
    bare_form_id_t file_load_order::remap_formID_for_save(bare_form_id_t id) const noexcept {
-      auto prefix = file_prefix::from_form_id(id, !this->light_plugin_support_enabled);
+      auto prefix = file_prefix::from_form_id(id, !this->is_light_plugin_support_enabled());
       if (prefix.is_undefined())
          return 0;
       auto index = this->index_of_prefix(prefix);
@@ -1455,25 +1455,6 @@ namespace dovah {
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
          } else {
-            if (was_originally_light != save_as_light_plugin) {
-               //
-               // We have changed whether the active file is a light plug-in, so we need to change all 
-               // of its form IDs in memory.
-               //
-               auto new_prefix = this->file_prefix_for(*this->active_file, save_as_light_plugin);
-               //
-               std::vector<form_stub*> stubs;
-               for (auto& pair : this->active_file_forms.forms) {
-                  auto* stub = pair.second;
-                  auto  id   = stub->formID;
-                  if (old_active_file_prefix.contains_form_id(id))
-                     stubs.push_back(stub);
-               }
-               for (auto* stub : stubs) {
-                  this->_renumber_form(*stub, new_prefix.coerce_form_id(stub->formID), false);
-               }
-            }
-            writer.update_source_file_header();
             //
             // Reopen the active file.
             //
@@ -1490,8 +1471,35 @@ namespace dovah {
             return false;
          }
          //
-         // The last step, before editing can resume, is to update all of the form stubs that were 
-         // saved to the new file.
+         // The file was reopened successfully, so let's update our in-memory state to match the data 
+         // that was saved out.
+         //
+         if (was_originally_light != save_as_light_plugin) {
+            //
+            // We have changed whether the active file is a light plug-in, so we need to change all 
+            // of its form IDs in memory.
+            //
+            auto new_prefix = this->file_prefix_for(*this->active_file, save_as_light_plugin);
+            //
+            std::vector<form_stub*> stubs;
+            for (auto& pair : this->active_file_forms.forms) {
+               auto* stub = pair.second;
+               auto  id   = stub->formID;
+               if (old_active_file_prefix.contains_form_id(id))
+                  stubs.push_back(stub);
+            }
+            for (auto* stub : stubs) {
+               this->_renumber_form(*stub, new_prefix.coerce_form_id(stub->formID), false);
+            }
+         }
+         writer.update_source_file_header();
+         //
+         // The last two steps, before editing can resume, involve updating all form stubs in memory. 
+         // Stubs that were saved to the new file need to have their file offsets updated. Active file 
+         // stubs that were NOT saved (e.g. forms that were lost during a conversion between games) 
+         // need to be discarded. (We need to discard those forms because the file they were originally 
+         // loaded from may have been replaced, and if it wasn't, then it still isn't in use anymore; 
+         // as such, if those forms have been unloaded, we can't load their data into memory anymore.)
          //
          for (auto& pair : writer.fixup_data.form_stubs) {
             auto& info = pair.second;
@@ -1510,16 +1518,31 @@ namespace dovah {
             }
             stub->set_edited(false);
          }
-         #if _DEBUG
-            for (auto& pair : this->active_file_forms.forms) { // this isn't actually a problem i ran into. i've put this check here in case future development uncovers or causes any issues.
-               auto* stub = pair.second;
-               assert(!stub->is_edited() && "Somehow we didn't fully commit changes to an active file form stub after a save operation.");
+         for (auto& pair : this->active_file_forms.forms) {
+            bare_form_id_t id = pair.first;
+            if (cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
+               continue;
+            auto* stub = pair.second;
+            auto  type = stub->formType;
+            if (this->on_form_loss)
+               (this->on_form_loss)(*stub); // ensure that the frontend can abandon any references it has to this stub and its loaded form data
+            //
+            auto request = this->request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
+            request.commit();
+            if (request.get_result_code() != form_deletion_request::result_code::success) {
+               this->save_error.code = notice_code::game_conversion_form_cleanup_failed;
             }
-         #endif
+         }
+         //
+         // Oh, and if we switched the active file's "light" flag, then the frontend may need a heads-up.
+         //
          if (was_originally_light != save_as_light_plugin) {
             if (this->on_mass_renumber)
                (this->on_mass_renumber)();
          }
+         //
+         if (this->save_error.defined())
+            return false;
       }
       this->save_error = writer.error;
       return !writer.error.defined();
