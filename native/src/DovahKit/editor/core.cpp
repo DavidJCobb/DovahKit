@@ -142,6 +142,10 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
    return task.result;
 }
 
+dovah::game DovahKitCore::get_current_game() const noexcept {
+   return this->load_order->get_current_game();
+}
+
 float DovahKitCore::assess_load_progress() const noexcept {
    return this->load_order->assess_load_progress();
 }
@@ -160,7 +164,7 @@ QString DovahKitCore::get_active_file_name() const noexcept {
 bool DovahKitCore::has_active_file() const noexcept {
    return this->load_order->has_active_file();
 }
-bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg) {
+bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg) {
    //
    // TODO: fail if a save is in progress.
    //
@@ -208,13 +212,6 @@ const dovah::file_write_error& DovahKitCore::get_last_write_error() const noexce
 }
 const dovah::file_write_warning& DovahKitCore::get_write_warning() const noexcept {
    return this->load_order->save_warning;
-}
-
-bool DovahKitCore::is_light_plugin_support_enabled() const noexcept {
-   return this->load_order->is_light_plugin_support_enabled();
-}
-bool DovahKitCore::set_light_plugin_support_enabled(bool state) {
-   return this->load_order->set_light_plugin_support_enabled(state);
 }
 
 uint32_t DovahKitCore::count_forms_of_type(form_type_t ft) const noexcept {

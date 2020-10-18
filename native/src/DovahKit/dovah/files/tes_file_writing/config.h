@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "../common.h"
+#include "../../core.h"
 
 namespace dovah::tes_file_writing {
    enum class record_compression_policy {
@@ -10,11 +11,6 @@ namespace dovah::tes_file_writing {
    };
 
    struct write_config {
-      enum class game_t {
-         skyrim_classic,
-         skyrim_special,
-      };
-      //
       record_compression_policy record_compression = record_compression_policy::never;
       uint32_t file_flags     = 0;
       uint16_t record_version = 0; // 0 = same as source file
@@ -29,7 +25,10 @@ namespace dovah::tes_file_writing {
          uint32_t version_control = 0;
       };
       uint16_t version_control_2 = 0;
-      game_t   game = game_t::skyrim_classic;
+      game     output_game       = game::skyrim_classic;
+
+      static write_config for_skyrim_classic();
+      static write_config for_skyrim_special();
    };
 
 }

@@ -10,6 +10,7 @@
 #include <vector>
 #include "file_load_order_normalizer.h"
 #include "file_write_error.h"
+#include "../notice_code_t.h"
 
 namespace dovah {
    class form_stub;
@@ -77,6 +78,7 @@ namespace dovah {
          _form_map_by_type forms_by_type;
          _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
+         game              current_game = game::skyrim_special; // TODO: put this to use
          bool              light_plugin_support_enabled = true;
          struct {
             mutable std::recursive_mutex lock;
@@ -127,15 +129,18 @@ namespace dovah {
          // can be done when saving (i.e. when converting a Skyrim Classic file to a Skyrim Special ESL, or when 
          // converting a Skyrim Special file to a Skyrim Classic file.)
          //
-         bool _set_light_plugin_support_enabled(bool state, bool because_we_are_changing_whether_the_active_file_is_light);
-         bool _can_modify_light_plugin_support(bool state, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept;
+
+         notice_code_t _change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light);
+         notice_code_t _can_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept;
          
       public:
          ~file_load_order();
          //
          bool is_light_plugin_support_enabled() const noexcept;
-         bool can_modify_light_plugin_support(bool) const noexcept;
-         bool set_light_plugin_support_enabled(bool) noexcept; // this can fail; it returns (true) on success.
+         //
+         inline game get_current_game() const noexcept { return this->current_game; }
+         notice_code_t can_change_current_game(game) const noexcept;
+         notice_code_t change_current_game(game);
          //
          #pragma region Content related to loading
          std::string base_path; // used for loading and saving. changing this between loading files and saving them back out is undefined behavior.
@@ -248,7 +253,7 @@ namespace dovah {
          tes_file_header* get_active_file_header() const noexcept;
          #pragma endregion
 
-         bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config* cfg = nullptr);
+         bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg);
    };
 
    class form_creation_request {

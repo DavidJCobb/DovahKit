@@ -5,6 +5,7 @@
 #include "../../dovah/files/file_header.h"
 #include "../../dovah/files/tes_file_writing/config.h"
 #include "../../editor/core.h"
+#include "../../dovah/notice_code_list.h"
 #include "../main_window.h"
 
 ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
@@ -25,7 +26,7 @@ ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
       this->reject();
       return;
    }
-   this->ui.game->setCurrentIndex(editor.is_light_plugin_support_enabled());
+   this->ui.game->setCurrentIndex(editor.get_current_game() == dovah::game::skyrim_special);
    if (editor.active_file_has_name()) {
       this->ui.filename->setText(editor.get_active_file_name());
       //
@@ -113,7 +114,7 @@ void ActiveFileSaveDialog::commit() {
       return;
    }
    //
-   bool was_skyrim_classic = editor.is_light_plugin_support_enabled();
+   bool was_skyrim_classic = editor.get_current_game() == dovah::game::skyrim_classic;
    bool is_skyrim_classic  = this->ui.game->currentIndex() == 0;
    //
    std::filesystem::path install_path;
@@ -125,7 +126,13 @@ void ActiveFileSaveDialog::commit() {
    // TODO: if a file with this name exists, pop a confirmation prompt before just overwriting it
    //
 
-   dovah::tes_file_writing::write_config config;
+   using write_config = dovah::tes_file_writing::write_config;
+   //
+   write_config config;
+   switch (this->ui.game->currentIndex()) {
+      case 0: config = write_config::for_skyrim_classic(); break;
+      case 1: config = write_config::for_skyrim_special(); break;
+   }
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::light,  this->ui.flagLight->isChecked());
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::master, this->ui.flagMaster->isChecked());
    //
@@ -138,17 +145,11 @@ void ActiveFileSaveDialog::commit() {
       case 2: config.record_compression = dovah::tes_file_writing::record_compression_policy::bethesda;  break;
    }
    config.record_compress_threshold = this->ui.compressionThreshold->value();
-   switch (this->ui.game->currentIndex()) {
-      case 0: config.game = dovah::tes_file_writing::write_config::game_t::skyrim_classic; break;
-      case 1: config.game = dovah::tes_file_writing::write_config::game_t::skyrim_special; break;
-   }
    //
-   auto result = editor.save_active_file(filename, &config);
+   auto result = editor.save_active_file(filename, config);
    if (!result) {
       this->handleLastSaveError();
       this->reject();
-      //
-      editor.set_light_plugin_support_enabled(was_skyrim_classic); // revert game selection after a failed save
    } else {
       auto& warning = editor.get_write_warning();
       if (warning.code == dovah::file_write_warning::warning_code::save_complete_but_to_temporary_file) {
@@ -168,44 +169,44 @@ void ActiveFileSaveDialog::handleLastSaveError() {
    auto& warning = editor.get_write_warning();
    QString message;
    switch (error.code) {
-      case dovah::file_write_error::error_code::unknown_form_type:
+      case dovah::notice_code::unknown_form_type:
          message = tr("One of the forms that needs to be saved is of a type that DovahKit has not yet been programmed to handle.", "write error");
          break;
-      case dovah::file_write_error::error_code::no_active_file:
+      case dovah::notice_code::no_active_file:
          message = tr("You did not select an active file, and there is no room in this load order for another file.", "write error");
          break;
-      case dovah::file_write_error::error_code::cannot_save_right_now:
+      case dovah::notice_code::cannot_save_right_now:
          message = tr("It is not safe to save right now, because DovahKit is currently performing some other operation (e.g. a load or save).", "write error");
          break;
-      case dovah::file_write_error::error_code::no_filename_specified:
+      case dovah::notice_code::no_filename_specified:
          message = tr("The active file is implicit (nameless) and no filename was provided. (Wait, what? How did this happen? We should've made you either provide a name or cancel.)", "write error");
          break;
-      case dovah::file_write_error::error_code::save_complete_but_reopen_failed:
+      case dovah::notice_code::save_complete_but_reopen_failed:
          message = tr("The file was successfully saved, but could not be reopened for editing after the save. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
          if (warning.code == dovah::file_write_warning::warning_code::save_complete_but_to_temporary_file) {
             message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
          }
          break;
-      case dovah::file_write_error::error_code::out_of_memory:
+      case dovah::notice_code::out_of_memory:
          message = tr("An out-of-memory error occurred at some point during the save process, likely while trying to write a compressed record.", "write error");
          break;
-      case dovah::file_write_error::error_code::zlib_memory_error:
+      case dovah::notice_code::zlib_memory_error:
          message = tr("A zlib memory error occurred while trying to save a compressed record.", "write error");
          break;
-      case dovah::file_write_error::error_code::zlib_buffer_error:
+      case dovah::notice_code::zlib_buffer_error:
          message = tr("A zlib buffer error occurred while trying to save a compressed record.", "write error");
          break;
-      case dovah::file_write_error::error_code::forms_out_of_esl_range:
+      case dovah::notice_code::forms_out_of_esl_form_id_range:
          message = tr("You cannot convert a file to an ESL if any of its forms have IDs above XX000FFF.", "write error");
          break;
-      case dovah::file_write_error::error_code::too_many_dependencies:
+      case dovah::notice_code::too_many_dependencies:
          message = tr("A file cannot have more than 254 dependencies.", "write error");
          break;
-      case dovah::file_write_error::error_code::cannot_enable_esl_support:
-         message = tr("The current load order would not be possible in Skyrim Special. This is generally the case when the number of loaded non-ESL files (besides the active file) is high enough to overflow into the 0xFE slot.", "write error");
+      case dovah::notice_code::load_order_would_overflow_into_lights:
+         message = tr("The current load order would not be possible in Skyrim Special. Too many files (besides the active file) are loaded; they are overflowing into the 0xFE slot.", "write error");
          break;
-      case dovah::file_write_error::error_code::cannot_disable_esl_support:
-         message = tr("The current load order would not be possible in Skyrim Classic. This is generally the case when the load order contains ESL files (besides the active file).", "write error");
+      case dovah::notice_code::load_order_contains_light_files:
+         message = tr("The current load order would not be possible in Skyrim Classic. The load order contains ESL files (besides the active file).", "write error");
          break;
       default:
          message = tr("Unknown error.", "write error");

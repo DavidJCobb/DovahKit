@@ -15,9 +15,8 @@ namespace {
 }
 
 namespace dovah::tes_file_writing {
-   file_writer::file_writer(file_load_order& owner, file_reader& source, const write_config* cfg) : owner(owner), source(source), _record(*this), _subrecord(*this) {
-      if (cfg)
-         this->config = *cfg;
+   file_writer::file_writer(file_load_order& owner, file_reader& source, const write_config& cfg) : owner(owner), source(source), _record(*this), _subrecord(*this) {
+      this->config = cfg;
       //
       this->use_string_table = (this->source.header.flags & tes_file_flag::localized_string_table) != 0;
       if (!this->config.record_version)

@@ -271,6 +271,14 @@ namespace dovah {
    }};
    #pragma endregion
 
+   extern bool game_supports_light_plugins(game g) {
+      switch (g) {
+         case game::skyrim_special:
+            return true;
+      }
+      return false;
+   }
+
    /*static*/ file_prefix file_prefix::from_form_id(bare_form_id_t id, bool is_skyrim_classic) noexcept {
       if (!id)
          return file_prefix();

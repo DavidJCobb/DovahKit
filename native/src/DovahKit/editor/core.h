@@ -95,13 +95,15 @@ class DovahKitCore : public QObject {
       void set_queued_active_file(const std::filesystem::path&);
       bool acquire_load_order_data(bool async = false);
 
+      dovah::game get_current_game() const noexcept;
+
       float assess_load_progress() const noexcept;
       const dovah::file_read_error& get_last_read_error() const noexcept;
 
       bool active_file_has_name() const noexcept;
       QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;
-      bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config* cfg = nullptr);
+      bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg);
       QString get_active_file_author() const noexcept;
       QString get_active_file_description() const noexcept;
       void set_active_file_author(const QString&) const noexcept;
@@ -113,9 +115,6 @@ class DovahKitCore : public QObject {
 
       const dovah::file_write_error& get_last_write_error() const noexcept;
       const dovah::file_write_warning& get_write_warning() const noexcept;
-
-      bool is_light_plugin_support_enabled() const noexcept;
-      bool set_light_plugin_support_enabled(bool); // only allowed before load. when saving and converting between games, this is handled automatically by (file_load_order)
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;

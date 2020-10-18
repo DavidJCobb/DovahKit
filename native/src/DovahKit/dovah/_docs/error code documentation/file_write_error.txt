@@ -1,0 +1,52 @@
+
+The following notice codes can appear in file_write_error:
+
+== cannot_save_right_now ==
+It is not safe to save right now because  some other process (i.e. another load or save 
+operation) is in progress.
+
+== forms_out_of_esl_form_id_range ==
+There is at least one form in the active  file whose form ID is outside of the range of 
+form IDs supported in light files.
+
+== load_order_contains_light_files ==
+A conversion to the target  game is impossible, because  the load order has light files 
+in it and the target game does not support light files.
+
+== load_order_is_invalid_somehow ==
+Something went wrong well in advance of  the frontend requesting a save. The load order 
+is in an invalid state; some obvious invariant has been violated.
+
+== load_order_would_overflow_into_lights ==
+A conversion to the target game is impossible, because the load order contains too many 
+files. The target game supports light files (ESLs), and the current file list overflows 
+into the 0xFE slot that light files share.
+
+== no_active_file ==
+The user did not specify an active file, nor did they leave room for an implicit one in 
+the load order.
+
+== no_filename_specified ==
+The active file  is implicit (i.e. the user  is saving a new  file) and no filename was 
+provided for it to use.
+
+== out_of_memory ==
+DovahKit failed to allocate memory for a buffer at some point during the write process.
+
+== save_complete_but_reopen_failed ==
+DovahKit was able  to save the active file,  but was not able  to reopen it to continue 
+editing. This means that we can no longer load form content for any form stubs from the 
+active file, which makes further editing during this session impossible.
+
+== too_many_dependencies ==
+It is impossible to save the file because the total number of dependencies is more than 
+253 (Special) or 254 (Classic).
+
+== unknown_form_type ==
+DovahKit doesn't know how to load, or how to save, one of the forms in the active file.
+
+== zlib_buffer_error ==
+A zlib error code.
+
+== zlib_memory_error ==
+A zlib error code.

@@ -13,6 +13,13 @@ namespace dovah {
 
    using bare_form_id_t = uint32_t;
 
+   enum class game {
+      skyrim_classic,
+      skyrim_special,
+   };
+
+   extern bool game_supports_light_plugins(game);
+
    struct file_prefix {
       public:
          struct flag {

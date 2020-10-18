@@ -53,19 +53,7 @@
 //       toggling whether ESL support is enabled basically is the exact same operation 
 //       as toggling what game we're processing for.
 //
-//        - Let's define a game enum in core.h.
-//
-//        - This will also simplify, somewhat, the process by which the frontend 
-//          keeps track of what game it's currently operating on.
-//
-//        - In general, the entire save process needs to be reoriented around saving 
-//          content for X game or Y game. It should still be possible for a frontend 
-//          to specify individual options (e.g. form version) if it wants to, but the 
-//          default -- the path of least resistance -- should be to just pick a game 
-//          and then have all sensible configuration for that game set up automatically.
-//
-//           - This also means that the "write_config" struct used for saving needs to 
-//             be made mandatory.
+//        - Remaining work is in DovahKitCore.
 //
 //     - If the user is converting the active file between games, and the active file 
 //       contains any forms or overrides whose types don't exist in the target game, 

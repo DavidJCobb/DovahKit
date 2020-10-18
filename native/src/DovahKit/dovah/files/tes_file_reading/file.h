@@ -100,6 +100,8 @@ namespace dovah {
 
             writer_interface get_writer_interface(tes_file_writing::file_writer&) { return writer_interface(*this); }
             void set_path(const std::filesystem::path&); // also sets the filename. should only be used when saving an implicit active file
+
+            inline bool is_light() const noexcept { return this->header.is_light(); }
       };
    }
 }

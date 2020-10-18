@@ -27,6 +27,7 @@ namespace dovah::tes_file_reading {
          //
          void clear();
          bool load(const char* path) noexcept; // if result.defined() == false, then the load operation succeeded
+         inline bool is_light() const noexcept { return (this->flags & flag::light) != 0; }
          inline bool is_master() const noexcept { return (this->flags & flag::master) != 0; }
    };
 }

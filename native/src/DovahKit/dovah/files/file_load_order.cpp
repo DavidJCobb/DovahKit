@@ -16,6 +16,7 @@
 #include "../utils/get_ini_defined_bsa_list.h"
 #include "../utils/get_user_language_name.h"
 #include "../localization/localized_string_store.h"
+#include "../notice_code_list.h"
 #include <fstream>
 
 namespace {
@@ -507,62 +508,63 @@ namespace dovah {
    }
    #pragma endregion
 
-   bool file_load_order::_can_modify_light_plugin_support(bool state, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept {
-      if (state == this->light_plugin_support_enabled)
-         return true;
+   notice_code_t file_load_order::_can_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept {
+      if (this->current_game == g)
+         return notice_code::none;
       //
-      if (state) {
-         //
-         // Try to enable light plug-in support.
-         //
-         if (this->files.size() == 0xFF) {
+      bool prior_light = game_supports_light_plugins(this->current_game);
+      bool after_light = game_supports_light_plugins(g);
+      if (prior_light != after_light) {
+         if (after_light) {
             //
-            // The last loaded file is index 0xFE.
+            // See if we can enable light plug-in support.
             //
-            if (!because_we_are_changing_whether_the_active_file_is_light)
-               return false;
-            if (this->files[0xFE] != this->active_file)
-               return false;
-         }
-      } else {
-         //
-         // Try to disable light plug-in support.
-         //
-         if (!because_we_are_changing_whether_the_active_file_is_light) {
-            if (this->active_file && this->active_file->header.flags & tes_file_flag::light)
-               return false;
-         }
-         //
-         // You cannot disable light plug-in support if there are any light files besides the active file.
-         //
-         bool any_light_inactive = false;
-         for (auto* file : this->files) {
-            if (file == this->active_file)
-               continue;
-            if (file->header.flags & tes_file_flag::light)
-               return false;
+            auto size = this->files.size();
+            if (size > 0xFF)
+               return notice_code::load_order_is_invalid_somehow; // how do we have more than 255 non-light plug-ins in a load order for a game with no ESL support?
+            if (size == 0xFF) {
+               //
+               // The load order contains enough loaded files to overflow into slot 0xFE.
+               //
+               if (!because_we_are_changing_whether_the_active_file_is_light)
+                  return notice_code::load_order_would_overflow_into_lights;
+               if (this->files.back() != this->active_file)
+                  return notice_code::load_order_would_overflow_into_lights;
+            }
+         } else {
+            //
+            // See if we can disable light plug-in support. You can't disable light plug-in support if the 
+            // load order contains light plug-ins.
+            //
+            if (!because_we_are_changing_whether_the_active_file_is_light) {
+               if (this->active_file->is_light())
+                  return notice_code::load_order_contains_light_files;
+            }
+            for (auto* file : this->files) {
+               if (file == this->active_file)
+                  continue;
+               if (file->is_light())
+                  return notice_code::load_order_contains_light_files;
+            }
          }
       }
-      return true;
+      return notice_code::none;
    }
-   bool file_load_order::_set_light_plugin_support_enabled(bool state, bool because_we_are_changing_whether_the_active_file_is_light) {
-      if (!this->_can_modify_light_plugin_support(state, because_we_are_changing_whether_the_active_file_is_light))
-         return false;
-      this->light_plugin_support_enabled = state;
-      return true;
+   notice_code_t file_load_order::_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) {
+      auto code = this->_can_change_current_game(g, because_we_are_changing_whether_the_active_file_is_light);
+      if (code == notice_code::none)
+         this->current_game = g;
+      return code;
    }
+   notice_code_t file_load_order::can_change_current_game(game g) const noexcept {
+      return this->_can_change_current_game(g, false);
+   }
+   notice_code_t file_load_order::change_current_game(game g) {
+      return this->_change_current_game(g, false);
+   }
+
    bool file_load_order::is_light_plugin_support_enabled() const noexcept {
-      return this->light_plugin_support_enabled;
-   }
-   bool file_load_order::can_modify_light_plugin_support(bool state) const noexcept {
-      if (this->is_loading() || this->files.size())
-         return false;
-      return this->_can_modify_light_plugin_support(state, false);
-   }
-   bool file_load_order::set_light_plugin_support_enabled(bool state) noexcept {
-      if (this->is_loading() || this->files.size())
-         return false;
-      return this->_set_light_plugin_support_enabled(state, false);
+      return game_supports_light_plugins(this->current_game);
    }
 
    float file_load_order::assess_load_progress() const noexcept {
@@ -1277,7 +1279,7 @@ namespace dovah {
       return &this->active_file->header;
    }
 
-   bool file_load_order::save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config* cfg) {
+   bool file_load_order::save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg) {
       //
       // The process of saving an active file is somewhat complex, due to the need to support 
       // both Skyrim Classic  and Skyrim Special,  as well as the  need to support converting 
@@ -1366,12 +1368,12 @@ namespace dovah {
       this->save_error   = file_write_error();
       this->save_warning = file_write_warning();
       if (!this->active_file) {
-         this->save_error.code = file_write_error::error_code::no_active_file;
+         this->save_error.code = notice_code::no_active_file;
          return false;
       }
       _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_saving);
       if (!save_load_lock_guard) {
-         this->save_error.code = file_write_error::error_code::cannot_save_right_now;
+         this->save_error.code = notice_code::cannot_save_right_now;
          return false;
       }
       //
@@ -1379,13 +1381,13 @@ namespace dovah {
       if (!replacement_filename.empty())
          filename = replacement_filename;
       if (filename.empty()) {
-         this->save_error.code = file_write_error::error_code::no_filename_specified;
+         this->save_error.code = notice_code::no_filename_specified;
          return false;
       }
       this->active_file->set_path(std::filesystem::path(this->base_path) / filename);
       //
       if (this->files.size() > 0xFE) {
-         this->save_error.code = file_write_error::error_code::too_many_dependencies;
+         this->save_error.code = notice_code::too_many_dependencies;
          return false;
       }
       //
@@ -1405,17 +1407,9 @@ namespace dovah {
       }
       //
       auto old_active_file_prefix = this->file_prefix_for(*this->active_file);
-      bool is_skyrim_special      = cfg ? (cfg->game == tes_file_writing::write_config::game_t::skyrim_special) : false;
-      bool convert_across_games   = false;
-      bool was_originally_light   = this->active_file->header.flags & tes_file_flag::light;
-      bool save_as_light_plugin   = was_originally_light;
-      if (cfg) {
-         save_as_light_plugin = cfg->file_flags & tes_file_flag::light;
-         //
-         if (this->light_plugin_support_enabled != is_skyrim_special)
-            convert_across_games = true;
-      }
-      if (!is_skyrim_special)
+      bool was_originally_light   = this->active_file->is_light();
+      bool save_as_light_plugin   = cfg.file_flags & tes_file_flag::light;
+      if (cfg.output_game != game::skyrim_special)
          save_as_light_plugin = false;
       if (save_as_light_plugin && !was_originally_light) {
          //
@@ -1424,16 +1418,15 @@ namespace dovah {
          for (auto& pair : this->active_file_forms.forms) {
             auto id = pair.second->formID;
             if (id & 0x00FFF000) {
-               this->save_error.code = file_write_error::error_code::forms_out_of_esl_range;
+               this->save_error.code = notice_code::forms_out_of_esl_form_id_range;
                return false;
             }
          }
       }
-      if (convert_across_games) {
-         if (!this->_can_modify_light_plugin_support(is_skyrim_special, true)) {
-            this->save_error.code = file_write_error::error_code::cannot_enable_esl_support;
-            if (!is_skyrim_special)
-               this->save_error.code = file_write_error::error_code::cannot_disable_esl_support;
+      if (this->current_game != cfg.output_game) {
+         auto code = this->_can_change_current_game(cfg.output_game, was_originally_light != save_as_light_plugin);
+         if (code != notice_code::none) {
+            this->save_error.code = code;
             return false;
          }
       }
@@ -1451,13 +1444,13 @@ namespace dovah {
          writer.close(); // so we can move the new file
          this->active_file->close(); // so we can replace the old file
          //
-         this->_set_light_plugin_support_enabled(is_skyrim_special, true);
+         this->_change_current_game(cfg.output_game, was_originally_light != save_as_light_plugin);
          //
          std::error_code code;
          std::filesystem::rename(filename, this->active_file->get_path(), code);
          bool reopen_result = false;
          if (code) {
-            this->save_warning.code     = file_write_warning::warning_code::save_complete_but_to_temporary_file;
+            this->save_warning.code     = notice_code::save_complete_but_to_temporary_file;
             this->save_warning.filename = filename.filename();
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
@@ -1493,7 +1486,7 @@ namespace dovah {
             // save completed, but further editing is not possible.
             //
             auto& error = this->save_error;
-            error.code = file_write_error::error_code::save_complete_but_reopen_failed;
+            error.code = notice_code::save_complete_but_reopen_failed;
             return false;
          }
          //

@@ -67,7 +67,7 @@ namespace dovah {
                this->_write_impl(v);
             }
          public:
-            file_writer(file_load_order&, file_reader&, const write_config* cfg = nullptr);
+            file_writer(file_load_order&, file_reader&, const write_config& cfg);
             ~file_writer();
             //
             #pragma region config
