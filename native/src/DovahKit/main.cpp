@@ -87,21 +87,6 @@
 //
 //     - Implement ESL support.
 //
-//        - The max file count is enforced in (file_load_order_normalizer). We need 
-//          to move the check to (file_load_order), and only enforce it if an active 
-//          file is set.
-//
-//           - Skyrim Classic loads should always fail if we have 255 files i.e. if 
-//             we break into slot 0xFF.
-//
-//           - Skyrim Special loads should always fail if we have 254 non-light files 
-//             i.e. if they break into slot 0xFE, or if we have 4097+ light files i.e. 
-//             if they exceed the light slot range.
-//
-//           - Loads should always fail if there is an active file and more than 254 
-//             files prior to it such that the active file would encode its own forms 
-//             as 0xFF when saved. This should be enforced regardless of game.
-//
 //        - Saving an ESL should warn if the active file would have any CELL records, 
 //          whether they be new forms or overrides. Reportedly, CELLs in ESLs have 
 //          issues, though I don't know the source or the specific problems offhand.
