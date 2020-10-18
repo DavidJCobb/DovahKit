@@ -142,8 +142,10 @@ class DovahKitCore : public QObject {
       QString convert_localized_string(const dovah::localized_string&) const noexcept;
       void assign_localized_string(dovah::localized_string&, const QString&) const noexcept; // sets the localized_string's contained std::string, i.e. only suitable for when saving something with no STRINGS files
 
-      bool get_game_path(std::filesystem::path& out, bool skyrim_classic) const noexcept;
-      bool get_game_plugins(std::vector<QString>& out, bool skyrim_classic) const noexcept; // plugins.txt
+      bool get_game_path(std::filesystem::path& out, dovah::game) const noexcept;
+      bool get_game_plugins(std::vector<QString>& out, dovah::game) const noexcept; // plugins.txt
+
+      static QList<QString> list_all_official_plugins(dovah::game, bool mandatory_only = false) noexcept;
 };
 
 // IntelliSense doesn't like Q_DECLARE_METATYPE; ignore errors here unless they're compiler errors:

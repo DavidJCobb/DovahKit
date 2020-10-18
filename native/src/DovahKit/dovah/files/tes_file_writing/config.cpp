@@ -13,4 +13,11 @@ namespace dovah::tes_file_writing {
       out.record_version = 44;
       return out;
    }
+   /*static*/ write_config write_config::for_game(dovah::game g) {
+      switch (g) {
+         case game::skyrim_classic: return for_skyrim_classic();
+         case game::skyrim_special: return for_skyrim_special();
+      }
+      return write_config();
+   }
 }

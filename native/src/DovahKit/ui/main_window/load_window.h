@@ -3,12 +3,13 @@
 #include <QDialog>
 #include <QTimer>
 #include "ui_load_window.h"
+#include "../../dovah/core.h"
 
 class LoadOrderOpenDialog : public QDialog {
    Q_OBJECT
    //
    public:
-      LoadOrderOpenDialog(bool is_skyrim_classic, QWidget* parent = Q_NULLPTR);
+      LoadOrderOpenDialog(dovah::game, QWidget* parent = Q_NULLPTR);
       //
    private slots:
       void loadPoll();

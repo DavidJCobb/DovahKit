@@ -559,13 +559,18 @@ void DovahKitCore::assign_localized_string(dovah::localized_string& s, const QSt
    s.localized = dovah::localization_language::none;
 }
 
-bool DovahKitCore::get_game_path(std::filesystem::path& out, bool skyrim_classic) const noexcept {
+bool DovahKitCore::get_game_path(std::filesystem::path& out, dovah::game game) const noexcept {
    std::wstring value(512, 0);
    const wchar_t* key;
-   if (skyrim_classic) {
-      key = L"SOFTWARE\\Bethesda Softworks\\Skyrim\\";
-   } else {
-      key = L"SOFTWARE\\Bethesda Softworks\\Skyrim Special Edition\\";
+   switch (game) {
+      case dovah::game::skyrim_classic:
+         key = L"SOFTWARE\\Bethesda Softworks\\Skyrim\\";
+         break;
+      case dovah::game::skyrim_special:
+         key = L"SOFTWARE\\Bethesda Softworks\\Skyrim Special Edition\\";
+         break;
+      default:
+         return false;
    }
    bool success = cobb::windows_registry::get_string_value(cobb::windows_registry::hkey::local_machine, key, L"installed path", value);
    if (success) {
@@ -575,42 +580,63 @@ bool DovahKitCore::get_game_path(std::filesystem::path& out, bool skyrim_classic
    out.clear();
    return false;
 }
-bool DovahKitCore::get_game_plugins(std::vector<QString>& out, bool skyrim_classic) const noexcept {
+bool DovahKitCore::get_game_plugins(std::vector<QString>& out, dovah::game game) const noexcept {
    out.clear();
    //
    auto env  = QProcessEnvironment::systemEnvironment();
    QString path;
-   if (skyrim_classic) {
-      path = env.value("LOCALAPPDATA") + "\\Skyrim\\plugins.txt";
-   } else {
-      path = env.value("LOCALAPPDATA") + "\\Skyrim Special Edition\\plugins.txt";
+   switch (game) {
+      case dovah::game::skyrim_classic:
+         path = env.value("LOCALAPPDATA") + "\\Skyrim\\plugins.txt";
+         break;
+      case dovah::game::skyrim_special:
+         path = env.value("LOCALAPPDATA") + "\\Skyrim Special Edition\\plugins.txt";
+         break;
+      default:
+         return false;
    }
    auto file = QFile(path);
-   if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-      return false;
    //
-   out.push_back("Skyrim.esm"); // game forces this to be 00, and it is not present in plugins.txt
-   out.push_back("Update.esm"); // game forces this to be 01, and it is not present in plugins.txt
-   if (!skyrim_classic) {
-      //
-      // Skyrim Special also omits the DLCs and Creation Club content from plugins.txt. Reportedly 
-      // it enforces load order for both, but I'm not going to bother to add the CC filenames here.
-      //
-      out.push_back("Dawnguard.esm");
-      out.push_back("HearthFires.esm");
-      out.push_back("Dragonborn.esm");
-   }
+   auto official = list_all_official_plugins(game, true);
+   for (auto& s : official)
+      out.push_back(s);
    //
-   while (!file.atEnd()) {
-      auto line = file.readLine();
-      if (line[0] == '#')
-         continue;
-      line = line.trimmed();
-      if (line.compare("Skyrim.esm", Qt::CaseInsensitive) == 0) // hardcoded file; already in our list; don't allow it to appear twice if plugins.txt wrongly includes it
-         continue;
-      if (line.compare("Update.esm", Qt::CaseInsensitive) == 0) // hardcoded file; already in our list; don't allow it to appear twice if plugins.txt wrongly includes it
-         continue;
-      out.push_back(line);
+   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      while (!file.atEnd()) {
+         auto line = file.readLine();
+         if (line[0] == '#')
+            continue;
+         line = line.trimmed();
+         //
+         bool found = false;
+         for (auto& s : official) {
+            if (s.compare(line, Qt::CaseInsensitive) == 0) {
+               found = true; // hardcoded file; already in our list; don't allow it to appear twice if plugins.txt wrongly includes it
+               break;
+            }
+         }
+         if (found)
+            continue;
+         //
+         out.push_back(line);
+      }
    }
    return true;
+}
+
+/*static*/ QList<QString> DovahKitCore::list_all_official_plugins(dovah::game game, bool mandatory_only) noexcept {
+   QList<QString> out;
+   out.push_back("Skyrim.esm"); // game forces this to be 00, and it is not present in plugins.txt
+   out.push_back("Update.esm"); // game forces this to be 01, and it is not present in plugins.txt
+   if (mandatory_only && game != dovah::game::skyrim_special)
+      return out;
+   out.push_back("Dawnguard.esm");
+   out.push_back("HearthFires.esm");
+   out.push_back("Dragonborn.esm");
+   //
+   // TODO: Creation Club files? We probably shouldn't hardcode those, but rather should have a list 
+   // file of them somewhere, so that DovahKit doesn't need to be rebuilt whenever Bethesda adds new 
+   // content to the shop.
+   //
+   return out;
 }

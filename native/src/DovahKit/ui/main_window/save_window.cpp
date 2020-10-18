@@ -11,6 +11,13 @@
 ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
+   this->ui.game->clear();
+   {
+      auto* widget = this->ui.game;
+      widget->addItem(tr("Skyrim Classic"), (int)dovah::game::skyrim_classic);
+      widget->addItem(tr("Skyrim Special"), (int)dovah::game::skyrim_special);
+   }
+   //
    this->ui.compressionThreshold->setRange(64, std::numeric_limits<decltype(dovah::tes_file_writing::write_config::record_compress_threshold)>::max());
    QObject::connect(this->ui.compressionPolicy, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
       this->ui.compressionThreshold->setEnabled(index == 1);
@@ -114,11 +121,9 @@ void ActiveFileSaveDialog::commit() {
       return;
    }
    //
-   bool was_skyrim_classic = editor.get_current_game() == dovah::game::skyrim_classic;
-   bool is_skyrim_classic  = this->ui.game->currentIndex() == 0;
-   //
+   dovah::game game = (dovah::game)this->ui.game->currentData().toInt();
    std::filesystem::path install_path;
-   editor.get_game_path(install_path, is_skyrim_classic);
+   editor.get_game_path(install_path, game);
    install_path.append("Data");
    editor.set_load_order_folder(install_path); // in case the user never actually loaded a file and is making a file with no masters
 
@@ -126,18 +131,12 @@ void ActiveFileSaveDialog::commit() {
    // TODO: if a file with this name exists, pop a confirmation prompt before just overwriting it
    //
 
-   using write_config = dovah::tes_file_writing::write_config;
-   //
-   write_config config;
-   switch (this->ui.game->currentIndex()) {
-      case 0: config = write_config::for_skyrim_classic(); break;
-      case 1: config = write_config::for_skyrim_special(); break;
-   }
+   auto config = dovah::tes_file_writing::write_config::for_game(game);
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::light,  this->ui.flagLight->isChecked());
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::master, this->ui.flagMaster->isChecked());
    //
    // TODO: We should preserve any flags on the original file, unless they are flags controllable 
-   // from this UI.
+   // from this UI, or unless they are flags for things we can't edit (e.g. localized strings).
    //
    switch (this->ui.compressionPolicy->currentIndex()) {
       case 0: config.record_compression = dovah::tes_file_writing::record_compression_policy::never;     break;
@@ -207,6 +206,9 @@ void ActiveFileSaveDialog::handleLastSaveError() {
          if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
             message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
          }
+         //
+         // The mass data unload for this specific error is handled by the call to (editor.abandon_data) at the bottom of this function.
+         //
          break;
       case dovah::notice_code::out_of_memory:
          message = tr("An out-of-memory error occurred at some point during the save process, likely while trying to write a compressed record.", "write error");
@@ -234,6 +236,9 @@ void ActiveFileSaveDialog::handleLastSaveError() {
          if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
             message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
          }
+         //
+         // The mass data unload for this specific error is handled by the call to (editor.abandon_data) at the bottom of this function.
+         //
          break;
       default:
          message = tr("Unknown error.", "write error");

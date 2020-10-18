@@ -20,10 +20,10 @@ namespace {
    }
 }
 
-LoadOrderOpenDialog::LoadOrderOpenDialog(bool is_skyrim_classic, QWidget* parent) : QDialog(parent) {
+LoadOrderOpenDialog::LoadOrderOpenDialog(dovah::game g, QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
-   this->ui.fileList->listFiles(is_skyrim_classic);
+   this->ui.fileList->listFiles(g);
    //
    this->_load_poller.setSingleShot(false);
    this->_load_poller.setInterval(100); // ms
@@ -77,63 +77,57 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(bool is_skyrim_classic, QWidget* parent
       this->ui.dependencies->clear();
       //
       auto widget = this->ui.fileList;
-      auto model  = (LoadOrderFileList::model_type*)widget->model();
-      auto active = model->activeFile();
-      auto select = widget->selectionModel()->selection().indexes();
-      if (select.size() > 0) {
-         //auto& idx = select[0];
-         const auto  idx  = widget->selectionModel()->currentIndex();
-         const auto* item = (LoadOrderFileList::model_item_type*)idx.internalPointer();
-         if (item) {
-            this->ui.author->setText(item->author);
-            this->ui.description->setPlainText(item->description);
-            this->ui.dateCreated->setText(item->created.toString());
-            this->ui.dateModified->setText(item->modified.toString());
-            //
-            auto& list = item->dependencies;
-            auto  size = item->dependencies.size();
-            for (size_t i = 0; i < size; ++i) {
-               this->ui.dependencies->insertItem(i, list[i]);
-            }
-            //
-            if (item == active) {
-               this->ui.buttonSetActiveFile->setText(tr("Un-set as Active File"));
-            } else {
-               this->ui.buttonSetActiveFile->setText(tr("Set as Active File"));
-            }
-            //
-            // Grey out the "set as active file" button if an official game file is selected:
-            //
-            bool is_official = _is_official_content(item->filename);
-            this->ui.buttonSetActiveFile->setDisabled(is_official);
+      const auto  idx  = widget->selectionModel()->currentIndex();
+      const auto* item = (LoadOrderFileList::model_item_type*)idx.internalPointer();
+      if (item) {
+         auto* model  = (LoadOrderFileList::model_type*)widget->model();
+         auto* active = model->activeFile();
+         //
+         this->ui.author->setText(item->author);
+         this->ui.description->setPlainText(item->description);
+         this->ui.dateCreated->setText(item->created.toString());
+         this->ui.dateModified->setText(item->modified.toString());
+         //
+         auto& list = item->dependencies;
+         auto  size = item->dependencies.size();
+         for (size_t i = 0; i < size; ++i) {
+            this->ui.dependencies->insertItem(i, list[i]);
          }
+         //
+         if (item == active) {
+            this->ui.buttonSetActiveFile->setText(tr("Un-set as Active File"));
+         } else {
+            this->ui.buttonSetActiveFile->setText(tr("Set as Active File"));
+         }
+         //
+         // Grey out the "set as active file" button if an official game file is selected:
+         //
+         bool is_official = _is_official_content(item->filename);
+         this->ui.buttonSetActiveFile->setDisabled(is_official);
       }
    });
    QObject::connect(this->ui.buttonSetActiveFile, &QPushButton::clicked, [this]() {
-      auto widget = this->ui.fileList;
-      auto model  = (LoadOrderFileList::model_type*)widget->model();
-      auto select = widget->selectionModel()->selection().indexes();
-      if (select.size() > 0) {
-         auto& idx  = select[0];
-         auto* item = (LoadOrderFileList::model_item_type*)idx.internalPointer();
-         if (item) {
-            //
-            // Do not allow the user to set official content as the active file. (This should never 
-            // be possible -- the button should be greyed out if an official file is selected -- but 
-            // it never hurts to be careful.)
-            //
-            if (_is_official_content(item->filename)) {
-               QApplication::beep(); // beep, just so the user knows that we're actively rejecting their input rather than simply not handling it
-               return;
-            }
-            //
-            if (item == model->activeFile()) {
-               model->setActiveFile(nullptr);
-               this->ui.buttonSetActiveFile->setText(tr("Set as Active File"));
-            } else {
-               model->setActiveFile(item);
-               this->ui.buttonSetActiveFile->setText(tr("Un-set as Active File"));
-            }
+      auto* widget = this->ui.fileList;
+      auto  idx    = widget->selectionModel()->currentIndex();
+      auto* item   = (LoadOrderFileList::model_item_type*)idx.internalPointer();
+      if (item) {
+         auto* model = (LoadOrderFileList::model_type*)widget->model();
+         //
+         // Do not allow the user to set official content as the active file. (This should never 
+         // be possible -- the button should be greyed out if an official file is selected -- but 
+         // it never hurts to be careful.)
+         //
+         if (_is_official_content(item->filename)) {
+            QApplication::beep(); // beep, just so the user knows that we're actively rejecting their input rather than simply not handling it
+            return;
+         }
+         //
+         if (item == model->activeFile()) {
+            model->setActiveFile(nullptr);
+            this->ui.buttonSetActiveFile->setText(tr("Set as Active File"));
+         } else {
+            model->setActiveFile(item);
+            this->ui.buttonSetActiveFile->setText(tr("Un-set as Active File"));
          }
       }
    });
@@ -217,11 +211,11 @@ void LoadOrderOpenDialog::commit() {
    editor.abandon_data();
    //
    std::filesystem::path install_path;
-   bool is_skyrim_classic = this->ui.fileList->isSkyrimClassic();
-   editor.get_game_path(install_path, is_skyrim_classic);
+   dovah::game game = this->ui.fileList->game();
+   editor.get_game_path(install_path, game);
    install_path.append("Data");
    editor.set_load_order_folder(install_path);
-   editor.set_load_queued_game(is_skyrim_classic ? dovah::game::skyrim_classic : dovah::game::skyrim_special);
+   editor.set_load_queued_game(game);
    //
    for (const auto* file : model->files()) {
       if (!file->selected)

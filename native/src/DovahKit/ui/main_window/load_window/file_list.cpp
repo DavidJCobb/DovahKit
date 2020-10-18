@@ -127,11 +127,11 @@ void LoadOrderFileListModel::clear() {
    this->children.clear();
    this->endResetModel();
 }
-void LoadOrderFileListModel::setGame(bool skyrim_classic) {
-   if (this->is_skyrim_classic == skyrim_classic)
+void LoadOrderFileListModel::setGame(dovah::game g) {
+   if (this->current_game == g)
       return;
    this->clear();
-   this->is_skyrim_classic = skyrim_classic;
+   this->current_game = g;
 }
 void LoadOrderFileListModel::insert(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified) {
    auto item = new item_type(header, created, modified);
@@ -145,9 +145,12 @@ void LoadOrderFileListModel::insert(const dovah::tes_file_reading::file_header_r
 }
 void LoadOrderFileListModel::sortByPluginsTxt() {
    std::vector<QString> files;
-   DovahKitCore::get().get_game_plugins(files, this->is_skyrim_classic);
+   DovahKitCore::get().get_game_plugins(files, this->current_game);
    if (files.empty())
       return;
+   //
+   emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
+   //
    uint8_t i    = 0;
    uint8_t j    = 0;
    int     max  = std::min<int>(255, files.size());
@@ -171,6 +174,8 @@ void LoadOrderFileListModel::sortByPluginsTxt() {
          return a->modified < b->modified;
       });
    }
+   //
+   emit layoutChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
 }
 
 void LoadOrderFileListModel::setActiveFile(item_type* item) noexcept {
@@ -223,15 +228,15 @@ LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
       }
    });
 };
-void LoadOrderFileList::listFiles(bool skyrim_classic) {
+void LoadOrderFileList::listFiles(dovah::game g) {
    auto* model = (model_type*)this->model();
    model->clear();
    //
-   model->setGame(skyrim_classic);
+   model->setGame(g);
    //
    auto& editor = DovahKitCore::get();
    std::filesystem::path install_path;
-   if (!editor.get_game_path(install_path, skyrim_classic)) {
+   if (!editor.get_game_path(install_path, g)) {
       //
       // TODO: display error
       //

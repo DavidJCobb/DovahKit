@@ -55,11 +55,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    this->ui.actionEditFileMetadata->setDisabled(true);
    this->ui.actionSave->setDisabled(true);
    //
-   this->ui.actionLoadDataClassic->setData(true);
-   this->ui.actionLoadDataSpecial->setData(false);
+   this->ui.actionLoadDataClassic->setData((int)dovah::game::skyrim_classic);
+   this->ui.actionLoadDataSpecial->setData((int)dovah::game::skyrim_special);
    for (auto* action : this->ui.menuLoadData->actions()) {
       QObject::connect(action, &QAction::triggered, this, [action, this]() {
-         auto modal = new LoadOrderOpenDialog(action->data().toBool(), this);
+         auto modal = new LoadOrderOpenDialog((dovah::game)action->data().toInt(), this);
          modal->setModal(true);
          modal->open();
       });

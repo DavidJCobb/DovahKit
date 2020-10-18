@@ -29,6 +29,7 @@ namespace dovah::tes_file_writing {
 
       static write_config for_skyrim_classic();
       static write_config for_skyrim_special();
+      static write_config for_game(dovah::game);
    };
 
 }
