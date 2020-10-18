@@ -166,18 +166,6 @@
 //          WRLDs, and an ACHR within an interior cell. Ensure that the overridden 
 //          forms and their parents/ancestors are both properly saved to the file.
 //
-//  - 9/14/2020: Very rare crashes on exit. One access violation seen; two 0xC0000374 
-//    seen (the latter is memory mismanagement). No consistent repro steps, and it's 
-//    not like there's a lot you can do in the program as of this writing (the file 
-//    load dialog is finished except for being unsorted). Let's keep an eye out for 
-//    more issues like this. It's not consistent, which means it isn't the result of 
-//    something we're doing consistently; it's random chance or maybe an edge-case in 
-//    in the UI somewhere.
-//
-//     - Made some preemptive tweaks to memory management, including having the 
-//       file_load_order only discard its file_readers after the form_stubs instead 
-//       of before. For now, let's just try to stay alert for this.
-//
 // UPCOMING TASKS:
 //
 //  - Add a "Windows" menu to the main window. It should list all open windows and 

@@ -245,6 +245,12 @@ bool DovahKitCore::for_each_impossible_to_save_form(dovah::game g, std::function
    return this->load_order->for_each_impossible_to_save_form(g, functor);
 }
 
+bool DovahKitCore::is_form_defined_in_active_file(dovah::form_stub* stub) const noexcept {
+   if (!stub)
+      return false;
+   return this->load_order->is_defined_in_active_file(*stub);
+}
+
 dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type_t ft) {
    if (!this->loaded)
       return nullptr;

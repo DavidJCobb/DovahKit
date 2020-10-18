@@ -222,6 +222,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       this->_formActionDuplicate->setVisible(stub != nullptr);
       this->_formActionShowUseInfo->setVisible(stub != nullptr);
       this->_formActionRenumber->setVisible(stub != nullptr);
+      this->_formActionRenumber->setEnabled(DovahKitCore::get().is_form_defined_in_active_file(stub));
       this->_formActionDelete->setVisible(stub != nullptr);
       //
       QMenu menu(opener);

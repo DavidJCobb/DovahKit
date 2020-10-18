@@ -124,6 +124,8 @@ class DovahKitCore : public QObject {
       bool for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
       bool for_each_impossible_to_save_form(dovah::game, std::function<bool(dovah::form_stub*)>);
 
+      bool is_form_defined_in_active_file(dovah::form_stub*) const noexcept;
+
       dovah::form_stub* create_form_of_type(form_type_t);
       dovah::form_creation_request request_form_creation(form_type_t) noexcept;
       dovah::form_duplication_request request_form_duplication() noexcept;
