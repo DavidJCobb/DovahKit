@@ -861,6 +861,17 @@ namespace dovah {
       }
       return false;
    }
+   bool file_load_order::for_each_impossible_to_save_form(game g, std::function<bool(form_stub*)> functor) {
+      if (g == game::skyrim_special)
+         return false;
+      for (auto& info : form_types) {
+         if (!(info.flags & form_type_info::flag::is_skyrim_special))
+            continue;
+         if (this->for_each_active_file_form_of_type(info.formType, functor))
+            return true;
+      }
+      return false;
+   }
    bool file_load_order::for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor) {
       if (form_type >= this->forms_by_type.size())
          return false;

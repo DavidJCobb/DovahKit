@@ -231,6 +231,7 @@ namespace dovah {
          bool for_each_active_file_form(std::function<bool(form_stub*)> functor);
          bool for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
          bool for_each_active_file_override_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor);
+         bool for_each_impossible_to_save_form(game, std::function<bool(form_stub*)> functor);
          bool for_each_top_level_form_needing_save(form_type_t form_type, std::function<bool(form_stub*)> functor);
          void get_active_file_name(std::filesystem::path& out) const noexcept;
          bool has_active_file() const noexcept;

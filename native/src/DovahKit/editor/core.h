@@ -122,6 +122,7 @@ class DovahKitCore : public QObject {
       dovah::form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
       bool for_each_form(std::function<bool(dovah::form_stub*)>);
       bool for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
+      bool for_each_impossible_to_save_form(dovah::game, std::function<bool(dovah::form_stub*)>);
 
       dovah::form_stub* create_form_of_type(form_type_t);
       dovah::form_creation_request request_form_creation(form_type_t) noexcept;

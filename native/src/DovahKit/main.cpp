@@ -51,17 +51,13 @@
 //       then DovahKit should show an additional confirmation prompt warning of this 
 //       before saving.
 //
-//        - This, and all other warnings encountered during a save operation, should 
-//          be listed in a log window and written to a log file.
+//        - The confirmation prompt should be a custom window that lists each of the 
+//          relevant forms, along with access to their use info.
 //
-//        - The warning should show a full list of affected forms, with access to 
-//          their use info. In turn, the log file should list all users of these 
-//          forms as well, and it should specify that those users may log their own 
-//          errors.
-//
-//        - The warning shown to the user needs to make it clear that we will not 
-//          only skip these forms during saving, but also remove them from memory 
-//          if the save operation completes successfully.
+//        - If the user proceeds with the save operation, then the full warning 
+//          should be written to a log window and to a log file. The log file should 
+//          also list all users of these forms, and it should specify that those 
+//          users may log their own errors.
 //
 //     - If the user is converting the active file between games, and a loaded form 
 //       contains data that cannot be serialized in the target game, then it needs 

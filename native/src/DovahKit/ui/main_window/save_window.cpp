@@ -146,6 +146,27 @@ void ActiveFileSaveDialog::commit() {
    }
    config.record_compress_threshold = this->ui.compressionThreshold->value();
    //
+   std::vector<dovah::form_stub*> forms_we_cant_save;
+   editor.for_each_impossible_to_save_form(config.output_game, [&forms_we_cant_save](dovah::form_stub* stub) {
+      forms_we_cant_save.push_back(stub);
+      return false;
+   });
+   if (forms_we_cant_save.size()) {
+      //
+      // TODO: Show detailed information on the relevant forms
+      //
+      auto choice = QMessageBox::critical(
+         this,
+         tr("Warning", "save error"),
+         tr("The active file currently contains %1 forms that are not supported in the target game. Not only will these forms not be saved; they will also be deleted from memory if the save operation completes successfully.<br/><br/>Are you sure you still want to convert this file to the selected game?")
+            .arg(forms_we_cant_save.size()),
+         QMessageBox::YesToAll | QMessageBox::Cancel
+      );
+      if (choice == QMessageBox::Cancel)
+         return;
+   }
+
+   //
    auto result = editor.save_active_file(filename, config);
    if (!result) {
       this->handleLastSaveError();

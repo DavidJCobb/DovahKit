@@ -23,6 +23,7 @@ namespace {
          emit DovahKitCore::get().formCreated(stub);
    }
    void _on_form_loss(dovah::form_stub& stub) {
+      emit DovahKitCore::get().formDeletionImminent(&stub, false);
       emit DovahKitCore::get().formDeletionComplete(stub.formID, false);
    }
    void _on_form_renumber(dovah::form_stub& stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
@@ -239,6 +240,9 @@ bool DovahKitCore::for_each_form(std::function<bool(dovah::form_stub*)> functor)
 }
 bool DovahKitCore::for_each_form_of_type(form_type_t ft, std::function<bool(dovah::form_stub*)> functor) {
    return this->load_order->for_each_form_of_type(ft, functor);
+}
+bool DovahKitCore::for_each_impossible_to_save_form(dovah::game g, std::function<bool(dovah::form_stub*)> functor) {
+   return this->load_order->for_each_impossible_to_save_form(g, functor);
 }
 
 dovah::form_stub* DovahKitCore::create_form_of_type(dovah::form_type_t ft) {
