@@ -5,6 +5,7 @@
 #include "../../form_stub.h"
 #include "../../form_stub_helpers.h"
 #include "../../forms/Form.h"
+#include "../../notice_code_list.h"
 #include "../common.h"
 extern "C" {
    #include "../../../zlib/zlib.h" // interproject ref
@@ -206,14 +207,14 @@ namespace dovah::tes_file_writing {
             // an error.
             //
             if (!this->error.defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
-               this->error.code = file_write_error::error_code::unknown_form_type;
+               this->error.code = notice_code::unknown_form_type;
             this->error.formID      = stub->formID;
             this->error.form_type   = stub->formType;
             this->error.file_offset = this->get_stream_position();
             return false;
          }
       } else {
-         this->error.code        = file_write_error::error_code::unknown_form_type;
+         this->error.code        = notice_code::unknown_form_type;
          this->error.formID      = stub->formID;
          this->error.form_type   = stub->formType;
          this->error.file_offset = this->get_stream_position();
@@ -251,7 +252,7 @@ namespace dovah::tes_file_writing {
          uint32_t compressed_size   = compressBound(decompressed_size);
          auto  buffer = malloc(compressed_size);
          if (!buffer) {
-            error.code        = file_write_error::error_code::out_of_memory;
+            error.code        = notice_code::out_of_memory;
             error.formID      = record.header.formID;
             error.form_type   = stub ? stub->formType : form_type::none;
             error.file_offset = this->get_stream_position();
@@ -264,10 +265,10 @@ namespace dovah::tes_file_writing {
             error.file_offset = this->get_stream_position();
             switch (result) {
                case Z_MEM_ERROR:
-                  error.code = file_write_error::error_code::zlib_memory_error;
+                  error.code = notice_code::zlib_memory_error;
                   return;
                case Z_BUF_ERROR:
-                  error.code = file_write_error::error_code::zlib_buffer_error;
+                  error.code = notice_code::zlib_buffer_error;
                   return;
             }
          }

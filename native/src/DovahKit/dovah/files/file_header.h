@@ -37,5 +37,8 @@ namespace dovah {
       uint32_t subINTV;
       uint32_t subINCC;
       // TODO: SCRN
+      //
+      inline bool is_light() const noexcept { return this->flags & flag::light; }
+      inline bool is_master() const noexcept { return this->flags & flag::master; }
    };
 }

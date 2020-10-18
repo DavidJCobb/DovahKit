@@ -71,8 +71,8 @@ void DovahKitCore::queue_load_order_file(const std::filesystem::path& p) {
 void DovahKitCore::unqueue_load_order_file(const std::filesystem::path& p) {
    this->load_order->unqueue_file(p.string());
 }
-void DovahKitCore::set_load_queued_game(bool skyrim_classic) {
-   this->load_order->set_light_plugin_support_enabled(!skyrim_classic);
+void DovahKitCore::set_load_queued_game(dovah::game g) {
+   this->load_order->change_current_game(g);
 }
 void DovahKitCore::set_queued_active_file(const std::filesystem::path& p) {
    this->load_order->queue_active_file(p.string());

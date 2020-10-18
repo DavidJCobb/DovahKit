@@ -104,6 +104,7 @@
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
     <ClCompile Include="dovah\files\bsa\threads.cpp" />
+    <ClCompile Include="dovah\files\file_write_error.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp" />
     <ClCompile Include="dovah\files\file_load_order.cpp" />
     <ClCompile Include="dovah\files\file_load_order_normalizer.cpp" />
@@ -113,6 +114,7 @@
     <ClCompile Include="dovah\files\tes_file_reading\file.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\localized_string_file.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\threads.cpp" />
+    <ClCompile Include="dovah\files\tes_file_writing\config.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\elements.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\file_writer.cpp" />
     <ClCompile Include="dovah\files\threaded_load_order_use_info_builder.cpp" />
@@ -385,6 +387,8 @@
     <ClInclude Include="dovah\localization\localized_string_store.h" />
     <ClInclude Include="dovah\localized_strings.h" />
     <ClInclude Include="dovah\logging.h" />
+    <ClInclude Include="dovah\notice_code_list.h" />
+    <ClInclude Include="dovah\notice_code_t.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
     <ClInclude Include="dovah\utils\get_user_language_name.h" />
     <ClInclude Include="helpers\windows_environment.h" />
@@ -485,6 +489,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dovah\_docs\basics.txt" />
+    <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
     <Text Include="dovah\_docs\list of SSE CK warnings (non-exhaustive).txt" />
     <Text Include="dovah\_docs\plugin types.txt" />
     <Text Include="dovah\_docs\reading files.txt" />

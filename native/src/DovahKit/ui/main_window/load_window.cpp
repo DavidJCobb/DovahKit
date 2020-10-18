@@ -182,7 +182,7 @@ void LoadOrderOpenDialog::commit() {
    editor.get_game_path(install_path, is_skyrim_classic);
    install_path.append("Data");
    editor.set_load_order_folder(install_path);
-   editor.set_light_plugin_support_enabled(!is_skyrim_classic);
+   editor.set_load_queued_game(is_skyrim_classic ? dovah::game::skyrim_classic : dovah::game::skyrim_special);
    //
    for (const auto* file : model->files()) {
       if (!file->selected)

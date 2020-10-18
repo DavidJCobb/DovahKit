@@ -459,6 +459,12 @@
     <ClCompile Include="ui\generic\QTextEncodingValidator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_writing\config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\file_write_error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -962,6 +968,12 @@
     <ClInclude Include="dovah\localization\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notice_code_t.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notice_code_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1128,5 +1140,6 @@
     <Text Include="dovah\_docs\threading.txt" />
     <Text Include="dovah\_docs\list of SSE CK warnings (non-exhaustive).txt" />
     <Text Include="dovah\_docs\plugin types.txt" />
+    <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
   </ItemGroup>
 </Project>

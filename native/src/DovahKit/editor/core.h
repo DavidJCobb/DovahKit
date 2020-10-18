@@ -91,7 +91,7 @@ class DovahKitCore : public QObject {
       void set_load_order_folder(const std::filesystem::path&);
       void queue_load_order_file(const std::filesystem::path&);
       void unqueue_load_order_file(const std::filesystem::path&);
-      void set_load_queued_game(bool skyrim_classic);
+      void set_load_queued_game(dovah::game);
       void set_queued_active_file(const std::filesystem::path&);
       bool acquire_load_order_data(bool async = false);
 

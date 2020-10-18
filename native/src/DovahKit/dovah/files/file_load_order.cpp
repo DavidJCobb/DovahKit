@@ -528,7 +528,7 @@ namespace dovah {
                //
                if (!because_we_are_changing_whether_the_active_file_is_light)
                   return notice_code::load_order_would_overflow_into_lights;
-               if (this->files.back() != this->active_file)
+               if (this->active_file && this->files.back() != this->active_file)
                   return notice_code::load_order_would_overflow_into_lights;
             }
          } else {
@@ -537,7 +537,7 @@ namespace dovah {
             // load order contains light plug-ins.
             //
             if (!because_we_are_changing_whether_the_active_file_is_light) {
-               if (this->active_file->is_light())
+               if (this->active_file && this->active_file->is_light())
                   return notice_code::load_order_contains_light_files;
             }
             for (auto* file : this->files) {
