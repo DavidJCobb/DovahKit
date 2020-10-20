@@ -98,6 +98,96 @@
 //             edits a CELL that originates from another ESL. We'll probably want to 
 //             only warn when saving an ESL that overrides another ESL's cells.
 //
+//  - Multiple-file form loading
+//
+//     - The content of some forms can be influenced by multiple files, and not just the 
+//       winning override. Locations (LCTN) are an obvious example, but other examples 
+//       are known to include story manager content and dialogue topics (in the case of 
+//       a mod inserting an INFO into the middle of a DIAL's list).
+//
+//       <https://www.afkmods.com/index.php?/topic/3940-skyrim-tes5edit-records-that-merge-at-runtime/>
+//
+//       We're going to need to handle this.
+//
+//        - STEP ONE: We need to reverse-engineer the game and figure out whether this 
+//          is a "sometimes" thing or an "all the time" thing: does the game only allow 
+//          specific form types to incorporate data from all loaded files, or does it 
+//          allow *all* form types to do so, with most form types simply opting not to 
+//          take advantage of the ability? If it's the latter, then we need to scrutinize 
+//          form-loading code much more thoroughly, and we need to allow all form types 
+//          to do the same.
+//
+//           - It looks like forms may have TESForm::ClearComponentData called to erase 
+//             the content of components like TESFullName and BGSKeywordForm, followed 
+//             by TESForm::ClearData (virtual 0x05) to yeet data within the form itself. 
+//             It also looks like any form can (and will, if there are overrides) be 
+//             loaded from multiple files.
+//
+//             This means that we basically need to have a form load from all files that 
+//             define it, and we need to have it clear members as appropriate. It should 
+//             not clear *all* members -- again, some forms integrate data from multiple 
+//             files -- but rather, should clear members in mimicry of these functions:
+//
+//              = TESForm::ClearComponentData
+//              = TESForm::ClearData (virtual 0x05; check for an override)
+//              = TESForm::LoadForm  (virtual 0x06; pay attention to how it loads stuff)
+//
+//        - STEP TWO: We need to make form_stub able to store multiple file pointers and 
+//          file offsets. We should probably mimic the BSTSmallArray, where the stub can 
+//          store a single file or a pointer to a list of them, with the flag that indic-
+//          ates which being stored within the form stub's existing flags mask.
+//
+//        - STEP THREE: We need to make it possible for a form stub to load a form using 
+//          all of its files.
+//
+//        - STEP FOUR: DIAL/INFO is a special case. It's my understanding that INFO/PNAM 
+//          is just used to positing a TESTopicInfo within its TESTopic's info vector, 
+//          which means that our existing setup (relying solely on use info to link a 
+//          topic to its infos, and the infos to their siblings) is not adequate. The 
+//          form stub for DIALs will need to be able to store a dedicated list of INFOs, 
+//          and we'll need to build this list during stub generation. We can generalize 
+//          this situation -- allow form stubs to optionally store an "ordered child form 
+//          list."
+//
+//     - Once the needed machinery for all of the above is in place, we can look into 
+//       taking advantage of it. First, we need to test the performance impact of tracking 
+//       all file offsets for all forms. Most forms will not be overridden and so will 
+//       have only one offset, so using a BSTSmallArray-style list should hopefully avoid 
+//       memory fragmentation and memory-related performance issues.
+//
+//       If we find that it is indeed economical to be able to store multiple file offsets 
+//       for all forms, then we can go a step further. What if it were possible to right-
+//       click a form in the object window, mouse over a "Revisions" context menu item, 
+//       and pick which file (i.e. which record/override) you want to work with?
+//
+//       Implementating this would require a few considerations:
+//
+//        - Form stubs would need to be able to store *which* file they've been told to 
+//          load from. An int16_t (with -1 meaning "use latest file") should do the trick.
+//
+//        - Editing a form stub that has been "reverted" in this manner should flag it as 
+//          edited and thne switch its "which file" value to "use latest file."
+//
+//        - If we "revert" a form stub, then we need to clear all of its outbound use 
+//          info, and then use loaded_forms::Form::generateUseInfo on the selected file 
+//          to rebuild use info as it existed for that revision.
+//
+//           - We'd also need to re-load the form's editor ID, along with any other data 
+//             that gets stored on the stub during the initial stub-build process.
+//
+//       There are also UX considerations:
+//
+//        - Should a "reverted" form be treated as edited and written into the active file? 
+//          This would effectively create either ITMs (when reverting to the last non-active 
+//          record) or allow easy reversion of changes made by other mods.
+//
+//       But there are UX benefits:
+//
+//        - The backend tech needed for this could easily be used for reverting overrides 
+//          that exist in the active file. Currently, the Creation Kit lets you do that via 
+//          the Data menu, but it requires a full reload (i.e. you aren't "reverting an 
+//          override" so much as you are "electing to not load a particular override").
+//
 //  - Localized string support
 //
 //     - The UI needs to physically prevent the user from entering glyphs that are not 
@@ -475,49 +565,8 @@
 //       error indicator), and otherwise don't bother solving the problem or giving 
 //       the user the option to solve the problem.
 //
-//  - ESL Support
-//
-//     = The current state of ESL support is that we treat ESLs the same as ESPs and 
-//       ESMs. They are not placed at load order slot 0xFE and do not share a load 
-//       order slot, and we take no steps to prevent them from being used as masters  
-//       for other files. In other words, we don't *have* ESL support.
-//
-//     - Currently, (file_load_order) stores all loaded files in (file_load_order::files). 
-//       For ESL support, we'd need two separate lists. We'd also need to amend form ID 
-//       resolution.
-//
-//     - ESLs are not allowed to be dependencies of other files. This means that we'd 
-//       need to make some pretty big modifications to DovahKit. We have two options:
-//
-//       a) Do not allow the user to load an ESL unless it is both the only ESL to load 
-//          and the active file.
-//
-//       b) Allow the user to load one or more ESLs without them being the active file, 
-//          but take steps to prevent the user from modifying any forms that originate 
-//          from an ESL, and take steps to prevent the user from modifying any other 
-//          forms in such a way that they refer to ESL-sourced forms.
-//
-//           - If the active file is an ESL, then the user should be able to modify 
-//             forms in that ESL only, and make forms defined or overridden in that ESL 
-//             refer to other forms in that ESL only.
-//
-//              - This requires that it be possible to query whether two form_stubs 
-//                belong to the same file, and query whether a form_stub belongs to an 
-//                ESL file.
-//
-//           - When saving the active file, we'd need to exclude all loaded ESLs from 
-//             the final list of masters to use. We'd also need the file-saving code 
-//             to fail when serializing any references between forms that the UI should 
-//             have prevented (in case the UI *doesn't* prevent them).
-//
-//              - This would require subrecord::_write_impl(const form_id_t&) to set 
-//                error information on the owning file_writer. If we're doing that, 
-//                then it'd be nice if subrecord::write could return a boolean so that 
-//                a form can immediately abort a write if any error occurs.
-//
-//       Unless and until one of the above two approaches is implemented, DovahKit 
-//       cannot be said to be compatible with ESLs even if we implement proper loading 
-//       for ESLs.
+//  - Phantom has requested camera path editing, and pointed me to the GECK wiki as the 
+//    sole known source of information on that.
 //
 // HORIZON TASKS:
 //
