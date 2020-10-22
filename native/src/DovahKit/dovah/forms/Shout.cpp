@@ -5,6 +5,14 @@ namespace dovah::loaded_forms {
    void Shout::load(tes_record_reader& record) {
       Form::load(record);
       //
+      #pragma region TESShout parents that get reset with each override
+      this->name.reset();                // TESFullName
+      this->description.reset();         // TESDescription
+      this->menu_display_object.reset(); // BGSMenuDisplayObject
+      this->equip_type.reset();          // BGSEquipType
+      #pragma endregion
+      //
+      size_t current_word = 0;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'FULL':
@@ -13,27 +21,38 @@ namespace dovah::loaded_forms {
             case 'MDOB':
                subrecord.read(this->menu_display_object);
                break;
+            case 'ETYP':
+               subrecord.read(this->equip_type);
+               break;
             case 'DESC':
                subrecord.to_string(this->description);
                break;
             case 'SNAM':
                {
-                  Word& entry = this->words.emplace_back();
+                  auto& entry = this->words[current_word];
                   subrecord.read(entry.word_of_power);
                   subrecord.read(entry.spell);
                   subrecord.read(entry.recoveryTime);
+                  ++current_word;
                }
                break;
          }
       }
-      if (this->words.size() < 3) // enforce minimum word count
-         this->words.resize(3);
+      if (current_word != 3) {
+         //
+         // TODO: log an error.
+         //
+         // The game always assumes that SHOU will have three SNAMs. The Rule of One will not be properly 
+         // applied if a SHOU override supplies fewer than three SNAMs.
+         //
+      }
    }
    /*static*/ void Shout::generateUseInfo(tes_record_reader& record, form_stub* stub) {
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
-            case 'MDOB': // looping sound (e.g. nirnroot bell)
+            case 'MDOB': // menu display object
+            case 'ETYP': // equip type
                if (subrecord.read(formID))
                   stub->add_outbound_reference(formID);
                break;
@@ -54,7 +73,6 @@ namespace dovah::loaded_forms {
       }
    }
    void Shout::setup(const file_load_order& load_order) noexcept {
-      this->words.resize(3);
    }
    bool Shout::_clone_impl(Form* out) const noexcept {
       auto copy = dynamic_cast<Shout*>(out);
@@ -65,10 +83,7 @@ namespace dovah::loaded_forms {
       copy->description = this->description;
       copy->menu_display_object.set(*copy->stub, this->menu_display_object);
       //
-      size_t size = this->words.size();
-      assert(copy->words.empty() && "We should be working with a newly-created form. If this isn't empty, then we need to clear out the form IDs already inside via (set) calls; simply resizing/clearing the vector and destroying form_id_ts will fail to clean up already-existing use info.");
-      copy->words.resize(size);
-      for (size_t i = 0; i < size; ++i) {
+      for (size_t i = 0; i < this->words.size(); ++i) {
          auto& word = copy->words[i];
          auto& from = this->words[i];
          word.word_of_power.set(*copy->stub, from.word_of_power);
@@ -84,6 +99,7 @@ namespace dovah::loaded_forms {
       auto& MDOB = record.open_next_subrecord('MDOB');
       MDOB.write(this->menu_display_object);
       MDOB.close();
+      record.write_formID_subrecord('ETYP', this->equip_type, true);
       auto& DESC = record.open_next_subrecord('DESC');
       DESC.write(this->description);
       DESC.close();
@@ -97,6 +113,7 @@ namespace dovah::loaded_forms {
       return true;
    }
    void Shout::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->equip_type.clear_if(*this->stub, other);
       this->menu_display_object.clear_if(*this->stub, other);
       for (auto& word : this->words) {
          word.word_of_power.clear_if(*this->stub, other);

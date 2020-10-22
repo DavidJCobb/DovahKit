@@ -98,7 +98,22 @@
 //             edits a CELL that originates from another ESL. We'll probably want to 
 //             only warn when saving an ESL that overrides another ESL's cells.
 //
+//  - Reverse-engineering
+//
+//     - A worldspace's persistent cell is the first persistent-flagged child cell to load.
+//
 //  - Multiple-file form loading
+//
+//     - Reverse-engineering indicates that the "partial" record flag available in FO4 is 
+//       also available in Skyrim Classic. It should only affect loading in the following 
+//       ways:
+//
+//        - If the form is already loaded into memory and is a parent form, then call 
+//          TESForm::LoadPartial rather than TESForm::LoadForm.
+//
+//        - If the form is not already loaded into memory, then check its load order 
+//          prefix. If it originates from the file currently being loaded, then strip 
+//          the "partial" flag and continue as normal; otherwise, skip the form.
 //
 //     - The content of some forms can be influenced by multiple files, and not just the 
 //       winning override. Locations (LCTN) are an obvious example, but other examples 
@@ -117,20 +132,7 @@
 //          form-loading code much more thoroughly, and we need to allow all form types 
 //          to do the same.
 //
-//           - It looks like forms may have TESForm::ClearComponentData called to erase 
-//             the content of components like TESFullName and BGSKeywordForm, followed 
-//             by TESForm::ClearData (virtual 0x05) to yeet data within the form itself. 
-//             It also looks like any form can (and will, if there are overrides) be 
-//             loaded from multiple files.
-//
-//             This means that we basically need to have a form load from all files that 
-//             define it, and we need to have it clear members as appropriate. It should 
-//             not clear *all* members -- again, some forms integrate data from multiple 
-//             files -- but rather, should clear members in mimicry of these functions:
-//
-//              = TESForm::ClearComponentData
-//              = TESForm::ClearData (virtual 0x05; check for an override)
-//              = TESForm::LoadForm  (virtual 0x06; pay attention to how it loads stuff)
+//           - DONE.
 //
 //        - STEP TWO: We need to make form_stub able to store multiple file pointers and 
 //          file offsets. We should probably mimic the BSTSmallArray, where the stub can 
@@ -139,6 +141,9 @@
 //
 //        - STEP THREE: We need to make it possible for a form stub to load a form using 
 //          all of its files.
+//
+//           - Loaded forms need to clear data as appropriate at the start of their load 
+//             functions.
 //
 //        - STEP FOUR: DIAL/INFO is a special case. It's my understanding that INFO/PNAM 
 //          is just used to positing a TESTopicInfo within its TESTopic's info vector, 

@@ -1,7 +1,7 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include <string>
-#include <vector>
 #include "../../helpers/bitwise.h"
 #include "Form.h"
 #include "_common.h"
@@ -10,9 +10,7 @@ namespace dovah::loaded_forms {
    class Shout : public Form {
       public:
          static constexpr form_type_t form_type = form_type::shout;
-         Shout() : Form(form_type) {
-            this->words.reserve(3);
-         };
+         Shout() : Form(form_type) {};
 
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
@@ -21,15 +19,16 @@ namespace dovah::loaded_forms {
          };
 
          struct Word {
-            form_reference_t word_of_power;
-            form_reference_t spell;
+            form_reference_t word_of_power; // WOOP
+            form_reference_t spell;         // SPEL
             float recoveryTime = 0.0F;
          };
 
          localized_string name        = localized_string(localized_string_type::common);      // FULL
          localized_string description = localized_string(localized_string_type::description); // DESC
-         form_reference_t menu_display_object; // MDOB
-         std::vector<Word> words; // SNAM // a shout should always have exactly 3 of these, but we want to account for cases where they do not
+         form_reference_t equip_type;          // ETYP; should be an EQUP form
+         form_reference_t menu_display_object; // MDOB; should be a  STAT form
+         std::array<Word, 3> words; // SNAM (one per word)
 
          void load(tes_record_reader&);
          static void generateUseInfo(tes_record_reader&, form_stub*);

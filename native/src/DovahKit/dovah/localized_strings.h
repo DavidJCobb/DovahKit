@@ -16,6 +16,8 @@ namespace dovah {
       inline const char* c_str() const noexcept { return this->value.c_str(); }
       inline size_t size() const noexcept { return this->value.size(); }
       inline bool empty() const noexcept { return this->value.empty(); }
+      
+      void reset();
 
       localized_string& operator=(const std::string&) noexcept;
       localized_string& operator=(const localized_string&) noexcept;

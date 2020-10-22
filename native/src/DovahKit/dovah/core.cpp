@@ -438,6 +438,9 @@ namespace dovah {
    void form_reference_t::set(form_stub& owner, const form_reference_t& set_to) {
       this->set(owner, set_to.stub);
    }
+   void form_reference_t::reset() {
+      this->stub = nullptr;
+   }
    //
    base_form_reference_t::base_form_reference_t() : form_reference_t(use_info_entry::flag::object_reference) {};
    base_form_reference_t::base_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::object_reference, s) {};

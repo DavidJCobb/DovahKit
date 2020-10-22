@@ -318,6 +318,8 @@ namespace dovah {
          void set(form_stub& owner, form_stub* set_to);
          void set(form_stub& owner, const form_reference_t& set_to);
          //
+         void reset(); // ONLY call this when loading form data
+         //
          inline operator bool() const noexcept { return this->stub != nullptr; }
          inline bool operator==(const form_reference_t& other) const noexcept { return this->stub == other.stub; };
          inline bool operator!=(const form_reference_t& other) const noexcept { return this->stub != other.stub; };

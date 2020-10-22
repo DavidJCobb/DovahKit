@@ -1,0 +1,97 @@
+
+In Skyrim, each piece of game data is a "form" with a unique numeric "form ID." 
+Forms are encoded into a file as "records" and "subrecords." If a file includes 
+a record with the same  form ID as a record in one of  the file's dependencies, 
+then this new record  "overrides" the old one.  This gives rise to the "Rule of 
+One," a principle  which describes how  data conflicts are  handled by the game 
+engine.
+
+Here's a  basic example of  the Rule of  One. Say you  want to make  a mod that 
+changes the name of the item "Apple" to "Red Apple." You go to the Creation Kit 
+and you make that change.  What actually gets encoded  into your file is a full 
+copy of the original record,  but with a changed name:  you can't simply change 
+the name of an item, but rather must replace all of the item's data with a near-
+exact duplicate,  identical save for the  name. What happens,  then, if another 
+mod wants to change the  price of an apple?  Well, that mod, too,  will embed a 
+near-exact duplicate  of the original  apple definition. These  two mods, then, 
+will conflict: each one is trying to wholly replace the entire definition of an 
+apple, and only one of them can "win."  In practice, the mod that loads last is 
+the mod that will win.
+
+Sounds pretty  straightforward, then, right?  Because of  the Rule of One, only 
+one definition of a form can be loaded,  which means a form can be edited by at 
+most one file  before conflicts  occur. Except it  isn't nearly  so simple. The 
+real process is as follows:
+
+Upon encountering a record, the game checks  to see if a form is already loaded 
+into memory with that  record's form ID (which would be  the case if the record 
+were an override). If so, then the game does  a quick sanity check to make sure 
+that the existing form and the new record  are of the same type. If they aren't 
+(e.g. a WEAP  overriding a  VTYP), then the form  fails to load.  (There is one 
+exception: ARMO and ARMA are allowed  to override each other, for some reason.)
+
+If the form is already  loaded, then the  game checks if  it's a "parent" form, 
+i.e. if it is allowed to "contain" other forms (as in the case of: CELLs, which 
+contain REFRs; WRLDs, which contain CELLs;  or DIALs, which contain INFOs; note 
+that QUSTs don't actually contain DIALs). The game then checks if the record is 
+"partial." Cell and worldspace records are "partial" if they have the "partial" 
+flag, while overrides  of all other parent  forms are always  "partial." If the 
+record is "partial," then the game does a special "partial" load and then stops 
+all further processing: the record is at this point fully loaded.
+
+(The purpose of "partial" loads is to allow  files to add child forms to parent 
+forms in a dependency (and potentially make other changes to the parents) while 
+avoiding the need to override the entire parent form. Remember that the process 
+just described only applies to overrides.)
+
+If the form does  *not* already exist  in memory (i.e. if  this record isn't an 
+override), then the game  checks if the record is  flagged as "partial." If so, 
+then the game's response differs depending on what file the form is expected to 
+originate from based on its form ID (in Skyrim Classic, this is done via a test 
+of the form ID's load prefix).  If the form should originate from the file that 
+the game is  currently loading, then the "partial" flag is  simply stripped off 
+and ignored; otherwise, the form is skipped.
+
+Next up: if the form exists in memory (i.e. this record is an override), and if 
+the record is  not flagged as "deleted,"  then some special  steps are taken if 
+the form is a quest or object-reference. Regardless of the form's type, it will 
+then be asked to clear all of its data.  This is the origin of the Rule of One: 
+it is not the result of the game only using the last-loaded record for any form 
+ID, but rather a deliberate design decision  on Bethesda's part, and crucially, 
+it is a design  decision to which they  can make exception:  any data that they 
+don't go out of their  way to clear will, in effect,  be coalesced across every 
+file that defines a given form.
+
+That's an important point,  so let me restate it:  data will be exempt from the 
+Rule of One in every  case where Bethesda does not consciously  apply the rule. 
+Known examples  include various Location (LCTN) subrecords  that serve as lists 
+of ObjectReferences in a given Location.
+
+In practice, in order to know whether a given piece of data in a form type does 
+or does not obey the Rule of One,  a reverse-engineer must check at least three 
+places:
+
+   virtual void TESForm::ClearData();                    // virtual method 0x05
+   void TESForm::ClearAllComponentData();                // Classic: 0x00450D00
+   virtual bool TESForm::LoadForm(BGSLoadFormBuffer*);   // virtual method 0x06
+
+For parent forms, a reverse-engineer must also check one more location in code: 
+
+   virtual bool TESForm::LoadPartial(BGSLoadFormBuffer*);       // virtual 0x07
+
+The internal form class, TESForm, uses  multiple inheritance in order to supply 
+properties like  a full name (TESFullName)  or a description  (TESDescription). 
+SKSE class definitions list these parent  classes as members in order to ensure 
+consistent struct layouts  with the game, though the fields  are usually marked 
+with a comment indicating  that they're actually parents,  not members. You can 
+safely assume  that these fields  will have their  data cleared  when a form is 
+overridden (presuming the override lacks  the "deleted" flag). Clearing them is 
+the purpose of TESForm::ClearAllComponentData.
+
+Papyrus data is also cleared off of overridden forms (again, presuming that the 
+override lacks the "deleted" flag).  The form loader communicates directly with 
+the Papyrus VM; the form itself isn't responsible for clearing Papyrus state in 
+this situation.
+
+The function that  coordinates all of the above is,  in Skyrim Classic, located 
+at offset 0x004401B0.

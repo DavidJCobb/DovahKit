@@ -1,6 +1,10 @@
 #include "localized_strings.h"
 
 namespace dovah {
+   void localized_string::reset() {
+      *this = localized_string(this->type);
+   }
+
    localized_string& localized_string::operator=(const std::string& other) noexcept {
       this->value     = other;
       this->exists    = true;
