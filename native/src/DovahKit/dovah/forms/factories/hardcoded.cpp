@@ -784,10 +784,11 @@ namespace dovah {
          lo._accept_hardcoded_form(stub);
       }
    }
-   void build_hardcoded_form_outbound_refs(form_stub& stub) {
-      switch (stub.formID) {
+   void build_hardcoded_form_outbound_refs(form_stub_use_info_builder& uib) {
+      auto* stub = uib.stub();
+      switch (stub->formID) {
          case 0x00000014: // [ACHR]PlayerRef
-            stub.add_outbound_reference(0x00000007, use_info_entry::flag::object_reference);
+            uib.add_outbound_reference(0x00000007, use_info_entry::flag::object_reference);
             break;
          case 0x0000015E: // [WTHR]DefaultWeather
             //

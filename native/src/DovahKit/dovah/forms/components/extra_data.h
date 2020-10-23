@@ -180,7 +180,7 @@ namespace dovah::loaded_forms::components {
          void clone_from(const extra_data_list& source, form_stub& owner_of_clone);
          void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
          //
-         static extra_data_load_result generate_use_info(tes_record_reader&, form_stub*);
+         static extra_data_load_result generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
          basic_extra_data* lookup_by_type(extra_data_type) const noexcept;
          template<class e> inline e* lookup(extra_data_type et) const noexcept {

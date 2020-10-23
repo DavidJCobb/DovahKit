@@ -18,11 +18,11 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.close();
    }
    //
-   /*static*/ void navmesh_door_portal::generate_use_info(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void navmesh_door_portal::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       form_id_t formID;
       if (subrecord.read(formID) && formID)
-         stub->add_outbound_reference(formID);
+         uib.add_outbound_reference(formID);
    }
    basic_extra_data* navmesh_door_portal::clone(form_stub& clone_owner) const noexcept {
       auto* clone = new navmesh_door_portal;

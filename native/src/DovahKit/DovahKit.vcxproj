@@ -490,6 +490,7 @@
   <ItemGroup>
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
+    <Text Include="dovah\_docs\how the game loads forms.txt" />
     <Text Include="dovah\_docs\list of SSE CK warnings (non-exhaustive).txt" />
     <Text Include="dovah\_docs\plugin types.txt" />
     <Text Include="dovah\_docs\reading files.txt" />

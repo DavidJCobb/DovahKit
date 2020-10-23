@@ -84,8 +84,8 @@ namespace dovah::loaded_forms::components {
       for (auto* extra : this->content)
          extra->sever_outbound_references_to(target, my_owner);
    }
-   /*static*/ extra_data_load_result extra_data_list::generate_use_info(tes_record_reader& record, form_stub* stub) {
-      return generate_extra_data_use_info(record, stub);
+   /*static*/ extra_data_load_result extra_data_list::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      return generate_extra_data_use_info(record, uib);
    }
    basic_extra_data* extra_data_list::lookup_by_type(extra_data_type t) const noexcept {
       for (auto* item : this->content)

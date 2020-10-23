@@ -25,10 +25,10 @@ namespace dovah::loaded_forms::components::extra {
          this->event.save(record);
    }
    //
-   /*static*/ void patrol_ref_data::generate_use_info(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void patrol_ref_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature_event)
-         package_event_dialogue::generateUseInfo(record, stub);
+         package_event_dialogue::generate_use_info(record, uib);
    }
    basic_extra_data* patrol_ref_data::clone(form_stub& clone_owner) const noexcept {
       auto* clone = new patrol_ref_data;

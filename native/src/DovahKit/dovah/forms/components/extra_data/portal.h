@@ -25,7 +25,7 @@ namespace dovah::loaded_forms::components::extra {
          virtual load_result load(tes_subrecord_reader&) override;
          virtual void save(tes_record_writer&) override;
          //
-         static void generate_use_info(tes_record_reader&, form_stub*) {}
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}
          //
          virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept override;
    };

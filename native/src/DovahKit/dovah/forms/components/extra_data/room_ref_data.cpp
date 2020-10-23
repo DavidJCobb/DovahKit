@@ -65,16 +65,16 @@ namespace dovah::loaded_forms::components::extra {
          record.write_formID_subrecord('XLRM', this->linked_rooms[i]);
    }
    //
-   /*static*/ void room_ref_data::generate_use_info(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void room_ref_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       room_ref_data temp;
       temp.load(record);
       if (temp.lighting_template)
-         stub->add_outbound_reference(temp.lighting_template);
+         uib.add_outbound_reference(temp.lighting_template);
       if (temp.imagespace)
-         stub->add_outbound_reference(temp.imagespace);
+         uib.add_outbound_reference(temp.imagespace);
       for (auto id : temp.linked_rooms)
          if (id)
-            stub->add_outbound_reference(id);
+            uib.add_outbound_reference(id);
    }
    basic_extra_data* room_ref_data::clone(form_stub& clone_owner) const noexcept {
       auto* clone = new room_ref_data;

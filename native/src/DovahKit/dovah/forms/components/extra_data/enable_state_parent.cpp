@@ -18,12 +18,12 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.close();
    }
    //
-   /*static*/ void enable_state_parent::generate_use_info(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void enable_state_parent::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature) {
          form_id_t formID;
          if (subrecord.read(formID) && formID)
-            stub->add_outbound_reference(formID);
+            uib.add_outbound_reference(formID);
       }
    }
    basic_extra_data* enable_state_parent::clone(form_stub& clone_owner) const noexcept {

@@ -68,10 +68,10 @@ namespace dovah::loaded_forms {
             case 'ATKD': // attack data
                subrecord.skip_bytes(8);
                if (subrecord.read(formID)) // attack spell
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                subrecord.skip_bytes(16);
                if (subrecord.read(formID)) // attack type
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                subrecord.skip_bytes(12);
                break;
             case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field

@@ -25,6 +25,18 @@ namespace dovah {
       return flags;
    }
 
+   #pragma region form_stub_use_info_builder
+   void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
+      this->_stub._add_one_way_outbound_reference(to_stub, flags);
+   }
+   void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+      this->_stub._add_one_way_outbound_reference(toFormID, flags);
+   }
+   #pragma endregion
+
+   form_stub::form_stub() {
+      this->file = file_data();
+   }
    form_stub::~form_stub() {
       if (this->get_refcount()) {
          #if _DEBUG
@@ -35,6 +47,10 @@ namespace dovah {
       if (auto form = this->form) { // needed for edited forms, hardcoded forms, and other forms that aren't normally allowed to unload
          delete form;
          this->form = nullptr;
+      }
+      if (!(this->flags & flag::has_only_one_file)) {
+         if (this->files.entries)
+            delete[] this->files.entries;
       }
    }
    void form_stub::_unload_form() {
@@ -158,6 +174,35 @@ namespace dovah {
       out_arr   = this->files.entries;
       out_count = this->files.count;
    }
+   void form_stub::_adopt_source_file_list(const form_stub* other) {
+      if (!other)
+         return;
+      uint16_t start   = other->source_file_count();
+      uint16_t bring   = this->source_file_count();
+      uint16_t count   = bring + start;
+      auto*    resized = new file_data[count];
+      if (start == 1) {
+         resized[0].pointer = other->file.pointer;
+         resized[0].offset  = other->file.offset;
+      } else if (start > 1) {
+         for (uint16_t i = 0; i < start; ++i) {
+            resized[i].pointer = other->files.entries[i].pointer;
+            resized[i].offset  = other->files.entries[i].offset;
+         }
+      }
+      if (this->flags & flag::has_only_one_file) {
+         resized[start].pointer = this->file.pointer;
+         resized[start].offset  = this->file.offset;
+      } else {
+         for (uint16_t i = 0; i < bring; ++i) {
+            resized[i].pointer = this->files.entries[i].pointer;
+            resized[i].offset  = this->files.entries[i].offset;
+         }
+         delete[] this->files.entries;
+      }
+      this->files.entries = resized;
+      this->files.count   = count;
+   }
 
    const form_stub::file_data* form_stub::get_source_file_info(int16_t i) const noexcept {
       if (this->flags & flag::has_only_one_file) {
@@ -176,6 +221,14 @@ namespace dovah {
       if (this->flags & flag::has_only_one_file)
          return this->file;
       return this->files.entries != nullptr;
+   }
+   uint16_t form_stub::source_file_count() const noexcept {
+      if (this->flags & flag::has_only_one_file) {
+         if (!this->file)
+            return 0;
+         return 1;
+      }
+      return this->files.count;
    }
    int16_t form_stub::index_of_file(const owner_file_t* f) const noexcept {
       if (this->flags & flag::has_only_one_file) {
@@ -244,7 +297,8 @@ namespace dovah {
    #pragma region form_stub use info functions
    void form_stub::build_outbound_refs(tes_file_reading::basic_reader* reader) noexcept {
       if (this->is_non_overridden_hardcoded_form()) { // hardcoded forms only have hardcoded outbound refs
-         build_hardcoded_form_outbound_refs(*this);
+         form_stub_use_info_builder use_interface(*this);
+         build_hardcoded_form_outbound_refs(use_interface);
          return;
       }
       //
@@ -262,15 +316,15 @@ namespace dovah {
                builder(record, use_interface);
          }
       }
-      this->add_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
+      this->_add_one_way_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
    }
    void form_stub::send_inbound_refs() noexcept {
       //
       // This function takes all outbound connections and creates, for the connected forms, inbound 
       // connections from this form. It is intended only for use at the tail end of the (file_load_order) 
-      // load process, for building use info for all loaded forms: (add_outbound_reference) is used to 
-      // create single-direction connections, and this function subsequently makes all such connections 
-      // bidirectional.
+      // load process, for building use info for all loaded forms: (_add_one_way_outbound_reference) is 
+      // used to create single-direction connections, and this function subsequently makes all such 
+      // connections bidirectional.
       //
       // If you were to call this function later on, you would end up with redundant inbound connections, 
       // as already-sent outbound connections would be sent again.
@@ -290,7 +344,7 @@ namespace dovah {
       entry.flags = flags;
    }
 
-   void form_stub::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
+   void form_stub::_add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
       //
       // This function creates a single-direction connection from (this) to (to_stub), with the understanding 
       // that a later call to (this->send_inbound_refs()) will make all such connections bidirectional. As 
@@ -316,7 +370,7 @@ namespace dovah {
       if (flags)
          entry.flags |= flags;
    }
-   void form_stub::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+   void form_stub::_add_one_way_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
       //
       // Please refer to the documentation comments in this function's other overload.
       //
@@ -512,7 +566,7 @@ namespace dovah {
       if (!new_stub)
          return;
       //
-      this->add_outbound_reference(new_stub, flags);
+      this->_add_one_way_outbound_reference(new_stub, flags);
       new_stub->receive_inbound_ref(this, use_info_entry::invert_flags(flags));
    }
    void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {

@@ -20,14 +20,14 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.close();
    }
    //
-   /*static*/ void cell_region_list::generate_use_info(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void cell_region_list::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature) {
          auto count = subrecord.size() / 4;
          for (size_t i = 0; i < count; ++i) {
             form_id_t formID;
             if (subrecord.read(formID) && formID)
-               stub->add_outbound_reference(formID);
+               uib.add_outbound_reference(formID);
          }
       }
    }

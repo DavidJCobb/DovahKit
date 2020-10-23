@@ -83,7 +83,7 @@ namespace dovah {
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
       //
-      stub->_add_file(*this->hardcoded_forms_file);
+      stub->_add_file(*this->hardcoded_forms_file, 0);
       stub->flags |= form_stub::flag::is_hardcoded;
       //
       bare_form_id_t formID = stub->formID;
@@ -399,6 +399,7 @@ namespace dovah {
          if (target->formType != stub->formType) { // TODO: ARMO/ARMA mismatches are allowed by the game, as a (bad) leftover from FO3
             return form_id_status::form_type_mismatch;
          }
+         stub->_adopt_source_file_list(target);
          delete target; // delete the overridden form stub
       }
       target = stub;
@@ -1249,7 +1250,7 @@ namespace dovah {
          out = stub->formID & 0x00FFFFFF;
          return form_id_status::valid;
       }
-      auto    file   = stub->file;
+      auto    file   = stub->get_file_at_index(-1);
       uint8_t local  = file->header.masters.size();
       uint8_t prefix = stub->formID >> 0x18;
       if (prefix == local) {

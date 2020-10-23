@@ -183,6 +183,7 @@ namespace dovah {
       friend form_stub_use_info_builder;
       //
       public:
+         form_stub();
          ~form_stub();
          struct flag {
             flag() = delete;
@@ -238,7 +239,7 @@ namespace dovah {
          //
       protected:
          union {
-            file_data      file = file_data();
+            file_data      file;
             file_data_list files;
          };
          std::atomic<uint32_t> refcount = 0;
@@ -253,6 +254,10 @@ namespace dovah {
          void _add_file(owner_file_t&, uint32_t offset);
          void _set_active_file_data(owner_file_t&, uint32_t offset);
          void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) noexcept;
+         void _adopt_source_file_list(const form_stub* other);
+         //
+         void _add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
+         void _add_one_way_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
          //
       public:
          group_stub    groupInfo;
@@ -274,6 +279,7 @@ namespace dovah {
          const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;
          bool file_list_includes(const owner_file_t*) const noexcept;
          bool has_source_files() const noexcept;
+         uint16_t source_file_count() const noexcept;
          int16_t index_of_file(const owner_file_t*) const noexcept;
          owner_file_t* get_file_at_index(int16_t) const noexcept;
          //
@@ -306,24 +312,6 @@ namespace dovah {
          void replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags = 0);
 
          void sever_all_outbound_references(); // works bidirectionally; use when deleting a form
-
-         //
-         // The (add_outbound_reference) functions create a one-way outbound connection between this form and another. 
-         // They should only be used by internal code for managing form stubs, and by loaded-form classes' functions 
-         // for generating use info at the tail end of the (file_load_order) load process. (It is the latter task that 
-         // requires that these be public functions; they would otherwise be protected.) It is assumed that after all 
-         // needed (add_outbound_reference) calls have been made, the load process will call (send_inbound_refs) on 
-         // all stubs to make all of their outbound connections bidirectional.
-         //
-         // In general you should not be programmatically manipulating form stub connections, preferring instead to 
-         // edit loaded-form classes; if for some reason you do need to programmatically add connections after the 
-         // initial load, then call (replace_outbound_reference) with zero as the "old form ID."
-         //
-         // (Calling (send_inbound_refs) yourself is not a solution; that would cause any connections that already 
-         // are bidirectional to be doubled on the "inbound" side.)
-         //
-         void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
-         void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
          
          static void* operator new(std::size_t sz);
          static void operator delete(void* ptr, std::size_t sz);

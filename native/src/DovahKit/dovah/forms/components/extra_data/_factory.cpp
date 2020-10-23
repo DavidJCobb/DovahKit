@@ -97,15 +97,16 @@
 namespace {
    using namespace dovah::loaded_forms::components;
    using namespace dovah::loaded_forms::components::extra;
-   using form_stub            = dovah::form_stub;
-   using tes_record_reader    = dovah::tes_file_reading::record;
-   using tes_subrecord_reader = dovah::tes_file_reading::subrecord;
+   using form_stub                  = dovah::form_stub;
+   using form_stub_use_info_builder = dovah::form_stub_use_info_builder;
+   using tes_record_reader          = dovah::tes_file_reading::record;
+   using tes_subrecord_reader       = dovah::tes_file_reading::subrecord;
    //
    template<class edc> basic_extra_data* _create() { return new edc; }
    using _factory_t = basic_extra_data*(*)();
    //
-   template<class edc> void _use_info(tes_record_reader& record, form_stub* stub) { edc::generate_use_info(record, stub); };
-   using _use_info_t = void(*)(tes_record_reader&, form_stub*);
+   template<class edc> void _use_info(tes_record_reader& record, form_stub_use_info_builder& uib) { edc::generate_use_info(record, uib); };
+   using _use_info_t = void(*)(tes_record_reader&, form_stub_use_info_builder&);
 
    struct _handlers {
       _factory_t  construct;
@@ -266,14 +267,14 @@ namespace dovah::loaded_forms::components {
       }
       return nullptr;
    }
-   extra_data_load_result generate_extra_data_use_info(tes_record_reader& record, form_stub* stub) {
+   extra_data_load_result generate_extra_data_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord && "You need to open a subrecord before calling this.");
       auto  signature = subrecord.signature();
       for (int i = 0; i < std::extent<decltype(_factories)>::value; ++i) {
          auto& entry = _factories[i];
          if (signature == entry.signature) {
-            (entry.handlers.use_info)(record, stub);
+            (entry.handlers.use_info)(record, uib);
             return extra_data_load_result::succeeded;
          }
       }
