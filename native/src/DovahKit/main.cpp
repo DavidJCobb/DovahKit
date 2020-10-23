@@ -121,86 +121,61 @@
 //
 //           = URGENT
 //
+//  - Support for loading records flagged as "partial"
+//
+//     - If the flag is present on an injected record, then skip the record.
+//
+//     - If the flag is present on a non-injected non-override, then it should be stripped.
+//
+//     - The loaders for WRLD, CELL, and DIAL need to check for the flag (they have access 
+//       to the record reader, so they should be capable of this) and if it's present, then 
+//       they need to match the behavior of the appropriate TESForm::LoadPartial override 
+//       in TESV.exe.
+//
 //  - Multiple-file form loading
 //
-//     - Reverse-engineering indicates that the "partial" record flag available in FO4 is 
-//       also available in Skyrim Classic. It should only affect loading in the following 
-//       ways:
+//     - Examine all form types except SHOU (we already checked that one): double-check to 
+//       see what data they clear when loading overrides, and modify our load code to act 
+//       consistently with what we find.
 //
-//        - If the form is already loaded into memory and is a parent form, then call 
-//          TESForm::LoadPartial rather than TESForm::LoadForm.
+//        - Use Info generation also needs to behave consistently.
 //
-//           - We need to examine the partial load code for all parent form types, and 
-//             implement a virtual "partial load" function on loaded_forms::Form.
+//  - Support for injected records
 //
-//        - If the form is not already loaded into memory, then check its load order 
-//          prefix. If it originates from the file currently being loaded, then strip 
-//          the "partial" flag and continue as normal; otherwise, skip the form.
+//     = Since form stubs now store a list of all files that define their forms, we no 
+//       longer need to rely on the form stub's form ID to identify forms that originate 
+//       from the active file. Accordingly, we should allow the user to renumber forms 
+//       that originate in the active file to inject them (or to convert injected records 
+//       to normal ones), since we can tell injected records apart from others by testing 
+//       whether any of the files in their list match up with their load order slot (no 
+//       match = injected).
 //
-//     - The content of some forms can be influenced by multiple files, and not just the 
-//       winning override. Locations (LCTN) are an obvious example, but other examples 
-//       are known to include story manager content and dialogue topics (in the case of 
-//       a mod inserting an INFO into the middle of a DIAL's list).
+//  - Support for special-case relationships between records
 //
-//       <https://www.afkmods.com/index.php?/topic/3940-skyrim-tes5edit-records-that-merge-at-runtime/>
+//     - WRLD can only have one persistent cell, and it's the first persistent-flagged 
+//       child CELL to load.
 //
-//       We're going to need to handle this.
+//     - DIAL needs to maintain a list of all of its child INFOs outside of the loaded 
+//       form. It's my understanding that INFO/PNAM is just used to positioning a 
+//       TESTopicInfo within its TESTopic's info vector, which means that our existing 
+//       setup (relying solely on use info to link a topic to its infos, and the infos 
+//       to their siblings) is not adequate. The form stub for DIALs will need to be able 
+//       to store a dedicated list of INFOs, and we'll need to build this list during 
+//       stub generation. We can generalize this situation -- allow form stubs to 
+//       optionally store an "ordered child form list."
 //
-//        - STEP ONE: We need to reverse-engineer the game and figure out whether this 
-//          is a "sometimes" thing or an "all the time" thing: does the game only allow 
-//          specific form types to incorporate data from all loaded files, or does it 
-//          allow *all* form types to do so, with most form types simply opting not to 
-//          take advantage of the ability? If it's the latter, then we need to scrutinize 
-//          form-loading code much more thoroughly, and we need to allow all form types 
-//          to do the same.
+//  - Support for reverting forms, and for removing an active file's overrides
 //
-//           - DONE.
-//
-//        - STEP TWO: We need to make form_stub able to store multiple file pointers and 
-//          file offsets. We should probably mimic the BSTSmallArray, where the stub can 
-//          store a single file or a pointer to a list of them, with the flag that indic-
-//          ates which being stored within the form stub's existing flags mask.
-//
-//        - STEP THREE: We need to make it possible for a form stub to load a form using 
-//          all of its files.
-//
-//           - Loaded forms need to clear data as appropriate at the start of their load 
-//             functions.
-//
-//              - So does Form::generateUseInfo.
-//
-//           - If we implement this, then we can support injected records, because we 
-//             don't need to rely on the form ID to identify them. If a record is injected 
-//             into File X but doesn't have an offset for that file, then we know that 
-//             despite its form ID, it doesn't truly originate from that file.
-//
-//        - STEP FOUR: DIAL/INFO is a special case. It's my understanding that INFO/PNAM 
-//          is just used to positing a TESTopicInfo within its TESTopic's info vector, 
-//          which means that our existing setup (relying solely on use info to link a 
-//          topic to its infos, and the infos to their siblings) is not adequate. The 
-//          form stub for DIALs will need to be able to store a dedicated list of INFOs, 
-//          and we'll need to build this list during stub generation. We can generalize 
-//          this situation -- allow form stubs to optionally store an "ordered child form 
-//          list."
-//
-//     - Once the needed machinery for all of the above is in place, we can look into 
-//       taking advantage of it. First, we need to test the performance impact of tracking 
-//       all file offsets for all forms. Most forms will not be overridden and so will 
-//       have only one offset, so using a BSTSmallArray-style list should hopefully avoid 
-//       memory fragmentation and memory-related performance issues.
-//
-//       If we find that it is indeed economical to be able to store multiple file offsets 
-//       for all forms, then we can go a step further. What if it were possible to right-
-//       click a form in the object window, mouse over a "Revisions" context menu item, 
-//       and pick which file (i.e. which record/override) you want to work with?
+//     - What if it were possible to right-click a form in the object window, mouse over 
+//       a "Revisions" context menu item, and pick which file (i.e. which record/override) 
+//       you want to work with?
 //
 //       Implementating this would require a few considerations:
 //
 //        - Form stubs would need to be able to store *which* file they've been told to 
 //          load from. An int16_t (with -1 meaning "use latest file") should do the trick.
 //
-//        - Editing a form stub that has been "reverted" in this manner should flag it as 
-//          edited and thne switch its "which file" value to "use latest file."
+//        - Reverting a form stub should flag it as edited.
 //
 //        - If we "revert" a form stub, then we need to clear all of its outbound use 
 //          info, and then use loaded_forms::Form::generateUseInfo on the selected file 
@@ -217,7 +192,7 @@
 //
 //       But there are UX benefits:
 //
-//        - The backend tech needed for this could easily be used for reverting overrides 
+//        - The backend tech needed for this could easily be used for undoing overrides 
 //          that exist in the active file. Currently, the Creation Kit lets you do that via 
 //          the Data menu, but it requires a full reload (i.e. you aren't "reverting an 
 //          override" so much as you are "electing to not load a particular override").
