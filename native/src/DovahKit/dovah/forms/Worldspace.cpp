@@ -260,6 +260,8 @@ namespace dovah::loaded_forms {
                   uib.add_outbound_reference(formID);
                break;
             case 'RNAM': // large references // SSE-only, but we'll still load it if we see it in a Classic file.
+               if (!subrecord.is_skyrim_special())
+                  break;
                subrecord.skip_bytes(4);
                while (subrecord.is_in_bounds(8)) {
                   if (subrecord.read(formID))

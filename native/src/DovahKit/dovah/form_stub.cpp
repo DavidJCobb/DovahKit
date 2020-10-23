@@ -302,6 +302,8 @@ namespace dovah {
       form_stub_use_info_builder use_interface(*this);
       //
       for (uint16_t i = 0; i < size; ++i) {
+         if (i == size - 1)
+            use_interface._is_final_file = true;
          if (arr[i].pointer->load_record_at(arr[i].offset, reader)) {
             auto& record = reader->get_current_record();
             auto  builder = get_outbound_uses_builder_by_type(this->formType);
