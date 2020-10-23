@@ -217,10 +217,10 @@ namespace dovah {
                //
                flagged_as_deleted = 0x08,
                //
-               // (has_only_one_file)
-               // Indicates that the (file)/(files) union is (file).
+               // (has_multiple_source_files)
+               // Indicates that the (file)/(files) union is (files).
                //
-               has_only_one_file = 0x10,
+               has_multiple_source_files = 0x10,
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;
@@ -253,7 +253,7 @@ namespace dovah {
          //
          void _add_file(owner_file_t&, uint32_t offset);
          void _set_active_file_data(owner_file_t&, uint32_t offset);
-         void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) noexcept;
+         void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept;
          void _adopt_source_file_list(const form_stub* other);
          //
          void _add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
@@ -279,6 +279,7 @@ namespace dovah {
          const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;
          bool file_list_includes(const owner_file_t*) const noexcept;
          bool has_source_files() const noexcept;
+         inline bool has_multiple_source_files() const noexcept { return this->flags & flag::has_multiple_source_files; }
          uint16_t source_file_count() const noexcept;
          int16_t index_of_file(const owner_file_t*) const noexcept;
          owner_file_t* get_file_at_index(int16_t) const noexcept;

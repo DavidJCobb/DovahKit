@@ -48,7 +48,7 @@ namespace dovah::loaded_forms {
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               decltype(script_data)::generateUseInfo(subrecord, uib);
+               decltype(script_data)::generate_use_info(subrecord, uib);
                break;
             case 'NAME': // base form (subrecord signature is vestigial from Morrowind, which used editor IDs instead of form IDs)
                if (subrecord.read(formID))

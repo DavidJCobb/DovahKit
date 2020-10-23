@@ -48,7 +48,7 @@ namespace dovah {
          delete form;
          this->form = nullptr;
       }
-      if (!(this->flags & flag::has_only_one_file)) {
+      if (this->has_multiple_source_files()) {
          if (this->files.entries)
             delete[] this->files.entries;
       }
@@ -123,14 +123,14 @@ namespace dovah {
 
    #pragma region form_stub file list
    void form_stub::_add_file(owner_file_t& f, uint32_t offset) {
-      if (this->flags & flag::has_only_one_file) {
+      if (!this->has_multiple_source_files()) {
          if (!this->file) {
             this->file.pointer = &f;
             this->file.offset  = offset;
             return;
          }
          auto prior = this->file;
-         this->flags &= ~flag::has_only_one_file;
+         this->flags |= flag::has_multiple_source_files;
          this->files.entries = new file_data[2];
          this->files.count   = 2;
          this->files.entries[0] = prior;
@@ -153,7 +153,7 @@ namespace dovah {
          this->_add_file(f, offset);
          return;
       }
-      if (i == 0 && this->flags & flag::has_only_one_file) {
+      if (i == 0 && !this->has_multiple_source_files()) {
          this->file.pointer = &f;
          this->file.offset  = offset;
          return;
@@ -161,12 +161,12 @@ namespace dovah {
       this->files.entries[i].pointer = &f;
       this->files.entries[i].offset  = offset;
    }
-   void form_stub::_get_source_file_list(file_data*& out_arr, uint16_t& out_count) noexcept {
+   void form_stub::_get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept {
       out_arr   = nullptr;
       out_count = 0;
-      if (this->flags & flag::has_only_one_file) {
+      if (!this->has_multiple_source_files()) {
          if (this->file) {
-            out_arr   = &this->file;
+            out_arr   = const_cast<file_data*>(&this->file);
             out_count = 1;
          }
          return;
@@ -177,36 +177,29 @@ namespace dovah {
    void form_stub::_adopt_source_file_list(const form_stub* other) {
       if (!other)
          return;
-      uint16_t start   = other->source_file_count();
-      uint16_t bring   = this->source_file_count();
-      uint16_t count   = bring + start;
-      auto*    resized = new file_data[count];
-      if (start == 1) {
-         resized[0].pointer = other->file.pointer;
-         resized[0].offset  = other->file.offset;
-      } else if (start > 1) {
-         for (uint16_t i = 0; i < start; ++i) {
-            resized[i].pointer = other->files.entries[i].pointer;
-            resized[i].offset  = other->files.entries[i].offset;
-         }
-      }
-      if (this->flags & flag::has_only_one_file) {
-         resized[start].pointer = this->file.pointer;
-         resized[start].offset  = this->file.offset;
-      } else {
-         for (uint16_t i = 0; i < bring; ++i) {
-            resized[i].pointer = this->files.entries[i].pointer;
-            resized[i].offset  = this->files.entries[i].offset;
-         }
+      uint16_t   count_a;
+      uint16_t   count_b;
+      file_data* array_a;
+      file_data* array_b;
+      other->_get_source_file_list(array_a, count_a);
+      this->_get_source_file_list(array_b, count_b);
+      //
+      auto* resized = new file_data[count_a + count_b];
+      for (uint16_t i = 0; i < count_a; ++i)
+         resized[i] = array_a[i];
+      for (uint16_t i = 0; i < count_b; ++i)
+         resized[i + count_a] = array_b[i];
+      //
+      if (this->has_multiple_source_files())
          delete[] this->files.entries;
-      }
       this->files.entries = resized;
-      this->files.count   = count;
+      this->files.count   = count_a + count_b;
+      this->flags |= flag::has_multiple_source_files;
    }
 
    const form_stub::file_data* form_stub::get_source_file_info(int16_t i) const noexcept {
-      if (this->flags & flag::has_only_one_file) {
-         if (i > 0 || i != -1)
+      if (!this->has_multiple_source_files()) {
+         if (i != 0 && i != -1)
             return nullptr;
          return &this->file;
       }
@@ -218,12 +211,12 @@ namespace dovah {
    }
 
    bool form_stub::has_source_files() const noexcept {
-      if (this->flags & flag::has_only_one_file)
+      if (!this->has_multiple_source_files())
          return this->file;
       return this->files.entries != nullptr;
    }
    uint16_t form_stub::source_file_count() const noexcept {
-      if (this->flags & flag::has_only_one_file) {
+      if (!this->has_multiple_source_files()) {
          if (!this->file)
             return 0;
          return 1;
@@ -231,7 +224,7 @@ namespace dovah {
       return this->files.count;
    }
    int16_t form_stub::index_of_file(const owner_file_t* f) const noexcept {
-      if (this->flags & flag::has_only_one_file) {
+      if (!this->has_multiple_source_files()) {
          if (this->file.pointer == f)
             return 0;
          return -1;
@@ -243,7 +236,7 @@ namespace dovah {
       return -1;
    }
    bool form_stub::file_list_includes(const owner_file_t* f) const noexcept {
-      if (this->flags & flag::has_only_one_file)
+      if (!this->has_multiple_source_files())
          return this->file.pointer == f;
       auto size = this->files.count;
       for (uint16_t i = 0; i < size; ++i)

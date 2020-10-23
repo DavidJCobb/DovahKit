@@ -1,7 +1,5 @@
 #include "TopicInfo.h"
 #include "_common_cpp.h"
-#include "components/conditions.h"
-#include "components/papyrus.h"
 
 namespace dovah::loaded_forms {
    /*static*/ void TopicInfo::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -29,7 +27,7 @@ namespace dovah::loaded_forms {
                   uib.add_outbound_reference(formID);
                break;
             case 'CTDA':
-               components::condition::generateUseInfo(record, uib);
+               components::condition::generate_use_info(record, uib);
                break;
             case 'DATA': // metadata (old)
             case 'ENAM': // metadata (new)

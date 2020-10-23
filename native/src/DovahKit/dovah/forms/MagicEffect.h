@@ -3,6 +3,8 @@
 #include <string>
 #include "Form.h"
 #include "_common.h"
+#include "components/conditions.h"
+#include "components/keyword_list.h"
 #include "components/papyrus.h"
 
 namespace dovah::loaded_forms {

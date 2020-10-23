@@ -1,6 +1,5 @@
 #include "MagicEffect.h"
 #include "_common_cpp.h"
-#include "components/conditions.h"
 
 namespace dovah::loaded_forms {
    /*static*/ void MagicEffect::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
