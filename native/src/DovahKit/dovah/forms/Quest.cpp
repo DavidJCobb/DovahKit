@@ -469,12 +469,12 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void Quest::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void Quest::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               components::papyrus_attachment_data::generateUseInfo(subrecord, stub);
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'QTGL': // text global (there can be multiple)
             case 'NAM0': // log entry next quest
@@ -496,19 +496,19 @@ namespace dovah::loaded_forms {
             case 'ALFL': // alias fill from location ID
             case 'KNAM': // alias fill from location keyword ID
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
             case 'KSIZ': // alias keywords
             case 'KWDA':
-               components::keyword_list::generateUseInfo(subrecord, stub);
+               components::keyword_list::generate_use_info(subrecord, uib);
                break;
             case 'CTDA':
-               components::condition::generateUseInfo(record, stub);
+               components::condition::generate_use_info(record, uib);
                break;
             case 'COCT':
             case 'CNTO':
             case 'COED':
-               components::container_data::generateUseInfo(subrecord, stub);
+               components::container_data::generate_use_info(subrecord, uib);
                break;
             #ifdef _DEBUG
             case 'EDID': // editor ID
@@ -547,15 +547,8 @@ namespace dovah::loaded_forms {
             case 'SCRV': // DEPRECATED: ObScript ObjectReference variable
             case 'SLSD': // ObScript data? game doesn't load this
             case 'QNAM': // ObScript data? game doesn't load this / alias hidden flag
-               break;
             case 'DNAM': // quest form version?
                break;
-            default:
-               {
-                  char sig[5];
-                  dovah::logging::format_signature(subrecord.signature(), sig);
-                  dovah::logging::print_line("Warning: [QUST:%08X]%s: Unrecognized signature %s at offset %08X.", record.formID(), stub->get_editor_id(), sig, record.stream_pos());
-               }
             #endif
          }
       }

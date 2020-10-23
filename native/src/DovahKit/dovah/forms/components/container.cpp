@@ -40,11 +40,11 @@ namespace dovah::loaded_forms::components {
          assert(false && "ContainerData::load should only be called for COCT, CNTO, and COED subrecords!");
       #endif
    }
-   /*static*/ void container_data::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+   /*static*/ void container_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
       if (subrecord.signature() == 'CNTO') {
          if (subrecord.read(formID))
-            stub->add_outbound_reference(formID);
+            uib.add_outbound_reference(formID);
          // remaining bytes don't matter
          return;
       }
@@ -55,13 +55,13 @@ namespace dovah::loaded_forms::components {
          // we've already identified all forms and their types.
          //
          if (subrecord.read(formID)) {
-            stub->add_outbound_reference(formID);
+            uib.add_outbound_reference(formID);
             //
             if (formID) {
-               auto ownerStub = subrecord.lookup_form_by_id(formID);
+               const auto* ownerStub = subrecord.lookup_form_by_id(formID);
                if (ownerStub && ownerStub->formType == form_type::actor_base) {
                   if (subrecord.read(formID)) // owner GLOB
-                     stub->add_outbound_reference(formID);
+                     uib.add_outbound_reference(formID);
                }
             }
          }

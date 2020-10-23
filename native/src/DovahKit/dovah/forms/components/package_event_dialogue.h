@@ -15,7 +15,7 @@ namespace dovah::loaded_forms::components {
       uint32_t         topic_subtype = 0; // signature
       //
       bool load(tes_record_reader&);
-      static void generateUseInfo(tes_record_reader&, form_stub*);
+      static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
       void save(tes_record_writer&);
       void clone_from(const package_event_dialogue& original, form_stub& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;

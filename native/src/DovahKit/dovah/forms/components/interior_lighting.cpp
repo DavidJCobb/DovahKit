@@ -31,7 +31,7 @@ namespace dovah::loaded_forms::components {
       subrecord.read(this->light_fade_distance.end);
       subrecord.read(this->inherit_flags);
    }
-   /*static*/ void interior_lighting::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+   /*static*/ void interior_lighting::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       return;
    }
    void interior_lighting::save(tes_subrecord_writer& subrecord) {

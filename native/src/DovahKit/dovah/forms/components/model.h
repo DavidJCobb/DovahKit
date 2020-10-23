@@ -26,7 +26,7 @@ namespace dovah::loaded_forms::components {
       std::vector<model_texture_swap> texture_swaps;
       //
       void load(tes_subrecord_reader&);
-      static void generateUseInfo(tes_subrecord_reader&, form_stub*);
+      static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
       void save(tes_subrecord_writer&); // open the subrecord before calling
       void save(tes_record_writer&, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap); // opens the subrecords, etc., for you
       //

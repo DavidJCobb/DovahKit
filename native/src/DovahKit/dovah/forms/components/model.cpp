@@ -38,7 +38,7 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
-   /*static*/ void model::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+   /*static*/ void model::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
       switch (subrecord.signature()) {
          case 'MODL':
@@ -58,7 +58,7 @@ namespace dovah::loaded_forms::components {
                   for (uint32_t i = 0; i < count; i++) {
                      subrecord.skip_length_prefixed_string<4>();
                      if (subrecord.read(formID))
-                        stub->add_outbound_reference(formID);
+                        uib.add_outbound_reference(formID);
                      subrecord.skip_bytes(4);
                      if (!subrecord.is_in_bounds())
                         return;

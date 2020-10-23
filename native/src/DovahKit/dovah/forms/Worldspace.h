@@ -182,7 +182,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data; // VMAD
 
          void load(tes_record_reader&);
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
          virtual void setup(const file_load_order&) noexcept override;
          //

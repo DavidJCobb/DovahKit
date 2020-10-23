@@ -15,6 +15,6 @@ namespace dovah::loaded_forms {
          TopicInfo() : Form(form_type) {};
 
          void load(tes_record_reader&); // TODO: FINISH ME
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
    };
 }

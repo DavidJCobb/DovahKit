@@ -102,6 +102,25 @@
 //
 //     - A worldspace's persistent cell is the first persistent-flagged child cell to load.
 //
+//     - The game reuses a single NavMeshInfoMap for all NAVI, even ones that don't override 
+//       a prior NAVI. However, non-overrides wouldn't go through the normal data-clearing 
+//       process that happens when overrides occur (though NAVI may just have that as no-ops 
+//       anyway). It's worth checking a few things, then: would a non-overriding NAVI change 
+//       the form ID of the baseline NAVI, and is there any data that should be cleared in 
+//       an override (that therefore wouldn't be cleared by a non-override)?
+//
+//     - It seems like Skyrim allows ARMO and ARMA to override each other (i.e. an ARMO with 
+//       the same form ID as an ARMA, or vice versa). Presumably, the overriding record's 
+//       content would be passed to the existing form, i.e. if ARMA overrides ARMO, then the 
+//       contents of the ARMA record would be passed to the ARMO loader. This is based on 
+//       code analysis (it exists as a specific exception to "skip overrides if their form 
+//       type doesn't match that of the overridden form") and isn't verified experimentally.
+//
+//        - Speaking of which, do we have an error procedure for overrides that don't match 
+//          the type of the overridden form? I don't think we do. We need to fix that.
+//
+//           = URGENT
+//
 //  - Multiple-file form loading
 //
 //     - Reverse-engineering indicates that the "partial" record flag available in FO4 is 
@@ -110,6 +129,9 @@
 //
 //        - If the form is already loaded into memory and is a parent form, then call 
 //          TESForm::LoadPartial rather than TESForm::LoadForm.
+//
+//           - We need to examine the partial load code for all parent form types, and 
+//             implement a virtual "partial load" function on loaded_forms::Form.
 //
 //        - If the form is not already loaded into memory, then check its load order 
 //          prefix. If it originates from the file currently being loaded, then strip 
@@ -144,6 +166,13 @@
 //
 //           - Loaded forms need to clear data as appropriate at the start of their load 
 //             functions.
+//
+//              - So does Form::generateUseInfo.
+//
+//           - If we implement this, then we can support injected records, because we 
+//             don't need to rely on the form ID to identify them. If a record is injected 
+//             into File X but doesn't have an offset for that file, then we know that 
+//             despite its form ID, it doesn't truly originate from that file.
 //
 //        - STEP FOUR: DIAL/INFO is a special case. It's my understanding that INFO/PNAM 
 //          is just used to positing a TESTopicInfo within its TESTopic's info vector, 

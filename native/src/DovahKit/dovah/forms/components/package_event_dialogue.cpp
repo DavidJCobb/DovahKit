@@ -30,13 +30,13 @@ namespace dovah::loaded_forms::components {
       }
       return false;
    }
-   /*static*/ void package_event_dialogue::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void package_event_dialogue::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       package_event_dialogue temp;
       temp.load(record); // TODO: we have no way to signal errors re: malformed data
       if (temp.idle)
-         stub->add_outbound_reference(temp.idle);
+         uib.add_outbound_reference(temp.idle);
       if (temp.topic)
-         stub->add_outbound_reference(temp.topic);
+         uib.add_outbound_reference(temp.topic);
    }
    void package_event_dialogue::save(tes_record_writer& record) {
       if (this->idle)

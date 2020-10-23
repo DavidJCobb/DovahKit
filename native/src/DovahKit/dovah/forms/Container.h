@@ -35,7 +35,7 @@ namespace dovah::loaded_forms {
          form_reference_t  close_sound;
 
          void load(tes_record_reader&);
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }

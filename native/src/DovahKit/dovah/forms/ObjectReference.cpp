@@ -37,23 +37,29 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void ObjectReference::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void ObjectReference::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               decltype(script_data)::generateUseInfo(subrecord, stub);
+               decltype(script_data)::generateUseInfo(subrecord, uib);
                break;
             case 'NAME': // base form (subrecord signature is vestigial from Morrowind, which used editor IDs instead of form IDs)
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID, use_info_entry::flag::object_reference);
+                  uib.add_outbound_reference(formID, use_info_entry::flag::object_reference);
                break;
             case 'EDID': // editor ID
             case 'ONAM':
             case 'DATA':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, stub) == components::extra_data_load_result::unrecognized) {
+               if (components::extra_data_list::generate_use_info(record, uib) == components::extra_data_load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //

@@ -13,7 +13,7 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void Voicetype::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void Voicetype::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       return; // this form type does not have any subrecords that contain form IDs
    }
    bool Voicetype::_clone_impl(Form* out) const noexcept {

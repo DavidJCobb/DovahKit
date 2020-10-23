@@ -232,10 +232,22 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void Worldspace::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void Worldspace::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
+            case 'VMAD':
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               break;
+            case 'OBND': // bounds
+               components::object_bounds::generate_use_info(subrecord, uib);
+               break;
             case 'CNAM': // climate
             case 'LTMP': // lighting template
             case 'XEZN': // encounter zone
@@ -245,7 +257,15 @@ namespace dovah::loaded_forms {
             case 'WNAM': // parent worldspace
             case 'ZNAM': // music type
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
+               break;
+            case 'RNAM': // large references // SSE-only, but we'll still load it if we see it in a Classic file.
+               subrecord.skip_bytes(4);
+               while (subrecord.is_in_bounds(8)) {
+                  if (subrecord.read(formID))
+                     uib.add_outbound_reference(formID);
+                  subrecord.skip_bytes(4);
+               }
                break;
          }
       }

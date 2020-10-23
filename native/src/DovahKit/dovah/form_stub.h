@@ -152,6 +152,22 @@ namespace dovah {
    using use_info_list = std::map<bare_form_id_t, use_info_entry>;
    #pragma endregion
 
+   class form_stub_use_info_builder {
+      friend class form_stub;
+      protected:
+         form_stub& _stub;
+         bool       _is_final_file = false;
+         //
+         form_stub_use_info_builder(form_stub& s) : _stub(s) {}
+         //
+      public:
+         void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
+         void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         //
+         inline const form_stub* stub() const noexcept { return &this->_stub; }
+         inline bool is_final_file() const noexcept { return this->_is_final_file; }
+   };
+
    class form_stub {
       //
       // A class which represents a form, whether loaded or unloaded. Every FormStub contains 
@@ -164,6 +180,7 @@ namespace dovah {
       friend tes_file_reading::file_reader;
       friend tes_file_writing::file_writer;
       friend threaded_load_order_use_info_builder;
+      friend form_stub_use_info_builder;
       //
       public:
          ~form_stub();
@@ -198,14 +215,32 @@ namespace dovah {
                // Indicates that the form is flagged as deleted.
                //
                flagged_as_deleted = 0x08,
+               //
+               // (has_only_one_file)
+               // Indicates that the (file)/(files) union is (file).
+               //
+               has_only_one_file = 0x10,
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;
          using owner_file_t = tes_file_reading::file_reader;
          //
+         struct file_data {
+            owner_file_t* pointer = nullptr;
+            uint32_t      offset  = 0;
+            //
+            operator bool() const noexcept { return this->pointer != nullptr; }
+         };
+         struct file_data_list {
+            file_data* entries = nullptr;
+            uint16_t   count   = 0;
+         };
+         //
       protected:
-         owner_file_t*  file   = nullptr; // once a form_stub has been properly loaded, this should never be nullptr
-         uint32_t       offset = 0;       // offset of this form's record header within its owning file. this should be 0 for newly-created forms and for non-overridden hardcoded forms.
+         union {
+            file_data      file = file_data();
+            file_data_list files;
+         };
          std::atomic<uint32_t> refcount = 0;
          void build_outbound_refs(tes_file_reading::basic_reader*) noexcept;
          void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
@@ -214,6 +249,10 @@ namespace dovah {
          file_load_order& form_stub::_get_load_order() const noexcept;
          loaded_form_ptr<loaded_forms::Form> _load(bool force = false);
          void _unload_form();
+         //
+         void _add_file(owner_file_t&, uint32_t offset);
+         void _set_active_file_data(owner_file_t&, uint32_t offset);
+         void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) noexcept;
          //
       public:
          group_stub    groupInfo;
@@ -229,21 +268,27 @@ namespace dovah {
          loaded_form_ptr<loaded_forms::Form> load() { return this->_load(); }
          loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
          //
-         bool fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size) const noexcept;
+         bool fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size, int16_t source_file_index = -1) const noexcept;
+         //
+         #pragma region Source file member functions
+         const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;
+         bool file_list_includes(const owner_file_t*) const noexcept;
+         bool has_source_files() const noexcept;
+         int16_t index_of_file(const owner_file_t*) const noexcept;
+         owner_file_t* get_file_at_index(int16_t) const noexcept;
+         //
+         uint32_t get_file_offset(int16_t file_index = -1) const noexcept;
+         #pragma endregion
          //
          bool can_unload_form() const noexcept;
-         inline uint32_t    get_file_offset() const noexcept { return this->offset; }
          inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
          inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
-         inline bool        has_usable_source_file() const noexcept { return this->offset != 0; }
          inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
          inline bool        is_deleted()   const noexcept { return (bool)(this->flags & flag::flagged_as_deleted); };
          inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
          inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
          bool is_non_overridden_hardcoded_form() const noexcept;
          void set_edited(bool v);
-         //
-         void get_source_filename(std::string& out) const noexcept;
 
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;

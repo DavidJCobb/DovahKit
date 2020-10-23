@@ -11,7 +11,7 @@ namespace dovah::loaded_forms::components {
       subrecord.unchecked_read(this->max.y);
       subrecord.unchecked_read(this->max.z);
    }
-   /*static*/ void object_bounds::generateUseInfo(tes_subrecord_reader&, form_stub*) {
+   /*static*/ void object_bounds::generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder& uib) {
       return; // no use info to generate
    }
    void object_bounds::save(tes_subrecord_writer& subrecord) {

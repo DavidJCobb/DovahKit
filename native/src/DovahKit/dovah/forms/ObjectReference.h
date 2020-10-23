@@ -52,7 +52,7 @@ namespace dovah::loaded_forms {
          cobb::vector3<float> rotation; // DATA // radians
 
          void load(tes_record_reader&); // TODO: FINISH ME
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
       protected:
          ObjectReference(form_type_t ft) : Form(ft) {}; // for subclasses

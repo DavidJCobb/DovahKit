@@ -46,49 +46,172 @@ namespace dovah {
          this->form = nullptr;
       }
    }
-   void form_stub::get_source_filename(std::string& out) const noexcept {
-      out.clear();
-      if (this->file)
-         out = this->file->get_filename();
-   }
    file_load_order& form_stub::_get_load_order() const noexcept {
-      return this->file->load_order;
+      auto* file = this->get_file_at_index(0);
+      assert(file);
+      return file->load_order;
    }
    loaded_form_ptr<loaded_forms::Form> form_stub::_load(bool force) {
-      if (!this->form && this->file) {
-         auto file = this->file;
+      if (this->form)
+         return loaded_form_ptr<loaded_forms::Form>(this); // already loaded
+      if (!this->has_source_files())
+         return loaded_form_ptr<loaded_forms::Form>(this); // no files to load from
+      //
+      if (!force) {
          //
-         if (!force) {
-            //
-            // Don't try to load the form if the file's load order is in the middle of 
-            // a save operation, or if loading is otherwise unsafe.
-            //
-            auto& lo = this->_get_load_order();
-            if (lo.is_form_loading_blocked(this))
-               return loaded_form_ptr<loaded_forms::Form>(this);
-         }
+         // Don't try to load the form if the file's load order is in the middle of 
+         // a save operation, or if loading is otherwise unsafe.
          //
-         if (this->file->load_record_at(this->offset)) {
-            auto& record   = this->file->get_current_record();
+         auto& lo = this->_get_load_order();
+         if (lo.is_form_loading_blocked(this))
+            return loaded_form_ptr<loaded_forms::Form>(this);
+      }
+      //
+      file_data* arr;
+      uint16_t   size;
+      this->_get_source_file_list(arr, size);
+      //
+      if (auto* file = arr[0].pointer) {
+         if (file->load_record_at(arr[0].offset)) {
+            auto& record   = file->get_current_record();
             auto  formType = form_type_info::signature_to_form_type(record.signature());
             auto  factory  = get_loaded_form_factory_by_type(formType);
             if (factory) {
                this->form = factory(record);
                this->form->stub = this;
             }
-         } else
-            dovah::logging::print_line("...stub failed.");
+         }
       }
+      if (!this->form)
+         return loaded_form_ptr<loaded_forms::Form>(this); // load failed
+      //
+      for (uint16_t i = 1; i < size; ++i) {
+         auto* file = arr[i].pointer;
+         if (file->load_record_at(arr[i].offset)) {
+            auto& record = file->get_current_record();
+            this->form->load(record);
+         }
+      }
+      //
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
    loaded_form_ptr<loaded_forms::Form> form_stub::get_content_if_loaded() {
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
-   bool form_stub::fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size) const noexcept {
-      if (!this->file || this->is_non_overridden_hardcoded_form())
+   bool form_stub::fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size, int16_t source_file_index) const noexcept {
+      auto* data = this->get_source_file_info(source_file_index);
+      if (!data)
          return false;
-      return this->file->fetch_record_header(this->offset, out, out_record_decompressed_size);
+      return data->pointer->fetch_record_header(data->offset, out, out_record_decompressed_size);
    }
+
+   #pragma region form_stub file list
+   void form_stub::_add_file(owner_file_t& f, uint32_t offset) {
+      if (this->flags & flag::has_only_one_file) {
+         if (!this->file) {
+            this->file.pointer = &f;
+            this->file.offset  = offset;
+            return;
+         }
+         auto prior = this->file;
+         this->flags &= ~flag::has_only_one_file;
+         this->files.entries = new file_data[2];
+         this->files.count   = 2;
+         this->files.entries[0] = prior;
+         this->files.entries[1].pointer = &f;
+         this->files.entries[1].offset  = offset;
+         return;
+      }
+      auto resized = new file_data[this->files.count + 1];
+      uint16_t i = 0;
+      for (; i < this->files.count; ++i)
+         resized[i] = this->files.entries[i];
+      resized[i].pointer = &f;
+      resized[i].offset  = offset;
+      delete[] this->files.entries;
+      this->files.entries = resized;
+   }
+   void form_stub::_set_active_file_data(owner_file_t& f, uint32_t offset) {
+      auto i = this->index_of_file(&f);
+      if (i < 0) {
+         this->_add_file(f, offset);
+         return;
+      }
+      if (i == 0 && this->flags & flag::has_only_one_file) {
+         this->file.pointer = &f;
+         this->file.offset  = offset;
+         return;
+      }
+      this->files.entries[i].pointer = &f;
+      this->files.entries[i].offset  = offset;
+   }
+   void form_stub::_get_source_file_list(file_data*& out_arr, uint16_t& out_count) noexcept {
+      out_arr   = nullptr;
+      out_count = 0;
+      if (this->flags & flag::has_only_one_file) {
+         if (this->file) {
+            out_arr   = &this->file;
+            out_count = 1;
+         }
+         return;
+      }
+      out_arr   = this->files.entries;
+      out_count = this->files.count;
+   }
+
+   const form_stub::file_data* form_stub::get_source_file_info(int16_t i) const noexcept {
+      if (this->flags & flag::has_only_one_file) {
+         if (i > 0 || i != -1)
+            return nullptr;
+         return &this->file;
+      }
+      if (i < 0)
+         i += this->files.count;
+      if (i >= this->files.count)
+         return nullptr;
+      return &this->files.entries[i];
+   }
+
+   bool form_stub::has_source_files() const noexcept {
+      if (this->flags & flag::has_only_one_file)
+         return this->file;
+      return this->files.entries != nullptr;
+   }
+   int16_t form_stub::index_of_file(const owner_file_t* f) const noexcept {
+      if (this->flags & flag::has_only_one_file) {
+         if (this->file.pointer == f)
+            return 0;
+         return -1;
+      }
+      auto size = this->files.count;
+      for (uint16_t i = 0; i < size; ++i)
+         if (this->files.entries[i].pointer == f)
+            return i;
+      return -1;
+   }
+   bool form_stub::file_list_includes(const owner_file_t* f) const noexcept {
+      if (this->flags & flag::has_only_one_file)
+         return this->file.pointer == f;
+      auto size = this->files.count;
+      for (uint16_t i = 0; i < size; ++i)
+         if (this->files.entries[i].pointer == f)
+            return true;
+      return false;
+   }
+   form_stub::owner_file_t* form_stub::get_file_at_index(int16_t i) const noexcept {
+      auto* data = this->get_source_file_info(i);
+      if (data)
+         return data->pointer;
+      return nullptr;
+   }
+   uint32_t form_stub::get_file_offset(int16_t file_index) const noexcept {
+      auto* data = this->get_source_file_info(file_index);
+      if (data)
+         return data->offset;
+      return 0;
+   }
+   #pragma endregion
+
    bool form_stub::can_unload_form() const noexcept {
       if (this->is_edited())
          return false;
@@ -98,9 +221,10 @@ namespace dovah {
    }
    bool form_stub::is_non_overridden_hardcoded_form() const noexcept {
       if (this->is_hardcoded()) {
-         if (!this->file)
-            return true;
-         if (this->file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) // allow overrides of hardcoded forms to unload
+         auto* info = this->get_source_file_info(-1); // get last file
+         if (!info || !info->pointer)
+            return false;
+         if (info->pointer->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) // allow overrides of hardcoded forms to unload
             return true;
       }
       return false;
@@ -123,12 +247,20 @@ namespace dovah {
          build_hardcoded_form_outbound_refs(*this);
          return;
       }
-      assert(this->file && "FormStub cannot build outbound refs without a file. How did this happen?");
-      if (this->file->load_record_at(this->offset, reader)) {
-         auto& record = reader->get_current_record();
-         auto  builder = get_outbound_uses_builder_by_type(this->formType);
-         if (builder)
-            builder(record, this);
+      //
+      file_data* arr;
+      uint16_t   size;
+      this->_get_source_file_list(arr, size);
+      //
+      form_stub_use_info_builder use_interface(*this);
+      //
+      for (uint16_t i = 0; i < size; ++i) {
+         if (arr[i].pointer->load_record_at(arr[i].offset, reader)) {
+            auto& record = reader->get_current_record();
+            auto  builder = get_outbound_uses_builder_by_type(this->formType);
+            if (builder)
+               builder(record, use_interface);
+         }
       }
       this->add_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
    }

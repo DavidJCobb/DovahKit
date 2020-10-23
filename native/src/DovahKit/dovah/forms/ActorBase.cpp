@@ -13,13 +13,19 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void ActorBase::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void ActorBase::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
       form_id_t formID;
       uint32_t  keywordCount = 0;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               components::papyrus_attachment_data::generateUseInfo(subrecord, stub);
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'RNAM': // race
             case 'TPLT': // template actor base
@@ -49,23 +55,15 @@ namespace dovah::loaded_forms {
             case 'CRIF': // crime faction
             case 'FTST': // face textureset
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
             case 'KSIZ':
-               subrecord.read(keywordCount);
-               break;
             case 'KWDA':
-               if (keywordCount == 0)
-                  keywordCount = subrecord.size() / 4;
-               for (uint32_t i = 0; i < keywordCount; i++)
-                  if (subrecord.read(formID))
-                     stub->add_outbound_reference(formID);
-                  else
-                     break;
+               components::keyword_list::generate_use_info(subrecord, uib);
                break;
             case 'CNTO':
             case 'COED':
-               components::container_data::generateUseInfo(subrecord, stub);
+               components::container_data::generate_use_info(subrecord, uib);
                break;
             case 'ATKD': // attack data
                subrecord.skip_bytes(8);
@@ -82,7 +80,7 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               components::destruction_stage_data::generateUseInfo(subrecord, stub);
+               components::destruction_stage_data::generate_use_info(subrecord, uib);
                break;
             //
             // End of destruction stage fields.

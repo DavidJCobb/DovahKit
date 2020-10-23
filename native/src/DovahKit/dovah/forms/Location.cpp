@@ -122,8 +122,8 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void Location::generateUseInfo(tes_record_reader& record, form_stub* stub) {
-      uint32_t keywordCount = 0;
+   /*static*/ void Location::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      uint32_t  keywordCount = 0;
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -132,64 +132,77 @@ namespace dovah::loaded_forms {
             case 'FNAM': // unreported crime faction
             case 'MNAM': // marker
             case 'NAM0': // horse marker
+               if (!uib.is_final_file())
+                  break;
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
             case 'KSIZ':
-               subrecord.read(keywordCount);
-               break;
             case 'KWDA':
-               if (!keywordCount)
-                  keywordCount = subrecord.size() / 4;
-               for (uint32_t i = 0; i < keywordCount; i++)
-                  if (subrecord.read(formID))
-                     stub->add_outbound_reference(formID);
+               if (!uib.is_final_file())
+                  break;
+               components::keyword_list::generate_use_info(subrecord, uib);
                break;
             case 'ACLR':
             case 'LCPR':
+               //
+               // TODO: Is this coalesced across multiple files?
+               //
                while (subrecord.is_in_bounds(12)) {
                   subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   subrecord.skip_bytes(4);
                }
                break;
             case 'RCPR':
             case 'ACID':
             case 'LCID':
+               //
+               // TODO: Is this coalesced across multiple files?
+               //
                while (subrecord.is_in_bounds(4))
                   if (subrecord.read(formID))
-                     stub->add_outbound_reference(formID);
+                     uib.add_outbound_reference(formID);
                break;
             case 'ACUN':
             case 'LCUN':
             case 'ACEP':
             case 'LCEP':
+               //
+               // TODO: Is this coalesced across multiple files?
+               //
                while (subrecord.is_in_bounds(12)) {
                   subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   subrecord.skip_bytes(4);
                }
                break;
             case 'ACSR':
             case 'LSCR':
+               //
+               // TODO: Is this coalesced across multiple files?
+               //
                while (subrecord.is_in_bounds(16)) {
                   subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   subrecord.unchecked_read(formID);
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   subrecord.skip_bytes(4);
                }
                break;
             case 'ACEC':
             case 'LCEC':
+               //
+               // TODO: Is this coalesced across multiple files?
+               //
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                // we can ignore the rest
                break;
             case 'EDID': // editor ID

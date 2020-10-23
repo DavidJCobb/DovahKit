@@ -696,7 +696,7 @@ namespace dovah::loaded_forms::components::papyrus {
 
    #pragma region Use info
    namespace {
-      void _generateUseInfoForScript(int16_t objFormat, tes_subrecord_reader& subrecord, form_stub* stub) {
+      void _generate_use_info_for_script(int16_t objFormat, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
          form_id_t formID;
          //
          subrecord.skip_length_prefixed_string<2>();
@@ -720,10 +720,10 @@ namespace dovah::loaded_forms::components::papyrus {
                   if (objFormat == 2) {
                      subrecord.skip_bytes(4);
                      subrecord.read(formID);
-                     stub->add_outbound_reference(formID);
+                     uib.add_outbound_reference(formID);
                   } else {
                      subrecord.read(formID);
-                     stub->add_outbound_reference(formID);
+                     uib.add_outbound_reference(formID);
                      subrecord.skip_bytes(4);
                   }
                   break;
@@ -742,10 +742,10 @@ namespace dovah::loaded_forms::components::papyrus {
                      if (objFormat == 2) {
                         subrecord.skip_bytes(4);
                         subrecord.read(formID);
-                        stub->add_outbound_reference(formID);
+                        uib.add_outbound_reference(formID);
                      } else {
                         subrecord.read(formID);
-                        stub->add_outbound_reference(formID);
+                        uib.add_outbound_reference(formID);
                         subrecord.skip_bytes(4);
                      }
                   }
@@ -765,7 +765,7 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   /*static*/ void script_data::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+   /*static*/ void script_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
       //
       int16_t  objFormat;
@@ -774,7 +774,7 @@ namespace dovah::loaded_forms::components::papyrus {
       if (!subrecord.read(objFormat) || !subrecord.read(count))
          return;
       for (uint16_t i = 0; i < count; i++) // scripts
-         _generateUseInfoForScript(objFormat, subrecord, stub);
+         _generate_use_info_for_script(objFormat, subrecord, uib);
       if (subrecord.is_at_end() || !subrecord.is_in_bounds()) // fragment data is optional
          return;
       #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
@@ -860,10 +860,10 @@ namespace dovah::loaded_forms::components::papyrus {
                   if (objFormat == 2) {
                      subrecord.skip_bytes(4);
                      subrecord.read(formID);
-                     stub->add_outbound_reference(formID);
+                     uib.add_outbound_reference(formID);
                   } else {
                      subrecord.read(formID);
-                     stub->add_outbound_reference(formID);
+                     uib.add_outbound_reference(formID);
                      subrecord.skip_bytes(4);
                   }
                   subrecord.skip_bytes(2); // alias script version
@@ -872,7 +872,7 @@ namespace dovah::loaded_forms::components::papyrus {
                   if (!subrecord.read(aliasObjFormat) || !subrecord.read(aliasScriptCount))
                      return;
                   for(uint16_t j = 0; j < aliasScriptCount; j++)
-                     _generateUseInfoForScript(aliasObjFormat, subrecord, stub);
+                     _generate_use_info_for_script(aliasObjFormat, subrecord, uib);
                }
             }
             break;

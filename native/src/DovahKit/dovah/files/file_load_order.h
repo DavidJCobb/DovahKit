@@ -52,6 +52,7 @@ namespace dovah {
             out_of_bounds,
             missing_master,
             null_is_not_allowed,
+            form_type_mismatch,
          };
          //
          using form_create_callback_t   = void(*)(form_stub*);

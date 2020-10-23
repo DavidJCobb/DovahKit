@@ -15,13 +15,19 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void FormList::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void FormList::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'LNAM': // list entry
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
          }
       }

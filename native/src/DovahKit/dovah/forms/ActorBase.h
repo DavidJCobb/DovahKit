@@ -5,6 +5,7 @@
 #include "_common.h"
 #include "components/container.h"
 #include "components/destruction.h"
+#include "components/keyword_list.h"
 #include "components/papyrus.h"
 
 namespace dovah::loaded_forms {
@@ -19,6 +20,6 @@ namespace dovah::loaded_forms {
          localized_string name;
 
          void load(tes_record_reader&); // TODO: FINISH ME
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
    };
 }

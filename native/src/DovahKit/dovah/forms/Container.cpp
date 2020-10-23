@@ -41,30 +41,36 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void Container::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void Container::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               components::papyrus_attachment_data::generateUseInfo(subrecord, stub);
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'SNAM': // open sound
             case 'QNAM': // close sound
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               components::model::generateUseInfo(subrecord, stub);
+               components::model::generate_use_info(subrecord, uib);
                break;
             case 'COCT':
             case 'CNTO':
             case 'COED':
-               components::container_data::generateUseInfo(subrecord, stub);
+               components::container_data::generate_use_info(subrecord, uib);
                break;
             case 'OBND': // bounds
-               components::object_bounds::generateUseInfo(subrecord, stub);
+               components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case 'EDID': // editor ID
             case 'FULL': // name

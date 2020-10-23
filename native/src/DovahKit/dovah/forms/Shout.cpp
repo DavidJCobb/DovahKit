@@ -28,39 +28,47 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->description);
                break;
             case 'SNAM':
-               {
+               if (current_word < this->words.size()) {
                   auto& entry = this->words[current_word];
                   subrecord.read(entry.word_of_power);
                   subrecord.read(entry.spell);
                   subrecord.read(entry.recoveryTime);
-                  ++current_word;
                }
+               ++current_word;
                break;
          }
       }
-      if (current_word != 3) {
+      if (current_word != this->words.size()) {
          //
          // TODO: log an error.
          //
          // The game always assumes that SHOU will have three SNAMs. The Rule of One will not be properly 
-         // applied if a SHOU override supplies fewer than three SNAMs.
+         // applied if a SHOU override supplies fewer than three SNAMs. We should, of course, double-check 
+         // this, by setting up tests with bad numbers of SNAM and using conditional breakpoints to see if 
+         // the game fails to clear data.
          //
       }
    }
-   /*static*/ void Shout::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void Shout::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files.
+         //
+         return;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'MDOB': // menu display object
             case 'ETYP': // equip type
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
             case 'SNAM':
                if (subrecord.read(formID)) {
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                   if (subrecord.read(formID)) {
-                     stub->add_outbound_reference(formID);
+                     uib.add_outbound_reference(formID);
                      // and then a four-byte float, which we can ignore
                   }
                }

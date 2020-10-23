@@ -24,7 +24,7 @@ namespace dovah::loaded_forms {
          voicetype_flags_t voicetype_flags = 0;
 
          void load(tes_record_reader&);
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

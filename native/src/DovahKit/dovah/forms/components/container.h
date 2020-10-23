@@ -19,7 +19,7 @@ namespace dovah::loaded_forms::components {
       std::vector<container_entry> entries;
       //
       void load(tes_subrecord_reader&);
-      static void generateUseInfo(tes_subrecord_reader&, form_stub*);
+      static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
       void clone_from(const container_data& original, form_stub& my_owner) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
    };

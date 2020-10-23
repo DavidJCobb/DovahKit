@@ -64,7 +64,7 @@ namespace dovah::loaded_forms::components {
             //
             bool load(tes_subrecord_reader&); // assumes we're at a VMAD subrecord
             bool save(tes_subrecord_writer&);
-            static void generateUseInfo(tes_subrecord_reader&, form_stub*);
+            static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
             //
             bool save(tes_record_writer&); // opens VMAD, writes, closes
             void clone_from(const script_data& source, form_stub& owner_of_clone) noexcept;

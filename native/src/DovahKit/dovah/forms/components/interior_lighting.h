@@ -52,7 +52,7 @@ namespace dovah::loaded_forms::components {
       uint32_t inherit_flags = 0x79F; // what fields are inherited from the lighting template?
       //
       void load(tes_subrecord_reader&);
-      static void generateUseInfo(tes_subrecord_reader&, form_stub*);
+      static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
       void save(tes_subrecord_writer&);
    };
 }

@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components {
       }
       subrecord.read(this->radius);
    }
-   /*static*/ void package_location::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+   /*static*/ void package_location::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       package_location_type t;
       if (subrecord.read(t)) {
          form_id_t formID;
@@ -39,7 +39,7 @@ namespace dovah::loaded_forms::components {
             case package_location_type::object_id:
             case package_location_type::near_linked_reference:
                if (subrecord.read(formID) && formID)
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
          }
       }

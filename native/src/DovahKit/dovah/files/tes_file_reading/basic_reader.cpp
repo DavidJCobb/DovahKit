@@ -311,8 +311,7 @@ namespace dovah::tes_file_reading {
    form_stub* basic_reader::make_stub_for_record(file_reader& file) {
       auto& record = this->get_current_record();
       auto  stub   = new form_stub();
-      stub->file     = &file;
-      stub->offset   = record.head_pos;
+      stub->_add_file(file, record.head_pos);
       stub->formID   = record.formID();
       stub->formType = form_type_info::signature_to_form_type(record.signature());
       if (record.header.flags & tes_file_record_header::flag::deleted)

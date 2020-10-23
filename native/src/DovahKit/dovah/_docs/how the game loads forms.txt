@@ -58,7 +58,7 @@ the form is a quest or object-reference. Regardless of the form's type, it will
 then be asked to clear all of its data.  This is the origin of the Rule of One: 
 it is not the result of the game only using the last-loaded record for any form 
 ID, but rather a deliberate design decision  on Bethesda's part, and crucially, 
-it is a design  decision to which they  can make exception:  any data that they 
+it is a design  decision to which they can make exceptions:  any data that they 
 don't go out of their  way to clear will, in effect,  be coalesced across every 
 file that defines a given form.
 

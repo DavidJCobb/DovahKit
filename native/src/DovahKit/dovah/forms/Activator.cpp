@@ -59,32 +59,38 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void Activator::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void Activator::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
       uint32_t keywordCount = 0;
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               components::papyrus_attachment_data::generateUseInfo(subrecord, stub);
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'SNAM': // looping sound (e.g. nirnroot bell)
             case 'VNAM': // activation sound
             case 'WNAM': // water type, for water activators
             case 'KNAM': // interaction keyword
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               components::model::generateUseInfo(subrecord, stub);
+               components::model::generate_use_info(subrecord, uib);
                break;
             case 'KSIZ':
             case 'KWDA':
-               components::keyword_list::generateUseInfo(subrecord, stub);
+               components::keyword_list::generate_use_info(subrecord, uib);
                break;
             case 'OBND': // bounds
-               components::object_bounds::generateUseInfo(subrecord, stub);
+               components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case 'EDID': // editor ID
             case 'FULL': // displayed name

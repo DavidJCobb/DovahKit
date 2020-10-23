@@ -18,7 +18,7 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void WordOfPower::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void WordOfPower::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       return; // this form type does not have any subrecords that contain form IDs
    }
    bool WordOfPower::_clone_impl(Form* out) const noexcept {

@@ -83,7 +83,7 @@ namespace dovah {
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
       //
-      stub->file = this->hardcoded_forms_file;
+      stub->_add_file(*this->hardcoded_forms_file);
       stub->flags |= form_stub::flag::is_hardcoded;
       //
       bare_form_id_t formID = stub->formID;
@@ -395,8 +395,12 @@ namespace dovah {
       // update the map of forms by type:
       //
       form_stub*& target = type.forms[formID];
-      if (target) // is this an override?
+      if (target) { // is this an override?
+         if (target->formType != stub->formType) { // TODO: ARMO/ARMA mismatches are allowed by the game, as a (bad) leftover from FO3
+            return form_id_status::form_type_mismatch;
+         }
          delete target; // delete the overridden form stub
+      }
       target = stub;
       //
       // update the map of all forms as well:
@@ -406,7 +410,7 @@ namespace dovah {
       stub->formID = formID;
       //
       if (this->active_file) {
-         bool store = stub->file == this->active_file;
+         bool store = stub->file_list_includes(this->active_file);
          if (!store) {
             auto active_prefix = this->active_file_prefix();
             if (active_prefix.contains_form_id(formID))
@@ -890,7 +894,7 @@ namespace dovah {
          auto& list = this->forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
-            if (stub->file == this->active_file || stub->is_edited() || stub->does_descendant_form_need_save())
+            if (stub->is_edited() || stub->file_list_includes(this->active_file) || stub->does_descendant_form_need_save())
                if (functor(stub))
                   return true;
          }
@@ -898,7 +902,7 @@ namespace dovah {
          auto& list = this->active_file_forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
-            if (stub->file == this->active_file || stub->is_edited())
+            if (stub->is_edited() || stub->file_list_includes(this->active_file))
                if (functor(stub))
                   return true;
          }
@@ -914,12 +918,10 @@ namespace dovah {
       return this->active_file != nullptr;
    }
    bool file_load_order::is_defined_in_active_file(const form_stub& stub) const noexcept {
-      if (stub.file != this->active_file)
-         return false;
       return this->is_active_file_formID(stub.formID);
    }
    bool file_load_order::is_defined_or_overridden_in_active_file(const form_stub& stub) const noexcept {
-      return stub.file == this->active_file;
+      return stub.file_list_includes(this->active_file);
    }
    bool file_load_order::is_active_file_formID(bare_form_id_t id) const noexcept {
       auto active_prefix = this->active_file_prefix();
@@ -1036,8 +1038,7 @@ namespace dovah {
       auto* stub = new form_stub;
       stub->formType = request.form_type;
       stub->form     = loaded;
-      stub->file     = this->active_file;
-      stub->offset   = 0;
+      stub->_add_file(*this->active_file, 0);
       stub->formID   = formID;
       stub->editorID = request.editorID;
       stub->set_edited(true);
@@ -1516,8 +1517,7 @@ namespace dovah {
          for (auto& pair : writer.fixup_data.form_stubs) {
             auto& info = pair.second;
             auto* stub = info.stub;
-            stub->offset = info.offset;
-            stub->file   = this->active_file;
+            stub->_set_active_file_data(*this->active_file, info.offset);
             if (!stub->is_edited()) {
                //
                // If the form stub was written to the file despite not having been flagged as edited, 

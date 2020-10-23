@@ -15,7 +15,7 @@ namespace dovah::loaded_forms {
          MagicEffect() : Form(form_type) {};
 
          void load(tes_record_reader&); // TODO: FINISH ME
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
 
          enum class archetype_t : uint32_t {
             value_modifier       =  0,

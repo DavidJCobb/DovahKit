@@ -19,7 +19,7 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
-   /*static*/ void keyword_list::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+   /*static*/ void keyword_list::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       uint32_t  keywordSize = 0;
       form_id_t formID;
       switch (subrecord.signature()) {
@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components {
             keywordSize = subrecord.size() / 4;
             for (uint32_t i = 0; i < keywordSize; i++)
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
             break;
       }
    }

@@ -7,4 +7,5 @@
 
 namespace dovah {
    class form_stub;
+   class form_stub_use_info_builder;
 }

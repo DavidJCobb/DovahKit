@@ -87,7 +87,7 @@ namespace dovah::loaded_forms::components {
       inline uint8_t    get_flags()    const noexcept { return this->type & 0x1F; }
       //
       bool read(tes_record_reader&); // assumes we've already opened a CTDA subrecord
-      static void generateUseInfo(tes_record_reader&, form_stub*);
+      static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
       void save(tes_record_writer&); // call with no subrecord open
       void clone_from(const condition& original, form_stub& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;

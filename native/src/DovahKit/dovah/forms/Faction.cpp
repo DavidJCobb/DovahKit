@@ -109,7 +109,13 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void Faction::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void Faction::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -122,10 +128,10 @@ namespace dovah::loaded_forms {
             case 'VEND':
             case 'VENC':
                if (subrecord.read(formID))
-                  stub->add_outbound_reference(formID);
+                  uib.add_outbound_reference(formID);
                break;
             case 'PLVD':
-               components::package_location::generateUseInfo(subrecord, stub);
+               components::package_location::generate_use_info(subrecord, uib);
                break;
          }
       }

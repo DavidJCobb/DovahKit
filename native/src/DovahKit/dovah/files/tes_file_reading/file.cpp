@@ -3,6 +3,7 @@
 #include "../../../helpers/strings.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
+#include "../../notice_code_list.h"
 #include "localized_string_file.h"
 
 namespace dovah::tes_file_reading {

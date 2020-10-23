@@ -31,7 +31,7 @@ namespace dovah::loaded_forms {
          std::array<Word, 3> words; // SNAM (one per word)
 
          void load(tes_record_reader&);
-         static void generateUseInfo(tes_record_reader&, form_stub*);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
          virtual void setup(const file_load_order&) noexcept override;
 

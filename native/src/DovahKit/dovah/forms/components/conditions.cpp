@@ -836,7 +836,7 @@ namespace dovah::loaded_forms::components {
       }
       return true;
    }
-   /*static*/ void condition::generateUseInfo(tes_record_reader& record, form_stub* stub) {
+   /*static*/ void condition::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'CTDA' && "Condition::read should only be called just after the CTDA subrecord is opened.");
       if (!subrecord.is_in_bounds(0x14))
@@ -848,7 +848,7 @@ namespace dovah::loaded_forms::components {
       subrecord.skip_bytes(3);
       if (type & flag::compare_to_global) {
          subrecord.unchecked_read(formID);
-         stub->add_outbound_reference(formID);
+         uib.add_outbound_reference(formID);
       } else
          subrecord.skip_bytes(4);
       subrecord.unchecked_read(function);
@@ -862,7 +862,7 @@ namespace dovah::loaded_forms::components {
          uint32_t firstValue; // needed for when the second arg is a union
          if (!uses_aliases && arg0 && arg0->underlying == condition_info::arg_underlying_type::formID) {
             subrecord.unchecked_read(formID);
-            stub->add_outbound_reference(formID);
+            uib.add_outbound_reference(formID);
          } else
             subrecord.unchecked_read(firstValue);
          if (arg1 && arg1->isUnion) { // resolve the union
@@ -872,7 +872,7 @@ namespace dovah::loaded_forms::components {
          }
          if (!uses_aliases && arg1 && arg1->underlying == condition_info::arg_underlying_type::formID) {
             subrecord.unchecked_read(formID);
-            stub->add_outbound_reference(formID);
+            uib.add_outbound_reference(formID);
          } else
             subrecord.skip_bytes(4);
          if (func && func->uses_event_data) {
@@ -880,13 +880,13 @@ namespace dovah::loaded_forms::components {
                return;
             subrecord.skip_bytes(4);
             subrecord.unchecked_read(formID);
-            stub->add_outbound_reference(formID);
+            uib.add_outbound_reference(formID);
          } else {
             if (!subrecord.is_in_bounds(12))
                return;
             subrecord.skip_bytes(4);
             subrecord.unchecked_read(formID);
-            stub->add_outbound_reference(formID);
+            uib.add_outbound_reference(formID);
             subrecord.skip_bytes(4);
          }
       }

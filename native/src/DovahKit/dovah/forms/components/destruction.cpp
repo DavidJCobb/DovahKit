@@ -74,7 +74,7 @@ namespace dovah::loaded_forms::components {
          }
       #endif
    }
-   /*static*/ void destruction_stage_data::generateUseInfo(tes_subrecord_reader& subrecord, form_stub* stub) {
+   /*static*/ void destruction_stage_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
       switch (subrecord.signature()) {
          case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
@@ -82,15 +82,15 @@ namespace dovah::loaded_forms::components {
          case 'DSTD': // destruction stage data
             subrecord.skip_bytes(8);
             if (subrecord.read(formID)) // explosion
-               stub->add_outbound_reference(formID);
+               uib.add_outbound_reference(formID);
             if (subrecord.read(formID)) // debris
-               stub->add_outbound_reference(formID);
+               uib.add_outbound_reference(formID);
             // remaining four bytes don't matter
             break;
          case 'DMDL': // destruction stage model
          case 'DMDT': // 
          case 'DMDS': // 
-            model::generateUseInfo(subrecord, stub);
+            model::generate_use_info(subrecord, uib);
             break;
          case 'DSTF': // destruction stage end marker
             break;
