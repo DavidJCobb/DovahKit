@@ -5,6 +5,7 @@
 #include "ui_main_window.h"
 #include "main_window/cell_view.h"
 #include "main_window/object_window.h"
+#include "main_window/log_window.h"
 
 class FileMetadataWindow;
 
@@ -25,11 +26,33 @@ class MainWindow : public QMainWindow {
       void shown();
       //
    private:
+      struct _subwindow_base {
+         QWidget*        _widget = nullptr;
+         QMdiSubWindow*  _window = nullptr;
+         Qt::WindowFlags flags;
+         //
+         void _open(QMdiArea* parent);
+      };
+      template<class C> struct _subwindow : public _subwindow_base {
+         void open(QMdiArea* parent) {
+            if (!this->_widget)
+               this->_widget = new C(parent);
+            this->_open(parent);
+         }
+         inline C* widget() const noexcept { return (C*)this->_widget; }
+      };
+      //
+   private:
       Ui::MainWindow ui;
-      QWinTaskbarButton*  taskbar_button   = nullptr;
-      CellViewWindow*     cell_view_window = nullptr;
-      ObjectWindow*       object_window    = nullptr;
-      FileMetadataWindow* metadata_window  = nullptr;
+      struct {
+         _subwindow<CellViewWindow> cell_view;
+         _subwindow<LogWindow>      log;
+         _subwindow<ObjectWindow>   object;
+      } subwindows;
+      QWinTaskbarButton*  taskbar_button  = nullptr;
+      FileMetadataWindow* metadata_window = nullptr;
+      //
+      QMdiSubWindow* getSubwindowFor(QWidget*) const noexcept;
       //
    protected:
       virtual void closeEvent(QCloseEvent* event) override;

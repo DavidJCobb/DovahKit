@@ -32,6 +32,9 @@ namespace {
    void _on_mass_renumber() {
       emit DovahKitCore::get().formsRenumberedEnMasse();
    }
+   void _on_read_warning(const dovah::file_read_warning& warning) {
+      emit DovahKitCore::get().fileLoadWarningReceived(warning);
+   }
 }
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
@@ -57,6 +60,7 @@ void DovahKitCore::_configure_load_order() {
    this->load_order->on_form_loss     = &_on_form_loss;
    this->load_order->on_form_renumber = &_on_form_renumber;
    this->load_order->on_mass_renumber = &_on_mass_renumber;
+   this->load_order->on_read_warning  = &_on_read_warning;
    this->load_order->adopt_archive_list(*(new dovah::bsa_load_order));
 }
 void DovahKitCore::abandon_data() {

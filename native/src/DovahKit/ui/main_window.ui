@@ -83,8 +83,14 @@
     </widget>
     <addaction name="menuTextEncoding"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

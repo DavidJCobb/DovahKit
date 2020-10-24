@@ -10,6 +10,7 @@
 #include <vector>
 #include "file_load_order_normalizer.h"
 #include "file_write_error.h"
+#include "file_read_warning.h"
 #include "../notice_code_t.h"
 
 namespace dovah {
@@ -58,7 +59,10 @@ namespace dovah {
          using form_create_callback_t   = void(*)(form_stub*);
          using form_loss_callback_t     = void(*)(form_stub&);
          using form_renumber_callback_t = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
+         using warning_callback_t       = void(*)(const file_read_warning&);
          using generic_callback_t       = void(*)();
+         //
+         using read_warning_list_t = std::vector<file_read_warning>;
          //
       protected:
          struct _form_map {
@@ -80,7 +84,8 @@ namespace dovah {
          _form_map_by_type forms_by_type;
          _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.
          _form_map_by_type active_file_forms_by_type;
-         game              current_game = game::skyrim_special; // TODO: put this to use
+         game              current_game = game::skyrim_special;
+         //
          struct {
             mutable std::recursive_mutex lock;
             std::vector<bare_form_id_t> reserved_formIDs; // form IDs reserved for form creation or form renumbering
@@ -155,12 +160,14 @@ namespace dovah {
             } options;
          } queued_load;
          file_read_error          load_error;
+         read_warning_list_t      load_warnings;
          file_write_error         save_error;
          file_write_warning       save_warning;
          form_create_callback_t   on_form_create   = nullptr;
          form_loss_callback_t     on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
          form_renumber_callback_t on_form_renumber = nullptr;
          generic_callback_t       on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
+         warning_callback_t       on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -172,6 +179,7 @@ namespace dovah {
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
          bare_form_id_t remap_formID_for_save(bare_form_id_t) const noexcept;
+         void log_load_warning(const file_read_warning&);
 
          // (acceptFormStub)
          // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 

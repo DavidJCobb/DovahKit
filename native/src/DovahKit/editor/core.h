@@ -65,6 +65,7 @@ class DovahKitCore : public QObject {
       void dataAcquireComplete(); // we have loaded new files and forms
       void dataAcquireFailed(const dovah::file_read_error&);   // we tried to load new files, but failed
       //
+      void fileLoadWarningReceived(const dovah::file_read_warning&);
       void fileLoadStatisticsAvailable(const file_load_stats&);
       //
       void formModificationImminent(dovah::form_stub*); // emit this before changing a form, so that listeners can update any Use Info they are displaying

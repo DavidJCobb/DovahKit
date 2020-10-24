@@ -22,6 +22,8 @@ namespace dovah {
          no_active_file                        = 0x0000000D,
          save_complete_but_to_temporary_file   = 0x0000000E,
          game_conversion_form_cleanup_failed   = 0x0000000F, // Some forms were not saved due to the file, but could not be deleted from memory. It is not safe to continue this editing session.
+         form_override_has_type_mismatch       = 0x00000010,
+         form_override_has_armo_arma_mismatch  = 0x00000011,
       };
    };
 }

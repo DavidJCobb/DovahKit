@@ -396,8 +396,39 @@ namespace dovah {
       //
       form_stub*& target = type.forms[formID];
       if (target) { // is this an override?
-         if (target->formType != stub->formType) { // TODO: ARMO/ARMA mismatches are allowed by the game, as a (bad) leftover from FO3
-            return form_id_status::form_type_mismatch;
+         form_type_t type_a = target->formType;
+         form_type_t type_b = stub->formType;
+         if (type_a != type_b) { // TODO: ARMO/ARMA mismatches are allowed by the game, as a (bad) leftover from FO3
+            bool is_armo_arma = (type_a == form_type::armor || type_a == form_type::armor);
+            if (is_armo_arma)
+               is_armo_arma = (type_a == form_type::armor_addon || type_a == form_type::armor_addon);
+            //
+            auto* file_a = target->get_file_at_index(0);
+            auto* file_b = stub->get_file_at_index(-1);
+            //
+            file_read_warning warning;
+            warning.code               = is_armo_arma ? notice_code::form_override_has_armo_arma_mismatch : notice_code::form_override_has_type_mismatch;
+            warning.cause_form.localID = target->formID;
+            warning.cause_form.fixedID = formID;
+            warning.cause_form.type    = type_a;
+            warning.set_flag(file_read_warning::flag::has_cause_form);
+            if (file_a) {
+               warning.cause_file = file_a->get_filename();
+               warning.set_flag(file_read_warning::flag::has_cause_file);
+            }
+            if (file_b) {
+               warning.relevant_files.emplace_back() = file_b->get_filename();
+            }
+            //
+            auto& relevant = warning.relevant_forms.emplace_back();
+            relevant.localID = stub->formID;
+            relevant.fixedID = formID;
+            relevant.type    = type_b;
+            //
+            this->log_load_warning(warning);
+            //
+            if (!is_armo_arma)
+               return form_id_status::form_type_mismatch;
          }
          stub->_adopt_source_file_list(target);
          delete target; // delete the overridden form stub
@@ -425,6 +456,12 @@ namespace dovah {
       }
       //
       return form_id_status::valid;
+   }
+
+   void file_load_order::log_load_warning(const file_read_warning& w) {
+      this->load_warnings.push_back(w);
+      if (this->on_read_warning)
+         (this->on_read_warning)(w);
    }
    #pragma endregion
 

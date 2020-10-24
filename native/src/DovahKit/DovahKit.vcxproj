@@ -243,6 +243,7 @@
     <ClCompile Include="ui\main_window\form_use_info\use_info_list.cpp" />
     <ClCompile Include="ui\main_window\load_window.cpp" />
     <ClCompile Include="ui\main_window\load_window\file_list.cpp" />
+    <ClCompile Include="ui\main_window\log_window.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
@@ -263,6 +264,7 @@
     <ClInclude Include="dovah\files\file_header.h" />
     <ClInclude Include="dovah\files\file_load_order_normalizer.h" />
     <ClInclude Include="dovah\files\file_read_error.h" />
+    <ClInclude Include="dovah\files\file_read_warning.h" />
     <ClInclude Include="dovah\files\tes_file_reading\file_header.h" />
     <ClInclude Include="dovah\files\file_load_order.h" />
     <ClInclude Include="dovah\files\file_write_error.h" />
@@ -394,6 +396,7 @@
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
+    <QtMoc Include="ui\main_window\log_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />
@@ -470,6 +473,7 @@
     <QtUic Include="ui\main_window\file_metadata_window.ui" />
     <QtUic Include="ui\main_window\form_use_info.ui" />
     <QtUic Include="ui\main_window\load_window.ui" />
+    <QtUic Include="ui\main_window\log_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />
     <QtUic Include="ui\main_window\save_window.ui" />
   </ItemGroup>

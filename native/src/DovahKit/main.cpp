@@ -121,6 +121,18 @@
 //
 //           = URGENT
 //
+//           - Mismatched ARMO/ARMA records need a special warning, since the game will 
+//             actually try to load those anyway (a leftover behavior from FO3, where 
+//             one of them was just the other with some additional subrecords).
+//
+//  - If (file_load_order::accept_form_stub) fails, a stub will leak, because the (file_reader) 
+//    function that calls it can't return a success/failure code to its own callers. Those 
+//    callers will perform further operations on the stub, so (file_reader) can't simply 
+//    delete it.
+//
+//     - To clarify: a failure code from (accept_form_stub) means that the stub was NOT 
+//       inserted into the (file_load_order) form maps.
+//
 //  - Support for loading records flagged as "partial"
 //
 //     - If the flag is present on an injected record, then skip the record.
@@ -578,6 +590,8 @@
 //    sole known source of information on that.
 //
 // HORIZON TASKS:
+//
+//  - Seasonal/event themes, like we did for CobbPos
 //
 //  - Mod merging could be useful, particularly if we write a co-save file that describes 
 //    the mapping of forms from the source files to the destination file (so that later 

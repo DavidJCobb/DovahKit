@@ -9,6 +9,7 @@
 #include "main_window/load_window.h"
 #include "main_window/save_window.h"
 #include "main_window/file_metadata_window.h"
+#include "main_window/log_window.h"
 
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
@@ -26,6 +27,23 @@ namespace {
    assert(_window && "You shouldn't be calling ReachVariantTool::get before the main window is actually created!");
    return *_window;
 }
+
+void MainWindow::_subwindow_base::_open(QMdiArea* parent) {
+   if (auto* win = this->_window) {
+      if (!win->mdiArea()) { // was the subwindow removed?
+         win->setWidget(this->_widget); // QMdiSubWindow may clear its widget after being closed
+         parent->addSubWindow(win, this->flags);
+      }
+      win->show();
+      win->raise();
+      win->activateWindow();
+      return;
+   }
+   QMdiSubWindow* win = this->_window = new QMdiSubWindow(parent);
+   win->setWidget(this->_widget);
+   parent->addSubWindow(this->_window, this->flags);
+}
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    ui.setupUi(this);
    _window = this;
@@ -46,11 +64,33 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       this->ui.actionSave->setDisabled(true);
    });
    //
-   this->object_window = new ObjectWindow(this);
-   this->ui.mdi->addSubWindow(this->object_window, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+   this->subwindows.object.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
+   this->subwindows.object.open(this->ui.mdi);
+   this->subwindows.cell_view.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
+   this->subwindows.cell_view.open(this->ui.mdi);
+   this->subwindows.log.open(this->ui.mdi);
    //
-   this->cell_view_window = new CellViewWindow(this);
-   this->ui.mdi->addSubWindow(this->cell_view_window, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+   #pragma region Window menu
+   {
+      QAction* action;
+      QMenu*   menu = this->ui.menuWindow;
+      //
+      action = new QAction(menu);
+      action->setText(tr("Cell View Window", "main window - window menu"));
+      QObject::connect(action, &QAction::triggered, this, [this]() { this->subwindows.cell_view.open(this->ui.mdi); });
+      menu->addAction(action);
+      //
+      action = new QAction(menu);
+      action->setText(tr("Log Window", "main window - window menu"));
+      QObject::connect(action, &QAction::triggered, this, [this]() { this->subwindows.log.open(this->ui.mdi); });
+      menu->addAction(action);
+      //
+      action = new QAction(menu);
+      action->setText(tr("Object Window", "main window - window menu"));
+      QObject::connect(action, &QAction::triggered, this, [this]() { this->subwindows.object.open(this->ui.mdi); });
+      menu->addAction(action);
+   }
+   #pragma endregion
    //
    this->ui.actionEditFileMetadata->setDisabled(true);
    this->ui.actionSave->setDisabled(true);
@@ -207,6 +247,14 @@ void MainWindow::setProgressEnableState(bool s) {
    p->setVisible(s);
 }
 
+QMdiSubWindow* MainWindow::getSubwindowFor(QWidget* w) const noexcept {
+   auto windows = this->ui.mdi->subWindowList();
+   for (auto* win : windows)
+      if (win->widget() == w)
+         return win;
+   return nullptr;
+}
+
 void MainWindow::closeEvent(QCloseEvent* event) {
    //
    // TODO: If the user has unsaved changes, show a confirmation prompt. If they 
@@ -221,14 +269,12 @@ void MainWindow::showEvent(QShowEvent* event) {
    //
    if (auto tb = this->taskbar_button)
       tb->setWindow(this->windowHandle());
-   for (auto* subwindow : this->ui.mdi->subWindowList()) { // set initial object window height
-      if (subwindow->widget() == this->object_window) {
-         auto g_canvas = this->ui.mdi->geometry();
-         auto g_subwin = subwindow->geometry();
-         subwindow->move(0, 0);
-         subwindow->resize(g_subwin.width(), g_canvas.height() - 2); // not sure why this is off by 2px or whether that's consistent :(
-         break;
-      }
+   //
+   auto g_canvas = this->ui.mdi->geometry();
+   if (auto* subwindow = this->subwindows.object._window) { // set initial object window height
+      auto g_subwin = subwindow->geometry();
+      subwindow->move(0, 0);
+      subwindow->resize(g_subwin.width(), g_canvas.height() - 2); // not sure why this is off by 2px or whether that's consistent :(
    }
    //
    if (event->spontaneous()) // spontaneous events occur just after the window is visible; internal events, just before.
