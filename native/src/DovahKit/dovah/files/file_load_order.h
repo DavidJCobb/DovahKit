@@ -33,6 +33,10 @@ namespace dovah {
    class form_deletion_request;
    class form_renumber_request;
 
+   namespace load_order_interfaces {
+      class form_load;
+   }
+
    class file_load_order {
       //
       // Used to select files to load, and stores all loaded forms after the load process 
@@ -42,6 +46,7 @@ namespace dovah {
       friend class form_creation_request;
       friend class form_deletion_request;
       friend class form_renumber_request;
+      friend class load_order_interfaces::form_load;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
          static constexpr uint8_t light_load_prefix   = 0xFE;
@@ -160,7 +165,7 @@ namespace dovah {
             } options;
          } queued_load;
          file_read_error          load_error;
-         read_warning_list_t      load_warnings;
+         read_warning_list_t      load_warnings; // TODO: put a mutex on this
          file_write_error         save_error;
          file_write_warning       save_warning;
          form_create_callback_t   on_form_create   = nullptr;
@@ -267,6 +272,7 @@ namespace dovah {
          bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg);
    };
 
+   #pragma region Requests to manipulate forms
    class form_creation_request {
       friend class file_load_order;
       friend class form_duplication_request;
@@ -443,4 +449,18 @@ namespace dovah {
          //
          bool commit();
    };
+   #pragma endregion
+
+   namespace load_order_interfaces {
+      class form_load {
+         friend class form_stub;
+         public:
+            file_load_order& owner;
+            //
+            void log_load_warning(const file_read_warning&);
+            //
+         protected:
+            form_load(file_load_order& o) : owner(o) {}
+      };
+   }
 }

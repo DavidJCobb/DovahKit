@@ -8,8 +8,11 @@ namespace dovah {
    namespace tes_file_reading {
       class record;
    }
-   using loaded_form_load_function_t = loaded_forms::Form*(*)(tes_file_reading::record&); // construct and load
-   extern loaded_form_load_function_t get_loaded_form_factory_by_type(form_type_t) noexcept; // can return nullptr
+   namespace load_order_interfaces {
+      class form_load;
+   }
+   using form_loader_function_t = void(*)(loaded_forms::Form*, tes_file_reading::record&, load_order_interfaces::form_load&); // construct and load
 
+   extern form_loader_function_t get_form_loader_function(form_type_t) noexcept;
    extern loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t) noexcept;
 }

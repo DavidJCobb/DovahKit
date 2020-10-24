@@ -2,10 +2,12 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
-   void Activator::load(tes_record_reader& record) {
-      Form::load(record);
+   void Activator::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
       //
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
             case 'EDID': // already read by the FormStub
                break;
@@ -40,12 +42,21 @@ namespace dovah::loaded_forms {
                break;
             case 'SNAM':
                subrecord.read(this->looping_sound);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, *this->stub, this->looping_sound)
+               );
                break;
             case 'VNAM':
                subrecord.read(this->activation_sound);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, *this->stub, this->activation_sound)
+               );
                break;
             case 'WNAM':
                subrecord.read(this->water_type);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::water_type, *this->stub, this->water_type)
+               );
                break;
             case 'RNAM':
                subrecord.read(this->activation_verb);
@@ -55,6 +66,14 @@ namespace dovah::loaded_forms {
                break;
             case 'KNAM':
                subrecord.read(this->interact_keyword);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::keyword, *this->stub, this->interact_keyword)
+               );
+               break;
+            default:
+               intfc.log_load_warning(
+                  file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+               );
                break;
          }
       }

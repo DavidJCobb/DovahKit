@@ -80,7 +80,7 @@ namespace dovah::loaded_forms {
             uint8_t alpha; // unused
          } color; // CNAM
 
-         void load(tes_record_reader&);
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
    };
 }

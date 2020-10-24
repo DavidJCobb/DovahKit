@@ -1,14 +1,17 @@
 #include "ObjectReference.h"
 #include "_common_cpp.h"
+#include "../notice_code_list.h"
 #include "factories/hardcoded.h"
 #include "components/extra_data/enable_state_parent.h"
 
 namespace dovah::loaded_forms {
-   void ObjectReference::load(tes_record_reader& record) {
-      Form::load(record);
+   void ObjectReference::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
       //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
             case 'DATA':
                subrecord.read(this->position.x);
@@ -32,6 +35,9 @@ namespace dovah::loaded_forms {
                   //
                   // Subrecord is not extra-data.
                   //
+                  intfc.log_load_warning(
+                     file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  );
                }
                break;
          }

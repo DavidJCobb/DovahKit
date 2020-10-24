@@ -32,9 +32,11 @@ namespace {
       QString fixed     = QObject::tr("--------", "log window - missing form ID");
       if (form.fixedID)
          fixed = QString("%1").arg(form.fixedID, 8, 16, QChar('0')).toUpper();
-      if (form.localID)
+      if (form.localID) {
          local = QString("%1").arg(form.localID, 8, 16, QChar('0')).toUpper();
-      return QObject::tr("[%1][Local:%2][Loaded:%3]").arg(signature).arg(local).arg(fixed);
+         return QObject::tr("[%1][Local:%2][Loaded:%3]").arg(signature).arg(local).arg(fixed);
+      }
+      return QObject::tr("[%1:%2]").arg(signature).arg(fixed);
    }
 }
 
@@ -91,6 +93,115 @@ void LogWindow::loadWarningReceived(const dovah::file_read_warning& warning) {
             }
             //
             text = text.arg(form_a).arg(file_a).arg(form_b).arg(file_b).arg(final_signature);
+         }
+         break;
+      case notice_code::cell_flags_not_yet_found:
+         {
+            QString form      = tr("<unknown cell>", "log window");
+            QString subrecord = tr("<unknown subrecord>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+               subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
+            }
+            //
+            text = tr("%1 contained subrecord %2, which is handled differently for interior and exterior cells; however, the cell's DATA subrecord has not yet appeared, so the cell will default to being an exterior.")
+               .arg(form)
+               .arg(subrecord);
+         }
+         break;
+      case notice_code::exterior_cell_data_in_interior_cell:
+         {
+            QString form      = tr("<unknown cell>", "log window");
+            QString subrecord = tr("<unknown subrecord>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+               subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
+            }
+            //
+            text = tr("%1 contained subrecord %2, exclusive to exterior cells, but the cell is flagged as an interior.")
+               .arg(form)
+               .arg(subrecord);
+         }
+         break;
+      case notice_code::interior_cell_data_in_exterior_cell:
+         {
+            QString form      = tr("<unknown cell>", "log window");
+            QString subrecord = tr("<unknown subrecord>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+               subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
+            }
+            //
+            text = tr("%1 contained subrecord %2, exclusive to interior cells, but the cell is flagged as an exterior.")
+               .arg(form)
+               .arg(subrecord);
+         }
+         break;
+      case notice_code::unrecognized_subrecord:
+         {
+            QString form      = tr("<unknown form>", "log window");
+            QString subrecord = tr("<unknown subrecord>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+               subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
+            }
+            //
+            text = tr("Form %1 contained unrecognized an subrecord with signature %2.")
+               .arg(form)
+               .arg(subrecord);
+         }
+         break;
+      case notice_code::form_reference_is_of_incorrect_type:
+         {
+            QString referer   = tr("<unknown form>", "log window");
+            QString referent  = referer;
+            QString subrecord = tr("<unknown subrecord>", "log window");
+            QString desired   = tr("<unknown type", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               referer = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form_type) {
+               desired = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(warning.cause_form_type).signature);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+               subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
+            }
+            if (!warning.relevant_forms.empty()) {
+               referent = _read_error_form_id_to_string(warning.relevant_forms[0]);
+            }
+            //
+            text = tr("Form %1 contained a %2 subrecord that referred to form %3, but was supposed to refer to a form of type %4.")
+               .arg(referer)
+               .arg(subrecord)
+               .arg(referent)
+               .arg(desired);
+         }
+         break;
+      case notice_code::shout_has_wrong_word_count:
+         {
+            QString form = tr("<unknown shout>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            //
+            auto word_count = warning.extra_integers[0];
+            if (word_count > 3) {
+               text = tr("Form %1 defined %2 words. A shout record must have exactly three words; if it has more than that, then Skyrim will write past the end of the in-memory shout's word list while loading and trash memory.")
+                  .arg(form)
+                  .arg(word_count);
+            } else {
+               text = tr("Form %1 defined %2 words. A shout must have exactly three words; in particular, if an override defines fewer than three words, then it will fail to override the words it leaves undefined.")
+                  .arg(form)
+                  .arg(word_count);
+            }
          }
          break;
    }

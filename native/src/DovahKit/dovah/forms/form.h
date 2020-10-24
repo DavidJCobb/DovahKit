@@ -10,6 +10,9 @@ namespace dovah {
    namespace tes_file_writing {
       class record;
    }
+   namespace load_order_interfaces {
+      class form_load;
+   }
 
    namespace loaded_forms {
       class Form {
@@ -28,7 +31,7 @@ namespace dovah {
             uint32_t   flags = 0;
             //
             const char* get_editor_id() const noexcept;
-            void load(tes_file_reading::record& record);
+            void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
 
             //
             // === Form* Form::clone(form_stub&) =================================================
@@ -86,6 +89,8 @@ namespace dovah {
             virtual bool _friendly_delete_impl(const file_load_order&) noexcept { return false; }
 
             virtual void _sever_outbound_references_impl(form_stub& other) noexcept {}; // TODO: implement on existing forms; then, make pure
+
+            static bool subrecord_is_handled_elsewhere(uint32_t signature); // call from Subclass::load
       };
    }
 }

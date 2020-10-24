@@ -104,6 +104,7 @@
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
     <ClCompile Include="dovah\files\bsa\threads.cpp" />
+    <ClCompile Include="dovah\files\file_read_warning.cpp" />
     <ClCompile Include="dovah\files\file_write_error.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp" />
     <ClCompile Include="dovah\files\file_load_order.cpp" />

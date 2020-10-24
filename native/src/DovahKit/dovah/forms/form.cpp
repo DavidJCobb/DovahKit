@@ -8,7 +8,7 @@ namespace dovah::loaded_forms {
    const char* Form::get_editor_id() const noexcept {
       return this->stub ? this->stub->get_editor_id() : nullptr;
    }
-   void Form::load(tes_record_reader& record) {
+   void Form::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       this->flags = record.flags();
    }
    Form* Form::clone(form_stub& receiving_stub, bool* out_complete) const noexcept {
@@ -54,5 +54,13 @@ namespace dovah::loaded_forms {
    }
    void Form::sever_outbound_references_to(form_stub& other) noexcept {
       this->_sever_outbound_references_impl(other);
+   }
+
+   /*static*/ bool Form::subrecord_is_handled_elsewhere(uint32_t signature) {
+      switch (signature) {
+         case 'EDID':
+            return true;
+      }
+      return false;
    }
 }

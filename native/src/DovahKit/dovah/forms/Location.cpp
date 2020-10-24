@@ -2,13 +2,15 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
-   void Location::load(tes_record_reader& record) {
-      Form::load(record);
+   void Location::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
       //
       this->subrecordFlags = 0;
       form_reference_t formID;
       uint32_t  keywordCount = 0;
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
             case 'ACPR':
                this->subrecordFlags |= subrecord_flag::population_is_a;
@@ -118,6 +120,11 @@ namespace dovah::loaded_forms {
                subrecord.read(this->color.g);
                subrecord.read(this->color.b);
                subrecord.read(this->color.alpha);
+               break;
+            default:
+               intfc.log_load_warning(
+                  file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+               );
                break;
          }
       }

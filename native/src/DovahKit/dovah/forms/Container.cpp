@@ -2,10 +2,12 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
-   void Container::load(tes_record_reader& record) {
-      Form::load(record);
+   void Container::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
       //
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
             case 'EDID': // already read by the FormStub
                break;
@@ -34,9 +36,20 @@ namespace dovah::loaded_forms {
                break;
             case 'SNAM': // open sound
                subrecord.read(this->open_sound);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, *this->stub, this->open_sound)
+               );
                break;
             case 'QNAM': // close sound
                subrecord.read(this->close_sound);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, *this->stub, this->close_sound)
+               );
+               break;
+            default:
+               intfc.log_load_warning(
+                  file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+               );
                break;
          }
       }

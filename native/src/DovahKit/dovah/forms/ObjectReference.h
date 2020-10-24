@@ -51,7 +51,7 @@ namespace dovah::loaded_forms {
          cobb::vector3<float> position; // DATA
          cobb::vector3<float> rotation; // DATA // radians
 
-         void load(tes_record_reader&); // TODO: FINISH ME
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
       protected:

@@ -1,26 +1,71 @@
 #include "Cell.h"
 #include "_common_cpp.h"
+#include "../notice_code_list.h"
 
 namespace dovah::loaded_forms {
-   void Cell::load(tes_record_reader& record) {
-      Form::load(record);
+   void Cell::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
       //
       form_id_t formID;
+      bool      loaded_cell_flags = false;
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
             case 'DATA':
                subrecord.read(this->cell_flags);
+               loaded_cell_flags = true;
                break;
             case 'XCLC':
+               if (!loaded_cell_flags) {
+                  file_read_warning warning;
+                  warning.code = notice_code::cell_flags_not_yet_found;
+                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_subrecord(subrecord.signature());
+                  //
+                  intfc.log_load_warning(warning);
+                  //
+                  // Cells without flags would theoretically default to being exteriors, so don't early-out here.
+                  //
+               } else if (this->cell_flags & cell_flag::interior) {
+                  file_read_warning warning;
+                  warning.code = notice_code::exterior_cell_data_in_interior_cell;
+                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_subrecord(subrecord.signature());
+                  //
+                  intfc.log_load_warning(warning);
+                  break;
+               }
                subrecord.skip_bytes(sizeof(group_stub::gridX)); // form stubs store this information
                subrecord.skip_bytes(sizeof(group_stub::gridY)); // form stubs store this information
                subrecord.read(this->land_flags);
                break;
             case 'XCLL':
+               if (!loaded_cell_flags) {
+                  file_read_warning warning;
+                  warning.code = notice_code::cell_flags_not_yet_found;
+                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_subrecord(subrecord.signature());
+                  //
+                  intfc.log_load_warning(warning);
+                  break;
+               }
+               if (!(this->cell_flags & cell_flag::interior)) {
+                  file_read_warning warning;
+                  warning.code = notice_code::interior_cell_data_in_exterior_cell;
+                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_subrecord(subrecord.signature());
+                  //
+                  intfc.log_load_warning(warning);
+                  break;
+               }
                this->interior.lighting.load(subrecord);
                break;
             case 'LTMP':
                subrecord.read(this->interior.lighting_template_ID);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, *this->stub, this->interior.lighting_template_ID)
+               );
                break;
             case 'TVDT':
                this->exterior.occlusion_data.present = true;
@@ -58,6 +103,9 @@ namespace dovah::loaded_forms {
                   //
                   // Subrecord is not extra-data.
                   //
+                  intfc.log_load_warning(
+                     file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  );
                }
                break;
          }

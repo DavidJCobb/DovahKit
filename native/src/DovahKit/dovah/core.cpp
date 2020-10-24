@@ -438,6 +438,11 @@ namespace dovah {
    void form_reference_t::set(form_stub& owner, const form_reference_t& set_to) {
       this->set(owner, set_to.stub);
    }
+   bool form_reference_t::form_type_matches(form_type_t ft) const noexcept {
+      if (!this->stub)
+         return true;
+      return this->stub->formType == ft;
+   }
    void form_reference_t::reset() {
       this->stub = nullptr;
    }

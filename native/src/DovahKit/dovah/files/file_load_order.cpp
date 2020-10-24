@@ -466,6 +466,8 @@ namespace dovah {
    }
 
    void file_load_order::log_load_warning(const file_read_warning& w) {
+      if (!w)
+         return;
       this->load_warnings.push_back(w);
       if (this->on_read_warning)
          (this->on_read_warning)(w);
@@ -1605,6 +1607,7 @@ namespace dovah {
       return !writer.error.defined();
    }
 
+   #pragma region Requests for manipulating forms
    #pragma region form_creation_request
    form_creation_request::form_creation_request(file_load_order& o) : owner(o) {
    }
@@ -1957,6 +1960,15 @@ namespace dovah {
    bool form_renumber_request::commit() {
       this->owner.commit_form_renumber_request(*this);
       return this->error == error_code::none;
+   }
+   #pragma endregion
+   #pragma endregion
+
+   #pragma region Interfaces to file_load_order
+   namespace load_order_interfaces {
+      void form_load::log_load_warning(const file_read_warning& warning) {
+         this->owner.log_load_warning(warning);
+      }
    }
    #pragma endregion
 }

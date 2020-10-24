@@ -44,6 +44,45 @@
 //     - If the user converts a file across games, and the existing file's name also 
 //       exists for the target game, then we should prompt to overwrite as well.
 //
+//  - Clean up the load process.
+//
+//     - Currently, form content only reports warnings when loaded on demand; it does 
+//       not report warnings during the initial load. In practice, this means that 
+//       DovahKit will only report errors in a form if the user actually goes to edit 
+//       or otherwise inspect that specific form (or if something like a future Render 
+//       Window causes it to load); moreover, DovahKit will re-report the errors every 
+//       time it loads. That's... not ideal.
+//
+//        - The function for generating use info already has an interface-style object 
+//          that gets passed in. If nothing else, we could have the use info build step 
+//          also be responsible for reporting (form_reference_is_of_incorrect_type) 
+//          warnings, while allowing on-demand loads to report all other errors.
+//
+//        - The (file_read_warning) struct should be allowed to indicate exactly what 
+//          step of the read process it came from (e.g. use info build, on-demand load, 
+//          or something else). This would make it easier for frontend code to know 
+//          whether the error being reported is likely to be a duplicate report. For 
+//          example, it could decline to report an on-demand load error if the form 
+//          already has an error of the same code and form ID.
+//
+//     - The log window should have a "message type" column, differentiating between 
+//       notices from the initial stub build, notices from on-demand form loading, 
+//       and notices from saves.
+//
+//     - The (form_load) interface needs to be allowed to keep track of the file that 
+//       the form is currently loading from, so that it can report which file produces 
+//       any given error.
+//
+//        - The interface should also be able to report whether we are currently 
+//          loading the winning record, so that we can decline to report warnings 
+//          in overridden data.
+//
+//        - If we're going to have the interface maintain that kind of state, then 
+//          we should move it to form_stub.h.
+//
+//     - Form components, such as keyword lists and extra-data, need to be able to 
+//       report (file_read_warning)s.
+//
 //  - Clean up the save process.
 //
 //     - If the user is converting the active file between games, and the active file 
@@ -108,22 +147,6 @@
 //       anyway). It's worth checking a few things, then: would a non-overriding NAVI change 
 //       the form ID of the baseline NAVI, and is there any data that should be cleared in 
 //       an override (that therefore wouldn't be cleared by a non-override)?
-//
-//     - It seems like Skyrim allows ARMO and ARMA to override each other (i.e. an ARMO with 
-//       the same form ID as an ARMA, or vice versa). Presumably, the overriding record's 
-//       content would be passed to the existing form, i.e. if ARMA overrides ARMO, then the 
-//       contents of the ARMA record would be passed to the ARMO loader. This is based on 
-//       code analysis (it exists as a specific exception to "skip overrides if their form 
-//       type doesn't match that of the overridden form") and isn't verified experimentally.
-//
-//        - Speaking of which, do we have an error procedure for overrides that don't match 
-//          the type of the overridden form? I don't think we do. We need to fix that.
-//
-//           = URGENT
-//
-//           - Mismatched ARMO/ARMA records need a special warning, since the game will 
-//             actually try to load those anyway (a leftover behavior from FO3, where 
-//             one of them was just the other with some additional subrecords).
 //
 //  - If (file_load_order::accept_form_stub) fails, a stub will leak, because the (file_reader) 
 //    function that calls it can't return a success/failure code to its own callers. Those 

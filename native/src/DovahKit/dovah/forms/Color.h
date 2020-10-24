@@ -25,7 +25,7 @@ namespace dovah::loaded_forms {
          color_t          color;
          color_flags_t    color_flags = 0;
 
-         void load(tes_record_reader&);
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
       protected:

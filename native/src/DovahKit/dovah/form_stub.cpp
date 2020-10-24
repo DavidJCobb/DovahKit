@@ -73,12 +73,12 @@ namespace dovah {
       if (!this->has_source_files())
          return loaded_form_ptr<loaded_forms::Form>(this); // no files to load from
       //
+      auto& lo = this->_get_load_order();
       if (!force) {
          //
          // Don't try to load the form if the file's load order is in the middle of 
          // a save operation, or if loading is otherwise unsafe.
          //
-         auto& lo = this->_get_load_order();
          if (lo.is_form_loading_blocked(this))
             return loaded_form_ptr<loaded_forms::Form>(this);
       }
@@ -87,14 +87,17 @@ namespace dovah {
       uint16_t   size;
       this->_get_source_file_list(arr, size);
       //
+      auto  intfc  = load_order_interfaces::form_load(lo);
+      auto* loader = get_form_loader_function(this->formType);
+      if (!loader)
+         return loaded_form_ptr<loaded_forms::Form>(this); // load failed
       if (auto* file = arr[0].pointer) {
          if (file->load_record_at(arr[0].offset)) {
-            auto& record   = file->get_current_record();
-            auto  formType = form_type_info::signature_to_form_type(record.signature());
-            auto  factory  = get_loaded_form_factory_by_type(formType);
-            if (factory) {
-               this->form = factory(record);
+            auto& record = file->get_current_record();
+            this->form = create_blank_loaded_form_by_type(this->formType);
+            if (this->form) {
                this->form->stub = this;
+               (loader)(this->form, record, intfc);
             }
          }
       }
@@ -105,7 +108,7 @@ namespace dovah {
          auto* file = arr[i].pointer;
          if (file->load_record_at(arr[i].offset)) {
             auto& record = file->get_current_record();
-            this->form->load(record);
+            (loader)(this->form, record, intfc);
          }
       }
       //

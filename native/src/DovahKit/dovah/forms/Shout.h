@@ -30,7 +30,7 @@ namespace dovah::loaded_forms {
          form_reference_t menu_display_object; // MDOB; should be a  STAT form
          std::array<Word, 3> words; // SNAM (one per word)
 
-         void load(tes_record_reader&);
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
          virtual void setup(const file_load_order&) noexcept override;

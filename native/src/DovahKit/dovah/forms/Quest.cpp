@@ -323,17 +323,16 @@ namespace dovah::loaded_forms {
       }
       return nullptr;
    }
-   void Quest::load(tes_record_reader& record) {
-      Form::load(record);
+   void Quest::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
       //
       bool     isInEventConditions = false;
       bool     hasLastLogEntry     = false;
       uint32_t lastLogEntryIndices[2];
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
-            case 'EDID': // required; TODO: fail if this is not present
-               subrecord.to_string(this->editorID);
-               break;
             case 'FULL':
                subrecord.to_string(this->name);
                break;
@@ -465,6 +464,11 @@ namespace dovah::loaded_forms {
                // TODO: The game passes all of these to TESQuest::LogEntry::Load, but it just ignores them; it 
                // returns instantly if it encounters any record other than QSDT and NAM0.
                //
+               break;
+            default:
+               intfc.log_load_warning(
+                  file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+               );
                break;
          }
       }

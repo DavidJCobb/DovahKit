@@ -2,10 +2,12 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
-   void ActorBase::load(tes_record_reader& record) {
-      Form::load(record);
+   void ActorBase::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
       //
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
             case 'FULL':
                subrecord.to_string(this->name);
