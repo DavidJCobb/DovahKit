@@ -528,7 +528,7 @@ namespace dovah {
       {  // [WTHR:15F]"DefaultClimate"
          auto stub = new form_stub();
          stub->formID   = 0x15F;
-         stub->formType = form_type_info::signature_to_form_type('WTHR');
+         stub->formType = form_type_info::signature_to_form_type('CLMT');
          stub->editorID = "DefaultClimate";
          lo._accept_hardcoded_form(stub);
       }

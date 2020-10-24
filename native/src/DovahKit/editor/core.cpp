@@ -13,6 +13,7 @@
 #include "../dovah/files/tes_file_reading/file.h"
 #include "../dovah/utils/get_user_language_name.h"
 #include "core_internals/load_task.h"
+#include "core_internals/read_warning_dispatcher.h"
 #include "helpers/make_editor_id_for_duplicate.h"
 #include "../ui/main_window/delete_form_dialog.h"
 #include <QDebug>
@@ -33,7 +34,23 @@ namespace {
       emit DovahKitCore::get().formsRenumberedEnMasse();
    }
    void _on_read_warning(const dovah::file_read_warning& warning) {
-      emit DovahKitCore::get().fileLoadWarningReceived(warning);
+      //
+      // This callback can come from the initial file load (where form stubs are built), or 
+      // when loading the full contents of a form. This particular frontend runs the initial 
+      // file load on a worker thread to avoid blocking the UI, which means that we need to 
+      // adapt the data sent by this callback and guarantee that the signal we emit goes to 
+      // the main thread.
+      //
+      // Accordingly, we rely on a "dispatcher" singleton that: wraps the warning struct in 
+      // another struct suitable for use as a Qt metatype; and then emits a signal, which 
+      // DovahKitCore will in turn listen for.
+      //
+      // (If we were to just emit the DovahKitCore signal from here, without registering a 
+      // metatype, then it would only trigger slots registered on whatever thread we're 
+      // emitting from. Registering the metatype allows Qt to copy the data and trigger 
+      // slots across threads.)
+      //
+      DovahKitEditorInternals::read_warning_dispatcher::get().send(warning);
    }
 }
 DovahKitCore::DovahKitCore() {
@@ -43,6 +60,14 @@ DovahKitCore::DovahKitCore() {
    this->_configure_load_order();
    //
    this->set_encoding();
+   //
+   {
+      using dispatcher_t = DovahKitEditorInternals::read_warning_dispatcher;
+      dispatcher_t& dispatcher = dispatcher_t::get();
+      QObject::connect(&dispatcher, &dispatcher_t::received, this, [this](DovahKitEditorInternals::multithreadable_file_read_warning w) {
+         emit this->fileLoadWarningReceived(w.warning);
+      }, Qt::QueuedConnection);
+   }
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {

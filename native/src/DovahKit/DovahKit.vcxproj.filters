@@ -468,6 +468,9 @@
     <ClCompile Include="ui\main_window\log_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\core_internals\read_warning_dispatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1135,6 +1138,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\log_window.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\core_internals\read_warning_dispatcher.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

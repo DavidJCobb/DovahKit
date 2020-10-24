@@ -376,8 +376,6 @@ namespace dovah {
    };
 
    file_load_order::form_id_status file_load_order::accept_form_stub(form_stub* stub) noexcept {
-      auto& type = this->forms_by_type[stub->formType];
-      std::lock_guard<std::mutex> guard_for_form_type(type.lock);
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
       //
       uint32_t formID;
@@ -394,14 +392,19 @@ namespace dovah {
       //
       // update the map of forms by type:
       //
-      form_stub*& target = type.forms[formID];
+      form_stub*& target = this->forms.forms[formID];
       if (target) { // is this an override?
          form_type_t type_a = target->formType;
          form_type_t type_b = stub->formType;
-         if (type_a != type_b) { // TODO: ARMO/ARMA mismatches are allowed by the game, as a (bad) leftover from FO3
-            bool is_armo_arma = (type_a == form_type::armor || type_a == form_type::armor);
-            if (is_armo_arma)
-               is_armo_arma = (type_a == form_type::armor_addon || type_a == form_type::armor_addon);
+         if (type_a != type_b) {
+            //
+            // We're loading an override, but its form type doesn't match that of the overridden form. 
+            // This is a hard error in almost all cases, but there is one exception: Skyrim allows 
+            // ARMA and ARMO records to override each other. This is a legacy behavior originating 
+            // from Fallout 3's engine. We should warn on all mismatched overrides, but skip any 
+            // mismatched overrides that aren't ARMA/ARMO.
+            //
+            bool is_armo_arma = (type_a == form_type::armor || type_b == form_type::armor) && (type_a == form_type::armor_addon || type_b == form_type::armor_addon);
             //
             auto* file_a = target->get_file_at_index(0);
             auto* file_b = stub->get_file_at_index(-1);
@@ -429,15 +432,19 @@ namespace dovah {
             //
             if (!is_armo_arma)
                return form_id_status::form_type_mismatch;
+            //
+            stub->formType = target->formType;
          }
          stub->_adopt_source_file_list(target);
          delete target; // delete the overridden form stub
       }
+      auto& type = this->forms_by_type[stub->formType];
+      std::lock_guard<std::mutex> guard_for_form_type(type.lock);
+      //
+      // Insert the stub into the form maps:
+      //
       target = stub;
-      //
-      // update the map of all forms as well:
-      //
-      this->forms.forms[formID] = stub;
+      type.forms[formID] = stub;
       //
       stub->formID = formID;
       //

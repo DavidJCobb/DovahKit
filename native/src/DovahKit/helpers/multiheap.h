@@ -279,6 +279,7 @@ namespace cobb {
                {
                   std::lock_guard guard(state.unownedLock);
                   if (state.unowned) {
+                     std::lock_guard guard(state.subheapsLock); // we've already been registered, so this is necessary
                      assert(state.unowned != this->data->first);
                      delete this->data->first;
                      this->data->first = state.unowned;

@@ -198,6 +198,7 @@
     <ClCompile Include="dovah\utils\get_user_language_name.cpp" />
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
+    <ClCompile Include="editor\core_internals\read_warning_dispatcher.cpp" />
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
@@ -393,6 +394,7 @@
     <ClInclude Include="dovah\notice_code_t.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
     <ClInclude Include="dovah\utils\get_user_language_name.h" />
+    <QtMoc Include="editor\core_internals\read_warning_dispatcher.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />

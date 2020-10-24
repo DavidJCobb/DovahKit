@@ -33,8 +33,8 @@ namespace {
       if (form.fixedID)
          fixed = QString("%1").arg(form.fixedID, 8, 16, QChar('0')).toUpper();
       if (form.localID)
-         fixed = QString("%1").arg(form.localID, 8, 16, QChar('0')).toUpper();
-      return QObject::tr("[%1:%2]{LoadedID:%3]").arg(signature).arg(local).arg(fixed);
+         local = QString("%1").arg(form.localID, 8, 16, QChar('0')).toUpper();
+      return QObject::tr("[%1][Local:%2][Loaded:%3]").arg(signature).arg(local).arg(fixed);
    }
 }
 
@@ -65,6 +65,32 @@ void LogWindow::loadWarningReceived(const dovah::file_read_warning& warning) {
             }
             //
             text = text.arg(form_a).arg(file_a).arg(form_b).arg(file_b);
+         }
+         break;
+      case notice_code::form_override_has_armo_arma_mismatch:
+         {
+            text = tr("File %4 is attempting to override form %1 (defined in file %2) with form %3. The form types are mismatched, but Skyrim allows ARMA/ARMO msimatches as a legacy behavior from Fallout 3's GECK. This override will be loaded as %5.", "log window");
+            QString file_a = tr("<unknown filename>", "log window");
+            QString file_b = file_a;
+            QString form_a = tr("<unknown form>", "log window");
+            QString form_b = form_a;
+            QString final_signature = tr("????", "log window - unknown signature");
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form_a = _read_error_form_id_to_string(warning.cause_form);
+               final_signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(warning.cause_form.type).signature);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               file_a = QString::fromStdString(warning.cause_file);
+            }
+            if (!warning.relevant_forms.empty()) {
+               form_b = _read_error_form_id_to_string(warning.relevant_forms[0]);
+            }
+            if (!warning.relevant_files.empty()) {
+               file_b = QString::fromStdString(warning.relevant_files[0]);
+            }
+            //
+            text = text.arg(form_a).arg(file_a).arg(form_b).arg(file_b).arg(final_signature);
          }
          break;
    }

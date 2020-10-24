@@ -1,6 +1,7 @@
 #pragma once
 #include "../core.h"
 #include "../notice_code_t.h"
+#include <string>
 #include <vector>
 
 namespace dovah {

@@ -5,6 +5,7 @@
 #include <QObject>
 #include "../dovah/core.h"
 #include "../dovah/files/file_load_order.h"
+#include "../dovah/files/file_read_warning.h"
 
 namespace dovah {
    class  bsa_archived_file;
