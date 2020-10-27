@@ -45,9 +45,11 @@ namespace dovah::loaded_forms {
                   //
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
                      file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::word_of_power, *this->stub, entry.word_of_power)
+                        .set_subrecord_index(current_word)
                   );
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
                      file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::spell, *this->stub, entry.spell)
+                        .set_subrecord_index(current_word)
                   );
                }
                ++current_word;

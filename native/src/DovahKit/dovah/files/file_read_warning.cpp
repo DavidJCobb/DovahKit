@@ -42,4 +42,42 @@ namespace dovah {
       warning.add_relevant_form(*reference.get_form_stub());
       return warning;
    }
+
+   file_read_warning& file_read_warning::set_subrecord_index(int i) noexcept {
+      this->cause_subrecord_index = i;
+      this->flags |= flag::has_cause_subrecord_index;
+      return *this;
+   }
+
+   bool file_read_warning::operator==(const file_read_warning& other) const noexcept {
+      if (this->code != other.code)
+         return false;
+      if (this->flags != other.flags)
+         return false;
+      if (this->flags & flag::has_file_offset)
+         if (this->offset != other.offset)
+            return false;
+      if (this->flags & flag::has_cause_subrecord) {
+         if (this->cause_subrecord != other.cause_subrecord)
+            return false;
+         if (this->flags & flag::has_cause_subrecord_index)
+            if (this->cause_subrecord_index != other.cause_subrecord_index)
+               return false;
+      }
+      if (this->flags & flag::has_cause_form)
+         if (this->cause_form != other.cause_form)
+            return false;
+      if (this->flags & flag::has_cause_form_type)
+         if (this->cause_form_type != other.cause_form_type)
+            return false;
+      if (this->cause_file != other.cause_file)
+         return false;
+      if (this->relevant_forms != other.relevant_forms)
+         return false;
+      if (this->relevant_files != other.relevant_files)
+         return false;
+      if (this->extra_integers != other.extra_integers)
+         return false;
+      return true;
+   }
 }

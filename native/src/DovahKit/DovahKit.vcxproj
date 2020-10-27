@@ -246,6 +246,7 @@
     <ClCompile Include="ui\main_window\load_window.cpp" />
     <ClCompile Include="ui\main_window\load_window\file_list.cpp" />
     <ClCompile Include="ui\main_window\log_window.cpp" />
+    <ClCompile Include="ui\main_window\log_window\log_list_view.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
@@ -400,6 +401,7 @@
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
     <QtMoc Include="ui\main_window\log_window.h" />
+    <QtMoc Include="ui\main_window\log_window\log_list_view.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />

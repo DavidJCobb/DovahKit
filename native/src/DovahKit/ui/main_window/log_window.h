@@ -15,9 +15,6 @@ class LogWindow : public QWidget {
       LogWindow(QWidget* parent);
       //
    public slots:
-      void loadWarningReceived(const dovah::file_read_warning&);
-      void saveErrorReceived(const dovah::file_write_error&);
-      void clearLog();
       void insertLogEntry(const QString&);
       //
    private:

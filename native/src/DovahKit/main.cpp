@@ -46,24 +46,19 @@
 //
 //  - Clean up the load process.
 //
-//     - Currently, form content only reports warnings when loaded on demand; it does 
-//       not report warnings during the initial load. In practice, this means that 
-//       DovahKit will only report errors in a form if the user actually goes to edit 
-//       or otherwise inspect that specific form (or if something like a future Render 
-//       Window causes it to load); moreover, DovahKit will re-report the errors every 
-//       time it loads. That's... not ideal.
+//     - The file load order's warning list needs to be made thread-safe. Our frontend 
+//       doesn't currently load forms off-thread, but we're likely to do so when we 
+//       eventually implement the render window. Outside agents should only be allowed 
+//       to retrieve a copy of the list, not a reference to it, and insertions and 
+//       clears should use a mutex.
 //
-//        - The function for generating use info already has an interface-style object 
-//          that gets passed in. If nothing else, we could have the use info build step 
-//          also be responsible for reporting (form_reference_is_of_incorrect_type) 
-//          warnings, while allowing on-demand loads to report all other errors.
+//     - The Log Window should use a view and model for warnings, and should refuse to 
+//       display duplicate warnings if they originate from repeatable processes (e.g. 
+//       on-demand form loading).
 //
-//        - The (file_read_warning) struct should be allowed to indicate exactly what 
-//          step of the read process it came from (e.g. use info build, on-demand load, 
-//          or something else). This would make it easier for frontend code to know 
-//          whether the error being reported is likely to be a duplicate report. For 
-//          example, it could decline to report an on-demand load error if the form 
-//          already has an error of the same code and form ID.
+//        - To prevent this from incorrectly suppressing warnings in multiple SHOU/SNAM 
+//          in the same form, we should give the warning struct an optional "cause 
+//          subrecord index" which indicates that it is the Nth SNAM.
 //
 //     - The log window should have a "message type" column, differentiating between 
 //       notices from the initial stub build, notices from on-demand form loading, 
