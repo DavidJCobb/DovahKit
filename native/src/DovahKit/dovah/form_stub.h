@@ -152,6 +152,7 @@ namespace dovah {
    using use_info_list = std::map<bare_form_id_t, use_info_entry>;
    #pragma endregion
 
+   #pragma region Interfaces for working with form stubs in specific contexts
    class form_stub_use_info_builder {
       friend class form_stub;
       protected:
@@ -167,6 +168,7 @@ namespace dovah {
          inline const form_stub* stub() const noexcept { return &this->_stub; }
          inline bool is_final_file() const noexcept { return this->_is_final_file; }
    };
+   #pragma endregion
 
    class form_stub {
       //

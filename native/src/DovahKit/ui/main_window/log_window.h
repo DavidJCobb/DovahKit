@@ -14,9 +14,6 @@ class LogWindow : public QWidget {
    public:
       LogWindow(QWidget* parent);
       //
-   public slots:
-      void insertLogEntry(const QString&);
-      //
    private:
       Ui::LogWindow ui;
 };

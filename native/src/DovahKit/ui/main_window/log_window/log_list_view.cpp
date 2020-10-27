@@ -31,6 +31,9 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
    //
    this->data = warning;
    this->type = type_t::file_read_warning;
+   if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+      this->file = QString::fromStdString(warning.cause_file);
+   }
    //
    switch (warning.code) {
       case notice_code::form_override_has_type_mismatch:
@@ -293,6 +296,15 @@ void LogListModel::saveErrorReceived(const dovah::file_write_error& error) {
 void LogListModel::loadWarningReceived(const dovah::file_read_warning& warning) {
    using flag = dovah::file_read_warning::flag;
    //
+   if (warning.context == dovah::file_read_warning::context_t::on_demand_form_load) {
+      //
+      // Don't log warnings from on-demand form loads, unless the specific data is 
+      // coalesced.
+      //
+      if (!warning.is_winning_record())
+         return;
+   }
+   //
    auto& map = this->warnings_cause_by_form;
    auto  cause_form_id  = warning.cause_form.fixedID;
    bool  has_cause_form = warning.flags & flag::has_cause_form;
@@ -342,7 +354,7 @@ int LogListModel::rowCount(const QModelIndex& parent) const {
    return this->children.size();
 }
 int LogListModel::columnCount(const QModelIndex& item) const {
-   return 1;
+   return 2;
 }
 Qt::ItemFlags LogListModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
@@ -359,6 +371,10 @@ QVariant LogListModel::data(const QModelIndex& index, int role) const {
          if (role == Qt::DisplayRole)
             return item->text;
          break;
+      case 1:
+         if (role == Qt::DisplayRole)
+            return item->file;
+         break;
    }
    return QVariant();
 }
@@ -373,6 +389,7 @@ QVariant LogListModel::headerData(int section, Qt::Orientation orientation, int 
       case Qt::DisplayRole:
          switch (section) {
             case 0: return tr("Text", "log window header");
+            case 1: return tr("File", "log window header");
          }
          break;
    }

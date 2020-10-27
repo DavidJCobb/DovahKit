@@ -1966,7 +1966,15 @@ namespace dovah {
 
    #pragma region Interfaces to file_load_order
    namespace load_order_interfaces {
-      void form_load::log_load_warning(const file_read_warning& warning) {
+      void form_load::log_load_warning(file_read_warning& warning) {
+         warning.context = file_read_warning::context_t::on_demand_form_load;
+         warning.modify_flag(file_read_warning::flag::is_winning_record, this->is_winning_record);
+         //
+         if (this->current_file && warning.cause_file.empty()) {
+            warning.cause_file = this->current_file->get_filename();
+            warning.set_flag(file_read_warning::flag::has_cause_file);
+         }
+         //
          this->owner.log_load_warning(warning);
       }
    }

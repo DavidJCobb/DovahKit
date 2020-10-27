@@ -11,7 +11,3 @@ LogWindow::LogWindow(QWidget* parent) : QWidget(parent) {
    this->ui.list->setUniformItemSizes(false);
    this->ui.list->setWordWrap(true);
 }
-
-void LogWindow::insertLogEntry(const QString& text) {
-   //this->ui.list->addItem(text);
-}

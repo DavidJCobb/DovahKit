@@ -86,12 +86,16 @@ namespace dovah {
       file_data* arr;
       uint16_t   size;
       this->_get_source_file_list(arr, size);
+      if (!size)
+         return loaded_form_ptr<loaded_forms::Form>(this); // no source files (this should never occur; it is only possible while the stub is being built)
       //
       auto  intfc  = load_order_interfaces::form_load(lo);
       auto* loader = get_form_loader_function(this->formType);
       if (!loader)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
       if (auto* file = arr[0].pointer) {
+         intfc.current_file      = file;
+         intfc.is_winning_record = (1 == size);
          if (file->load_record_at(arr[0].offset)) {
             auto& record = file->get_current_record();
             this->form = create_blank_loaded_form_by_type(this->formType);
@@ -106,6 +110,9 @@ namespace dovah {
       //
       for (uint16_t i = 1; i < size; ++i) {
          auto* file = arr[i].pointer;
+         //
+         intfc.is_winning_record = (i + 1 == size);
+         intfc.current_file      = file;
          if (file->load_record_at(arr[i].offset)) {
             auto& record = file->get_current_record();
             (loader)(this->form, record, intfc);

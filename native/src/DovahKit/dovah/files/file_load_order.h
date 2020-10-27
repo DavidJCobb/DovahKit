@@ -456,8 +456,10 @@ namespace dovah {
          friend class form_stub;
          public:
             file_load_order& owner;
+            tes_file_reading::file_reader* current_file = nullptr;
+            bool is_winning_record = false;
             //
-            void log_load_warning(const file_read_warning&);
+            void log_load_warning(file_read_warning&);
             //
          protected:
             form_load(file_load_order& o) : owner(o) {}

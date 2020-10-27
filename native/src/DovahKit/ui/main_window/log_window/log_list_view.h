@@ -24,6 +24,7 @@ class LogListModelItem {
       //
       type_t  type = type_t::text;
       QString text;
+      QString file;
       file_read_warning data;
       //
       LogListModelItem() {}

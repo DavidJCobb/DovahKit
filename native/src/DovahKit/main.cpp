@@ -52,28 +52,15 @@
 //       to retrieve a copy of the list, not a reference to it, and insertions and 
 //       clears should use a mutex.
 //
-//     - The Log Window should use a view and model for warnings, and should refuse to 
-//       display duplicate warnings if they originate from repeatable processes (e.g. 
-//       on-demand form loading).
-//
-//        - To prevent this from incorrectly suppressing warnings in multiple SHOU/SNAM 
-//          in the same form, we should give the warning struct an optional "cause 
-//          subrecord index" which indicates that it is the Nth SNAM.
-//
 //     - The log window should have a "message type" column, differentiating between 
 //       notices from the initial stub build, notices from on-demand form loading, 
 //       and notices from saves.
 //
-//     - The (form_load) interface needs to be allowed to keep track of the file that 
-//       the form is currently loading from, so that it can report which file produces 
-//       any given error.
+//     - The log window does not allow you to select entries, and offers no means to 
+//       copy them.
 //
-//        - The interface should also be able to report whether we are currently 
-//          loading the winning record, so that we can decline to report warnings 
-//          in overridden data.
-//
-//        - If we're going to have the interface maintain that kind of state, then 
-//          we should move it to form_stub.h.
+//     - The log window should ideally use a table view instead of a list view, with 
+//       columns for the filename (and potentially other details).
 //
 //     - Form components, such as keyword lists and extra-data, need to be able to 
 //       report (file_read_warning)s.
