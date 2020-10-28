@@ -25,6 +25,7 @@ namespace dovah {
          friend threads::interior_cell;
          friend threads::worldspace_sub_block;
          friend threads::worldspace_persistent_cell_children;
+         friend threads::game_setting;
          public:
             using flag = tes_file_flag;
             using detail_flag   = tes_file_header::detail_flag;
@@ -75,6 +76,7 @@ namespace dovah {
                std::array<threads::interior_cell,                       threads_for_interior_cell_load>   interior_cell;
                std::array<threads::worldspace_sub_block,                threads_for_worldspace_load>      worldspace;
                std::array<threads::worldspace_persistent_cell_children, threads_for_worldspace_cell_load> world_cell;
+               threads::game_setting game_setting;
                //
                _readers(file_reader&);
                void start();

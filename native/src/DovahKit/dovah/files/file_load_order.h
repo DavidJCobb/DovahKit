@@ -12,6 +12,8 @@
 #include "file_write_error.h"
 #include "file_read_warning.h"
 #include "../notice_code_t.h"
+#include "../localized_strings.h"
+#include "../data/game_settings.h"
 
 namespace dovah {
    class form_stub;
@@ -36,6 +38,18 @@ namespace dovah {
    namespace load_order_interfaces {
       class form_load;
    }
+
+   class loaded_game_setting {
+      public:
+         const game_setting_definition* definition = nullptr;
+         bare_form_id_t formID = 0;
+         //
+         localized_string value_string;
+         union {
+            float   f;
+            int32_t i;
+         } value;
+   };
 
    class file_load_order {
       //
@@ -80,6 +94,8 @@ namespace dovah {
          mutable std::mutex use_info_build_threads_lock;
          //
          bsa_load_order*   archives             = nullptr;
+         std::vector<loaded_game_setting> game_settings;
+         mutable std::mutex game_settings_lock;
          std::vector<loaded_file*> files;
          loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
          loaded_file*      active_file          = nullptr;
@@ -191,6 +207,7 @@ namespace dovah {
          // Notably NOT used for the initial load of hardcoded forms; see _accept_hardcoded_form.
          //
          form_id_status accept_form_stub(form_stub*) noexcept;
+         void accept_game_setting(const loaded_file* file, const loaded_game_setting&, bare_form_id_t formID) noexcept;
          #pragma endregion
 
          #pragma region content related to BSAs
@@ -249,6 +266,9 @@ namespace dovah {
          bool is_defined_in_active_file(const form_stub& stub) const noexcept;
          bool is_defined_or_overridden_in_active_file(const form_stub& stub) const noexcept;
          bool is_active_file_formID(bare_form_id_t) const noexcept;
+         //
+         bool get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept;
+         bool get_loaded_setting_by_name(const game_setting_definition& name, loaded_game_setting& out) const noexcept;
          //
          form_stub* create_form_of_type(form_type_t) noexcept;
          form_creation_request request_form_creation(form_type_t) noexcept;

@@ -464,6 +464,68 @@ namespace dovah {
       //
       return form_id_status::valid;
    }
+   void file_load_order::accept_game_setting(const loaded_file* file, const loaded_game_setting& working, bare_form_id_t formID) noexcept {
+      bare_form_id_t localID = formID;
+      //
+      auto result = this->local_formID_to_global_formID(file, formID);
+      if (result != form_id_status::valid)
+         formID = 0;
+      else if (formID) {
+         //
+         // Do not allow GMST to override form IDs of other types.
+         //
+         std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+         //
+         form_stub*& prior = this->forms.forms[formID];
+         if (prior && prior->formType != form_type::setting) {
+            if (prior->formType == form_type::setting) {
+               prior->_add_file(*const_cast<loaded_file*>(file), 0);
+            } else {
+               file_read_warning warning;
+               warning.code               = notice_code::form_override_has_type_mismatch;
+               warning.cause_form.localID = localID;
+               warning.cause_form.fixedID = formID;
+               warning.cause_form.type    = prior->formType;
+               warning.set_flag(file_read_warning::flag::has_cause_form);
+               if (auto* prior_file = prior->get_file_at_index(0)) {
+                  warning.cause_file = prior_file->get_filename();
+                  warning.set_flag(file_read_warning::flag::has_cause_file);
+               }
+               warning.relevant_files.emplace_back() = file->get_filename();
+               //
+               auto& relevant = warning.relevant_forms.emplace_back();
+               relevant.localID = localID;
+               relevant.fixedID = formID;
+               relevant.type    = form_type::setting;
+               //
+               this->log_load_warning(warning);
+               return;
+            }
+         }
+         if (!prior) {
+            //
+            // Create a form stub, so that this form ID is reserved and can't be used by other forms. Technically, 
+            // TESV.exe would allow a form to reuse the GMST form ID if it loaded after the GMST, but given that 
+            // we multi-thread form loading, I extremely don't want to try and account for that sort of edge case.
+            //
+            prior = new form_stub;
+            prior->_add_file(*const_cast<loaded_file*>(file), 0);
+            prior->formID   = formID;
+            prior->formType = form_type::setting;
+         }
+      }
+      //
+      std::lock_guard guard(this->game_settings_lock);
+      for (auto& entry : this->game_settings) {
+         if (entry.definition == working.definition) {
+            entry        = working;
+            entry.formID = formID;
+            return;
+         }
+      }
+      auto& entry = this->game_settings.emplace_back(working);
+      entry.formID = formID;
+   }
 
    void file_load_order::log_load_warning(const file_read_warning& w) {
       if (!w.is_defined())
@@ -978,6 +1040,29 @@ namespace dovah {
       return id >= min_id && id <= max_id;
    }
 
+   bool file_load_order::get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept {
+      std::lock_guard guard(this->game_settings_lock);
+      for (auto& entry : this->game_settings) {
+         if (!entry.definition)
+            continue;
+         if (_stricmp(name.c_str(), entry.definition->name) == 0) {
+            out = entry;
+            return true;
+         }
+      }
+      return false;
+   }
+   bool file_load_order::get_loaded_setting_by_name(const game_setting_definition& definition, loaded_game_setting& out) const noexcept {
+      std::lock_guard guard(this->game_settings_lock);
+      for (auto& entry : this->game_settings) {
+         if (entry.definition == &definition) {
+            out = entry;
+            return true;
+         }
+      }
+      return false;
+   }
+
    #pragma region Load order code for various form modification requests
    form_stub* file_load_order::create_form_of_type(form_type_t ft) noexcept {
       auto request = this->request_form_creation(ft);
@@ -1287,6 +1372,7 @@ namespace dovah {
          return form_id_status::valid;
       }
       if (stub->formType == form_type::setting) {
+         __debugbreak();
          //
          // Skyrim.esm contains a GMST record with incorrect form ID 0123C00E. Accordingly, 
          // since GMST form IDs clearly don't matter, we need to just make sure we store 

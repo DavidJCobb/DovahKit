@@ -123,18 +123,26 @@ namespace dovah {
                void start();
                void wait_for();
          };
-         #pragma endregion
-         //
-         #pragma region Localized string loaders
-         class localized_strings {
+         class game_setting : public threaded_reader_base {
+            //
+            // Class for reading a top-level GRUP of GMST.
+            //
             protected:
+               struct queued_group {
+                  uint32_t pos = 0;
+                  //
+                  queued_group(uint32_t p) : pos(p) {}
+               };
+               //
                void _load();
-               static void _thread_handler(localized_strings* instance);
+               static void _thread_handler(game_setting* instance);
             public:
-               std::vector<localized_string_file*> targets;
+               game_setting(file_reader& f) : threaded_reader_base(f) {}
+
+               std::vector<queued_group> queue;
                std::thread thread;
                //
-               void add_target(localized_string_file*);
+               void add_group(uint32_t groupPos);
                void start();
                void wait_for();
          };

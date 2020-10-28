@@ -347,23 +347,95 @@ namespace dovah {
             this->thread.join();
          }
          #pragma endregion
-
-         #pragma region localized_strings
-         void localized_strings::_thread_handler(localized_strings* instance) {
+         
+         #pragma region game_setting
+         void game_setting::_thread_handler(game_setting* instance) {
             instance->_load();
          }
-         void localized_strings::_load() {
-            for (auto* file : this->targets) {
-               file->open();
+         void game_setting::_load() {
+            this->file = this->owner->file;
+            auto& lo = this->owner->load_order;
+            //
+            auto size = this->queue.size();
+            this->progress.maximum = size;
+            for (uint32_t i = 0; i < size; i++) {
+               if (this->owner->aborted) {
+                  dovah::logging::print_line("[dovah::tes_file_reading::threads::game_setting] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
+                  break;
+               }
+               this->progress.current = i;
+               auto& desired = this->queue[i];
+               this->setPos(desired.pos);
+               this->resetParseState();
+               assert(this->next_record_or_group() == object_type::group); // TODO: error instead
+               object_type ot;
+               while (ot = this->next_record_or_group(), ot != object_type::none) {
+                  if (ot == object_type::group) {
+                     //
+                     // Stop if we've reached the end of the group we're meant to parse.
+                     //
+                     auto& first = this->_groups[0];
+                     if (!first.exists() || first.pos != desired.pos)
+                        break;
+                     if (this->_groups[1].exists()) {
+                        auto& error = this->owner->error;
+                        //
+                        error.code       = file_read_error::error_code::malformed_file;
+                        error.file       = this->as_file()->get_filename();
+                        error.fileOffset = this->getPos();
+                        cobb::sprintf(error.message, "Unexpected nested group within \"simple\" top-group GMST.");
+                        //
+                        this->owner->abort();
+                        break;
+                     }
+                  }
+                  if (ot == object_type::record) {
+                     auto& record = this->get_current_record();
+                     auto& group  = this->get_current_group();
+                     if (record.signature() != 'GMST')
+                        continue;
+                     //
+                     loaded_game_setting working;
+                     auto& EDID = record.next_subrecord();
+                     if (EDID.signature() != 'EDID')
+                        continue;
+                     std::string name;
+                     EDID.to_string(name);
+                     working.definition = &game_setting_definition::lookup(name.c_str());
+                     if (working.definition->is_none())
+                        continue;
+                     while (auto& subrecord = record.next_subrecord()) {
+                        if (subrecord.signature() != 'DATA')
+                           continue;
+                        switch (working.definition->type) {
+                           case game_setting_type::float32:
+                              subrecord.read(working.value.f);
+                              break;
+                           case game_setting_type::integer:
+                              subrecord.read(working.value.i);
+                              break;
+                           case game_setting_type::string:
+                              subrecord.to_string(working.value_string);
+                              break;
+                        }
+                        break;
+                     }
+                     lo.accept_game_setting(this->owner, working, record.formID());
+                     continue;
+                  }
+               }
             }
+            this->file = nullptr;
+            //
+            dovah::logging::print_line("[dovah::tes_file_reading::threads::game_setting] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
          }
-         void localized_strings::add_target(localized_string_file* f) {
-            this->targets.emplace_back(f);
+         void game_setting::add_group(uint32_t pos) {
+            this->queue.emplace_back(pos);
          }
-         void localized_strings::start() {
-            this->thread = std::thread(localized_strings::_thread_handler, this);
+         void game_setting::start() {
+            this->thread = std::thread(game_setting::_thread_handler, this);
          }
-         void localized_strings::wait_for() {
+         void game_setting::wait_for() {
             this->thread.join();
          }
          #pragma endregion

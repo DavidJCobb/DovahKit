@@ -12,7 +12,8 @@ namespace dovah::tes_file_reading {
       interior_cell{ owner, owner, owner, owner },
       worldspace{ owner, owner, owner, owner, owner, owner },
       world_cell{ owner, owner },
-      complex(owner, true)
+      complex(owner, true),
+      game_setting(owner)
    {}
    void file_reader::_readers::start() {
       this->complex.start();
@@ -24,6 +25,7 @@ namespace dovah::tes_file_reading {
          reader.start();
       for (auto& reader : this->world_cell)
          reader.start();
+      this->game_setting.start();
    }
    void file_reader::_readers::wait_for() {
       for (auto& reader : this->simple)
@@ -35,6 +37,7 @@ namespace dovah::tes_file_reading {
       for (auto& reader : this->world_cell)
          reader.wait_for();
       this->complex.wait_for();
+      this->game_setting.wait_for();
    }
    float file_reader::_readers::assess_progress() const noexcept {
       float   progress = 0.0F;
@@ -55,6 +58,10 @@ namespace dovah::tes_file_reading {
          progress += reader.assess_progress();
          ++count;
       }
+      progress += this->complex.assess_progress();
+      ++count;
+      progress += this->game_setting.assess_progress();
+      ++count;
       return progress / count;
    }
 
@@ -410,6 +417,7 @@ namespace dovah::tes_file_reading {
                      continue;
                }
                bool is_complex = false;
+               bool is_gmst    = false;
                switch (_byteswap_ulong(group.header.label)) {
                   case 'CELL': // contents handled by the Interior Cell Block readers.
                   case 'WRLD': // forms handled here; children handled by the worldspace sub-block readers.
@@ -420,8 +428,14 @@ namespace dovah::tes_file_reading {
                      continue;
                   case 'DIAL':
                      is_complex = true;
+                     break;
+                  case 'GMST':
+                     is_gmst = true;
+                     break;
                }
-               if (is_complex) {
+               if (is_gmst) {
+                  this->readers.game_setting.add_group(group.pos);
+               } else if (is_complex) {
                   this->readers.complex.add_group(_byteswap_ulong(group.header.label), group.pos);
                } else {
                   auto& loader = this->readers.simple[which_simple];
