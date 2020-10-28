@@ -1,8 +1,9 @@
 #include "package_event_dialogue.h"
 #include "../_common_cpp.h"
+#include "../../notice_code_list.h"
 
 namespace dovah::loaded_forms::components {
-   bool package_event_dialogue::load(tes_record_reader& record) {
+   bool package_event_dialogue::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       //
       // The game reads subrecords indefinitely, stopping only after reading TNAM or 
       // PDTO. It will simply skip any unrecognized subrecords up to that point.
@@ -10,33 +11,67 @@ namespace dovah::loaded_forms::components {
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'INAM':
-               record.next_subrecord().read(this->idle);
+               subrecord.read(this->idle);
+               intfc.log_load_warning(
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::idle, intfc.target_stub, this->idle)
+               );
                break;
             case 'TNAM':
                this->type = topic_type::ref;
-               record.next_subrecord().read(this->topic);
+               subrecord.read(this->topic);
+               intfc.log_load_warning(
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
+               );
                return true; // TESPackage::Data::Load aborts after reading TNAM
             case 'PDTO':
                {
-                  auto& subrecord = record.next_subrecord();
                   subrecord.read(this->type);
-                  if (this->type == topic_type::ref)
+                  if (this->type == topic_type::ref) {
                      subrecord.read(this->topic);
-                  else if (this->type == topic_type::subtype)
+                     intfc.log_load_warning(
+                        file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
+                     );
+                  } else if (this->type == topic_type::subtype)
                      subrecord.read(this->topic_subtype);
                }
-               return true; // TESPackage::Data aborts after reading PDTO
+               return true; // TESPackage::Data::Load aborts after reading PDTO
+            default:
+               {
+                  file_read_warning warning;
+                  warning.code = notice_code::package_event_dialogue_unrecognized_subrecord;
+                  warning.set_cause_form(intfc.target_stub);
+                  warning.set_cause_subrecord(subrecord.signature());
+                  //
+                  intfc.log_load_warning(warning);
+               }
+               break;
          }
       }
       return false;
    }
    /*static*/ void package_event_dialogue::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
-      package_event_dialogue temp;
-      temp.load(record); // TODO: we have no way to signal errors re: malformed data
-      if (temp.idle)
-         uib.add_outbound_reference(temp.idle);
-      if (temp.topic)
-         uib.add_outbound_reference(temp.topic);
+      form_id_t  formID;
+      topic_type type;
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'INAM':
+               if (subrecord.read(formID))
+                  uib.add_outbound_reference(formID);
+               break;
+            case 'TNAM':
+               if (subrecord.read(formID))
+                  uib.add_outbound_reference(formID);
+               return; // TESPackage::Data::Load aborts after reading TNAM
+            case 'PDTO':
+               {
+                  subrecord.read(type);
+                  if (type == topic_type::ref)
+                     if (subrecord.read(formID))
+                        uib.add_outbound_reference(formID);
+               }
+               return; // TESPackage::Data::Load aborts after reading PDTO
+         }
+      }
    }
    void package_event_dialogue::save(tes_record_writer& record) {
       if (this->idle)

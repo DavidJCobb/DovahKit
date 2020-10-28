@@ -2,7 +2,7 @@
 #include "../_common_cpp.h"
 
 namespace dovah::loaded_forms::components {
-   void interior_lighting::load(tes_subrecord_reader& subrecord) {
+   void interior_lighting::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.is_in_bounds(0x40)) {
          this->ambient.load(subrecord);
          this->directional.load(subrecord);

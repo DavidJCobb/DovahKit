@@ -12,10 +12,10 @@ namespace dovah::loaded_forms {
             case 'EDID': // already read by the FormStub
                break;
             case 'VMAD':
-               this->script_data.load(subrecord);
+               this->script_data.load(subrecord, intfc);
                break;
             case 'OBND':
-               this->bounds.load(subrecord);
+               this->bounds.load(subrecord, intfc);
                break;
             case 'FULL':
                subrecord.to_string(this->name);
@@ -23,7 +23,7 @@ namespace dovah::loaded_forms {
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               this->model.load(subrecord);
+               this->model.load(subrecord, intfc);
                break;
             case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
             case 'DSTD': // destruction stage data
@@ -31,11 +31,11 @@ namespace dovah::loaded_forms {
             case 'DMDT': // destruction stage model texture hashes
             case 'DMDS': // destruction stage model texture swaps
             case 'DSTF': // destruction stage end marker
-               this->destruction_data.load(subrecord);
+               this->destruction_data.load(subrecord, intfc);
                break;
             case 'KSIZ':
             case 'KWDA':
-               this->keywords.load(subrecord);
+               this->keywords.load(subrecord, intfc);
                break;
             case 'PNAM':
                this->marker_color.load(subrecord);

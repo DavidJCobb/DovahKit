@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result water_data::load(tes_subrecord_reader& subrecord) {
+   extra_data_load_result water_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       auto s = subrecord.signature();
       if (s == signature_base) {
          subrecord.read(this->count);
@@ -10,7 +10,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return load_result::unrecognized;
    }
-   bool water_data::load(tes_record_reader& record) {
+   bool water_data::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto signature = record.peek_next_subrecord_type();
       if (signature == signature_vel) {
          auto& subrecord = record.next_subrecord();

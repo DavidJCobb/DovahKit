@@ -786,26 +786,46 @@ namespace dovah::loaded_forms::components {
       return condition_info::arg_underlying_type::none;
    }
 
-   bool condition::read(tes_record_reader& record) {
+   bool condition::read(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'CTDA' && "Condition::read should only be called just after the CTDA subrecord is opened.");
       if (!subrecord.is_in_bounds(0x14))
          return false;
       subrecord.unchecked_read(this->type);
       subrecord.skip_bytes(3);
-      if (this->get_flags() & flag::compare_to_global)
+      if (this->get_flags() & flag::compare_to_global) {
          subrecord.unchecked_read(this->compare_to_global);
-      else
+         intfc.log_load_warning(
+            file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, this->compare_to_global)
+         );
+      } else {
          subrecord.unchecked_read(this->compare_to_constant);
+      }
       subrecord.unchecked_read(this->function);
       subrecord.skip_bytes(2);
       {
          auto func = condition_info::function::lookup_by_id(this->function);
-         for (int i = 0; i < 2; i++) {
-            if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID)
-               subrecord.unchecked_read(this->parameters[i].form);
-            else
-               subrecord.unchecked_read(this->parameters[i].dword);
+         if (func) {
+            for (int i = 0; i < 2; i++) {
+               if (this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID) {
+                  auto* arg_type   = func->argument_types[i];
+                  auto& allowed    = arg_type->allowedFormTypes;
+                  auto& value_form = this->parameters[i].form;
+                  subrecord.unchecked_read(value_form);
+                  //
+                  if (allowed.size() == 1) {
+                     intfc.log_load_warning(
+                        file_read_warning::warn_if_wrong_type(subrecord.signature(), arg_type->allowedFormTypes[0], intfc.target_stub, value_form)
+                     );
+                  } else if (!arg_type->allows_form_type(value_form.get_form_stub()->formType)) {
+                     intfc.log_load_warning(
+                        file_read_warning::warn_if_wrong_type(subrecord.signature(), {}, intfc.target_stub, value_form)
+                     );
+                  }
+               } else {
+                  subrecord.unchecked_read(this->parameters[i].dword);
+               }
+            }
          }
          if (func && func->uses_event_data) {
             if (!subrecord.is_in_bounds(8))
@@ -819,6 +839,9 @@ namespace dovah::loaded_forms::components {
             subrecord.unchecked_read(this->run_on);
             subrecord.unchecked_read(this->run_on_reference);
             subrecord.unchecked_read(this->run_on_index);
+            intfc.log_load_warning(
+               file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->run_on_reference)
+            );
          }
       }
       auto next = record.peek_next_subrecord_type();

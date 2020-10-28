@@ -2,12 +2,15 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result lock::load(tes_subrecord_reader& subrecord) {
+   extra_data_load_result lock::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->level);
       subrecord.read(this->pad01);
       subrecord.read(this->key);
+      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::key, intfc.target_stub, this->key)
+      );
       subrecord.read(this->flags);
       subrecord.read(this->pad09);
       subrecord.read(this->unk0C);

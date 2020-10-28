@@ -2,7 +2,7 @@
 #include "../_common_cpp.h"
 
 namespace dovah::loaded_forms::components {
-   void keyword_list::load(tes_subrecord_reader& subrecord) {
+   void keyword_list::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       uint32_t keywordSize = 0;
       form_reference_t formID;
       switch (subrecord.signature()) {
@@ -13,9 +13,14 @@ namespace dovah::loaded_forms::components {
          case 'KWDA':
             if (!keywordSize)
                keywordSize = subrecord.size() / 4;
-            for (uint32_t i = 0; i < keywordSize; i++)
-               if (subrecord.read(formID))
+            for (uint32_t i = 0; i < keywordSize; i++) {
+               if (subrecord.read(formID)) {
                   this->forms.push_back(formID);
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, formID)
+                  );
+               }
+            }
             break;
       }
    }

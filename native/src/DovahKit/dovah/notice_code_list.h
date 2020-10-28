@@ -30,6 +30,7 @@ namespace dovah {
          unrecognized_subrecord                = 0x00000015, // FORM full load: a subrecord was unrecognized.
          form_reference_is_of_incorrect_type   = 0x00000016, // FORM full load: a (form_reference_t) ended up referring to a form of the wrong type.
          shout_has_wrong_word_count            = 0x00000017, // SHOU full load: the shout has too many, or too few, words.
+         package_event_dialogue_unrecognized_subrecord = 0x00000018,
       };
    };
 }

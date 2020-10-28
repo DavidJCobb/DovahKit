@@ -2,10 +2,13 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result enable_state_parent::load(tes_subrecord_reader& subrecord) {
+   extra_data_load_result enable_state_parent::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->ref);
+      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+         file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->ref)
+      );
       subrecord.read(this->flags);
       subrecord.read(this->pad05);
       return load_result::succeeded;

@@ -8,4 +8,7 @@
 namespace dovah {
    class form_stub;
    class form_stub_use_info_builder;
+   namespace load_order_interfaces {
+      class form_load;
+   }
 }

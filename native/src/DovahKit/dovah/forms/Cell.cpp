@@ -16,6 +16,9 @@ namespace dovah::loaded_forms {
                subrecord.read(this->cell_flags);
                loaded_cell_flags = true;
                break;
+            case 'FULL':
+               subrecord.to_string(this->name);
+               break;
             case 'XCLC':
                if (!loaded_cell_flags) {
                   file_read_warning warning;
@@ -59,7 +62,7 @@ namespace dovah::loaded_forms {
                   intfc.log_load_warning(warning);
                   break;
                }
-               this->interior.lighting.load(subrecord);
+               this->interior.lighting.load(subrecord, intfc);
                break;
             case 'LTMP':
                subrecord.read(this->interior.lighting_template_ID);
@@ -93,13 +96,13 @@ namespace dovah::loaded_forms {
                break;
             case 'OBND':
                this->has_object_bounds = true;
-               this->object_bounds.load(subrecord);
+               this->object_bounds.load(subrecord, intfc);
                break;
             case 'VMAD':
-               this->script_data.load(subrecord);
+               this->script_data.load(subrecord, intfc);
                break;
             default:
-               if (this->extra_data.load(record) == components::extra_data_load_result::unrecognized) {
+               if (this->extra_data.load(record, intfc) == components::extra_data_load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //

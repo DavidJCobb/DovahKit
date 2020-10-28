@@ -1,7 +1,7 @@
 #include "bounds.h"
 
 namespace dovah::loaded_forms::components {
-   void object_bounds::load(tes_subrecord_reader& subrecord) {
+   void object_bounds::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (!subrecord.is_in_bounds(12))
          return;
       subrecord.unchecked_read(this->min.x);

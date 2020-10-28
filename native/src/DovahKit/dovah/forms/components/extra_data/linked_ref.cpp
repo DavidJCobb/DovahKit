@@ -1,12 +1,19 @@
 #include "linked_ref.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result linked_ref::load(tes_subrecord_reader& subrecord) {
+   extra_data_load_result linked_ref::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
-      if (subrecord.size() >= 8)
+      if (subrecord.size() >= 8) {
          subrecord.read(this->keyword);
+         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+            file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->keyword)
+         );
+      }
       subrecord.read(this->ref);
+      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+         file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->ref)
+      );
       return load_result::succeeded;
    }
    void linked_ref::save(tes_record_writer& record) {

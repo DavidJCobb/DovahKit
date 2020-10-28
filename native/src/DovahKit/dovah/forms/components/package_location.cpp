@@ -2,13 +2,28 @@
 #include "../_common_cpp.h"
 
 namespace dovah::loaded_forms::components {
-   void package_location::load(tes_subrecord_reader& subrecord) {
+   void package_location::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       subrecord.read(this->type);
       switch (this->type) {
-         case package_location_type::near_reference:
          case package_location_type::in_cell:
-         case package_location_type::object_id:
+            subrecord.read(this->detail.form);
+            intfc.log_load_warning(
+               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::cell, intfc.target_stub, this->detail.form)
+            );
+            break;
+         case package_location_type::near_reference:
+            subrecord.read(this->detail.form);
+            intfc.log_load_warning( // TODO: xEdit definitions claim that DOOR is valid here, but no other base forms. seems suspect imo but can we verify it?
+               file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->detail.form)
+            );
+            break;
          case package_location_type::near_linked_reference: // KYWD
+            subrecord.read(this->detail.form);
+            intfc.log_load_warning(
+               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->detail.form)
+            );
+            break;
+         case package_location_type::object_id:
             subrecord.read(this->detail.form);
             break;
          case package_location_type::reference_alias:

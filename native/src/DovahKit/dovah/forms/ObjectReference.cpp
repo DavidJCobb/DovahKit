@@ -28,10 +28,10 @@ namespace dovah::loaded_forms {
                subrecord.read(this->base_form);
                break;
             case 'VMAD':
-               this->script_data.load(subrecord);
+               this->script_data.load(subrecord, intfc);
                break;
             default:
-               if (this->extra_data.load(record) == components::extra_data_load_result::unrecognized) {
+               if (this->extra_data.load(record, intfc) == components::extra_data_load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //

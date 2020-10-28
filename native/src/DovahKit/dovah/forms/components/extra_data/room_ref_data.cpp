@@ -2,22 +2,34 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result room_ref_data::load(tes_subrecord_reader& subrecord) {
+   extra_data_load_result room_ref_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       return load_result::requires_record;
    }
-   bool room_ref_data::load(tes_record_reader& record) {
+   bool room_ref_data::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      {
+         auto& subrecord = record.get_current_subrecord();
+         assert(subrecord.signature() == signature && "This function should only have been called after the other (load) overload verified that we were in an XRMR subrecord.");
+         subrecord.read(this->linked_room_count);
+         subrecord.read(this->flags);
+      }
       if (this->flags & flag::has_lighting_template) {
          if (record.peek_next_subrecord_type() == 'LNAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
             auto& subrecord = record.next_subrecord();
             subrecord.read(this->lighting_template);
+            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, intfc.target_stub, this->lighting_template)
+            );
          }
       }
       if (this->flags & flag::has_imagespace) {
          if (record.peek_next_subrecord_type() == 'INAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
             auto& subrecord = record.next_subrecord();
             subrecord.read(this->imagespace);
+            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::imagespace, intfc.target_stub, this->imagespace)
+            );
          }
       }
       if (this->linked_room_count > 0) {
@@ -33,6 +45,9 @@ namespace dovah::loaded_forms::components::extra {
             auto& subrecord = record.next_subrecord();
             auto& formID    = this->linked_rooms.emplace_back();
             subrecord.read(formID);
+            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, formID)
+            );
          }
       }
       return true;
@@ -66,15 +81,44 @@ namespace dovah::loaded_forms::components::extra {
    }
    //
    /*static*/ void room_ref_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
-      room_ref_data temp;
-      temp.load(record);
-      if (temp.lighting_template)
-         uib.add_outbound_reference(temp.lighting_template);
-      if (temp.imagespace)
-         uib.add_outbound_reference(temp.imagespace);
-      for (auto id : temp.linked_rooms)
-         if (id)
-            uib.add_outbound_reference(id);
+      decltype(linked_room_count) linked_room_count;
+      decltype(flags) flags;
+      auto& XRMR = record.get_current_subrecord();
+      if (XRMR.signature() != signature) // shouldn't ever happen
+         return;
+      XRMR.read(linked_room_count);
+      XRMR.read(flags);
+      //
+      form_id_t formID;
+      if (flags & flag::has_lighting_template) {
+         if (record.peek_next_subrecord_type() == 'LNAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
+            auto& subrecord = record.next_subrecord();
+            if (subrecord.read(formID))
+               uib.add_outbound_reference(formID);
+         }
+      }
+      if (flags & flag::has_imagespace) {
+         if (record.peek_next_subrecord_type() == 'INAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
+            auto& subrecord = record.next_subrecord();
+            if (subrecord.read(formID))
+               uib.add_outbound_reference(formID);
+         }
+      }
+      if (linked_room_count > 0) {
+         while (record.peek_next_subrecord_type() == 'XLRM') {
+            //
+            // NOTE: If at any point the game encounters an XRMR subrecord, it skips that subrecord 
+            // but will decide to read one extra subrecord (for every XRMR it sees). Subrecord that 
+            // are not XRMR are assumed to be XLRM and are blindly read as form IDs. So, to give an 
+            // example, if the linked room count is five but you have two XRMR subrecords that show 
+            // up before the last XLRM, then the game will try to read seven non-XRMR subrecords, 
+            // all of which will be treated like XLRM.
+            //
+            auto& subrecord = record.next_subrecord();
+            if (subrecord.read(formID))
+               uib.add_outbound_reference(formID);
+         }
+      }
    }
    basic_extra_data* room_ref_data::clone(form_stub& clone_owner) const noexcept {
       auto* clone = new room_ref_data;

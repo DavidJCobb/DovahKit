@@ -46,12 +46,6 @@
 //
 //  - Clean up the load process.
 //
-//     - The file load order's warning list needs to be made thread-safe. Our frontend 
-//       doesn't currently load forms off-thread, but we're likely to do so when we 
-//       eventually implement the render window. Outside agents should only be allowed 
-//       to retrieve a copy of the list, not a reference to it, and insertions and 
-//       clears should use a mutex.
-//
 //     - The log window should have a "message type" column, differentiating between 
 //       notices from the initial stub build, notices from on-demand form loading, 
 //       and notices from saves.
@@ -61,9 +55,6 @@
 //
 //     - The log window should ideally use a table view instead of a list view, with 
 //       columns for the filename (and potentially other details).
-//
-//     - Form components, such as keyword lists and extra-data, need to be able to 
-//       report (file_read_warning)s.
 //
 //  - Clean up the save process.
 //

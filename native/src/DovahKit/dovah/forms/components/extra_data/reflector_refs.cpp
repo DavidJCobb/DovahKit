@@ -2,12 +2,16 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result reflector_refs::load(tes_subrecord_reader& subrecord) {
+   extra_data_load_result reflector_refs::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       auto& entry = this->entries.emplace_back();
       subrecord.read(entry.target);
       subrecord.read(entry.type);
+      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, entry.target)
+            .set_subrecord_index(this->entries.size() - 1)
+      );
       return load_result::succeeded;
    }
    void reflector_refs::save(tes_record_writer& record) {

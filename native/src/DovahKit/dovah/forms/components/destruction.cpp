@@ -3,7 +3,7 @@
 #include "../Form.h" // for LOAD_NAIVELY_WHEN_THE_GAME_DOES directive
 
 namespace dovah::loaded_forms::components {
-   void destruction_stage_data::load(tes_subrecord_reader& subrecord) {
+   void destruction_stage_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       uint32_t stageCount = 0;
       #if LOAD_NAIVELY_WHEN_THE_GAME_DOES == 1
          auto& record = subrecord.get_containing_record();
@@ -27,6 +27,17 @@ namespace dovah::loaded_forms::components {
                      subrecord.read(stage.explosion);
                      subrecord.read(stage.debris);
                      subrecord.read(stage.debrisCount);
+                     //
+                     const auto& stub = intfc.target_stub;
+                     auto index = this->stages.size() - 1;
+                     intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                        file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
+                           .set_subrecord_index(index)
+                     );
+                     intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                        file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
+                           .set_subrecord_index(index)
+                     );
                   }
                   break;
                case 'DMDL':
@@ -59,6 +70,17 @@ namespace dovah::loaded_forms::components {
                   subrecord.read(stage.explosion);
                   subrecord.read(stage.debris);
                   subrecord.read(stage.debrisCount);
+                  //
+                  const auto& stub = intfc.target_stub;
+                  auto index = this->stages.size() - 1;
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
+                        .set_subrecord_index(index)
+                  );
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
+                        .set_subrecord_index(index)
+                  );
                }
                break;
             case 'DMDL':
@@ -66,7 +88,7 @@ namespace dovah::loaded_forms::components {
             case 'DMDS':
                if (this->stages.size()) {
                   auto& stage = *this->stages.rbegin();
-                  stage.replacementModel.load(subrecord);
+                  stage.replacementModel.load(subrecord, intfc);
                }
                break;
             case 'DSTF': // end marker

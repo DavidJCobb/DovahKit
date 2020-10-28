@@ -2,7 +2,7 @@
 #include "../_common_cpp.h"
 
 namespace dovah::loaded_forms::components {
-   void container_data::load(tes_subrecord_reader& subrecord) {
+   void container_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() == 'CNTO') {
          auto& entry = this->entries.emplace_back();
          subrecord.unchecked_read(entry.item);
@@ -20,9 +20,15 @@ namespace dovah::loaded_forms::components {
          auto& entry = *this->entries.rbegin();
          if (subrecord.read(entry.owner)) {
             auto ownerStub = subrecord.lookup_form_by_id(entry.owner);
-            if (ownerStub && ownerStub->formType == form_type::actor_base)
+            intfc.log_load_warning(
+               file_read_warning::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::faction }, intfc.target_stub, entry.owner)
+            );
+            if (ownerStub && ownerStub->formType == form_type::actor_base) {
                subrecord.unchecked_read(entry.global);
-            else
+               intfc.log_load_warning(
+                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, entry.global)
+               );
+            } else
                subrecord.unchecked_read(entry.factionRank);
             subrecord.unchecked_read(entry.condition);
          }

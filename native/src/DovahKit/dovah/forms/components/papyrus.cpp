@@ -12,7 +12,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
    }
    //
-   bool script_data::load(tes_subrecord_reader& subrecord) {
+   bool script_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (!subrecord.read(this->version) || !subrecord.read(this->object_format))
          return false;
       {

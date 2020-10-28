@@ -12,10 +12,10 @@ namespace dovah::loaded_forms {
             case 'EDID': // already read by the FormStub
                break;
             case 'VMAD':
-               this->script_data.load(subrecord);
+               this->script_data.load(subrecord, intfc);
                break;
             case 'OBND':
-               this->bounds.load(subrecord);
+               this->bounds.load(subrecord, intfc);
                break;
             case 'FULL':
                subrecord.to_string(this->name);
@@ -23,12 +23,12 @@ namespace dovah::loaded_forms {
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               this->model.load(subrecord);
+               this->model.load(subrecord, intfc);
                break;
             case 'COCT':
             case 'CNTO':
             case 'COED':
-               this->inventory.load(subrecord);
+               this->inventory.load(subrecord, intfc);
                break;
             case 'DATA':
                subrecord.read(this->container_flags);

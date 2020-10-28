@@ -111,7 +111,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->vendor_data.unused0A);
                break;
             case 'PLVD':
-               this->package_location_vendor.load(subrecord);
+               this->package_location_vendor.load(subrecord, intfc);
                break;
             case 'CITC':
                {
@@ -125,15 +125,15 @@ namespace dovah::loaded_forms {
                   auto& list = this->vendor_conditions;
                   list.emplace_back();
                   auto& cnd = *list.rbegin();
-                  cnd.read(subrecord.get_containing_record());
+                  cnd.read(subrecord.get_containing_record(), intfc);
                }
                break;
             case 'OBND':
                this->has_object_bounds = true;
-               this->object_bounds.load(subrecord);
+               this->object_bounds.load(subrecord, intfc);
                break;
             case 'VMAD':
-               this->script_data.load(subrecord);
+               this->script_data.load(subrecord, intfc);
                break;
             default:
                intfc.log_load_warning(

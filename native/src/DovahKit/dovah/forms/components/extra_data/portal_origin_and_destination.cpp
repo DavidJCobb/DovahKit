@@ -1,11 +1,17 @@
 #include "portal_origin_and_destination.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result portal_origin_and_destination::load(tes_subrecord_reader& subrecord) {
+   extra_data_load_result portal_origin_and_destination::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->origin);
       subrecord.read(this->destination);
+      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->origin)
+      );
+      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->destination)
+      );
       return load_result::succeeded;
    }
    void portal_origin_and_destination::save(tes_record_writer& record) {

@@ -121,8 +121,8 @@ namespace dovah::loaded_forms::components {
       public:
          virtual extra_data_type get_type() const noexcept = 0;
          //
-         virtual load_result load(tes_subrecord_reader&) = 0;
-         virtual bool        load(tes_record_reader&) { return false; };
+         virtual load_result load(tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
+         virtual bool        load(tes_record_reader&, load_order_interfaces::form_load&) { return false; };
          virtual void        save(tes_record_writer&) = 0;
          //
          // The general process for loading a subrecord works as follows:
@@ -175,7 +175,7 @@ namespace dovah::loaded_forms::components {
          void remove(basic_extra_data*);
          void remove_by_type(extra_data_type);
          //
-         load_result load(tes_record_reader&);
+         load_result load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          void save(tes_record_writer&);
          void clone_from(const extra_data_list& source, form_stub& owner_of_clone);
          void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;

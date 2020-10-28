@@ -19,7 +19,7 @@ namespace dovah::loaded_forms::components {
          return (float)sizes.x * (float)sizes.y * (float)sizes.z;
       }
       //
-      void load(tes_subrecord_reader&);
+      void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
       static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
       void save(tes_subrecord_writer&); // open the subrecord before calling
    };

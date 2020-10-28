@@ -20,6 +20,7 @@ namespace dovah {
             has_cause_subrecord_index = 0x00000020,
             is_winning_record         = 0x00000040, // This warning was generated while loading form data from the last-loaded record for the cause form.
             is_coalesced_record_data  = 0x00000080, // This warning applies to form data that is coalesced across multiple files/overrides.
+            has_cause_form_index      = 0x00000100, // This warning applies to the Nth form provided by one or more cause subrecords.
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
@@ -46,6 +47,7 @@ namespace dovah {
       context_t     context           = context_t::unspecified;
       uint32_t      cause_subrecord   = 0;
       int           cause_subrecord_index = 0;
+      int           cause_form_index      = 0;
       relevant_form cause_form; // the form in which the error occurred
       std::string   cause_file;
       form_type_t   cause_form_type = form_type::none; // this IS NOT the same thing as the "cause form's type." if for example some form X referred to a form Y and Y had the wrong type, this would be the type X was expecting.
@@ -61,6 +63,8 @@ namespace dovah {
 
       static file_read_warning warn_about_unrecognized_subrecord(uint32_t subrecord, const form_stub& referrer);
       static file_read_warning warn_if_wrong_type(uint32_t subrecord_signature, form_type_t desired, const form_stub& referrer, const form_reference_t& reference);
+      static file_read_warning warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type_t> desired, const form_stub& referrer, const form_reference_t& reference);
+      static file_read_warning warn_if_not_object_reference(uint32_t subrecord_signature, const form_stub& referrer, const form_reference_t& reference);
 
       // Chainable setters:
       inline file_read_warning& modify_flag(flags_t f, bool s) noexcept {
@@ -74,6 +78,7 @@ namespace dovah {
          this->flags |= f;
          return *this;
       }
+      file_read_warning& set_cause_form_index(int) noexcept;
       file_read_warning& set_subrecord_index(int) noexcept;
 
       inline bool is_defined() const noexcept { return this->code != default_notice_code; } // making this (operator bool) would be cool except that that breaks equality comparisons because this language sucks sometimes

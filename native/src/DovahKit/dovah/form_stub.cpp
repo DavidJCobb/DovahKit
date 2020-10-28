@@ -89,7 +89,7 @@ namespace dovah {
       if (!size)
          return loaded_form_ptr<loaded_forms::Form>(this); // no source files (this should never occur; it is only possible while the stub is being built)
       //
-      auto  intfc  = load_order_interfaces::form_load(lo);
+      auto  intfc  = load_order_interfaces::form_load(lo, *this);
       auto* loader = get_form_loader_function(this->formType);
       if (!loader)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed

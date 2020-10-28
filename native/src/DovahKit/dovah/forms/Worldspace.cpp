@@ -129,7 +129,7 @@ namespace dovah::loaded_forms {
                break;
             case 'OBND':
                this->has_object_bounds = true;
-               this->object_bounds.load(subrecord);
+               this->object_bounds.load(subrecord, intfc);
                break;
             case 'FULL':
                subrecord.to_string(this->name);
@@ -196,7 +196,7 @@ namespace dovah::loaded_forms {
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               this->cloud_model.load(subrecord);
+               this->cloud_model.load(subrecord, intfc);
                break;
             case 'MNAM':
                subrecord.read(this->map_data.usable_dimensions.x);
@@ -253,7 +253,7 @@ namespace dovah::loaded_forms {
                //
                break;
             case 'VMAD':
-               this->script_data.load(subrecord);
+               this->script_data.load(subrecord, intfc);
                break;
             default:
                intfc.log_load_warning(

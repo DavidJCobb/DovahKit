@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::components::extra {
          uint32_t unk10; // this may be a float, and is the only field that can't be BSWAPped
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::package_start_location; };
-         virtual load_result load(tes_subrecord_reader&) override;
+         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override;
          virtual void save(tes_record_writer&) override;
          //
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}

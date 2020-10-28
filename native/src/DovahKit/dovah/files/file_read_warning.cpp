@@ -42,7 +42,36 @@ namespace dovah {
       warning.add_relevant_form(*reference.get_form_stub());
       return warning;
    }
+   /*static*/ file_read_warning file_read_warning::warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type_t> desired, const form_stub& referrer, const form_reference_t& reference) {
+      for (auto ft : desired)
+         if (reference.form_type_matches(ft))
+            return file_read_warning();
+      file_read_warning warning;
+      warning.code = notice_code::form_reference_is_of_incorrect_type;
+      warning.set_cause_form(referrer);
+      warning.set_cause_subrecord(subrecord_signature);
+      warning.add_relevant_form(*reference.get_form_stub());
+      return warning;
+   }
+   /*static*/ file_read_warning file_read_warning::warn_if_not_object_reference(uint32_t subrecord_signature, const form_stub& referrer, const form_reference_t& reference) {
+      for (auto& info : form_types)
+         if (info.is_reference())
+            if (reference.form_type_matches(info.formType))
+               return file_read_warning();
+      file_read_warning warning;
+      warning.code = notice_code::form_reference_is_of_incorrect_type;
+      warning.set_cause_form(referrer);
+      warning.set_cause_subrecord(subrecord_signature);
+      warning.add_relevant_form(*reference.get_form_stub());
+      return warning;
+   }
 
+
+   file_read_warning& file_read_warning::set_cause_form_index(int i) noexcept {
+      this->cause_form_index = i;
+      this->flags |= flag::has_cause_form_index;
+      return *this;
+   }
    file_read_warning& file_read_warning::set_subrecord_index(int i) noexcept {
       this->cause_subrecord_index = i;
       this->flags |= flag::has_cause_subrecord_index;

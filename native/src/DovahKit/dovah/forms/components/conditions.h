@@ -86,7 +86,7 @@ namespace dovah::loaded_forms::components {
       inline operator_t get_operator() const noexcept { return (operator_t)((this->type >> 5) & 7); }
       inline uint8_t    get_flags()    const noexcept { return this->type & 0x1F; }
       //
-      bool read(tes_record_reader&); // assumes we've already opened a CTDA subrecord
+      bool read(tes_record_reader&, load_order_interfaces::form_load&); // assumes we've already opened a CTDA subrecord
       static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
       void save(tes_record_writer&); // call with no subrecord open
       void clone_from(const condition& original, form_stub& owner_of_clone) noexcept;

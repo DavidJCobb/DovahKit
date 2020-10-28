@@ -62,7 +62,7 @@ namespace dovah::loaded_forms::components {
             std::vector<script>  scripts;
             basic_fragment_data* fragment_data = nullptr;
             //
-            bool load(tes_subrecord_reader&); // assumes we're at a VMAD subrecord
+            bool load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes we're at a VMAD subrecord
             bool save(tes_subrecord_writer&);
             static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
             //

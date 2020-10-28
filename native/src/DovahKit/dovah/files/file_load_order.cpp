@@ -468,7 +468,6 @@ namespace dovah {
    void file_load_order::log_load_warning(const file_read_warning& w) {
       if (!w.is_defined())
          return;
-      this->load_warnings.push_back(w);
       if (this->on_read_warning)
          (this->on_read_warning)(w);
    }

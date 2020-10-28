@@ -42,7 +42,7 @@ namespace dovah {
          data_flags_t flags;
          std::vector<Stage> stages;
          //
-         void load(tes_subrecord_reader&);
+         void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
          void save(tes_record_writer&);
          void clone_from(const destruction_stage_data& original, form_stub& owner_of_clone) noexcept;

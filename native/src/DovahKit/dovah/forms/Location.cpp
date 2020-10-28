@@ -95,7 +95,7 @@ namespace dovah::loaded_forms {
                break;
             case 'KSIZ':
             case 'KWDA':
-               this->keywords.load(subrecord);
+               this->keywords.load(subrecord, intfc);
                break;
             case 'PNAM':
                subrecord.read(this->parent_location);

@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::components {
          std::array<uint8_t, bytecount> bytes;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             subrecord.read(this->bytes.data(), this->bytes.size());
@@ -43,7 +43,7 @@ namespace dovah::loaded_forms::components {
          std::vector<uint8_t> bytes;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             auto size = subrecord.size();
@@ -75,7 +75,7 @@ namespace dovah::loaded_forms::components {
          static constexpr uint32_t signature = signature;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             return load_result::succeeded;
@@ -97,7 +97,7 @@ namespace dovah::loaded_forms::components {
          float value = 0.0F;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
             if (subrecord.signature() == signature) {
                subrecord.read(this->value);
                return load_result::succeeded;
@@ -116,17 +116,23 @@ namespace dovah::loaded_forms::components {
             return clone;
          }
    };
-   template<uint32_t signature, extra_data_type et> class formID_extra_data : public basic_extra_data {
+   template<uint32_t signature, extra_data_type et, form_type_t desired_form_type = form_type::none> class formID_extra_data : public basic_extra_data {
       public:
          static constexpr uint32_t signature = signature;
          //
          form_reference_t form;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
             if (subrecord.signature() == signature) {
-               subrecord.read(this->form);
-               return load_result::succeeded;
+               if (subrecord.read(this->form)) {
+                  if (desired_form_type != form_type::none)
+                     intfc.log_load_warning(
+                        file_read_warning::warn_if_wrong_type(signature, desired_form_type, intfc.target_stub, this->form)
+                     );
+                  return load_result::succeeded;
+               }
+               return load_result::failed;
             }
             return load_result::unrecognized;
          }
@@ -163,7 +169,7 @@ namespace dovah::loaded_forms::components {
          std::string value;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             auto size = subrecord.size();

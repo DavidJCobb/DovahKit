@@ -52,7 +52,7 @@ namespace dovah::loaded_forms {
          };
          using flags_t = std::underlying_type_t<flag::type>;
          //
-         virtual void load(tes_record_reader&) = 0;
+         virtual void load(tes_record_reader&, load_order_interfaces::form_load&) = 0;
          //
          uint32_t    id = 0;
          std::string name;
@@ -73,7 +73,7 @@ namespace dovah::loaded_forms {
             other_alias_in_other_quest, // ALEQ
          };
          //
-         virtual void load(tes_record_reader&) override;
+         virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
          //
          fill_type_t      fill_type = fill_type_t::none;
          form_reference_t fill_from_location;
@@ -94,7 +94,7 @@ namespace dovah::loaded_forms {
             find_matching_reference    = 7, // ALNA
          };
       public:
-         virtual void load(tes_record_reader&) override;
+         virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
          //
          fill_type_t fillType = fill_type_t::none;
          components::keyword_list   keywords; // KSIZ, KWDA
@@ -157,7 +157,7 @@ namespace dovah::loaded_forms {
             form_reference_t nextQuestID;
             // TODO: SCHR
             //
-            void load(tes_record_reader&); // assumes QSTD subrecord has already been opened
+            void load(tes_record_reader&, load_order_interfaces::form_load&); // assumes QSTD subrecord has already been opened
             void loadText(tes_subrecord_reader& cnam);
             void loadObScript(tes_record_reader&);
          };
@@ -167,7 +167,7 @@ namespace dovah::loaded_forms {
             uint8_t  padding;
             std::vector<LogEntry> entries;
             //
-            void load(tes_subrecord_reader&); // assumes INDX subrecord has already been opened
+            void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes INDX subrecord has already been opened
          };
 
          struct Target { // QSTA
@@ -175,7 +175,7 @@ namespace dovah::loaded_forms {
             uint8_t  flags; // stored in the file as a uint32_t, but loaded as a uint8_t; the game doesn't BSWAP if the endianness is wrong, so it must be a single byte with three padding bytes
             std::vector<components::condition> conditions;
             //
-            void load(tes_subrecord_reader&); // assumes QSTA subrecord has already been opened
+            void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes QSTA subrecord has already been opened
          };
          struct Objective {
             uint16_t   index;
@@ -185,7 +185,7 @@ namespace dovah::loaded_forms {
             bool error_isMissingFlags = false;
             bool error_isMissingText  = false;
             //
-            void load(tes_subrecord_reader&);
+            void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
             void load(tes_record_reader&); // assumes QOBJ subrecord has already been opened
          };
 

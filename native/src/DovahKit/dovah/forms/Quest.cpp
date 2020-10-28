@@ -3,7 +3,7 @@
 #include "../logging.h"
 
 namespace dovah::loaded_forms {
-   void LocationAlias::load(tes_record_reader& record) {
+   void LocationAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'ALLS' && "LocationAlias::load should only be called just after the ALLS subrecord is opened.");
       subrecord.read(this->id);
@@ -25,7 +25,7 @@ namespace dovah::loaded_forms {
                   auto& list = this->conditions;
                   list.emplace_back();
                   auto& cnd = *list.rbegin();
-                  cnd.read(subrecord.get_containing_record());
+                  cnd.read(subrecord.get_containing_record(), intfc);
                }
                break;
             case 'ALFD':
@@ -75,7 +75,7 @@ namespace dovah::loaded_forms {
       else if (this->fill_type == fill_type_t::other_alias_in_same_quest)
          this->fill_from_alias = internalAliasID;
    }
-   void ReferenceAlias::load(tes_record_reader& record) {
+   void ReferenceAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'ALST' && "ReferenceAlias::load should only be called just after the ALST subrecord is opened.");
       subrecord.read(this->id);
@@ -110,17 +110,17 @@ namespace dovah::loaded_forms {
                   auto& list = this->conditions;
                   list.emplace_back();
                   auto& cnd = *list.rbegin();
-                  cnd.read(subrecord.get_containing_record());
+                  cnd.read(subrecord.get_containing_record(), intfc);
                }
                break;
             case 'KSIZ':
             case 'KWDA':
-               this->keywords.load(subrecord);
+               this->keywords.load(subrecord, intfc);
                break;
             case 'COCT':
             case 'CNTO':
             case 'COED':
-               this->inventory.load(subrecord);
+               this->inventory.load(subrecord, intfc);
                break;
             case 'PRKZ':
                if (subrecord.read(perkListSize))
@@ -223,7 +223,7 @@ namespace dovah::loaded_forms {
       }
    }
 
-   void Quest::LogEntry::load(tes_record_reader& record) {
+   void Quest::LogEntry::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'QSDT' && "Quest::LogEntry::load should only be called just after the QSDT subrecord is opened.");
       subrecord.read(this->flags);
@@ -237,7 +237,7 @@ namespace dovah::loaded_forms {
       subrecord.to_string(this->journalText);
    }
 
-   void Quest::Stage::load(tes_subrecord_reader& subrecord) {
+   void Quest::Stage::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       assert(subrecord.signature() == 'INDX' && "Quest::Stage::load should only be called just after the INDX subrecord is opened.");
       if (subrecord.is_in_bounds(4)) {
          subrecord.unchecked_read(this->index);
@@ -246,7 +246,7 @@ namespace dovah::loaded_forms {
       }
    }
 
-   void Quest::Target::load(tes_subrecord_reader& subrecord) {
+   void Quest::Target::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       assert(subrecord.signature() == 'QSTA' && "Quest::Target::load should only be called just after the QSTA subrecord is opened.");
       subrecord.read(this->aliasID);
       subrecord.read(this->flags);
@@ -337,7 +337,7 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->name);
                break;
             case 'VMAD':
-               this->scriptData.load(subrecord);
+               this->scriptData.load(subrecord, intfc);
                break;
             case 'DNAM': // required; TODO: fail if this is not present; fail if it is too short
                if (subrecord.is_in_bounds(12)) {
@@ -373,7 +373,7 @@ namespace dovah::loaded_forms {
                {
                   this->stages.emplace_back();
                   auto& stage = *this->stages.rbegin();
-                  stage.load(subrecord);
+                  stage.load(subrecord, intfc);
                }
                break;
             case 'QSTD':
@@ -384,7 +384,7 @@ namespace dovah::loaded_forms {
                   lastLogEntryIndices[1] = stage.entries.size();
                   stage.entries.emplace_back();
                   auto& entry = stage.entries[lastLogEntryIndices[1]];
-                  entry.load(record);
+                  entry.load(record, intfc);
                }
                break;
             case 'CNAM':
@@ -419,14 +419,14 @@ namespace dovah::loaded_forms {
                   auto& objective = *this->objectives.rbegin();
                   objective.targets.emplace_back();
                   auto& target    = *objective.targets.rbegin();
-                  target.load(subrecord);
+                  target.load(subrecord, intfc);
                }
                hasLastLogEntry = false; // per TESV.exe TESQuest::LoadForm
                break;
             case 'CTDA':
                {
                   components::condition nc;
-                  nc.read(subrecord.get_containing_record());
+                  nc.read(subrecord.get_containing_record(), intfc);
                   if (hasLastLogEntry) {
                      auto& entry = this->stages[lastLogEntryIndices[0]].entries[lastLogEntryIndices[1]];
                      entry.conditions.push_back(nc);
@@ -446,14 +446,14 @@ namespace dovah::loaded_forms {
                {
                   auto alias = new LocationAlias;
                   this->aliases.push_back(alias);
-                  alias->load(record);
+                  alias->load(record, intfc);
                }
                break;
             case 'ALST':
                {
                   auto alias = new ReferenceAlias;
                   this->aliases.push_back(alias);
-                  alias->load(record);
+                  alias->load(record, intfc);
                }
                break;
             case 'SCDA':

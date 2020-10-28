@@ -2,7 +2,7 @@
 #include "../_common_cpp.h"
 
 namespace dovah::loaded_forms::components {
-   void model::load(tes_subrecord_reader& subrecord) {
+   void model::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
          case 'MODL':
          case 'MOD2':
@@ -30,6 +30,11 @@ namespace dovah::loaded_forms::components {
                      subrecord.read_length_prefixed_string<4>(entry.nif_block_name);
                      subrecord.read(entry.texture_set);
                      subrecord.read(entry.nif_block_index);
+                     //
+                     intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                        file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, intfc.target_stub, entry.texture_set)
+                     );
+                     //
                      if (!subrecord.is_in_bounds())
                         break;
                   }

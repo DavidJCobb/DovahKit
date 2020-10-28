@@ -173,12 +173,27 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             // %2: Subrecord signature
             // %3: Referent form
             // %4: Desired form type
-            // %5: Subrecord index
+            // %5: Subrecord or referent index
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord_index)
-               text = QObject::tr("Form %1 contained multiple %2 subrecords; %2[%5] referred to form %3, but was supposed to refer to a form of type %4.");
-            else
-               text = QObject::tr("Form %1 contained a %2 subrecord that referred to form %3, but was supposed to refer to a form of type %4.");
+            bool has_desired_type = warning.flags & dovah::file_read_warning::flag::has_cause_form_type;
+            bool has_index        = warning.flags & dovah::file_read_warning::flag::has_cause_subrecord_index;
+            bool has_form_index   = warning.flags & dovah::file_read_warning::flag::has_cause_form_index;
+            if (has_form_index) {
+               if (has_desired_type)
+                  text = QObject::tr("Form %1 refers to multiple forms using %2 subrecord(s); referent form #%5 was %3, but was supposed to refer to a form of type %4.");
+               else
+                  text = QObject::tr("Form %1 refers to multiple forms using %2 subrecord(s); referent form #%5 was %3, which is not the correct type.");
+            } else if (has_index) {
+               if (has_desired_type)
+                  text = QObject::tr("Form %1 contained multiple %2 subrecords; %2[%5] referred to form %3, but was supposed to refer to a form of type %4.");
+               else
+                  text = QObject::tr("Form %1 contained multiple %2 subrecords; %2[%5] referred to form %3, which is not the correct type.");
+            } else {
+               if (has_desired_type)
+                  text = QObject::tr("Form %1 contained a %2 subrecord that referred to form %3, but was supposed to refer to a form of type %4.");
+               else
+                  text = QObject::tr("Form %1 contained a %2 subrecord that referred to form %3, which is not the correct type.");
+            }
             //
             text = text.arg(referrer).arg(subrecord).arg(referent).arg(desired).arg(warning.cause_subrecord_index);
          }
@@ -200,6 +215,22 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
                   .arg(form)
                   .arg(word_count);
             }
+         }
+         break;
+      case notice_code::package_event_dialogue_unrecognized_subrecord:
+         {
+            QString form      = QObject::tr("<unknown form>", "log window");
+            QString subrecord = QObject::tr("<unknown subrecord>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+               subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
+            }
+            //
+            text = QObject::tr("A piece of package event dialogue data in form %1 contained at least one unrecognized subrecord with signature %2.")
+               .arg(form)
+               .arg(subrecord);
          }
          break;
    }

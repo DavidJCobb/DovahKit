@@ -67,8 +67,6 @@ namespace dovah {
          using warning_callback_t       = void(*)(const file_read_warning&);
          using generic_callback_t       = void(*)();
          //
-         using read_warning_list_t = std::vector<file_read_warning>;
-         //
       protected:
          struct _form_map {
             mutable std::mutex lock;
@@ -165,14 +163,13 @@ namespace dovah {
             } options;
          } queued_load;
          file_read_error          load_error;
-         read_warning_list_t      load_warnings; // TODO: put a mutex on this
          file_write_error         save_error;
          file_write_warning       save_warning;
          form_create_callback_t   on_form_create   = nullptr;
          form_loss_callback_t     on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
          form_renumber_callback_t on_form_renumber = nullptr;
          generic_callback_t       on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
-         warning_callback_t       on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later
+         warning_callback_t       on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later. frontend is responsible for maintaining thread-safety.
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -456,13 +453,16 @@ namespace dovah {
          friend class form_stub;
          public:
             file_load_order& owner;
+            const form_stub& target_stub;
             tes_file_reading::file_reader* current_file = nullptr;
             bool is_winning_record = false;
-            //
+
+            // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 
+            // called blindly to create and return warnings that only have a code if there's an actual problem.
             void log_load_warning(file_read_warning&);
-            //
+            
          protected:
-            form_load(file_load_order& o) : owner(o) {}
+            form_load(file_load_order& o, const form_stub& t) : owner(o), target_stub(t) {}
       };
    }
 }
