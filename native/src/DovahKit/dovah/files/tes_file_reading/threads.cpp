@@ -79,7 +79,10 @@ namespace dovah {
                         } else
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner->as_file()->get_filename(), stub->formID);
                      }
-                     this->owner->_insert_form(stub->formID, stub);
+                     if (!this->owner->_insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+                        delete stub;
+                        continue;
+                     }
                      this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }
@@ -159,7 +162,10 @@ namespace dovah {
                         } else
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->owner->as_file()->get_filename(), stub->formID);
                      }
-                     this->owner->_insert_form(stub->formID, stub);
+                     if (!this->owner->_insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+                        delete stub;
+                        continue;
+                     }
                      this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }
@@ -238,7 +244,10 @@ namespace dovah {
                         } else
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->owner->as_file()->get_filename(), stub->formID);
                      }
-                     this->owner->_insert_form(stub->formID, stub);
+                     if (!this->owner->_insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+                        delete stub;
+                        continue;
+                     }
                      this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }
@@ -315,7 +324,10 @@ namespace dovah {
                         } else
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->owner->as_file()->get_filename(), stub->formID);
                      }
-                     this->owner->_insert_form(stub->formID, stub);
+                     if (!this->owner->_insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+                        delete stub;
+                        continue;
+                     }
                      this->extract_high_value_subrecords_for_stub(stub);
                      continue;
                   }

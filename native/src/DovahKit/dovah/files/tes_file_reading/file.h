@@ -85,7 +85,7 @@ namespace dovah {
             //
             bool aborted = false;
             //
-            void _insert_form(uint32_t formID, form_stub* stub);
+            [[nodiscard]] bool _insert_form(uint32_t formID, form_stub* stub);
             //
          public:
             file_load_order& load_order;

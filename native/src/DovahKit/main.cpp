@@ -56,6 +56,62 @@
 //     - The log window should ideally use a table view instead of a list view, with 
 //       columns for the filename (and potentially other details).
 //
+//  - Add support for loading DOBJ and GMST records properly.
+//
+//     - The form ID of a GMST record is irrelevant unless it is shared with another 
+//       non-GMST form. GMSTs don't actually produce forms in memory when loaded by 
+//       the game; the game only cares about the EDID and, if that's present, passes 
+//       it and the record body to the GameSettingCollection singleton to load.
+//
+//       Currently, we use a hack in (file_load_order::local_formID_to_global_formID) 
+//       to prevent DovahKit from choking on an invalid GMST form ID in Skyrim.esm; 
+//       however, this hack causes DovahKit to mistake a GMST record in Dawnguard.esm 
+//       for a type-mismatched override of a REFR in Skyrim.esm, resulting in the 
+//       Dawnguard GMST record failing to load.
+//
+//       This means that we need to do a few things:
+//
+//        - We need to store GameSettings in a dedicated registry.
+//
+//           - We need a UI for viewing and editing this registry.
+//
+//        - We should create form stubs for GMSTs if their form IDs are valid, but 
+//          should not error if their form IDs are invalid. Either way, the content 
+//          of the GMST should be loaded separately into the aforementioned dedicated 
+//          registry. The reason we want to create form stubs is so that when we save 
+//          a file that has GMST records, we save it with consistent form IDs.
+//
+//           - If we create a form stub for a GMST, we should also store the form ID 
+//             or form stub pointer with the setting data in the dedicated registry. 
+//             If a GMST already has a form ID by virtue of the active file or its 
+//             dependencies, then we should reuse that form ID when editing that 
+//             GMST in the active file.
+//
+//              - Remember that the same form ID could correspond to multiple GMSTs.
+//
+//              - A single GMST could also be defined from multiple form IDs. We 
+//                should use the last one to load.
+//
+//           = GMSTs still shouldn't be allowed to exist as mismatched overrides; 
+//             however, their form IDs are otherwise irrelevant, and in fact, two 
+//             GMST definitions in the same file should theoretically be able to 
+//             share a form ID.
+//
+//           = A GMST record with no EDID subrecord is a no-op. It effectively 
+//             reserves a form ID within the file while doing absolutely nothing, 
+//             and generating no loaded data, at run-time.
+//
+//        - We need to be careful when saving GMSTs. Changed GMSTs will need to be 
+//          given form IDs either as they're changed or as they're saved; the former 
+//          would help us properly enforce the ESL form ID limit.
+//
+//           - It's tempting to reuse the same form ID for every new GMST, but xEdit 
+//             can't handle that, and whether the CK handles it is yet to be tested. 
+//             We'll want to allocate a new form ID for every edited GMST.
+//
+//     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
+//       TESForm class and so it does have a form ID.
+//
 //  - Clean up the save process.
 //
 //     - If the user is converting the active file between games, and the active file 
@@ -120,14 +176,6 @@
 //       anyway). It's worth checking a few things, then: would a non-overriding NAVI change 
 //       the form ID of the baseline NAVI, and is there any data that should be cleared in 
 //       an override (that therefore wouldn't be cleared by a non-override)?
-//
-//  - If (file_load_order::accept_form_stub) fails, a stub will leak, because the (file_reader) 
-//    function that calls it can't return a success/failure code to its own callers. Those 
-//    callers will perform further operations on the stub, so (file_reader) can't simply 
-//    delete it.
-//
-//     - To clarify: a failure code from (accept_form_stub) means that the stub was NOT 
-//       inserted into the (file_load_order) form maps.
 //
 //  - Support for loading records flagged as "partial"
 //
@@ -626,6 +674,16 @@
 //    system locales instead of UTF-8 or specifying a locale explicitly.
 //
 // STUFF I'M PROBABLY NOT EVER GOING TO BOTHER WITH:
+//
+//  - Being able to load files as part of the current load order, without making them 
+//    dependencies of the active file when saving; or, being able to prune the active 
+//    file's dependency list when saving.
+//
+//     - Would require being able to check that no active file forms refer to content 
+//       in a given dependency.
+//
+//     - Would require shuffling the form IDs used for GMSTs, if those form IDs are from 
+//       a dependency.
 //
 //  - TESV.exe reacts to a file's endianness. If a file has all endianness swapped, such 
 //    that it begins with a "4SET" record, then TESV.exe will byteswap all fields as 

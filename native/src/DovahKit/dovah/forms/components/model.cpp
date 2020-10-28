@@ -33,6 +33,7 @@ namespace dovah::loaded_forms::components {
                      //
                      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
                         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, intfc.target_stub, entry.texture_set)
+                           .set_cause_form_index(i)
                      );
                      //
                      if (!subrecord.is_in_bounds())

@@ -227,32 +227,33 @@ namespace dovah::tes_file_reading {
       }
       return true;
    }
-   void file_reader::_insert_form(uint32_t formID, form_stub* stub) {
-      if (!this->aborted) {
-         auto result = this->load_order.accept_form_stub(stub);
-         switch (result) {
-            case file_load_order::form_id_status::missing_master:
-            case file_load_order::form_id_status::out_of_bounds:
-               this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
-               this->error.file       = this->name;
-               this->error.fileOffset = this->getPos();
-               this->error.formID    = stub->formID;
-               if (result == file_load_order::form_id_status::missing_master)
-                  this->error.message = "This form's ID corresponds to a missing master.";
-               else
-                  this->error.message = "This form ID's load order prefix is out of bounds.";
-               this->abort();
-               return;
-            case file_load_order::form_id_status::null_is_not_allowed:
-               this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
-               this->error.file       = this->name;
-               this->error.fileOffset = this->getPos();
-               this->error.formID     = stub->formID;
-               this->error.message    = "A form cannot use xx000000 as its form ID.";
-               this->abort();
-               return;
-         }
+   bool file_reader::_insert_form(uint32_t formID, form_stub* stub) {
+      if (this->aborted)
+         return false;
+      auto result = this->load_order.accept_form_stub(stub);
+      switch (result) {
+         case file_load_order::form_id_status::missing_master:
+         case file_load_order::form_id_status::out_of_bounds:
+            this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
+            this->error.file       = this->name;
+            this->error.fileOffset = this->getPos();
+            this->error.formID    = stub->formID;
+            if (result == file_load_order::form_id_status::missing_master)
+               this->error.message = "This form's ID corresponds to a missing master.";
+            else
+               this->error.message = "This form ID's load order prefix is out of bounds.";
+            this->abort();
+            return false;
+         case file_load_order::form_id_status::null_is_not_allowed:
+            this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
+            this->error.file       = this->name;
+            this->error.fileOffset = this->getPos();
+            this->error.formID     = stub->formID;
+            this->error.message    = "A form cannot use xx000000 as its form ID.";
+            this->abort();
+            return false;
       }
+      return true;
    }
    bool file_reader::load(const char* filepath) {
       this->path = filepath;
@@ -453,7 +454,10 @@ namespace dovah::tes_file_reading {
                      last_world_cell_id = stub->formID;
                      break;
                }
-               this->_insert_form(stub->formID, stub); // also normalizes (stub->formID)
+               if (!this->_insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+                  delete stub;
+                  continue;
+               }
                this->extract_high_value_subrecords_for_stub(stub);
                if (record.signature() == 'WRLD')
                   last_worldspace_id = stub->formID;

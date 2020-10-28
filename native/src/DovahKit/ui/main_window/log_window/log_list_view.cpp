@@ -228,7 +228,7 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
-            text = QObject::tr("A piece of package event dialogue data in form %1 contained at least one unrecognized subrecord with signature %2.")
+            text = QObject::tr("A piece of package event dialogue data in form %1 contained at least one unrecognized subrecord with signature %2. This could be a serious problem, as package event dialogue data will blindly consume subrecords until it finds one it expects.")
                .arg(form)
                .arg(subrecord);
          }

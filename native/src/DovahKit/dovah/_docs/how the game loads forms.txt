@@ -21,7 +21,7 @@ the mod that will win.
 Sounds pretty  straightforward, then, right?  Because of  the Rule of One, only 
 one definition of a form can be loaded,  which means a form can be edited by at 
 most one file  before conflicts  occur. Except it  isn't nearly  so simple. The 
-real process is as follows:
+real process [3] is as follows:
 
 Upon encountering a record, the game checks  to see if a form is already loaded 
 into memory with that  record's form ID (which would be  the case if the record 
@@ -67,6 +67,13 @@ Rule of One in every  case where Bethesda does not consciously  apply the rule.
 Known examples  include various Location (LCTN) subrecords  that serve as lists 
 of ObjectReferences in a given Location.
 
+If, on the other hand, the form does not already exist in memory, the game will 
+create a new  form in-memory as  appropriate. "As appropriate"  is an important 
+qualifier, because there are several  special cases that are handled here, such 
+as the loading of GMST records and  the loading of the TES4/ONAM subrecord. [2]
+
+-------------------------------------------------------------------------------
+
 In practice, in order to know whether a given piece of data in a form type does 
 or does not obey the Rule of One,  a reverse-engineer must check at least three 
 places:
@@ -107,3 +114,102 @@ engine); when quirks  like this exist in the editor, one  can reasonably expect
 them to also appear  in the game, and vice versa.  ARMO and ARMA have obviously 
 diverged  significantly from  each other since  Fallout 3, and the  data is not 
 likely to still be compatible.
+
+[2] The following  records are known to  be handled as  special cases in Skyrim 
+Classic: CELL; CPTH; DIAL; DOBJ; GMST;  IDLE; INFO; LAND; NAVI; NAVM; REFR (and 
+all subclasses); TES4; WRLD. Special-case behaviors are as follows:
+
+   CELL (cell)
+      The cell is loaded as normal. If  the cell  is an exterior  and is not an 
+      override, then additional processing will connect it to its worldspace as 
+      appropriate: if it is  the first persistent-flagged  cell to load in that 
+      worldspace,  then it will  be set as  the worldspace's  persistent  cell; 
+      otherwise, it will be  inserted into the worldspace as  appropriate based 
+      on its grid  coordinates. Either way, a pointer to  the cell is retained; 
+      the pointer is used  to keep track of what cell any child  records should 
+      be associated with.
+
+   CPTH (camera path), IDLE (idle)
+      Instances of the  forms are created in  memory, and the  appropriate form 
+      loader (TESForm::LoadForm override) is called.
+
+   DIAL (dialogue topic)
+      The form is loaded as normal, and then additional functions are called on 
+      the file object,  with the loaded form  passed as an argument.
+
+   DOBJ (default object list)
+      The game stores default-object list  in a singleton that is a subclass of 
+      TESForm. The game  calls the appropriate  form loader  (TESForm::LoadForm 
+      override) on the singleton.
+
+   GMST (game setting)
+      The game checks for an  EDID subrecord and immediately  skips the rest of 
+      the record if one is not found.  Otherwise, the editor ID and the rest of 
+      the record  body is passed  to the  GameSettingCollection  singleton. The 
+      game doesn't appear to create an  in-memory form for game settings, which 
+      means that GMSTs always run the special-case load behavior.
+
+      In short, a GMST can have  any form ID so long as  it does not override a 
+      non-GMST form; GMSTs with invalid form IDs will still load, as will GMSTs 
+      within the same file that share the  same form ID. As of October 2020, no 
+      tools are known to exploit this, and xEdit is known not to support it. We 
+      could exploit  this engine quirk to  conserve form IDs within  ESL files, 
+      but default behaviors  that conflict with other tools  would be unwise if 
+      not outright discourteous.
+
+   INFO (dialogue topic info)
+      The form  is loaded as normal.  A pointer to it is retained for  use when 
+      opening TOFT records [3].
+
+   LAND (heightmapped landscape)
+      An instance is created,  and some tasks are performed  using the instance 
+      and its parent  cell. Then,  the game calls the  appropriate  form loader 
+      (TESForm::LoadForm  override) for the  landscape.
+
+   NAVI (navmesh info map)
+      The game will only ever create a single NavMeshInfoMap instance, retained 
+      within the TES singleton; if an  instance already exists, then it will be 
+      reused. The appropriate form loader  (TESForm::LoadForm override) will be 
+      called.
+
+   NAVM (navmesh)
+      Instances of the  forms are created in  memory, and the  appropriate form 
+      loader  (TESForm::LoadForm override)  is called. After that,  the  parent 
+      cell  is retrieved,  and special functionality  is used  to integrate the 
+      navmesh into the cell.
+
+   REFR and subclasses (object-reference)
+      A reference is created and given a reference handle. The appropriate form 
+      loader (TESForm::LoadForm override) is called, and then the game makes up 
+      to two consecutive attempts to give  the reference a new handle. The game 
+      then performs various bookkeeping tasks,  including: checking whether the 
+      reference's parent cell is persistent  and if so, setting its "persistent 
+      cell" extra-data; checking  whether the reference is  an Actor and if so, 
+      forcibly  removing its  reference  handle from  in-memory AI  lists (most 
+      likely to ensure that it doesn't get  stuck in the low- or middle-process 
+      lists); and flagging the reference  as persistent at run-time if the file 
+      that provides it is not a master.
+
+   TES4 (file header)
+      The game loads and processes the ONAM subrecord, if present.
+
+   WRLD (worldspace)
+      The game loads the form as normal, with the sole exception that it stores 
+      a pointer to the  newly-loaded worldspace  whether or not  the worldspace 
+      loader returns true. The pointer is used to keep track of what worldspace 
+      any child records should be associated with; the CELL behavior above, for 
+      example, uses this  worldspace pointer to identify  the cell's containing 
+      worldspace.
+
+[3] Records with the signature TOFT are exempt from the process described above 
+and in fact do not  define forms at all.  There is a form  type value for TOFT, 
+but it does not correspond  to any TESForm subclass  (which is somewhat normal; 
+form type constants also exist for file structure elements like the file header 
+and GRUPs).
+
+In a TOFT record, the space normally used for a form ID is instead used to hold 
+a file offset. If the offset in question  is not equal to -1 (0xFFFFFFFF) or -2 
+(0xFFFFFFFE), then  it will be supplied  to the last-loaded  topic info (INFO), 
+worldspace (WRLD), or interior cell (CELL with appropriate flag) that came from 
+the current GRUP.  The exact significance  of this file offset  is unknown, and 
+TOFT records have never been seen in the wild in any Bethesda RPG.
