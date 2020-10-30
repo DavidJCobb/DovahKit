@@ -367,6 +367,27 @@ namespace dovah {
             file->localization_data->open_language_files(language);
          }
       }
+      for (auto& pair : this->game_settings.by_name) {
+         //
+         // String GMSTs hold localizable strings, not constant strings. This means that after localization 
+         // files become available, we need to swipe the appropriate string values for any GMSTs that need 
+         // them.
+         //
+         if (get_game_setting_type_from_name(pair.first.c_str()) != game_setting_type::string)
+            continue;
+         auto& list = pair.second;
+         for (auto& entry : list) {
+            auto& field = entry.value.s;
+            if (field.localized == localization_language::none)
+               continue;
+            if (auto* base = entry.source_file) {
+               if (auto* store = base->localization_data) {
+                  field.value     = store->lookup(field.type, field.index);
+                  field.localized = store->get_default_language_enum();
+               }
+            }
+         }
+      }
       //
       return !this->load_error.defined();
    }
@@ -515,16 +536,16 @@ namespace dovah {
          }
       }
       //
-      std::lock_guard guard(this->game_settings_lock);
-      for (auto& entry : this->game_settings) {
-         if (entry.definition == working.definition) {
-            entry        = working;
-            entry.formID = formID;
-            return;
-         }
-      }
-      auto& entry = this->game_settings.emplace_back(working);
-      entry.formID = formID;
+      std::string lowercase;
+      lowercase.reserve(working.name.size());
+      for (auto c : working.name)
+         lowercase += tolower(c);
+      //
+      std::lock_guard guard(this->game_settings.lock);
+      auto& list  = this->game_settings.by_name[lowercase];
+      auto& entry = list.emplace_back(working);
+      entry.source_file = file;
+      entry.formID      = formID;
    }
 
    void file_load_order::log_load_warning(const file_read_warning& w) {
@@ -1041,26 +1062,21 @@ namespace dovah {
    }
 
    bool file_load_order::get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept {
-      std::lock_guard guard(this->game_settings_lock);
-      for (auto& entry : this->game_settings) {
-         if (!entry.definition)
-            continue;
-         if (_stricmp(name.c_str(), entry.definition->name) == 0) {
-            out = entry;
-            return true;
-         }
-      }
-      return false;
+      std::string lowercase;
+      lowercase.reserve(name.size());
+      for (auto c : name)
+         lowercase += tolower(c);
+      //
+      std::lock_guard guard(this->game_settings.lock);
+      auto& map  = this->game_settings.by_name;
+      if (!cobb::unordered_map_contains(map, lowercase))
+         return false;
+      auto& list = map.at(lowercase); // can't use operator[] when the map is (accessed as) const
+      out = list.back();
+      return true;
    }
    bool file_load_order::get_loaded_setting_by_name(const game_setting_definition& definition, loaded_game_setting& out) const noexcept {
-      std::lock_guard guard(this->game_settings_lock);
-      for (auto& entry : this->game_settings) {
-         if (entry.definition == &definition) {
-            out = entry;
-            return true;
-         }
-      }
-      return false;
+      return this->get_loaded_setting_by_name(definition.name, out);
    }
 
    #pragma region Load order code for various form modification requests

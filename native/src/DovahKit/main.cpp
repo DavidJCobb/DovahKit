@@ -58,56 +58,111 @@
 //
 //  - Add support for loading DOBJ and GMST records properly.
 //
-//     - The form ID of a GMST record is irrelevant unless it is shared with another 
+//     = MAINTAIN OUR INTERNAL DOCUMENTATION ON THIS, UNTIL WE'RE DONE WITH IT.
+//
+//     - We need to retain loaded GMST values for the active file and for the last 
+//       non-active file, separately. That way, we can erase GMSTs from the active 
+//       file and be able to restore the value (if any) supplied by non-active files. 
+//       We also need this so that we know what GMSTs to save to the active file.
+//
+//        - Actually, GMSTs need to know exactly which file they were loaded from 
+//          because string GMSTs are actually LSTRINGS. We'll need to wire those 
+//          up and retrieve the appropriate string value after localization files 
+//          are loaded.
+//
+//     - We need a UI that allows viewing and browinsg all GMSTs. GMSTs that have 
+//       been modified by any loaded file, or by the active file, should be indicated, 
+//       with the latter bolded in the listing.
+//
+//        - This UI needs to make it possible to change the form ID of any setting 
+//          that has actually been altered by the active file. For now, let's not 
+//          allow injecting GMSTs into dependencies. We can revisit that decision 
+//          later.
+//
+//        - Editing a GMST should result in us reusing its form ID (if it has one by 
+//          virtue of being changed by any loaded file) or allocating a new form ID 
+//          for it (otherwise). If we are unable to allocate a new form ID, then we 
+//          should fail to edit the setting.
+//
+//           - The backend needs to offer an API for setting a GMST's value. The 
+//             frontend should be able to specify whether to use a specific form ID 
+//             (chosen by the frontend, with no validation to be performed by the 
+//             backend) or to let the backend choose a form ID at its discretion 
+//             (reusing a form ID if the setting has already been edited or using a 
+//             new form ID otherwise).
+//
+//             Our particular frontend is only ever going to do the latter, in order 
+//             to ensure that DovahKit produces data that is as friendly to other 
+//             editors as possible; however, I want the backend to be able to support 
+//             doing weird stuff with GMSTs to the fullest extent possible, since the 
+//             game itself supports that.
+//
+//     - We need to remember, and preserve, GMSTs in the active file that did not 
+//       have an EDID, or did not specify a known setting name.
+//
+//        - The UI needs to make it possible to view these.
+//
+//     - The GMST loader needs to warn on the following:
+//
+//        - Nameless settings
+//        - Settings with unknown names
+//        - Settings with no DATA subrecord
+//        - Settings with a DATA subrecord of insufficient length
+//        - Non-string settings whose DATA subrecord contains extra content
+//        - Settings with unrecognized subrecords
+//        - Settings with zero or out-of-bounds form IDs
+//        - Settings that share form IDs with each other
+//        - Settings that share form IDs with real forms
+//           - These won't load reliably because we multi-thread file loading on a 
+//             GRUP by GRUP basis. Fixing that would require more intensive changes, 
+//             but if anything that's even more incentive to add a warning in the 
+//             event that we load them successfully.
+// 
+//     - The file save code currently has no handling for GMSTs. They need to be 
+//       treated as a special case. Because it's technically possible for multiple 
+//       GMSTs to share the same form ID, and for GMSTs to have form IDs that are 
+//       completely invalid, we can't rely on the GMST form stubs. Those stubs only 
+//       exist as a means of reserving valid form IDs that are in use by GMSTs, so 
+//       that those form IDs don't end up being used by newly-created forms (and 
+//       frankly, we may want to just have all form ID code check the GMST list 
+//       instead and not even have GMST form stubs).
+//
+//        - We need to save only GMSTs that were edited by the active file, and not 
+//          GMSTs edited by non-active files, so that we don't end up embedding a 
+//          ton of ITMs into the active file.
+//
+//     = The form ID of a GMST record is irrelevant unless it is shared with another 
 //       non-GMST form. GMSTs don't actually produce forms in memory when loaded by 
 //       the game; the game only cares about the EDID and, if that's present, passes 
-//       it and the record body to the GameSettingCollection singleton to load.
+//       it and the record body to the GameSettingCollection singleton to load. This 
+//       has the following implications:
 //
-//       Currently, we use a hack in (file_load_order::local_formID_to_global_formID) 
-//       to prevent DovahKit from choking on an invalid GMST form ID in Skyrim.esm; 
-//       however, this hack causes DovahKit to mistake a GMST record in Dawnguard.esm 
-//       for a type-mismatched override of a REFR in Skyrim.esm, resulting in the 
-//       Dawnguard GMST record failing to load.
+//        = GMSTs can share form IDs with each other.
 //
-//       This means that we need to do a few things:
+//           - This has possible applications for cutting down on form ID usage in 
+//             ESL files.
 //
-//        - We need to store GameSettings in a dedicated registry.
+//           - We can't currently take advantage of this, as xEdit can't handle 
+//             form(-like construct)s sharing IDs, and the Creation Kit's reaction 
+//             is currently untested.
 //
-//           - We need a UI for viewing and editing this registry.
+//        = GMSTs can share form IDs with real forms, so long as those forms load 
+//          after the GMST. If the forms load first, then the GMSTs will be treated 
+//          as type-mismatched overrides and fail to load.
 //
-//        - We should create form stubs for GMSTs if their form IDs are valid, but 
-//          should not error if their form IDs are invalid. Either way, the content 
-//          of the GMST should be loaded separately into the aforementioned dedicated 
-//          registry. The reason we want to create form stubs is so that when we save 
-//          a file that has GMST records, we save it with consistent form IDs.
+//           - We can't reliably reproduce this game behavior because we multi-
+//             thread file loading on a GRUP by GRUP basis, and in any case we 
+//             don't know what order the game uses for loading GRUPs. No known 
+//             editor would produce this kind of data, so support is not strictly 
+//             necessary.
 //
-//           - If we create a form stub for a GMST, we should also store the form ID 
-//             or form stub pointer with the setting data in the dedicated registry. 
-//             If a GMST already has a form ID by virtue of the active file or its 
-//             dependencies, then we should reuse that form ID when editing that 
-//             GMST in the active file.
+//        = GMSTs can have invalid form IDs, including out-of-bounds local form IDs.
 //
-//              - Remember that the same form ID could correspond to multiple GMSTs.
+//           - Skyrim.esm has a GMST record with an out-of-bounds form ID.
 //
-//              - A single GMST could also be defined from multiple form IDs. We 
-//                should use the last one to load.
-//
-//           = GMSTs still shouldn't be allowed to exist as mismatched overrides; 
-//             however, their form IDs are otherwise irrelevant, and in fact, two 
-//             GMST definitions in the same file should theoretically be able to 
-//             share a form ID.
-//
-//           = A GMST record with no EDID subrecord is a no-op. It effectively 
-//             reserves a form ID within the file while doing absolutely nothing, 
-//             and generating no loaded data, at run-time.
-//
-//        - We need to be careful when saving GMSTs. Changed GMSTs will need to be 
-//          given form IDs either as they're changed or as they're saved; the former 
-//          would help us properly enforce the ESL form ID limit.
-//
-//           - It's tempting to reuse the same form ID for every new GMST, but xEdit 
-//             can't handle that, and whether the CK handles it is yet to be tested. 
-//             We'll want to allocate a new form ID for every edited GMST.
+//        = GMSTs with missing or invalid names can be used as no-op records. Editors 
+//          that retain these records (i.e. xEdit and DovahKit) would be prevented 
+//          from creating a new form with the same form ID in the same file.
 //
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.

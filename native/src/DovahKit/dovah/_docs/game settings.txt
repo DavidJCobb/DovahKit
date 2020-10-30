@@ -1,0 +1,110 @@
+
+If you've read the documentation on how the game loads forms, then you now know 
+that GMST records don't actually define  forms. Game settings are not forms and 
+do not have form IDs,  which means  that as long as their special-case  loading 
+code is  reached, they will load regardles s of their form ID. This  means that 
+game settings disobey the usual rules for form IDs in the following manner:
+
+ - Multiple GMSTs can share the same form ID.
+
+ - GMSTs can share their form IDs with real forms,  so long as those forms load 
+   later than the GMSTs.
+
+ - GMSTs can have form  IDs that are out of bounds or  otherwise invalid, as is 
+   seen with a particular GMST record in Skyrim.esm.
+
+ - If a file  contains multiple  GMST records with  different form  IDs but the 
+   same editor ID, then one will override the other.
+
+Only one such anomalous GMST record is known to exist in official content,  and 
+official editing tools have never been  observed to break these rules after the 
+game's initial release.  The information above comes  from disassembling Skyrim 
+Classic.
+
+This has a number of  implications for loading and  managing GMSTs in DovahKit:
+
+ - We cannot use form stubs to encode a GMST, because we can only have one form 
+   stub per form ID,  and every form stub  must have a form ID.  Multiple GMSTs 
+   can share  the same form ID,  and GMST records can load  even if their local 
+   form IDs are impossible to convert into global form IDs.
+
+ - GMSTs must be indexed by name.
+
+ - GMSTs must therefore be loaded differently than form stubs, and they must be 
+   stored separately  from them. In practice,  this must be  done when DovahKit 
+   initially parses an ES[LPM] file, which means that GMSTs cannot be loaded on-
+   demand but rather must be loaded immediately and in full.
+
+ - String GMSTs encode their values as localizable strings. Those normally only 
+   appear inside  of form data  that is loaded  on-demand, and so are  normally 
+   only accessed after all localization files have been loaded. DovahKit's load 
+   process must therefore take an extra step after localization files have been 
+   loaded: it must loop  over all loaded GMSTs and pull  the appropriate string 
+   content for GMSTs that rely on the localization files.
+
+There are additional  considerations as well:  to the fullest  extent possible, 
+the backend should support and preserve  any anomalous GMST records it finds. A 
+frontend is  free to enforce  restrictions on GMSTs  and limit them  to what is 
+sensible and compatible with other editors,  but the backend should endeavor to 
+support anything the game can support whenever it is reasonably practical to do 
+so. Accordingly, DovahKit makes the following efforts to preserve any anomalous 
+GMSTs that it finds:
+
+ - When the same GMST appears multiple  times in the same file, DovahKit should 
+   retain all instances. Editing tasks should be performed upon the last one to 
+   load.  When re-saving the active file,  all instances of a  GMST within that 
+   file should be saved.
+
+ - When DovahKit loads GMSTs from the active file,  it should re-save them with 
+   the same form ID they  loaded with, if it was possible  to convert that form 
+   ID from a file-local ID to  a global ID (i.e. one  relative to the full load 
+   order).
+
+ - When a GMST has a  valid form ID, DovahKit should create  a placeholder form 
+   stub with the same form ID, in order to prevent new forms from being created 
+   with the same form ID.
+
+ - DovahKit should  retain GMST  records even if  their editor  IDs are absent, 
+   blank, or do not correspond to known or valid setting names.
+
+However, there are some allowances that DovahKit does not make:
+
+ - GMSTs with  irresolvable file-local  form IDs (i.e.  out-of-bounds form IDs) 
+   will not retain these form IDs when saved.
+
+ - DovahKit does not allow  GMSTs and forms to share  the same form ID, as file 
+   loads are multi-threaded on a GRUP by  GRUP basis and so it is impossible to 
+   guarantee that records are parsed and loaded  in a consistent order relative 
+   to one another.  Such a guarantee is necessary in order  to properly enforce 
+   the one-way constraint between form IDs and GMST record IDs.
+
+The following rationales justify attempting to maintain anomalous GMST records:
+
+ - Form ID usage by GMSTs can be reduced  if all GMSTs in a file share the same 
+   form ID. The game should  react well to this,  although some editors may not 
+   (as of this  writing, xEdit  is known not  to support this).  This justifies 
+   making sure that the backend has load  and save support for GMSTs that share 
+   the same form ID.
+
+ - GMST records could be used as placeholders  to prevent editing software from 
+   creating new  forms with  specific IDs. Whether  this would  work would vary 
+   from program to program; it would be effective in xEdit and, with the design 
+   described above, in DovahKit. This justifies retaining all manner of strange 
+   GMST records, including nameless ones.
+
+    - This use case is  not perfect for reserving  form IDs for use with record 
+      injection, because programs that honor the "reservations" would be unable 
+      to load the injected records alongside the "reserving" GMST records.
+
+  - If an SKSE  DLL were to  patch appropriately deep  into the  game's loader, 
+    then it could be possible to use string  GMSTs with incorrect editor IDs as 
+    a way of allowing ES[LPM] files to  provide data directly to a DLL, without 
+    the need for  ancillary TXT files, the  use of Papyrus  APIs on startup, or 
+    similar measures.  This justifies retaining GMSTs that don't  correspond to 
+    valid setting names.
+
+     - As an SKSE DLL developer myself, I find this possibility exciting, but I 
+       would caution DLL developers against "lone wolf" implementations. Better 
+       to create a dedicated DLL for the  purpose and have it offer APIs to all 
+       other SKSE DLLs,  to avoid having multiple competing implementations all 
+       trying to patch and tamper with the same highly-sensitive spot.

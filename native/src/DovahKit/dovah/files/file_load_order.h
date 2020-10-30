@@ -41,14 +41,11 @@ namespace dovah {
 
    class loaded_game_setting {
       public:
-         const game_setting_definition* definition = nullptr;
-         bare_form_id_t formID = 0;
-         //
-         localized_string value_string;
-         union {
-            float   f;
-            int32_t i;
-         } value;
+         const game_setting_definition*       definition  = nullptr;
+         const tes_file_reading::file_reader* source_file = nullptr; // needed so we can deal with LSTRING values
+         std::string        name;  // needed separate from the definition so we can track GMSTs with invalid/no names
+         game_setting_value value;
+         bare_form_id_t     formID = 0;
    };
 
    class file_load_order {
@@ -93,9 +90,11 @@ namespace dovah {
          std::array<threaded_load_order_use_info_builder*, 8> use_info_build_threads{};
          mutable std::mutex use_info_build_threads_lock;
          //
+         struct {
+            std::unordered_map<std::string, std::vector<loaded_game_setting>> by_name; // convert name to lowercase before lookups/insertions. vector should end up going from oldest-loaded to latest-loaded
+            mutable std::mutex lock;
+         } game_settings;
          bsa_load_order*   archives             = nullptr;
-         std::vector<loaded_game_setting> game_settings;
-         mutable std::mutex game_settings_lock;
          std::vector<loaded_file*> files;
          loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
          loaded_file*      active_file          = nullptr;

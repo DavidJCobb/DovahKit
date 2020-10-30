@@ -2,7 +2,24 @@
 
 namespace dovah {
    namespace {
-      static game_setting_type _none = game_setting_type(game_setting_type::none);
+      static game_setting_definition _none = game_setting_definition(game_setting_type::none);
+   }
+
+   extern game_setting_type get_game_setting_type_from_name(const char* name) {
+      if (!name)
+         return game_setting_type::none;
+      switch (name[0]) {
+         case 'f':
+         case 'F':
+            return game_setting_type::float32;
+         case 'i':
+         case 'I':
+            return game_setting_type::integer;
+         case 's':
+         case 'S':
+            return game_setting_type::string;
+      }
+      return game_setting_type::none;
    }
 
    game_setting_definition::game_setting_definition(const char* n, float value) : name(n) {
@@ -14,26 +31,12 @@ namespace dovah {
       this->type = game_setting_type::integer;
    }
    game_setting_definition::game_setting_definition(const char* n, const char* value) : name(n) {
-      this->default_string = value;
+      this->default_value.s = value;
       this->type = game_setting_type::string;
    }
 
    /*static*/ const game_setting_definition& game_setting_definition::lookup(const char* name) noexcept {
-      game_setting_type filter = game_setting_type::none;
-      switch (name[0]) {
-         case 'f':
-         case 'F':
-            filter = game_setting_type::float32;
-            break;
-         case 'i':
-         case 'I':
-            filter = game_setting_type::integer;
-            break;
-         case 's':
-         case 'S':
-            filter = game_setting_type::string;
-            break;
-      }
+      game_setting_type filter = get_game_setting_type_from_name(name);
       if (filter == game_setting_type::none) {
          for (auto& entry : game_settings)
             if (_stricmp(entry.name, name) == 0)
@@ -49,7 +52,7 @@ namespace dovah {
       return _none;
    }
 
-   std::array<game_setting_definition, 2957> game_settings = {{
+   const std::array<game_setting_definition, 2957> game_settings = {{
       #pragma region floats
          #pragma region A
             { "fActiveEffectConditionUpdateInterval", 1.000000F },

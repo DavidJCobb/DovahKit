@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include "../core.h"
+#include "../localized_strings.h"
 
 namespace dovah {
    enum class game_setting_type {
@@ -12,15 +13,21 @@ namespace dovah {
       string,
    };
 
+   extern game_setting_type get_game_setting_type_from_name(const char* name);
+
+   struct game_setting_value {
+      union {
+         float   f;
+         int32_t i = 0;
+      };
+      localized_string s;
+   };
+
    class game_setting_definition {
       public:
-         const char*       name;
-         game_setting_type type;
-         const char* default_string = nullptr;
-         union {
-            float   f;
-            int32_t i;
-         } default_value;
+         const char*        name;
+         game_setting_type  type;
+         game_setting_value default_value;
          //
          game_setting_definition(game_setting_type t) : type(t) {}
          game_setting_definition(const char* n, float value);
@@ -32,5 +39,5 @@ namespace dovah {
          inline bool is_none() const noexcept { return this->type == game_setting_type::none; }
    };
 
-   extern std::array<game_setting_definition, 2957> game_settings;
-   }
+   extern const std::array<game_setting_definition, 2957> game_settings;
+}

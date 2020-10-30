@@ -1178,5 +1178,6 @@
     <Text Include="dovah\_docs\plugin types.txt" />
     <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
     <Text Include="dovah\_docs\how the game loads forms.txt" />
+    <Text Include="dovah\_docs\game settings.txt" />
   </ItemGroup>
 </Project>
