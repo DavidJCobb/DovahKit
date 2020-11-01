@@ -480,6 +480,15 @@
     <ClCompile Include="dovah\data\game_settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\game_setting_window\game_setting_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\get_game_setting_description.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\game_setting_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -995,6 +1004,9 @@
     <ClInclude Include="dovah\data\game_settings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\get_game_setting_description.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1159,6 +1171,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\log_window\log_list_view.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\game_setting_window\game_setting_list.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\game_setting_window.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

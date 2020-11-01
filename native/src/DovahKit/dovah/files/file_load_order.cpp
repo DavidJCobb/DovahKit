@@ -552,6 +552,8 @@ namespace dovah {
       auto& entry = list.emplace_back(working);
       entry.source_file = file;
       entry.formID      = formID;
+      if (entry.definition->is_none())
+         entry.definition = nullptr;
    }
 
    void file_load_order::log_load_warning(const file_read_warning& w) {
@@ -1067,6 +1069,18 @@ namespace dovah {
       return id >= min_id && id <= max_id;
    }
 
+   bool file_load_order::for_each_loaded_game_setting(std::function<bool(const loaded_game_setting&)> functor) {
+      std::lock_guard guard(this->game_settings.lock);
+      auto& map = this->game_settings.by_name;
+      for (auto& pair : map) {
+         auto& list = pair.second;
+         if (list.empty()) // shouldn't happen, but eh
+            continue;
+         if (functor(list.back()))
+            return true;
+      }
+      return false;
+   }
    bool file_load_order::get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept {
       std::string lowercase;
       lowercase.reserve(name.size());

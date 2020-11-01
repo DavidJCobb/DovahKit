@@ -489,6 +489,13 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
       emit this->formDeletionComplete(entry.id, entry.flagged);
 }
 
+bool DovahKitCore::get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out) {
+   return this->load_order->get_loaded_setting_by_name(name, out);
+}
+bool DovahKitCore::for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)> callback) {
+   return this->load_order->for_each_loaded_game_setting(callback);
+}
+
 dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::string& path) {
    auto* archives = this->load_order->get_archive_list();
    if (!archives)

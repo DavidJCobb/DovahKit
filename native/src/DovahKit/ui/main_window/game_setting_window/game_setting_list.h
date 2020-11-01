@@ -26,7 +26,7 @@ class GameSettingListModelItem {
       QString name;
       QString description;
       QString last_file;
-      bare_form_id_t formID;
+      bare_form_id_t formID = 0;
       struct {
          bool    boolean = false;
          QString string;
@@ -37,6 +37,7 @@ class GameSettingListModelItem {
       //
       GameSettingListModelItem() {}
       GameSettingListModelItem(const dovah::loaded_game_setting&);
+      GameSettingListModelItem(const dovah::game_setting_definition&);
       void updateFrom(const dovah::loaded_game_setting&);
       //
       QString valueAsString() const noexcept;
@@ -55,14 +56,6 @@ class GameSettingListModel : public QAbstractTableModel {
    protected:
       QVector<item_type*> children;
       QVector<item_type*> queued_additions;
-      //
-      void addUser(const use_info_entry&, bool queued); // takes care of all appropriate filtering based on (relationship_mode) and so on
-      void removeUser(item_type*);
-      void updateUser(item_type*);
-      //
-   protected slots:
-      void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
-      void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
       //
    public:
       GameSettingListModel(QObject* parent = nullptr);

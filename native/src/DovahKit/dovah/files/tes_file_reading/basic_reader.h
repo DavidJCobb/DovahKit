@@ -42,8 +42,8 @@ namespace dovah {
             subrecord _subrecord;
             uint32_t  last_potential_group_parent = 0; // form ID: CELL, WRLD, DIAL
             //
-            bool is_skyrim_special();
-            bool uses_string_table = false;
+            bool is_skyrim_special() const noexcept;
+            bool uses_string_table() const noexcept;
             //
             void read(void* buffer, uint32_t size) {
                this->stream_position += this->file->read_from(this->stream_position, buffer, size);

@@ -10,6 +10,7 @@
 #include "main_window/save_window.h"
 #include "main_window/file_metadata_window.h"
 #include "main_window/log_window.h"
+#include "main_window/game_setting_window.h"
 
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
@@ -111,11 +112,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          dialog->activateWindow();
          return;
       }
-      auto& editor = DovahKitCore::get();
-      auto  dialog = new FileMetadataWindow(this);
+      auto* dialog = new FileMetadataWindow(this);
       this->metadata_window = dialog;
-      QObject::connect(dialog, &QDialog::finished, &editor, [this, dialog]() {
+      QObject::connect(dialog, &QDialog::finished, this, [this, dialog]() {
          this->metadata_window = nullptr;
+         dialog->deleteLater();
+      });
+      dialog->show();
+   });
+   QObject::connect(this->ui.actionGameSettings, &QAction::triggered, this, [this]() {
+      if (auto dialog = this->game_setting_window) {
+         dialog->raise();
+         dialog->activateWindow();
+         return;
+      }
+      auto* dialog = new GameSettingWindow(this);
+      this->game_setting_window = dialog;
+      QObject::connect(dialog, &QDialog::finished, this, [this, dialog]() {
+         this->game_setting_window = nullptr;
          dialog->deleteLater();
       });
       dialog->show();

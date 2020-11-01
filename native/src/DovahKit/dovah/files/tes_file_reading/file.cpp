@@ -277,7 +277,6 @@ namespace dovah::tes_file_reading {
          return false;
       }
       dovah::logging::print_line("Read file header.");
-      this->uses_string_table = (bool)(this->header.flags & flag::localized_string_table);
       {
          object_type ot;
          uint32_t   which_simple = 0;

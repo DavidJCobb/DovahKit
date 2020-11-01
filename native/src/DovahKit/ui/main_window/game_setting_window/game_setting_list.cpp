@@ -2,12 +2,32 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include "../../../helpers/qt/strings.h"
+#include "../../../dovah/files/tes_file_reading/file.h"
 #include "../../../editor/core.h"
 #include "../../../editor/get_game_setting_description.h"
 
 #pragma region GameSettingListModel
 GameSettingListModelItem::GameSettingListModelItem(const dovah::loaded_game_setting& source) {
    this->updateFrom(source);
+}
+GameSettingListModelItem::GameSettingListModelItem(const dovah::game_setting_definition& definition) {
+   this->name        = QString::fromLatin1(definition.name);
+   this->description = get_game_setting_description(definition.name);
+   this->type        = definition.type;
+   switch (this->type) {
+      case dovah::game_setting_type::boolean:
+         this->value.boolean = definition.default_value.b;
+         break;
+      case dovah::game_setting_type::float32:
+         this->value.float32 = definition.default_value.f;
+         break;
+      case dovah::game_setting_type::integer:
+         this->value.number = definition.default_value.i;
+         break;
+      case dovah::game_setting_type::string:
+         this->value.string = definition.default_value.s.c_str();
+         break;
+   }
 }
 void GameSettingListModelItem::updateFrom(const dovah::loaded_game_setting& source) {
    if (auto* def = source.definition) {
@@ -32,6 +52,8 @@ void GameSettingListModelItem::updateFrom(const dovah::loaded_game_setting& sour
          this->value.string = DovahKitCore::get().convert_localized_string(source.value.s);
          break;
    }
+   if (source.source_file)
+      this->last_file = QString::fromStdString(source.source_file->get_filename());
    //
    // TODO: get last file to define the setting
    //
@@ -54,104 +76,7 @@ QString GameSettingListModelItem::valueAsString() const noexcept {
 
 GameSettingListModel::GameSettingListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::formDeletionImminent,     this, &GameSettingListModel::formDeletionImminent);
-   QObject::connect(&editor, &DovahKitCore::formRenumbered,           this, &GameSettingListModel::formRenumbered);
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &GameSettingListModel::clear);
-}
-void GameSettingListModel::addUser(const use_info_entry& entry, bool queued) {
-   using _ue_flag = dovah::use_info_entry::flag;
-   //
-   // Do not list child forms as "using" their parents, in the UI:
-   //
-   if (entry.flags & (_ue_flag::i_am_parent_of)) {
-      if (entry.refcount <= 1)
-         return;
-   }
-   //
-   switch (this->mode) {
-      case relationship_mode::general_only:
-         if (entry.flags & _ue_flag::object_reference)
-            if (entry.refcount <= 1)
-               return;
-         break;
-      case relationship_mode::base_form_only:
-         if (!(entry.flags & _ue_flag::object_reference))
-            return;
-         break;
-   }
-   auto item = new item_type(&entry);
-   if (queued) {
-      this->queued_additions.push_back(item);
-   } else {
-      auto first_inserted = this->children.size();
-      auto last_inserted  = first_inserted;
-      this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
-      this->children.push_back(item);
-      this->endInsertRows();
-   }
-}
-void GameSettingListModel::removeUser(item_type* item) {
-   QModelIndex parent_index;
-   auto& list  = this->children;
-   auto  index = list.indexOf(item);
-   if (index < 0)
-      return;
-   this->beginRemoveRows(parent_index, index, index);
-   list.removeAt(index);
-   this->endRemoveRows();
-}
-void GameSettingListModel::updateUser(item_type* item) {
-   auto& watch = this->potential_severed_uses;
-   auto  index = watch.indexOf(item);
-   if (index >= 0)
-      watch.removeAt(index);
-   //
-   item->updateUseInfo(*this->used);
-   if (item->isNonUse()) {
-      this->removeUser(item);
-      return;
-   }
-   item->updateFromStub();
-   //
-   auto i     = this->children.indexOf(item);
-   auto root  = QModelIndex();
-   auto start = this->index(i, 0, root);
-   auto end   = this->index(i, this->columnCount(root), root);
-   emit dataChanged(start, end);
-}
-
-void GameSettingListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
-   if (!this->used)
-      return;
-   if (stub == this->used) {
-      this->clear();
-      return;
-   }
-   auto& list = this->children;
-   auto  size = list.size();
-   for (int i = 0; i < size; ++i) {
-      auto* item = list[i];
-      if (item->otherStub == stub) {
-         if (is_just_flagged) {
-            this->updateUser(item);
-            continue;
-         }
-         this->removeUser(item);
-      }
-   }
-}
-void GameSettingListModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
-   auto& list = this->children;
-   auto  size = list.size();
-   for (size_t i = 0; i < size; ++i) {
-      auto* item = list[i];
-      if (item->otherStub == stub) {
-         item->updateFromStub();
-         auto index = this->index(i, 1, QModelIndex());
-         emit dataChanged(index, index);
-         return;
-      }
-   }
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &GameSettingListModel::clear);
 }
 //
 QModelIndex GameSettingListModel::index(int row, int column, const QModelIndex& parent) const {
@@ -199,11 +124,24 @@ QVariant GameSettingListModel::data(const QModelIndex& index, int role) const {
             case SortRole: // sorting
             case FilterRole: // filtering
                return item->valueAsString();
+            case Qt::TextAlignmentRole:
+               switch (item->type) {
+                  case dovah::game_setting_type::boolean:
+                     return Qt::AlignCenter;
+                  case dovah::game_setting_type::float32:
+                  case dovah::game_setting_type::integer:
+                     return Qt::AlignRight;
+                  case dovah::game_setting_type::string:
+                     return Qt::AlignLeft;
+               }
+               break;
          }
          break;
       case ColumnFormID:
          switch (role) {
             case Qt::DisplayRole:
+               if (item->last_file.isEmpty())
+                  return "";
                return QString("%1").arg(item->formID, 8, 16, QChar('0')).toUpper();
             case SortRole: // sorting
                return item->formID;
@@ -212,6 +150,8 @@ QVariant GameSettingListModel::data(const QModelIndex& index, int role) const {
       case ColumnFile:
          switch (role) {
             case Qt::DisplayRole:
+               if (item->last_file.isEmpty())
+                  return QObject::tr("<executable>", "game setting list");
             case SortRole: // sorting
             case FilterRole: // filtering
                return item->last_file;
@@ -249,11 +189,21 @@ void GameSettingListModel::clear() {
 void GameSettingListModel::build() {
    this->clear();
    //
+   auto& editor = DovahKitCore::get();
    auto& queued = this->queued_additions;
-   //
-   using _ue_flag = dovah::use_info_entry::flag;
-   for (auto& pair : used->inbound)
-      this->addUser(pair.second, true);
+   for (auto& definition : dovah::game_settings) {
+      dovah::loaded_game_setting loaded;
+      if (editor.get_loaded_game_setting(definition.name, loaded)) {
+         queued.push_back(new item_type(loaded));
+      } else {
+         queued.push_back(new item_type(definition));
+      }
+   }
+   editor.for_each_loaded_game_setting([this](const dovah::loaded_game_setting& loaded) {
+      if (loaded.definition)
+         return false; // continue
+      this->queued_additions.push_back(new item_type(loaded));
+   });
    if (queued.size() == 0)
       return;
    auto first_inserted = this->children.size();
@@ -289,13 +239,14 @@ GameSettingList::GameSettingList(QWidget* parent) : QTableView(parent) {
    auto metrics = QFontMetrics(this->font());
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
-   header->resizeSection(0, metrics.boundingRect("XMMX").width() * 1.5F + 4);
-   header->resizeSection(1, 4);
-   header->resizeSection(3, metrics.boundingRect("Use Count").width() * 1.5F + 4);
-   header->setSectionResizeMode(0, QHeaderView::Interactive);
-   header->setSectionResizeMode(1, QHeaderView::Interactive);
-   header->setSectionResizeMode(2, QHeaderView::Stretch);
-   header->setSectionResizeMode(3, QHeaderView::Interactive);
+   header->resizeSection(GameSettingListModel::ColumnName,   metrics.boundingRect("XMMX").width() * 1.5F + 4);
+   header->resizeSection(GameSettingListModel::ColumnValue,  metrics.boundingRect("000.000000").width() * 1.5F + 4);
+   header->resizeSection(GameSettingListModel::ColumnFormID, 4);
+   header->resizeSection(GameSettingListModel::ColumnFile,   metrics.boundingRect("Skyrim.esm").width() * 1.5F + 4);
+   header->setSectionResizeMode(GameSettingListModel::ColumnName,   QHeaderView::Stretch);
+   header->setSectionResizeMode(GameSettingListModel::ColumnValue,  QHeaderView::Interactive);
+   header->setSectionResizeMode(GameSettingListModel::ColumnFormID, QHeaderView::Interactive);
+   header->setSectionResizeMode(GameSettingListModel::ColumnFile,   QHeaderView::Interactive);
    //
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto* proxy = (QSortFilterProxyModel*)this->model();
@@ -303,8 +254,11 @@ GameSettingList::GameSettingList(QWidget* parent) : QTableView(parent) {
       if (!real.isValid())
          return;
       auto data = (model_item_type*)real.internalPointer();
-      if (data && data->otherStub)
-         open_edit_dialog_for_form(data->otherStub, this);
+      if (!data)
+         return;
+      //
+      // TODO: show the setting *and* focus the relevant editing control
+      //
    });
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)

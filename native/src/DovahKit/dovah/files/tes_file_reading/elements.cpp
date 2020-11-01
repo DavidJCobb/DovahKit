@@ -214,7 +214,7 @@ namespace dovah {
       }
       bool subrecord::to_string(localized_string& field) {
          field.value.clear();
-         if (this->owner.uses_string_table) {
+         if (this->owner.uses_string_table()) {
             field.localized = localization_language::unknown;
             bool result = this->read(field.index);
             //

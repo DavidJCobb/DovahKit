@@ -60,6 +60,9 @@
 //
 //     = MAINTAIN OUR INTERNAL DOCUMENTATION ON THIS, UNTIL WE'RE DONE WITH IT.
 //
+//     - We're missing several game settings. We need to write a tool to export them 
+//       directly from the game. Can we do that in x32dbg?
+//
 //     - We need to retain loaded GMST values for the active file and for the last 
 //       non-active file, separately. That way, we can erase GMSTs from the active 
 //       file and be able to restore the value (if any) supplied by non-active files. 

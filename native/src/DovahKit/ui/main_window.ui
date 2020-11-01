@@ -82,6 +82,7 @@
      <addaction name="actionSetEncodingUTF8"/>
     </widget>
     <addaction name="menuTextEncoding"/>
+    <addaction name="actionGameSettings"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -177,6 +178,11 @@
   <action name="actionLoadDataSpecial">
    <property name="text">
     <string>Skyrim Special</string>
+   </property>
+  </action>
+  <action name="actionGameSettings">
+   <property name="text">
+    <string>Game Settings...</string>
    </property>
   </action>
  </widget>

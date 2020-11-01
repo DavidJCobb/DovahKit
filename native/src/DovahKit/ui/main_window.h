@@ -8,6 +8,7 @@
 #include "main_window/log_window.h"
 
 class FileMetadataWindow;
+class GameSettingWindow;
 
 class MainWindow : public QMainWindow {
    Q_OBJECT
@@ -49,8 +50,9 @@ class MainWindow : public QMainWindow {
          _subwindow<LogWindow>      log;
          _subwindow<ObjectWindow>   object;
       } subwindows;
-      QWinTaskbarButton*  taskbar_button  = nullptr;
-      FileMetadataWindow* metadata_window = nullptr;
+      QWinTaskbarButton*  taskbar_button      = nullptr;
+      GameSettingWindow*  game_setting_window = nullptr;
+      FileMetadataWindow* metadata_window     = nullptr;
       //
       QMdiSubWindow* getSubwindowFor(QWidget*) const noexcept;
       //

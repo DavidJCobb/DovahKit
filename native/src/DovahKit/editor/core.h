@@ -137,6 +137,9 @@ class DovahKitCore : public QObject {
 
       void delete_form(dovah::form_stub& target, QWidget* dialog_parent = nullptr);
 
+      bool get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out);
+      bool for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)>);
+
       dovah::bsa_archived_file* lookup_game_asset(const std::string&); // path should be relative to, and should not include, the Data directory
 
       inline const std::string& get_encoding() const noexcept { return this->encoding; }

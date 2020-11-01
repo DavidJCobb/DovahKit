@@ -29,11 +29,17 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
-   bool basic_reader::is_skyrim_special() {
+   bool basic_reader::is_skyrim_special() const noexcept {
       auto owner = this->owner;
       if (!owner)
          return false;
       return owner->header.record_version >= 44;
+   }
+   bool basic_reader::uses_string_table() const noexcept {
+      auto* f = this->as_file();
+      if (!f)
+         return false;
+      return f->header.flags & tes_file_flag::localized_string_table;
    }
 
    namespace {

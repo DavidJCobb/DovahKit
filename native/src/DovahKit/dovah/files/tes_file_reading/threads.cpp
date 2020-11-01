@@ -401,9 +401,8 @@ namespace dovah {
                         continue;
                      std::string name;
                      EDID.to_string(name);
+                     working.name       = name;
                      working.definition = &game_setting_definition::lookup(name.c_str());
-                     if (working.definition->is_none())
-                        continue;
                      while (auto& subrecord = record.next_subrecord()) {
                         if (subrecord.signature() != 'DATA')
                            continue;
@@ -415,11 +414,14 @@ namespace dovah {
                               subrecord.read(working.value.i);
                               break;
                            case game_setting_type::string:
-                              subrecord.to_string(working.value_string);
+                              subrecord.to_string(working.value.s);
                               break;
                         }
                         break;
                      }
+                     //
+                     // TODO: EDID after DATA won't load
+                     //
                      lo.accept_game_setting(this->owner, working, record.formID());
                      continue;
                   }
