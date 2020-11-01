@@ -3,6 +3,7 @@
 #include "../../../helpers/strings.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
+#include "../../notice_code_list.h"
 #include "localized_string_file.h"
 
 namespace dovah {
@@ -397,15 +398,38 @@ namespace dovah {
                      //
                      loaded_game_setting working;
                      auto& EDID = record.next_subrecord();
-                     if (EDID.signature() != 'EDID')
-                        continue;
-                     std::string name;
-                     EDID.to_string(name);
-                     working.name       = name;
-                     working.definition = &game_setting_definition::lookup(name.c_str());
+                     if (EDID.signature() == 'EDID') {
+                        std::string name;
+                        EDID.to_string(name);
+                        working.name = name;
+                        working.definition = &game_setting_definition::lookup(name.c_str());
+                     }
                      while (auto& subrecord = record.next_subrecord()) {
-                        if (subrecord.signature() != 'DATA')
+                        if (subrecord.signature() == 'EDID') {
+                           file_read_warning warning;
+                           warning.code               = notice_code::game_setting_record_is_misordered;
+                           warning.cause_form.localID = record.formID();
+                           warning.cause_form.fixedID = 0;
+                           warning.cause_form.type    = form_type::setting;
+                           warning.set_flag(file_read_warning::flag::has_cause_form);
+                           warning.cause_file = this->owner->get_filename();
+                           warning.set_flag(file_read_warning::flag::has_cause_file);
+                           lo.log_load_warning(warning);
                            continue;
+                        }
+                        if (subrecord.signature() != 'DATA') {
+                           file_read_warning warning;
+                           warning.code               = notice_code::unrecognized_subrecord;
+                           warning.cause_form.localID = record.formID();
+                           warning.cause_form.fixedID = 0;
+                           warning.cause_form.type    = form_type::setting;
+                           warning.cause_file         = this->owner->get_filename();
+                           warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                           warning.set_cause_subrecord(subrecord);
+                           lo.log_load_warning(warning);
+                           //
+                           continue;
+                        }
                         switch (working.definition->type) {
                            case game_setting_type::float32:
                               subrecord.read(working.value.f);
@@ -416,6 +440,17 @@ namespace dovah {
                            case game_setting_type::string:
                               subrecord.to_string(working.value.s);
                               break;
+                        }
+                        if (!subrecord.is_at_end()) {
+                           file_read_warning warning;
+                           warning.code               = notice_code::subrecord_has_extra_content;
+                           warning.cause_form.localID = record.formID();
+                           warning.cause_form.fixedID = 0;
+                           warning.cause_form.type    = form_type::setting;
+                           warning.cause_file         = this->owner->get_filename();
+                           warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                           warning.set_cause_subrecord(subrecord);
+                           lo.log_load_warning(warning);
                         }
                         break;
                      }

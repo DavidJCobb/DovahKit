@@ -19,7 +19,16 @@ game settings disobey the usual rules for form IDs in the following manner:
 Only one such anomalous GMST record is known to exist in official content,  and 
 official editing tools have never been  observed to break these rules after the 
 game's initial release.  The information above comes  from disassembling Skyrim 
-Classic.
+Classic. Additional  information comes from disassembling the  game and running 
+tests in the Creation Kit:
+
+ - A GMST record will only be recognized if EDID is the first subrecord inside.
+
+ - Nameless GMSTs are  not retained when  resaving a file in  the Creation Kit, 
+   and presumably, they aren't retained in memory at all.
+
+ - Unrecognized GMSTs are  retained when  resaving a file  in the Creation Kit, 
+   and they can even be seen in the Creation Kit's UI.
 
 This has a number of  implications for loading and  managing GMSTs in DovahKit:
 
@@ -64,8 +73,9 @@ GMSTs that it finds:
    stub with the same form ID, in order to prevent new forms from being created 
    with the same form ID.
 
- - DovahKit should  retain GMST  records even if  their editor  IDs are absent, 
-   blank, or do not correspond to known or valid setting names.
+ - DovahKit should  retain GMST records  even if their  editor IDs aren't known 
+   setting  names, but should not  retain them if  their editor IDs are absent, 
+   zero-length, or out of order.
 
 However, there are some allowances that DovahKit does not make:
 

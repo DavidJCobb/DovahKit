@@ -497,7 +497,21 @@ namespace dovah {
       auto result = this->local_formID_to_global_formID(file, formID);
       if (result != form_id_status::valid)
          formID = 0;
-      else if (formID) {
+      //
+      if (working.name.empty()) {
+         file_read_warning warning;
+         warning.code               = notice_code::game_setting_record_is_nameless;
+         warning.cause_form.localID = localID;
+         warning.cause_form.fixedID = formID;
+         warning.cause_form.type    = form_type::setting;
+         warning.set_flag(file_read_warning::flag::has_cause_form);
+         warning.cause_file = file->get_filename();
+         warning.set_flag(file_read_warning::flag::has_cause_file);
+         this->log_load_warning(warning);
+         return;
+      }
+      //
+      if (formID) {
          //
          // Do not allow GMST to override form IDs of other types.
          //

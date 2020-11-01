@@ -63,19 +63,23 @@
 //     - We're missing several game settings. We need to write a tool to export them 
 //       directly from the game. Can we do that in x32dbg?
 //
-//     - We need to retain loaded GMST values for the active file and for the last 
-//       non-active file, separately. That way, we can erase GMSTs from the active 
-//       file and be able to restore the value (if any) supplied by non-active files. 
-//       We also need this so that we know what GMSTs to save to the active file.
+//     - How does the CK react to anomalous game settings?
 //
-//        - Actually, GMSTs need to know exactly which file they were loaded from 
-//          because string GMSTs are actually LSTRINGS. We'll need to wire those 
-//          up and retrieve the appropriate string value after localization files 
-//          are loaded.
+//        - It generates this warning on unrecognized setting names: "GameSetting 
+//          'name' in file 'name.ext' is not recognized by the current EXE."
 //
-//     - We need a UI that allows viewing and browinsg all GMSTs. GMSTs that have 
-//       been modified by any loaded file, or by the active file, should be indicated, 
-//       with the latter bolded in the listing.
+//        - Nameless GMSTs do not generate a warning, and are stripped when saving.
+//
+//        - As with the game, the Creation Kit only recognizes a GMST if EDID is 
+//          the first subrecord.
+//
+//     - GMST UI
+//
+//        - Bold settings that have been defined in the active file.
+//
+//        - Implement editing a GMST's value.
+//
+//           - We need DovahKitCore signals for this.
 //
 //        - This UI needs to make it possible to change the form ID of any setting 
 //          that has actually been altered by the active file. For now, let's not 
@@ -105,14 +109,11 @@
 //
 //        - The UI needs to make it possible to view these.
 //
-//     - The GMST loader needs to warn on the following:
+//     - The GMST loader needs to warn on the following, and currently doesn't:
 //
-//        - Nameless settings
 //        - Settings with unknown names
 //        - Settings with no DATA subrecord
 //        - Settings with a DATA subrecord of insufficient length
-//        - Non-string settings whose DATA subrecord contains extra content
-//        - Settings with unrecognized subrecords
 //        - Settings with zero or out-of-bounds form IDs
 //        - Settings that share form IDs with each other
 //        - Settings that share form IDs with real forms

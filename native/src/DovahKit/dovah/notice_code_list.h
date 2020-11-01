@@ -31,6 +31,9 @@ namespace dovah {
          form_reference_is_of_incorrect_type   = 0x00000016, // FORM full load: a (form_reference_t) ended up referring to a form of the wrong type.
          shout_has_wrong_word_count            = 0x00000017, // SHOU full load: the shout has too many, or too few, words.
          package_event_dialogue_unrecognized_subrecord = 0x00000018,
+         game_setting_record_is_nameless       = 0x00000019, // A GMST record had no EDID or an empty EDID.
+         game_setting_record_is_misordered     = 0x0000001A, // A GMST record has its EDID record in the wrong place.
+         subrecord_has_extra_content           = 0x0000001B, // A subrecord has unexpected data at its end. (This is not emitted for most subrecords, but is explicitly checked for in special cases like the GMST loader.)
       };
    };
 }

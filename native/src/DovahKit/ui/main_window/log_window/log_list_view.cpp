@@ -145,9 +145,14 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
-            text = QObject::tr("Form %1 contained at least one unrecognized subrecord with signature %2.")
-               .arg(form)
-               .arg(subrecord);
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               QString file = QString::fromStdString(warning.cause_file);
+               text = QObject::tr("Form %1 in file %3 contained at least one unrecognized subrecord with signature %2.")
+                  .arg(form).arg(subrecord).arg(file);
+            } else {
+               text = QObject::tr("Form %1 contained at least one unrecognized subrecord with signature %2.")
+                  .arg(form).arg(subrecord);
+            }
          }
          break;
       case notice_code::form_reference_is_of_incorrect_type:
@@ -231,6 +236,47 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             text = QObject::tr("A piece of package event dialogue data in form %1 contained at least one unrecognized subrecord with signature %2. This could be a serious problem, as package event dialogue data will blindly consume subrecords until it finds one it expects.")
                .arg(form)
                .arg(subrecord);
+         }
+         break;
+      case notice_code::game_setting_record_is_nameless:
+         {
+            QString form = QObject::tr("<unknown GMST record>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            //
+            text = QObject::tr("Record %1 has no editor ID (EDID) or an empty editor ID. Skyrim and the Creation Kit would skip it, so DovahKit is skipping it as well.").arg(form);
+         }
+         break;
+      case notice_code::game_setting_record_is_misordered:
+         {
+            QString form = QObject::tr("<unknown GMST record>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            //
+            text = QObject::tr("Record %1 has its EDID subrecord in the wrong place. The EDID subrecord must be the first subrecord in order for it to be properly seen.").arg(form);
+         }
+         break;
+      case notice_code::subrecord_has_extra_content:
+         {
+            QString form      = QObject::tr("<unknown form>", "log window");
+            QString subrecord = QObject::tr("<unknown subrecord>", "log window");
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+               subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
+            }
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               QString file = QString::fromStdString(warning.cause_file);
+               text = QObject::tr("Form %1 in file %3 contained a %2 subrecord with extra bytes at the end.")
+                  .arg(form).arg(subrecord).arg(file);
+            } else {
+               text = QObject::tr("Form %1 contained a %2 subrecord with extra bytes at the end.")
+                  .arg(form).arg(subrecord);
+            }
          }
          break;
    }
