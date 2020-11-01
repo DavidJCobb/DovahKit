@@ -24,6 +24,12 @@ namespace {
 }
 
 namespace dovah {
+   game_setting_type loaded_game_setting::get_type() const noexcept {
+      if (this->definition)
+         return this->definition->type;
+      return get_game_setting_type_from_name(this->name.c_str());
+   }
+
    file_load_order::~file_load_order() {
       this->normalizer.delete_contents();
       this->queued_load.files.clear();

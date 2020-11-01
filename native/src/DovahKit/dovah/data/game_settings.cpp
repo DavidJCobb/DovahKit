@@ -9,6 +9,9 @@ namespace dovah {
       if (!name)
          return game_setting_type::none;
       switch (name[0]) {
+         case 'b':
+         case 'B':
+            return game_setting_type::boolean;
          case 'f':
          case 'F':
             return game_setting_type::float32;
@@ -22,6 +25,10 @@ namespace dovah {
       return game_setting_type::none;
    }
 
+   game_setting_definition::game_setting_definition(const char* n, bool value) : name(n) {
+      this->default_value.b = value;
+      this->type = game_setting_type::boolean;
+   }
    game_setting_definition::game_setting_definition(const char* n, float value) : name(n) {
       this->default_value.f = value;
       this->type = game_setting_type::float32;

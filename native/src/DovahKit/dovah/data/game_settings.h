@@ -17,6 +17,7 @@ namespace dovah {
 
    struct game_setting_value {
       union {
+         bool    b;
          float   f;
          int32_t i = 0;
       };
@@ -30,6 +31,7 @@ namespace dovah {
          game_setting_value default_value;
          //
          game_setting_definition(game_setting_type t) : type(t) {}
+         game_setting_definition(const char* n, bool value);
          game_setting_definition(const char* n, float value);
          game_setting_definition(const char* n, int32_t value);
          game_setting_definition(const char* n, const char* value);

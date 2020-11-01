@@ -46,6 +46,8 @@ namespace dovah {
          std::string        name;  // needed separate from the definition so we can track GMSTs with invalid/no names
          game_setting_value value;
          bare_form_id_t     formID = 0;
+
+         game_setting_type get_type() const noexcept;
    };
 
    class file_load_order {
