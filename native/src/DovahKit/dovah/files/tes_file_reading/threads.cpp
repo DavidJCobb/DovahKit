@@ -434,7 +434,11 @@ namespace dovah {
                         }
                         switch (working.get_type()) {
                            case game_setting_type::boolean:
-                              subrecord.read(working.value.b);
+                              {
+                                 uint32_t dummy;
+                                 subrecord.read(dummy);
+                                 working.value.b = dummy != 0;
+                              }
                               break;
                            case game_setting_type::float32:
                               subrecord.read(working.value.f);
@@ -467,7 +471,7 @@ namespace dovah {
                            warning.cause_form.type    = form_type::setting;
                            warning.cause_file         = this->owner->get_filename();
                            warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
-                           warning.set_cause_subrecord(subrecord);
+                           warning.set_cause_subrecord(subrecord.signature());
                            warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
                         }

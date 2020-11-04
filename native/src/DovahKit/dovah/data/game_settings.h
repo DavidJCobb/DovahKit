@@ -41,5 +41,5 @@ namespace dovah {
          inline bool is_none() const noexcept { return this->type == game_setting_type::none; }
    };
 
-   extern const std::array<game_setting_definition, 2957> game_settings;
+   extern const std::array<game_setting_definition, 3567> game_settings;
 }

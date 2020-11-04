@@ -25,7 +25,7 @@ namespace {
 
 namespace dovah {
    game_setting_type loaded_game_setting::get_type() const noexcept {
-      if (this->definition)
+      if (this->definition && !this->definition->is_none())
          return this->definition->type;
       return get_game_setting_type_from_name(this->name.c_str());
    }
