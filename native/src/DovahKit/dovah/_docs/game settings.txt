@@ -28,7 +28,14 @@ tests in the Creation Kit:
    and presumably, they aren't retained in memory at all.
 
  - Unrecognized GMSTs are  retained when  resaving a file  in the Creation Kit, 
-   and they can even be seen in the Creation Kit's UI.
+   and they can even  be seen in the Creation Kit's UI. They do  show a warning 
+   message when loaded.
+
+ - Unrecognized GMST names with invalid type prefixes are also loaded, but they 
+   cause the Creation Kit's game setting  editor window to malfunction. Warning 
+   dialogs display  when selecting them,  with text obviously  intended for the 
+   Creation Kit's developers,  and form controls' values  and enable states are 
+   not updated.
    
  - When multiple  instances of the same  game setting are loaded  (whether from 
    different files or the same file), the Creation Kit retains the last form ID 

@@ -618,6 +618,18 @@ namespace dovah {
       entry.formID      = formID;
       if (entry.definition->is_none())
          entry.definition = nullptr;
+      if (!entry.definition) {
+         file_read_warning warning;
+         warning.code               = notice_code::game_setting_name_is_unrecognized;
+         warning.cause_form.localID = localID;
+         warning.cause_form.fixedID = formID;
+         warning.cause_form.type    = form_type::setting;
+         warning.set_flag(file_read_warning::flag::has_cause_form);
+         warning.cause_file = file->get_filename();
+         warning.set_flag(file_read_warning::flag::has_cause_file);
+         warning.set_cause_editor_id(entry.name);
+         this->log_load_warning(warning);
+      }
    }
 
    void file_load_order::log_load_warning(const file_read_warning& w) {

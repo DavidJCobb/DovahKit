@@ -21,6 +21,7 @@ namespace dovah {
             is_winning_record         = 0x00000040, // This warning was generated while loading form data from the last-loaded record for the cause form.
             is_coalesced_record_data  = 0x00000080, // This warning applies to form data that is coalesced across multiple files/overrides.
             has_cause_form_index      = 0x00000100, // This warning applies to the Nth form provided by one or more cause subrecords.
+            has_cause_editor_id       = 0x00000200,
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
@@ -50,6 +51,7 @@ namespace dovah {
       int           cause_form_index      = 0;
       relevant_form cause_form; // the form in which the error occurred
       std::string   cause_file;
+      std::string   cause_editor_id;
       form_type_t   cause_form_type = form_type::none; // this IS NOT the same thing as the "cause form's type." if for example some form X referred to a form Y and Y had the wrong type, this would be the type X was expecting.
       std::vector<relevant_form> relevant_forms;
       std::vector<std::string>   relevant_files;
@@ -58,6 +60,7 @@ namespace dovah {
       void set_cause_form(const form_stub&);
       void set_cause_form_type(form_type_t);
       void set_cause_subrecord(uint32_t signature);
+      void set_cause_editor_id(const std::string&);
 
       void add_relevant_form(const form_stub&);
 

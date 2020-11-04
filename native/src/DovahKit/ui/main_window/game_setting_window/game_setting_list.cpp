@@ -54,9 +54,6 @@ void GameSettingListModelItem::updateFrom(const dovah::loaded_game_setting& sour
    }
    if (source.source_file)
       this->last_file = QString::fromStdString(source.source_file->get_filename());
-   //
-   // TODO: get last file to define the setting
-   //
 }
 QString GameSettingListModelItem::valueAsString() const noexcept {
    switch (this->type) {

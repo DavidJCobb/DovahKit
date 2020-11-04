@@ -63,19 +63,15 @@
 //     - We're missing several game settings. We need to write a tool to export them 
 //       directly from the game. Can we do that in x32dbg?
 //
-//     - How does the CK react to anomalous game settings?
-//
-//        - It generates this warning on unrecognized setting names: "GameSetting 
-//          'name' in file 'name.ext' is not recognized by the current EXE."
-//
-//        - Nameless GMSTs do not generate a warning, and are stripped when saving.
-//
-//        - As with the game, the Creation Kit only recognizes a GMST if EDID is 
-//          the first subrecord.
-//
 //     - GMST UI
 //
 //        - Bold settings that have been defined in the active file.
+//
+//        - We need form controls for editing boolean settings.
+//
+//        - The value-editing controls should be put in a stacked widget, so that we 
+//          can easily hide all controls except those related to the currently 
+//          selected setting.
 //
 //        - Implement editing a GMST's value.
 //
@@ -111,10 +107,8 @@
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
 //
-//        - Settings with unknown names
 //        - Settings with no DATA subrecord
 //        - Settings with a DATA subrecord of insufficient length
-//        - Settings with zero or out-of-bounds form IDs
 //        - Settings that share form IDs with each other
 //        - Settings that share form IDs with real forms
 //           - These won't load reliably because we multi-thread file loading on a 

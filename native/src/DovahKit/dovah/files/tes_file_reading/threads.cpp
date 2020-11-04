@@ -414,6 +414,7 @@ namespace dovah {
                            warning.set_flag(file_read_warning::flag::has_cause_form);
                            warning.cause_file = this->owner->get_filename();
                            warning.set_flag(file_read_warning::flag::has_cause_file);
+                           warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
                            continue;
                         }
@@ -426,11 +427,15 @@ namespace dovah {
                            warning.cause_file         = this->owner->get_filename();
                            warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
                            warning.set_cause_subrecord(subrecord);
+                           warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
                            //
                            continue;
                         }
                         switch (working.get_type()) {
+                           case game_setting_type::boolean:
+                              subrecord.read(working.value.b);
+                              break;
                            case game_setting_type::float32:
                               subrecord.read(working.value.f);
                               break;
@@ -439,6 +444,19 @@ namespace dovah {
                               break;
                            case game_setting_type::string:
                               subrecord.to_string(working.value.s);
+                              break;
+                           default:
+                              {
+                                 file_read_warning warning;
+                                 warning.code               = notice_code::game_setting_record_has_bad_type;
+                                 warning.cause_form.localID = record.formID();
+                                 warning.cause_form.fixedID = 0;
+                                 warning.cause_form.type    = form_type::setting;
+                                 warning.cause_file         = this->owner->get_filename();
+                                 warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                                 warning.set_cause_editor_id(working.name);
+                                 lo.log_load_warning(warning);
+                              }
                               break;
                         }
                         if (!subrecord.is_at_end()) {
@@ -450,13 +468,11 @@ namespace dovah {
                            warning.cause_file         = this->owner->get_filename();
                            warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
                            warning.set_cause_subrecord(subrecord);
+                           warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
                         }
                         break;
                      }
-                     //
-                     // TODO: EDID after DATA won't load
-                     //
                      lo.accept_game_setting(this->owner, working, record.formID());
                      continue;
                   }

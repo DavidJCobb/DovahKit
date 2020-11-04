@@ -251,11 +251,15 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
       case notice_code::game_setting_record_is_misordered:
          {
             QString form = QObject::tr("<unknown GMST record>", "log window");
+            QString name = QObject::tr("", "log window - missing editor ID");
             if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+               name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
+            }
             //
-            text = QObject::tr("Record %1 has its EDID subrecord in the wrong place. The EDID subrecord must be the first subrecord in order for it to be properly seen.").arg(form);
+            text = QObject::tr("Record %1%2 has its EDID subrecord in the wrong place. The EDID subrecord must be the first subrecord in order for it to be properly seen.").arg(form).arg(name);
          }
          break;
       case notice_code::subrecord_has_extra_content:
@@ -281,10 +285,11 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          break;
       case notice_code::game_setting_record_is_redundant:
          {
-            text = QObject::tr("Record %1 in file %3 redundantly defines the same setting as record %2 in the same file. The setting will use the last-loaded value and form ID.", "log window");
+            text = QObject::tr("Record %1%4 in file %3 redundantly defines the same setting as record %2 in the same file. The setting will use the last-loaded value and form ID.", "log window");
             QString file   = QObject::tr("<unknown filename>",    "log window");
             QString form_a = QObject::tr("<unknown GMST record>", "log window");
             QString form_b = form_a;
+            QString name   = QObject::tr("", "log window - missing editor ID");
             //
             if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
                form_a = _read_error_form_id_to_string(warning.cause_form);
@@ -295,15 +300,19 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             if (!warning.relevant_forms.empty()) {
                form_b = _read_error_form_id_to_string(warning.relevant_forms[0]);
             }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+               name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
+            }
             //
-            text = text.arg(form_a).arg(form_b).arg(file);
+            text = text.arg(form_a).arg(form_b).arg(file).arg(name);
          }
          break;
       case notice_code::game_setting_record_has_bad_form_id:
          {
-            text = QObject::tr("Record %1 in file %2 has an out-of-bounds or otherwise invalid form ID. This is incorrect, but the setting should still load properly.", "log window");
+            text = QObject::tr("Record %1%3 in file %2 has an out-of-bounds or otherwise invalid form ID. This is incorrect, but the setting should still load properly.", "log window");
             QString file = QObject::tr("<unknown filename>",    "log window");
             QString form = QObject::tr("<unknown GMST record>", "log window");
+            QString name = QObject::tr("", "log window - missing editor ID");
             //
             if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
@@ -311,8 +320,51 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+               name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
+            }
             //
-            text = text.arg(form).arg(file);
+            text = text.arg(form).arg(file).arg(name);
+         }
+         break;
+      case notice_code::game_setting_record_has_bad_type:
+         {
+            text = QObject::tr("Record %1%3 in file %2 is of an unidentified type. Its value could not be loaded.", "log window");
+            QString file = QObject::tr("<unknown filename>",    "log window");
+            QString form = QObject::tr("<unknown GMST record>", "log window");
+            QString name = QObject::tr("", "log window - missing editor ID");
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               file = QString::fromStdString(warning.cause_file);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+               name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
+            }
+            //
+            text = text.arg(form).arg(file).arg(name);
+         }
+         break;
+      case notice_code::game_setting_name_is_unrecognized:
+         {
+            text = QObject::tr("Record %1%3 in file %2 defines an unrecognized game setting.", "log window");
+            QString file = QObject::tr("<unknown filename>",    "log window");
+            QString form = QObject::tr("<unknown GMST record>", "log window");
+            QString name = QObject::tr("", "log window - missing editor ID");
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               file = QString::fromStdString(warning.cause_file);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+               name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
+            }
+            //
+            text = text.arg(form).arg(file).arg(name);
          }
          break;
    }

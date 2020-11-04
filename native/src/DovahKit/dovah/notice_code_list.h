@@ -36,6 +36,8 @@ namespace dovah {
          subrecord_has_extra_content           = 0x0000001B, // A subrecord has unexpected data at its end. (This is not emitted for most subrecords, but is explicitly checked for in special cases like the GMST loader.)
          game_setting_record_is_redundant      = 0x0000001C, // Multiple GMST records in the same file define the same setting but with different form IDs.
          game_setting_record_has_bad_form_id   = 0x0000001D, // A GMST record has an out-of-bounds or otherwise invalid form ID.
+         game_setting_record_has_bad_type      = 0x0000001E, // A GMST record has an unrecognized name, and the name's type prefix is also unrecognized.
+         game_setting_name_is_unrecognized     = 0x0000001F,
       };
    };
 }
