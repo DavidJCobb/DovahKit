@@ -62,10 +62,10 @@ namespace dovah {
    const std::array<game_setting_definition, 3567> game_settings = {{
       #pragma region Booleans
          #pragma region A
-            { "bAutoAimBasedOnDistance", 0 },
+            { "bAutoAimBasedOnDistance", false },
          #pragma endregion
          #pragma region R
-            { "bRegenNPCMagickaDuringCast", 1 },
+            { "bRegenNPCMagickaDuringCast", true },
          #pragma endregion
       #pragma endregion
       #pragma region Floats

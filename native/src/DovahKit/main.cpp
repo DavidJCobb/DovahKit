@@ -60,8 +60,13 @@
 //
 //     = MAINTAIN OUR INTERNAL DOCUMENTATION ON THIS, UNTIL WE'RE DONE WITH IT.
 //
-//     - We're missing several game settings. We need to write a tool to export them 
-//       directly from the game. Can we do that in x32dbg?
+//     - Skyrim Special Edition adds more GMSTs. We'll need to find a list of those 
+//       definitions, and we'll need to make it possible for GMST definitions to 
+//       indicate what games they appear in (defaulting to "all").
+//
+//        - Our current list is every Skyrim Classic setting, pulled directly from 
+//          the game engine with no GMST records loaded -- all pristine executable-
+//          level defaults.
 //
 //     - GMST UI
 //
