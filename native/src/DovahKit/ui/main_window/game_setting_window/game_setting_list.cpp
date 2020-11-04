@@ -148,7 +148,7 @@ QVariant GameSettingListModel::data(const QModelIndex& index, int role) const {
          switch (role) {
             case Qt::DisplayRole:
                if (item->last_file.isEmpty())
-                  return QObject::tr("<executable>", "game setting list");
+                  return QObject::tr("", "game setting list - no file");
             case SortRole: // sorting
             case FilterRole: // filtering
                return item->last_file;
