@@ -511,6 +511,18 @@ namespace dovah {
          return;
       }
       //
+      if (!formID) {
+         file_read_warning warning;
+         warning.code               = notice_code::game_setting_record_has_bad_form_id;
+         warning.cause_form.localID = localID;
+         warning.cause_form.fixedID = 0;
+         warning.cause_form.type    = form_type::setting;
+         warning.set_flag(file_read_warning::flag::has_cause_form);
+         warning.cause_file = file->get_filename();
+         warning.set_flag(file_read_warning::flag::has_cause_file);
+         this->log_load_warning(warning);
+      }
+      //
       if (formID) {
          //
          // Do not allow GMST to override form IDs of other types.
@@ -563,6 +575,44 @@ namespace dovah {
       //
       std::lock_guard guard(this->game_settings.lock);
       auto& list  = this->game_settings.by_name[lowercase];
+      if (!list.empty()) {
+         auto& last = list.back();
+         if (last.formID != formID) {
+            //
+            // This game setting was already defined. For consistency with the Creation Kit, a loaded game setting 
+            // will have the last seen form ID; this means that we need to delete the prior stub.
+            //
+            bare_form_id_t priorID = last.formID;
+            //
+            std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+            if (cobb::unordered_map_contains(this->forms.forms, priorID)) {
+               auto* old_stub = this->forms.forms[priorID];
+               delete old_stub;
+               this->forms.forms.erase(priorID);
+            }
+            if (last.source_file == file) {
+               file_read_warning warning;
+               warning.code               = notice_code::game_setting_record_is_redundant;
+               warning.cause_form.localID = localID;
+               warning.cause_form.fixedID = formID;
+               warning.cause_form.type    = form_type::setting;
+               warning.set_flag(file_read_warning::flag::has_cause_form);
+               warning.cause_file = file->get_filename();
+               warning.set_flag(file_read_warning::flag::has_cause_file);
+               //
+               auto& relevant = warning.relevant_forms.emplace_back();
+               relevant.localID = 0;
+               relevant.fixedID = priorID;
+               relevant.type    = form_type::setting;
+               //
+               this->log_load_warning(warning);
+               //
+               // And remove the redundant entry from the GMST list as well.
+               //
+               list.resize(list.size() - 1);
+            }
+         }
+      }
       auto& entry = list.emplace_back(working);
       entry.source_file = file;
       entry.formID      = formID;

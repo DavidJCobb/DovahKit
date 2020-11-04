@@ -34,6 +34,8 @@ namespace dovah {
          game_setting_record_is_nameless       = 0x00000019, // A GMST record had no EDID or an empty EDID.
          game_setting_record_is_misordered     = 0x0000001A, // A GMST record has its EDID record in the wrong place.
          subrecord_has_extra_content           = 0x0000001B, // A subrecord has unexpected data at its end. (This is not emitted for most subrecords, but is explicitly checked for in special cases like the GMST loader.)
+         game_setting_record_is_redundant      = 0x0000001C, // Multiple GMST records in the same file define the same setting but with different form IDs.
+         game_setting_record_has_bad_form_id   = 0x0000001D, // A GMST record has an out-of-bounds or otherwise invalid form ID.
       };
    };
 }

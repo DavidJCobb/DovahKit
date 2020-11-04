@@ -430,7 +430,7 @@ namespace dovah {
                            //
                            continue;
                         }
-                        switch (working.definition->type) {
+                        switch (working.get_type()) {
                            case game_setting_type::float32:
                               subrecord.read(working.value.f);
                               break;

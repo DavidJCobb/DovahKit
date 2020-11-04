@@ -279,6 +279,42 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             }
          }
          break;
+      case notice_code::game_setting_record_is_redundant:
+         {
+            text = QObject::tr("Record %1 in file %3 redundantly defines the same setting as record %2 in the same file. The setting will use the last-loaded value and form ID.", "log window");
+            QString file   = QObject::tr("<unknown filename>",    "log window");
+            QString form_a = QObject::tr("<unknown GMST record>", "log window");
+            QString form_b = form_a;
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form_a = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               file = QString::fromStdString(warning.cause_file);
+            }
+            if (!warning.relevant_forms.empty()) {
+               form_b = _read_error_form_id_to_string(warning.relevant_forms[0]);
+            }
+            //
+            text = text.arg(form_a).arg(form_b).arg(file);
+         }
+         break;
+      case notice_code::game_setting_record_has_bad_form_id:
+         {
+            text = QObject::tr("Record %1 in file %2 has an out-of-bounds or otherwise invalid form ID. This is incorrect, but the setting should still load properly.", "log window");
+            QString file = QObject::tr("<unknown filename>",    "log window");
+            QString form = QObject::tr("<unknown GMST record>", "log window");
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               file = QString::fromStdString(warning.cause_file);
+            }
+            //
+            text = text.arg(form).arg(file);
+         }
+         break;
    }
 }
 LogListModelItem::LogListModelItem(const dovah::file_write_error& error) {

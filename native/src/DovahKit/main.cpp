@@ -79,7 +79,7 @@
 //
 //        - Implement editing a GMST's value.
 //
-//           - We need DovahKitCore signals for this.
+//           - We need backend APIs and DovahKitCore signals for this.
 //
 //        - This UI needs to make it possible to change the form ID of any setting 
 //          that has actually been altered by the active file. For now, let's not 
@@ -105,7 +105,7 @@
 //             game itself supports that.
 //
 //     - We need to remember, and preserve, GMSTs in the active file that did not 
-//       have an EDID, or did not specify a known setting name.
+//       specify a known setting name.
 //
 //        - The UI needs to make it possible to view these.
 //
@@ -210,6 +210,22 @@
 //             exist in the saved file. In fact, let's take that approach for all of 
 //             the warnings we log, yeah?
 //
+//  - Support for loading records flagged as "partial"
+//
+//     - If the flag is present on an injected record, then skip the record.
+//
+//     - If the flag is present on a non-injected non-override, then it should be stripped.
+//
+//     - The loaders for WRLD, CELL, and DIAL need to check for the flag (they have access 
+//       to the record reader, so they should be capable of this) and if it's present, then 
+//       they need to match the behavior of the appropriate TESForm::LoadPartial override 
+//       in TESV.exe.
+//
+//     - Currently, if a child form is edited but the parent form is not, then at save time, 
+//       we flag the parent form as edited to ensure that it will save. This is not ideal. 
+//       We should instead be flagging the parent form as "partially edited" or using some 
+//       other procedure to ensure that a partial record, not a full one, is saved for it.
+//
 //  - Finalize for Skyrim Special Edition.
 //
 //     - Implement ESL support.
@@ -235,17 +251,6 @@
 //       anyway). It's worth checking a few things, then: would a non-overriding NAVI change 
 //       the form ID of the baseline NAVI, and is there any data that should be cleared in 
 //       an override (that therefore wouldn't be cleared by a non-override)?
-//
-//  - Support for loading records flagged as "partial"
-//
-//     - If the flag is present on an injected record, then skip the record.
-//
-//     - If the flag is present on a non-injected non-override, then it should be stripped.
-//
-//     - The loaders for WRLD, CELL, and DIAL need to check for the flag (they have access 
-//       to the record reader, so they should be capable of this) and if it's present, then 
-//       they need to match the behavior of the appropriate TESForm::LoadPartial override 
-//       in TESV.exe.
 //
 //  - Multiple-file form loading
 //
