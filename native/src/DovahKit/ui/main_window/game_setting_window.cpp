@@ -1,5 +1,7 @@
 #include "game_setting_window.h"
 #include <QItemSelectionModel>
+#include "../../dovah/data/game_settings.h"
+#include "../../helpers/qt/spinbox.h"
 
 namespace {
    GameSettingList::model_item_type* _get_selected_item(QTableView* widget) {
@@ -16,39 +18,44 @@ namespace {
 GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
+   cobb::qt::remove_spinbox_bounds(this->ui.valueF);
+   cobb::qt::remove_spinbox_bounds(this->ui.valueI);
+   //
    this->ui.list->setTextFilter(this->ui.filter);
    this->ui.list->build();
    QObject::connect(this->ui.list->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
       this->ui.settingName->setText(tr("No setting selected", "game setting window"));
       this->ui.description->setText("");
+      this->ui.valueStack->setCurrentWidget(this->ui.vpNone);
       //
-      this->ui.valueString->setPlainText("");
-      //
-      this->ui.valueFloat->setDisabled(true);
-      this->ui.valueInt->setDisabled(true);
-      this->ui.valueString->setDisabled(true);
-      this->ui.buttonReset->setDisabled(true);
+      this->ui.buttonReset->setEnabled(false);
       //
       const auto* item = _get_selected_item(this->ui.list);
       if (item) {
-         QWidget* value = nullptr;
+         QWidget* page = nullptr;
          switch (item->type) {
+            case dovah::game_setting_type::boolean:
+               page = this->ui.vpBool;
+               this->ui.valueB->setCurrentIndex(item->value.boolean ? 1 : 0);
+               break;
             case dovah::game_setting_type::float32:
-               value = this->ui.valueFloat;
-               this->ui.valueFloat->setValue(item->value.float32);
+               page = this->ui.vpFloat;
+               this->ui.valueF->setValue(item->value.float32);
                break;
             case dovah::game_setting_type::integer:
-               value = this->ui.valueInt;
-               this->ui.valueInt->setValue(item->value.number);
+               page = this->ui.vpInt;
+               this->ui.valueI->setValue(item->value.number);
                break;
             case dovah::game_setting_type::string:
-               value = this->ui.valueString;
-               this->ui.valueString->setPlainText(item->value.string);
+               page = this->ui.vpString;
+               this->ui.valueS->setPlainText(item->value.string);
                break;
          }
-         if (value) {
-            value->setEnabled(true);
+         if (page) {
+            this->ui.valueStack->setCurrentWidget(page);
             this->ui.buttonReset->setEnabled(true);
+         } else {
+            this->ui.valueStack->setCurrentWidget(this->ui.vpUnknown);
          }
          //
          this->ui.settingName->setText(item->name);

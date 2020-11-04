@@ -72,12 +72,6 @@
 //
 //        - Bold settings that have been defined in the active file.
 //
-//        - We need form controls for editing boolean settings.
-//
-//        - The value-editing controls should be put in a stacked widget, so that we 
-//          can easily hide all controls except those related to the currently 
-//          selected setting.
-//
 //        - Implement editing a GMST's value.
 //
 //           - We need backend APIs and DovahKitCore signals for this.
