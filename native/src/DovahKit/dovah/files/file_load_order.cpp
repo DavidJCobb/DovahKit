@@ -583,6 +583,11 @@ namespace dovah {
             prior->formType = form_type::setting;
          }
          this->forms_by_type[form_type::setting].forms[formID] = prior;
+         //
+         if (file == this->active_file) {
+            this->active_file_forms.forms[formID] = prior;
+            this->active_file_forms_by_type[form_type::setting].forms[formID] = prior;
+         }
       }
       //
       std::string lowercase;
