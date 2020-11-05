@@ -27,6 +27,7 @@ class GameSettingListModelItem {
       QString description;
       QString last_file;
       bare_form_id_t formID = 0;
+      bool    is_in_active_file = false;
       struct {
          bool    boolean = false;
          QString string;

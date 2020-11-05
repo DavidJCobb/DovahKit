@@ -109,6 +109,7 @@ QVariant GameSettingListModel::data(const QModelIndex& index, int role) const {
       case ColumnName:
          switch (role) {
             case Qt::DisplayRole:
+               return QObject::tr("%1%2").arg(item->name).arg(item->is_in_active_file ? QObject::tr(" *", "game setting window - active file setting marker") : "");
             case SortRole: // sorting
             case FilterRole: // filtering
                return item->name;
@@ -191,15 +192,22 @@ void GameSettingListModel::build() {
    for (auto& definition : dovah::game_settings) {
       dovah::loaded_game_setting loaded;
       if (editor.get_loaded_game_setting(definition.name, loaded)) {
-         queued.push_back(new item_type(loaded));
+         auto* item = new item_type(loaded);
+         queued.push_back(item);
+         if (loaded.source_file && editor.loaded_file_is_active(*loaded.source_file))
+            item->is_in_active_file = true;
       } else {
          queued.push_back(new item_type(definition));
       }
    }
-   editor.for_each_loaded_game_setting([this](const dovah::loaded_game_setting& loaded) {
+   editor.for_each_loaded_game_setting([this, &editor](const dovah::loaded_game_setting& loaded) {
       if (loaded.definition)
          return false; // continue
-      this->queued_additions.push_back(new item_type(loaded));
+      auto* item = new item_type(loaded);
+      this->queued_additions.push_back(item);
+      if (loaded.source_file && editor.loaded_file_is_active(*loaded.source_file))
+         item->is_in_active_file = true;
+      return false; // continue
    });
    if (queued.size() == 0)
       return;

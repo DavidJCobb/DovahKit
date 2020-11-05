@@ -70,8 +70,6 @@
 //
 //     - GMST UI
 //
-//        - Bold settings that have been defined in the active file.
-//
 //        - Implement editing a GMST's value.
 //
 //           - We need backend APIs and DovahKitCore signals for this.

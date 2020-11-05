@@ -34,6 +34,7 @@ namespace dovah {
    class form_duplication_request;
    class form_deletion_request;
    class form_renumber_request;
+   class game_setting_edit_request;
 
    namespace load_order_interfaces {
       class form_load;
@@ -48,6 +49,7 @@ namespace dovah {
          bare_form_id_t     formID = 0;
 
          game_setting_type get_type() const noexcept;
+         void set_value(const game_setting_value&) noexcept;
    };
 
    class file_load_order {
@@ -59,6 +61,7 @@ namespace dovah {
       friend class form_creation_request;
       friend class form_deletion_request;
       friend class form_renumber_request;
+      friend class game_setting_edit_request; // needed for its destructor
       friend class load_order_interfaces::form_load;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
@@ -240,11 +243,14 @@ namespace dovah {
          //
          int index_of_prefix(file_prefix) const noexcept;
          //
+         bool file_is_active(const loaded_file&) const noexcept;
          bool has_file(const std::filesystem::path& filename) const noexcept;
          bool has_non_active_file(const std::filesystem::path& filename) const noexcept;
          #pragma endregion
          
          #pragma region Content related to already-loaded data
+         std::vector<const loaded_file*> get_loaded_files() const noexcept;
+
          uint32_t count_forms_of_type(form_type_t) const noexcept;
          inline uint8_t file_count() const noexcept { return this->files.size(); }
          bool has_form(bare_form_id_t formID) const noexcept;
@@ -279,6 +285,9 @@ namespace dovah {
          form_deletion_request request_form_deletion(form_stub&) noexcept;
          form_renumber_request request_form_renumber(form_stub&, bare_form_id_t desiredID) noexcept;
          void commit_form_renumber_request(form_renumber_request&) noexcept; // you can call this, but you're meant to call form_renumber_request::commit instead
+         game_setting_edit_request request_game_setting_change(bool automatic_id = true) noexcept;
+         void set_reserved_form_id_for(game_setting_edit_request&, bare_form_id_t desired = 0);
+         void commit_game_setting_change_request(game_setting_edit_request&) noexcept;
          //
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
@@ -469,6 +478,42 @@ namespace dovah {
          bool commit();
    };
    #pragma endregion
+
+   class game_setting_edit_request {
+      friend class file_load_order;
+      public:
+         enum class form_id_policy {
+            find_valid_id,
+            use_chosen_id,
+         };
+      protected:
+         file_load_order& owner;
+         bare_form_id_t   desiredID = 0;
+         notice_code_t    code      = default_notice_code;
+         bool             done      = false;
+         //
+         game_setting_edit_request(file_load_order& o, form_id_policy);
+         game_setting_edit_request(game_setting_edit_request&&);
+         game_setting_edit_request(const game_setting_edit_request&) = delete;
+         game_setting_edit_request& operator=(const game_setting_edit_request&) = delete;
+         //
+      public:
+         ~game_setting_edit_request();
+         //
+         struct {
+            std::string        name;
+            game_setting_value value;
+         } setting;
+         const form_id_policy policy = form_id_policy::find_valid_id;
+         //
+         inline bare_form_id_t get_queued_form_id() const noexcept { return this->desiredID; }
+         inline notice_code_t get_notice_code() const noexcept { return this->code; }
+         //
+         void acquire_form_id(); // for use with form_id_policy::find_valid_id
+         void set_desired_form_id(bare_form_id_t); // for use with form_id_policy::use_chosen_id
+         //
+         void commit();
+   };
 
    namespace load_order_interfaces {
       class form_load {

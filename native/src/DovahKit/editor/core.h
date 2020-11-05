@@ -13,6 +13,9 @@ namespace dovah {
    class  file_write_error;
    struct localized_string;
    struct tes_file_header;
+   namespace tes_file_reading {
+      class file_reader;
+   }
    namespace tes_file_writing {
       struct write_config;
    }
@@ -102,6 +105,8 @@ class DovahKitCore : public QObject {
       float assess_load_progress() const noexcept;
       const dovah::file_read_error& get_last_read_error() const noexcept;
 
+      std::vector<const dovah::tes_file_reading::file_reader*> get_loaded_files() const noexcept;
+      bool loaded_file_is_active(const dovah::tes_file_reading::file_reader&) const noexcept;
       bool active_file_has_name() const noexcept;
       QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;

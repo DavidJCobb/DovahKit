@@ -20,6 +20,23 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
    //
    cobb::qt::remove_spinbox_bounds(this->ui.valueF);
    cobb::qt::remove_spinbox_bounds(this->ui.valueI);
+   {
+      auto* widget  = this->ui.settingName;
+      auto  metrics = QFontMetrics(widget->font());
+      int   longest = 0;
+      int   length  = 0;
+      for (auto& definition : dovah::game_settings) {
+         int size  = strlen(definition.name);
+         if (size < length - 5) // silly shortcut to avoid having to compute font metrics for *every* setting name
+            continue;
+         int width = metrics.boundingRect(definition.name).width();
+         if (width > longest) {
+            longest = width;
+            length  = size;
+         }
+      }
+      widget->setMinimumWidth(longest);
+   }
    //
    this->ui.list->setTextFilter(this->ui.filter);
    this->ui.list->build();

@@ -29,6 +29,22 @@ namespace dovah {
          return this->definition->type;
       return get_game_setting_type_from_name(this->name.c_str());
    }
+   void loaded_game_setting::set_value(const game_setting_value& v) noexcept {
+      switch (this->get_type()) {
+         case game_setting_type::boolean:
+            this->value.b = v.b;
+            break;
+         case game_setting_type::float32:
+            this->value.f = v.f;
+            break;
+         case game_setting_type::integer:
+            this->value.i = v.i;
+            break;
+         case game_setting_type::string:
+            this->value.s = v.s;
+            break;
+      }
+   }
 
    file_load_order::~file_load_order() {
       this->normalizer.delete_contents();
@@ -566,6 +582,7 @@ namespace dovah {
             prior->formID   = formID;
             prior->formType = form_type::setting;
          }
+         this->forms_by_type[form_type::setting].forms[formID] = prior;
       }
       //
       std::string lowercase;
@@ -589,6 +606,7 @@ namespace dovah {
                auto* old_stub = this->forms.forms[priorID];
                delete old_stub;
                this->forms.forms.erase(priorID);
+               this->forms_by_type[form_type::setting].forms.erase(priorID);
             }
             if (last.source_file == file) {
                file_read_warning warning;
@@ -928,6 +946,9 @@ namespace dovah {
       return -1;
    }
    //
+   bool file_load_order::file_is_active(const loaded_file& file) const noexcept {
+      return &file == this->active_file;
+   }
    bool file_load_order::has_file(const std::filesystem::path& filename) const noexcept {
       for (auto* f : this->files)
          if (f->get_filename() == filename)
@@ -941,6 +962,14 @@ namespace dovah {
       return this->has_file(filename);
    }
    #pragma endregion
+
+   std::vector<const file_load_order::loaded_file*> file_load_order::get_loaded_files() const noexcept {
+      std::vector<const file_load_order::loaded_file*> result;
+      result.reserve(this->files.size());
+      for (auto* f : this->files)
+         result.push_back(f);
+      return result;
+   }
 
    uint32_t file_load_order::count_forms_of_type(form_type_t ft) const noexcept {
       if (ft < this->forms_by_type.size()) {
@@ -1195,7 +1224,7 @@ namespace dovah {
          result.error = form_creation_request::error_code::no_active_file;
          return result;
       }
-      assert(this->active_file && "How were we able to get the index of the active file when the pointer has been lost?"); // in case any code changes in the future
+      assert(this->active_file && "How were we able to get the prefix of the active file when the pointer has been lost?"); // in case any code changes in the future
       auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
       //
       auto  guard = std::lock_guard(this->form_creation_request_info.lock);
@@ -1426,6 +1455,183 @@ namespace dovah {
          if (this->on_form_renumber)
             (this->on_form_renumber)(stub, oldID, desiredID);
       }
+   }
+   game_setting_edit_request file_load_order::request_game_setting_change(bool automatic_id) noexcept {
+      game_setting_edit_request result(*this, automatic_id ? game_setting_edit_request::form_id_policy::find_valid_id : game_setting_edit_request::form_id_policy::use_chosen_id);
+      return result;
+   }
+   void file_load_order::set_reserved_form_id_for(game_setting_edit_request& request, bare_form_id_t desired) {
+      if (&request.owner != this)
+         return;
+      auto  guard = std::lock_guard(this->form_creation_request_info.lock);
+      auto& list  = this->form_creation_request_info.reserved_formIDs;
+      if (request.desiredID) {
+         if (request.desiredID == desired)
+            return;
+         auto it = std::find(list.begin(), list.end(), request.desiredID);
+         if (it != list.end())
+            list.erase(it);
+         request.desiredID = 0;
+      }
+      auto prefix = this->active_file_prefix();
+      if (prefix.is_undefined()) {
+         request.code = notice_code::no_active_file;
+         return;
+      }
+      assert(this->active_file && "How were we able to get the prefix of the active file when the pointer has been lost?"); // in case any code changes in the future
+      auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
+      {
+         auto guard = std::lock_guard(this->forms.lock);
+         if (std::find(list.begin(), list.end(), formID) != list.end()) // if the form ID is reserved, then we need to find a new one
+            formID = 0;
+         if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
+            formID = this->find_first_free_form_id_in_active_file();
+            if (!formID) { // no form ID available
+               request.code = notice_code::form_id_unavailable_for_game_setting;
+               return;
+            }
+         }
+      }
+      //
+      list.push_back(formID);
+      request.desiredID = formID;
+   }
+   void file_load_order::commit_game_setting_change_request(game_setting_edit_request& request) noexcept {
+      if (&request.owner != this)
+         return;
+      if (!request.desiredID) {
+         if (request.policy == game_setting_edit_request::form_id_policy::find_valid_id) {
+            this->set_reserved_form_id_for(request);
+            if (!request.desiredID) {
+               if (request.code != default_notice_code)
+                  request.code = notice_code::game_setting_edit_request_lacked_id;
+               return;
+            }
+         } else {
+            request.code = notice_code::game_setting_edit_request_lacked_id;
+            return;
+         }
+      }
+      std::string lowercase;
+      lowercase.reserve(request.setting.name.size());
+      for (auto c : request.setting.name)
+         lowercase += tolower(c);
+      //
+      auto& definition = game_setting_definition::lookup(request.setting.name.c_str());
+      auto& map  = this->game_settings.by_name;
+      auto& list = map[lowercase];
+      //
+      loaded_game_setting* entry = nullptr;
+      if (!list.empty()) {
+         auto& back = list.back();
+         if (back.source_file == this->active_file)
+            entry = &back;
+      }
+      if (!entry) {
+         entry = &list.emplace_back();
+         entry->source_file = this->active_file;
+         if (definition.is_none()) {
+            entry->name = request.setting.name;
+         } else {
+            entry->name       = definition.name;
+            entry->definition = &definition;
+         }
+      }
+      entry->set_value(request.setting.value);
+      //
+      if (entry->formID != request.desiredID) {
+         //
+         // We are either inserting a new entry, or changing the form ID of an existing entry. 
+         // We need to create or renumber an existing form stub.
+         //
+         bare_form_id_t old_id = entry->formID;
+         //
+         uint32_t stub_count_for_this_id = 0;
+         auto     form_guard = std::lock_guard(this->forms.forms);
+         if (cobb::unordered_map_contains(this->forms.forms, request.desiredID)) {
+            //
+            // A form stub exists for this form ID, which means that the form ID is being used by 
+            // at least one game setting. Count the number of loaded game settings that are using 
+            // the form ID.
+            //
+            // For each game setting, we maintain a list of all data supplied by all loaded files. 
+            // However, we only care about the last loaded file that defines a setting; that's the 
+            // only one that will have a form stub.
+            //
+            for (auto& pair : map) {
+               auto& list = pair.second;
+               if (list.empty())
+                  continue;
+               auto& entry = list.back();
+               if (entry.formID == old_id)
+                  ++stub_count_for_this_id;
+            }
+         }
+         form_stub* stub = nullptr;
+         if (stub_count_for_this_id == 1) {
+            stub = this->forms.forms[old_id];
+            if (stub) {
+               bare_form_id_t new_id = request.desiredID;
+               //
+               stub->formID = new_id;
+               //
+               // Now move the form stub within the load order's maps.
+               //
+               auto _extract = [this, stub, old_id, new_id](_form_map& map) {
+                  auto guard = std::lock_guard(map.lock);
+                  auto node  = map.forms.extract(old_id);
+                  if (node.empty()) {
+                     //
+                     // There is no existing node. This can happen if, for example, we are changing 
+                     // the form ID of a game setting that was not previously defined in the active 
+                     // file.
+                     //
+                     map.forms[new_id] = stub;
+                     return;
+                  }
+                  node.key() = new_id;
+                  map.forms.insert(std::move(node));
+               };
+               _extract(this->forms);
+               _extract(this->forms_by_type[form_type::setting]);
+               _extract(this->active_file_forms);
+               _extract(this->active_file_forms_by_type[form_type::setting]);
+               //
+               if (this->on_form_renumber)
+                  (this->on_form_renumber)(*stub, old_id, new_id);
+            }
+         }
+         if (!stub) {
+            //
+            // Multiple game setting definitions use the existing stub, or there is no existing stub. 
+            // Create a new stub.
+            //
+            stub = new form_stub;
+            stub->formID   = request.desiredID;
+            stub->formType = form_type::setting;
+            this->forms.forms[request.desiredID] = stub;
+            this->forms_by_type[form_type::setting].forms[request.desiredID] = stub;
+            this->active_file_forms.forms[request.desiredID] = stub;
+            this->active_file_forms_by_type[form_type::setting].forms[request.desiredID] = stub;
+            //
+            if (this->on_form_create)
+               (this->on_form_create)(stub);
+         }
+      }
+      entry->formID = request.desiredID;
+      //
+      // Okay. The form stub is now squared away. Now, we need to un-flag the form ID as reserved.
+      //
+      {
+         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
+         auto& list  = this->form_creation_request_info.reserved_formIDs;
+         auto  it    = std::find(list.begin(), list.end(), request.desiredID);
+         if (it != list.end())
+            list.erase(it);
+      }
+      //
+      request.code = default_notice_code;
+      request.done = true;
    }
    #pragma endregion
    
@@ -2159,6 +2365,56 @@ namespace dovah {
       return this->error == error_code::none;
    }
    #pragma endregion
+   #pragma endregion
+
+   #pragma region game_setting_edit_request
+   game_setting_edit_request::game_setting_edit_request(file_load_order& o, form_id_policy p) : owner(o), policy(p) {
+   }
+   game_setting_edit_request::game_setting_edit_request(game_setting_edit_request&& other) : owner(other.owner), policy(other.policy) {
+      this->setting   = other.setting;
+      this->desiredID = other.desiredID;
+      this->code      = other.code;
+   }
+   game_setting_edit_request::~game_setting_edit_request() {
+      if (!this->desiredID || this->done)
+         return;
+      //
+      auto  guard = std::lock_guard(this->owner.form_creation_request_info.lock);
+      auto& list = this->owner.form_creation_request_info.reserved_formIDs;
+      //
+      auto it = std::find(list.begin(), list.end(), this->desiredID);
+      if (it != list.end())
+         list.erase(it);
+      //
+      this->desiredID = 0;
+   }
+   void game_setting_edit_request::acquire_form_id() {
+      if (this->policy != form_id_policy::find_valid_id) {
+         #if _DEBUG
+            __debugbreak(); // Calling this doesn't make sense if you're not relying on the load order to pick a form ID for you.
+         #endif
+         return;
+      }
+      if (this->desiredID)
+         return;
+      //
+      this->owner.set_reserved_form_id_for(*this);
+   }
+   void game_setting_edit_request::set_desired_form_id(bare_form_id_t id) {
+      if (this->policy != form_id_policy::use_chosen_id) {
+         #if _DEBUG
+            __debugbreak(); // Calling this doesn't make sense if you're not supplying a form ID yourself.
+         #endif
+         return;
+      }
+      if (this->desiredID == id)
+         return;
+      //
+      this->owner.set_reserved_form_id_for(*this, id);
+   }
+   void game_setting_edit_request::commit() {
+      this->owner.commit_game_setting_change_request(*this);
+   }
    #pragma endregion
 
    #pragma region Interfaces to file_load_order

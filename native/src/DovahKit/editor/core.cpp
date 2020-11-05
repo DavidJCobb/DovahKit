@@ -187,6 +187,12 @@ const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept
    return this->load_order->load_error;
 }
 
+std::vector<const dovah::tes_file_reading::file_reader*> DovahKitCore::get_loaded_files() const noexcept {
+   return this->load_order->get_loaded_files();
+}
+bool DovahKitCore::loaded_file_is_active(const dovah::tes_file_reading::file_reader& file) const noexcept {
+   return this->load_order->file_is_active(file);
+}
 bool DovahKitCore::active_file_has_name() const noexcept {
    return this->load_order->active_file_has_name();
 }

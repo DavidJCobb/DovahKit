@@ -38,6 +38,8 @@ namespace dovah {
          game_setting_record_has_bad_form_id   = 0x0000001D, // A GMST record has an out-of-bounds or otherwise invalid form ID.
          game_setting_record_has_bad_type      = 0x0000001E, // A GMST record has an unrecognized name, and the name's type prefix is also unrecognized.
          game_setting_name_is_unrecognized     = 0x0000001F,
+         form_id_unavailable_for_game_setting  = 0x00000020, // A game setting edit request failed because a form ID wasn't available for use.
+         game_setting_edit_request_lacked_id   = 0x00000021, // A game setting edit request failed because it had no form ID.
       };
    };
 }
