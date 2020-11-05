@@ -52,8 +52,12 @@ void GameSettingListModelItem::updateFrom(const dovah::loaded_game_setting& sour
          this->value.string = DovahKitCore::get().convert_localized_string(source.value.s);
          break;
    }
-   if (source.source_file)
+   if (source.source_file) {
       this->last_file = QString::fromStdString(source.source_file->get_filename());
+      if (this->last_file.isEmpty()) {
+         this->last_file = QObject::tr("<untitled>", "unsaved/implicit active file shown in game setting window");
+      }
+   }
 }
 QString GameSettingListModelItem::valueAsString() const noexcept {
    switch (this->type) {
