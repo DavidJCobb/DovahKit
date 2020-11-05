@@ -58,6 +58,9 @@ class GameSettingListModel : public QAbstractTableModel {
       QVector<item_type*> children;
       QVector<item_type*> queued_additions;
       //
+   protected slots:
+      void gameSettingValueChanged(const char* name);
+      //
    public:
       GameSettingListModel(QObject* parent = nullptr);
       ~GameSettingListModel() {

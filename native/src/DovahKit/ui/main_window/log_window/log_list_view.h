@@ -49,6 +49,7 @@ class LogListModel : public QAbstractTableModel {
       void dataSaveComplete();
       void saveErrorReceived(const dovah::file_write_error& error);
       void loadWarningReceived(const dovah::file_read_warning& warning);
+      void gameSettingValueChangeFailed(const char* name, dovah::notice_code_t);
       //
    public:
       LogListModel(QObject* parent = nullptr);

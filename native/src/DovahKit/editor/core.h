@@ -83,6 +83,9 @@ class DovahKitCore : public QObject {
       //
       void formsRenumberedEnMasse();
       //
+      void gameSettingValueChanged(const char* name);
+      void gameSettingValueChangeFailed(const char* name, dovah::notice_code_t);
+      //
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed(const dovah::file_write_error&);
@@ -144,6 +147,7 @@ class DovahKitCore : public QObject {
 
       bool get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out);
       bool for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)>);
+      bool edit_game_setting(const char* name, const dovah::game_setting_value&);
 
       dovah::bsa_archived_file* lookup_game_asset(const std::string&); // path should be relative to, and should not include, the Data directory
 

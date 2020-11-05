@@ -73,7 +73,40 @@ QString GameSettingListModelItem::valueAsString() const noexcept {
 
 GameSettingListModel::GameSettingListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &GameSettingListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,     this, &GameSettingListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::gameSettingValueChanged, this, &GameSettingListModel::gameSettingValueChanged);
+}
+//
+void GameSettingListModel::gameSettingValueChanged(const char* name) {
+   item_type* item = nullptr;
+   int i = 0;
+   for (; i < this->children.size(); ++i) {
+      auto* current = this->children[i];
+      if (current->name.compare(name, Qt::CaseInsensitive) == 0) {
+         item = current;
+         break;
+      }
+   }
+   dovah::loaded_game_setting loaded;
+   auto& editor = DovahKitCore::get();
+   if (editor.get_loaded_game_setting(name, loaded)) {
+      if (item) {
+         item->updateFrom(loaded);
+         //
+         auto root  = QModelIndex();
+         auto start = this->index(i, 0, root);
+         auto end   = this->index(i, this->columnCount(root), root);
+         emit dataChanged(start, end);
+      } else {
+         auto* item = new item_type(loaded);
+         //
+         auto first_inserted = this->children.size();
+         auto last_inserted  = first_inserted;
+         this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
+         this->children.push_back(item);
+         this->endInsertRows();
+      }
+   }
 }
 //
 QModelIndex GameSettingListModel::index(int row, int column, const QModelIndex& parent) const {

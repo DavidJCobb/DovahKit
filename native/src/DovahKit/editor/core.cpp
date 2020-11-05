@@ -501,6 +501,16 @@ bool DovahKitCore::get_loaded_game_setting(const char* name, dovah::loaded_game_
 bool DovahKitCore::for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)> callback) {
    return this->load_order->for_each_loaded_game_setting(callback);
 }
+bool DovahKitCore::edit_game_setting(const char* name, const dovah::game_setting_value& value) {
+   auto request = this->load_order->request_game_setting_change();
+   request.commit();
+   if (request.was_successful()) {
+      emit this->gameSettingValueChanged(name);
+   } else {
+      emit this->gameSettingValueChangeFailed(name, request.get_notice_code());
+   }
+   return request.was_successful();
+}
 
 dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::string& path) {
    auto* archives = this->load_order->get_archive_list();

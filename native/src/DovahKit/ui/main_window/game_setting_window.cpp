@@ -38,6 +38,42 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
       widget->setMinimumWidth(longest);
    }
    //
+   QObject::connect(this->ui.buttonCommit, &QPushButton::clicked, this, [this]() {
+      const auto* item = _get_selected_item(this->ui.list);
+      if (!item)
+         return;
+      auto& editor = DovahKitCore::get();
+      dovah::game_setting_value value;
+      std::string name = item->name.toStdString();
+      switch (item->type) {
+         case dovah::game_setting_type::boolean:
+            value.b = this->ui.valueB->currentIndex() != 0;
+            break;
+         case dovah::game_setting_type::float32:
+            value.f = this->ui.valueF->value();
+            break;
+         case dovah::game_setting_type::integer:
+            value.i = this->ui.valueF->value();
+            break;
+         case dovah::game_setting_type::string:
+            editor.assign_localized_string(value.s, this->ui.valueS->plainText());
+            break;
+         default:
+            return;
+      }
+      bool result = editor.edit_game_setting(name.c_str(), value);
+      if (!result) {
+         //
+         // TODO: message box telling the user that an error occurred, and to check the log window
+         //
+      }
+   });
+   QObject::connect(this->ui.buttonReset, &QPushButton::clicked, this, [this]() {
+      //
+      // TODO
+      //
+   });
+   //
    this->ui.list->setTextFilter(this->ui.filter);
    this->ui.list->build();
    QObject::connect(this->ui.list->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
@@ -45,6 +81,7 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
       this->ui.description->setText("");
       this->ui.valueStack->setCurrentWidget(this->ui.vpNone);
       //
+      this->ui.buttonCommit->setEnabled(false);
       this->ui.buttonReset->setEnabled(false);
       //
       const auto* item = _get_selected_item(this->ui.list);
@@ -70,6 +107,7 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
          }
          if (page) {
             this->ui.valueStack->setCurrentWidget(page);
+            this->ui.buttonCommit->setEnabled(true);
             this->ui.buttonReset->setEnabled(true);
          } else {
             this->ui.valueStack->setCurrentWidget(this->ui.vpUnknown);

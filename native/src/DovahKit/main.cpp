@@ -74,6 +74,10 @@
 //
 //           - We need backend APIs and DovahKitCore signals for this.
 //
+//        - Implement reverting the active file's changes to a GMST.
+//
+//           - We need a backend API for this.
+//
 //        - This UI needs to make it possible to change the form ID of any setting 
 //          that has actually been altered by the active file. For now, let's not 
 //          allow injecting GMSTs into dependencies. We can revisit that decision 

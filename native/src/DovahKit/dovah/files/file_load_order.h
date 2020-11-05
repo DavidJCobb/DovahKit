@@ -508,6 +508,7 @@ namespace dovah {
          //
          inline bare_form_id_t get_queued_form_id() const noexcept { return this->desiredID; }
          inline notice_code_t get_notice_code() const noexcept { return this->code; }
+         inline bool was_successful() const noexcept { return this->done; }
          //
          void acquire_form_id(); // for use with form_id_policy::find_valid_id
          void set_desired_form_id(bare_form_id_t); // for use with form_id_policy::use_chosen_id

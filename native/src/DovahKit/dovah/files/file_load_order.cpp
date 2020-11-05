@@ -1547,7 +1547,7 @@ namespace dovah {
          bare_form_id_t old_id = entry->formID;
          //
          uint32_t stub_count_for_this_id = 0;
-         auto     form_guard = std::lock_guard(this->forms.forms);
+         auto     form_guard = std::lock_guard(this->forms.lock);
          if (cobb::unordered_map_contains(this->forms.forms, request.desiredID)) {
             //
             // A form stub exists for this form ID, which means that the form ID is being used by 
@@ -1578,8 +1578,7 @@ namespace dovah {
                // Now move the form stub within the load order's maps.
                //
                auto _extract = [this, stub, old_id, new_id](_form_map& map) {
-                  auto guard = std::lock_guard(map.lock);
-                  auto node  = map.forms.extract(old_id);
+                  auto node = map.forms.extract(old_id);
                   if (node.empty()) {
                      //
                      // There is no existing node. This can happen if, for example, we are changing 

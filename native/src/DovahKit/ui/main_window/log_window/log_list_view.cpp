@@ -501,6 +501,26 @@ void LogListModel::loadWarningReceived(const dovah::file_read_warning& warning) 
    //
    this->endInsertRows();
 }
+void LogListModel::gameSettingValueChangeFailed(const char* name, dovah::notice_code_t code) {
+   auto* item = new item_type();
+   switch (code) {
+      case dovah::notice_code::form_id_unavailable_for_game_setting:
+         item->text = tr("An error occurred while trying to modify the value of game setting %1. DovahKit was unable to allocate a form ID for the setting.").arg(name);
+         break;
+      case dovah::notice_code::game_setting_edit_request_lacked_id:
+         item->text = tr("An error occurred while trying to modify the value of game setting %1. No form ID was allocated for the setting.").arg(name);
+         break;
+      default:
+         item->text = tr("An unknown error occurred while trying to modify the value of game setting %1.").arg(name);
+         break;
+   }
+   //
+   auto first_inserted = this->children.size();
+   auto last_inserted  = first_inserted;
+   this->beginInsertRows(QModelIndex(), first_inserted, last_inserted);
+   this->children.push_back(item);
+   this->endInsertRows();
+}
 
 QModelIndex LogListModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
