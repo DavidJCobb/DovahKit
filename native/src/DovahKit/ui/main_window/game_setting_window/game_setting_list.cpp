@@ -175,7 +175,7 @@ QVariant GameSettingListModel::data(const QModelIndex& index, int role) const {
       case ColumnFormID:
          switch (role) {
             case Qt::DisplayRole:
-               if (item->last_file.isEmpty())
+               if (item->last_file.isEmpty() && !item->is_in_active_file)
                   return "";
                return QString("%1").arg(item->formID, 8, 16, QChar('0')).toUpper();
             case SortRole: // sorting
