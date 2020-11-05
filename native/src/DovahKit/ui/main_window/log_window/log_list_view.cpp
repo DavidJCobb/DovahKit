@@ -510,6 +510,12 @@ void LogListModel::gameSettingValueChangeFailed(const char* name, dovah::notice_
       case dovah::notice_code::game_setting_edit_request_lacked_id:
          item->text = tr("An error occurred while trying to modify the value of game setting %1. No form ID was allocated for the setting.").arg(name);
          break;
+      case dovah::notice_code::form_id_is_already_in_use:
+         item->text = tr("An error occurred while trying to modify the value of game setting %1. The desired form ID is already in use by another (non-setting) form.").arg(name);
+         break;
+      case dovah::notice_code::form_id_is_reserved_for_other_process:
+         item->text = tr("An error occurred while trying to modify the value of game setting %1. The desired form ID is reserved for use in some other process, such as form creation or form renumbering.").arg(name);
+         break;
       default:
          item->text = tr("An unknown error occurred while trying to modify the value of game setting %1.").arg(name);
          break;

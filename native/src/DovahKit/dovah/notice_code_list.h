@@ -40,6 +40,8 @@ namespace dovah {
          game_setting_name_is_unrecognized     = 0x0000001F,
          form_id_unavailable_for_game_setting  = 0x00000020, // A game setting edit request failed because a form ID wasn't available for use.
          game_setting_edit_request_lacked_id   = 0x00000021, // A game setting edit request failed because it had no form ID.
+         form_id_is_already_in_use             = 0x00000022,
+         form_id_is_reserved_for_other_process = 0x00000023, // Cannot use the specified form ID. It is reserved for use by another process, such as form creation or form renumbering.
       };
    };
 }

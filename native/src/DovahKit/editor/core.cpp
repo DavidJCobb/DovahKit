@@ -503,6 +503,8 @@ bool DovahKitCore::for_each_loaded_game_setting(std::function<bool(const dovah::
 }
 bool DovahKitCore::edit_game_setting(const char* name, const dovah::game_setting_value& value) {
    auto request = this->load_order->request_game_setting_change();
+   request.setting.name  = name;
+   request.setting.value = value;
    request.commit();
    if (request.was_successful()) {
       emit this->gameSettingValueChanged(name);

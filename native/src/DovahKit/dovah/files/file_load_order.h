@@ -490,7 +490,8 @@ namespace dovah {
          file_load_order& owner;
          bare_form_id_t   desiredID = 0;
          notice_code_t    code      = default_notice_code;
-         bool             done      = false;
+         bool reservedID = false;
+         bool done       = false;
          //
          game_setting_edit_request(file_load_order& o, form_id_policy);
          game_setting_edit_request(game_setting_edit_request&&);

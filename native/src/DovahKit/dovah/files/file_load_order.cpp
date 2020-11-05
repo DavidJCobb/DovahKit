@@ -1465,7 +1465,7 @@ namespace dovah {
          return;
       auto  guard = std::lock_guard(this->form_creation_request_info.lock);
       auto& list  = this->form_creation_request_info.reserved_formIDs;
-      if (request.desiredID) {
+      if (request.reservedID) {
          if (request.desiredID == desired)
             return;
          auto it = std::find(list.begin(), list.end(), request.desiredID);
@@ -1473,6 +1473,45 @@ namespace dovah {
             list.erase(it);
          request.desiredID = 0;
       }
+      //
+      if (desired) {
+         if (std::find(list.begin(), list.end(), desired) != list.end()) {
+            request.code = notice_code::form_id_is_reserved_for_other_process;
+            return;
+         }
+         //
+         bool reserve = true;
+         if (cobb::unordered_map_contains(this->forms.forms, desired)) {
+            auto* stub = this->forms.forms[desired];
+            if (stub) {
+               if (stub->formType != form_type::setting) {
+                  request.code = notice_code::form_id_is_already_in_use;
+                  return;
+               }
+               reserve = false;
+            }
+         }
+         request.desiredID = desired;
+         if (reserve)
+            list.push_back(desired);
+         //
+         return;
+      }
+      //
+      // Okay, we want to auto-select a form ID. First, let's see if there's already a form ID for this 
+      // setting.
+      //
+      loaded_game_setting loaded;
+      if (this->get_loaded_setting_by_name(request.setting.name, loaded)) {
+         if (loaded.formID) {
+            request.desiredID  = loaded.formID;
+            request.reservedID = false;
+            return;
+         }
+      }
+      //
+      // If we made it here, then no, so let's find a form ID.
+      //
       auto prefix = this->active_file_prefix();
       if (prefix.is_undefined()) {
          request.code = notice_code::no_active_file;
@@ -1494,7 +1533,8 @@ namespace dovah {
       }
       //
       list.push_back(formID);
-      request.desiredID = formID;
+      request.desiredID  = formID;
+      request.reservedID = true;
    }
    void file_load_order::commit_game_setting_change_request(game_setting_edit_request& request) noexcept {
       if (&request.owner != this)
@@ -1621,7 +1661,7 @@ namespace dovah {
       //
       // Okay. The form stub is now squared away. Now, we need to un-flag the form ID as reserved.
       //
-      {
+      if (request.reservedID) {
          auto  guard = std::lock_guard(this->form_creation_request_info.lock);
          auto& list  = this->form_creation_request_info.reserved_formIDs;
          auto  it    = std::find(list.begin(), list.end(), request.desiredID);
@@ -2370,22 +2410,23 @@ namespace dovah {
    game_setting_edit_request::game_setting_edit_request(file_load_order& o, form_id_policy p) : owner(o), policy(p) {
    }
    game_setting_edit_request::game_setting_edit_request(game_setting_edit_request&& other) : owner(other.owner), policy(other.policy) {
-      this->setting   = other.setting;
-      this->desiredID = other.desiredID;
-      this->code      = other.code;
+      this->setting    = other.setting;
+      this->desiredID  = other.desiredID;
+      this->reservedID = other.reservedID;
+      this->code       = other.code;
+      this->done       = other.done;
    }
    game_setting_edit_request::~game_setting_edit_request() {
-      if (!this->desiredID || this->done)
-         return;
-      //
-      auto  guard = std::lock_guard(this->owner.form_creation_request_info.lock);
-      auto& list = this->owner.form_creation_request_info.reserved_formIDs;
-      //
-      auto it = std::find(list.begin(), list.end(), this->desiredID);
-      if (it != list.end())
-         list.erase(it);
-      //
-      this->desiredID = 0;
+      if (this->reservedID) {
+         auto  guard = std::lock_guard(this->owner.form_creation_request_info.lock);
+         auto& list = this->owner.form_creation_request_info.reserved_formIDs;
+         //
+         auto it = std::find(list.begin(), list.end(), this->desiredID);
+         if (it != list.end())
+            list.erase(it);
+         //
+         this->reservedID = false;
+      }
    }
    void game_setting_edit_request::acquire_form_id() {
       if (this->policy != form_id_policy::find_valid_id) {

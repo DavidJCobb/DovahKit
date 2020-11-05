@@ -95,7 +95,7 @@ void GameSettingListModel::gameSettingValueChanged(const char* name) {
          //
          auto root  = QModelIndex();
          auto start = this->index(i, 0, root);
-         auto end   = this->index(i, this->columnCount(root), root);
+         auto end   = this->index(i, this->columnCount(root) - 1, root);
          emit dataChanged(start, end);
       } else {
          auto* item = new item_type(loaded);

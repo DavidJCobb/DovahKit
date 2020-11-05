@@ -2,6 +2,7 @@
 #include <QItemSelectionModel>
 #include "../../dovah/data/game_settings.h"
 #include "../../helpers/qt/spinbox.h"
+#include "../../editor/core.h"
 
 namespace {
    GameSettingList::model_item_type* _get_selected_item(QTableView* widget) {
@@ -56,7 +57,7 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
             value.i = this->ui.valueF->value();
             break;
          case dovah::game_setting_type::string:
-            editor.assign_localized_string(value.s, this->ui.valueS->plainText());
+            editor.assign_localized_string(value.s, this->ui.valueS->toPlainText());
             break;
          default:
             return;
