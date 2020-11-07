@@ -56,6 +56,29 @@
 //     - The log window should ideally use a table view instead of a list view, with 
 //       columns for the filename (and potentially other details).
 //
+//  - Form renumbering
+//
+//     - Now that form stubs store all loaded files' offsets, we can identify active 
+//       file forms without having to rely on their load order prefix. Accordingly, 
+//       we should allow record injection.
+//
+//        = Do we even handle loading and re-saving injected records properly?
+//
+//        - There are three functions used to check whether a form or form ID is 
+//          from the active file. The first two in this list use the load order 
+//          prefix, while the last uses the form stub's file list. In what situations 
+//          are these functions used? Does anything need to change in order for us to 
+//          handle injected records properly?
+//
+//           - file_load_order::is_active_file_formID
+//           - file_load_order::is_defined_in_active_file
+//           - file_load_order::is_defined_or_overridden_in_active_file
+//
+//        - Record injection needs to be extra careful to avoid form ID conflicts; 
+//          specifically, we need to check against the form IDs of all GMSTs in the 
+//          file we're injecting into, and we may need to make similar considerations 
+//          for DOBJ and NAVI.
+//
 //  - Add support for loading DOBJ and GMST records properly.
 //
 //     = MAINTAIN OUR INTERNAL DOCUMENTATION ON THIS, UNTIL WE'RE DONE WITH IT.
@@ -83,18 +106,10 @@
 //          allow injecting GMSTs into dependencies. We can revisit that decision 
 //          later.
 //
-//        - Editing a GMST should result in us reusing its form ID, if it has one by 
-//          virtue of being changed by any loaded file.
-//
-//           - If it doesn't have a valid form ID, then should we allocate one for 
-//             it? What about if its form ID isn't unique? Currently, there's no 
-//             way for the frontend to even request this behavior, though I'm not 
-//             sure that we should actually do it that way.
-//
-//     - We need to remember, and preserve, GMSTs in the active file that did not 
-//       specify a known setting name.
-//
-//        - The UI needs to make it possible to view these.
+//           - We need to be careful about renumbering form stubs, because a single 
+//             stub could represent multiple game settings. We already check for 
+//             this in the code to edit a setting's value; I expect we can take 
+//             a lot of parts of that and split them into their own functions.
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
 //
