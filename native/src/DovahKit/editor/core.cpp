@@ -496,12 +496,18 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
 }
 
 bool DovahKitCore::get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out) {
+   if (!this->load_order)
+      return false;
    return this->load_order->get_loaded_setting_by_name(name, out);
 }
 bool DovahKitCore::for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)> callback) {
+   if (!this->load_order)
+      return false;
    return this->load_order->for_each_loaded_game_setting(callback);
 }
 bool DovahKitCore::edit_game_setting(const char* name, const dovah::game_setting_value& value) {
+   if (!this->load_order)
+      return false;
    auto request = this->load_order->request_game_setting_change();
    request.setting.name  = name;
    request.setting.value = value;

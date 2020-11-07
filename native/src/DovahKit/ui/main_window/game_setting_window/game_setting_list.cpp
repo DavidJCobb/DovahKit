@@ -77,7 +77,8 @@ QString GameSettingListModelItem::valueAsString() const noexcept {
 
 GameSettingListModel::GameSettingListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,     this, &GameSettingListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,     this, &GameSettingListModel::build);
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &GameSettingListModel::build);
    QObject::connect(&editor, &DovahKitCore::gameSettingValueChanged, this, &GameSettingListModel::gameSettingValueChanged);
 }
 //

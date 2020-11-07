@@ -106,52 +106,6 @@
 //             GRUP by GRUP basis. Fixing that would require more intensive changes, 
 //             but if anything that's even more incentive to add a warning in the 
 //             event that we load them successfully.
-// 
-//     - The file save code currently has no handling for GMSTs. They need to be 
-//       treated as a special case. Because it's technically possible for multiple 
-//       GMSTs to share the same form ID, and for GMSTs to have form IDs that are 
-//       completely invalid, we can't rely on the GMST form stubs. Those stubs only 
-//       exist as a means of reserving valid form IDs that are in use by GMSTs, so 
-//       that those form IDs don't end up being used by newly-created forms (and 
-//       frankly, we may want to just have all form ID code check the GMST list 
-//       instead and not even have GMST form stubs).
-//
-//        - We need to save only GMSTs that were edited by the active file, and not 
-//          GMSTs edited by non-active files, so that we don't end up embedding a 
-//          ton of ITMs into the active file.
-//
-//     = The form ID of a GMST record is irrelevant unless it is shared with another 
-//       non-GMST form. GMSTs don't actually produce forms in memory when loaded by 
-//       the game; the game only cares about the EDID and, if that's present, passes 
-//       it and the record body to the GameSettingCollection singleton to load. This 
-//       has the following implications:
-//
-//        = GMSTs can share form IDs with each other.
-//
-//           - This has possible applications for cutting down on form ID usage in 
-//             ESL files.
-//
-//           - We can't currently take advantage of this, as xEdit can't handle 
-//             form(-like construct)s sharing IDs, and the Creation Kit's reaction 
-//             is currently untested.
-//
-//        = GMSTs can share form IDs with real forms, so long as those forms load 
-//          after the GMST. If the forms load first, then the GMSTs will be treated 
-//          as type-mismatched overrides and fail to load.
-//
-//           - We can't reliably reproduce this game behavior because we multi-
-//             thread file loading on a GRUP by GRUP basis, and in any case we 
-//             don't know what order the game uses for loading GRUPs. No known 
-//             editor would produce this kind of data, so support is not strictly 
-//             necessary.
-//
-//        = GMSTs can have invalid form IDs, including out-of-bounds local form IDs.
-//
-//           - Skyrim.esm has a GMST record with an out-of-bounds form ID.
-//
-//        = GMSTs with missing or invalid names can be used as no-op records. Editors 
-//          that retain these records (i.e. xEdit and DovahKit) would be prevented 
-//          from creating a new form with the same form ID in the same file.
 //
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
