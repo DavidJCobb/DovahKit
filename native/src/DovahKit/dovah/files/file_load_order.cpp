@@ -1179,6 +1179,21 @@ namespace dovah {
       return id >= min_id && id <= max_id;
    }
 
+   bool file_load_order::for_each_active_file_game_setting(std::function<bool(const loaded_game_setting&)> functor) {
+      std::lock_guard guard(this->game_settings.lock);
+      auto& map = this->game_settings.by_name;
+      for (auto& pair : map) {
+         auto& list = pair.second;
+         if (list.empty()) // shouldn't happen, but eh
+            continue;
+         auto& entry = list.back();
+         if (entry.source_file != this->active_file)
+            continue;
+         if (functor(entry))
+            return true;
+      }
+      return false;
+   }
    bool file_load_order::for_each_loaded_game_setting(std::function<bool(const loaded_game_setting&)> functor) {
       std::lock_guard guard(this->game_settings.lock);
       auto& map = this->game_settings.by_name;
@@ -2024,12 +2039,16 @@ namespace dovah {
             }
             stub->set_edited(false);
          }
+         std::vector<form_stub*> stubs_to_remove;
          for (auto& pair : this->active_file_forms.forms) {
             bare_form_id_t id = pair.first;
-            if (cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
-               continue;
-            auto* stub = pair.second;
+            if (!cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
+               stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
+         }
+         for (auto* stub : stubs_to_remove) {
             auto  type = stub->formType;
+            if (type == form_type::setting) // GMSTs are a special case. their form-stubs are just placeholders and do not retain meaningful information, file offsets included
+               continue;
             if (this->on_form_loss)
                (this->on_form_loss)(*stub); // ensure that the frontend can abandon any references it has to this stub and its loaded form data
             //

@@ -53,6 +53,7 @@ namespace dovah {
             void _write_child_forms_for_topic(form_stub*);
             void _write_child_forms_for_worldspace(form_stub*);
             void _write_interior_cells();
+            void _write_game_settings();
             //
             void _write_impl(const void* source, uint32_t size);
             void _write_impl(const tes_file_group_header&);

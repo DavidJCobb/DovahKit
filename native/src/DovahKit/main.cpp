@@ -83,23 +83,13 @@
 //          allow injecting GMSTs into dependencies. We can revisit that decision 
 //          later.
 //
-//        - Editing a GMST should result in us reusing its form ID (if it has one by 
-//          virtue of being changed by any loaded file) or allocating a new form ID 
-//          for it (otherwise). If we are unable to allocate a new form ID, then we 
-//          should fail to edit the setting.
+//        - Editing a GMST should result in us reusing its form ID, if it has one by 
+//          virtue of being changed by any loaded file.
 //
-//           - The backend needs to offer an API for setting a GMST's value. The 
-//             frontend should be able to specify whether to use a specific form ID 
-//             (chosen by the frontend, with no validation to be performed by the 
-//             backend) or to let the backend choose a form ID at its discretion 
-//             (reusing a form ID if the setting has already been edited or using a 
-//             new form ID otherwise).
-//
-//             Our particular frontend is only ever going to do the latter, in order 
-//             to ensure that DovahKit produces data that is as friendly to other 
-//             editors as possible; however, I want the backend to be able to support 
-//             doing weird stuff with GMSTs to the fullest extent possible, since the 
-//             game itself supports that.
+//           - If it doesn't have a valid form ID, then should we allocate one for 
+//             it? What about if its form ID isn't unique? Currently, there's no 
+//             way for the frontend to even request this behavior, though I'm not 
+//             sure that we should actually do it that way.
 //
 //     - We need to remember, and preserve, GMSTs in the active file that did not 
 //       specify a known setting name.

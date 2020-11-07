@@ -185,12 +185,17 @@ QVariant GameSettingListModel::data(const QModelIndex& index, int role) const {
       case ColumnFile:
          switch (role) {
             case Qt::DisplayRole:
-               if (item->last_file.isEmpty())
+               if (item->last_file.isEmpty()) {
+                  if (item->is_in_active_file)
+                     return QObject::tr("<new file>", "game setting list - untitled/implicit active file");
                   return QObject::tr("", "game setting list - no file");
+               }
+               [[fallthrough]];
             case SortRole: // sorting
             case FilterRole: // filtering
                return item->last_file;
          }
+         break;
    }
    return QVariant();
 }

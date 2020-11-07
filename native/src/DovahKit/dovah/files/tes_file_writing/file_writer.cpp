@@ -428,6 +428,48 @@ namespace dovah::tes_file_writing {
       if (group_opened)
          this->close_current_group();
    }
+   //
+   void file_writer::_write_game_settings() {
+      bool group_opened = false;
+      //
+      this->owner.for_each_active_file_game_setting([this, &group_opened](const dovah::loaded_game_setting& setting) {
+         std::string name = setting.name;
+         if (name.empty()) {
+            if (!setting.definition)
+               return false;
+            name = setting.definition->name;
+         }
+         //
+         if (!group_opened) { // only open a GMST GRUP if we have GMSTs to write
+            group_opened = true;
+            this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong('GMST'), 0);
+         }
+         //
+         auto& record = this->_open_next_record(form_types[form_type::setting].signature, setting.formID);
+         record.write_string_subrecord('EDID', name);
+         //
+         switch (setting.get_type()) {
+            case dovah::game_setting_type::boolean:
+               record.open_next_subrecord('DATA').write(uint32_t(setting.value.b));
+               break;
+            case dovah::game_setting_type::float32:
+               record.open_next_subrecord('DATA').write(setting.value.f);
+               break;
+            case dovah::game_setting_type::integer:
+               record.open_next_subrecord('DATA').write(setting.value.i);
+               break;
+            case dovah::game_setting_type::string:
+               record.open_next_subrecord('DATA').write(setting.value.s);
+               break;
+         }
+         record._close();
+         //
+         return false;
+      });
+      //
+      if (group_opened)
+         this->close_current_group();
+   }
 
    void file_writer::_write_impl(const void* source, uint32_t size) {
       this->stream.write((const uint8_t*)source, size);
@@ -524,6 +566,10 @@ namespace dovah::tes_file_writing {
       this->_write_header();
       for (uint32_t signature : group_sequence_list) {
          auto form_type = form_type_info::signature_to_form_type(signature);
+         if (form_type == form_type::setting) {
+            this->_write_game_settings();
+            continue;
+         }
          if (!this->owner.active_file_has_forms_of_type(form_type))
             continue;
          //

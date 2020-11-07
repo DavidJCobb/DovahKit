@@ -275,6 +275,7 @@ namespace dovah {
          bool is_active_file_formID(bare_form_id_t) const noexcept;
          //
          bool for_each_loaded_game_setting(std::function<bool(const loaded_game_setting&)> functor);
+         bool for_each_active_file_game_setting(std::function<bool(const loaded_game_setting&)> functor);
          bool get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept;
          bool get_loaded_setting_by_name(const game_setting_definition& name, loaded_game_setting& out) const noexcept;
          //
