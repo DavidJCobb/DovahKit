@@ -79,6 +79,8 @@
 //          file we're injecting into, and we may need to make similar considerations 
 //          for DOBJ and NAVI.
 //
+//        - We should also amend GMST renumbering to allow injecting those.
+//
 //  - Add support for loading DOBJ and GMST records properly.
 //
 //     = MAINTAIN OUR INTERNAL DOCUMENTATION ON THIS, UNTIL WE'RE DONE WITH IT.
@@ -101,15 +103,9 @@
 //
 //           - We need a backend API for this.
 //
-//        - This UI needs to make it possible to change the form ID of any setting 
-//          that has actually been altered by the active file. For now, let's not 
-//          allow injecting GMSTs into dependencies. We can revisit that decision 
-//          later.
-//
-//           - We need to be careful about renumbering form stubs, because a single 
-//             stub could represent multiple game settings. We already check for 
-//             this in the code to edit a setting's value; I expect we can take 
-//             a lot of parts of that and split them into their own functions.
+//     - GMST renumbering should allow GMSTs to share their form IDs with other 
+//       existing GMSTs, albeit with a displayed warning. Currently this is not 
+//       allowed.
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
 //

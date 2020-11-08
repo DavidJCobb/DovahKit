@@ -543,6 +543,8 @@ namespace dovah {
          game_setting_renumber_request& operator=(const game_setting_renumber_request&) = delete;
          //
       public:
+         ~game_setting_renumber_request();
+         //
          std::string setting;
          //
          inline bare_form_id_t get_queued_form_id() const noexcept { return this->desiredID; }
