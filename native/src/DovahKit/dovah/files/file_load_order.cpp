@@ -680,6 +680,18 @@ namespace dovah {
    }
    #pragma endregion
 
+   bool file_load_order::_abandon_form_id_reservation(bare_form_id_t id) {
+      auto  guard = std::lock_guard(this->form_creation_request_info.lock);
+      auto& list  = this->form_creation_request_info.reserved_formIDs;
+      //
+      auto it = std::find(list.begin(), list.end(), id);
+      if (it != list.end()) {
+         list.erase(it);
+         return true;
+      }
+      return false;
+   }
+
    #pragma region Form renumbering
    void file_load_order::_renumber_form(form_stub& stub, bare_form_id_t new_id, bool update_users) {
       //
@@ -1376,6 +1388,8 @@ namespace dovah {
       bare_form_id_t formID = request.formID;
       if (!formID)
          return nullptr;
+      if (&request.owner != this)
+         return nullptr;
       assert(!cobb::unordered_map_contains(this->forms.forms, formID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
       //
       if (request.child_of) {
@@ -1476,15 +1490,7 @@ namespace dovah {
          this->active_file->header.nextFormID = this->find_first_free_form_id_in_active_file(request.formID + 1);
       }
       //
-      {
-         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
-         auto& list  = this->form_creation_request_info.reserved_formIDs;
-         //
-         auto it = std::find(list.begin(), list.end(), formID);
-         assert(it != list.end() && "Wait, did we just create a form stub for a form ID that wasn't reserved? That shouldn't have happened!");
-         if (it != list.end())
-            list.erase(it);
-      }
+      assert(this->_abandon_form_id_reservation(formID) && "Wait, did we just create a form stub for a form ID that wasn't reserved? That shouldn't have happened!");
       request.formID = 0;
       if (this->on_form_create)
          (this->on_form_create)(stub);
@@ -1542,6 +1548,8 @@ namespace dovah {
    void file_load_order::commit_form_renumber_request(form_renumber_request& request) noexcept {
       constexpr auto no_error = form_renumber_request::error_code::none;
       //
+      if (&request.owner != this)
+         return;
       if (request.error != no_error)
          return;
       //
@@ -1568,13 +1576,7 @@ namespace dovah {
       //
       // Un-reserve the form ID:
       //
-      {
-         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
-         auto& list  = this->form_creation_request_info.reserved_formIDs;
-         auto  it    = std::find(list.begin(), list.end(), desiredID);
-         if (it != list.end())
-            list.erase(it);
-      }
+      this->_abandon_form_id_reservation(desiredID);
       //
       if (request.error == no_error) {
          request.desiredID = 0;
@@ -1632,13 +1634,8 @@ namespace dovah {
       //
       // Okay. The form stub is now squared away. Now, we need to un-flag the form ID as reserved.
       //
-      if (request.reservedID) {
-         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
-         auto& list  = this->form_creation_request_info.reserved_formIDs;
-         auto  it    = std::find(list.begin(), list.end(), request.desiredID);
-         if (it != list.end())
-            list.erase(it);
-      }
+      if (request.reservedID)
+         this->_abandon_form_id_reservation(request.desiredID);
       //
       request.code = default_notice_code;
       request.done = true;
@@ -1677,13 +1674,8 @@ namespace dovah {
       //
       // Okay. The form stub is now squared away. Now, we need to un-flag the form ID as reserved.
       //
-      if (request.reservedID) {
-         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
-         auto& list  = this->form_creation_request_info.reserved_formIDs;
-         auto  it    = std::find(list.begin(), list.end(), request.desiredID);
-         if (it != list.end())
-            list.erase(it);
-      }
+      if (request.reservedID)
+         this->_abandon_form_id_reservation(request.desiredID);
       //
       request.code = default_notice_code;
       request.done = true;
@@ -1697,9 +1689,7 @@ namespace dovah {
       if (request.reservedID) {
          if (request.desiredID == desired)
             return;
-         auto it = std::find(list.begin(), list.end(), request.desiredID);
-         if (it != list.end())
-            list.erase(it);
+         this->_abandon_form_id_reservation(request.desiredID);
          request.desiredID = 0;
       }
       //
@@ -1773,9 +1763,7 @@ namespace dovah {
       if (request.reservedID) {
          if (request.desiredID == desired)
             return;
-         auto it = std::find(list.begin(), list.end(), request.desiredID);
-         if (it != list.end())
-            list.erase(it);
+         this->_abandon_form_id_reservation(request.desiredID);
          request.desiredID = 0;
       }
       //
@@ -1804,27 +1792,37 @@ namespace dovah {
          list.push_back(desired);
    }
    //
+   void file_load_order::abandon_form_id_reservation(form_creation_request& request) {
+      if (&request.owner != this)
+         return;
+      if (!request.formID)
+         return;
+      this->_abandon_form_id_reservation(request.formID);
+      request.formID = 0;
+   }
+   void file_load_order::abandon_form_id_reservation(form_renumber_request& request) {
+      if (&request.owner != this)
+         return;
+      if (!request.desiredID)
+         return;
+      this->_abandon_form_id_reservation(request.desiredID);
+      request.desiredID = 0;
+   }
    void file_load_order::abandon_form_id_reservation(game_setting_edit_request& request) {
+      if (&request.owner != this)
+         return;
       if (!request.reservedID)
          return;
       request.reservedID = false;
-      auto  guard = std::lock_guard(this->form_creation_request_info.lock);
-      auto& list  = this->form_creation_request_info.reserved_formIDs;
-      //
-      auto it = std::find(list.begin(), list.end(), request.desiredID);
-      if (it != list.end())
-         list.erase(it);
+      this->_abandon_form_id_reservation(request.desiredID);
    }
    void file_load_order::abandon_form_id_reservation(game_setting_renumber_request& request) {
+      if (&request.owner != this)
+         return;
       if (!request.reservedID)
          return;
       request.reservedID = false;
-      auto  guard = std::lock_guard(this->form_creation_request_info.lock);
-      auto& list  = this->form_creation_request_info.reserved_formIDs;
-      //
-      auto it = std::find(list.begin(), list.end(), request.desiredID);
-      if (it != list.end())
-         list.erase(it);
+      this->_abandon_form_id_reservation(request.desiredID);
    }
    #pragma endregion
    
@@ -2225,17 +2223,7 @@ namespace dovah {
       other.formID = 0;
    }
    form_creation_request::~form_creation_request() {
-      if (!this->formID)
-         return;
-      //
-      auto  guard = std::lock_guard(this->owner.form_creation_request_info.lock);
-      auto& list  = this->owner.form_creation_request_info.reserved_formIDs;
-      //
-      auto it = std::find(list.begin(), list.end(), this->formID);
-      if (it != list.end())
-         list.erase(it);
-      //
-      this->formID = 0;
+      this->owner.abandon_form_id_reservation(*this);
    }
    void form_creation_request::set_parent_form(form_stub* parent) {
       this->child_of = parent;
@@ -2546,17 +2534,7 @@ namespace dovah {
       this->desiredID = other.desiredID;
    }
    form_renumber_request::~form_renumber_request() {
-      if (!this->desiredID)
-         return;
-      //
-      auto  guard = std::lock_guard(this->owner.form_creation_request_info.lock);
-      auto& list = this->owner.form_creation_request_info.reserved_formIDs;
-      //
-      auto it = std::find(list.begin(), list.end(), this->desiredID);
-      if (it != list.end())
-         list.erase(it);
-      //
-      this->desiredID = 0;
+      this->owner.abandon_form_id_reservation(*this);
    }
    bool form_renumber_request::commit() {
       this->owner.commit_form_renumber_request(*this);

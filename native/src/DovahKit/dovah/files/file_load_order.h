@@ -11,8 +11,9 @@
 #include "file_load_order_normalizer.h"
 #include "file_write_error.h"
 #include "file_read_warning.h"
-#include "../notice_code_t.h"
+#include "../form_stub.h"
 #include "../localized_strings.h"
+#include "../notice_code_t.h"
 #include "../data/game_settings.h"
 
 namespace dovah {
@@ -59,9 +60,7 @@ namespace dovah {
       // is complete.
       //
       friend void add_hardcoded_forms_to_load_order(file_load_order&);
-      friend class form_creation_request;
       friend class form_deletion_request;
-      friend class form_renumber_request;
       friend class load_order_interfaces::form_load;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
@@ -89,7 +88,7 @@ namespace dovah {
             map_of_forms forms;
          };
          using _form_map_by_type = std::array<_form_map, form_types.size()>;
-         //
+         
          file_load_order_normalizer normalizer;
          //
          std::array<threaded_load_order_use_info_builder*, 8> use_info_build_threads{};
@@ -150,6 +149,8 @@ namespace dovah {
          void _make_hardcoded_forms();
          void _accept_hardcoded_form(form_stub*) noexcept;
          void _build_use_info();
+
+         bool _abandon_form_id_reservation(bare_form_id_t);
          
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
          void _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);
@@ -297,6 +298,8 @@ namespace dovah {
          void set_reserved_form_id_for(game_setting_edit_request&,     bare_form_id_t desired = 0);
          void set_reserved_form_id_for(game_setting_renumber_request&, bare_form_id_t desired = 0);
          //
+         void abandon_form_id_reservation(form_creation_request&);
+         void abandon_form_id_reservation(form_renumber_request&);
          void abandon_form_id_reservation(game_setting_edit_request&);
          void abandon_form_id_reservation(game_setting_renumber_request&);
          
