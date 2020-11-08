@@ -85,6 +85,7 @@ class DovahKitCore : public QObject {
       //
       void gameSettingValueChanged(const char* name);
       void gameSettingValueChangeFailed(const char* name, dovah::notice_code_t);
+      void gameSettingRenumbered(const char* name, bare_form_id_t oldID, bare_form_id_t newID);
       //
       void dataSaveImminent();
       void dataSaveComplete();

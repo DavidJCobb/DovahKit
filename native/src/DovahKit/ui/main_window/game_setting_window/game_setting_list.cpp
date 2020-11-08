@@ -79,6 +79,7 @@ GameSettingListModel::GameSettingListModel(QObject* parent) : QAbstractTableMode
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,     this, &GameSettingListModel::build);
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &GameSettingListModel::build);
+   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse,  this, &GameSettingListModel::build);
    QObject::connect(&editor, &DovahKitCore::gameSettingValueChanged, this, &GameSettingListModel::gameSettingValueChanged);
 }
 //

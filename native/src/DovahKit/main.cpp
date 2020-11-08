@@ -125,6 +125,14 @@
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
 //
+//        - If files define their own DOBJ with a different form ID, then what form 
+//          ID does the final loaded DOBJ use?
+//
+//     - NAVI
+//
+//        - If files define their own NAVI with a different form ID, then what form 
+//          ID does the final loaded NAVI use?
+//
 //  - Clean up the save process.
 //
 //     - If the user is converting the active file between games, and the active file 

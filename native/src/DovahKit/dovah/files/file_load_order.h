@@ -35,6 +35,7 @@ namespace dovah {
    class form_deletion_request;
    class form_renumber_request;
    class game_setting_edit_request;
+   class game_setting_renumber_request;
 
    namespace load_order_interfaces {
       class form_load;
@@ -61,7 +62,6 @@ namespace dovah {
       friend class form_creation_request;
       friend class form_deletion_request;
       friend class form_renumber_request;
-      friend class game_setting_edit_request; // needed for its destructor
       friend class load_order_interfaces::form_load;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
@@ -152,6 +152,9 @@ namespace dovah {
          void _build_use_info();
          
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
+         void _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);
+
+         uint32_t _count_game_settings_with_form_id(bare_form_id_t) const noexcept; // doesn't lock
          
          //
          // Try to change whether light plug-in support is enabled. This can be done before files are loaded, or it 
@@ -278,7 +281,7 @@ namespace dovah {
          bool for_each_active_file_game_setting(std::function<bool(const loaded_game_setting&)> functor);
          bool get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept;
          bool get_loaded_setting_by_name(const game_setting_definition& name, loaded_game_setting& out) const noexcept;
-         //
+         
          form_stub* create_form_of_type(form_type_t) noexcept;
          form_creation_request request_form_creation(form_type_t) noexcept;
          form_stub* commit_form_creation_request(form_creation_request&) noexcept; // you can call this, but you're meant to call form_creation_request::commit instead
@@ -287,9 +290,16 @@ namespace dovah {
          form_renumber_request request_form_renumber(form_stub&, bare_form_id_t desiredID) noexcept;
          void commit_form_renumber_request(form_renumber_request&) noexcept; // you can call this, but you're meant to call form_renumber_request::commit instead
          game_setting_edit_request request_game_setting_change(bool automatic_id = true) noexcept;
-         void set_reserved_form_id_for(game_setting_edit_request&, bare_form_id_t desired = 0);
          void commit_game_setting_change_request(game_setting_edit_request&) noexcept;
+         game_setting_renumber_request request_game_setting_renumber() noexcept;
+         void commit_game_setting_renumber_request(game_setting_renumber_request&) noexcept;
          //
+         void set_reserved_form_id_for(game_setting_edit_request&,     bare_form_id_t desired = 0);
+         void set_reserved_form_id_for(game_setting_renumber_request&, bare_form_id_t desired = 0);
+         //
+         void abandon_form_id_reservation(game_setting_edit_request&);
+         void abandon_form_id_reservation(game_setting_renumber_request&);
+         
          bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor);
          //
          void stub_flagged_as_edited(form_stub*) noexcept; // called by form_stub::set_edited
@@ -513,6 +523,32 @@ namespace dovah {
          inline bool was_successful() const noexcept { return this->done; }
          //
          void acquire_form_id(); // for use with form_id_policy::find_valid_id
+         void set_desired_form_id(bare_form_id_t); // for use with form_id_policy::use_chosen_id
+         //
+         void commit();
+   };
+
+   class game_setting_renumber_request {
+      friend class file_load_order;
+      protected:
+         file_load_order& owner;
+         bare_form_id_t   desiredID = 0;
+         notice_code_t    code      = default_notice_code;
+         bool reservedID = false;
+         bool done       = false;
+         //
+         game_setting_renumber_request(file_load_order& o);
+         game_setting_renumber_request(game_setting_renumber_request&&);
+         game_setting_renumber_request(const game_setting_renumber_request&) = delete;
+         game_setting_renumber_request& operator=(const game_setting_renumber_request&) = delete;
+         //
+      public:
+         std::string setting;
+         //
+         inline bare_form_id_t get_queued_form_id() const noexcept { return this->desiredID; }
+         inline notice_code_t get_notice_code() const noexcept { return this->code; }
+         inline bool was_successful() const noexcept { return this->done; }
+         //
          void set_desired_form_id(bare_form_id_t); // for use with form_id_policy::use_chosen_id
          //
          void commit();
