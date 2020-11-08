@@ -11,4 +11,5 @@ class GameSettingWindow : public QDialog {
       //
    private:
       Ui::GameSettingWindow ui;
+      QAction* _formActionRenumber = nullptr;
 };

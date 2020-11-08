@@ -1,5 +1,7 @@
 #include "game_setting_window.h"
+#include <QAction>
 #include <QItemSelectionModel>
+#include <QMenu>
 #include "../../dovah/data/game_settings.h"
 #include "../../helpers/qt/spinbox.h"
 #include "../../editor/core.h"
@@ -38,6 +40,30 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
       }
       widget->setMinimumWidth(longest);
    }
+   //
+   #pragma region Context menu
+   this->_formActionRenumber = new QAction(tr("Change form ID...", "game setting window"), this);
+   QObject::connect(this->_formActionRenumber, &QAction::triggered, this, [this]() {
+      const auto* item = _get_selected_item(this->ui.list);
+      if (item)
+         DovahKitCore::get().renumber_game_setting(item->name.toStdString().c_str(), this);
+   });
+   //
+   this->ui.list->setContextMenuPolicy(Qt::CustomContextMenu);
+   QObject::connect(this->ui.list, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+      auto opener = this->ui.list;
+      //
+      auto* item = _get_selected_item(opener);
+      this->_formActionRenumber->setVisible(item != nullptr);
+      this->_formActionRenumber->setEnabled(item && item->is_in_active_file);
+      //
+      QMenu menu(opener);
+      menu.addAction(this->_formActionRenumber);
+      if (menu.isEmpty())
+         return;
+      menu.exec(opener->mapToGlobal(pos));
+   });
+   #pragma endregion
    //
    QObject::connect(this->ui.buttonCommit, &QPushButton::clicked, this, [this]() {
       const auto* item = _get_selected_item(this->ui.list);

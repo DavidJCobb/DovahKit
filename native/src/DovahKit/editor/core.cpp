@@ -8,6 +8,7 @@
 #include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
 #include "../dovah/form_stub.h"
+#include "../dovah/notice_code_list.h"
 #include "../dovah/localized_strings.h"
 #include "../dovah/files/bsa/bsa_load_order.h"
 #include "../dovah/files/tes_file_reading/file.h"
@@ -518,6 +519,75 @@ bool DovahKitCore::edit_game_setting(const char* name, const dovah::game_setting
       emit this->gameSettingValueChangeFailed(name, request.get_notice_code());
    }
    return request.was_successful();
+}
+//
+namespace {
+   void _report_game_setting_renumber_error(QWidget* parent, const QString& text) {
+      QMessageBox::critical(
+         parent,
+         QObject::tr("Error", "renumber GMST error"),
+         QObject::tr("Unable to change this game setting's form ID. %1").arg(text)
+      );
+   }
+   QString _stringify_game_setting_renumber_error(dovah::notice_code_t code) {
+      constexpr char* disambig = "game setting renumber errors";
+      //
+      switch (code) {
+         case dovah::notice_code::form_id_unavailable_for_game_setting:
+            return QObject::tr("This desired form ID is unavailable for some reason.", disambig);
+         case dovah::notice_code::form_id_is_already_in_use:
+            return QObject::tr("The desired form ID is in use by another form.", disambig);
+         case dovah::notice_code::form_id_is_reserved_for_other_process:
+            return QObject::tr("The desired form ID is currently reserved for use in some other process, such as form creation.", disambig);
+         case dovah::notice_code::game_setting_not_in_active_file:
+            return QObject::tr("This game setting is not defined in the active file.", disambig);
+      }
+      return "";
+   }
+}
+void DovahKitCore::renumber_game_setting(const char* name, QWidget* dialog_parent) {
+   if (!this->load_order)
+      return;
+   dovah::loaded_game_setting setting;
+   if (!this->load_order->get_loaded_setting_by_name(name, setting))
+      return;
+   bool    ok   = false;
+   QString text = QInputDialog::getText(dialog_parent, tr("Choose form ID"), tr("What form ID do you want this game setting to use?"), QLineEdit::Normal, QString("%1").arg(setting.formID, 8, 16, QChar('0')).toUpper(), &ok);
+   if (!ok)
+      return;
+   dovah::bare_form_id_t newID = text.toUInt(&ok, 16);
+   if (!ok) {
+      QMessageBox::critical(
+         dialog_parent,
+         QObject::tr("Error", "renumber form error"),
+         QObject::tr("\"%1\" is not a valid form ID. A form ID is an eight-digit hexadecimal number (that is, each digit is between 0-9 or A-F, inclusive).").arg(text)
+      );
+      return;
+   }
+   if (newID == setting.formID) {
+      QMessageBox::critical(
+         dialog_parent,
+         QObject::tr("Error", "renumber form error"),
+         QObject::tr("That game setting's form ID already is %1.").arg(QString("%1").arg(newID, 8, 16, QChar('0')).toUpper())
+      );
+      return;
+   }
+   //
+   bare_form_id_t oldID = setting.formID;
+   //
+   auto request = this->load_order->request_game_setting_renumber();
+   request.setting = name;
+   request.set_desired_form_id(newID);
+   if (auto code = request.get_notice_code()) {
+      _report_game_setting_renumber_error(dialog_parent, _stringify_game_setting_renumber_error(code));
+      return;
+   }
+   request.commit();
+   if (auto code = request.get_notice_code()) {
+      _report_game_setting_renumber_error(dialog_parent, _stringify_game_setting_renumber_error(code));
+      return;
+   }
+   emit this->gameSettingRenumbered(name, oldID, newID);
 }
 
 dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::string& path) {

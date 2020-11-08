@@ -233,16 +233,8 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       menu.addAction(this->_formActionRenumber);
       menu.addAction(this->_formActionDelete);
       //
-      bool any = false;
-      for (auto* action : menu.actions()) {
-         if (action->isEnabled() && action->isVisible()) {
-            any = true;
-            break;
-         }
-      }
-      if (!any)
+      if (menu.isEmpty())
          return; // don't show a menu if all of its contents are disabled or hidden
-      //
       menu.exec(opener->mapToGlobal(pos));
    });
    #pragma endregion
