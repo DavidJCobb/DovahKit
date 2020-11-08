@@ -599,38 +599,55 @@ namespace dovah {
       auto& list  = this->game_settings.by_name[lowercase];
       if (!list.empty()) {
          auto& last = list.back();
-         if (last.formID != formID) {
-            //
-            // This game setting was already defined. For consistency with the Creation Kit, a loaded game setting 
-            // will have the last seen form ID; this means that we need to delete the prior stub.
-            //
+         if (last.formID != formID && last.source_file == file) {
             bare_form_id_t priorID = last.formID;
             //
-            std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
-            if (cobb::unordered_map_contains(this->forms.forms, priorID)) {
-               auto* old_stub = this->forms.forms[priorID];
-               delete old_stub;
-               this->forms.forms.erase(priorID);
-               this->forms_by_type[form_type::setting].forms.erase(priorID);
-            }
-            if (last.source_file == file) {
-               file_read_warning warning;
-               warning.code               = notice_code::game_setting_record_is_redundant;
-               warning.cause_form.localID = localID;
-               warning.cause_form.fixedID = formID;
-               warning.cause_form.type    = form_type::setting;
-               warning.set_flag(file_read_warning::flag::has_cause_form);
-               warning.cause_file = file->get_filename();
-               warning.set_flag(file_read_warning::flag::has_cause_file);
+            // This is a redundant game setting definition: the game setting was already defined in this file, 
+            // but with a different form ID. Let's log a warning before we do anything else.
+            //
+            file_read_warning warning;
+            warning.code               = notice_code::game_setting_record_is_redundant;
+            warning.cause_form.localID = localID;
+            warning.cause_form.fixedID = formID;
+            warning.cause_form.type    = form_type::setting;
+            warning.set_flag(file_read_warning::flag::has_cause_form);
+            warning.cause_file = file->get_filename();
+            warning.set_flag(file_read_warning::flag::has_cause_file);
+            //
+            auto& relevant = warning.relevant_forms.emplace_back();
+            relevant.localID = 0;
+            relevant.fixedID = priorID;
+            relevant.type    = form_type::setting;
+            //
+            this->log_load_warning(warning);
+            //
+            // What we need to do next depends on what file this came from. If it was the active file, then we 
+            // need to delete the old form stub (if no other settings are using it). Why? Well, we don't want 
+            // to retain or re-save redundant GMST records in the active file, because that complicates the 
+            // process of editing settings' values and the process of saving settings into a file. At the same 
+            // time, however, we need to make sure that we handle redundant GMST records in dependencies 
+            // properly. We want to support record injection to the fullest extent possible, and if redundant 
+            // game settings cause a single setting to take up multiple form IDs within a given file, then we 
+            // need to make sure that the user doesn't inject a record onto either of those form IDs -- which 
+            // means that we need a stub for each of them.
+            //
+            // Accordingly, we'll delete the old stub. That will give us consistent behavior with the Creation 
+            // Kit: a game setting will have the load seen form ID.
+            //
+            if (file == this->active_file) {
+               if (this->_count_game_settings_with_form_id(priorID) == 1) { // Only delete the form stub if no other settings are using it.
+                  std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+                  if (cobb::unordered_map_contains(this->forms.forms, priorID)) {
+                     auto* old_stub = this->forms.forms[priorID];
+                     delete old_stub;
+                     this->forms.forms.erase(priorID);
+                     this->forms_by_type[form_type::setting].forms.erase(priorID);
+                     this->active_file_forms.forms.erase(priorID);
+                     this->active_file_forms_by_type[form_type::setting].forms.erase(priorID);
+                  }
+               }
                //
-               auto& relevant = warning.relevant_forms.emplace_back();
-               relevant.localID = 0;
-               relevant.fixedID = priorID;
-               relevant.type    = form_type::setting;
-               //
-               this->log_load_warning(warning);
-               //
-               // And remove the redundant entry from the GMST list as well.
+               // We're only retaining one definition for this game setting, so remove the prior definition.
                //
                list.resize(list.size() - 1);
             }
@@ -1863,16 +1880,6 @@ namespace dovah {
          // load order prefix is ignored.
          //
          out = stub->formID & hardcoded_form_id_mask;
-         return form_id_status::valid;
-      }
-      if (stub->formType == form_type::setting) {
-         __debugbreak();
-         //
-         // Skyrim.esm contains a GMST record with incorrect form ID 0123C00E. Accordingly, 
-         // since GMST form IDs clearly don't matter, we need to just make sure we store 
-         // them consistently and otherwise not validate them in any way.
-         //
-         out = stub->formID & 0x00FFFFFF;
          return form_id_status::valid;
       }
       auto    file   = stub->get_file_at_index(-1);

@@ -44,7 +44,7 @@
 //     - If the user converts a file across games, and the existing file's name also 
 //       exists for the target game, then we should prompt to overwrite as well.
 //
-//  - Clean up the load process.
+//  - Log window
 //
 //     - The log window should have a "message type" column, differentiating between 
 //       notices from the initial stub build, notices from on-demand form loading, 
@@ -97,6 +97,13 @@
 //          the game engine with no GMST records loaded -- all pristine executable-
 //          level defaults.
 //
+//     - Strongly consider not even having form stubs for GMSTs, in favor of adding 
+//       a generic system for indicating that form IDs are being consumed by any 
+//       sort of non-form (be it a GMST or a form ID reservation at run-time). This 
+//       would cut down on data redundancy and further simplify management of GMSTs, 
+//       at the cost of us having to go back and check all form ID-related code to 
+//       make it consult with this list.
+//
 //     - GMST UI
 //
 //        - Implement reverting the active file's changes to a GMST.
@@ -106,6 +113,8 @@
 //     - GMST renumbering should allow GMSTs to share their form IDs with other 
 //       existing GMSTs, albeit with a displayed warning. Currently this is not 
 //       allowed.
+//
+//     - GMST renumbering: test all error cases.
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
 //
@@ -178,11 +187,6 @@
 //       to the record reader, so they should be capable of this) and if it's present, then 
 //       they need to match the behavior of the appropriate TESForm::LoadPartial override 
 //       in TESV.exe.
-//
-//     - Currently, if a child form is edited but the parent form is not, then at save time, 
-//       we flag the parent form as edited to ensure that it will save. This is not ideal. 
-//       We should instead be flagging the parent form as "partially edited" or using some 
-//       other procedure to ensure that a partial record, not a full one, is saved for it.
 //
 //  - Finalize for Skyrim Special Edition.
 //

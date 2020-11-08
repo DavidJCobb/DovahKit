@@ -41,22 +41,99 @@ tests in the Creation Kit:
    different files or the same file), the Creation Kit retains the last form ID 
    that it saw for that setting.
 
-This has a number of  implications for loading and  managing GMSTs in DovahKit:
+All of the above findings,  then, establish that game  settings must be handled 
+very  differently from forms just to approximate (let alone exactly  mimic) how 
+the game engine handles  them. This creates the need to  actually decide how to 
+handle game settings, and to what extent we should support, retain, and re-save 
+anomalous GMST records.
 
- - We cannot use form stubs to encode a GMST, because we can only have one form 
-   stub per form ID,  and every form stub  must have a form ID.  Multiple GMSTs 
-   can share  the same form ID,  and GMST records can load  even if their local 
-   form IDs are impossible to convert into global form IDs. However, we do need 
-   to generate form stubs for any loaded  GMST with a valid form ID, so that we 
-   can  enforce constraints regarding  form ID sharing and overrides that  have 
-   mismatched form types.
+The vast majority of GMST anomalies are  quirks arising from the fact that the 
+file format is not, in this case, suited to the data it is being used to store: 
+GMSTs are not forms, yet are being encoded  in a format that requires form IDs, 
+instead of some special-case format.  This means that the vast majority of GMST 
+anomalies are file format details rather than aspects of the data that is being 
+represented. Referring back to <basics.txt>, we see that like the Creation Kit, 
+DovahKit aims to focus on the data  being represented rather than on the file's 
+representation of that data, this being a contrast to tools like xEdit. It just 
+wouldn't make sense to design the vast majority of DovahKit to be data-oriented 
+only to then make this one thing file-oriented. Accordingly, GMST anomalies are 
+to be handled as follows:
 
- - GMSTs must be indexed by name.
+ - GMSTs with blank,  missing,  or misplaced editor IDs  will not be  loaded or 
+   retained. Neither the game nor the Creation Kit load or retain them.
 
- - GMSTs must therefore be loaded differently than form stubs, and they must be 
-   stored separately  from them. In practice,  this must be  done when DovahKit 
-   initially parses an ES[LPM] file, which means that GMSTs cannot be loaded on-
-   demand but rather must be loaded immediately and in full.
+    = There is  no practical use for  retaining nameless GMSTs.  In theory they 
+      could be used  to "reserve" form IDs somehow, but in practice  that would 
+      only affect xEdit. A dummy form would be a better, and interoperable, way 
+      to occupy a form ID.
+
+ - GMSTs with unrecognized names will be retained and re-saved, consistent with 
+   the Creation Kit, to ensure forward compatibility in the event that Bethesda 
+   adds new settings to Skyrim Special  Edition. However, settings with unknown 
+   type prefixes will not have their values loaded or re-saved.
+
+    - If we ever wanted to change this  decision, then we would have to make it 
+      possible for every loaded game setting to store a vector of bytes.
+
+ - If a GMST in the  active file has a given form ID, then it  will be re-saved 
+   with the same form ID.
+ 
+ - GMSTs will be permitted to share form  IDs with other GMSTs, both when first 
+   loaded and if  edited to do so. The frontend will not have  GMSTs share form 
+   IDs normally, but will not stop the  user from manually renumbering GMSTs to 
+   share form IDs.
+
+    = Form ID sharing  is practical for reducing form ID  usage by GMSTs, which 
+      would be  particularly  useful when  working with  an ESL file.  However, 
+      xEdit doesn't support it as of this writing,  so the frontend won't do it 
+      by default.
+
+ - GMSTs will not be permitted to share form IDs with actual forms.
+
+ - GMSTs with out-of-bounds  or otherwise invalid form IDs  will load, but will 
+   use form ID 0 in memory.
+
+    - Changing this would require making  it possible for a loaded game setting 
+      to know whether its form ID was resolved or is file local instead.
+
+ - Redundant GMSTs  in the active file (i.e. multiple GMST records  that define 
+   values for the same setting, but with different form IDs) won't be retained. 
+   Only the last loaded GMST will be used for the setting (the same behavior as 
+   the Creation Kit).
+
+    - Non-active files need to be an exception, so that users can't assign form 
+      IDs used by redundant GMSTs to an injected record.
+
+The above decisions push us to the following details:
+
+ - We cannot use form stubs as the primary means of encoding a GMST, because we 
+   can only have  one form stub per form ID,  and because every form  stub must 
+   have a valid and resolved form ID. By contrast, multiple GMSTs can share the 
+   same form ID, and GMSTs do not need to have a valid form ID.
+
+   At the same time, it is easiest to  enforce most of the editor's constraints 
+   regarding form  IDs if we create dummy form stubs for all  form IDs that are 
+   used by one or more GMST. These constraints include detecting form overrides 
+   that have mismatched form types, and preventing forms from sharing their IDs 
+   with game settings.
+
+ - Game settings, then, need to be  stored in a separate list, indexed by name. 
+   Entries in this list must know their  resolved form IDs, so that we can tell 
+   which settings are represented by which form stubs.
+
+ - It is difficult to support editing and  renumbering GMSTs if we also support 
+   redundant GMSTs  in full.  When loading and retaining  non-active files,  we 
+   need to be able to  know when redundant  GMSTs exist and what  form IDs they 
+   use, but we don't need that information for the active file. Accordingly, we 
+   can simplify GMST editing by refusing to retain redundant GMSTs when loading 
+   the active file in specific.
+
+   That is to say: for each game setting, we retain one loaded_game_setting and 
+   one form_stub per definition found in  a non-active file, as well as at most 
+   one instance of each struct for any definition in the active file.
+
+ - Game settings aren't complex enough to warrant loading them on demand, so we 
+   will instead load them during the initial parsing of all ES[LPM] files.
 
  - String GMSTs encode their values as localizable strings. Those normally only 
    appear inside  of form data  that is loaded  on-demand, and so are  normally 
@@ -65,38 +142,8 @@ This has a number of  implications for loading and  managing GMSTs in DovahKit:
    loaded: it must loop  over all loaded GMSTs and pull  the appropriate string 
    content for GMSTs that rely on the localization files.
 
-There are additional concerns that must  be addressed: to what extent should we 
-support,  retain, and preserve anomalous GMST records? In the  vast majority of 
-cases, these anomalies are quirks arising from the fact that the file format is 
-not, in this case, suited to the data it  is being used to represent: GMSTs are 
-not forms, yet are being encoded in a format that requires form IDs, instead of 
-some special-case format. This means that  the vast majority of anomalous cases 
-are file  format details rather than  quirks within the data itself.  Referring 
-back to <basics.txt>, we see that like the Creation Kit, DovahKit aims to focus 
-on the data  being represented rather than  on the representation itself,  this 
-being a contrast to tools like xEdit. It wouldn't make sense to design the vast 
-majority of DovahKit to be data-oriented only to then make this one thing file-
-oriented. Accordingly, GMST anomalies are to be handled as follows:
-
- - GMSTs with no editor ID, a blank editor ID, or an out-of-place editor ID are 
-   to be skipped, with a warning.
-
- - GMSTs with an unrecognized editor ID will be retained and re-saved.
-
- - GMSTs are not permitted to share their  form IDs with other forms. Where the 
-   game  enforces this as a one-way  constraint (applying only if  the form was 
-   loaded first), DovahKit enforces it bidirectionally in order to avoid horrid 
-   complications with multi-threaded loading.
-
- - GMSTs can still have out-of-bounds or otherwise invalid form IDs.
-
- - If a GMST has a valid form ID, then  it will be re-saved with that same form 
-   ID.
-
- - If a file  contains redundant GMST  records (i.e. multiple  records defining 
-   the same setting, possibly with different form IDs), then DovahKit will only 
-   re-save one record,  using the last loaded value (if unedited)  and form ID.
-
- - DovahKit will support allowing multiple game settings to share the same form 
-   ID. This could  be potentially useful  for reducing form ID  usage, and with 
-   the current implementation of GMSTs it costs us nothing.
+ - Changing a GMST's value, and renumbering  a GMST, both require that we check 
+   how many other GMSTs  use the same form ID. Both operations  can lead to the 
+   GMST's form  ID changing, and  if it does, then we  need to know  whether to 
+   renumber the  matching form stub (if  it's only used by the  one setting) or 
+   create an additional form stub (otherwise).
