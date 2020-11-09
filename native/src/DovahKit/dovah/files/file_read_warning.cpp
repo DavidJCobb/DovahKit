@@ -19,7 +19,8 @@ namespace dovah {
    }
    void file_read_warning::set_cause_editor_id(const std::string& ed) {
       this->cause_editor_id = ed;
-      this->set_flag(flag::has_cause_editor_id);
+      if (!ed.empty())
+         this->set_flag(flag::has_cause_editor_id);
    }
    void file_read_warning::add_relevant_form(const form_stub& stub) {
       auto& entry = this->relevant_forms.emplace_back();

@@ -396,6 +396,7 @@ namespace dovah {
                      if (record.signature() != 'GMST')
                         continue;
                      //
+                     bool found_data = false;
                      loaded_game_setting working;
                      auto& EDID = record.next_subrecord();
                      if (EDID.signature() == 'EDID') {
@@ -403,6 +404,8 @@ namespace dovah {
                         EDID.to_string(name);
                         working.name = name;
                         working.definition = &game_setting_definition::lookup(name.c_str());
+                     } else {
+                        found_data = EDID.signature() == 'DATA';
                      }
                      while (auto& subrecord = record.next_subrecord()) {
                         if (subrecord.signature() == 'EDID') {
@@ -432,22 +435,25 @@ namespace dovah {
                            //
                            continue;
                         }
+                        found_data = true;
+                        //
+                        bool no_read_error = true;
                         switch (working.get_type()) {
                            case game_setting_type::boolean:
                               {
                                  uint32_t dummy;
-                                 subrecord.read(dummy);
+                                 no_read_error = subrecord.read(dummy);
                                  working.value.b = dummy != 0;
                               }
                               break;
                            case game_setting_type::float32:
-                              subrecord.read(working.value.f);
+                              no_read_error = subrecord.read(working.value.f);
                               break;
                            case game_setting_type::integer:
-                              subrecord.read(working.value.i);
+                              no_read_error = subrecord.read(working.value.i);
                               break;
                            case game_setting_type::string:
-                              subrecord.to_string(working.value.s);
+                              no_read_error = subrecord.to_string(working.value.s);
                               break;
                            default:
                               {
@@ -463,6 +469,18 @@ namespace dovah {
                               }
                               break;
                         }
+                        if (!no_read_error) {
+                           file_read_warning warning;
+                           warning.code               = notice_code::game_setting_record_unreadable_data;
+                           warning.cause_form.localID = record.formID();
+                           warning.cause_form.fixedID = 0;
+                           warning.cause_form.type    = form_type::setting;
+                           warning.cause_file         = this->owner->get_filename();
+                           warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                           warning.set_cause_subrecord(subrecord.signature());
+                           warning.set_cause_editor_id(working.name);
+                           lo.log_load_warning(warning);
+                        }
                         if (!subrecord.is_at_end()) {
                            file_read_warning warning;
                            warning.code               = notice_code::subrecord_has_extra_content;
@@ -476,6 +494,17 @@ namespace dovah {
                            lo.log_load_warning(warning);
                         }
                         break;
+                     }
+                     if (!found_data) {
+                        file_read_warning warning;
+                        warning.code               = notice_code::game_setting_record_has_no_data;
+                        warning.cause_form.localID = record.formID();
+                        warning.cause_form.fixedID = 0;
+                        warning.cause_form.type    = form_type::setting;
+                        warning.cause_file         = this->owner->get_filename();
+                        warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                        warning.set_cause_editor_id(working.name);
+                        lo.log_load_warning(warning);
                      }
                      lo.accept_game_setting(this->owner, working, record.formID());
                      continue;

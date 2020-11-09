@@ -43,6 +43,8 @@ namespace dovah {
          form_id_is_already_in_use             = 0x00000022,
          form_id_is_reserved_for_other_process = 0x00000023, // Cannot use the specified form ID. It is reserved for use by another process, such as form creation or form renumbering.
          game_setting_not_in_active_file       = 0x00000024, // The specified game setting is not defined in the active file.
+         game_setting_record_has_no_data       = 0x00000025, // A GMST record had no DATA subrecord.
+         game_setting_record_unreadable_data   = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
       };
    };
 }

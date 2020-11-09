@@ -74,10 +74,7 @@
 //           - file_load_order::is_defined_in_active_file
 //           - file_load_order::is_defined_or_overridden_in_active_file
 //
-//        - Record injection needs to be extra careful to avoid form ID conflicts; 
-//          specifically, we need to check against the form IDs of all GMSTs in the 
-//          file we're injecting into, and we may need to make similar considerations 
-//          for DOBJ and NAVI.
+//        - Record injection needs to be extra careful to avoid form ID conflicts.
 //
 //        - We should also amend GMST renumbering to allow injecting those.
 //
@@ -97,23 +94,6 @@
 //          the game engine with no GMST records loaded -- all pristine executable-
 //          level defaults.
 //
-//     - Strongly consider not even having form stubs for GMSTs, in favor of adding 
-//       a generic system for indicating that form IDs are being consumed by any 
-//       sort of non-form (be it a GMST or a form ID reservation at run-time). This 
-//       would cut down on data redundancy and further simplify management of GMSTs, 
-//       at the cost of us having to go back and check all form ID-related code to 
-//       make it consult with this list.
-//
-//        - We could call this system "zombie form IDs." Each zombie should have a 
-//          refcount as well as a set of flags indicating what things are keeping 
-//          it around (e.g. a flag indicating that at least one of the incoming 
-//          references is from a GMST). However, we don't need to do any smart 
-//          pointer stuff with it (and in fact, that would complicate how we work 
-//          with loaded settings); the refcount can be managed manually by the load 
-//          order.
-//
-//        - We would need to audit every place where raw form IDs are worked with.
-//
 //     - GMST UI
 //
 //        - Implement reverting the active file's changes to a GMST.
@@ -124,8 +104,6 @@
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
 //
-//        - Settings with no DATA subrecord
-//        - Settings with a DATA subrecord of insufficient length
 //        - Settings that share form IDs with each other
 //        - Settings that share form IDs with real forms
 //           - These won't load reliably because we multi-thread file loading on a 
