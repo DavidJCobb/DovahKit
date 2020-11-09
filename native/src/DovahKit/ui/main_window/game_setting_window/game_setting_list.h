@@ -25,7 +25,7 @@ class GameSettingListModelItem {
       //
       QString name;
       QString description;
-      QString last_file;
+      QString last_file; // empty string only if no file or if the file is a namelesss active file
       bare_form_id_t formID = 0;
       bool    is_in_active_file = false;
       struct {

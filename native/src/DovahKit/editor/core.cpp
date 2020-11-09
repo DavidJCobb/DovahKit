@@ -573,6 +573,19 @@ void DovahKitCore::renumber_game_setting(const char* name, QWidget* dialog_paren
       return;
    }
    //
+   if (auto* stub = this->load_order->get_form(dovah::form_type::setting, newID)) {
+      auto choice = QMessageBox::question(
+         dialog_parent,
+         QObject::tr("Warning", "reumber game setting"),
+         QObject::tr("Form ID %1 is in use by one or more game settings. Game settings <em>can</em> share the same form ID without causing problems for the game, but community tools like xEdit (a.k.a. TES5Edit and SSEEdit) may not respond properly. Are you sure you wish to use this form ID?", "reumber game setting")
+            .arg(QString("%1").arg(newID, 8, 16, QChar('0')).toUpper()),
+         QMessageBox::Yes | QMessageBox::No,
+         QMessageBox::No
+      );
+      if (choice != QMessageBox::Yes)
+         return;
+   }
+   //
    bare_form_id_t oldID = setting.formID;
    //
    auto request = this->load_order->request_game_setting_renumber();

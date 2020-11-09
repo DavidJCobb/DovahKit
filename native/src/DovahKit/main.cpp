@@ -104,15 +104,21 @@
 //       at the cost of us having to go back and check all form ID-related code to 
 //       make it consult with this list.
 //
+//        - We could call this system "zombie form IDs." Each zombie should have a 
+//          refcount as well as a set of flags indicating what things are keeping 
+//          it around (e.g. a flag indicating that at least one of the incoming 
+//          references is from a GMST). However, we don't need to do any smart 
+//          pointer stuff with it (and in fact, that would complicate how we work 
+//          with loaded settings); the refcount can be managed manually by the load 
+//          order.
+//
+//        - We would need to audit every place where raw form IDs are worked with.
+//
 //     - GMST UI
 //
 //        - Implement reverting the active file's changes to a GMST.
 //
 //           - We need a backend API for this.
-//
-//     - GMST renumbering should allow GMSTs to share their form IDs with other 
-//       existing GMSTs, albeit with a displayed warning. Currently this is not 
-//       allowed.
 //
 //     - GMST renumbering: test all error cases.
 //

@@ -52,11 +52,10 @@ void GameSettingListModelItem::updateFrom(const dovah::loaded_game_setting& sour
          this->value.string = DovahKitCore::get().convert_localized_string(source.value.s);
          break;
    }
+   this->is_in_active_file = false;
    if (source.source_file) {
+      this->is_in_active_file = DovahKitCore::get().loaded_file_is_active(*source.source_file);
       this->last_file = QString::fromStdString(source.source_file->get_filename());
-      if (this->last_file.isEmpty()) {
-         this->last_file = QObject::tr("<untitled>", "unsaved/implicit active file shown in game setting window");
-      }
    }
 }
 QString GameSettingListModelItem::valueAsString() const noexcept {
@@ -239,22 +238,14 @@ void GameSettingListModel::build() {
    auto& queued = this->queued_additions;
    for (auto& definition : dovah::game_settings) {
       dovah::loaded_game_setting loaded;
-      if (editor.get_loaded_game_setting(definition.name, loaded)) {
-         auto* item = new item_type(loaded);
-         queued.push_back(item);
-         if (loaded.source_file && editor.loaded_file_is_active(*loaded.source_file))
-            item->is_in_active_file = true;
-      } else {
+      if (editor.get_loaded_game_setting(definition.name, loaded))
+         queued.push_back(new item_type(loaded));
+      else
          queued.push_back(new item_type(definition));
-      }
    }
    editor.for_each_loaded_game_setting([this, &editor](const dovah::loaded_game_setting& loaded) {
-      if (loaded.definition)
-         return false; // continue
-      auto* item = new item_type(loaded);
-      this->queued_additions.push_back(item);
-      if (loaded.source_file && editor.loaded_file_is_active(*loaded.source_file))
-         item->is_in_active_file = true;
+      if (!loaded.definition)
+         this->queued_additions.push_back(new item_type(loaded));
       return false; // continue
    });
    if (queued.size() == 0)
