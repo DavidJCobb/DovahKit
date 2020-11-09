@@ -111,27 +111,24 @@
 //             but if anything that's even more incentive to add a warning in the 
 //             event that we load them successfully.
 //
+//     - Singleton form support
+//
+//        - We need special-case code in the file writer, to ensure that we only 
+//          write the "canonical" form stub for a singleton form type, and even 
+//          then only if it's in the active file or otherwise edited.
+//
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
 //
 //        - If files define their own DOBJ with a different form ID, then what form 
-//          ID does the final loaded DOBJ use?
-//
-//        - DOBJ and NAVI are "singleton forms:" multiple form IDs can contribute to 
-//          a single form, and so we need one stub per form ID. The only viable way 
-//          to handle this is to make it so that the (file_load_order), upon loading 
-//          a DOBJ record, finds all pre-existing DOBJ stubs and copies their file 
-//          list entries into the file list of the new record; that way, the form 
-//          load process for form stubs can properly coalesce data for all prior 
-//          DOBJs even if their form IDs differed.
-//
-//          (Why this and not just a central registry of values, as with GMST? Well, 
-//          the DOBJ manager is used to refer to forms, so we need to track use info.)
+//          ID does the final loaded DOBJ use? This doesn't matter for DovahKit, but 
+//          I'm curious.
 //
 //     - NAVI
 //
 //        - If files define their own NAVI with a different form ID, then what form 
-//          ID does the final loaded NAVI use?
+//          ID does the final loaded NAVI use? This doesn't matter for DovahKit, but 
+//          I'm curious.
 //
 //  - Clean up the save process.
 //

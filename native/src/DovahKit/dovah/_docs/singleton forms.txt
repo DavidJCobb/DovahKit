@@ -43,10 +43,26 @@ information, to be sure that we pass  records into the form loader in the right
 order. Simply  sorting by file isn't enough, since a file could  hypothetically 
 define redundant  records for the singleton form; as such, we  need to sort the 
 source file entries by  their load order position and  their offset. Additional 
-complications  arise when dealing with a stub that has been flagged  as edited.
+complications  arise during  sorting if  one of the  stubs has  been flagged as 
+"edited."
 
 
 == Copying source file information between stubs ==============================
 
+Because we're  managing form stubs' source  file information as  we insert each 
+individual  stub, we don't  need to take care of  sorting or any  other similar 
+process. As long as  DOBJs aren't misplaced into other GRUPs,  we should always 
+load them in  a predictable order.  If they are misplaced,  or if multiple DOBJ 
+GRUPs  exist, then  the process of  merging source  file lists may  not produce 
+consistent results between sessions because  we multi-thread file loading; that 
+said, it's not our responsibility to perfectly handle every possible way that a 
+file can be malformed.
+
 In order to load the data for a singleton  form, we need to be able to identify 
-which form stub was the last to load. 
+which form stub was the last to load.  Fortunately, this is actually very easy. 
+When dealing with  stubs for singleton forms, a later stub  will have a copy of 
+the source file information  from all  earlier stubs,  plus its own source file 
+information; ergo the stub with the  longest list of source file information is 
+the last loaded stub for a given singleton form. As such, it's trivial to offer 
+the  (file_load_order::get_canonical_instance_of_singleton_form)  function  for 
+accessing the form stub for a given singleton form.

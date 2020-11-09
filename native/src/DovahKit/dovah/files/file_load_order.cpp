@@ -493,11 +493,13 @@ namespace dovah {
          // We need to replicate this behavior, while also still being aware that each given form ID was 
          // occupied by a definition. In other words, we need to have it so that multiple form stubs can 
          // contribute to "the same" form. The easiest way to manage that is this: when inserting a DOBJ 
-         // form stub, iterate over all pre-existing DOBJ stubs and prepend their file lists to the new 
-         // stub.
+         // form stub, grab the last inserted DOBJ form stub and copy its source file information into 
+         // the new form stub. (Why only the last inserted DOBJ stub? Because it, in turn, will have the 
+         // information from its own predecessor, and so on.)
          //
          std::vector<form_stub::file_data> stub_files;
-         this->for_each_form_of_type(form_type::setting, [&stub_files](dovah::form_stub* prior) {
+         auto* prior = this->get_canonical_instance_of_singleton_form(stub->formType);
+         if (prior) {
             uint16_t count = prior->source_file_count();
             for (uint16_t i = 0; i < count; ++i) {
                auto* data = prior->get_source_file_info(i);
@@ -505,17 +507,9 @@ namespace dovah {
                   continue;
                stub_files.push_back(*data);
             }
-            return false; // continue
-         });
-         std::sort(stub_files.begin(), stub_files.end(), [this](const form_stub::file_data& a, const form_stub::file_data& b) {
-            int ia = this->index_of_file(*a.pointer);
-            int ib = this->index_of_file(*b.pointer);
-            if (ia != ib)
-               return ia < ib;
-            return a.offset < b.offset;
-         });
+         }
          //
-         // And of course, the new stub already knows its files, so let's grab those.
+         // And of course, the new stub already knows its file information, so let's grab that, too.
          //
          uint16_t count = stub->source_file_count();
          for (uint16_t i = 0; i < count; ++i) {
@@ -1145,71 +1139,6 @@ namespace dovah {
       return result;
    }
 
-   bool file_load_order::form_is_later_than(const form_stub& a, const form_stub& b) const noexcept {
-      //
-      // This function's primary utility is for identifying which form stub is "canonical" for a given 
-      // singleton form. As such, it needs to return consistent results.
-      //
-      bool ea = a.is_edited();
-      bool eb = b.is_edited();
-      if (ea || eb) {
-         //
-         // One or both of the stubs are edited, so their source files are irrelevant.
-         //
-         if (ea && !eb)
-            return true;
-         if (!ea && eb)
-            return false;
-      } else {
-         //
-         // Neither stub is edited, so let's consult their source files.
-         //
-         auto* da = a.get_source_file_info();
-         auto* db = b.get_source_file_info();
-         assert(da && db && "How is a form stub missing file info?!");
-         if (da->pointer != db->pointer) {
-            if (da->pointer == this->active_file)
-               return true;
-            if (db->pointer == this->active_file)
-               return false;
-            int ia = this->index_of_file(*da->pointer);
-            int ib = this->index_of_file(*db->pointer);
-            if (ia < 0 || ib < 0) // this load order was given a stub that didn't actually come from it. that's not a meaningful operation and we won't return a meaningful result.
-               return false;
-            if (ia != ib)
-               return ia > ib;
-         }
-         if (da->pointer != this->active_file) {
-            //
-            // The two stubs are from the same file, but are not from the active file, 
-            // so let's just compare their file offsets.
-            //
-            return da->offset > db->offset;
-         }
-      }
-      //
-      // Both of the stubs are edited, or are from the active file. If they are of 
-      // different types, then compare their position in the GRUP save order.
-      //
-      if (a.formType != b.formType) {
-         uint32_t sa = form_type_info::lookup(a.formType).signature;
-         uint32_t sb = form_type_info::lookup(b.formType).signature;
-         if (sa != sb) { // if the form type values are bad, then both signatures will be 'NONE'
-            for (auto signature : group_sequence_list) {
-               if (signature == sa)
-                  return false;
-               if (signature == sb)
-                  return true;
-            }
-         }
-      }
-      //
-      // Both stubs are edited and are of the same type. Comparing their order is not a 
-      // meaningful operation at this time, because we don't save forms in any defined order, 
-      // but let's just do a form ID comparison.
-      //
-      return a.formID > b.formID;
-   }
    uint32_t file_load_order::count_forms_of_type(form_type_t ft) const noexcept {
       if (ft < this->forms_by_type.size()) {
          auto& list = this->forms_by_type[ft].forms;
@@ -1221,6 +1150,24 @@ namespace dovah {
       if (formID == 0)
          return false;
       return cobb::unordered_map_contains(this->forms.forms, formID);
+   }
+   form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type_t ft) const noexcept {
+      if (!(form_type_info::lookup(ft).flags & form_type_info::flag::is_singleton))
+         return nullptr;
+      uint16_t   length  = 0;
+      form_stub* longest = nullptr;
+      auto&      map     = this->forms_by_type[ft].forms;
+      for (auto pair : map) {
+         auto* stub = pair.second;
+         if (!stub)
+            continue;
+         auto count = stub->source_file_count();
+         if (count > length) {
+            length  = count;
+            longest = stub;
+         }
+      }
+      return longest;
    }
    form_stub* file_load_order::get_form(bare_form_id_t formID) const noexcept {
       if (formID == 0)
@@ -1257,7 +1204,10 @@ namespace dovah {
       if (formType < this->forms_by_type.size()) {
          auto& list = this->forms_by_type[formType].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
-            if (functor(it->second))
+            auto* stub = it->second;
+            if (!stub)
+               continue;
+            if (functor(stub))
                return true;
          }
       }
@@ -1311,16 +1261,23 @@ namespace dovah {
    }
    bool file_load_order::for_each_active_file_form(std::function<bool(form_stub*)> functor) {
       auto& list = this->active_file_forms.forms;
-      for (auto& pair : list)
-         if (functor(pair.second))
+      for (auto& pair : list) {
+         auto* stub = pair.second;
+         if (!stub)
+            continue;
+         if (functor(stub))
             return true;
+      }
       return false;
    }
    bool file_load_order::for_each_active_file_form_of_type(form_type_t form_type, std::function<bool(form_stub*)> functor) {
       if (form_type < this->active_file_forms_by_type.size()) {
          auto& list = this->active_file_forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
-            if (functor(it->second))
+            auto* stub = it->second;
+            if (!stub)
+               continue;
+            if (functor(stub))
                return true;
          }
       }
@@ -1338,8 +1295,10 @@ namespace dovah {
       //
       auto& list = this->active_file_forms_by_type[form_type].forms;
       for (auto& pair : list) {
-         auto id   = pair.first;
-         auto stub = pair.second;
+         auto  id   = pair.first;
+         auto* stub = pair.second;
+         if (!stub)
+            continue;
          if (id < min_id || id > max_id)
             continue;
          if (functor(stub))
@@ -1375,6 +1334,8 @@ namespace dovah {
          auto& list = this->forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
+            if (!stub)
+               continue;
             if (stub->is_edited() || stub->file_list_includes(this->active_file) || stub->does_descendant_form_need_save())
                if (functor(stub))
                   return true;
@@ -1383,6 +1344,8 @@ namespace dovah {
          auto& list = this->active_file_forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
+            if (!stub)
+               continue;
             if (stub->is_edited() || stub->file_list_includes(this->active_file))
                if (functor(stub))
                   return true;

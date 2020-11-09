@@ -256,10 +256,10 @@ namespace dovah {
          #pragma region Content related to already-loaded data
          std::vector<const loaded_file*> get_loaded_files() const noexcept;
 
-         bool form_is_later_than(const form_stub& a, const form_stub& b) const noexcept;
          uint32_t count_forms_of_type(form_type_t) const noexcept;
          inline uint8_t file_count() const noexcept { return this->files.size(); }
          bool has_form(bare_form_id_t formID) const noexcept;
+         form_stub* get_canonical_instance_of_singleton_form(form_type_t) const noexcept;
          form_stub* get_form(bare_form_id_t formID) const noexcept;
          form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
          form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
