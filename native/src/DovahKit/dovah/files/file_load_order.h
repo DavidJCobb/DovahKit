@@ -245,6 +245,7 @@ namespace dovah {
          }
          file_prefix active_file_prefix() const noexcept;
          //
+         int index_of_file(const loaded_file&) const noexcept;
          int index_of_prefix(file_prefix) const noexcept;
          //
          bool file_is_active(const loaded_file&) const noexcept;
@@ -255,6 +256,7 @@ namespace dovah {
          #pragma region Content related to already-loaded data
          std::vector<const loaded_file*> get_loaded_files() const noexcept;
 
+         bool form_is_later_than(const form_stub& a, const form_stub& b) const noexcept;
          uint32_t count_forms_of_type(form_type_t) const noexcept;
          inline uint8_t file_count() const noexcept { return this->files.size(); }
          bool has_form(bare_form_id_t formID) const noexcept;

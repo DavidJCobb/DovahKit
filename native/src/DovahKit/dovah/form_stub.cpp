@@ -208,6 +208,29 @@ namespace dovah {
       this->files.count   = count_a + count_b;
       this->flags |= flag::has_multiple_source_files;
    }
+   void form_stub::_set_source_file_list(const std::vector<file_data>& list) {
+      if (this->has_multiple_source_files())
+         delete[] this->files.entries;
+      auto size = list.size();
+      if (size < 2) {
+         this->flags &= ~flag::has_multiple_source_files;
+         this->file.offset  = 0;
+         this->file.pointer = nullptr;
+         if (size) {
+            this->file.offset  = list[0].offset;
+            this->file.pointer = list[0].pointer;
+         }
+         return;
+      }
+      this->flags |= flag::has_multiple_source_files;
+      this->files.entries = new file_data[size];
+      this->files.count   = size;
+      for (uint16_t i = 0; i < size; ++i) {
+         auto& f = this->files.entries[i];
+         f.offset  = list[i].offset;
+         f.pointer = list[i].pointer;
+      }
+   }
 
    const form_stub::file_data* form_stub::get_source_file_info(int16_t i) const noexcept {
       if (!this->has_multiple_source_files()) {

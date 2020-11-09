@@ -77,6 +77,8 @@ namespace dovah {
             return id;
          }
          bare_form_id_t coerce_form_id(bare_form_id_t id) const noexcept {
+            if (id == 0)
+               return id;
             id &= ~0xFF000000;
             if (this->is_light())
                id &= ~0xFFFFF000;
@@ -270,6 +272,7 @@ namespace dovah {
             can_have_children = 0x04, // Forms of this type can have child forms. (Used to optimize saving.)
             empty_if_deleted  = 0x08, // Forms of this type don't save any subrecords if they're flagged as deleted.
             is_skyrim_special = 0x10, // Forms of this type don't exist in Skyrim Classic.
+            is_singleton      = 0x20, // Only one form of this type can exist. All definitions are coalesced into a "singleton" form.
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;

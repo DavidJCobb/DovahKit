@@ -65,7 +65,7 @@ namespace dovah {
       { 'SPGD', form_type::shader_particle_geometry_data, "Shader Particle Geometry" },
       { 'RFCT', form_type::reference_effect, "VisualEffect" }, // "ReferenceEffect," internally
       { 'REGN', form_type::region, "Region" },
-      { 'NAVI', form_type::navmesh_info_map,  "Navmesh Info Map" },
+      { 'NAVI', form_type::navmesh_info_map,  "Navmesh Info Map", form_type_info::flag::is_singleton },
       { 'CELL', form_type::cell,  "Cell", form_type_info::flag::can_have_children },
       { 'REFR', form_type::reference, "ObjectReference" },
       { 'ACHR', form_type::actor, "Actor" },
@@ -113,7 +113,7 @@ namespace dovah {
       { 'LCTN', form_type::location, "Location" },
       { 'MESG', form_type::message, "Message" },
       { 'RGDL', form_type::ragdoll, "Ragdoll" }, // BGSRagdoll
-      { 'DOBJ', form_type::default_object_manager, "Default Objects" }, // Skyrim's loader handles this as a special case; there is no factory for this form type.
+      { 'DOBJ', form_type::default_object_manager, "Default Objects", form_type_info::flag::is_singleton }, // Skyrim's loader handles this as a special case; there is no factory for this form type.
       { 'LGTM', form_type::lighting_template, "Lighting Template" },
       { 'MUSC', form_type::music_type, "MusicType" },
       { 'FSTP', form_type::footstep, "Footstep" },

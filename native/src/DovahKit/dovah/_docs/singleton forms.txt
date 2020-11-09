@@ -1,0 +1,52 @@
+
+In Skyrim,  some form types describe  "singleton forms." As  the name suggests, 
+the game will never  create more than one instance of  these forms. If multiple 
+records of this form type exist (whether  in a single file or across the entire 
+load order), then they will all be  treated as overrides of the same form, even 
+if their form IDs differ.
+
+This behavior is implemented as a special case in the game's form loader (refer 
+to <how the game loads forms.txt>).  The form types that act  as singletons are 
+DOBJ and NAVI: the default object manager and the navmesh info map.
+
+This begs the question: how should DovahKit handle singleton forms?
+
+We need to create one form stub for  each form ID used by a record that defines 
+a singleton form,  so that we can handle type-mismatched  overrides safely, and 
+so that we know that  these form IDs  are unavailable  for record injection. We 
+also want to rely on the form stubs for managing use info, which means that the 
+content of singleton forms  needs to be loaded and  managed the same as for any 
+ordinary form type.  That, of course, gives rise to a  complicated problem: how 
+do we  manage on-demand  loading of a singleton  form's content, when  the form 
+needs to be coalesced not just across multiple files, but through multiple form 
+stubs?
+
+One basic approach would be to co-opt  use info, to allow the stubs for a given 
+singleton form to be aware of each other. An alternate approach would be to use 
+the (file_load_order) to coordinate these stubs: when it loads a new stub for a 
+singleton form, it  can iterate over all pre-existing stubs  for that singleton 
+and copy their file data into the new stub, so that it can access the file data 
+for the other records despite those records having had a different form ID. The 
+two approaches are  more or less equal; neither is really any  cleaner than the 
+other. The former approach keeps the  (form_stub) file list system "clean," but 
+dirties up the  use info system and the code for loading form data.  The latter 
+approach does the opposite, but requires  additional measures to identify which 
+(form_stub) should be used to load a singleton form.
+
+Each approach needs the following accommodations.
+
+
+== Making singleton forms' stubs aware of each other ==========================
+
+In order to load the data for a singleton form, we need to sort all source file 
+information, to be sure that we pass  records into the form loader in the right 
+order. Simply  sorting by file isn't enough, since a file could  hypothetically 
+define redundant  records for the singleton form; as such, we  need to sort the 
+source file entries by  their load order position and  their offset. Additional 
+complications  arise when dealing with a stub that has been flagged  as edited.
+
+
+== Copying source file information between stubs ==============================
+
+In order to load the data for a singleton  form, we need to be able to identify 
+which form stub was the last to load. 

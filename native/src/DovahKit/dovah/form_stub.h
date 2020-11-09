@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <type_traits>
+#include <vector>
 #include "core.h"
 
 namespace dovah {
@@ -240,7 +241,7 @@ namespace dovah {
          };
          //
       protected:
-         union {
+         union { // a stub must ALWAYS have at least one source file, unless it's literally in the middle of being loaded from that source file.
             file_data      file;
             file_data_list files;
          };
@@ -257,6 +258,7 @@ namespace dovah {
          void _set_active_file_data(owner_file_t&, uint32_t offset);
          void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept;
          void _adopt_source_file_list(const form_stub* other);
+         void _set_source_file_list(const std::vector<file_data>&);
          //
          void _add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void _add_one_way_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
