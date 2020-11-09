@@ -1919,6 +1919,12 @@ namespace dovah {
       this->active_file_forms.forms[stub->formID] = stub;
       auto& at = this->active_file_forms_by_type[stub->formType];
       at.forms[stub->formID] = stub;
+      //
+      // NOTE: Merely flagging a form stub as edited SHOULD NOT result in the active file being 
+      // added to the stub's source file list (if not already present). Currently, our handling 
+      // of singleton forms depends on no such addition being made (refer to documentation for 
+      // more information).
+      //
    }
 
    file_load_order::form_id_status file_load_order::local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const {
@@ -2258,9 +2264,20 @@ namespace dovah {
                stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
          }
          for (auto* stub : stubs_to_remove) {
-            auto  type = stub->formType;
+            auto type = stub->formType;
             if (type == form_type::setting) // GMSTs are a special case. their form-stubs are just placeholders and do not retain meaningful information, file offsets included
                continue;
+            if (form_type_info::lookup(type).flags & form_type_info::flag::is_singleton) {
+               //
+               // Only strip these forms if they originated from the active file (i.e. the active file including 
+               // redundant instances of a singleton form, and subsequently only saving one instance with merged 
+               // data). If a stub isn't stripped, then remove its "edited" flag (that won't have been done above).
+               //
+               if (!stub->file_list_includes(this->active_file)) {
+                  stub->set_edited(false);
+                  continue;
+               }
+            }
             if (this->on_form_loss)
                (this->on_form_loss)(*stub); // ensure that the frontend can abandon any references it has to this stub and its loaded form data
             //

@@ -46,6 +46,13 @@ source file entries by  their load order position and  their offset. Additional
 complications  arise during  sorting if  one of the  stubs has  been flagged as 
 "edited."
 
+I had tried writing  out code for  sorting, but it felt...  fragile. Sort these 
+stubs by load order position and file  offset, unless they're both edited or in 
+the active file, in which case, sort them by GRUP order or form ID? It felt too 
+indirect, like it was creating room for edge-cases I couldn't readily see. Once 
+I thought of the other approach,  and the ways it could simplify things, I went 
+with it instead of trying to fully reason out this approach's complications.
+
 
 == Copying source file information between stubs ==============================
 
@@ -66,3 +73,47 @@ information; ergo the stub with the  longest list of source file information is
 the last loaded stub for a given singleton form. As such, it's trivial to offer 
 the  (file_load_order::get_canonical_instance_of_singleton_form)  function  for 
 accessing the form stub for a given singleton form.
+
+All nice and simple.
+
+
+== Anywho... ==================================================================
+
+There are other major and as-yet-unresolved complications that arise from these 
+forms. One is how to  handle their outbound references.  Consider the case of a 
+DOBJ singleton form that refers to some KYWD. Deleting the KYWD form would lead 
+DovahKit to try  and sever outbound references  from the DOBJ  form stub to the 
+KYWD being deleted.  Except here's the thing:  what if the  DOBJ singleton form 
+refers to the to-be-deleted  KYWD form in a dependency,  rather than the active 
+file? Well, that leads to use trying to sever outbound references from multiple 
+DOBJ stubs,  not just the canonical one,  which in turn leads to  each of these 
+stubs being flagged as edited.
+
+With the approach  wherein we copy source file information  between stubs, this 
+doesn't have any immediately obvious  consequences. We're still identifying the 
+canonical DOBJ stub based on the length of its file list, rather than by trying 
+to sort multiple  stubs based on where  in what files they  originated from and 
+whether they've been flagged as edited; this  means that flagging multiple DOBJ 
+stubs as edited doesn't affect our ability to identify the canonical stub. This 
+holds even if the  canonical stub isn't  part of the active  file and has never 
+been edited  in it, because  merely flagging a stub  as edited  doesn't add the 
+active file to  its file list.  Additionally,  when saving  the active file, we 
+only plan on writing the canonical stub  to the file, which means that flagging 
+additional  DOBJ stubs as  edited shouldn't affect  our file output  even if we 
+don't end up also flagging the canonical stub as edited.
+
+We do need to be  careful when performing post-save form  stub fixup tasks. For 
+example, if multiple  stubs for a  singleton form  were flagged as edited, then 
+the  non-canonical stubs  will subsequently  fail to save  (because  we're only 
+saving the canonical stub); that's normal, and we shouldn't necessarily discard 
+those stubs. At  the same time, if we loaded an active file  that had redundant 
+records for a singleton form (e.g.  multiple DOBJ records), then we actually do 
+want to discard those redundant stubs once they fail to save. Accordingly, when 
+discarding form stubs  that failed to save, we need to check  if they represent 
+singleton forms  and if so,  we need to  check whether  their source  file list 
+includes the active file (which will only be the case if they originally loaded 
+from it; we  only add the active file  to the lists of stubs that  successfully 
+saved).
+
+As of this writing, it *feels* like having  multiple stubs for a singleton form 
+be edited as a result of use info is consequence-free.
