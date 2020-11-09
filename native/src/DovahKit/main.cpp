@@ -117,6 +117,17 @@
 //        - If files define their own DOBJ with a different form ID, then what form 
 //          ID does the final loaded DOBJ use?
 //
+//        - DOBJ and NAVI are "singleton forms:" multiple form IDs can contribute to 
+//          a single form, and so we need one stub per form ID. The only viable way 
+//          to handle this is to make it so that the (file_load_order), upon loading 
+//          a DOBJ record, finds all pre-existing DOBJ stubs and copies their file 
+//          list entries into the file list of the new record; that way, the form 
+//          load process for form stubs can properly coalesce data for all prior 
+//          DOBJs even if their form IDs differed.
+//
+//          (Why this and not just a central registry of values, as with GMST? Well, 
+//          the DOBJ manager is used to refer to forms, so we need to track use info.)
+//
 //     - NAVI
 //
 //        - If files define their own NAVI with a different form ID, then what form 
@@ -171,6 +182,15 @@
 //       to the record reader, so they should be capable of this) and if it's present, then 
 //       they need to match the behavior of the appropriate TESForm::LoadPartial override 
 //       in TESV.exe.
+//
+//     - Form stubs need to either cache the "partial" flag, or store record flags for each 
+//       entry in their file list. See, in order to save a child form, we also need to save 
+//       its parent and ancestor forms; however, if those forms haven't actually been edited, 
+//       we can simply save them as "partial" records to avoid actually overriding them. how 
+//       do we determine whether we've saved the parent form? well, we need to check whether 
+//       it was defined or overridden in the active file, but we also need to double-check 
+//       that any such override was not already partial, and that requires access to the 
+//       record flags.
 //
 //  - Finalize for Skyrim Special Edition.
 //
