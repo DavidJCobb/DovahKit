@@ -573,6 +573,22 @@ namespace dovah::tes_file_writing {
          if (!this->owner.active_file_has_forms_of_type(form_type))
             continue;
          //
+         if (form_type_info::lookup(form_type).flags & form_type_info::flag::is_singleton) { // special case
+            //
+            // Singleton forms need special handling. We should only write out the "canonical" form stub, 
+            // and none of the others.
+            //
+            auto* stub = this->owner.get_canonical_instance_of_singleton_form(form_type);
+            if (!stub)
+               continue;
+            if (!this->owner.is_defined_or_overridden_in_active_file(*stub) && !stub->is_edited())
+               continue;
+            this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong(signature), 0);
+            this->_write_form(stub);
+            this->close_current_group();
+            continue;
+         }
+         //
          if (form_type == form_type::cell) { // special case; requires a particular hierarchy of nested GRUPs
             this->_write_interior_cells();
             continue;

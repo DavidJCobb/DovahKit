@@ -113,9 +113,7 @@
 //
 //     - Singleton form support
 //
-//        - We need special-case code in the file writer, to ensure that we only 
-//          write the "canonical" form stub for a singleton form type, and even 
-//          then only if it's in the active file or otherwise edited.
+//        - Implemented but untested. DOBJ would be a good one to test with.
 //
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
@@ -123,6 +121,12 @@
 //        - If files define their own DOBJ with a different form ID, then what form 
 //          ID does the final loaded DOBJ use? This doesn't matter for DovahKit, but 
 //          I'm curious.
+//
+//        - DOBJ needs to maintain, for every entry, information on whether it was 
+//          supplied by the active file, and information on whether it has been 
+//          edited. When we save a DOBJ record, we only want to save the entries 
+//          that actually belong in the active file, and not entries coalesced from 
+//          dependencies.
 //
 //     - NAVI
 //
