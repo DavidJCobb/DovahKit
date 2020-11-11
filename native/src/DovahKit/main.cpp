@@ -56,27 +56,83 @@
 //     - The log window should ideally use a table view instead of a list view, with 
 //       columns for the filename (and potentially other details).
 //
-//  - Form renumbering
+//  - We should log a warning when loading a form that is misplaced into the wrong 
+//    GRUP.
 //
-//     - Now that form stubs store all loaded files' offsets, we can identify active 
-//       file forms without having to rely on their load order prefix. Accordingly, 
-//       we should allow record injection.
+//  - DovahKit currently has a bit of a design flaw with respect to invalid references 
+//    to unoccupied form IDs. Consider the case where I load a file with a SHOU/SNAM 
+//    that refers to some form xx001234, but there is no form with that ID. Then, in 
+//    DovahKit, I create a new form with ID xx001234 and then I load the SHOU. Well, 
+//    DovahKit has no way to know that the SHOU wasn't originally referring to the 
+//    new form. If the new form isn't of a type that SHOU/SNAM can reference, then 
+//    the user still gets a warning, but if the new form is, say, a spell or word of 
+//    power, then we have a situation where the SHOU's data has silently changed, 
+//    probably in a way that'll break things.
 //
-//        = Do we even handle loading and re-saving injected records properly?
+//    There's really only one way to address this, and it's gonna be messy. We'd have 
+//    to create form stubs not only for *defined* form IDs, as we do now, but also for 
+//    any *referenced* form IDs. This would allow us to track use info for form IDs 
+//    instead of just for forms, which would be necessary for knowing that a given 
+//    form ID is referenced despite not being used on a real form; it would also allow 
+//    us to know whether a given form-ID-sans-form used to be referenced but isn't any 
+//    longer (because if an inbound reference is severed by user action, then use info 
+//    will be updated appropriately).
 //
-//        - There are three functions used to check whether a form or form ID is 
-//          from the active file. The first two in this list use the load order 
-//          prefix, while the last uses the form stub's file list. In what situations 
-//          are these functions used? Does anything need to change in order for us to 
-//          handle injected records properly?
+//    The form stubs for referenced-but-undefined form IDs would need to be generated 
+//    during the use info build step. They could use form_type::none as their form 
+//    type, and be sorted into file_load_order::forms_by_type[form_type::none]. We'd 
+//    then need to make two changes. First: when searching for an available form ID, 
+//    if we find that the ID is in use by a stub with no inbound references and a 
+//    "none" form type, then we need to consider the ID available; and second, when 
+//    actually taking an action that would place a valid form in that ID, we need to 
+//    delete the "none"-type stub (which in turn requires telling any referencing 
+//    forms to sever their references to it, and those forms may be of types that 
+//    DovahKit doesn't yet know how to edit, so that's a new potential point of 
+//    failure for form creation and renumbering).
 //
-//           - file_load_order::is_active_file_formID
-//           - file_load_order::is_defined_in_active_file
-//           - file_load_order::is_defined_or_overridden_in_active_file
+//    Another nice bonus: if a form refers to an undefined non-zero form ID, then we 
+//    can generate a warning for that using the same code we already have for catching 
+//    type-mismatched form-to-form references. We'd just need to edit the error text 
+//    for the case where the referent's type is form_type::none.
 //
-//        - Record injection needs to be extra careful to avoid form ID conflicts.
+//     = So we'd need to identify referenced-but-unoccupied form IDs and create stubs 
+//       for them during the use info build step, right? Well, how do we do that? It 
+//       should be pretty simple. For every form, we need to loop over its outbound 
+//       references and look for references that have a form ID but no pointer to the 
+//       target stub. The (form_stub::_add_one_way_outbound_reference) function will 
+//       always grab the target stub if it exists, so the only way that pointer would 
+//       be missing is if the reference were to an unoccupied form ID. We'd use that 
+//       to gather a list of all referenced-but-unoccupied form IDs, and then, after 
+//       building that list, we'd create all of the relevant stubs. We'd need to do 
+//       all this BEFORE the calls to (form_stub::send_inbound_refs), to ensure that 
+//       the references are properly made bidirectional (i.e. the target stubs need 
+//       to be made existent first).
 //
-//        - We should also amend GMST renumbering to allow injecting those.
+//     - If we do this, then we need to add an entire documentation file that's just 
+//       about form stubs, and we need to very thoroughly and carefully explain all 
+//       of this, as well as every special-case check that we end up needing for it. 
+//       The idea of having form stubs correspond to raw form IDs and not to real 
+//       forms is extremely unintuitive (case in point: I didn't do it before now), 
+//       and the consequences that could stem from this are real nasty.
+//
+//     - It's tempting to do things like making (file_load_order) refuse to grant 
+//       access to none-type stubs, but that's a non-starter. First of all, those 
+//       stubs will already be accessible through the loaded form data of the 
+//       referencing forms. Second of all, it could actually be useful to allow 
+//       things like calling (file_load_order::for_each_form_of_type) with the 
+//       "none" type, in order to get a list of all referenced-but-undefined form 
+//       IDs.
+//
+//     = While I'm here: things like this may make it tempting to do form-to-form 
+//       reference error checking in the initial use info build step, in order to 
+//       catch and log errors as early as possible, but I'm actually extremely not 
+//       a fan. Why? Because we still wouldn't be logging any other errors, and it'd 
+//       add redundancy between the load code and the use info build code. If we 
+//       really want to give the user the option to scour the file for every possible 
+//       data error on load, we can implement it by just loading and unloading every 
+//       form's full data (possibly with multi-threading if we can manage that) and 
+//       letting the on-demand load functions log the same warnings they would at any 
+//       other time.
 //
 //  - Add support for loading DOBJ and GMST records properly.
 //
@@ -94,11 +150,30 @@
 //          the game engine with no GMST records loaded -- all pristine executable-
 //          level defaults.
 //
-//     - GMST UI
+//     - I DON'T THINK WE PROPERLY HANDLE THE CASE OF A FORM *INCORRECTLY* REFERRING 
+//       TO A GMST. THE CODE FOR MANAGING GMST FORM STUBS ASSUMES THAT THERE WILL BE 
+//       NO INBOUND USES WITHIN THE USE INFO SYSTEM, BECAUSE IT DOESN'T MAKE SENSE 
+//       FOR GMSTs TO EVER BE REFERENCED, BUT ANY FORM CAN HAVE A TYPE-MISMATCHED 
+//       REFERENCE TO ANYTHING WITH A FORM ID (E.G. xEdit CAN SOMETIMES BE USED TO 
+//       SET UP REFERENCES TO FORMS OF THE WRONG TYPE). THIS CREATES SOME NASTY EDGE-
+//       CASES WITH RENUMBERING GMSTs: IF A FORM DOES INCORRECTLY REFER TO A GMST 
+//       AND YOU RENUMBER THAT GMST, CREATE A NEW FORM WITH THE GMST'S OLD ID, AND 
+//       THEN LOAD THE REFERENCING FORM, THEN THE REFERENCE THAT FORMERLY POINTED TO 
+//       THE GMST WILL NOW POINT TO YOUR NEW FORM. THIS OBSCURES THE ORIGINAL ERROR, 
+//       AND IF THE NEW FORM IS OF A TYPE THAT *IS* APPROPRIATELY REFERENCEABLE, THEN 
+//       THERE WOULD TECHNICALLY BE "NO ERROR" AND SO THERE WOULD BE NO OBVIOUS 
+//       INDICATION THAT ANYTHING HAS GONE WRONG.
 //
-//        - Implement reverting the active file's changes to a GMST.
-//
-//           - We need a backend API for this.
+//        - Okay, so GMSTs being referenced is an atypical case and it falls under 
+//          the realm of the file being malformed, so I don't think it's a major 
+//          failing if editing a referenced GMST has some additional limits. In this 
+//          case, we can't take any action that would lead to the renumbering or 
+//          deletion of a GMST's form stub unless EITHER: the stub has no inbound 
+//          references; OR: *all* inbound-referencing forms can be loaded, told to 
+//          sever those references, and flagged as edited, as we do when deleting 
+//          referenced forms. The latter would only be impossible if DovahKit doesn't 
+//          yet know how to edit a referencing form, which should only be a concern 
+//          during development, so... I think this is fine.
 //
 //     - GMST renumbering: test all error cases.
 //
@@ -114,6 +189,15 @@
 //     - Singleton form support
 //
 //        - Implemented but untested. DOBJ would be a good one to test with.
+//
+//        - The (file_load_order::get_canonical_instance_of_singleton_form) function 
+//          needs an optional boolean argument, "create_if_missing", which, if true, 
+//          will create a new form stub of the appropriate type with an appropriate 
+//          form ID. We'll need this to handle cases like "I want to create a new 
+//          file with no masters and edit DOBJs."
+//
+//        - We should log a warning when loading a redundant instance of a singleton 
+//          form (e.g. multiple DOBJ records in the same file).
 //
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
@@ -184,6 +268,11 @@
 //       they need to match the behavior of the appropriate TESForm::LoadPartial override 
 //       in TESV.exe.
 //
+//        - Wondering if we should: change (EveryFormSubclass::load) into a virtual member 
+//          function (_load_impl); add a (_load_partial_impl); and then add (Form::load) as 
+//          a non-virtual function that checks the record flag and calls the appropriate 
+//          underlying virtual member function.
+//
 //     - Form stubs need to either cache the "partial" flag, or store record flags for each 
 //       entry in their file list. See, in order to save a child form, we also need to save 
 //       its parent and ancestor forms; however, if those forms haven't actually been edited, 
@@ -192,6 +281,36 @@
 //       it was defined or overridden in the active file, but we also need to double-check 
 //       that any such override was not already partial, and that requires access to the 
 //       record flags.
+//
+//        - The "save" code for parent forms will *also* need to check the record flags, 
+//          which means that the flags need to be set before we call (Form::save).
+//
+//  - Form renumbering
+//
+//     - Now that form stubs store all loaded files' offsets, we can identify active 
+//       file forms without having to rely on their load order prefix. Accordingly, 
+//       we should allow record injection.
+//
+//        = Do we even handle loading and re-saving injected records properly?
+//
+//        = Incidentally, we can tell whether a record is injected by checking whether 
+//          its load order prefix matches that of any of the files in its stub's source 
+//          file list. We should implement a getter for this with the signature 
+//          (bool file_load_order::form_is_injected(const form_stub&) const noexcept).
+//
+//        - There are three functions used to check whether a form or form ID is 
+//          from the active file. The first two in this list use the load order 
+//          prefix, while the last uses the form stub's file list. In what situations 
+//          are these functions used? Does anything need to change in order for us to 
+//          handle injected records properly?
+//
+//           - file_load_order::is_active_file_formID
+//           - file_load_order::is_defined_in_active_file
+//           - file_load_order::is_defined_or_overridden_in_active_file
+//
+//        - Record injection needs to be extra careful to avoid form ID conflicts.
+//
+//        - We should also amend GMST renumbering to allow injecting those.
 //
 //  - Finalize for Skyrim Special Edition.
 //
@@ -226,16 +345,6 @@
 //       consistently with what we find.
 //
 //        - Use Info generation also needs to behave consistently.
-//
-//  - Support for injected records
-//
-//     = Since form stubs now store a list of all files that define their forms, we no 
-//       longer need to rely on the form stub's form ID to identify forms that originate 
-//       from the active file. Accordingly, we should allow the user to renumber forms 
-//       that originate in the active file to inject them (or to convert injected records 
-//       to normal ones), since we can tell injected records apart from others by testing 
-//       whether any of the files in their list match up with their load order slot (no 
-//       match = injected).
 //
 //  - Support for special-case relationships between records
 //
@@ -283,6 +392,11 @@
 //          that exist in the active file. Currently, the Creation Kit lets you do that via 
 //          the Data menu, but it requires a full reload (i.e. you aren't "reverting an 
 //          override" so much as you are "electing to not load a particular override").
+//
+//     - We'll want this for GMST as well, but that'll require different underlying code. 
+//       This could possibly include deletion of a GMST form stub, with the caveat that a 
+//       form could (incorrectly) have a reference to such a stub (same issue as with 
+//       renumbering a GMST).
 //
 //  - Localized string support
 //
