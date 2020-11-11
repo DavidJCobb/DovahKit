@@ -45,6 +45,8 @@ namespace dovah {
          game_setting_not_in_active_file       = 0x00000024, // The specified game setting is not defined in the active file.
          game_setting_record_has_no_data       = 0x00000025, // A GMST record had no DATA subrecord.
          game_setting_record_unreadable_data   = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
+         cannot_sever_references_to_target     = 0x00000027,
+         game_setting_is_not_in_active_file    = 0x00000028, // Cannot renumber a GMST that doesn't originate from the active file.
       };
    };
 }

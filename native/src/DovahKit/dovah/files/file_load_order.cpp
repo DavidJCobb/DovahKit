@@ -814,14 +814,14 @@ namespace dovah {
       _extract(this->active_file_forms);
       _extract(this->active_file_forms_by_type[form_type]);
    }
-   void file_load_order::_renumber_game_setting(loaded_game_setting& entry, bare_form_id_t new_id) {
+   notice_code_t file_load_order::_renumber_game_setting(loaded_game_setting& entry, bare_form_id_t new_id) {
       if (entry.formID == new_id)
-         return;
+         return default_notice_code;
       if (entry.source_file != this->active_file) {
          #if _DEBUG
             __debugbreak(); // Why are we attempting to renumber a game setting definition that didn't come from the active file?
          #endif
-         return;
+         return notice_code::game_setting_is_not_in_active_file;
       }
       //
       // To renumber a game setting, we need to create or renumber an existing form stub.
@@ -834,6 +834,32 @@ namespace dovah {
       if (stub_count_for_this_id == 1) {
          stub = this->forms.forms[old_id];
          if (stub) {
+            if (!stub->inbound.empty()) {
+               //
+               // There are forms that (incorrectly) refer to this GMST's form ID. We need to 
+               // sever those references.
+               //
+               if (!ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE) {
+                  //
+                  // If DovahKit doesn't yet support all form types, then we're gonna need to 
+                  // double-check that the inbound references actually can be severed.
+                  //
+                  for (auto& pair : stub->inbound) {
+                     auto& data = pair.second;
+                     if (!data.other || !data.other->load())
+                        return notice_code::cannot_sever_references_to_target;
+                  }
+               }
+               //
+               // Sever those references!
+               //
+               for (auto& pair : stub->inbound) {
+                  auto& data = pair.second;
+                  auto  form = data.other->load();
+                  form->sever_outbound_references_to(*stub);
+               }
+            }
+            //
             stub->formID = new_id;
             //
             // Now move the form stub within the load order's maps.
@@ -878,6 +904,8 @@ namespace dovah {
             (this->on_form_create)(stub);
       }
       entry.formID = new_id;
+      //
+      return default_notice_code;
    }
    #pragma endregion
 
@@ -1168,6 +1196,12 @@ namespace dovah {
          }
       }
       return longest;
+   }
+   form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type_t ft, bool create_if_missing) noexcept {
+      auto* stub = this->get_canonical_instance_of_singleton_form(ft);
+      if (!stub && create_if_missing)
+         return this->create_form_of_type(ft);
+      return stub;
    }
    form_stub* file_load_order::get_form(bare_form_id_t formID) const noexcept {
       if (formID == 0)
@@ -1749,7 +1783,7 @@ namespace dovah {
          request.code = notice_code::game_setting_not_in_active_file;
          return;
       }
-      this->_renumber_game_setting(*entry, request.desiredID);
+      auto code = this->_renumber_game_setting(*entry, request.desiredID);
       //
       // Okay. The form stub is now squared away. Now, we need to un-flag the form ID as reserved.
       //

@@ -5,6 +5,7 @@
 #include "../Cell.h"
 #include "../Color.h"
 #include "../Container.h"
+#include "../DefaultObjectManager.h"
 #include "../Faction.h"
 #include "../FormList.h"
 #include "../Location.h"
@@ -27,23 +28,24 @@ namespace {
       _Builder(form_type_t f, outbound_uses_builder_t b) : form_type(f), builder(b) {}
    };
    _Builder _builders[] = {
-      { form_type::faction,       dovah::loaded_forms::Faction::generate_use_info },
-      { form_type::magic_effect,  dovah::loaded_forms::MagicEffect::generate_use_info },
-      { form_type::activator,     dovah::loaded_forms::Activator::generate_use_info },
-      { form_type::container,     dovah::loaded_forms::Container::generate_use_info },
-      { form_type::actor_base,    dovah::loaded_forms::ActorBase::generate_use_info },
-      { form_type::cell,          dovah::loaded_forms::Cell::generate_use_info },
-      { form_type::reference,     dovah::loaded_forms::ObjectReference::generate_use_info },
-      { form_type::actor,         dovah::loaded_forms::Actor::generate_use_info },
-      { form_type::worldspace,    dovah::loaded_forms::Worldspace::generate_use_info },
-      { form_type::topic_info,    dovah::loaded_forms::TopicInfo::generate_use_info },
-      { form_type::quest,         dovah::loaded_forms::Quest::generate_use_info },
-      { form_type::formlist,      dovah::loaded_forms::FormList::generate_use_info },
-      { form_type::voicetype,     dovah::loaded_forms::Voicetype::generate_use_info },
-      { form_type::location,      dovah::loaded_forms::Location::generate_use_info },
-      { form_type::shout,         dovah::loaded_forms::Shout::generate_use_info },
-      { form_type::word_of_power, dovah::loaded_forms::WordOfPower::generate_use_info },
-      { form_type::color,         dovah::loaded_forms::Color::generate_use_info },
+      { form_type::faction,                dovah::loaded_forms::Faction::generate_use_info },
+      { form_type::magic_effect,           dovah::loaded_forms::MagicEffect::generate_use_info },
+      { form_type::activator,              dovah::loaded_forms::Activator::generate_use_info },
+      { form_type::container,              dovah::loaded_forms::Container::generate_use_info },
+      { form_type::actor_base,             dovah::loaded_forms::ActorBase::generate_use_info },
+      { form_type::cell,                   dovah::loaded_forms::Cell::generate_use_info },
+      { form_type::reference,              dovah::loaded_forms::ObjectReference::generate_use_info },
+      { form_type::actor,                  dovah::loaded_forms::Actor::generate_use_info },
+      { form_type::worldspace,             dovah::loaded_forms::Worldspace::generate_use_info },
+      { form_type::topic_info,             dovah::loaded_forms::TopicInfo::generate_use_info },
+      { form_type::quest,                  dovah::loaded_forms::Quest::generate_use_info },
+      { form_type::formlist,               dovah::loaded_forms::FormList::generate_use_info },
+      { form_type::voicetype,              dovah::loaded_forms::Voicetype::generate_use_info },
+      { form_type::location,               dovah::loaded_forms::Location::generate_use_info },
+      { form_type::default_object_manager, dovah::loaded_forms::DefaultObjectManager::generate_use_info },
+      { form_type::shout,                  dovah::loaded_forms::Shout::generate_use_info },
+      { form_type::word_of_power,          dovah::loaded_forms::WordOfPower::generate_use_info },
+      { form_type::color,                  dovah::loaded_forms::Color::generate_use_info },
    };
 }
 namespace dovah {

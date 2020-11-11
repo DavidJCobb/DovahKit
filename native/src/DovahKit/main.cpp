@@ -162,31 +162,6 @@
 //          the game engine with no GMST records loaded -- all pristine executable-
 //          level defaults.
 //
-//     - I DON'T THINK WE PROPERLY HANDLE THE CASE OF A FORM *INCORRECTLY* REFERRING 
-//       TO A GMST. THE CODE FOR MANAGING GMST FORM STUBS ASSUMES THAT THERE WILL BE 
-//       NO INBOUND USES WITHIN THE USE INFO SYSTEM, BECAUSE IT DOESN'T MAKE SENSE 
-//       FOR GMSTs TO EVER BE REFERENCED, BUT ANY FORM CAN HAVE A TYPE-MISMATCHED 
-//       REFERENCE TO ANYTHING WITH A FORM ID (E.G. xEdit CAN SOMETIMES BE USED TO 
-//       SET UP REFERENCES TO FORMS OF THE WRONG TYPE). THIS CREATES SOME NASTY EDGE-
-//       CASES WITH RENUMBERING GMSTs: IF A FORM DOES INCORRECTLY REFER TO A GMST 
-//       AND YOU RENUMBER THAT GMST, CREATE A NEW FORM WITH THE GMST'S OLD ID, AND 
-//       THEN LOAD THE REFERENCING FORM, THEN THE REFERENCE THAT FORMERLY POINTED TO 
-//       THE GMST WILL NOW POINT TO YOUR NEW FORM. THIS OBSCURES THE ORIGINAL ERROR, 
-//       AND IF THE NEW FORM IS OF A TYPE THAT *IS* APPROPRIATELY REFERENCEABLE, THEN 
-//       THERE WOULD TECHNICALLY BE "NO ERROR" AND SO THERE WOULD BE NO OBVIOUS 
-//       INDICATION THAT ANYTHING HAS GONE WRONG.
-//
-//        - Okay, so GMSTs being referenced is an atypical case and it falls under 
-//          the realm of the file being malformed, so I don't think it's a major 
-//          failing if editing a referenced GMST has some additional limits. In this 
-//          case, we can't take any action that would lead to the renumbering or 
-//          deletion of a GMST's form stub unless EITHER: the stub has no inbound 
-//          references; OR: *all* inbound-referencing forms can be loaded, told to 
-//          sever those references, and flagged as edited, as we do when deleting 
-//          referenced forms. The latter would only be impossible if DovahKit doesn't 
-//          yet know how to edit a referencing form, which should only be a concern 
-//          during development, so... I think this is fine.
-//
 //     - GMST renumbering: test all error cases.
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
@@ -202,11 +177,10 @@
 //
 //        - Implemented but untested. DOBJ would be a good one to test with.
 //
-//        - The (file_load_order::get_canonical_instance_of_singleton_form) function 
-//          needs an optional boolean argument, "create_if_missing", which, if true, 
-//          will create a new form stub of the appropriate type with an appropriate 
-//          form ID. We'll need this to handle cases like "I want to create a new 
-//          file with no masters and edit DOBJs."
+//        - Our current system isn't going to manage use info super well. If you 
+//          check the use info of a form used by DOBJ, but there are multiple form 
+//          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
+//          get awkward.
 //
 //        - We should log a warning when loading a redundant instance of a singleton 
 //          form (e.g. multiple DOBJ records in the same file).

@@ -174,6 +174,7 @@
     <ClCompile Include="dovah\forms\components\package_location.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus.cpp" />
     <ClCompile Include="dovah\forms\Container.cpp" />
+    <ClCompile Include="dovah\forms\DefaultObjectManager.cpp" />
     <ClCompile Include="dovah\forms\Faction.cpp" />
     <ClCompile Include="dovah\forms\factories\construct.cpp" />
     <ClCompile Include="dovah\forms\factories\hardcoded.cpp" />
@@ -201,6 +202,7 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\read_warning_dispatcher.cpp" />
+    <ClCompile Include="editor\get_default_object_info.cpp" />
     <ClCompile Include="editor\get_game_setting_description.cpp" />
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
@@ -365,6 +367,7 @@
     <ClInclude Include="dovah\forms\components\keyword_list.h" />
     <ClInclude Include="dovah\forms\components\package_location.h" />
     <ClInclude Include="dovah\forms\components\package_event_dialogue.h" />
+    <ClInclude Include="dovah\forms\DefaultObjectManager.h" />
     <ClInclude Include="dovah\forms\Faction.h" />
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
@@ -402,6 +405,7 @@
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
     <ClInclude Include="dovah\utils\get_user_language_name.h" />
     <QtMoc Include="editor\core_internals\read_warning_dispatcher.h" />
+    <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />

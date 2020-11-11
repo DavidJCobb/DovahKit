@@ -153,7 +153,7 @@ namespace dovah {
          bool _abandon_form_id_reservation(bare_form_id_t);
          
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
-         void _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);
+         notice_code_t _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);
 
          uint32_t _count_game_settings_with_form_id(bare_form_id_t) const noexcept; // doesn't lock
          
@@ -260,6 +260,7 @@ namespace dovah {
          inline uint8_t file_count() const noexcept { return this->files.size(); }
          bool has_form(bare_form_id_t formID) const noexcept;
          form_stub* get_canonical_instance_of_singleton_form(form_type_t) const noexcept;
+         form_stub* get_canonical_instance_of_singleton_form(form_type_t, bool create_if_missing = false) noexcept; // (create_if_missing) can fail if no available form IDs
          form_stub* get_form(bare_form_id_t formID) const noexcept;
          form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
          form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
@@ -573,6 +574,12 @@ namespace dovah {
             // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 
             // called blindly to create and return warnings that only have a code if there's an actual problem.
             void log_load_warning(file_read_warning&);
+
+            inline bool is_active_file() const noexcept {
+               if (!this->current_file)
+                  return false;
+               return this->owner.file_is_active(*this->current_file);
+            }
             
          protected:
             form_load(file_load_order& o, const form_stub& t) : owner(o), target_stub(t) {}

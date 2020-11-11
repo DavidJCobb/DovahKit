@@ -541,6 +541,10 @@ namespace {
             return QObject::tr("The desired form ID is currently reserved for use in some other process, such as form creation.", disambig);
          case dovah::notice_code::game_setting_not_in_active_file:
             return QObject::tr("This game setting is not defined in the active file.", disambig);
+         case dovah::notice_code::cannot_sever_references_to_target:
+            return QObject::tr("One or more forms refer to this game setting's form ID, even though that shouldn't be possible, and DovahKit doesn't know how to edit those forms and thus can't sever those references.", disambig);
+         case dovah::notice_code::game_setting_is_not_in_active_file:
+            return QObject::tr("You can't renumber a game setting that isn't defined in the active file.", disambig);
       }
       return "";
    }

@@ -489,6 +489,12 @@
     <ClCompile Include="ui\main_window\game_setting_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\DefaultObjectManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\get_default_object_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1005,6 +1011,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\get_game_setting_description.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\DefaultObjectManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\get_default_object_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

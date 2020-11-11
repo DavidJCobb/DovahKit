@@ -2,6 +2,7 @@
 #include "../Actor.h"
 #include "../Cell.h"
 #include "../Color.h"
+#include "../DefaultObjectManager.h"
 #include "../Faction.h"
 #include "../FormList.h"
 #include "../Location.h"
@@ -45,18 +46,19 @@ namespace {
    };
 
    _entry _builders[] = {
-      { form_type::faction,       _handlers::make<loaded_forms::Faction>() },
-      { form_type::cell,          _handlers::make<loaded_forms::Cell>() },
-      { form_type::reference,     _handlers::make<loaded_forms::ObjectReference>() },
-      { form_type::actor,         _handlers::make<loaded_forms::Actor>() },
-      { form_type::worldspace,    _handlers::make<loaded_forms::Worldspace>() },
-      { form_type::quest,         _handlers::make<loaded_forms::Quest>() },
-      { form_type::formlist,      _handlers::make<loaded_forms::FormList>() },
-      { form_type::voicetype,     _handlers::make<loaded_forms::Voicetype>() },
-      { form_type::location,      _handlers::make<loaded_forms::Location>() },
-      { form_type::shout,         _handlers::make<loaded_forms::Shout>() },
-      { form_type::word_of_power, _handlers::make<loaded_forms::WordOfPower>() },
-      { form_type::color,         _handlers::make<loaded_forms::Color>() },
+      { form_type::faction,                _handlers::make<loaded_forms::Faction>() },
+      { form_type::cell,                   _handlers::make<loaded_forms::Cell>() },
+      { form_type::reference,              _handlers::make<loaded_forms::ObjectReference>() },
+      { form_type::actor,                  _handlers::make<loaded_forms::Actor>() },
+      { form_type::worldspace,             _handlers::make<loaded_forms::Worldspace>() },
+      { form_type::quest,                  _handlers::make<loaded_forms::Quest>() },
+      { form_type::formlist,               _handlers::make<loaded_forms::FormList>() },
+      { form_type::voicetype,              _handlers::make<loaded_forms::Voicetype>() },
+      { form_type::location,               _handlers::make<loaded_forms::Location>() },
+      { form_type::default_object_manager, _handlers::make<loaded_forms::DefaultObjectManager>() },
+      { form_type::shout,                  _handlers::make<loaded_forms::Shout>() },
+      { form_type::word_of_power,          _handlers::make<loaded_forms::WordOfPower>() },
+      { form_type::color,                  _handlers::make<loaded_forms::Color>() },
    };
 }
 namespace dovah {
