@@ -115,6 +115,18 @@
 //       forms is extremely unintuitive (case in point: I didn't do it before now), 
 //       and the consequences that could stem from this are real nasty.
 //
+//        - We should call them "none-stubs."
+//
+//     - FORM RENUMBERING: If the user is renumbering a form to an ID that is 
+//       referenced but unoccupied, then they need to be warned that that's the 
+//       case, and ideally even shown a list of the referencing forms. This should 
+//       be easy enough to do entirely within the frontend: just check if there's 
+//       a "none"-type form with the same ID before even attempting the renumber 
+//       operation otherwise.
+//
+//     - Deletion of a "none-stub" as a result of renumbering or another process 
+//       MUST trigger (file_load_order::on_form_loss).
+//
 //     - It's tempting to do things like making (file_load_order) refuse to grant 
 //       access to none-type stubs, but that's a non-starter. First of all, those 
 //       stubs will already be accessible through the loaded form data of the 
@@ -695,6 +707,16 @@
 //          because doing so cannot leave the active file in an inconsistent state 
 //          (since the script isn't doing anything). This attribute is advised for 
 //          scripts that are just examining, searching, or otherwise analyzing data.
+//
+//        - [[fileaccess]]: The script will be able to create new files in a sandboxed 
+//          directory on the user's system.
+//
+//        - [[shellexec]]: The script will be able to ask for permission to run programs 
+//          on the user's system. This could be useful for some niche tasks, but also 
+//          [insert link to TheZZAZZGlitch's "TECHNO" demonstration here]. Ideally we'd 
+//          still require the script to actually get the user's permission to run any 
+//          particular program by way of a hardcoded confirmation prompt, but I don't 
+//          know for sure how practical that'd be.
 //
 //     - Since we don't reveal every single form through a unified interface as xEdit 
 //       does, it will need to be possible for scripts to define forms (as in sheets 
