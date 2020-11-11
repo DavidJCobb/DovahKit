@@ -495,6 +495,9 @@
     <ClCompile Include="editor\get_default_object_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\data\default_objects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1017,6 +1020,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\get_default_object_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\default_objects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

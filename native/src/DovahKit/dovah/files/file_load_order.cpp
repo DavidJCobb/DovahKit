@@ -1198,7 +1198,8 @@ namespace dovah {
       return longest;
    }
    form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type_t ft, bool create_if_missing) noexcept {
-      auto* stub = this->get_canonical_instance_of_singleton_form(ft);
+      const auto* self = this; // needed to disambiguate between the const and non-const overload
+      auto* stub = self->get_canonical_instance_of_singleton_form(ft);
       if (!stub && create_if_missing)
          return this->create_form_of_type(ft);
       return stub;

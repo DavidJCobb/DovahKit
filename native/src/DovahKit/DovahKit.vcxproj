@@ -101,6 +101,7 @@
     <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
     <ClCompile Include="dovah\data\actor_values.cpp" />
+    <ClCompile Include="dovah\data\default_objects.cpp" />
     <ClCompile Include="dovah\data\game_settings.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
@@ -265,6 +266,7 @@
     <ClInclude Include="dovah\bs_hash.h" />
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
+    <ClInclude Include="dovah\data\default_objects.h" />
     <ClInclude Include="dovah\data\game_settings.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archive.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archived_file.h" />

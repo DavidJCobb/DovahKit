@@ -177,6 +177,10 @@
 //
 //        - Implemented but untested. DOBJ would be a good one to test with.
 //
+//        = DOBJ is actually a hardcoded form with form ID 0x00000031. What happens 
+//          if the game loads a DOBJ with a different form ID? Should we coerce all 
+//          saved DOBJ to use the hardcoded form ID?
+//
 //        - Our current system isn't going to manage use info super well. If you 
 //          check the use info of a form used by DOBJ, but there are multiple form 
 //          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
