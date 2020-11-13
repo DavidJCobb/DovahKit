@@ -11,6 +11,7 @@
 #include "main_window/file_metadata_window.h"
 #include "main_window/log_window.h"
 #include "main_window/game_setting_window.h"
+#include "main_window/default_object_window.h"
 
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
@@ -116,6 +117,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       this->metadata_window = dialog;
       QObject::connect(dialog, &QDialog::finished, this, [this, dialog]() {
          this->metadata_window = nullptr;
+         dialog->deleteLater();
+      });
+      dialog->show();
+   });
+   QObject::connect(this->ui.actionDefaultObjects, &QAction::triggered, this, [this]() {
+      if (auto dialog = this->default_object_window) {
+         dialog->raise();
+         dialog->activateWindow();
+         return;
+      }
+      auto* dialog = new DefaultObjectWindow(this);
+      this->default_object_window = dialog;
+      QObject::connect(dialog, &QDialog::finished, this, [this, dialog]() {
+         this->default_object_window = nullptr;
          dialog->deleteLater();
       });
       dialog->show();

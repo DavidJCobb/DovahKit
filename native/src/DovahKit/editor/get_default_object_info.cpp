@@ -382,3 +382,11 @@ extern QString get_default_object_description(uint32_t signature) {
    }
    return QString();
 }
+
+extern bool for_each_default_object(std::function<bool(uint32_t s, const QString& n, const QString& d)> functor) {
+   for (auto& entry : _default_objects) {
+      if (functor(entry.signature, entry.name, entry.description))
+         return true;
+   }
+   return false;
+}

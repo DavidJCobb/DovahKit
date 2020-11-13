@@ -166,6 +166,8 @@
 //          the game engine with no GMST records loaded -- all pristine executable-
 //          level defaults.
 //
+//     - GMST window: "Reset to Default" button
+//
 //     - GMST renumbering: test all error cases.
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
