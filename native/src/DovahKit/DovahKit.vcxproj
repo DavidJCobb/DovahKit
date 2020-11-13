@@ -245,6 +245,7 @@
     <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
     <ClCompile Include="ui\main_window\cell_view\cell_ref_list.cpp" />
     <ClCompile Include="ui\main_window\default_object_window.cpp" />
+    <ClCompile Include="ui\main_window\default_object_window\default_object_list.cpp" />
     <ClCompile Include="ui\main_window\delete_form_dialog.cpp" />
     <ClCompile Include="ui\main_window\delete_form_dialog\delete_form_table.cpp" />
     <ClCompile Include="ui\main_window\file_metadata_window.cpp" />
@@ -420,6 +421,7 @@
     <QtMoc Include="ui\main_window\game_setting_window\game_setting_list.h" />
     <QtMoc Include="ui\main_window\game_setting_window.h" />
     <QtMoc Include="ui\main_window\default_object_window.h" />
+    <QtMoc Include="ui\main_window\default_object_window\default_object_list.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />

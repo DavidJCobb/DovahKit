@@ -25,6 +25,9 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
+//  - FormsOfTypeCombobox won't automatically add newly-created forms. It doesn't 
+//    listen for the DovahKitCore::formCreated signal.
+//
 //  - Cell View
 //
 //     - Implement the "Sort loaded at top" checkbox.
@@ -200,6 +203,11 @@
 //          edited. When we save a DOBJ record, we only want to save the entries 
 //          that actually belong in the active file, and not entries coalesced from 
 //          dependencies.
+//
+//        = If there is no DOBJ form and we fail to create one due to there being 
+//          no form IDs available, then we don't emit any errors. That said, that 
+//          should be impossible since DOBJ is hardcoded to form ID 0x00000031 by 
+//          default.
 //
 //     - NAVI
 //

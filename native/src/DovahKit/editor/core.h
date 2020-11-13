@@ -87,6 +87,8 @@ class DovahKitCore : public QObject {
       void gameSettingValueChangeFailed(const char* name, dovah::notice_code_t);
       void gameSettingRenumbered(const char* name, bare_form_id_t oldID, bare_form_id_t newID);
       //
+      void defaultObjectEntryChanged(uint32_t signature);
+      //
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed(const dovah::file_write_error&);
@@ -131,6 +133,7 @@ class DovahKitCore : public QObject {
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;
       dovah::form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
       dovah::form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
+      dovah::form_stub* get_singleton_form(form_type_t, bool create_if_missing = false) const noexcept; // (create_if_missing) can fail if there are no available form IDs
       bool for_each_form(std::function<bool(dovah::form_stub*)>);
       bool for_each_form_of_type(form_type_t formType, std::function<bool(dovah::form_stub*)>);
       bool for_each_impossible_to_save_form(dovah::game, std::function<bool(dovah::form_stub*)>);
@@ -150,6 +153,9 @@ class DovahKitCore : public QObject {
       bool for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)>);
       bool edit_game_setting(const char* name, const dovah::game_setting_value&);
       void renumber_game_setting(const char* name, QWidget* dialog_parent); // handles UI, error reporting, etc., for you
+      
+      void set_default_object(uint32_t signature, dovah::form_stub*);
+      void set_default_object(uint32_t signature, bare_form_id_t);
 
       dovah::bsa_archived_file* lookup_game_asset(const std::string&); // path should be relative to, and should not include, the Data directory
 

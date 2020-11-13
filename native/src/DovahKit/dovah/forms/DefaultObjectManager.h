@@ -22,6 +22,7 @@ namespace dovah::loaded_forms {
 
          form_stub* get_entry(signature_t) const noexcept;
          notice_code_t set_entry(signature_t, form_stub*);
+         bool entry_is_edited(signature_t) const noexcept;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

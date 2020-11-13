@@ -13,6 +13,7 @@
 #include "../dovah/files/bsa/bsa_load_order.h"
 #include "../dovah/files/tes_file_reading/file.h"
 #include "../dovah/utils/get_user_language_name.h"
+#include "../dovah/forms/DefaultObjectManager.h"
 #include "core_internals/load_task.h"
 #include "core_internals/read_warning_dispatcher.h"
 #include "helpers/make_editor_id_for_duplicate.h"
@@ -266,6 +267,11 @@ dovah::form_stub* DovahKitCore::get_form(form_type_t ft, bare_form_id_t formID) 
 }
 dovah::form_stub* DovahKitCore::get_form_of_probable_type(form_type_t ft, bare_form_id_t formID) const noexcept {
    return this->load_order->get_form_of_probable_type(ft, formID);
+}
+dovah::form_stub* DovahKitCore::get_singleton_form(form_type_t ft, bool create_if_missing) const noexcept {
+   if (this->load_order)
+      return this->load_order->get_canonical_instance_of_singleton_form(ft, create_if_missing);
+   return nullptr;
 }
 bool DovahKitCore::for_each_form(std::function<bool(dovah::form_stub*)> functor) {
    for (uint8_t i = 0; i < dovah::form_types.size(); ++i) {
@@ -605,6 +611,44 @@ void DovahKitCore::renumber_game_setting(const char* name, QWidget* dialog_paren
       return;
    }
    emit this->gameSettingRenumbered(name, oldID, newID);
+}
+
+void DovahKitCore::set_default_object(uint32_t signature, dovah::form_stub* stub) {
+   if (!this->load_order)
+      return;
+   auto* stub = this->load_order->get_canonical_instance_of_singleton_form(dovah::form_type::default_object_manager, true);
+   if (!stub) {
+      //
+      // Should be impossible since DOBJ has hardcoded form ID 0x00000031 reserved for it, so 
+      // don't even bother handling this.
+      //
+      #if _DEBUG
+         __debugbreak();
+      #endif
+      return;
+   }
+   auto loaded = stub->load().ptr_cast<dovah::loaded_forms::DefaultObjectManager>();
+   if (loaded) {
+      //
+      // This *can* return warning and failure codes, but the UI shouldn't allow the user to 
+      // supply any invalid values, so for now, don't bother displaying them.
+      //
+      auto code = loaded->set_entry(signature, stub);
+      switch (code) {
+         case dovah::notice_code::default_object_rejected_for_bad_type:
+            return;
+      }
+      //
+      // Emit success signal:
+      //
+      emit this->defaultObjectEntryChanged(signature);
+   }
+}
+void DovahKitCore::set_default_object(uint32_t signature, bare_form_id_t id) {
+   if (!this->load_order)
+      return;
+   auto* stub = this->load_order->get_form(id);
+   this->set_default_object(signature, stub);
 }
 
 dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::string& path) {

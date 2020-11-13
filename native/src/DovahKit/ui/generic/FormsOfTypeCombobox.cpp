@@ -50,6 +50,9 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
 void FormsOfTypeCombobox::addFormType(dovah::form_type_t ft) {
    this->_formTypes.push_back(ft);
 }
+void FormsOfTypeCombobox::allowAllFormTypes() {
+   this->_formTypes.clear();
+}
 bool FormsOfTypeCombobox::allowsFormType(dovah::form_type_t ft) const noexcept {
    return this->_formTypes.indexOf(ft) >= 0;
 }
@@ -120,6 +123,13 @@ void FormsOfTypeCombobox::populate() {
    }
    //
    emit populated();
+}
+void FormsOfTypeCombobox::setAllowedFormType(dovah::form_type_t ft) {
+   this->_formTypes.clear();
+   this->addFormType(ft);
+}
+void FormsOfTypeCombobox::setAllowedFormTypes(QVector<dovah::form_type_t> ft) {
+   this->_formTypes = ft;
 }
 
 void FormsOfTypeCombobox::setAllowNone(bool s) noexcept {

@@ -504,6 +504,9 @@
     <ClCompile Include="ui\main_window\default_object_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\default_object_window\default_object_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1210,6 +1213,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\default_object_window.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\default_object_window\default_object_list.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

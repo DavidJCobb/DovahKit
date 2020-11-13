@@ -40,7 +40,7 @@
       </widget>
      </item>
      <item row="1" column="0" colspan="2">
-      <widget class="QTableView" name="list"/>
+      <widget class="DefaultObjectList" name="list"/>
      </item>
     </layout>
    </item>
@@ -122,6 +122,11 @@
    <class>FormsOfTypeCombobox</class>
    <extends>QComboBox</extends>
    <header>../generic/FormsOfTypeCombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DefaultObjectList</class>
+   <extends>QTableView</extends>
+   <header>default_object_window/default_object_list.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

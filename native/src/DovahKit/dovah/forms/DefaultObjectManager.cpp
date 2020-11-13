@@ -11,6 +11,11 @@ namespace dovah::loaded_forms {
       auto& e = cobb::unordered_map_get_if_present(this->entries, signature, none);
       return e.form.get_form_stub();
    }
+   bool DefaultObjectManager::entry_is_edited(signature_t signature) const noexcept {
+      entry none;
+      auto& e = cobb::unordered_map_get_if_present(this->entries, signature, none);
+      return e.is_active_file;
+   }
    notice_code_t DefaultObjectManager::set_entry(signature_t signature, form_stub* stub) {
       auto* definition = get_default_object_definition(signature);
       if (definition) {
