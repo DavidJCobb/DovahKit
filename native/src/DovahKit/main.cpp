@@ -186,11 +186,6 @@
 //          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
 //          get awkward.
 //
-//        - We should log a warning when loading a redundant instance of a singleton 
-//          form (e.g. multiple DOBJ records in the same file).
-//
-//           - IMPLEMENTED; NEEDS TESTING.
-//
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
 //

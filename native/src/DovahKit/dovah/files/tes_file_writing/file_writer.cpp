@@ -170,7 +170,10 @@ namespace dovah::tes_file_writing {
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
          record.header.flags = loaded->flags & ~tes_file_record_header::non_data_flags;
          cobb::edit_bit(record.header.flags, tes_file_record_header::flag::deleted, (stub->flags & form_stub::flag::flagged_as_deleted));
-         if (loaded->save(record)) {
+         //
+         auto intfc = load_order_interfaces::form_save(this->owner);
+         //
+         if (loaded->save(record, intfc)) {
             auto& write_info = this->fixup_data.form_stubs[stub->formID];
             write_info.stub   = stub;
             write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record

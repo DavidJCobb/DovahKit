@@ -26,7 +26,7 @@ namespace dovah::loaded_forms {
       }
       return instance;
    }
-   bool Form::save(tes_record_writer& record) {
+   bool Form::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (this->stub->is_deleted()) {
          //
          // Specific form types don't appear to save ANY data -- not even editor IDs -- if they 
@@ -41,7 +41,7 @@ namespace dovah::loaded_forms {
       if (editor_id && editor_id[0])
          record.write_string_subrecord('EDID', editor_id);
       //
-      return this->_save_impl(record);
+      return this->_save_impl(record, intfc);
    }
    void Form::friendly_delete_override(const file_load_order& load_order) noexcept {
       bool flag = !this->_friendly_delete_impl(load_order);

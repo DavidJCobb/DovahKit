@@ -29,6 +29,7 @@ namespace dovah {
    }
    namespace tes_file_writing {
       struct write_config;
+      class  file_writer;
    }
    struct file_save_warning;
 
@@ -589,7 +590,7 @@ namespace dovah {
             form_load(file_load_order& o, const form_stub& t) : owner(o), target_stub(t) {}
       };
       class form_save {
-         friend class file_load_order;
+         friend class tes_file_writing::file_writer;
          public:
             file_load_order& owner;
 

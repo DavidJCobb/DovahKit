@@ -16,7 +16,7 @@ namespace cobb {
       }
       return false;
    }
-   template<typename key_type, typename value_type> value_type& unordered_map_get_if_present(const std::unordered_map<key_type, value_type>& map, const key_type& k, value_type& fallback) {
+   template<typename key_type, typename value_type> const value_type& unordered_map_get_if_present(const std::unordered_map<key_type, value_type>& map, const key_type& k, value_type& fallback) {
       if (!map.bucket_count())
          return fallback;
       size_t bucket = map.bucket(k);

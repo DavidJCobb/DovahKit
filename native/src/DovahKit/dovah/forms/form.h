@@ -54,7 +54,7 @@ namespace dovah {
             //
             Form* clone(form_stub& receiving_stub, bool* out_complete = nullptr) const noexcept;
 
-            bool save(tes_file_writing::record& record); // returns a success bool. will write EDID for you.
+            bool save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc); // returns a success bool. will write EDID for you.
 
             void friendly_delete_override(const file_load_order&) noexcept;
             void flag_as_deleted() noexcept;
