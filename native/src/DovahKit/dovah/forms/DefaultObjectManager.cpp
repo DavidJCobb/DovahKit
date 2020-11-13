@@ -16,6 +16,7 @@ namespace dovah::loaded_forms {
                while (subrecord.is_in_bounds(8)) {
                   signature_t s;
                   subrecord.read(s);
+                  s = _byteswap_ulong(s);
                   auto& entry = this->entries[s];
                   subrecord.read(entry.form);
                   entry.is_active_file = is_active_file;

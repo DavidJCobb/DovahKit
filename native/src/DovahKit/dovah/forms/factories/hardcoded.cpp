@@ -7,6 +7,7 @@
 #include "../Actor.h"
 #include "../ActorBase.h"
 #include "../Container.h"
+#include "../DefaultObjectManager.h"
 #include "../Form.h"
 #include "../FormList.h"
 #include "../Voicetype.h"
@@ -303,6 +304,23 @@ namespace dovah {
          lo._accept_hardcoded_form(stub);
          //
          auto form = new loaded_forms::Voicetype;
+         form->stub = stub;
+         stub->form = form;
+      }
+      {  // [DOBJ:031]
+         //
+         // This form is a singleton, so the game only creates it when it is first loaded or 
+         // accessed. As far as I can see, the game doesn't bother giving it a specific form 
+         // ID. Official game files use form ID 0x031, though, so I assume it's hardcoded 
+         // into the Creation Kit.
+         //
+         auto stub = new form_stub();
+         stub->formID   = 0x031;
+         stub->formType = form_type_info::signature_to_form_type('DOBJ');
+         //
+         lo._accept_hardcoded_form(stub);
+         //
+         auto form = new loaded_forms::DefaultObjectManager;
          form->stub = stub;
          stub->form = form;
       }

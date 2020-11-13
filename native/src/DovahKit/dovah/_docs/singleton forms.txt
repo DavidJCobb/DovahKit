@@ -3,7 +3,8 @@ In Skyrim,  some form types describe  "singleton forms." As  the name suggests,
 the game will never  create more than one instance of  these forms. If multiple 
 records of this form type exist (whether  in a single file or across the entire 
 load order), then they will all be  treated as overrides of the same form, even 
-if their form IDs differ.
+if their form IDs  differ. The final forms in memory will  use the form ID from 
+the last loaded definition.
 
 This behavior is implemented as a special case in the game's form loader (refer 
 to <how the game loads forms.txt>).  The form types that act  as singletons are 

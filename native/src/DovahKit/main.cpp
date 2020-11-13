@@ -108,6 +108,10 @@
 //       the references are properly made bidirectional (i.e. the target stubs need 
 //       to be made existent first).
 //
+//     - You know how the file load order has a dummy "hardcoded form file" so that 
+//       hardcoded forms' stubs can find their owning file load order? Yeah. We're 
+//       gonna need a dummy file for these "none-stubs" as well.
+//
 //     - If we do this, then we need to add an entire documentation file that's just 
 //       about form stubs, and we need to very thoroughly and carefully explain all 
 //       of this, as well as every special-case check that we end up needing for it. 
@@ -177,9 +181,9 @@
 //
 //        - Implemented but untested. DOBJ would be a good one to test with.
 //
-//        = DOBJ is actually a hardcoded form with form ID 0x00000031. What happens 
-//          if the game loads a DOBJ with a different form ID? Should we coerce all 
-//          saved DOBJ to use the hardcoded form ID?
+//        = DOBJ is actually a hardcoded form with form ID 0x00000031. However, the 
+//          final loaded DefaultObjectManager in the game's memory will use the form 
+//          ID supplied by the last loaded DOBJ record.
 //
 //        - Our current system isn't going to manage use info super well. If you 
 //          check the use info of a form used by DOBJ, but there are multiple form 
