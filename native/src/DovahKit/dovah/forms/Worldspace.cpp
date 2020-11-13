@@ -346,7 +346,7 @@ namespace dovah::loaded_forms {
       clone.script_data.clone_from(this->script_data, *clone.stub);
       return true;
    }
-   bool Worldspace::_save_impl(tes_record_writer& record) {
+   bool Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
       if (KEEP_WORLDSPACE_LARGE_REFERENCES) {
          for (auto& entry : this->large_references.entries) {

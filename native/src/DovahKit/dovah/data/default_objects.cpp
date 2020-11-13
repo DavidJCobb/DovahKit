@@ -1,6 +1,13 @@
 #include "default_objects.h"
 
 namespace dovah {
+   extern const default_object* get_default_object_definition(uint32_t signature) {
+      for(auto& d : default_objects)
+         if (d.signature == signature)
+            return &d;
+      return nullptr;
+   }
+
    extern const std::array<default_object, 0x15A> default_objects = {
       default_object('AAAC', form_type::action),
       default_object('AAB1', form_type::action),

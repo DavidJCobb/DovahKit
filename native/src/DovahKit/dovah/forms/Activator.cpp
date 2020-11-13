@@ -140,7 +140,7 @@ namespace dovah::loaded_forms {
       copy->activator_flags = this->activator_flags;
       return true;
    }
-   bool Activator::_save_impl(tes_record_writer& record) {
+   bool Activator::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND);

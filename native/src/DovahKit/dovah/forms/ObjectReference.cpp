@@ -88,7 +88,7 @@ namespace dovah::loaded_forms {
       copy->rotation = this->rotation;
       return true;
    }
-   bool ObjectReference::_save_impl(tes_record_writer& record) {
+   bool ObjectReference::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record);
       //
       auto& NAME = record.open_next_subrecord('NAME');

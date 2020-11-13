@@ -40,7 +40,7 @@ namespace dovah::loaded_forms {
       copy->color_flags = this->color_flags;
       return true;
    }
-   bool Color::_save_impl(tes_record_writer& record) {
+   bool Color::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();

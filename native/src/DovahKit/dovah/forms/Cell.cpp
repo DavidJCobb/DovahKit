@@ -173,7 +173,7 @@ namespace dovah::loaded_forms {
       copy->script_data.clone_from(this->script_data, *copy->stub);
       return true;
    }
-   bool Cell::_save_impl(tes_record_writer& record) {
+   bool Cell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       bool is_exterior = this->stub->is_exterior_cell();
       //
       auto& FULL = record.open_next_subrecord('FULL');

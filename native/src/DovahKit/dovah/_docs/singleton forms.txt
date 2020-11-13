@@ -90,7 +90,7 @@ file? Well, that leads to use trying to sever outbound references from multiple
 DOBJ stubs,  not just the canonical one,  which in turn leads to  each of these 
 stubs being flagged as edited.
 
-With the approach  wherein we copy source file information  between stubs, this 
+With the approach in which we copy source  file information between stubs, this 
 doesn't have any immediately obvious  consequences. We're still identifying the 
 canonical DOBJ stub based on the length of its file list, rather than by trying 
 to sort multiple  stubs based on where  in what files they  originated from and 

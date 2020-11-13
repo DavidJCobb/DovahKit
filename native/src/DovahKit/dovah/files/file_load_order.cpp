@@ -17,6 +17,7 @@
 #include "../utils/get_user_language_name.h"
 #include "../localization/localized_string_store.h"
 #include "../notice_code_list.h"
+#include "file_save_warning.h"
 #include <fstream>
 
 namespace {
@@ -507,6 +508,29 @@ namespace dovah {
                   continue;
                stub_files.push_back(*data);
             }
+            //
+            // Also, let's log a load warning if this singleton form is redundantly defined within the 
+            // current file.
+            //
+            auto* pf = prior->get_source_file_info();
+            auto* sf = stub->get_source_file_info();
+            if (pf && sf && pf->pointer == sf->pointer) {
+               file_read_warning warning;
+               warning.code               = notice_code::singleton_form_is_redundantly_defined;
+               warning.cause_form.localID = stub->formID;
+               warning.cause_form.fixedID = formID;
+               warning.cause_form.type    = stub->formType;
+               warning.set_flag(file_read_warning::flag::has_cause_form);
+               warning.cause_file = sf->pointer->get_filename();
+               warning.set_flag(file_read_warning::flag::has_cause_file);
+               //
+               auto& relevant = warning.relevant_forms.emplace_back();
+               relevant.localID = 0;
+               relevant.fixedID = prior->formID;
+               relevant.type    = prior->formType;
+               //
+               this->log_load_warning(warning);
+            }
          }
          //
          // And of course, the new stub already knows its file information, so let's grab that, too.
@@ -715,6 +739,12 @@ namespace dovah {
          return;
       if (this->on_read_warning)
          (this->on_read_warning)(w);
+   }
+   void file_load_order::log_save_warning(const file_save_warning& w) {
+      if (!w.is_defined())
+         return;
+      if (this->on_save_warning)
+         (this->on_save_warning)(w);
    }
    #pragma endregion
 
@@ -2751,6 +2781,11 @@ namespace dovah {
          }
          //
          this->owner.log_load_warning(warning);
+      }
+
+      void form_save::log_save_warning(file_save_warning& warning) {
+         warning.context = file_save_warning::context_t::on_demand_form_save;
+         this->owner.log_save_warning(warning);
       }
    }
    #pragma endregion

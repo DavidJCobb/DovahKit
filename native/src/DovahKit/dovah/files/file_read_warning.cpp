@@ -104,6 +104,9 @@ namespace dovah {
       if (this->flags & flag::has_cause_form_type)
          if (this->cause_form_type != other.cause_form_type)
             return false;
+      if (this->flags & flag::has_cause_editor_id)
+         if (this->cause_editor_id != other.cause_editor_id)
+            return false;
       if (this->cause_file != other.cause_file)
          return false;
       if (this->relevant_forms != other.relevant_forms)

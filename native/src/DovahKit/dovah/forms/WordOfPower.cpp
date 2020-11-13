@@ -36,7 +36,7 @@ namespace dovah::loaded_forms {
       copy->human_name  = this->human_name;
       return true;
    }
-   bool WordOfPower::_save_impl(tes_record_writer& record) {
+   bool WordOfPower::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->dragon_name);
       FULL.close();

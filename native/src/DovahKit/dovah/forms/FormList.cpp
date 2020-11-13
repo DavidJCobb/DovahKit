@@ -49,7 +49,7 @@ namespace dovah::loaded_forms {
          copy->contents[i].set(*copy->stub, this->contents[i]);
       return true;
    }
-   bool FormList::_save_impl(tes_record_writer& record) {
+   bool FormList::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       for (auto& entry : this->contents)
          record.write_formID_subrecord('LNAM', entry);
       return true;

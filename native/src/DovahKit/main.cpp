@@ -181,10 +181,6 @@
 //
 //        - Implemented but untested. DOBJ would be a good one to test with.
 //
-//        = DOBJ is actually a hardcoded form with form ID 0x00000031. However, the 
-//          final loaded DefaultObjectManager in the game's memory will use the form 
-//          ID supplied by the last loaded DOBJ record.
-//
 //        - Our current system isn't going to manage use info super well. If you 
 //          check the use info of a form used by DOBJ, but there are multiple form 
 //          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
@@ -192,6 +188,8 @@
 //
 //        - We should log a warning when loading a redundant instance of a singleton 
 //          form (e.g. multiple DOBJ records in the same file).
+//
+//           - IMPLEMENTED; NEEDS TESTING.
 //
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
@@ -234,22 +232,20 @@
 //          also list all users of these forms, and it should specify that those 
 //          users may log their own errors.
 //
-//     - If the user is converting the active file between games, and a loaded form 
-//       contains data that cannot be serialized in the target game, then it needs 
-//       some way to report a warning. Form::save and Form::_save_impl should receive 
-//       a second argument: a file_save_process& that can be used to log warnings. 
-//       (The name is generic so that we can give it other duties in the future if we 
-//       need to.) It would be perfectly acceptable for this to just be a wrapper or 
-//       interface to file_writer.
+//     - Logging save warnings from forms
 //
-//        - What we want, then, is for forms to be able to log warnings; each warning 
-//          should be a struct with a notice code and some optional generic details 
-//          about the warning (e.g. other form IDs, etc.).
+//        - Form components need to receive the "form save" interface so that they can 
+//          also log warnings.
 //
-//           - Form IDs in this struct should be listed in both "global" and "remapped" 
-//             format, i.e. the IDs as they exist in memory and the IDs as they would 
-//             exist in the saved file. In fact, let's take that approach for all of 
-//             the warnings we log, yeah?
+//        - Audit existing form types and extra data types, and add any appropriate 
+//          save warnings, particularly for converting between Classic and Special.
+//
+//        - Do we want to store "local" form IDs in the save warnings, as we do for read 
+//          warnings?
+//
+//           - How much can we share between the two warning structs? It'd be nice if we 
+//             could sort of centralize and standardize things instead of having bespoke 
+//             warning and error codes and structs everywhere.
 //
 //  - Support for loading records flagged as "partial"
 //

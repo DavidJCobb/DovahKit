@@ -407,6 +407,26 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             text = text.arg(form).arg(file).arg(name);
          }
          break;
+      case notice_code::singleton_form_is_redundantly_defined:
+         {
+            text = QObject::tr("File %1 contains multiple records that define the same singleton: %2 and %3. The game only allows one form of this type to exist; all records are loaded into that one form, so there's no need to have multiple records.", "log window");
+            QString file   = QObject::tr("<unknown filename>",    "log window");
+            QString form_a = QObject::tr("<unknown GMST record>", "log window");
+            QString form_b = form_a;
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form_a = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (!warning.relevant_forms.empty()) {
+               form_b = _read_error_form_id_to_string(warning.relevant_forms[0]);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               file = QString::fromStdString(warning.cause_file);
+            }
+            //
+            text = text.arg(file).arg(form_a).arg(form_b);
+         }
+         break;
    }
 }
 LogListModelItem::LogListModelItem(const dovah::file_write_error& error) {

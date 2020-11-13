@@ -47,6 +47,9 @@ namespace dovah {
          game_setting_record_unreadable_data   = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
          cannot_sever_references_to_target     = 0x00000027,
          game_setting_is_not_in_active_file    = 0x00000028, // Cannot renumber a GMST that doesn't originate from the active file.
+         default_object_rejected_for_bad_type  = 0x00000029, // The loaded DefaultObjectManager won't let you use the specified form for the specified entry, as the form is of the wrong type.
+         default_object_accepted_but_unknown   = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one DovahKit's backend recognizes.
+         singleton_form_is_redundantly_defined = 0x0000002B, // A file contained multiple records for the same singleton form (e.g. multiple DOBJ records or multiple NAVI records).
       };
    };
 }

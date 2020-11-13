@@ -12,6 +12,7 @@ namespace dovah {
    }
    namespace load_order_interfaces {
       class form_load;
+      class form_save;
    }
 
    namespace loaded_forms {
@@ -71,7 +72,7 @@ namespace dovah {
             
          protected:
             virtual bool _clone_impl(Form* out) const noexcept { return false; }; // TODO: implement on existing forms; then, make pure
-            virtual bool _save_impl(tes_file_writing::record& record) { return false; }; // TODO: implement on existing forms; then, make pure
+            virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save&) { return false; }; // TODO: implement on existing forms; then, make pure
 
             //
             // === void Form::_friendly_delete_impl() ============================================

@@ -1,9 +1,29 @@
 #include "DefaultObjectManager.h"
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
+#include "../data/default_objects.h"
+#include "../../helpers/unordered_map.h"
 #include "factories/hardcoded.h"
 
 namespace dovah::loaded_forms {
+   form_stub* DefaultObjectManager::get_entry(signature_t signature) const noexcept {
+      entry none;
+      auto& e = cobb::unordered_map_get_if_present(this->entries, signature, none);
+      return e.form.get_form_stub();
+   }
+   notice_code_t DefaultObjectManager::set_entry(signature_t signature, form_stub* stub) {
+      auto* definition = get_default_object_definition(signature);
+      if (definition) {
+         if (stub && stub->formType != definition->type)
+            return notice_code::default_object_rejected_for_bad_type;
+      }
+      auto& entry = this->entries[signature];
+      entry.form.set(*this->stub, stub);
+      if (!definition)
+         return notice_code::default_object_accepted_but_unknown;
+      return default_notice_code;
+   }
+
    void DefaultObjectManager::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
@@ -65,7 +85,7 @@ namespace dovah::loaded_forms {
       }
       return true;
    }
-   bool DefaultObjectManager::_save_impl(tes_record_writer& record) {
+   bool DefaultObjectManager::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       bool opened = false;
       for (auto& pair : this->entries) {
          auto& entry = pair.second;

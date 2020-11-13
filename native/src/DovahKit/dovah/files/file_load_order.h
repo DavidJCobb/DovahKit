@@ -30,6 +30,7 @@ namespace dovah {
    namespace tes_file_writing {
       struct write_config;
    }
+   struct file_save_warning;
 
    class form_creation_request;
    class form_duplication_request;
@@ -79,7 +80,8 @@ namespace dovah {
          using form_create_callback_t   = void(*)(form_stub*);
          using form_loss_callback_t     = void(*)(form_stub&);
          using form_renumber_callback_t = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
-         using warning_callback_t       = void(*)(const file_read_warning&);
+         using read_warning_callback_t  = void(*)(const file_read_warning&);
+         using save_warning_callback_t  = void(*)(const file_save_warning&);
          using generic_callback_t       = void(*)();
          //
       protected:
@@ -193,7 +195,8 @@ namespace dovah {
          form_loss_callback_t     on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
          form_renumber_callback_t on_form_renumber = nullptr;
          generic_callback_t       on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
-         warning_callback_t       on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later. frontend is responsible for maintaining thread-safety.
+         read_warning_callback_t  on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later. frontend is responsible for maintaining thread-safety.
+         save_warning_callback_t  on_save_warning  = nullptr; // warnings that occur when saving a file. frontend is responsible for maintaining thread-safety.
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -206,6 +209,7 @@ namespace dovah {
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
          bare_form_id_t remap_formID_for_save(bare_form_id_t) const noexcept;
          void log_load_warning(const file_read_warning&);
+         void log_save_warning(const file_save_warning&);
 
          // (acceptFormStub)
          // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 
@@ -583,6 +587,17 @@ namespace dovah {
             
          protected:
             form_load(file_load_order& o, const form_stub& t) : owner(o), target_stub(t) {}
+      };
+      class form_save {
+         friend class file_load_order;
+         public:
+            file_load_order& owner;
+
+            // TIP: This function only logs a warning if it has a warning code.
+            void log_save_warning(file_save_warning&);
+            
+         protected:
+            form_save(file_load_order& o) : owner(o) {}
       };
    }
 }
