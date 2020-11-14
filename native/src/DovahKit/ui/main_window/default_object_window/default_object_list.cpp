@@ -136,6 +136,7 @@ QVariant DefaultObjectListModel::data(const QModelIndex& index, int role) const 
       case ColumnSignature:
          switch (role) {
             case Qt::DisplayRole:
+               return QObject::tr("%1%2").arg(cobb::qt::four_cc_to_string(item->signature)).arg(item->is_edited ? QObject::tr(" *", "default object window - active file setting marker") : "");
             case SortRole: // sorting
             case FilterRole: // filtering
                return cobb::qt::four_cc_to_string(item->signature);
@@ -146,6 +147,7 @@ QVariant DefaultObjectListModel::data(const QModelIndex& index, int role) const 
       case ColumnName:
          switch (role) {
             case Qt::DisplayRole:
+               return QObject::tr("%1%2").arg(item->name).arg(item->is_edited ? QObject::tr(" *", "default object window - active file setting marker") : "");
             case SortRole: // sorting
             case FilterRole: // filtering
                return item->name;
@@ -206,8 +208,10 @@ void DefaultObjectListModel::build() {
       loaded = stub->load().ptr_cast<form_t>();
    for (auto& definition : dovah::default_objects) {
       auto* item = new item_type(definition.signature, definition.type);
-      if (loaded)
-         item->form = loaded->get_entry(definition.signature);
+      if (loaded) {
+         item->form      = loaded->get_entry(definition.signature);
+         item->is_edited = loaded->entry_is_edited(definition.signature);
+      }
       queued.push_back(item);
    }
    if (loaded) {
@@ -217,7 +221,8 @@ void DefaultObjectListModel::build() {
          if (dovah::get_default_object_definition(signature))
             continue;
          auto* item = new item_type(signature, dovah::form_type::none);
-         item->form = entry.form.get_form_stub();
+         item->form      = entry.form.get_form_stub();
+         item->is_edited = entry.is_active_file;
          queued.push_back(item);
       }
    }
@@ -256,7 +261,7 @@ DefaultObjectList::DefaultObjectList(QWidget* parent) : QTableView(parent) {
    auto metrics = QFontMetrics(this->font());
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
-   header->resizeSection(DefaultObjectListModel::ColumnSignature, metrics.boundingRect("XMMX").width() * 1.5F + 4);
+   header->resizeSection(DefaultObjectListModel::ColumnSignature, metrics.boundingRect("XMMX *").width() * 1.5F + 4);
    header->setSectionResizeMode(DefaultObjectListModel::ColumnName,  QHeaderView::Stretch);
    header->setSectionResizeMode(DefaultObjectListModel::ColumnValue, QHeaderView::Stretch);
    //
