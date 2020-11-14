@@ -134,6 +134,10 @@ namespace dovah::tes_file_writing {
       memcpy(target, source, size);
       this->pos += size;
    }
+   void subrecord::write_signature(uint32_t s) {
+      s = _byteswap_ulong(s);
+      this->write(s);
+   }
    void subrecord::skip_bytes(uint32_t size) {
       this->data.resize(this->pos + size);
       void* target = this->data.data() + this->pos;

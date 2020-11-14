@@ -230,6 +230,8 @@ namespace dovah {
             template<> inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }
             #pragma endregion
             //
+            bool read_signature(uint32_t& out) const noexcept;
+            //
             bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator
             bool read_wstring(std::wstring& field);
             //

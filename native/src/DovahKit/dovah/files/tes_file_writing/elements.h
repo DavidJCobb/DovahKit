@@ -141,6 +141,8 @@ namespace dovah {
             template<> inline void write(const tes_file_subrecord_header& v) = delete;
             template<> inline void write(const form_id_t& v) = delete;
             //
+            void write_signature(uint32_t);
+            //
             template<int length_bytes> void write_length_prefixed_string(const std::string& v) {
                using int_t = cobb::bytecount_to_int_t<length_bytes>;
                int_t length = v.size();

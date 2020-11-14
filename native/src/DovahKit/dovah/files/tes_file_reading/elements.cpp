@@ -182,6 +182,12 @@ namespace dovah {
       record& subrecord::get_containing_record() const {
          return this->owner._record;
       }
+      bool subrecord::read_signature(uint32_t& out) const noexcept {
+         if (!this->read(out))
+            return false;
+         out = _byteswap_ulong(out);
+         return true;
+      }
       bool subrecord::read_wstring(std::string& field) {
          field.clear();
          uint16_t length;

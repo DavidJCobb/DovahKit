@@ -42,8 +42,7 @@ namespace dovah::loaded_forms {
             case 'DNAM':
                while (subrecord.is_in_bounds(8)) {
                   signature_t s;
-                  subrecord.read(s);
-                  s = _byteswap_ulong(s);
+                  subrecord.read_signature(s);
                   auto& entry = this->entries[s];
                   subrecord.read(entry.form);
                   entry.is_active_file = is_active_file;
@@ -101,7 +100,7 @@ namespace dovah::loaded_forms {
          if (!opened)
             record.open_next_subrecord('DNAM');
          auto& subrecord = record.get_current_subrecord();
-         subrecord.write(pair.first);
+         subrecord.write_signature(pair.first);
          subrecord.write(entry.form);
       }
       if (opened)

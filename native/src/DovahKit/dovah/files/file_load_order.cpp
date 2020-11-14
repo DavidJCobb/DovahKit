@@ -481,9 +481,13 @@ namespace dovah {
          }
          stub->_adopt_source_file_list(target);
          delete target; // delete the overridden form stub
+         target = nullptr; // needed to prevent the singleton-form special case below from crashing, if what we're deleting is the canonical stub
       }
       auto& type = this->forms_by_type[stub->formType];
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);
+      //
+      if (type.forms[formID])
+         type.forms[formID] = nullptr; // needed to prevent the singleton-form special case below from crashing, if what we deleted just above was the canonical stub
       //
       if (form_type_info::lookup(stub->formType).flags & form_type_info::flag::is_singleton) {
          //
