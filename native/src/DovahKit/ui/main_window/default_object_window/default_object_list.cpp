@@ -7,7 +7,7 @@
 #include "../../../editor/get_default_object_info.h"
 
 #pragma region DefaultObjectListModel
-DefaultObjectListModelItem::DefaultObjectListModelItem(uint32_t signature, form_type_t ft) {
+DefaultObjectListModelItem::DefaultObjectListModelItem(uint32_t signature, dovah::form_type_t ft) {
    this->signature   = signature;
    this->form_type   = ft;
    this->name        = get_default_object_name(signature);
@@ -25,14 +25,38 @@ QString DefaultObjectListModelItem::valueAsString() const noexcept {
 
 DefaultObjectListModel::DefaultObjectListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,     this, &DefaultObjectListModel::build);
-   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &DefaultObjectListModel::build);
-   QObject::connect(&editor, &DovahKitCore::formModified,            this, &DefaultObjectListModel::formModified);
-   QObject::connect(&editor, &DovahKitCore::formDeletionImminent,    this, &DefaultObjectListModel::formDeletionImminent);
-   QObject::connect(&editor, &DovahKitCore::formRenumbered,          this, &DefaultObjectListModel::formRenumbered);
-   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse,  this, &DefaultObjectListModel::build);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,       this, &DefaultObjectListModel::build);
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,       this, &DefaultObjectListModel::build);
+   QObject::connect(&editor, &DovahKitCore::formModified,              this, &DefaultObjectListModel::formModified);
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent,      this, &DefaultObjectListModel::formDeletionImminent);
+   QObject::connect(&editor, &DovahKitCore::formRenumbered,            this, &DefaultObjectListModel::formRenumbered);
+   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse,    this, &DefaultObjectListModel::build);
+   QObject::connect(&editor, &DovahKitCore::defaultObjectEntryChanged, this, &DefaultObjectListModel::defaultObjectEntryChanged);
 }
 //
+void DefaultObjectListModel::defaultObjectEntryChanged(uint32_t signature) {
+   int size = this->children.size();
+   for (int i = 0; i < size; ++i) {
+      auto* item = this->children[i];
+      if (item->signature == signature) {
+         auto& editor = DovahKitCore::get();
+         form_ptr_t loaded;
+         if (auto* stub = editor.get_singleton_form(dovah::form_type::default_object_manager)) {
+            loaded = stub->load().ptr_cast<form_t>();
+            if (!loaded)
+               return;
+         }
+         item->form      = loaded->get_entry(signature);
+         item->is_edited = loaded->entry_is_edited(item->signature);
+         //
+         auto root  = QModelIndex();
+         auto start = this->index(i, 0, root);
+         auto end   = this->index(i, this->columnCount(root), root);
+         emit dataChanged(start, end);
+         return;
+      }
+   }
+}
 void DefaultObjectListModel::formModified(const dovah::form_stub* stub) {
    int size = this->children.size();
    for (int i = 0; i < size; ++i) {
@@ -96,7 +120,7 @@ int DefaultObjectListModel::rowCount(const QModelIndex& parent) const {
    return this->children.size();
 }
 int DefaultObjectListModel::columnCount(const QModelIndex& item) const {
-   return 4;
+   return 3;
 }
 Qt::ItemFlags DefaultObjectListModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
@@ -233,21 +257,9 @@ DefaultObjectList::DefaultObjectList(QWidget* parent) : QTableView(parent) {
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
    header->resizeSection(DefaultObjectListModel::ColumnSignature, metrics.boundingRect("XMMX").width() * 1.5F + 4);
-   header->setSectionResizeMode(DefaultObjectListModel::ColumnName,   QHeaderView::Stretch);
-   header->setSectionResizeMode(DefaultObjectListModel::ColumnValue,  QHeaderView::Stretch);
+   header->setSectionResizeMode(DefaultObjectListModel::ColumnName,  QHeaderView::Stretch);
+   header->setSectionResizeMode(DefaultObjectListModel::ColumnValue, QHeaderView::Stretch);
    //
-   QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
-      auto* proxy = (QSortFilterProxyModel*)this->model();
-      auto  real  = proxy->mapToSource(index); // the (index) we received is specific to the proxy; we need an index relative to the underlying model
-      if (!real.isValid())
-         return;
-      auto data = (model_item_type*)real.internalPointer();
-      if (!data)
-         return;
-      //
-      // TODO: show the setting *and* focus the relevant editing control
-      //
-   });
    QObject::connect(this->_filterThrottle, &QTimer::timeout, [this]() {
       if (this->_filter)
          this->refilterModelByText(this->_filter->text());

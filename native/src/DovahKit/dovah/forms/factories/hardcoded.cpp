@@ -1,6 +1,7 @@
 #include "hardcoded.h"
 #include "../../core.h"
 #include "../../form_stub.h"
+#include "../../files/tes_file_reading/file.h"
 #include "../../files/file_load_order.h"
 #include "../../data/actor_values.h"
 #include "../Activator.h"
@@ -14,13 +15,64 @@
 #include "../Worldspace.h"
 
 namespace dovah {
+   extern loaded_forms::Form* instantiate_hardcoded_form(form_stub& stub) {
+      assert(stub.form == nullptr && "Why are we trying to create a loaded-form instance for a stub (for a hardcoded form) that already has one?");
+      //
+      // First, let's handle singleton forms.
+      //
+      if (stub.formType == form_type::default_object_manager)
+         return new loaded_forms::DefaultObjectManager;
+      //
+      // Next, we'll check the form ID. First, we'll look into the actor values.
+      //
+      {  // Actor values
+         auto& list = data::actor_Value_info_list::get();
+         for (uint16_t i = 0; i < list.count; i++) {
+            auto& entry = list.list[i];
+            if (stub.formID == entry.formID)
+               return nullptr; // TODO: we need a class for these
+         }
+      }
+      //
+      // Now, some of the other forms have relationships to each other, which we'll need to set 
+      // up, so first, we need to get the stub's owning load order in order to be able to look 
+      // up other forms by their IDs.
+      //
+      // When setting up these relationships, we should use (form_reference_t::unmanaged_set), 
+      // because use info should've been set up already in (build_hardcoded_form_outbound_refs).
+      //
+      auto* file = stub.get_file_at_index(0);
+      if (!file) {
+         #if _DEBUG
+            __debugbreak();
+         #endif
+         return nullptr;
+      }
+      auto& lo = file->load_order;
+      switch (stub.formID) {
+         case 0x14:
+            {
+               auto* form = new loaded_forms::Actor;
+               form->base_form.unmanaged_set(lo.get_form(form_type::actor_base, 0x007));
+               return form;
+            }
+            break;
+         case 0x2D:
+            return new loaded_forms::Voicetype;
+         case 0x2E:
+            return new loaded_forms::Voicetype;
+         case 0x3C:
+            return new loaded_forms::Worldspace;
+         case 0x163:
+            return new loaded_forms::FormList;
+         case 0x165:
+            return new loaded_forms::FormList;
+         case 0x1F3:
+            return new loaded_forms::FormList;
+      }
+      return nullptr;
+   }
    void add_hardcoded_forms_to_load_order(file_load_order& lo) {
-      //
-      // TODO: Add loaded form objects for objects below as we implement more loaded form classes.
-      //
-      // NOTE: You must create and configure the loaded form object after the load order has 
-      //       accepted the stub, as only then will it be safe to set up references between 
-      //       hardcoded forms (e.g. PlayerRef -> Player).
       //
       // NOTE: Some forms below are listed as being hardcoded into the CK but not the game. This 
       //       is an educated guess; I have not reverse-engineered the CK to verify this. These 
@@ -163,11 +215,6 @@ namespace dovah {
          stub->editorID = "PlayerRef";
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::Actor;
-         form->base_form.set(*stub, Player);
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [STAT:015]"MultiBoundMarker"
          auto stub = new form_stub();
@@ -290,10 +337,6 @@ namespace dovah {
          stub->editorID = "AdultMaleVoice1";
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::Voicetype;
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [VTYP:02E]"AdultFemaleVoice1"
          auto stub = new form_stub();
@@ -302,10 +345,6 @@ namespace dovah {
          stub->editorID = "AdultFemaleVoice1";
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::Voicetype;
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [DOBJ:031]
          //
@@ -319,10 +358,6 @@ namespace dovah {
          stub->formType = form_type_info::signature_to_form_type('DOBJ');
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::DefaultObjectManager;
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [STAT:032]"COCMarkerHeading"
          auto stub = new form_stub();
@@ -406,10 +441,6 @@ namespace dovah {
          stub->editorID = "DefaultWorld";
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::Worldspace;
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [CSTY:03D]"DefaultCombatstyle"
          //
@@ -578,10 +609,6 @@ namespace dovah {
          stub->editorID = "HelpManualPC";
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::FormList;
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [IMAD:164]"ImageSpaceConcussion"
          auto stub = new form_stub();
@@ -597,10 +624,6 @@ namespace dovah {
          stub->editorID = "HelpManualXBox";
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::FormList;
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [IMAD:166]"ExplosionInFace"
          auto stub = new form_stub();
@@ -751,10 +774,6 @@ namespace dovah {
          stub->editorID = "HairColorListDoNotUse";
          //
          lo._accept_hardcoded_form(stub);
-         //
-         auto form = new loaded_forms::FormList;
-         form->stub = stub;
-         stub->form = form;
       }
       {  // [WEAP:1F4]"Unarmed"
          auto stub = new form_stub();

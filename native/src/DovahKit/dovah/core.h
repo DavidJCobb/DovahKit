@@ -329,7 +329,14 @@ namespace dovah {
          inline bool operator!=(const form_reference_t& other) const noexcept { return this->stub != other.stub; };
          inline bool operator==(const form_stub* other) const noexcept { return this->stub == other; }
          inline bool operator!=(const form_stub* other) const noexcept { return this->stub != other; }
+         
          //
+         // This function is for internal use only. Hardcoded forms use it during the on-demand 
+         // load process, to set up form-to-form references that are present in hardcoded data 
+         // (in lieu of having a file to load this data from).
+         //
+         void unmanaged_set(form_stub* set_to); // FOR INTERNAL USE ONLY
+         
       protected:
          inline form_reference_t& operator=(form_stub* other) { this->stub = other; return *this; };
    };

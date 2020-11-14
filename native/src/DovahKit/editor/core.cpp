@@ -616,8 +616,8 @@ void DovahKitCore::renumber_game_setting(const char* name, QWidget* dialog_paren
 void DovahKitCore::set_default_object(uint32_t signature, dovah::form_stub* stub) {
    if (!this->load_order)
       return;
-   auto* stub = this->load_order->get_canonical_instance_of_singleton_form(dovah::form_type::default_object_manager, true);
-   if (!stub) {
+   auto* singleton_stub = this->load_order->get_canonical_instance_of_singleton_form(dovah::form_type::default_object_manager, true);
+   if (!singleton_stub) {
       //
       // Should be impossible since DOBJ has hardcoded form ID 0x00000031 reserved for it, so 
       // don't even bother handling this.
@@ -627,7 +627,7 @@ void DovahKitCore::set_default_object(uint32_t signature, dovah::form_stub* stub
       #endif
       return;
    }
-   auto loaded = stub->load().ptr_cast<dovah::loaded_forms::DefaultObjectManager>();
+   auto loaded = singleton_stub->load().ptr_cast<dovah::loaded_forms::DefaultObjectManager>();
    if (loaded) {
       //
       // This *can* return warning and failure codes, but the UI shouldn't allow the user to 

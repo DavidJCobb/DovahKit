@@ -76,6 +76,7 @@ DefaultObjectWindow::DefaultObjectWindow(QWidget* parent) : QDialog(parent) {
          //
          bool has_data = DovahKitCore::get().has_data();
          this->ui.buttonCommit->setEnabled(has_data);
+         this->ui.form->setEnabled(has_data);
          //
          this->ui.entryName->setText(item->name);
          this->ui.description->setText(item->description);

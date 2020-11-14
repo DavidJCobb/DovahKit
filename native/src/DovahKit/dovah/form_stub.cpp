@@ -96,14 +96,27 @@ namespace dovah {
       if (!loader)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
       if (auto* file = arr[0].pointer) {
-         intfc.current_file      = file;
-         intfc.is_winning_record = (1 == size);
-         if (file->load_record_at(arr[0].offset)) {
-            auto& record = file->get_current_record();
-            this->form = create_blank_loaded_form_by_type(this->formType);
-            if (this->form) {
+         if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
+            //
+            // This file is the hardcoded dummy file. We'll need to instantiate the loaded-form 
+            // class a bit differently, since hardcoded forms don't come from a "real" file.
+            //
+            this->form = instantiate_hardcoded_form(*this);
+            if (this->form)
                this->form->stub = this;
-               (loader)(this->form, record, intfc);
+         } else {
+            //
+            // This file is a real file. Load from it.
+            //
+            intfc.current_file      = file;
+            intfc.is_winning_record = (1 == size);
+            if (file->load_record_at(arr[0].offset)) {
+               auto& record = file->get_current_record();
+               this->form = create_blank_loaded_form_by_type(this->formType);
+               if (this->form) {
+                  this->form->stub = this;
+                  (loader)(this->form, record, intfc);
+               }
             }
          }
       }
@@ -296,8 +309,6 @@ namespace dovah {
    bool form_stub::can_unload_form() const noexcept {
       if (this->is_edited())
          return false;
-      if (this->is_non_overridden_hardcoded_form())
-         return false;
       return true;
    }
    bool form_stub::is_non_overridden_hardcoded_form() const noexcept {
@@ -305,7 +316,7 @@ namespace dovah {
          auto* info = this->get_source_file_info(-1); // get last file
          if (!info || !info->pointer)
             return false;
-         if (info->pointer->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) // allow overrides of hardcoded forms to unload
+         if (info->pointer->header.details & owner_file_t::detail_flag::is_hardcoded_dummy)
             return true;
       }
       return false;

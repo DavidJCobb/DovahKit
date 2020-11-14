@@ -7,8 +7,12 @@
 #include <QTableView>
 #include <QTimer>
 #include "../../../dovah/core.h"
+#include "../../../dovah/form_stub.h"
 #include "../../../dovah/data/default_objects.h"
 
+namespace dovah::loaded_forms {
+   class DefaultObjectManager;
+}
 
 class DefaultObjectListModel;
 class DefaultObjectListModelItem {
@@ -19,18 +23,16 @@ class DefaultObjectListModelItem {
    friend DefaultObjectListModel;
    public:
       using bare_form_id_t = dovah::bare_form_id_t;
-      using form_type      = dovah::form_type;
-      using form_type_t    = dovah::form_type_t;
       //
       uint32_t signature = 0;
       QString  name;
       QString  description;
       const dovah::form_stub* form      = nullptr;
-      dovah::form_type_t      form_type = form_type::none;
+      dovah::form_type_t      form_type = dovah::form_type::none;
       bool is_edited = false;
       //
       DefaultObjectListModelItem() {}
-      DefaultObjectListModelItem(uint32_t signature, form_type_t ft);
+      DefaultObjectListModelItem(uint32_t signature, dovah::form_type_t ft);
       //
       QString valueAsString() const noexcept;
 };
