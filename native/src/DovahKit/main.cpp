@@ -62,6 +62,19 @@
 //  - We should log a warning when loading a form that is misplaced into the wrong 
 //    GRUP.
 //
+//  - Currently, form stubs retain the GRUP they loaded from. This is used to identify 
+//    a worldspace's persistent cell, as well as to sort REFRs into a cell's persistent 
+//    and temporary child GRUPs when saving. Neither of these uses is going to be 
+//    tenable in the long run.
+//
+//     = As far as the game is concerned, the first persistent-flagged CELL that it 
+//       loads is the persistent cell for a WRLD.
+//
+//     = We need to investigate how exactly the CK sorts REFRs into persistent and 
+//       temporary CELL GRUPs, and how this differs for interior versus exterior cells.
+//
+//     - If we make changes in this regard, then we need to update the form stub docs.
+//
 //  - DovahKit currently has a bit of a design flaw with respect to invalid references 
 //    to unoccupied form IDs. Consider the case where I load a file with a SHOU/SNAM 
 //    that refers to some form xx001234, but there is no form with that ID. Then, in 
