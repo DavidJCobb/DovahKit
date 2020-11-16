@@ -14,14 +14,6 @@
 //  - Use std::filesystem::path instead of std::string for file paths and names in 
 //    dovah::file_load_order, dovah::tes_file_reading::file_reader, and so on.
 //
-//  - If the load order has been configured to load Skyrim Special Edition files, 
-//    then the load order should be capped at 253 entries, not 254.
-//
-//     - It's tempting to go by the individual files' versions, but remember: we 
-//       have to load Special files from a different location than Classic files. 
-//       Don't bother mucking around with file versions; just put a flag on the 
-//       file_load_order and use that.
-//
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //

@@ -367,7 +367,7 @@ namespace dovah {
             file->header.flags &= ~tes_file_flag::light;
       }
       //
-      if (!this->active_file && this->files.size() < 254) { // TODO: the cutoff should be 253 if any of the loaded files are ESLs or SSE files
+      if (!this->active_file && this->files.size() < (this->is_light_plugin_support_enabled() ? 253 : 254)) {
          auto file = new tes_file_reading::file_reader(*this);
          this->active_file = file;
          this->files.push_back(file);
