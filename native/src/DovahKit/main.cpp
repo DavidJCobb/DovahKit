@@ -184,8 +184,6 @@
 //
 //     - Singleton form support
 //
-//        - Implemented but untested. DOBJ would be a good one to test with.
-//
 //        - Our current system isn't going to manage use info super well. If you 
 //          check the use info of a form used by DOBJ, but there are multiple form 
 //          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
@@ -193,16 +191,6 @@
 //
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
-//
-//        - If files define their own DOBJ with a different form ID, then what form 
-//          ID does the final loaded DOBJ use? This doesn't matter for DovahKit, but 
-//          I'm curious.
-//
-//        - DOBJ needs to maintain, for every entry, information on whether it was 
-//          supplied by the active file, and information on whether it has been 
-//          edited. When we save a DOBJ record, we only want to save the entries 
-//          that actually belong in the active file, and not entries coalesced from 
-//          dependencies.
 //
 //        = If there is no DOBJ form and we fail to create one due to there being 
 //          no form IDs available, then we don't emit any errors. That said, that 
