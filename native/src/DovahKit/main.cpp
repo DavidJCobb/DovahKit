@@ -65,6 +65,10 @@
 //     = We need to investigate how exactly the CK sorts REFRs into persistent and 
 //       temporary CELL GRUPs, and how this differs for interior versus exterior cells.
 //
+//     - If we get rid of the group type, then that frees up one byte. We have three 
+//       bytes to spare already, so that leaves us with enough room to let a WRLD form 
+//       stub explicitly specify its persistent CELL's form ID.
+//
 //     - If we make changes in this regard, then we need to update the form stub docs.
 //
 //  - DovahKit currently has a bit of a design flaw with respect to invalid references 
@@ -102,6 +106,25 @@
 //    can generate a warning for that using the same code we already have for catching 
 //    type-mismatched form-to-form references. We'd just need to edit the error text 
 //    for the case where the referent's type is form_type::none.
+//
+//     - TASKS
+//
+//        - (file_load_order::find_first_free_form_id_in_active_file) needs to check 
+//          for none-stubs in the global form map, not just forms in the active file 
+//          form map.
+//
+//        - (file_load_order::commit_form_creation_request) needs to check whether 
+//          the desired form ID is occupied by a none-stub and if so, attempt to 
+//          yeet it.
+//
+//           - Write an internal helper function for destroying a none-stub with a 
+//             given ID. Function should return a notice code.
+//
+//        - (file_load_order::commit_form_renumber_request) needs to check whether 
+//          the desired form ID is occupied by a none-stub and if so, attempt to 
+//          yeet it.
+//
+//        - Implement the actual none-stub build step.
 //
 //     = So we'd need to identify referenced-but-unoccupied form IDs and create stubs 
 //       for them during the use info build step, right? Well, how do we do that? It 

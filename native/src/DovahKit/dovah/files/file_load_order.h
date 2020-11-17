@@ -266,9 +266,9 @@ namespace dovah {
          bool has_form(bare_form_id_t formID) const noexcept;
          form_stub* get_canonical_instance_of_singleton_form(form_type_t) const noexcept;
          form_stub* get_canonical_instance_of_singleton_form(form_type_t, bool create_if_missing = false) noexcept; // (create_if_missing) can fail if no available form IDs
-         form_stub* get_form(bare_form_id_t formID) const noexcept;
+         form_stub* get_form(bare_form_id_t formID, bool ignore_none_stubs = true) const noexcept;
          form_stub* get_form(form_type_t, bare_form_id_t formID) const noexcept; // use when you KNOW the form's type
-         form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID) const noexcept; // searches (formType) first, then the other types
+         form_stub* get_form_of_probable_type(form_type_t, bare_form_id_t formID, bool ignore_none_stubs = true) const noexcept; // searches (formType) first, then the other types
          bool for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor); // if the functor returns (true), this function stops early and also returns (true); otherwise, this function returns (false).
          //
          bool active_file_has_name() const noexcept;

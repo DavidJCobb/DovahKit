@@ -1211,7 +1211,7 @@ namespace dovah {
    bool file_load_order::has_form(bare_form_id_t formID) const noexcept {
       if (formID == 0)
          return false;
-      return cobb::unordered_map_contains(this->forms.forms, formID);
+      return this->get_form(formID) != nullptr;
    }
    form_stub* file_load_order::get_canonical_instance_of_singleton_form(form_type_t ft) const noexcept {
       if (!(form_type_info::lookup(ft).flags & form_type_info::flag::is_singleton))
@@ -1238,13 +1238,17 @@ namespace dovah {
          return this->create_form_of_type(ft);
       return stub;
    }
-   form_stub* file_load_order::get_form(bare_form_id_t formID) const noexcept {
+   form_stub* file_load_order::get_form(bare_form_id_t formID, bool ignore_none_stubs) const noexcept {
       if (formID == 0)
          return nullptr;
       auto& list = this->forms.forms;
       auto  it   = list.find(formID);
-      if (it != list.end())
-         return it->second;
+      if (it != list.end()) {
+         auto* stub = it->second;
+         if (ignore_none_stubs && stub && stub->formType == form_type::none)
+            stub = nullptr;
+         return stub;
+      }
       return nullptr;
    }
    form_stub* file_load_order::get_form(form_type_t formType, bare_form_id_t formID) const noexcept {
@@ -1258,7 +1262,7 @@ namespace dovah {
       }
       return nullptr;
    }
-   form_stub* file_load_order::get_form_of_probable_type(form_type_t formType, bare_form_id_t formID) const noexcept {
+   form_stub* file_load_order::get_form_of_probable_type(form_type_t formType, bare_form_id_t formID, bool ignore_none_stubs) const noexcept {
       if (formID == 0)
          return nullptr;
       if (formType < this->forms_by_type.size()) {
@@ -1267,7 +1271,7 @@ namespace dovah {
          if (it != list.end())
             return it->second;
       }
-      return this->get_form(formID);
+      return this->get_form(formID, ignore_none_stubs);
    }
    bool file_load_order::for_each_form_of_type(form_type_t formType, std::function<bool(form_stub*)> functor) {
       if (formType < this->forms_by_type.size()) {
@@ -1431,7 +1435,9 @@ namespace dovah {
       return this->active_file != nullptr;
    }
    bool file_load_order::is_defined_in_active_file(const form_stub& stub) const noexcept {
-      return this->is_active_file_formID(stub.formID);
+      if (stub.source_file_count() > 1)
+         return false; // the form is an override or is overridden
+      return stub.file_list_includes(this->active_file);
    }
    bool file_load_order::is_defined_or_overridden_in_active_file(const form_stub& stub) const noexcept {
       return stub.file_list_includes(this->active_file);

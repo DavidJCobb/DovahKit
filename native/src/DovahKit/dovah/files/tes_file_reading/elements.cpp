@@ -111,7 +111,7 @@ namespace dovah {
       }
 
       form_stub* record::lookup_form_by_id(bare_form_id_t id) const noexcept {
-         return this->owner.as_file()->load_order.get_form(id);
+         return this->owner.as_file()->load_order.get_form(id, false);
       }
       #pragma endregion
 
@@ -239,7 +239,7 @@ namespace dovah {
       }
       
       form_stub* subrecord::lookup_form_by_id(bare_form_id_t id) const noexcept {
-         return this->owner.as_file()->load_order.get_form(id);
+         return this->owner.as_file()->load_order.get_form(id, false);
       }
       #pragma endregion
    }

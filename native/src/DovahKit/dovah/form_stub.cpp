@@ -421,21 +421,7 @@ namespace dovah {
       auto& entry = list[toFormID];
       auto& lo    = this->_get_load_order();
       if (!entry.other)
-         entry.other = lo.get_form(toFormID);
-      #ifdef _DEBUG
-         //
-         // When compiled in Debug, warn on any use of a missing form.
-         //
-         if (!entry.other
-            && toFormID != 0x02006718 // Dawnguard.esm
-            && toFormID != 0x00106633 // Skyrim.esm: CELL/XCLR has references to a non-existent REGN
-         ) {
-            if (lo.has_form(toFormID))
-               __debugbreak();
-            else
-               __debugbreak();
-         }
-      #endif
+         entry.other = lo.get_form(toFormID, false);
       entry.refcount++;
       //
       if (flags) {
@@ -612,7 +598,7 @@ namespace dovah {
    }
    void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {
       auto& lo       = this->_get_load_order();
-      auto* new_stub = lo.get_form(change_to);
+      auto* new_stub = lo.get_form(change_to, false);
       this->replace_outbound_reference(old, new_stub, flags);
    }
 
