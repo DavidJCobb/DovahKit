@@ -471,23 +471,11 @@ namespace dovah {
 
    class form_renumber_request {
       friend class file_load_order;
-      public:
-         enum class error_code {
-            none,
-            no_active_file,
-            is_hardcoded_form,       // you can't renumber hardcoded forms
-            is_not_active_file_form, // you can't renumber forms that don't originate from the active file
-            is_not_active_file_id,   // the desired form ID must be within the active file's form ID range
-            desired_id_is_taken,
-            desired_id_is_hardcoded, // you can't use IDs in the range reserved for hardcoded forms
-            desired_id_is_none,      // you can't use 00000000 as a form ID
-            cannot_load_user,        // unable to update a user form
-         };
       protected:
          file_load_order& owner;
          form_stub&       target;
          bare_form_id_t   desiredID = 0;
-         error_code       error     = error_code::none;
+         notice_code_t    error     = default_notice_code;
          //
          form_renumber_request(file_load_order& o, form_stub& target);
          form_renumber_request(form_renumber_request&&);
@@ -497,7 +485,7 @@ namespace dovah {
       public:
          ~form_renumber_request();
          //
-         inline error_code get_error_code() const noexcept { return this->error; }
+         inline notice_code_t get_error_code() const noexcept { return this->error; }
          //
          bool commit();
    };

@@ -50,6 +50,12 @@ namespace dovah {
          default_object_rejected_for_bad_type  = 0x00000029, // The loaded DefaultObjectManager won't let you use the specified form for the specified entry, as the form is of the wrong type.
          default_object_accepted_but_unknown   = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one DovahKit's backend recognizes.
          singleton_form_is_redundantly_defined = 0x0000002B, // A file contained multiple records for the same singleton form (e.g. multiple DOBJ records or multiple NAVI records).
+         cannot_renumber_hardcoded_form        = 0x0000002C,
+         form_is_not_defined_in_active_file    = 0x0000002D, // The desired operation can only be performed on forms that were originally defined in the active file.
+         zero_is_not_an_allowed_form_id        = 0x0000002E, // The desired operation does not allow you to use zero as a form ID.
+         cannot_load_all_users_of_this_form    = 0x0000002F, // The desired operation requires that DovahKit load all of the forms that use the target form, and that isn't yet implemented.
+         form_id_is_in_the_hardcoded_range     = 0x00000030, // You cannot use this form ID, because it's in the range reserved for hardcoded forms.
+         cannot_sever_references_to_none_stub  = 0x00000031,
       };
    };
 }

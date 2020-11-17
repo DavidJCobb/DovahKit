@@ -111,7 +111,8 @@
 //
 //        - (file_load_order::find_first_free_form_id_in_active_file) needs to check 
 //          for none-stubs in the global form map, not just forms in the active file 
-//          form map.
+//          form map. Better yet: give it a bool that will allow us to choose whether 
+//          to avoid any none-stubs.
 //
 //        - (file_load_order::commit_form_creation_request) needs to check whether 
 //          the desired form ID is occupied by a none-stub and if so, attempt to 
@@ -122,6 +123,14 @@
 //             to check for a failure. Note that since it does remove the stub 
 //             from form maps and delete it, it will invalidate any iterators for 
 //             those maps.
+//
+//              - If this helper function returns (cannot_sever_references_to_target), 
+//                then the request should use (cannot_sever_references_to_none_stub) 
+//                as its own error code.
+//
+//           - If a specific form ID wasn't requested, and the form ID we selected 
+//             automatically contains a none-stub that we're unable to delete, then 
+//             can we fall back to picking a totally unoccupied form ID?
 //
 //           - We need to switch the form-create-request to use notice codes.
 //

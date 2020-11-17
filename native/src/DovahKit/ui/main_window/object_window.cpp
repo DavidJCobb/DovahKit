@@ -2,6 +2,7 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
+#include "../../dovah/notice_code_list.h"
 #include "../../editor/core.h"
 #include "../../editor/open_window_for_form.h"
 #include "../../editor/helpers/make_editor_id_for_duplicate.h"
@@ -62,34 +63,37 @@ namespace {
          QObject::tr("Unable to create new form. %1").arg(text)
       );
    }
-   void _report_form_renumber_error(QWidget* window, dovah::form_renumber_request::error_code ec) {
-      using error_code = dovah::form_renumber_request::error_code;
+   void _report_form_renumber_error(QWidget* window, dovah::notice_code_t ec) {
+      using notice_code = dovah::notice_code;
       //
       QString text;
       switch (ec) {
-         case error_code::is_not_active_file_form:
+         case notice_code::form_is_not_defined_in_active_file:
             text = QObject::tr("You can't renumber forms that do not originate from the active file.");
             break;
-         case error_code::is_not_active_file_id:
-            text = QObject::tr("You can't renumber a form out of the active file's form ID space.");
-            break;
-         case error_code::is_hardcoded_form:
+         case notice_code::cannot_renumber_hardcoded_form:
             text = QObject::tr("You can't renumber hardcoded forms.");
             break;
-         case error_code::desired_id_is_hardcoded:
+         case notice_code::form_id_is_in_the_hardcoded_range:
             text = QObject::tr("The desired form ID cannot be used; all IDs in the range xx000001 to xx0007FF are reserved for hardcoded forms.");
             break;
-         case error_code::desired_id_is_none:
+         case notice_code::zero_is_not_an_allowed_form_id:
             text = QObject::tr("A form cannot have the form ID 00000000.");
             break;
-         case error_code::desired_id_is_taken:
+         case notice_code::form_id_is_already_in_use:
             text = QObject::tr("The desired form ID is already in use.");
             break;
-         case error_code::cannot_load_user:
+         case notice_code::form_id_is_reserved_for_other_process:
+            text = QObject::tr("DovahKit has reserved the desired form ID for use by some other process, such as the creation of a new form.");
+            break;
+         case notice_code::cannot_load_all_users_of_this_form:
             text = QObject::tr("DovahKit cannot renumber a form unless it supports editing all of the forms that use the target form.");
             break;
-         case error_code::no_active_file:
+         case notice_code::no_active_file:
             text = QObject::tr("There is no active file, nor any room in the load order for a new file.");
+            break;
+         case notice_code::cannot_sever_references_to_none_stub:
+            text = QObject::tr("The desired ID is the target of one or more dangling references, and DovahKit does not know how to sever those references.");
             break;
       }
       QMessageBox::critical(
@@ -194,7 +198,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       //
       auto& editor  = DovahKitCore::get();
       auto  request = editor.request_form_renumber(*stub, id);
-      if (request.get_error_code() != dovah::form_renumber_request::error_code::none) {
+      if (request.get_error_code() != dovah::default_notice_code) {
          _report_form_renumber_error(this, request.get_error_code());
          return;
       }

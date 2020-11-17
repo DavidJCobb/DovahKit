@@ -1701,50 +1701,48 @@ namespace dovah {
       result.desiredID = desiredID;
       //
       if (stub.is_hardcoded()) {
-         result.error = form_renumber_request::error_code::is_hardcoded_form;
+         result.error = notice_code::cannot_renumber_hardcoded_form;
          return result;
       }
       if (desiredID == 0) {
-         result.error = form_renumber_request::error_code::desired_id_is_none;
+         result.error = notice_code::zero_is_not_an_allowed_form_id;
          return result;
       }
       if ((desiredID & plugin_form_id_mask) == 0) {
-         result.error = form_renumber_request::error_code::desired_id_is_hardcoded;
+         result.error = notice_code::form_id_is_in_the_hardcoded_range;
          return result;
       }
       if (!this->is_defined_in_active_file(stub)) {
-         result.error = form_renumber_request::error_code::is_not_active_file_form;
+         result.error = notice_code::form_is_not_defined_in_active_file;
          return result;
       }
-      if (!this->is_active_file_formID(desiredID)) {
+      /*if (!this->is_active_file_formID(desiredID)) {
          result.error = form_renumber_request::error_code::is_not_active_file_id;
          return result;
-      }
+      }*/
       //
       if (!this->active_file) {
-         result.error = form_renumber_request::error_code::no_active_file;
+         result.error = notice_code::no_active_file;
          return result;
       }
       auto guard1 = std::lock_guard(this->forms.lock);
       auto guard2 = std::lock_guard(this->form_creation_request_info.lock);
       if (this->has_form(desiredID)) {
-         result.error = form_renumber_request::error_code::desired_id_is_taken;
+         result.error = notice_code::form_id_is_already_in_use;
          return result;
       }
       auto& list = this->form_creation_request_info.reserved_formIDs;
       if (std::find(list.begin(), list.end(), desiredID) != list.end()) {
-         result.error = form_renumber_request::error_code::desired_id_is_taken;
+         result.error = notice_code::form_id_is_reserved_for_other_process;
          return result;
       }
       list.push_back(desiredID);
       return result;
    }
    void file_load_order::commit_form_renumber_request(form_renumber_request& request) noexcept {
-      constexpr auto no_error = form_renumber_request::error_code::none;
-      //
       if (&request.owner != this)
          return;
-      if (request.error != no_error)
+      if (request.error != default_notice_code)
          return;
       //
       bare_form_id_t desiredID = request.desiredID;
@@ -1759,12 +1757,12 @@ namespace dovah {
             auto& entry = pair.second;
             auto* other = entry.other;
             if (!entry.other->load()) {
-               request.error = form_renumber_request::error_code::cannot_load_user;
+               request.error = notice_code::cannot_load_all_users_of_this_form;
                break;
             }
          }
       }
-      if (request.error == no_error) {
+      if (request.error == default_notice_code) {
          this->_renumber_form(stub, desiredID, true);
       }
       //
@@ -1772,7 +1770,7 @@ namespace dovah {
       //
       this->_abandon_form_id_reservation(desiredID);
       //
-      if (request.error == no_error) {
+      if (request.error == default_notice_code) {
          request.desiredID = 0;
          if (this->on_form_renumber)
             (this->on_form_renumber)(stub, oldID, desiredID);
