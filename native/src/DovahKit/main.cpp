@@ -71,6 +71,14 @@
 //
 //     - If we make changes in this regard, then we need to update the form stub docs.
 //
+//  - Design flaw in (file_load_order::save_active_file): save error information is 
+//    stored on the (save_error) member of the load order. This means that the notice 
+//    code (cannot_save_right_now) is not reliable: if you attempt one save operation 
+//    while another is in progress, then the in-progress save operation will overwrite 
+//    the error information for the blocked save operation, possibly before the latter's 
+//    caller can view it. We should rename and repurpose (tes_file_writing::write_config) 
+//    as a "save request" or "save process" struct, and have it retain error information.
+//
 //  - DovahKit currently has a bit of a design flaw with respect to invalid references 
 //    to unoccupied form IDs. Consider the case where I load a file with a SHOU/SNAM 
 //    that refers to some form xx001234, but there is no form with that ID. Then, in 

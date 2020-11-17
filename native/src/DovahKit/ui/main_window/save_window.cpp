@@ -240,6 +240,15 @@ void ActiveFileSaveDialog::handleLastSaveError() {
          // The mass data unload for this specific error is handled by the call to (editor.abandon_data) at the bottom of this function.
          //
          break;
+      case dovah::notice_code::post_save_none_stub_cleanup_failed:
+         message = tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+         if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
+            message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
+         }
+         //
+         // The mass data unload for this specific error is handled by the call to (editor.abandon_data) at the bottom of this function.
+         //
+         break;
       default:
          message = tr("Unknown error.", "write error");
          break;

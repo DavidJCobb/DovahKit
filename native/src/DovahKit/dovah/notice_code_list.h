@@ -65,6 +65,7 @@ namespace dovah {
          form_created_but_clone_failed               = 0x00000038, // We were able to make a new form, but Form::clone() returned false; we made a blank new form instead of duplicating a form as requested.
          form_id_unavailable_for_new_form            = 0x00000039, // A form creation request failed because a form ID wasn't available for use.
          form_id_is_out_of_bounds                    = 0x0000003A, // The requested form ID is out-of-bounds, e.g. form ID 0x05000000 in a load order with fewer than six files.
+         post_save_none_stub_cleanup_failed          = 0x0000003B, // Failed to clean up none-stubs after a save operation. It is not safe to continue this editing session.
       };
    };
 }

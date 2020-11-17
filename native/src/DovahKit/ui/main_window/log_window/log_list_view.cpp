@@ -475,6 +475,10 @@ LogListModelItem::LogListModelItem(const dovah::file_write_error& error) {
          non_continuable_success = true;
          text = QObject::tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
          break;
+      case notice_code::post_save_none_stub_cleanup_failed:
+         non_continuable_success = true;
+         text = QObject::tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+         break;
       default:
          text = QObject::tr("Unknown error.", "write error");
          break;

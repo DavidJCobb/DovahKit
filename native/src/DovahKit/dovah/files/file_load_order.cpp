@@ -2380,6 +2380,9 @@ namespace dovah {
             if (!cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
                stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
          }
+         for (auto& pair : this->forms_by_type[form_type::none].forms) { // none-stubs should never be saved, and all references should be serialized as zero, so yeet 'em
+            stubs_to_remove.push_back(pair.second);
+         }
          for (auto* stub : stubs_to_remove) {
             auto type = stub->formType;
             if (type == form_type::setting) // GMSTs are a special case. their form-stubs are just placeholders and do not retain meaningful information, file offsets included
@@ -2402,6 +2405,8 @@ namespace dovah {
             request.commit();
             if (request.get_result_code() != form_deletion_request::result_code::success) {
                this->save_error.code = notice_code::game_conversion_form_cleanup_failed;
+               if (stub->formType == form_type::none)
+                  this->save_error.code = notice_code::post_save_none_stub_cleanup_failed;
             }
          }
          //

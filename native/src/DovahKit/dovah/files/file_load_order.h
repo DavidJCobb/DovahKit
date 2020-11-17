@@ -321,6 +321,19 @@ namespace dovah {
          tes_file_header* get_active_file_header() const noexcept;
          #pragma endregion
 
+         //
+         // Saves the active file.
+         //
+         // The frontend MUST unload all form data before calling this function. This is because some forms 
+         // may fail to save, and  all none-stubs will fail to save; these form stubs  will be deleted, and 
+         // the "form loss" callback will fire. If one  of the deleted stubs has its form data loaded, then 
+         // that form data will be orphaned. If other stubs have form-to-form references to a deleted stub, 
+         // and if those other stubs have their form data loaded, then that data will be left with dangling 
+         // pointers.
+         //
+         // The return value is a  success bool. Specific error information can be  found in the load order 
+         // instance's (save_error) field.
+         //
          bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg);
    };
 
