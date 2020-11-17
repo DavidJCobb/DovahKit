@@ -128,17 +128,9 @@
 //                then the request should use (cannot_sever_references_to_none_stub) 
 //                as its own error code.
 //
-//           - If a specific form ID wasn't requested, and the form ID we selected 
-//             automatically contains a none-stub that we're unable to delete, then 
-//             can we fall back to picking a totally unoccupied form ID?
-//
-//           - We need to switch the form-create-request to use notice codes.
-//
 //        - (file_load_order::commit_form_renumber_request) needs to check whether 
 //          the desired form ID is occupied by a none-stub and if so, attempt to 
 //          yeet it.
-//
-//           - We need to switch the form-renumber-request to use notice codes.
 //
 //        - Implement the actual none-stub build step.
 //

@@ -345,27 +345,13 @@ namespace dovah {
       // This class is capable of creating a new, blank form, or of duplicating a single form. If 
       // you wish to duplicate a form and its children, then use (form_duplication_request).
       //
-      public:
-         enum class error_code {
-            none,
-            no_active_file,
-            no_form_id_available,
-            bad_form_type_requested,
-            unsupported_form_type_requested,
-            invalid_parent_child_relationship, // forms of (child_of)'s type cannot have children of type (form_type)
-            exterior_grid_coordinates_already_taken, // cannot create an exterior cell; the desired grid coordinates are used by another cell in the same world
-            cannot_create_reference_with_no_parent_cell,
-            interior_cell_clone_cannot_have_parent,
-            exterior_cell_clone_must_have_parent,
-            form_created_but_clone_failed, // we were able to make a new form, but Form::clone() returned false
-         };
       protected:
          file_load_order& owner;
          form_type_t      form_type = form_type::none;
          bare_form_id_t   formID    = 0;       // the form ID reserved for the newly-created form. set by the owning load order
          form_stub*       child_of  = nullptr; // what form should serve as the new form's parent?
          form_stub*       clone_of  = nullptr; // do we want to create a new form from scratch, or duplicate an existing one?
-         error_code       error     = error_code::none;
+         notice_code_t    error     = default_notice_code;
          //
          // In order to return (form_creation_request) instances from functions that construct them 
          // without (form_creation_request::~form_creation_request) blowing away all of our data, we 
@@ -386,8 +372,8 @@ namespace dovah {
             int32_t y = 0;
          } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
          //
-         inline bool is_valid() const noexcept { return this->formID != 0 && this->error == error_code::none; } // returns (true) if the request has a reserved ID and has not yet completed/failed
-         inline error_code get_error_code() const noexcept { return this->error; }
+         inline bool is_valid() const noexcept { return this->formID != 0 && this->error == default_notice_code; } // returns (true) if the request has a reserved ID and has not yet completed/failed
+         inline notice_code_t get_error_code() const noexcept { return this->error; }
          //
          void set_parent_form(form_stub* parent);
          void set_parent_form(bare_form_id_t parentID);
@@ -397,8 +383,6 @@ namespace dovah {
    };
 
    class form_duplication_request {
-      public:
-         using error_code = form_creation_request::error_code;
       protected:
          file_load_order& owner;
          form_creation_request* main_request = nullptr;
@@ -422,9 +406,9 @@ namespace dovah {
          //
          form_stub* commit();
          //
-         error_code get_main_form_error_code() const noexcept;
-         std::vector<error_code> get_child_form_error_codes() const noexcept; // returns only non-none errors
-         std::vector<error_code> get_error_codes() const noexcept; // returns all error codes, including nones. main first, then children
+         notice_code_t get_main_form_error_code() const noexcept;
+         std::vector<notice_code_t> get_child_form_error_codes() const noexcept; // returns only non-none errors
+         std::vector<notice_code_t> get_error_codes() const noexcept; // returns all error codes, including nones. main first, then children
          bool has_error() const noexcept;
          bool is_valid() const noexcept;
          unsigned int get_total_form_count() const noexcept;

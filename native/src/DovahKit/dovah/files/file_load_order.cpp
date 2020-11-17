@@ -1548,12 +1548,12 @@ namespace dovah {
       result.form_type = ft;
       //
       if (ft >= form_types.size()) {
-         result.error = form_creation_request::error_code::bad_form_type_requested;
+         result.error = notice_code::unknown_form_type;
          return result;
       }
       auto prefix = this->active_file_prefix();
       if (prefix.is_undefined()) {
-         result.error = form_creation_request::error_code::no_active_file;
+         result.error = notice_code::no_active_file;
          return result;
       }
       assert(this->active_file && "How were we able to get the prefix of the active file when the pointer has been lost?"); // in case any code changes in the future
@@ -1568,7 +1568,7 @@ namespace dovah {
          if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
             formID = this->find_first_free_form_id_in_active_file();
             if (!formID) { // no form ID available
-               result.error = form_creation_request::error_code::no_form_id_available;
+               result.error = notice_code::form_id_unavailable_for_new_form;
                return result;
             }
          }
@@ -1602,32 +1602,32 @@ namespace dovah {
          }
          //
          if (error) {
-            request.error = form_creation_request::error_code::invalid_parent_child_relationship;
+            request.error = notice_code::invalid_parent_child_relationship;
             return nullptr;
          }
          //
          if (child_type == form_type::cell) { // validate worldspace grid coordinates
             auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(request.child_of, request.cell_grid_coordinates.x, request.cell_grid_coordinates.y);
             if (existing) {
-               request.error = form_creation_request::error_code::exterior_grid_coordinates_already_taken;
+               request.error = notice_code::exterior_grid_coordinates_already_taken;
                return nullptr;
             }
          }
       } else {
          if (form_type_info::form_type_is_reference(request.form_type)) {
-            request.error = form_creation_request::error_code::cannot_create_reference_with_no_parent_cell;
+            request.error = notice_code::cannot_create_reference_with_no_parent_cell;
             return nullptr;
          }
       }
       if (request.clone_of && request.form_type == form_type::cell) {
          if (request.child_of) {
             if (request.clone_of->groupInfo.parentFormID == 0) {
-               request.error = form_creation_request::error_code::interior_cell_clone_cannot_have_parent;
+               request.error = notice_code::interior_cell_clone_cannot_have_parent;
                return nullptr;
             }
          } else {
             if (request.clone_of->groupInfo.parentFormID != 0) {
-               request.error = form_creation_request::error_code::exterior_cell_clone_must_have_parent;
+               request.error = notice_code::exterior_cell_clone_must_have_parent;
                return nullptr;
             }
          }
@@ -1637,7 +1637,7 @@ namespace dovah {
       if (!request.clone_of) {
          loaded = create_blank_loaded_form_by_type(request.form_type);
          if (!loaded) {
-            request.error = form_creation_request::error_code::unsupported_form_type_requested;
+            request.error = notice_code::unimplemented_form_type;
             return nullptr;
          }
       }
@@ -1674,7 +1674,7 @@ namespace dovah {
             bool result = false;
             loaded = original->clone(*stub, &result);
             if (!result)
-               request.error = form_creation_request::error_code::form_created_but_clone_failed;
+               request.error = notice_code::form_created_but_clone_failed;
          }
       } else {
          loaded->setup(*this);
@@ -2549,20 +2549,20 @@ namespace dovah {
       //
       return result;
    }
-   form_duplication_request::error_code form_duplication_request::get_main_form_error_code() const noexcept {
+   notice_code_t form_duplication_request::get_main_form_error_code() const noexcept {
       if (this->main_request)
          return this->main_request->error;
-      return error_code::none;
+      return default_notice_code;
    }
-   std::vector<form_duplication_request::error_code> form_duplication_request::get_child_form_error_codes() const noexcept {
-      std::vector<form_duplication_request::error_code> out;
+   std::vector<notice_code_t> form_duplication_request::get_child_form_error_codes() const noexcept {
+      std::vector<notice_code_t> out;
       for (auto* request : this->child_requests)
-         if (request && request->error != error_code::none)
+         if (request && request->error != default_notice_code)
             out.push_back(request->error);
       return out;
    }
-   std::vector<form_duplication_request::error_code> form_duplication_request::get_error_codes() const noexcept {
-      std::vector<form_duplication_request::error_code> out;
+   std::vector<notice_code_t> form_duplication_request::get_error_codes() const noexcept {
+      std::vector<notice_code_t> out;
       if (this->main_request) {
          out.push_back(this->main_request->error);
          for (auto* request : this->child_requests)
@@ -2573,10 +2573,10 @@ namespace dovah {
    }
    bool form_duplication_request::has_error() const noexcept {
       if (this->main_request) {
-         if (this->main_request->error != error_code::none)
+         if (this->main_request->error != default_notice_code)
             return true;
          for (auto* request : this->child_requests)
-            if (request && request->error != error_code::none)
+            if (request && request->error != default_notice_code)
                return true;
       }
       return false;
@@ -2747,7 +2747,7 @@ namespace dovah {
    }
    bool form_renumber_request::commit() {
       this->owner.commit_form_renumber_request(*this);
-      return this->error == error_code::none;
+      return this->error == default_notice_code;
    }
    #pragma endregion
    #pragma endregion

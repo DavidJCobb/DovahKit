@@ -24,36 +24,36 @@ namespace {
          return nullptr;
       return data->stub;
    }
-   void _report_form_create_error(QWidget* window, dovah::form_creation_request::error_code ec) {
-      using error_code = dovah::form_creation_request::error_code;
+   void _report_form_create_error(QWidget* window, dovah::notice_code_t ec) {
+      using notice_code = dovah::notice_code;
       //
       QString text;
       switch (ec) {
-         case error_code::bad_form_type_requested:
+         case notice_code::unknown_form_type:
             text = QObject::tr("An internal program error occurred: DovahKit tried to create a form but supplied a bad form type.");
             break;
-         case error_code::no_active_file:
+         case notice_code::no_active_file:
             text = QObject::tr("There is no active file, nor any room in the load order for a new file.");
             break;
-         case error_code::no_form_id_available:
+         case notice_code::form_id_unavailable_for_game_setting:
             text = QObject::tr("You've used up all of the form IDs available to this file!");
             break;
-         case error_code::unsupported_form_type_requested:
+         case notice_code::unimplemented_form_type:
             text = QObject::tr("DovahKit does not support editing this form type.");
             break;
-         case error_code::invalid_parent_child_relationship:
+         case notice_code::invalid_parent_child_relationship:
             text = QObject::tr("The specified parent form cannot have a child form of this type. (Wait, what? How did you get the Object Window to try to do that?)");
             break;
-         case error_code::exterior_grid_coordinates_already_taken:
+         case notice_code::exterior_grid_coordinates_already_taken:
             text = QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
             break;
-         case error_code::cannot_create_reference_with_no_parent_cell:
+         case notice_code::cannot_create_reference_with_no_parent_cell:
             text = QObject::tr("References cannot be created outside of a cell. (Wait, what? How did you get the Object Window to try and create a reference?)");
             break;
-         case error_code::interior_cell_clone_cannot_have_parent:
+         case notice_code::interior_cell_clone_cannot_have_parent:
             text = QObject::tr("Interior cells cannot have a parent worldspace. (Wait, what? How did you get the Object Window to try and create an interior cell?)");
             break;
-         case error_code::exterior_cell_clone_must_have_parent:
+         case notice_code::exterior_cell_clone_must_have_parent:
             text = QObject::tr("Exterior cells must have a parent worldspace. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
             break;
       }
@@ -118,15 +118,13 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    #pragma region Context menu
    this->_actionCreateForm = new QAction(tr("New form...", "object window form actions"), this->ui.table);
    QObject::connect(this->_actionCreateForm, &QAction::triggered, this, [this]() {
-      using error_code = dovah::form_creation_request::error_code;
-      //
       auto form_types = this->ui.tree->selectedFormTypes();
       if (form_types.size() != 1)
          return;
       //
       auto& editor  = DovahKitCore::get();
       auto  request = editor.request_form_creation(form_types.back());
-      if (request.get_error_code() != dovah::form_creation_request::error_code::none) {
+      if (request.get_error_code() != dovah::default_notice_code) {
          _report_form_create_error(this, request.get_error_code());
          return;
       }
@@ -136,7 +134,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          return;
       request.editorID = editor_id.toStdString();
       auto result = request.commit();
-      if (request.get_error_code() != dovah::form_creation_request::error_code::none) {
+      if (request.get_error_code() != dovah::default_notice_code) {
          _report_form_create_error(this, request.get_error_code());
       }
       if (result)
@@ -154,8 +152,6 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
          open_edit_dialog_for_form(stub, this->parentWidget());
    });
    QObject::connect(this->_formActionDuplicate, &QAction::triggered, this, [this]() {
-      using error_code = dovah::form_duplication_request::error_code;
-      //
       auto* stub = _get_selected_form(this->ui.table);
       if (!stub)
          return;

@@ -317,58 +317,55 @@ namespace {
          QObject::tr("Unable to duplicate this form. %1").arg(text)
       );
    }
-   QString _stringify_duplicate_form_a_posteriori_error(dovah::form_duplication_request::error_code code) {
-      using error_code = dovah::form_duplication_request::error_code;
+   QString _stringify_duplicate_form_a_posteriori_error(dovah::notice_code_t code) {
+      using notice_code = dovah::notice_code;
       switch (code) {
-         case error_code::bad_form_type_requested:
+         case notice_code::unknown_form_type:
             return QObject::tr("An internal program error occurred: DovahKit tried to create a form but supplied a bad form type.");
-         case error_code::no_active_file:
+         case notice_code::no_active_file:
             //
             // This should've been caught beforehand.
             //
             break;
-         case error_code::no_form_id_available:
+         case notice_code::form_id_unavailable_for_new_form:
             //
             // This should've been caught beforehand.
             //
             break;
-         case error_code::unsupported_form_type_requested:
+         case notice_code::unimplemented_form_type:
             return QObject::tr("DovahKit does not support editing this form type.");
-         case error_code::invalid_parent_child_relationship:
+         case notice_code::invalid_parent_child_relationship:
             return QObject::tr("The specified parent form cannot have a child form of this type.");
-         case error_code::exterior_grid_coordinates_already_taken:
+         case notice_code::exterior_grid_coordinates_already_taken:
             return QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates.");
-         case error_code::cannot_create_reference_with_no_parent_cell:
+         case notice_code::cannot_create_reference_with_no_parent_cell:
             return QObject::tr("References cannot be created outside of a cell.");
-         case error_code::interior_cell_clone_cannot_have_parent:
+         case notice_code::interior_cell_clone_cannot_have_parent:
             return QObject::tr("Interior cells cannot have a parent worldspace.");
-         case error_code::exterior_cell_clone_must_have_parent:
+         case notice_code::exterior_cell_clone_must_have_parent:
             return QObject::tr("Exterior cells must have a parent worldspace.");
       }
       return "";
    }
 }
 dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidget* dialog_parent) {
-   using error_code = dovah::form_duplication_request::error_code;
-   //
    auto  request = this->request_form_duplication();
    request.set_target(&original);
    if (request.has_error()) {
-      auto       errors = request.get_error_codes();
-      error_code error  = error_code::none;
+      auto errors = request.get_error_codes();
       //
       unsigned int needed_forms    = request.get_total_form_count();
       unsigned int no_reservations = 0;
       unsigned int other_failures  = 0;
       //
       for (auto e : errors) {
-         if (e == error_code::none)
+         if (e == dovah::notice_code::none)
             continue;
-         if (e == error_code::no_active_file) {
+         if (e == dovah::notice_code::no_active_file) {
             _report_duplicate_form_error(dialog_parent, tr("There is neither an active file in the load order nor any room in the load order for a new file."));
             return nullptr;
          }
-         if (e == error_code::no_form_id_available) {
+         if (e == dovah::notice_code::form_id_unavailable_for_new_form) {
             ++no_reservations;
             continue;
          }
@@ -410,7 +407,7 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
    QString error_text;
    auto    main_error   = request.get_main_form_error_code();
    auto    child_errors = request.get_child_form_error_codes();
-   if (main_error != error_code::none) {
+   if (main_error != dovah::default_notice_code) {
       error_text = _stringify_duplicate_form_a_posteriori_error(main_error);
    }
    if (!child_errors.empty()) {
