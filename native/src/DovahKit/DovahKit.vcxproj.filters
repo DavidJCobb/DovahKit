@@ -1237,5 +1237,6 @@
     <Text Include="dovah\_docs\how the game loads forms.txt" />
     <Text Include="dovah\_docs\game settings.txt" />
     <Text Include="dovah\_docs\singleton forms.txt" />
+    <Text Include="dovah\_docs\form stubs.txt" />
   </ItemGroup>
 </Project>

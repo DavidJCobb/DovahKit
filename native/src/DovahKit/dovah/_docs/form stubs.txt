@@ -154,20 +154,27 @@ loaded forms, but also form IDs themselves.
 
 "None-stubs" require a number of additional considerations:
 
+ - None-stubs shouldn't  be placed in a load order's map  of active file forms, 
+   even if their form IDs would place them within the active file.
+
  - When the user attempts to renumber a form to an ID that is in use by a none-
    stub, we need  to sever all references to the none-stub and  then delete it. 
    If this is  not possible  (which should only be the  case while  DovahKit is 
    still  in development, if one  of the referring  forms is of a type  that we 
    haven't implemented editing for), then  the renumbering operation must fail.
 
- - When creating a new form,  the backend should prefer  wholly unoccupied form 
-   IDs if any are available. If no such  form IDs are available, then we should 
-   see if there's a  none-stub that we can delete and replace;  if so, then the 
-   none-stub should be disposed of in  the same manner as for form renumbering, 
-   with the same potential failures.
+ - Form creation  will behave  similarly. The backend  already picks  a form ID 
+   automatically; if the selected form  ID is occupied by a none-stub, then the 
+   stub needs to be discarded in the same  manner as for form renumbering, with 
+   the same possible failures.
 
  - Any none-stubs that  are destroyed by an internal operation  need to trigger 
    the "form loss" callback.
+
+ - When serializing  a form-to-form reference, we should  write zero instead of 
+   the referenced  form stub's form ID  if the referenced stub  is a none-stub. 
+   This is handled by returning  false when  (file_writer::_can_serialize_form) 
+   is called for a none-stub.
 
 
 === MEMORY MANAGEMENT FOR FORM STUBS ==========================================

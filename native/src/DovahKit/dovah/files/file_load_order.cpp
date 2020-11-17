@@ -1716,10 +1716,14 @@ namespace dovah {
          result.error = notice_code::form_is_not_defined_in_active_file;
          return result;
       }
-      /*if (!this->is_active_file_formID(desiredID)) {
-         result.error = form_renumber_request::error_code::is_not_active_file_id;
-         return result;
-      }*/
+      if (!this->files.empty()) {
+         auto prefix = this->file_prefix_for(*this->files.back());
+         auto max    = prefix.max_form_id();
+         if (desiredID > max) {
+            result.error = notice_code::form_id_is_out_of_bounds;
+            return result;
+         }
+      }
       //
       if (!this->active_file) {
          result.error = notice_code::no_active_file;

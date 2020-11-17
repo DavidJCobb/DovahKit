@@ -80,6 +80,9 @@ namespace {
          case notice_code::zero_is_not_an_allowed_form_id:
             text = QObject::tr("A form cannot have the form ID 00000000.");
             break;
+         case notice_code::form_id_is_out_of_bounds:
+            text = QObject::tr("The desired form ID is out-of-bounds; its load order prefix places it outside of all loaded files.");
+            break;
          case notice_code::form_id_is_already_in_use:
             text = QObject::tr("The desired form ID is already in use.");
             break;

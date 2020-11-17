@@ -109,10 +109,13 @@
 //
 //     - TASKS
 //
-//        - (file_load_order::find_first_free_form_id_in_active_file) needs to check 
-//          for none-stubs in the global form map, not just forms in the active file 
-//          form map. Better yet: give it a bool that will allow us to choose whether 
-//          to avoid any none-stubs.
+//        - (file_load_order::find_first_free_form_id_in_active_file) should take a 
+//          bool that will allow us to choose whether to avoid any none-stubs. Default 
+//          behavior is to not even bother.
+//
+//           - Avoiding form stubs requires us to check the normal form map, not just 
+//             the active file form map, as none-stubs shouldn't go in the active file 
+//             form map.
 //
 //        - (file_load_order::commit_form_creation_request) needs to check whether 
 //          the desired form ID is occupied by a none-stub and if so, attempt to 
@@ -132,7 +135,20 @@
 //          the desired form ID is occupied by a none-stub and if so, attempt to 
 //          yeet it.
 //
+//        - The code for serializing a (form_reference_t) should write zero instead 
+//          of the referenced form stub's form ID if the referenced form stub is a 
+//          none-stub.
+//
+//           = IMPLEMENTED.
+//
+//           - Once this is implemented, we can mass-discard none-stubs after a 
+//             successful save. Of course, I suspect that would happen anyway because 
+//             of the already-written code to discard stubs that weren't saved.
+//
 //        - Implement the actual none-stub build step.
+//
+//           - The file load order needs to create a dummy file for none-stubs, just 
+//             like how hardcoded forms need a dummy file.
 //
 //     = So we'd need to identify referenced-but-unoccupied form IDs and create stubs 
 //       for them during the use info build step, right? Well, how do we do that? It 
