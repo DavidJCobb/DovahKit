@@ -176,13 +176,6 @@
 //
 //        - We should call them "none-stubs."
 //
-//     - FORM RENUMBERING: If the user is renumbering a form to an ID that is 
-//       referenced but unoccupied, then they need to be warned that that's the 
-//       case, and ideally even shown a list of the referencing forms. This should 
-//       be easy enough to do entirely within the frontend: just check if there's 
-//       a "none"-type form with the same ID before even attempting the renumber 
-//       operation otherwise.
-//
 //     - Deletion of a "none-stub" as a result of renumbering or another process 
 //       MUST trigger (file_load_order::on_form_loss).
 //

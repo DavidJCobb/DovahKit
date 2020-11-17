@@ -335,12 +335,6 @@ namespace dovah {
 
    #pragma region form_stub use info functions
    void form_stub::build_outbound_refs(tes_file_reading::basic_reader* reader) noexcept {
-      if (this->is_non_overridden_hardcoded_form()) { // hardcoded forms only have hardcoded outbound refs
-         form_stub_use_info_builder use_interface(*this);
-         build_hardcoded_form_outbound_refs(use_interface);
-         return;
-      }
-      //
       file_data* arr;
       uint16_t   size;
       this->_get_source_file_list(arr, size);
@@ -350,11 +344,16 @@ namespace dovah {
       for (uint16_t i = 0; i < size; ++i) {
          if (i == size - 1)
             use_interface._is_final_file = true;
-         if (arr[i].pointer->load_record_at(arr[i].offset, reader)) {
-            auto& record = reader->get_current_record();
-            auto  builder = get_outbound_uses_builder_by_type(this->formType);
-            if (builder)
-               builder(record, use_interface);
+         auto* file = arr[i].pointer;
+         if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
+            build_hardcoded_form_outbound_refs(use_interface);
+         } else {
+            if (file->load_record_at(arr[i].offset, reader)) {
+               auto& record = reader->get_current_record();
+               auto  builder = get_outbound_uses_builder_by_type(this->formType);
+               if (builder)
+                  builder(record, use_interface);
+            }
          }
       }
       this->_add_one_way_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
