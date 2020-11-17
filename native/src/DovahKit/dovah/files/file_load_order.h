@@ -154,6 +154,8 @@ namespace dovah {
          void _build_use_info();
 
          bool _abandon_form_id_reservation(bare_form_id_t);
+
+         notice_code_t _destroy_none_stub(form_stub&);
          
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
          notice_code_t _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);

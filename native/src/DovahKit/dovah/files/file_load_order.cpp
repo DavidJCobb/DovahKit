@@ -764,6 +764,46 @@ namespace dovah {
       return false;
    }
 
+   notice_code_t file_load_order::_destroy_none_stub(form_stub& stub) {
+      if (!ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE) {
+         //
+         // Double-check that we *can* destroy all references to the stub, first.
+         //
+         for (auto& pair : stub.inbound) {
+            auto& data = pair.second;
+            if (!data.other || !data.other->load())
+               return notice_code::cannot_sever_references_to_target;
+         }
+      }
+      stub.sever_all_outbound_references(); // sever the stub's references to other forms.
+      //
+      std::vector<form_stub*> pending;
+      //
+      for (auto& pair : stub.inbound) {
+         auto& entry = pair.second;
+         auto* other = entry.other;
+         auto  form = other->load();
+         pending.push_back(other); // gather forms to process later. we don't want to sever refs now, as that will change use info and potentially invalidate iterators during the loop
+         other->set_edited(true);
+      }
+      for (auto* user : pending) {
+         auto form = user->load();
+         form->sever_outbound_references_to(stub);
+      }
+      //
+      if (this->on_form_loss)
+         (this->on_form_loss)(stub);
+      //
+      bare_form_id_t formID = stub.formID;
+      this->forms.forms.erase(formID);
+      this->forms_by_type[stub.formType].forms.erase(formID);
+      this->active_file_forms.forms.erase(formID);
+      this->active_file_forms_by_type[stub.formType].forms.erase(formID);
+      //
+      delete &stub;
+      return default_notice_code;
+   }
+
    #pragma region Form renumbering
    void file_load_order::_renumber_form(form_stub& stub, bare_form_id_t new_id, bool update_users) {
       //

@@ -117,12 +117,19 @@
 //          the desired form ID is occupied by a none-stub and if so, attempt to 
 //          yeet it.
 //
-//           - Write an internal helper function for destroying a none-stub with a 
-//             given ID. Function should return a notice code.
+//           - Use the helper function (file_load_order::_destroy_none_stub) to 
+//             destroy the none-stub. It returns a notice code, which can be used 
+//             to check for a failure. Note that since it does remove the stub 
+//             from form maps and delete it, it will invalidate any iterators for 
+//             those maps.
+//
+//           - We need to switch the form-create-request to use notice codes.
 //
 //        - (file_load_order::commit_form_renumber_request) needs to check whether 
 //          the desired form ID is occupied by a none-stub and if so, attempt to 
 //          yeet it.
+//
+//           - We need to switch the form-renumber-request to use notice codes.
 //
 //        - Implement the actual none-stub build step.
 //
