@@ -153,6 +153,14 @@
 //             successful save. Of course, I suspect that would happen anyway because 
 //             of the already-written code to discard stubs that weren't saved.
 //
+//              - THIS IS IMPLEMENTED, BUT NOT STRICTLY CORRECTLY. WHAT WE NEED TO DO 
+//                IS DISCARD ALL NONE-STUBS THAT ARE REFERRED TO ONLY BY ACTIVE FILE 
+//                FORMS, AND LEAVE ALL OTHER NONE-STUBS UNTOUCHED. THIS IS BECAUSE A 
+//                NON-ACTIVE FILE (SUCH AS Skyrim.esm, INCIDENTALLY) COULD CONTAIN 
+//                DANGLING REFERENCES, AND WE SHOULD CONTINUE TO HANDLE THOSE SANELY 
+//                AFTER A SAVE; A SAVE ONLY ELIMINATES DANGLING REFERENCES EXCLUSIVE 
+//                TO THE ACTIVE FILE.
+//
 //        - Implement the actual none-stub build step.
 //
 //           - The file load order needs to create a dummy file for none-stubs, just 

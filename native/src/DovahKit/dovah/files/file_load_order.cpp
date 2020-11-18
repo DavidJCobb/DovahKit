@@ -2209,7 +2209,9 @@ namespace dovah {
       //    that the save operation succeeded, but that editing cannot continue.
       //
       //  - If we were able to open the mapped file view, then update the file offsets on all 
-      //    form_stubs for forms defined or overridden in the active file.
+      //    form_stubs for  forms defined or overridden  in the active file.  Delete any form 
+      //    stubs that were defined in the active  file but didn't save, as well as any none-
+      //    stubs that were referred to only by active file forms.
       //
       this->save_error   = file_write_error();
       this->save_warning = file_write_warning();
@@ -2405,7 +2407,7 @@ namespace dovah {
             request.commit();
             if (request.get_result_code() != form_deletion_request::result_code::success) {
                this->save_error.code = notice_code::game_conversion_form_cleanup_failed;
-               if (stub->formType == form_type::none)
+               if (type == form_type::none)
                   this->save_error.code = notice_code::post_save_none_stub_cleanup_failed;
             }
          }
