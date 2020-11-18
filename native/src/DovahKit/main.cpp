@@ -161,6 +161,9 @@
 //                AFTER A SAVE; A SAVE ONLY ELIMINATES DANGLING REFERENCES EXCLUSIVE 
 //                TO THE ACTIVE FILE.
 //
+//                 - ACTUALLY, WE SHOULD ALSO DISCARD NONE-STUBS THAT ARE TOTALLY 
+//                   UNREFERENCED, AS WELL.
+//
 //        - Implement the actual none-stub build step.
 //
 //           - The file load order needs to create a dummy file for none-stubs, just 
