@@ -807,6 +807,12 @@ namespace dovah {
          lo._accept_hardcoded_form(stub);
       }
       {  // [NONE:28A]"PapyrusPersistenceForm"
+         //
+         // Behaves similarly to the CommandingActorPersistenceForm (see below), but with some 
+         // additional ties to the Papyrus VM. Probably used to ensure that TESObjectREFRs stay 
+         // loaded (i.e. "promoted" and flagged as persistent) while a Papyrus variable is 
+         // pointing to them.
+         //
          auto stub = new form_stub();
          stub->formID   = 0x28A;
          stub->formType = form_type_info::signature_to_form_type('NONE');
@@ -814,6 +820,14 @@ namespace dovah {
          lo._accept_hardcoded_form(stub);
       }
       {  // [NONE:294]"CommandingActorPersistenceForm"
+         //
+         // This form is initialized in game as a generic TESForm, and can appear in references' 
+         // ExtraPromotedRef arrays. The code that removes it from these arrays checks whether 
+         // doing so has emptied the array; if so, it un-flags the reference as persistent and, 
+         // if it has no parent cell, passes it to the garbage collector immediately. Presumably, 
+         // then, this form is used as a sentinel to "promote" NPCs that are being commanded by 
+         // other actors.
+         //
          auto stub = new form_stub();
          stub->formID   = 0x294;
          stub->formType = form_type_info::signature_to_form_type('NONE');

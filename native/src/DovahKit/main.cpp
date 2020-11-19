@@ -102,8 +102,6 @@
 //          none-stub. Remember to use the getter on form_stub; don't just check the 
 //          form type, or we'll false-positive on the hardcoded "persistence forms."
 //
-//           - Speaking of which, we should research how those work.
-//
 //        - (file_load_order::find_first_free_form_id_in_active_file) should take a 
 //          bool that will allow us to choose whether to avoid any none-stubs. Default 
 //          behavior is to not even bother.
