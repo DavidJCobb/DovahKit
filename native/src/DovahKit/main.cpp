@@ -139,10 +139,6 @@
 //                then the request should use (cannot_sever_references_to_none_stub) 
 //                as its own error code.
 //
-//        - (file_load_order::commit_form_renumber_request) needs to check whether 
-//          the desired form ID is occupied by a none-stub and if so, attempt to 
-//          yeet it.
-//
 //        - The code for serializing a (form_reference_t) should write zero instead 
 //          of the referenced form stub's form ID if the referenced form stub is a 
 //          none-stub.

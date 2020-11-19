@@ -336,6 +336,12 @@ namespace dovah {
    };
 
    #pragma region Requests to manipulate forms
+   //
+   // These requests are used to perform tasks like creating, renumbering, or deleting forms. 
+   // Note that some of them can iterate invalidators to the form map for a few reasons, such 
+   // as deleting none-stubs that are in their way.
+   //
+
    class form_creation_request {
       friend class file_load_order;
       friend class form_duplication_request;

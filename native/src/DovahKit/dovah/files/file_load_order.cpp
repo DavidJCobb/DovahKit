@@ -21,6 +21,12 @@
 #include <fstream>
 
 namespace {
+   //
+   // Several parts of the  backend will double-check that  all forms relevant to a 
+   // task can be edited in certain ways. If all form types are known to have fully-
+   // implemented loaded-form classes, then these checks are unnecessary and can be 
+   // skipped. Setting this bool to (true) will skip these tasks.
+   //
    constexpr bool ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE = false;
 }
 
@@ -1753,7 +1759,23 @@ namespace dovah {
       bare_form_id_t oldID     = request.target.formID;
       if (!desiredID)
          return;
-      assert(!this->has_form(desiredID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+      form_stub* occupier = this->get_form(desiredID, false);
+      if (occupier) {
+         assert(occupier->formType == form_type::none && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+         if (occupier->formType == form_type::none) {
+            //
+            // If a none-stub is taking the desired form ID, then destroy it. If we 
+            // can't destroy it, then that's an error.
+            //
+            auto result = this->_destroy_none_stub(*occupier);
+            if (result != default_notice_code) { // destruction failed
+               request.error = result;
+               if (result == notice_code::cannot_sever_references_to_target)
+                  request.error = notice_code::cannot_sever_references_to_none_stub;
+               return;
+            }
+         }
+      }
       //
       auto& stub = request.target;
       if (ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE == false) {
