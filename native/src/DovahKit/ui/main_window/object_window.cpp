@@ -56,6 +56,9 @@ namespace {
          case notice_code::exterior_cell_clone_must_have_parent:
             text = QObject::tr("Exterior cells must have a parent worldspace. (Wait, what? How did you get the Object Window to try and create an exterior cell?)");
             break;
+         case notice_code::cannot_sever_references_to_none_stub:
+            text = QObject::tr("DovahKit needed to select a form ID to use for the new form. The chosen form ID is the target of one or more dangling references, and DovahKit does not know how to sever those references, so the form creation process could not continue.");
+            break;
       }
       QMessageBox::critical(
          window,

@@ -1590,7 +1590,22 @@ namespace dovah {
          return nullptr;
       if (&request.owner != this)
          return nullptr;
-      assert(!cobb::unordered_map_contains(this->forms.forms, formID) && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+      if (form_stub* occupier = this->get_form(formID, false)) {
+         assert(occupier->formType == form_type::none && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+         if (occupier->formType == form_type::none) {
+            //
+            // If a none-stub is taking the desired form ID, then destroy it. If we 
+            // can't destroy it, then that's an error.
+            //
+            auto result = this->_destroy_none_stub(*occupier);
+            if (result != default_notice_code) { // destruction failed
+               request.error = result;
+               if (result == notice_code::cannot_sever_references_to_target)
+                  request.error = notice_code::cannot_sever_references_to_none_stub;
+               return nullptr;
+            }
+         }
+      }
       //
       if (request.child_of) {
          auto parent_type = request.child_of->formType;
@@ -1759,8 +1774,7 @@ namespace dovah {
       bare_form_id_t oldID     = request.target.formID;
       if (!desiredID)
          return;
-      form_stub* occupier = this->get_form(desiredID, false);
-      if (occupier) {
+      if (form_stub* occupier = this->get_form(desiredID, false)) {
          assert(occupier->formType == form_type::none && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
          if (occupier->formType == form_type::none) {
             //

@@ -125,19 +125,11 @@
 //             the active file form map, as none-stubs shouldn't go in the active file 
 //             form map.
 //
-//        - (file_load_order::commit_form_creation_request) needs to check whether 
-//          the desired form ID is occupied by a none-stub and if so, attempt to 
-//          yeet it.
+//        = TEST THAT FORM CREATION PROPERLY DESTROYS ANY NONE-STUBS THAT ARE IN 
+//          THEIR WAY.
 //
-//           - Use the helper function (file_load_order::_destroy_none_stub) to 
-//             destroy the none-stub. It returns a notice code, which can be used 
-//             to check for a failure. Note that since it does remove the stub 
-//             from form maps and delete it, it will invalidate any iterators for 
-//             those maps.
-//
-//              - If this helper function returns (cannot_sever_references_to_target), 
-//                then the request should use (cannot_sever_references_to_none_stub) 
-//                as its own error code.
+//        = TEST THAT FORM RENUMBERING PROPERLY DESTROYS ANY NONE-STUBS THAT ARE IN 
+//          THEIR WAY.
 //
 //        - The code for serializing a (form_reference_t) should write zero instead 
 //          of the referenced form stub's form ID if the referenced form stub is a 

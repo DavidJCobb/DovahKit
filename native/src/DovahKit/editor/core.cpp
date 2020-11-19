@@ -344,6 +344,8 @@ namespace {
             return QObject::tr("Interior cells cannot have a parent worldspace.");
          case notice_code::exterior_cell_clone_must_have_parent:
             return QObject::tr("Exterior cells must have a parent worldspace.");
+         case notice_code::cannot_sever_references_to_none_stub:
+            return QObject::tr("DovahKit needed to select a form ID to use for the new form. The chosen form ID is the target of one or more dangling references, and DovahKit does not know how to sever those references, so the form creation process could not continue.");
       }
       return "";
    }
