@@ -154,10 +154,6 @@
 //
 //     = MAINTAIN OUR INTERNAL DOCUMENTATION ON THIS, UNTIL WE'RE DONE WITH IT.
 //
-//     - Some of the GMSTs that we extracted with a script have names formatted like 
-//       INI settings. Double-check that these really are GMSTs. Ctrl+F the listing 
-//       for ":" to know which ones to check.
-//
 //     - Skyrim Special Edition adds more GMSTs. We'll need to find a list of those 
 //       definitions, and we'll need to make it possible for GMST definitions to 
 //       indicate what games they appear in (defaulting to "all").

@@ -59,7 +59,7 @@ namespace dovah {
       return _none;
    }
 
-   const std::array<game_setting_definition, 3567> game_settings = {{
+   const std::array<game_setting_definition, 3561> game_settings = {{
       #pragma region Booleans
          #pragma region A
             { "bAutoAimBasedOnDistance", false },
@@ -1148,7 +1148,6 @@ namespace dovah {
             { "fDistanceProjectileExplosionDetection", 400.0F },
             { "fDistancetoPlayerforConversations", 3000.0F },
             { "fDOFDistanceMult", 5.0F },
-            { "fDoorMarkerDisplayHeight:Interface", 64.0F },
             { "fDragonLandingZoneClearRadius", 256.0F },
             { "fDragonMaxUpwardPitch", 45.0F },
             { "fDragonRiderLandingZoneClearRadius", 200.0F },
@@ -1933,7 +1932,6 @@ namespace dovah {
             { "fShockSegmentLength", 32.0F },
             { "fShockSegmentVariance", 20.0F },
             { "fShockSubSegmentVariance", 0.0F },
-            { "fShoutMeterFinishTime:Interface", 3.0F },
             { "fShoutRumbleBigMotorDurationV1", 0.0F },
             { "fShoutRumbleBigMotorDurationV2", 0.0F },
             { "fShoutRumbleBigMotorDurationV3", 0.0F },
@@ -2492,8 +2490,6 @@ namespace dovah {
             { "iDragonPatrolMarkerReference", 233730 },
          #pragma endregion
          #pragma region E
-            { "iEnemyHealthDisplayAngle:Interface", 90 },
-            { "iEnemyHealthDisplayTime:Interface", 2000 },
             { "iExplosionDebug", 0 },
             { "iEyeMorphCount", 10 },
          #pragma endregion
@@ -2502,7 +2498,6 @@ namespace dovah {
             { "iFavorAllyValue", 300 },
             { "iFavorConfidantValue", 200 },
             { "iFavorFriendValue", 100 },
-            { "iFavoritesDisplayTime:Interface", 3000 },
             { "iFavorLoverValue", 400 },
             { "iFavorPointsRestore", 4 },
             { "iFloraEmptyAlpha", 160 },
@@ -2599,9 +2594,6 @@ namespace dovah {
             { "iNumberActorsInCombatPlayer", 20 },
             { "iNumberGuardsCrimeResponse", 4 },
             { "iNumExplosionDecalCDPoint", 250 },
-         #pragma endregion
-         #pragma region O
-            { "iObjectivesWaitTime:Interface", 250 },
          #pragma endregion
          #pragma region P
             { "iPCStartSpellSkillLevel", 30 },

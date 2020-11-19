@@ -26,8 +26,8 @@ namespace dovah {
 
    class game_setting_definition {
       public:
-         const char*        name;
-         game_setting_type  type;
+         const char*        name = "";
+         game_setting_type  type = game_setting_type::none;
          game_setting_value default_value;
          //
          game_setting_definition(game_setting_type t) : type(t) {}
@@ -41,5 +41,5 @@ namespace dovah {
          inline bool is_none() const noexcept { return this->type == game_setting_type::none; }
    };
 
-   extern const std::array<game_setting_definition, 3567> game_settings;
+   extern const std::array<game_setting_definition, 3561> game_settings;
 }
