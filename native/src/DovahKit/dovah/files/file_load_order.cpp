@@ -2491,12 +2491,19 @@ namespace dovah {
                }
             }
          }
+         //
+         // Okay, that's the file data updated for all saved stubs. Now, we need to discard the 
+         // stubs that couldn't be saved, as well as any none-stubs that can safely be discarded. 
+         // In order to avoid invalidating iterators during a loop and crashing, we'll gather up 
+         // all the stubs-to-discard into a vector, and then chuck 'em all in another loop.
+         //
          std::vector<form_stub*> stubs_to_remove;
          for (auto& pair : this->active_file_forms.forms) {
             bare_form_id_t id = pair.first;
             if (!cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
                stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
          }
+         size_t only_none_stubs_past_this_point = stubs_to_remove.size();
          for (auto& pair : this->forms_by_type[form_type::none].forms) {
             auto* stub = pair.second;
             if (!stub || !stub->is_none_stub())
@@ -2511,25 +2518,29 @@ namespace dovah {
             //
             //     - They are outbound from forms that were serialized to the file, and they 
             //       were therefore serialized as zero, tracked, and then severed as part of 
-            //       the "fixup" loop above.
+            //       the "fixup" loop above... which means that they *aren't* inbound 
+            //       references anymore.
             //
-            //     - They are outbound from forms that themselves need to be removed.
+            //     - They are outbound from forms that themselves need to be removed. (We can 
+            //       use the (only_none_stubs_past_this_point) variable to test this faster, 
+            //       because none-stubs should never be able to refer to each other.)
             //
             bool can_delete = true;
             for (auto& pair : stub->inbound) {
                auto* user = pair.second.other;
                if (!user)
                   continue;
-               if (std::find(stubs_to_remove.begin(), stubs_to_remove.end(), user) != stubs_to_remove.end()) // the referencing form is itself going to be discarded.
+               if (std::find(stubs_to_remove.begin(), stubs_to_remove.begin() + only_none_stubs_past_this_point, user) != stubs_to_remove.end()) // the referencing form is itself going to be discarded.
                   continue;
-               if (!writer.get_write_info_for_stub(*user)) {
-                  can_delete = false; // the referencing form will be retained and was not serialized into the file
-                  break;
-               }
+               can_delete = false;
+               break;
             }
             if (can_delete)
                stubs_to_remove.push_back(pair.second);
          }
+         //
+         // Okay, now we have a list of all the stubs to discard, so let's get to it!
+         //
          for (auto* stub : stubs_to_remove) {
             auto type = stub->formType;
             if (type == form_type::setting) // GMSTs are a special case. their form-stubs are just placeholders and do not retain meaningful information, file offsets included
