@@ -17,6 +17,7 @@ namespace dovah {
             has_incc = 0x0002,
             has_onam = 0x0004,
             is_hardcoded_dummy = 0x0008, // used by file_reader
+            is_none_stub_dummy = 0x0010, // used by file_reader
          };
       };
       using detail_flag_t = std::underlying_type_t<detail_flag::type>;

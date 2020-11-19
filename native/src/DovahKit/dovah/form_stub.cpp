@@ -72,8 +72,8 @@ namespace dovah {
          return loaded_form_ptr<loaded_forms::Form>(this); // already loaded
       if (!this->has_source_files())
          return loaded_form_ptr<loaded_forms::Form>(this); // no files to load from
-      if (this->formType == form_type::setting)
-         return loaded_form_ptr<loaded_forms::Form>(this); // GMSTs aren't actually forms
+      if (this->formType == form_type::setting || this->formType == form_type::none)
+         return loaded_form_ptr<loaded_forms::Form>(this); // skip GMSTs (because they aren't actually forms) and none-stubs
       //
       auto& lo = this->_get_load_order();
       if (!force) {

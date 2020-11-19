@@ -104,6 +104,7 @@ namespace dovah {
          bsa_load_order*   archives             = nullptr;
          std::vector<loaded_file*> files;
          loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
+         loaded_file*      none_stubs_file      = nullptr; // needed so that none-stubs can find this file_load_order.
          loaded_file*      active_file          = nullptr;
          _form_map         forms;
          _form_map_by_type forms_by_type;
@@ -151,6 +152,7 @@ namespace dovah {
          //
          void _make_hardcoded_forms();
          void _accept_hardcoded_form(form_stub*) noexcept;
+         void _build_none_stubs();
          void _build_use_info();
 
          bool _abandon_form_id_reservation(bare_form_id_t);

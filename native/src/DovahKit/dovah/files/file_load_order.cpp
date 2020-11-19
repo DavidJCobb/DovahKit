@@ -119,6 +119,34 @@ namespace dovah {
       type.forms[formID] = stub;
       this->forms.forms[formID] = stub;
    }
+   void file_load_order::_build_none_stubs() {
+      this->none_stubs_file = new tes_file_reading::file_reader(*this);
+      this->none_stubs_file->header.details |= tes_file_reading::file_reader::detail_flag::is_none_stub_dummy;
+      //
+      std::vector<bare_form_id_t> formIDs;
+      for (auto& pair : this->forms.forms) {
+         auto* stub = pair.second;
+         if (!stub)
+            continue;
+         for (auto& pair : stub->outbound) {
+            bare_form_id_t id = pair.first;
+            if (pair.second.other) // if there's a stub pointer, then this isn't a dangling form-to-form reference
+               continue;
+            formIDs.push_back(id);
+         }
+      }
+      if (formIDs.empty())
+         return;
+      for (auto id : formIDs) {
+         auto* stub = new form_stub;
+         stub->formID   = id;
+         stub->formType = form_type::none;
+         stub->_add_file(*this->none_stubs_file, 0);
+         //
+         this->forms_by_type[form_type::none].forms[id] = stub;
+         this->forms.forms[id] = stub;
+      }
+   }
    void file_load_order::_build_use_info() {
       //
       // We generate Use Info using two passes. First, we divide all forms across multiple 
@@ -156,9 +184,18 @@ namespace dovah {
          }
          this->save_load_state.flags |= save_load_flag::use_info_outbound_complete;
       }
-      // Outbound next; has to be single-threaded
-      for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
-         it->second->send_inbound_refs();
+      //
+      // These next steps have to be single-threaded. First, we need to build any 
+      // none-stubs that are needed; then, we need to use outbound use info to 
+      // build inbound use info. None-stubs need to be built first so that the 
+      // references to them are properly made bidirectional.
+      //
+      this->_build_none_stubs();
+      for (auto& pair : this->forms.forms) {
+         auto* stub = pair.second;
+         if (!stub || stub->formType == form_type::none) // none-stubs should never have outbound references, so we can skip them
+            continue;
+         stub->send_inbound_refs();
       }
    }
 

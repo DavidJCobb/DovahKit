@@ -131,28 +131,6 @@
 //        = TEST THAT FORM RENUMBERING PROPERLY DESTROYS ANY NONE-STUBS THAT ARE IN 
 //          THEIR WAY.
 //
-//        - Implement the actual none-stub build step.
-//
-//           - The file load order needs to create a dummy file for none-stubs, just 
-//             like how hardcoded forms need a dummy file.
-//
-//     = So we'd need to identify referenced-but-unoccupied form IDs and create stubs 
-//       for them during the use info build step, right? Well, how do we do that? It 
-//       should be pretty simple. For every form, we need to loop over its outbound 
-//       references and look for references that have a form ID but no pointer to the 
-//       target stub. The (form_stub::_add_one_way_outbound_reference) function will 
-//       always grab the target stub if it exists, so the only way that pointer would 
-//       be missing is if the reference were to an unoccupied form ID. We'd use that 
-//       to gather a list of all referenced-but-unoccupied form IDs, and then, after 
-//       building that list, we'd create all of the relevant stubs. We'd need to do 
-//       all this BEFORE the calls to (form_stub::send_inbound_refs), to ensure that 
-//       the references are properly made bidirectional (i.e. the target stubs need 
-//       to be made existent first).
-//
-//     - You know how the file load order has a dummy "hardcoded form file" so that 
-//       hardcoded forms' stubs can find their owning file load order? Yeah. We're 
-//       gonna need a dummy file for these "none-stubs" as well.
-//
 //     - It's tempting to do things like making (file_load_order) refuse to grant 
 //       access to none-type stubs, but that's a non-starter. First of all, those 
 //       stubs will already be accessible through the loaded form data of the 
