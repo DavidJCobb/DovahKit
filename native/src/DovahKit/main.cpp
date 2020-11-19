@@ -51,6 +51,21 @@
 //     - The log window should ideally use a table view instead of a list view, with 
 //       columns for the filename (and potentially other details).
 //
+//  - Form duplication can fail in complex ways: even if we successfully duplicate the 
+//    target form, we may fail to duplicate child or descendant forms. We should create 
+//    a custom dialog box that can show multiple sets of error details for this case.
+//
+//  - We currently have multiple structs for file- and form-related errors and warnings, 
+//    including two different save warnings: (file_save_warning) and (file_write_warning). 
+//    We should consider replacing all of these with a (file_notice) struct based on 
+//    (file_read_warning), which seems to have just about everything we need already. We 
+//    should then also create documentation for each process that can return one of these 
+//    notices, like what we already have for file write errors.
+//
+//  - The Object Window should allow the user to view a list of all none-stubs, when any 
+//    exist. The user should not be able to create new ones, obviously, but it would be 
+//    useful for them to be able to view Use Info on none-stubs.
+//
 //  - We should log a warning when loading a form that is misplaced into the wrong 
 //    GRUP.
 //
@@ -79,43 +94,31 @@
 //    caller can view it. We should rename and repurpose (tes_file_writing::write_config) 
 //    as a "save request" or "save process" struct, and have it retain error information.
 //
-//  - DovahKit currently has a bit of a design flaw with respect to invalid references 
-//    to unoccupied form IDs. Consider the case where I load a file with a SHOU/SNAM 
-//    that refers to some form xx001234, but there is no form with that ID. Then, in 
-//    DovahKit, I create a new form with ID xx001234 and then I load the SHOU. Well, 
-//    DovahKit has no way to know that the SHOU wasn't originally referring to the 
-//    new form. If the new form isn't of a type that SHOU/SNAM can reference, then 
-//    the user still gets a warning, but if the new form is, say, a spell or word of 
-//    power, then we have a situation where the SHOU's data has silently changed, 
-//    probably in a way that'll break things.
+//  - Design flaw in (file_load_order::save_active_file): Suppose we are converting from 
+//    Skyrim Special to Skyrim Classic, and we have a form list that refers to a VOLI -- 
+//    a form of a type that doesn't exist in Skyrim Classic. If that VOLI were itself in 
+//    the active file, then it would be deleted normally. However, if the VOLI is in one 
+//    of the active file's masters, and the form list is in the active file, then the 
+//    VOLI will not be deleted and -- crucially -- the form list's reference to it will 
+//    not be severed. If the form list is unloaded at the time of the save, then when it 
+//    loads, it'll have a reference to None instead; however, its in-memory use info 
+//    will still refer to the VOLI. If the form list is loaded during the save, then the 
+//    loaded form data will still refer to the VOLI.
 //
-//    There's really only one way to address this, and it's gonna be messy. We'd have 
-//    to create form stubs not only for *defined* form IDs, as we do now, but also for 
-//    any *referenced* form IDs. This would allow us to track use info for form IDs 
-//    instead of just for forms, which would be necessary for knowing that a given 
-//    form ID is referenced despite not being used on a real form; it would also allow 
-//    us to know whether a given form-ID-sans-form used to be referenced but isn't any 
-//    longer (because if an inbound reference is severed by user action, then use info 
-//    will be updated appropriately).
+//    What we need, then, is either to sever these references as they are saved, or to 
+//    check use info on every form that failed to save and forcibly sever only uses that 
+//    come from the active file (similarly to how we only delete none-stubs if they are 
+//    unreferenced or if they are only referenced by the active file).
 //
-//    The form stubs for referenced-but-undefined form IDs would need to be generated 
-//    during the use info build step. They could use form_type::none as their form 
-//    type, and be sorted into file_load_order::forms_by_type[form_type::none]. We'd 
-//    then need to make two changes. First: when searching for an available form ID, 
-//    if we find that the ID is in use by a stub with no inbound references and a 
-//    "none" form type, then we need to consider the ID available; and second, when 
-//    actually taking an action that would place a valid form in that ID, we need to 
-//    delete the "none"-type stub (which in turn requires telling any referencing 
-//    forms to sever their references to it, and those forms may be of types that 
-//    DovahKit doesn't yet know how to edit, so that's a new potential point of 
-//    failure for form creation and renumbering).
-//
-//    Another nice bonus: if a form refers to an undefined non-zero form ID, then we 
-//    can generate a warning for that using the same code we already have for catching 
-//    type-mismatched form-to-form references. We'd just need to edit the error text 
-//    for the case where the referent's type is form_type::none.
+//  - None-stub support
 //
 //     - TASKS
+//
+//        - On-demand form loading should emit a warning when loading a reference to a 
+//          none-stub. Remember to use the getter on form_stub; don't just check the 
+//          form type, or we'll false-positive on the hardcoded "persistence forms."
+//
+//           - Speaking of which, we should research how those work.
 //
 //        - (file_load_order::find_first_free_form_id_in_active_file) should take a 
 //          bool that will allow us to choose whether to avoid any none-stubs. Default 
