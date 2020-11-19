@@ -124,16 +124,20 @@ namespace dovah {
       this->none_stubs_file->header.details |= tes_file_reading::file_reader::detail_flag::is_none_stub_dummy;
       //
       std::vector<bare_form_id_t> formIDs;
+      std::vector<form_stub*> users;
       for (auto& pair : this->forms.forms) {
          auto* stub = pair.second;
          if (!stub)
             continue;
+         bool found_any = false;
          for (auto& pair : stub->outbound) {
-            bare_form_id_t id = pair.first;
             if (pair.second.other) // if there's a stub pointer, then this isn't a dangling form-to-form reference
                continue;
-            formIDs.push_back(id);
+            formIDs.push_back(pair.first);
+            found_any = true;
          }
+         if (found_any)
+            users.push_back(stub);
       }
       if (formIDs.empty())
          return;
@@ -145,6 +149,17 @@ namespace dovah {
          //
          this->forms_by_type[form_type::none].forms[id] = stub;
          this->forms.forms[id] = stub;
+      }
+      //
+      // Simply creating the none-stubs isn't enough, though: the use info in the 
+      // referencing forms needs to be updated to point to the new none-stubs.
+      //
+      for (auto* user : users) {
+         for (auto& pair : user->outbound) {
+            if (pair.second.other)
+               continue;
+            pair.second.other = this->get_form(form_type::none, pair.first);
+         }
       }
    }
    void file_load_order::_build_use_info() {
@@ -193,7 +208,7 @@ namespace dovah {
       this->_build_none_stubs();
       for (auto& pair : this->forms.forms) {
          auto* stub = pair.second;
-         if (!stub || stub->formType == form_type::none) // none-stubs should never have outbound references, so we can skip them
+         if (!stub || stub->formType == form_type::none) // none-type forms (which are usually, but not always, none-stubs) should never have outbound references, so we can skip them
             continue;
          stub->send_inbound_refs();
       }
@@ -1328,7 +1343,7 @@ namespace dovah {
       auto  it   = list.find(formID);
       if (it != list.end()) {
          auto* stub = it->second;
-         if (ignore_none_stubs && stub && stub->formType == form_type::none)
+         if (ignore_none_stubs && stub && stub->is_none_stub())
             stub = nullptr;
          return stub;
       }
@@ -1628,8 +1643,8 @@ namespace dovah {
       if (&request.owner != this)
          return nullptr;
       if (form_stub* occupier = this->get_form(formID, false)) {
-         assert(occupier->formType == form_type::none && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
-         if (occupier->formType == form_type::none) {
+         assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+         if (occupier->is_none_stub()) {
             //
             // If a none-stub is taking the desired form ID, then destroy it. If we 
             // can't destroy it, then that's an error.
@@ -1812,8 +1827,8 @@ namespace dovah {
       if (!desiredID)
          return;
       if (form_stub* occupier = this->get_form(desiredID, false)) {
-         assert(occupier->formType == form_type::none && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
-         if (occupier->formType == form_type::none) {
+         assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+         if (occupier->is_none_stub()) {
             //
             // If a none-stub is taking the desired form ID, then destroy it. If we 
             // can't destroy it, then that's an error.
@@ -2457,13 +2472,14 @@ namespace dovah {
             if (!cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
                stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
          }
-         for (auto& pair : this->forms_by_type[form_type::none].forms) { // none-stubs should never be saved, and all references to them should be serialized as zero, so yeet 'em if we should
+         for (auto& pair : this->forms_by_type[form_type::none].forms) {
             auto* stub = pair.second;
-            if (!stub)
+            if (!stub || !stub->is_none_stub())
                continue;
             //
-            // We can only delete a none-stub if it's totally unreferenced, or if all 
-            // references come from active file forms.
+            // References to none-stubs should be serialized as zero, essentially being 
+            // severed at save time. If a none-stub is unreferenced, then, or if it's 
+            // only referred to by active file forms, then we should delete it.
             //
             bool can_delete = true;
             for (auto& pair : stub->inbound) {
@@ -2496,11 +2512,12 @@ namespace dovah {
             if (this->on_form_loss)
                (this->on_form_loss)(*stub); // ensure that the frontend can abandon any references it has to this stub and its loaded form data
             //
-            auto request = this->request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
+            bool is_none_stub = stub->is_none_stub();
+            auto request      = this->request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
             request.commit();
             if (request.get_result_code() != form_deletion_request::result_code::success) {
                this->save_error.code = notice_code::game_conversion_form_cleanup_failed;
-               if (type == form_type::none)
+               if (is_none_stub)
                   this->save_error.code = notice_code::post_save_none_stub_cleanup_failed;
             }
          }

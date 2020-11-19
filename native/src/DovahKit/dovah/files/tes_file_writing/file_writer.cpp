@@ -498,7 +498,7 @@ namespace dovah::tes_file_writing {
    bool file_writer::_can_serialize_form(const form_stub* stub) const noexcept {
       if (!stub)
          return true;
-      if (stub->formType == form_type::none)
+      if (stub->is_none_stub())
          return false;
       if (this->config.output_game != game::skyrim_special) {
          auto& info = form_type_info::lookup(stub->formType);

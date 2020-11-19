@@ -95,24 +95,17 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
          //
       }
    });
-   QObject::connect(this->ui.buttonReset, &QPushButton::clicked, this, [this]() {
-      //
-      // TODO
-      //
-   });
    //
    this->ui.list->setTextFilter(this->ui.filter);
    this->ui.list->build();
    this->ui.valueStack->setCurrentWidget(this->ui.vpNone);
    this->ui.buttonCommit->setEnabled(false);
-   this->ui.buttonReset->setEnabled(false);
    QObject::connect(this->ui.list->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
       this->ui.settingName->setText(tr("No setting selected", "game setting window"));
       this->ui.description->setText("");
       this->ui.valueStack->setCurrentWidget(this->ui.vpNone);
       //
       this->ui.buttonCommit->setEnabled(false);
-      this->ui.buttonReset->setEnabled(false);
       //
       const auto* item = _get_selected_item(this->ui.list);
       if (item) {
@@ -141,7 +134,6 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
             bool has_data = DovahKitCore::get().has_data();
             //
             this->ui.buttonCommit->setEnabled(has_data);
-            this->ui.buttonReset->setEnabled(has_data);
          } else {
             this->ui.valueStack->setCurrentWidget(this->ui.vpUnknown);
          }

@@ -123,8 +123,6 @@ and ignoring everything else. This is a multi-threaded process. Once all of the
 outbound uses have been found, a single-threaded loop is used to "send" them to 
 the target forms, which create matching inbound use info.
 
- - The next part is not yet implemented, as of this writing. -
-
 But what about dangling references between forms? That is, what if one form has 
 data that refers to some form ID which  is not actually in use by another form? 
 This can occur as a result of incorrect  edits made with community tools (often 
@@ -154,6 +152,15 @@ loaded forms, but also form IDs themselves.
 
 "None-stubs" require a number of additional considerations:
 
+ - None-stubs need a dummy file object,  because form stubs access their owning 
+   load order via their first file.
+
+ - Not all form stubs with  form type "none" are "none-stubs,"  because nothing 
+   is ever simple...  Bethesda defines two hardcoded  "persistence forms" whose 
+   form type is "none."  Fortunately, we can check whether  a form stub's first 
+   file is the dummy none-stub file, and use that to tell these stubs apart. We 
+   provide (form_stub::is_none_stub) which performs this check.
+
  - None-stubs shouldn't  be placed in a load order's map  of active file forms, 
    even if their form IDs would place them within the active file.
 
@@ -168,6 +175,14 @@ loaded forms, but also form IDs themselves.
    stub needs to be discarded in the same  manner as for form renumbering, with 
    the same possible failures.
 
+   This gets messy when dealing with  form duplication, as duplicating a parent 
+   form should also duplicate the children. A non-severable none-stub can cause 
+   any of the forms to fail to duplicate, but only a failure of the parent form 
+   will halt  the overall  duplication process. No  attempt is made  to prevent 
+   this, because this sort of problem should only occur while DovahKit is still 
+   in development; once support for all form types is implemented, there should 
+   be no case where a none-stub cannot have all inbound references severed.
+
  - Any none-stubs that  are destroyed by an internal operation  need to trigger 
    the "form loss" callback.
 
@@ -175,6 +190,12 @@ loaded forms, but also form IDs themselves.
    the referenced  form stub's form ID  if the referenced stub  is a none-stub. 
    This is handled by returning  false when  (file_writer::_can_serialize_form) 
    is called for a none-stub.
+
+ - After a save operation,  none-stubs must be deleted  from memory if they are 
+   unreferenced or if they are referred  to only by active file forms (i.e. the 
+   forms that have just been saved). We need to refrain from deleting any none-
+   stubs that are referred  to by non-active file forms,  as doing so will flag 
+   those forms as "edited."
 
 
 === MEMORY MANAGEMENT FOR FORM STUBS ==========================================

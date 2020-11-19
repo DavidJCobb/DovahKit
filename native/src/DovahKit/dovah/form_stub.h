@@ -299,6 +299,7 @@ namespace dovah {
          inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
          inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
          bool is_non_overridden_hardcoded_form() const noexcept;
+         bool is_none_stub() const noexcept;
          void set_edited(bool v);
 
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form

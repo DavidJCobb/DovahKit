@@ -64,6 +64,7 @@
     <addaction name="actionDebugLogBSAContents"/>
     <addaction name="actionDebugExtractBSAFile"/>
     <addaction name="actionDebugLookupBSAFile"/>
+    <addaction name="actionDebugListNoneStubs"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -189,6 +190,11 @@
   <action name="actionDefaultObjects">
    <property name="text">
     <string>Default Objects...</string>
+   </property>
+  </action>
+  <action name="actionDebugListNoneStubs">
+   <property name="text">
+    <string>List all dangling references</string>
    </property>
   </action>
  </widget>

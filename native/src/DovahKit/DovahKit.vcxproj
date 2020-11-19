@@ -263,6 +263,7 @@
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -424,6 +425,7 @@
     <QtMoc Include="ui\main_window\default_object_window\default_object_list.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h" />
     <QtMoc Include="ui\generic\DelayedAvailabilityButton.h" />

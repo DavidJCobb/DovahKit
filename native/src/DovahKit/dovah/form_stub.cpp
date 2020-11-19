@@ -321,6 +321,14 @@ namespace dovah {
       }
       return false;
    }
+   bool form_stub::is_none_stub() const noexcept {
+      auto* info = this->get_source_file_info(-1); // get last file
+      if (!info || !info->pointer)
+         return false;
+      if (info->pointer->header.details & owner_file_t::detail_flag::is_none_stub_dummy)
+         return true;
+      return false;
+   }
    void form_stub::set_edited(bool v) {
       if (this->is_edited() == v)
          return;

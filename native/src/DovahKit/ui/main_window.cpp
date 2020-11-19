@@ -21,6 +21,7 @@
 #include "main_window/_debug_hooks/enumerate_bsa_contents.h"
 #include "main_window/_debug_hooks/extract_bsa_file.h"
 #include "main_window/_debug_hooks/lookup_bsa_file_from_bsa_load_order.h"
+#include "main_window/_debug_hooks/list_none_stubs.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -253,6 +254,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(this->ui.actionDebugLookupBSAFile, &QAction::triggered, this, [this]() {
       DovahKitDebug::lookup_bsa_file_from_bsa_load_order(this);
+   });
+   QObject::connect(this->ui.actionDebugListNoneStubs, &QAction::triggered, this, [this]() {
+      DovahKitDebug::list_none_stubs(this);
    });
    #pragma endregion
 }
