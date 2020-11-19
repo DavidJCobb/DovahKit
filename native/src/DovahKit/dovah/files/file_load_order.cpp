@@ -2420,8 +2420,26 @@ namespace dovah {
             if (!cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
                stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
          }
-         for (auto& pair : this->forms_by_type[form_type::none].forms) { // none-stubs should never be saved, and all references should be serialized as zero, so yeet 'em
-            stubs_to_remove.push_back(pair.second);
+         for (auto& pair : this->forms_by_type[form_type::none].forms) { // none-stubs should never be saved, and all references to them should be serialized as zero, so yeet 'em if we should
+            auto* stub = pair.second;
+            if (!stub)
+               continue;
+            //
+            // We can only delete a none-stub if it's totally unreferenced, or if all 
+            // references come from active file forms.
+            //
+            bool can_delete = true;
+            for (auto& pair : stub->inbound) {
+               auto* other = pair.second.other;
+               if (!other)
+                  continue;
+               if (!this->is_defined_or_overridden_in_active_file(*other)) {
+                  can_delete = false;
+                  break;
+               }
+            }
+            if (can_delete)
+               stubs_to_remove.push_back(pair.second);
          }
          for (auto* stub : stubs_to_remove) {
             auto type = stub->formType;

@@ -131,27 +131,6 @@
 //        = TEST THAT FORM RENUMBERING PROPERLY DESTROYS ANY NONE-STUBS THAT ARE IN 
 //          THEIR WAY.
 //
-//        - The code for serializing a (form_reference_t) should write zero instead 
-//          of the referenced form stub's form ID if the referenced form stub is a 
-//          none-stub.
-//
-//           = IMPLEMENTED.
-//
-//           - Once this is implemented, we can mass-discard none-stubs after a 
-//             successful save. Of course, I suspect that would happen anyway because 
-//             of the already-written code to discard stubs that weren't saved.
-//
-//              - THIS IS IMPLEMENTED, BUT NOT STRICTLY CORRECTLY. WHAT WE NEED TO DO 
-//                IS DISCARD ALL NONE-STUBS THAT ARE REFERRED TO ONLY BY ACTIVE FILE 
-//                FORMS, AND LEAVE ALL OTHER NONE-STUBS UNTOUCHED. THIS IS BECAUSE A 
-//                NON-ACTIVE FILE (SUCH AS Skyrim.esm, INCIDENTALLY) COULD CONTAIN 
-//                DANGLING REFERENCES, AND WE SHOULD CONTINUE TO HANDLE THOSE SANELY 
-//                AFTER A SAVE; A SAVE ONLY ELIMINATES DANGLING REFERENCES EXCLUSIVE 
-//                TO THE ACTIVE FILE.
-//
-//                 - ACTUALLY, WE SHOULD ALSO DISCARD NONE-STUBS THAT ARE TOTALLY 
-//                   UNREFERENCED, AS WELL.
-//
 //        - Implement the actual none-stub build step.
 //
 //           - The file load order needs to create a dummy file for none-stubs, just 
@@ -173,18 +152,6 @@
 //     - You know how the file load order has a dummy "hardcoded form file" so that 
 //       hardcoded forms' stubs can find their owning file load order? Yeah. We're 
 //       gonna need a dummy file for these "none-stubs" as well.
-//
-//     - If we do this, then we need to add an entire documentation file that's just 
-//       about form stubs, and we need to very thoroughly and carefully explain all 
-//       of this, as well as every special-case check that we end up needing for it. 
-//       The idea of having form stubs correspond to raw form IDs and not to real 
-//       forms is extremely unintuitive (case in point: I didn't do it before now), 
-//       and the consequences that could stem from this are real nasty.
-//
-//        - We should call them "none-stubs."
-//
-//     - Deletion of a "none-stub" as a result of renumbering or another process 
-//       MUST trigger (file_load_order::on_form_loss).
 //
 //     - It's tempting to do things like making (file_load_order) refuse to grant 
 //       access to none-type stubs, but that's a non-starter. First of all, those 
