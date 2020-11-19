@@ -177,6 +177,12 @@ namespace dovah::tes_file_writing {
             auto& write_info = this->fixup_data.form_stubs[stub->formID];
             write_info.stub   = stub;
             write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
+            for (auto& pair : stub->outbound) {
+               auto  id    = pair.first;
+               auto& entry = pair.second;
+               if (!this->_can_serialize_form(entry.other))
+                  write_info.sever_references_to.push_back(id);
+            }
             //
             if (this->_should_compress_current_record(stub))
                record.header.flags |= tes_file_record_header::flag::compressed;
@@ -633,5 +639,15 @@ namespace dovah::tes_file_writing {
    }
    void file_writer::close() {
       this->stream.close();
+   }
+
+   const file_writer::form_stub_write_info* file_writer::get_write_info_for_stub(const form_stub& stub) const noexcept {
+      auto& list = this->fixup_data.form_stubs;
+      for (auto& pair : list) {
+         auto& entry = pair.second;
+         if (entry.stub == &stub)
+            return &entry;
+      }
+      return nullptr;
    }
 }

@@ -94,28 +94,6 @@
 //    caller can view it. We should rename and repurpose (tes_file_writing::write_config) 
 //    as a "save request" or "save process" struct, and have it retain error information.
 //
-//  - Design flaw in (file_load_order::save_active_file): Suppose we are converting from 
-//    Skyrim Special to Skyrim Classic, and we have a form list that refers to a VOLI -- 
-//    a form of a type that doesn't exist in Skyrim Classic. If that VOLI were itself in 
-//    the active file, then it would be deleted normally. However, if the VOLI is in one 
-//    of the active file's masters, and the form list is in the active file, then the 
-//    VOLI will not be deleted and -- crucially -- the form list's reference to it will 
-//    not be severed. If the form list is unloaded at the time of the save, then when it 
-//    loads, it'll have a reference to None instead; however, its in-memory use info 
-//    will still refer to the VOLI. If the form list is loaded during the save, then the 
-//    loaded form data will still refer to the VOLI.
-//
-//    What we need, then, is either to sever these references as they are saved, or to 
-//    check use info on every form that failed to save and forcibly sever only uses that 
-//    come from the active file (similarly to how we only delete none-stubs if they are 
-//    unreferenced or if they are only referenced by the active file).
-//
-//     - Severing a form's references as we save it might be easy: after we load the 
-//       form but before we save it, we just loop over its outbound references and check 
-//       for references to any non-serializable forms; if so, we sever those references 
-//       at that time. Remember to gather the target form IDs into a vector and sever 
-//       them outside of the loop that finds them, so we don't invalidate iterators.
-//
 //  - None-stub support
 //
 //     - TASKS

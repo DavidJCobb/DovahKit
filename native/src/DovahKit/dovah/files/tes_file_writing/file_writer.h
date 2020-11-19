@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <unordered_map>
+#include <vector>
 #include "config.h"
 #include "elements.h"
 #include "../file_write_error.h"
@@ -30,6 +31,7 @@ namespace dovah {
                //
                form_stub* stub   = nullptr;
                uint32_t   offset = 0;
+               std::vector<bare_form_id_t> sever_references_to;
             };
             //
          protected:
@@ -86,7 +88,7 @@ namespace dovah {
                   file_offset_t next_object_id = 0;
                } header;
                struct {
-                  uint32_t      value = 0;
+                  uint32_t      value  = 0;
                   file_offset_t offset = 0;
                } record_and_group_count;
                std::unordered_map<bare_form_id_t, form_stub_write_info> form_stubs;
@@ -114,6 +116,8 @@ namespace dovah {
             bool write();
             void update_source_file_header();
             void close();
+
+            const form_stub_write_info* get_write_info_for_stub(const form_stub&) const noexcept;
       };
    }
 }

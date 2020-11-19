@@ -314,6 +314,7 @@ namespace dovah {
          uint32_t get_cell_sub_block() const noexcept;
          //
          void revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags = 0);
+         void revoke_all_outbound_references_to(form_stub* target);
          void replace_outbound_reference(bare_form_id_t old, form_stub* changeTo, use_info_entry::flags_t flags = 0);
          void replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags = 0);
 

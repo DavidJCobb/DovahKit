@@ -576,6 +576,30 @@ namespace dovah {
          }
       }
    }
+   void form_stub::revoke_all_outbound_references_to(form_stub* target) {
+      //
+      // Bidirectionally sever a connection from this form to another: this form's outbound 
+      // connection will be severed, and the other form's inbound connection will be severed.
+      //
+      auto& target_list = target->inbound;
+      for (auto it = target_list.begin(); it != target_list.end(); ++it) {
+         auto& pair  = *it;
+         auto& entry = pair.second;
+         if (pair.first == this->formID) {
+            target_list.erase(it);
+            break;
+         }
+      }
+      auto& subject_list = this->outbound;
+      for (auto it = subject_list.begin(); it != subject_list.end(); ++it) {
+         auto& pair  = *it;
+         auto& entry = pair.second;
+         if (pair.first == target->formID) {
+            subject_list.erase(it);
+            break;
+         }
+      }
+   }
    void form_stub::replace_outbound_reference(bare_form_id_t old, form_stub* new_stub, use_info_entry::flags_t flags) {
       //
       // This function replaces an outbound reference from this form to some other form, while also 

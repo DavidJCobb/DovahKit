@@ -2461,10 +2461,35 @@ namespace dovah {
                // We need to add this form to the active file form list.
                //
                this->active_file_forms.forms[stub->formID] = stub;
-               auto& at = this->active_file_forms_by_type[stub->formType];
-               at.forms[stub->formID] = stub;
+               this->active_file_forms_by_type[stub->formType].forms[stub->formID] = stub;
             }
             stub->set_edited(false);
+            //
+            if (!info.sever_references_to.empty()) {
+               //
+               // According to this form's use info, it refers to other forms that we were unable to 
+               // write to the final file. Those references will have been serialized as zero, so now 
+               // we need to sever them in-memory: if the form is still loaded, then we need to update 
+               // the loaded data, and either way, we also need to update the use info.
+               //
+               // One example of where this could happen: imagine that we're converting the active 
+               // file from Skyrim Special to Skyrim Classic, and it contains a form list that has 
+               // an entry for a VOLI form -- a type that can only exist in Skyrim Special. When 
+               // writing, we'll serialize form ID 0 instead of the VOLI form ID. If the VOLI form is 
+               // part of the active file, then we'll also discard it below using a form deletion 
+               // request, and that will sever the references to it. However, if the VOLI belongs to 
+               // one of the active file's masters, then it won't be deleted, so we need to sever the 
+               // references to it here.
+               //
+               auto loaded = stub->get_content_if_loaded(); // use this to ensure it doesn't unload out from under us
+               for (auto id : info.sever_references_to) {
+                  auto* target = this->get_form(id, false);
+                  assert(target && "Error during post-save cleanup: How does one of the saved forms have a dangling form-to-form reference with no target none-stub?");
+                  if (loaded)
+                     loaded->sever_outbound_references_to(*target);
+                  stub->revoke_all_outbound_references_to(target);
+               }
+            }
          }
          std::vector<form_stub*> stubs_to_remove;
          for (auto& pair : this->active_file_forms.forms) {
@@ -2477,17 +2502,28 @@ namespace dovah {
             if (!stub || !stub->is_none_stub())
                continue;
             //
-            // References to none-stubs should be serialized as zero, essentially being 
-            // severed at save time. If a none-stub is unreferenced, then, or if it's 
-            // only referred to by active file forms, then we should delete it.
+            // There are two situations in which we can safely delete a none-stub post-save: 
+            //
+            //  - It was unreferenced at the start of the save process, and therefore still is 
+            //    now.
+            //
+            //  - All references to it meet either of these two conditions:
+            //
+            //     - They are outbound from forms that were serialized to the file, and they 
+            //       were therefore serialized as zero, tracked, and then severed as part of 
+            //       the "fixup" loop above.
+            //
+            //     - They are outbound from forms that themselves need to be removed.
             //
             bool can_delete = true;
             for (auto& pair : stub->inbound) {
-               auto* other = pair.second.other;
-               if (!other)
+               auto* user = pair.second.other;
+               if (!user)
                   continue;
-               if (!this->is_defined_or_overridden_in_active_file(*other)) {
-                  can_delete = false;
+               if (std::find(stubs_to_remove.begin(), stubs_to_remove.end(), user) != stubs_to_remove.end()) // the referencing form is itself going to be discarded.
+                  continue;
+               if (!writer.get_write_info_for_stub(*user)) {
+                  can_delete = false; // the referencing form will be retained and was not serialized into the file
                   break;
                }
             }
