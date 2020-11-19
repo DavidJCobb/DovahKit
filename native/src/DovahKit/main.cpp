@@ -110,6 +110,12 @@
 //    come from the active file (similarly to how we only delete none-stubs if they are 
 //    unreferenced or if they are only referenced by the active file).
 //
+//     - Severing a form's references as we save it might be easy: after we load the 
+//       form but before we save it, we just loop over its outbound references and check 
+//       for references to any non-serializable forms; if so, we sever those references 
+//       at that time. Remember to gather the target form IDs into a vector and sever 
+//       them outside of the loop that finds them, so we don't invalidate iterators.
+//
 //  - None-stub support
 //
 //     - TASKS
