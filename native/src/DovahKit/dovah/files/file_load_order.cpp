@@ -2329,9 +2329,6 @@ namespace dovah {
             //
             auto new_prefix = this->file_prefix_for(*this->active_file, save_as_light_plugin);
             //
-            #if _DEBUG
-               bool caught_loaded_stub = false;
-            #endif
             std::vector<form_stub*> stubs;
             for (auto& pair : this->active_file_forms.forms) {
                auto* stub = pair.second;
@@ -2340,12 +2337,6 @@ namespace dovah {
                auto  id   = stub->formID;
                if (old_active_file_prefix.contains_form_id(id))
                   stubs.push_back(stub);
-               #if _DEBUG
-                  if (!caught_loaded_stub && stub->get_refcount()) {
-                     caught_loaded_stub = true;
-                     __debugbreak(); // Why does the stub have a non-zero refcount? The frontend should've unloaded all forms before the save operation. This is dangerous!
-                  }
-               #endif
             }
             for (auto* stub : stubs) {
                this->_renumber_form(*stub, new_prefix.coerce_form_id(stub->formID), false);
