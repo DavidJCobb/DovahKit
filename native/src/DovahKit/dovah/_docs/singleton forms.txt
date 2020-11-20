@@ -117,4 +117,6 @@ from it; we  only add the active file  to the lists of stubs that  successfully
 saved).
 
 As of this writing, it *feels* like having  multiple stubs for a singleton form 
-be edited as a result of use info is consequence-free.
+be edited as a result of use info is consequence-free... provided a frontend is 
+sure to work only  with the canonical stub, rather than  trying to treat all of 
+the stubs for a singleton form type  the same way as form stubs of other types.

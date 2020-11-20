@@ -35,8 +35,7 @@ header, with the choice of extension overriding any flags:
 
 In various places the term "master" is also used as a synonym for "dependency," 
 with a file's contained list of dependencies being called its "master list." In 
-these contexts,  there is no  antonym to "master,"  just as there  is no direct
-antonym to "dependency."
+these contexts, there is no direct antonym to "master."
 
 
 ===  Miscellaneous information on light files =================================
@@ -51,4 +50,3 @@ because doing so is much easier.
 
 DovahKit will load light files' forms into the 0xFE slot at run-time in mimicry 
 of the actual game.  DovahKit is not alone in this regard; xEdit does the same.
-

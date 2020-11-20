@@ -92,7 +92,9 @@
 //    while another is in progress, then the in-progress save operation will overwrite 
 //    the error information for the blocked save operation, possibly before the latter's 
 //    caller can view it. We should rename and repurpose (tes_file_writing::write_config) 
-//    as a "save request" or "save process" struct, and have it retain error information.
+//    as a "save request" or "save process" struct, and have it retain error information; 
+//    alternatively we can take a third argument used to report results in detail, which 
+//    would let us keep the config settings as const.
 //
 //  - None-stub support
 //

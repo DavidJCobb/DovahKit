@@ -2427,6 +2427,8 @@ namespace dovah {
                   stubs.push_back(stub);
             }
             for (auto* stub : stubs) {
+               if (stub->formID < 0x800)
+                  continue;
                this->_renumber_form(*stub, new_prefix.coerce_form_id(stub->formID), false);
             }
             //
@@ -2436,6 +2438,8 @@ namespace dovah {
                auto& list = pair.second;
                for (auto& entry : list) {
                   if (entry.source_file != this->active_file)
+                     continue;
+                  if (entry.formID < 0x800)
                      continue;
                   entry.formID = new_prefix.coerce_form_id(entry.formID);
                }
@@ -2524,6 +2528,10 @@ namespace dovah {
             //     - They are outbound from forms that themselves need to be removed. (We can 
             //       use the (only_none_stubs_past_this_point) variable to test this faster, 
             //       because none-stubs should never be able to refer to each other.)
+            //
+            // Attempting to delete any other none-stub may result in non-active-file forms 
+            // being wrongly flagged as "edited" as a result of the deletion. Those forms 
+            // would then bake into the active file during subsequent saves.
             //
             bool can_delete = true;
             for (auto& pair : stub->inbound) {

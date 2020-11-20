@@ -80,11 +80,11 @@ places:
 
    virtual void TESForm::ClearData();                    // virtual method 0x05
    void TESForm::ClearAllComponentData();                // Classic: 0x00450D00
-   virtual bool TESForm::LoadForm(BGSLoadFormBuffer*);   // virtual method 0x06
+   virtual bool TESForm::LoadForm(TESFile*);             // virtual method 0x06
 
 For parent forms, a reverse-engineer must also check one more location in code: 
 
-   virtual bool TESForm::LoadPartial(BGSLoadFormBuffer*);       // virtual 0x07
+   virtual bool TESForm::LoadPartial(TESFile*);          // virtual method 0x07
 
 The internal form class, TESForm, uses  multiple inheritance in order to supply 
 properties like  a full name (TESFullName)  or a description  (TESDescription). 
@@ -114,6 +114,7 @@ engine); when quirks  like this exist in the editor, one  can reasonably expect
 them to also appear  in the game, and vice versa.  ARMO and ARMA have obviously 
 diverged  significantly from  each other since  Fallout 3, and the  data is not 
 likely to still be compatible.
+
 
 [2] The following  records are known to  be handled as  special cases in Skyrim 
 Classic: CELL; CPTH; DIAL; DOBJ; GMST;  IDLE; INFO; LAND; NAVI; NAVM; REFR (and 
@@ -200,6 +201,7 @@ all subclasses); TES4; WRLD. Special-case behaviors are as follows:
       any child records should be associated with; the CELL behavior above, for 
       example, uses this  worldspace pointer to identify  the cell's containing 
       worldspace.
+
 
 [3] Records with the signature TOFT are exempt from the process described above 
 and in fact do not  define forms at all.  There is a form  type value for TOFT, 

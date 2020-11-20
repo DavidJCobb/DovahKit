@@ -62,7 +62,7 @@ want to write a script  that scans over all of the Infos  in a Topic, in order,
 there is no  built-in functionality  for this; rather, you must  manually write 
 the code to pull  the INFO/PNAM subrecord and treat  it as the link in a linked 
 list. It's certainly possible for xEdit's  developers to write code to abstract 
-away details like this,  but every such code is essentially  an exception being 
+away details  like this,  but all such  code is essentially  an exception being 
 made to its core design -- another thing  to have to maintain; another place to 
 make mistakes. But these limitations  aren't flaws. xEdit's design works; it is 
 one of the most  important editing tools available to the  community, and it is 

@@ -70,6 +70,11 @@ the owning load order instance:  the workers create  form stubs themselves, set
 up the appropriate  file info, and then send the stubs to the  load order to be 
 accepted or rejected.
 
+(Actually, there  are two kinds of form  stubs that aren't loaded  using worker 
+threads: worldspaces and their persistent cells. These stubs are created during 
+the process of assigning GRUPs to worker  threads, so that a worldspace's child 
+GRUPs can potentially be loaded by multiple worker threads at a time.)
+
 The load order will handle things like  validating form types on overrides, and 
 managing the file lists for singleton forms. When dealing with an override, the 
 load order will  copy the file list for  the previously-existing  stub into the 
@@ -138,7 +143,7 @@ knowledge. If the new form is of an  inappropriate type, then this will produce
 a warning, but not  the right warning; however, if it's of  an appropriate type 
 for the dangling reference in question,  then no warning will occur: there will 
 be no indication that a change has occurred, even though this change could lead 
-to undesired behavior at run-time.
+to undesired behavior in-game.
 
 The solution to this is "none-stubs."  During the process in which we build all 
 inbound use info using the already-built outbound use info, we want to scan for 
@@ -212,4 +217,11 @@ doubly-linked lists.  A block list can be assigned to an  individual thread, or
 it can be retained as a single "unowned" list. When a thread closes, its blocks 
 are merged into the "unowned" list; when a new thread spawns, the blocks in the 
 "unowned" list are given to it to use.  Threads can allocate memory without the 
-need to lock; however, freeing memory requires a lock.
+need to lock; however, freeing memory requires a lock,  and locking also occurs 
+when threads open and close,  regardless of whether they ever actually allocate 
+any form stubs.
+
+This doesn't result in us totally avoiding  all locking, as locks are still hit 
+when we actually insert  new form stubs  into the  file load order's form maps, 
+but  heap-related locks should only be hit after every sixteen thousandth  form 
+stub.
