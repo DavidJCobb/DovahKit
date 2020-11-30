@@ -2384,9 +2384,8 @@ namespace dovah {
          std::filesystem::rename(filename, this->active_file->get_path(), code);
          bool reopen_result = false;
          if (code) {
-            auto& warning = results.warnings.emplace_back();
-            warning.context = detailed_notice::notice_context::file_save;
-            warning.code    = notice_code::save_complete_but_to_temporary_file;
+            auto& warning = results.add_warning();
+            warning.code = notice_code::save_complete_but_to_temporary_file;
             warning.relevant_files.emplace_back(filename.filename().string());
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");

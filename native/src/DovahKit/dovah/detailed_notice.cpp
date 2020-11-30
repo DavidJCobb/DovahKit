@@ -95,6 +95,8 @@ namespace dovah {
    bool detailed_notice::operator==(const detailed_notice& other) const noexcept {
       if (this->type != other.type)
          return false;
+      if (this->context != other.context)
+         return false;
       if (this->code != other.code)
          return false;
       if (this->flags != other.flags)

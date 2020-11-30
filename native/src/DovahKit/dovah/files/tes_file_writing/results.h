@@ -12,5 +12,7 @@ namespace dovah::tes_file_writing {
          std::vector<detailed_notice> warnings;
 
          write_results();
+
+         detailed_notice& add_warning() noexcept;
    };
 }
