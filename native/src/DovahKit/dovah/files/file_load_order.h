@@ -9,7 +9,6 @@
 #include <unordered_map>
 #include <vector>
 #include "file_load_order_normalizer.h"
-#include "file_write_error.h"
 #include "file_read_warning.h"
 #include "../detailed_notice.h"
 #include "../form_stub.h"
@@ -33,7 +32,6 @@ namespace dovah {
       class  write_results;
       class  file_writer;
    }
-   struct file_save_warning;
 
    class form_creation_request;
    class form_duplication_request;
@@ -84,7 +82,7 @@ namespace dovah {
          using form_loss_callback_t     = void(*)(form_stub&);
          using form_renumber_callback_t = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
          using read_warning_callback_t  = void(*)(const file_read_warning&);
-         using save_warning_callback_t  = void(*)(const file_save_warning&);
+         using save_warning_callback_t  = void(*)(const detailed_notice&);
          using generic_callback_t       = void(*)();
          //
       protected:
@@ -214,7 +212,7 @@ namespace dovah {
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
          bare_form_id_t remap_formID_for_save(bare_form_id_t) const noexcept;
          void log_load_warning(const file_read_warning&);
-         void log_save_warning(const file_save_warning&);
+         void log_save_warning(const detailed_notice&);
 
          // (acceptFormStub)
          // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 
@@ -588,7 +586,7 @@ namespace dovah {
             file_load_order& owner;
 
             // TIP: This function only logs a warning if it has a warning code.
-            void log_save_warning(file_save_warning&);
+            void log_save_warning(detailed_notice&);
             
          protected:
             form_save(file_load_order& o) : owner(o) {}

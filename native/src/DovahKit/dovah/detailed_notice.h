@@ -13,6 +13,7 @@ namespace dovah {
          unspecified         = 0,
          on_demand_form_load = 1,
          file_save           = 2,
+         form_save           = 3,
       };
       enum class notice_type {
          unspecified = 0,

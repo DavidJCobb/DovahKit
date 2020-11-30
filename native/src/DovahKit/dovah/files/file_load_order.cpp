@@ -18,7 +18,6 @@
 #include "../utils/get_user_language_name.h"
 #include "../localization/localized_string_store.h"
 #include "../notice_code_list.h"
-#include "file_save_warning.h"
 #include <fstream>
 
 namespace {
@@ -803,7 +802,7 @@ namespace dovah {
       if (this->on_read_warning)
          (this->on_read_warning)(w);
    }
-   void file_load_order::log_save_warning(const file_save_warning& w) {
+   void file_load_order::log_save_warning(const detailed_notice& w) {
       if (!w.is_defined())
          return;
       if (this->on_save_warning)
@@ -2386,7 +2385,8 @@ namespace dovah {
          bool reopen_result = false;
          if (code) {
             auto& warning = results.warnings.emplace_back();
-            warning.code = notice_code::save_complete_but_to_temporary_file;
+            warning.context = detailed_notice::notice_context::file_save;
+            warning.code    = notice_code::save_complete_but_to_temporary_file;
             warning.relevant_files.emplace_back(filename.filename().string());
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
@@ -3006,8 +3006,9 @@ namespace dovah {
          this->owner.log_load_warning(warning);
       }
 
-      void form_save::log_save_warning(file_save_warning& warning) {
-         warning.context = file_save_warning::context_t::on_demand_form_save;
+      void form_save::log_save_warning(detailed_notice& warning) {
+         warning.type    = detailed_notice::notice_type::warning;
+         warning.context = detailed_notice::notice_context::form_save;
          this->owner.log_save_warning(warning);
       }
    }

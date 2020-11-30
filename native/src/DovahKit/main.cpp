@@ -64,7 +64,9 @@
 //
 //     - (file_write_error) SUCCESSFULLY REPLACED.
 //
-//     - (file_write_warning) PENDING. (Defined in file_write_error.h)
+//     - (file_write_warning) SUCCESSFULLY REPLACED.
+//
+//     - (file_save_warning) SUCCESSFULLY REPLACED. (Not that it was used to begin with...)
 //
 //     - (file_read_error) PENDING.
 //
