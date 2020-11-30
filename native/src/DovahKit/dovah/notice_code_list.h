@@ -42,13 +42,13 @@ namespace dovah {
          game_setting_edit_request_lacked_id         = 0x00000021, // A game setting edit request failed because it had no form ID.
          form_id_is_already_in_use                   = 0x00000022,
          form_id_is_reserved_for_other_process       = 0x00000023, // Cannot use the specified form ID. It is reserved for use by another process, such as form creation or form renumbering.
-         game_setting_not_in_active_file             = 0x00000024, // The specified game setting is not defined in the active file.
+         cannot_load_right_now                       = 0x00000024, // It is not safe to load right now, as a save or load operation is already in progress.
          game_setting_record_has_no_data             = 0x00000025, // A GMST record had no DATA subrecord.
          game_setting_record_unreadable_data         = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
          cannot_sever_references_to_target           = 0x00000027,
          game_setting_is_not_in_active_file          = 0x00000028, // Cannot renumber a GMST that doesn't originate from the active file.
          default_object_rejected_for_bad_type        = 0x00000029, // The loaded DefaultObjectManager won't let you use the specified form for the specified entry, as the form is of the wrong type.
-         default_object_accepted_but_unknown         = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one DovahKit's backend recognizes.
+         default_object_accepted_but_unknown         = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one that DovahKit's backend recognizes.
          singleton_form_is_redundantly_defined       = 0x0000002B, // A file contained multiple records for the same singleton form (e.g. multiple DOBJ records or multiple NAVI records).
          cannot_renumber_hardcoded_form              = 0x0000002C,
          form_is_not_defined_in_active_file          = 0x0000002D, // The desired operation can only be performed on forms that were originally defined in the active file.
@@ -67,12 +67,11 @@ namespace dovah {
          form_id_is_out_of_bounds                    = 0x0000003A, // The requested form ID is out-of-bounds, e.g. form ID 0x05000000 in a load order with fewer than six files.
          post_save_none_stub_cleanup_failed          = 0x0000003B, // Failed to clean up none-stubs after an otherwise successful save operation. It is not safe to continue this editing session.
          malformed_file                              = 0x0000003C,
-         missing_master                              = 0x0000003D,
-         missing_file                                = 0x0000003E,
+         missing_master                              = 0x0000003D, // Failed to load a file, because one of the file's masters is missing.
+         missing_file                                = 0x0000003E, // Failed to load a file, because the file is missing.
          file_is_locked                              = 0x0000003F, // DovahKit was unable to read a file because it is locked by the OS.
          cyclical_dependency_between_files           = 0x00000040, // The load order contains files whose master lists form a circular dependency.
          active_file_is_master_and_there_are_plugins = 0x00000041, // DovahKit can't place the active file at the end of the load order, because it's ESM-flagged and other files aren't.
-         cannot_load_right_now                       = 0x00000042, // It is not safe to load right now, as a save or load operation is already in progress.
       };
    };
 }

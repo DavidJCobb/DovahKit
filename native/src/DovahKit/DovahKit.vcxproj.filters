@@ -495,9 +495,6 @@
     <ClCompile Include="dovah\data\default_objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\file_save_warning.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\main_window\default_object_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -708,9 +705,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\assert.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\file_write_error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\filesystem.h">
@@ -1038,9 +1032,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\default_objects.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\file_save_warning.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h">

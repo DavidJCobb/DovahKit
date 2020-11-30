@@ -1951,7 +1951,7 @@ namespace dovah {
             entry = &back;
       }
       if (!entry) {
-         request.code = notice_code::game_setting_not_in_active_file;
+         request.code = notice_code::game_setting_is_not_in_active_file;
          return;
       }
       auto code = this->_renumber_game_setting(*entry, request.desiredID);

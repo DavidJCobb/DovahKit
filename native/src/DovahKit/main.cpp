@@ -70,7 +70,13 @@
 //
 //     - (file_read_error) PENDING.
 //
+//        - Already created most of the needed notice codes.
+//
 //     - (file_read_warning) PENDING.
+//
+//     = Once this is done, we should audit and document every process that can return 
+//       notice codes, along with a full description of what notice codes can be returned 
+//       and (in the case of any detailed notices) what other information may be present.
 //
 //  - The Object Window should allow the user to view a list of all none-stubs, when any 
 //    exist. The user should not be able to create new ones, obviously, but it would be 
@@ -80,6 +86,9 @@
 //    GRUP.
 //
 //  - Quick test: does saving a file as *.TES cause an assertion failure?
+//
+//     - The frontend doesn't allow it, but we should *probably* make sure it doesn't 
+//       cause the backend to choke.
 //
 //  - Currently, form stubs retain the GRUP they loaded from. This is used to identify 
 //    a worldspace's persistent cell, as well as to sort REFRs into a cell's persistent 
@@ -97,16 +106,6 @@
 //       stub explicitly specify its persistent CELL's form ID.
 //
 //     - If we make changes in this regard, then we need to update the form stub docs.
-//
-//  - Design flaw in (file_load_order::save_active_file): save error information is 
-//    stored on the (save_error) member of the load order. This means that the notice 
-//    code (cannot_save_right_now) is not reliable: if you attempt one save operation 
-//    while another is in progress, then the in-progress save operation will overwrite 
-//    the error information for the blocked save operation, possibly before the latter's 
-//    caller can view it. We should rename and repurpose (tes_file_writing::write_config) 
-//    as a "save request" or "save process" struct, and have it retain error information; 
-//    alternatively we can take a third argument used to report results in detail, which 
-//    would let us keep the config settings as const.
 //
 //  - None-stub support
 //
