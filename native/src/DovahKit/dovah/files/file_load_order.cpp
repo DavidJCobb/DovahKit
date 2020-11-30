@@ -2302,7 +2302,6 @@ namespace dovah {
       //    stubs that were defined in the active  file but didn't save, as well as any none-
       //    stubs that were referred to only by active file forms.
       //
-      this->save_warning = file_write_warning();
       if (!this->active_file) {
          results.error.code = notice_code::no_active_file;
          return false;
@@ -2387,7 +2386,7 @@ namespace dovah {
          bool reopen_result = false;
          if (code) {
             auto& warning = results.warnings.emplace_back();
-            warning.code     = notice_code::save_complete_but_to_temporary_file;
+            warning.code = notice_code::save_complete_but_to_temporary_file;
             warning.relevant_files.emplace_back(filename.filename().string());
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");

@@ -462,9 +462,6 @@
     <ClCompile Include="dovah\files\tes_file_writing\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\file_write_error.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\main_window\log_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -511,6 +508,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\detailed_notice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_writing\results.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

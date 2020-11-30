@@ -62,6 +62,14 @@
 //    should then also create documentation for each process that can return one of these 
 //    notices, like what we already have for file write errors.
 //
+//     - (file_write_error) SUCCESSFULLY REPLACED.
+//
+//     - (file_write_warning) PENDING. (Defined in file_write_error.h)
+//
+//     - (file_read_error) PENDING.
+//
+//     - (file_read_warning) PENDING.
+//
 //  - The Object Window should allow the user to view a list of all none-stubs, when any 
 //    exist. The user should not be able to create new ones, obviously, but it would be 
 //    useful for them to be able to view Use Info on none-stubs.

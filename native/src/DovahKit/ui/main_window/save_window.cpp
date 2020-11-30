@@ -172,14 +172,19 @@ void ActiveFileSaveDialog::commit() {
       this->handleLastSaveError(results);
       this->reject();
    } else {
-      auto& warning = editor.get_write_warning();
-      if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
-         QString message = tr("A minor problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
-         QMessageBox::critical(
-            this,
-            tr("Warning", "save error"),
-            message
-         );
+      for (auto& warning : results.warnings) {
+         if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
+            std::string filename;
+            if (!warning.relevant_files.empty())
+               filename = warning.relevant_files.back();
+            QString message = tr("A minor problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(filename.c_str());
+            QMessageBox::critical(
+               this,
+               tr("Warning", "save error"),
+               message
+            );
+            break;
+         }
       }
       this->accept();
    }
@@ -187,10 +192,29 @@ void ActiveFileSaveDialog::commit() {
 void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::write_results& results) {
    using notice_flag = dovah::detailed_notice::flag;
    //
-   bool    requires_reload = false;
-   auto&   editor  = DovahKitCore::get();
-   auto&   error   = results.error;
-   auto&   warning = editor.get_write_warning();
+   bool        requires_reload = false;
+   bool        temporary_file  = false;
+   std::string temporary_name;
+   auto& editor = DovahKitCore::get();
+   auto& error  = results.error;
+   //
+   for (auto& warning : results.warnings) {
+      if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
+         temporary_file = true;
+         if (!warning.relevant_files.empty())
+            temporary_name = warning.relevant_files.back();
+         break;
+      }
+   }
+   if (error.code == dovah::default_notice_code && temporary_file) {
+      QMessageBox::critical(
+         this,
+         tr("Warning", "save warning"),
+         tr("The file was successfully saved, but DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(temporary_name.c_str())
+      );
+      return;
+   }
+   //
    QString message;
    switch (error.code) {
       case dovah::notice_code::unknown_form_type:
@@ -208,9 +232,6 @@ void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::wr
       case dovah::notice_code::save_complete_but_reopen_failed:
          requires_reload = true;
          message = tr("The file was successfully saved, but could not be reopened for editing after the save. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
-         if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
-            message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
-         }
          //
          // The mass data unload for this specific error is handled by the call to (editor.abandon_data) at the bottom of this function.
          //
@@ -239,9 +260,6 @@ void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::wr
       case dovah::notice_code::game_conversion_form_cleanup_failed:
          requires_reload = true;
          message = tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
-         if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
-            message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
-         }
          //
          // The mass data unload for this specific error is handled by the call to (editor.abandon_data) at the bottom of this function.
          //
@@ -249,9 +267,6 @@ void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::wr
       case dovah::notice_code::post_save_none_stub_cleanup_failed:
          requires_reload = true;
          message = tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
-         if (warning.code == dovah::notice_code::save_complete_but_to_temporary_file) {
-            message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(warning.filename.c_str());
-         }
          //
          // The mass data unload for this specific error is handled by the call to (editor.abandon_data) at the bottom of this function.
          //
@@ -260,6 +275,10 @@ void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::wr
          message = tr("Unknown error.", "write error");
          break;
    }
+   if (temporary_file) {
+      message += tr("\r\n\r\nAn additional problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(temporary_name.c_str());
+   }
+   //
    QString text = QString("Unable to save the file. %1").arg(message);
    if (error.flags & notice_flag::has_cause_form) {
       text = QString("Unable to save the file. %1<br/>Form ID: %2<br/>Form type: %3<br/>File offset: %4")

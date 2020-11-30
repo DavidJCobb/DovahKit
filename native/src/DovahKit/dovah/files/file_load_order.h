@@ -196,7 +196,6 @@ namespace dovah {
             } options;
          } queued_load;
          file_read_error          load_error;
-         file_write_warning       save_warning;
          form_create_callback_t   on_form_create   = nullptr;
          form_loss_callback_t     on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
          form_renumber_callback_t on_form_renumber = nullptr;

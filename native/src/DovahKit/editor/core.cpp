@@ -251,10 +251,6 @@ bool DovahKitCore::load_order_has_file(const std::filesystem::path& filename, bo
    return this->load_order->has_file(filename);
 }
 
-const dovah::file_write_warning& DovahKitCore::get_write_warning() const noexcept {
-   return this->load_order->save_warning;
-}
-
 uint32_t DovahKitCore::count_forms_of_type(form_type_t ft) const noexcept {
    return this->load_order->count_forms_of_type(ft);
 }

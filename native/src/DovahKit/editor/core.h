@@ -11,7 +11,6 @@ namespace dovah {
    class  bsa_archived_file;
    struct detailed_notice;
    class  form_stub;
-   class  file_write_error;
    struct localized_string;
    struct tes_file_header;
    namespace tes_file_reading {
@@ -127,8 +126,6 @@ class DovahKitCore : public QObject {
 
       bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
       bool load_order_has_file(const std::filesystem::path& filename, bool ignore_if_active_file = false) const noexcept;
-
-      const dovah::file_write_warning& get_write_warning() const noexcept;
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;
       dovah::form_stub* get_form(bare_form_id_t formID) const noexcept;

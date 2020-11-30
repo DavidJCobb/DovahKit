@@ -10,8 +10,9 @@ namespace dovah {
 
    struct detailed_notice {
       enum class notice_context {
-         unspecified,
-         on_demand_form_load,
+         unspecified         = 0,
+         on_demand_form_load = 1,
+         file_save           = 2,
       };
       enum class notice_type {
          unspecified = 0,
@@ -37,8 +38,8 @@ namespace dovah {
       using flags_t = std::underlying_type_t<flag::type>;
 
       struct relevant_form {
-         bare_form_id_t localID = 0;
-         bare_form_id_t fixedID = 0;
+         bare_form_id_t localID = 0; // file-local form ID, when available; zero otherwise
+         bare_form_id_t fixedID = 0; // load-order-relative form ID, when available; zero otherwise
          form_type_t    type    = form_type::none;
          //
          inline bool operator==(const relevant_form& other) const noexcept {
@@ -47,12 +48,12 @@ namespace dovah {
          inline bool operator!=(const relevant_form& other) const noexcept { return !(*this == other); }
       };
 
-      notice_type    type   = notice_type::unspecified;
-      notice_code_t  code   = default_notice_code;
-      flags_t        flags  = 0;
-      uint32_t       offset = 0;
-      notice_context context           = notice_context::unspecified;
-      uint32_t       cause_subrecord   = 0;
+      notice_type    type    = notice_type::unspecified;
+      notice_context context = notice_context::unspecified;
+      notice_code_t  code    = default_notice_code;
+      flags_t        flags   = 0;
+      uint32_t       offset  = 0;
+      uint32_t       cause_subrecord       = 0;
       int            cause_subrecord_index = 0;
       int            cause_form_index      = 0;
       relevant_form  cause_form; // the form in which the error occurred

@@ -10,5 +10,7 @@ namespace dovah::tes_file_writing {
       public:
          detailed_notice error;
          std::vector<detailed_notice> warnings;
+
+         write_results();
    };
 }
