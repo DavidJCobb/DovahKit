@@ -103,6 +103,7 @@
     <ClCompile Include="dovah\data\actor_values.cpp" />
     <ClCompile Include="dovah\data\default_objects.cpp" />
     <ClCompile Include="dovah\data\game_settings.cpp" />
+    <ClCompile Include="dovah\detailed_notice.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
     <ClCompile Include="dovah\files\bsa\threads.cpp" />
@@ -272,6 +273,7 @@
     <ClInclude Include="dovah\data\actor_values.h" />
     <ClInclude Include="dovah\data\default_objects.h" />
     <ClInclude Include="dovah\data\game_settings.h" />
+    <ClInclude Include="dovah\detailed_notice.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archive.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archived_file.h" />
     <ClInclude Include="dovah\files\bsa\bsa_load_order.h" />
@@ -293,6 +295,7 @@
     <ClInclude Include="dovah\files\tes_file_writing\config.h" />
     <ClInclude Include="dovah\files\tes_file_writing\elements.h" />
     <ClInclude Include="dovah\files\tes_file_writing\file_writer.h" />
+    <ClInclude Include="dovah\files\tes_file_writing\results.h" />
     <ClInclude Include="dovah\files\threaded_load_order_use_info_builder.h" />
     <ClInclude Include="dovah\forms\Activator.h" />
     <ClInclude Include="dovah\forms\ActorBase.h" />

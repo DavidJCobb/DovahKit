@@ -429,7 +429,7 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          break;
    }
 }
-LogListModelItem::LogListModelItem(const dovah::file_write_error& error) {
+LogListModelItem::LogListModelItem(const dovah::detailed_notice& error) {
    using notice_code = dovah::notice_code;
    //
    bool non_continuable_success = false;
@@ -509,7 +509,7 @@ void LogListModel::dataSaveImminent() {
 void LogListModel::dataSaveComplete() {
    this->addTextEntry(tr("The active file has been successfully saved.", "log window"));
 }
-void LogListModel::saveErrorReceived(const dovah::file_write_error& error) {
+void LogListModel::saveErrorReceived(const dovah::detailed_notice& error) {
    auto* item = new item_type(error);
    if (item->empty()) {
       delete item;

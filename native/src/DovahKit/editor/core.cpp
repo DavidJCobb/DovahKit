@@ -7,11 +7,13 @@
 #include <QThread>
 #include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
+#include "../dovah/detailed_notice.h"
 #include "../dovah/form_stub.h"
 #include "../dovah/notice_code_list.h"
 #include "../dovah/localized_strings.h"
 #include "../dovah/files/bsa/bsa_load_order.h"
 #include "../dovah/files/tes_file_reading/file.h"
+#include "../dovah/files/tes_file_writing/results.h"
 #include "../dovah/utils/get_user_language_name.h"
 #include "../dovah/forms/DefaultObjectManager.h"
 #include "core_internals/load_task.h"
@@ -206,16 +208,16 @@ QString DovahKitCore::get_active_file_name() const noexcept {
 bool DovahKitCore::has_active_file() const noexcept {
    return this->load_order->has_active_file();
 }
-bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg) {
+bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
    //
    // TODO: fail if a save is in progress.
    //
    emit dataSaveImminent();
-   if (this->load_order->save_active_file(name_to_use_if_nameless, cfg)) {
+   if (this->load_order->save_active_file(name_to_use_if_nameless, cfg, results)) {
       emit dataSaveComplete();
       return true;
    }
-   emit dataSaveFailed(this->load_order->save_error);
+   emit dataSaveFailed(results.error);
    return false;
 }
 QString DovahKitCore::get_active_file_author() const noexcept {
@@ -249,9 +251,6 @@ bool DovahKitCore::load_order_has_file(const std::filesystem::path& filename, bo
    return this->load_order->has_file(filename);
 }
 
-const dovah::file_write_error& DovahKitCore::get_last_write_error() const noexcept {
-   return this->load_order->save_error;
-}
 const dovah::file_write_warning& DovahKitCore::get_write_warning() const noexcept {
    return this->load_order->save_warning;
 }

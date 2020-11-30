@@ -4,8 +4,8 @@
 #include "ui_log_window.h"
 
 namespace dovah {
+   struct detailed_notice;
    struct file_read_warning;
-   class  file_write_error;
 }
 
 class LogWindow : public QWidget {

@@ -8,6 +8,7 @@
 #include "tes_file_reading/file.h"
 #include "tes_file_reading/file_header.h"
 #include "tes_file_writing/file_writer.h"
+#include "tes_file_writing/results.h"
 #include "../forms/factories/construct.h"
 #include "../forms/factories/hardcoded.h"
 #include "../forms/Form.h"
@@ -2213,7 +2214,7 @@ namespace dovah {
       return &this->active_file->header;
    }
 
-   bool file_load_order::save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg) {
+   bool file_load_order::save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
       //
       // The process of saving an active file is somewhat complex, due to the need to support 
       // both Skyrim Classic  and Skyrim Special,  as well as the  need to support converting 
@@ -2301,15 +2302,14 @@ namespace dovah {
       //    stubs that were defined in the active  file but didn't save, as well as any none-
       //    stubs that were referred to only by active file forms.
       //
-      this->save_error   = file_write_error();
       this->save_warning = file_write_warning();
       if (!this->active_file) {
-         this->save_error.code = notice_code::no_active_file;
+         results.error.code = notice_code::no_active_file;
          return false;
       }
       _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_saving);
       if (!save_load_lock_guard) {
-         this->save_error.code = notice_code::cannot_save_right_now;
+         results.error.code = notice_code::cannot_save_right_now;
          return false;
       }
       //
@@ -2317,13 +2317,13 @@ namespace dovah {
       if (!replacement_filename.empty())
          filename = replacement_filename;
       if (filename.empty()) {
-         this->save_error.code = notice_code::no_filename_specified;
+         results.error.code = notice_code::no_filename_specified;
          return false;
       }
       this->active_file->set_path(std::filesystem::path(this->base_path) / filename);
       //
       if (this->files.size() > 0xFE) {
-         this->save_error.code = notice_code::too_many_dependencies;
+         results.error.code = notice_code::too_many_dependencies;
          return false;
       }
       //
@@ -2354,7 +2354,7 @@ namespace dovah {
          for (auto& pair : this->active_file_forms.forms) {
             auto id = pair.second->formID;
             if (id & 0x00FFF000) {
-               this->save_error.code = notice_code::forms_out_of_esl_form_id_range;
+               results.error.code = notice_code::forms_out_of_esl_form_id_range;
                return false;
             }
          }
@@ -2362,7 +2362,7 @@ namespace dovah {
       if (this->current_game != cfg.output_game) {
          auto code = this->_can_change_current_game(cfg.output_game, was_originally_light != save_as_light_plugin);
          if (code != notice_code::none) {
-            this->save_error.code = code;
+            results.error.code = code;
             return false;
          }
       }
@@ -2386,8 +2386,9 @@ namespace dovah {
          std::filesystem::rename(filename, this->active_file->get_path(), code);
          bool reopen_result = false;
          if (code) {
-            this->save_warning.code     = notice_code::save_complete_but_to_temporary_file;
-            this->save_warning.filename = filename.filename();
+            auto& warning = results.warnings.emplace_back();
+            warning.code     = notice_code::save_complete_but_to_temporary_file;
+            warning.relevant_files.emplace_back(filename.filename().string());
             reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
             assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
          } else {
@@ -2402,8 +2403,7 @@ namespace dovah {
             // so we can't load form content for active file form stubs anymore. In other words, the 
             // save completed, but further editing is not possible.
             //
-            auto& error = this->save_error;
-            error.code = notice_code::save_complete_but_reopen_failed;
+            results.error.code = notice_code::save_complete_but_reopen_failed;
             return false;
          }
          //
@@ -2571,9 +2571,9 @@ namespace dovah {
             auto request      = this->request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
             request.commit();
             if (request.get_result_code() != form_deletion_request::result_code::success) {
-               this->save_error.code = notice_code::game_conversion_form_cleanup_failed;
+               results.error.code = notice_code::game_conversion_form_cleanup_failed;
                if (is_none_stub)
-                  this->save_error.code = notice_code::post_save_none_stub_cleanup_failed;
+                  results.error.code = notice_code::post_save_none_stub_cleanup_failed;
             }
          }
          //
@@ -2584,11 +2584,11 @@ namespace dovah {
                (this->on_mass_renumber)();
          }
          //
-         if (this->save_error.defined())
+         if (results.error.is_defined())
             return false;
       }
-      this->save_error = writer.error;
-      return !writer.error.defined();
+      results.error = writer.error;
+      return !results.error.is_defined();
    }
 
    #pragma region Requests for manipulating forms

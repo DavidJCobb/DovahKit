@@ -11,6 +11,7 @@
 #include "file_load_order_normalizer.h"
 #include "file_write_error.h"
 #include "file_read_warning.h"
+#include "../detailed_notice.h"
 #include "../form_stub.h"
 #include "../localized_strings.h"
 #include "../notice_code_t.h"
@@ -29,6 +30,7 @@ namespace dovah {
    }
    namespace tes_file_writing {
       struct write_config;
+      class  write_results;
       class  file_writer;
    }
    struct file_save_warning;
@@ -194,7 +196,6 @@ namespace dovah {
             } options;
          } queued_load;
          file_read_error          load_error;
-         file_write_error         save_error;
          file_write_warning       save_warning;
          form_create_callback_t   on_form_create   = nullptr;
          form_loss_callback_t     on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
@@ -334,7 +335,7 @@ namespace dovah {
          // The return value is a  success bool. Specific error information can be  found in the load order 
          // instance's (save_error) field.
          //
-         bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg);
+         bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results);
    };
 
    #pragma region Requests to manipulate forms

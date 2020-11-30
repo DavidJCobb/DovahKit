@@ -9,6 +9,7 @@
 
 namespace dovah {
    class  bsa_archived_file;
+   struct detailed_notice;
    class  form_stub;
    class  file_write_error;
    struct localized_string;
@@ -18,6 +19,7 @@ namespace dovah {
    }
    namespace tes_file_writing {
       struct write_config;
+      class  write_results;
    }
 }
 namespace DovahKitEditorInternals {
@@ -91,7 +93,7 @@ class DovahKitCore : public QObject {
       //
       void dataSaveImminent();
       void dataSaveComplete();
-      void dataSaveFailed(const dovah::file_write_error&);
+      void dataSaveFailed(const dovah::detailed_notice&);
       //
       void editorEncodingChanged(const std::string& prior, const std::string& after);
       //
@@ -116,7 +118,7 @@ class DovahKitCore : public QObject {
       bool active_file_has_name() const noexcept;
       QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;
-      bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg);
+      bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results);
       QString get_active_file_author() const noexcept;
       QString get_active_file_description() const noexcept;
       void set_active_file_author(const QString&) const noexcept;
@@ -126,7 +128,6 @@ class DovahKitCore : public QObject {
       bool for_each_load_order_filename(std::function<bool(std::filesystem::path, bool is_active_file)> functor) const noexcept;
       bool load_order_has_file(const std::filesystem::path& filename, bool ignore_if_active_file = false) const noexcept;
 
-      const dovah::file_write_error& get_last_write_error() const noexcept;
       const dovah::file_write_warning& get_write_warning() const noexcept;
 
       uint32_t count_forms_of_type(form_type_t) const noexcept;

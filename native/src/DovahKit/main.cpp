@@ -69,6 +69,8 @@
 //  - We should log a warning when loading a form that is misplaced into the wrong 
 //    GRUP.
 //
+//  - Quick test: does saving a file as *.TES cause an assertion failure?
+//
 //  - Currently, form stubs retain the GRUP they loaded from. This is used to identify 
 //    a worldspace's persistent cell, as well as to sort REFRs into a cell's persistent 
 //    and temporary child GRUPs when saving. Neither of these uses is going to be 
@@ -666,6 +668,11 @@
 //          still require the script to actually get the user's permission to run any 
 //          particular program by way of a hardcoded confirmation prompt, but I don't 
 //          know for sure how practical that'd be.
+//       
+//       Options that grant access to advanced or dangerous functionality should result 
+//       in the user being shown a confirmation message in the script selection window, 
+//       i.e. the user is shown a list of permissions that the script is requesting and 
+//       must explicitly grant those permissions before the script can run.
 //
 //     - Since we don't reveal every single form through a unified interface as xEdit 
 //       does, it will need to be possible for scripts to define forms (as in sheets 
@@ -688,6 +695,9 @@
 //
 //        - We'll probably want to provide generic table, list, and tree views to Lua.
 //
+//        - UI widgets will need to be referred to using handles managed by our script 
+//          singleton, similarly to form data.
+//
 //        = Lua-spawned windows must exist on the main thread (QWidgets can only 
 //          function there), which means that in order to allow Lua to influence and 
 //          be influenced by the UI, we must pass messages across threads. This, of 
@@ -705,6 +715,20 @@
 //          with the built-in QLineEdit::textEdited signal), but rather must be given a 
 //          custom "change" event that fires when the widget loses focus after having 
 //          been edited (compare to JS "onchange").
+//
+//     - It'd be nice if scripts had access to a UI widget that would allow them to 
+//       draw arbitrary rasters, like JS canvas (but maybe with a friendlier API).
+//
+//        - Sending each individual draw request across threads would be slow. It may 
+//          be faster to maintain two copies of any given raster -- one within the 
+//          widget, used for rendering, and one on the Lua thread which gets copied 
+//          to the widget asynchronously. Each copy of the image could maintain a 
+//          "last updated" time in ms, allowing us to know when a copy is needed. To 
+//          avoid threading mishaps, the image data on the Lua thread would need a 
+//          lock, to be used on writes and copies.
+//
+//        - Access to this widget should require permission, just because scripts 
+//          could use it to draw rude things.
 //
 //  - If the user has any unsaved changes, the main window should show a confirmation 
 //    prompt on exit. We already override MainWindow::closeEvent; we'll want to do what 

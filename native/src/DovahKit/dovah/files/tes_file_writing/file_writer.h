@@ -6,7 +6,7 @@
 #include <vector>
 #include "config.h"
 #include "elements.h"
-#include "../file_write_error.h"
+#include "../../detailed_notice.h"
 
 namespace dovah {
    class file_load_order;
@@ -81,7 +81,7 @@ namespace dovah {
             bool use_string_table; // constructor defaults this to whatever the source file did
             #pragma endregion
             //
-            file_write_error error;
+            detailed_notice error;
             struct {
                struct {
                   file_offset_t record_count   = 0;

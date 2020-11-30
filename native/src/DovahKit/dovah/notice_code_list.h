@@ -66,6 +66,13 @@ namespace dovah {
          form_id_unavailable_for_new_form            = 0x00000039, // A form creation request failed because a form ID wasn't available for use.
          form_id_is_out_of_bounds                    = 0x0000003A, // The requested form ID is out-of-bounds, e.g. form ID 0x05000000 in a load order with fewer than six files.
          post_save_none_stub_cleanup_failed          = 0x0000003B, // Failed to clean up none-stubs after an otherwise successful save operation. It is not safe to continue this editing session.
+         malformed_file                              = 0x0000003C,
+         missing_master                              = 0x0000003D,
+         missing_file                                = 0x0000003E,
+         file_is_locked                              = 0x0000003F, // DovahKit was unable to read a file because it is locked by the OS.
+         cyclical_dependency_between_files           = 0x00000040, // The load order contains files whose master lists form a circular dependency.
+         active_file_is_master_and_there_are_plugins = 0x00000041, // DovahKit can't place the active file at the end of the load order, because it's ESM-flagged and other files aren't.
+         cannot_load_right_now                       = 0x00000042, // It is not safe to load right now, as a save or load operation is already in progress.
       };
    };
 }

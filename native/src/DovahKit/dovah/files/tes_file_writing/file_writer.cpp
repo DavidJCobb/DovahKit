@@ -192,7 +192,7 @@ namespace dovah::tes_file_writing {
             }
             //
             record._close();
-            if (this->error.defined()) // any zlib errors?
+            if (this->error.is_defined()) // any zlib errors?
                return false;
          } else {
             record._clear(); // abort this attempt at writing a record
@@ -215,18 +215,14 @@ namespace dovah::tes_file_writing {
             // The only suitable alternative to writing loaded form data, then, is failing with 
             // an error.
             //
-            if (!this->error.defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
+            if (!this->error.is_defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
                this->error.code = notice_code::unknown_form_type;
-            this->error.formID      = stub->formID;
-            this->error.form_type   = stub->formType;
-            this->error.file_offset = this->get_stream_position();
+            this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
             return false;
          }
       } else {
-         this->error.code        = notice_code::unknown_form_type;
-         this->error.formID      = stub->formID;
-         this->error.form_type   = stub->formType;
-         this->error.file_offset = this->get_stream_position();
+         this->error.code = notice_code::unknown_form_type;
+         this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
          return false;
       }
       if (stub->has_child_forms()) {
@@ -261,17 +257,15 @@ namespace dovah::tes_file_writing {
          uint32_t compressed_size   = compressBound(decompressed_size);
          auto  buffer = malloc(compressed_size);
          if (!buffer) {
-            error.code        = notice_code::out_of_memory;
-            error.formID      = record.header.formID;
-            error.form_type   = stub ? stub->formType : form_type::none;
-            error.file_offset = this->get_stream_position();
+            error.code = notice_code::out_of_memory;
+            this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
+            this->error.cause_form.fixedID = record.header.formID;
             return;
          }
          int result = compress2((Bytef*)buffer, (uLongf*)&compressed_size, (const Bytef*)record.data.data(), decompressed_size, Z_BEST_COMPRESSION);
          if (result != Z_OK) {
-            error.formID      = record.header.formID;
-            error.form_type   = stub ? stub->formType : form_type::none;
-            error.file_offset = this->get_stream_position();
+            this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
+            this->error.cause_form.fixedID = record.header.formID;
             switch (result) {
                case Z_MEM_ERROR:
                   error.code = notice_code::zlib_memory_error;
@@ -617,7 +611,7 @@ namespace dovah::tes_file_writing {
       this->_write(uint32_t(this->fixup_data.record_and_group_count.value));
       this->set_stream_position(pos);
       //
-      return !this->error.defined();
+      return !this->error.is_defined();
    }
    void file_writer::update_source_file_header() {
       auto& header = this->source.header;
