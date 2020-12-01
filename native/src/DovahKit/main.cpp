@@ -75,6 +75,14 @@
 //       notice codes, along with a full description of what notice codes can be returned 
 //       and (in the case of any detailed notices) what other information may be present.
 //
+//  - UI for editing Papyrus script data
+//
+//     - We have a loader for ACTI; we can write form save code and then build a UI 
+//       for it, and then test Papyrus editing.
+//
+//     - Once this UI is working, retroactively add it to the existing UI (if any) 
+//       for CELL, FACT, and WRLD, respectively.
+//
 //  - The Object Window should allow the user to view a list of all none-stubs, when any 
 //    exist. The user should not be able to create new ones, obviously, but it would be 
 //    useful for them to be able to view Use Info on none-stubs.
@@ -282,21 +290,6 @@
 //
 //        - We should also amend GMST renumbering to allow injecting those.
 //
-//  - Finalize for Skyrim Special Edition.
-//
-//     - Implement ESL support.
-//
-//        - Saving an ESL should warn if the active file would have any CELL records, 
-//          whether they be new forms or overrides. Reportedly, CELLs in ESLs have 
-//          issues, though I don't know the source or the specific problems offhand.
-//
-//           - GamerPoets here <https://youtu.be/g_urrHrGQOY?t=299> recommends against 
-//             ESL-flagging files that have interior cells, but gives no explanation 
-//             as to why. Per aers, CELLs in ESLs are always loaded as if they're in 
-//             0xFE000xxx, and per Parapets there is some issue that occurs if an ESL 
-//             edits a CELL that originates from another ESL. We'll probably want to 
-//             only warn when saving an ESL that overrides another ESL's cells.
-//
 //  - Reverse-engineering
 //
 //     - A worldspace's persistent cell is the first persistent-flagged child cell to load.
@@ -449,14 +442,6 @@
 //
 //     - Should we convert Use Info and form-editing dialogs to QMdiSubWindows?
 //
-//  - UI for editing Papyrus script data
-//
-//     - We have a loader for ACTI; we can write form save code and then build a UI 
-//       for it, and then test Papyrus editing.
-//
-//     - Once this UI is working, retroactively add it to the existing UI (if any) 
-//       for CELL, FACT, and WRLD, respectively.
-//
 // DISTANT TASKS:
 //
 //  - Refhandle usage tracking: the number of persistent references in ESMs, and the 
@@ -480,23 +465,6 @@
 //
 //        - We don't have a warnings dialog at present, and that's something that 
 //          would be valuable to have just in general.
-//
-//  - The user needs to be able to pick which game (Skyrim Classic or Skyrim Special) 
-//    they want to open files from. Currently, we just always use the Skyrim Classic 
-//    install path.
-//
-//     - We need a bool on file_load_order indicating whether it's dealing with Classic 
-//       or Special. This will affect whether it respects the "light" flag in file 
-//       headers, whether it reserves a load order slot for ESL forms, and so on.
-//
-//        - This bool need to be flipped to "Special" if the user loads files for 
-//          Classic and chooses to save the current active file as an SSE file. If 
-//          the current load order has 254 files in it, then the save operation 
-//          should fail (as the 0xFE slot would then conflict).
-//
-//        - Form loading/saving will still depend on each given file's version.
-//
-//     - We need to support ESLs.
 //
 //  - Miscellaneous technicalities
 //
@@ -534,9 +502,6 @@
 //    Creation Kit to find all of these, if we care that much.
 //
 //     - REFR/DATA
-//
-//  - form_id_t::set and its overrides on subclasses should take a form_stub&, not a 
-//    form_stub*, as the pointer is not optional.
 //
 //  - Code for changing a reference's base form
 //
@@ -819,6 +784,16 @@
 //
 //  - Handle different locales. Complicated by the fact that ES[LPM] files use various 
 //    system locales instead of UTF-8 or specifying a locale explicitly.
+//
+//  - Saving an ESL should warn if the active file would have any CELL records, whether they 
+//    be new forms or overrides. Reportedly, CELLs in ESLs have issues, though I don't know 
+//    the source or the specific problems offhand.
+//
+//     - GamerPoets here <https://youtu.be/g_urrHrGQOY?t=299> recommends against ESL-flagging 
+//       files that have interior cells, but gives no explanation as to why. Per aers, CELLs 
+//       in ESLs are always loaded as if they're in 0xFE000xxx, and per Parapets there is some 
+//       issue that occurs if an ESL edits a CELL that originates from another ESL. We'll 
+//       probably want to only warn when saving an ESL that overrides another ESL's cells.
 //
 // STUFF I'M PROBABLY NOT EVER GOING TO BOTHER WITH:
 //
