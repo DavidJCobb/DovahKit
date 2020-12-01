@@ -80,6 +80,7 @@ namespace dovah {
    file_read_warning& file_read_warning::set_cause_signature(uint32_t s) noexcept {
       this->cause_signature = s;
       this->flags |= flag::has_cause_signature;
+      return *this;
    }
    file_read_warning& file_read_warning::set_subrecord_index(int i) noexcept {
       this->cause_subrecord_index = i;

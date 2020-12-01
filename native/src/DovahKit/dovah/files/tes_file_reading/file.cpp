@@ -480,6 +480,23 @@ namespace dovah::tes_file_reading {
                this->extract_high_value_subrecords_for_stub(stub);
                if (record.signature() == 'WRLD')
                   last_worldspace_id = stub->formID;
+               //
+               if (&group == &this->_groups[0]) { // is this a top-level group?
+                  uint32_t group_signature = _byteswap_ulong(group.header.label);
+                  if (record.signature() != group_signature) { // misplaced record?
+                     form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
+                     //
+                     file_read_warning warning;
+                     warning.code       = notice_code::record_found_in_wrong_top_level_group;
+                     warning.cause_file = this->get_filename();
+                     warning.set_flag(file_read_warning::flag::has_cause_file);
+                     warning.set_cause_form(*stub);
+                     warning.set_cause_signature(group_signature);
+                     warning.set_cause_form_type(group_type);
+                     //
+                     this->load_order.log_load_warning(warning);
+                  }
+               }
             }
          }
       }

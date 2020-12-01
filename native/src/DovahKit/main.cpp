@@ -82,8 +82,9 @@
 //    exist. The user should not be able to create new ones, obviously, but it would be 
 //    useful for them to be able to view Use Info on none-stubs.
 //
-//  - We should log a warning when loading a form that is misplaced into the wrong 
-//    GRUP.
+//  - When loading the contents of cell GRUPs, we should log a warning if a record is 
+//    misplaced (e.g. WRLD/VTYP, WRLD/CELL/VTYP, etc.). We already log warnings for 
+//    misplaced records in top groups.
 //
 //  - Quick test: does saving a file as *.TES cause an assertion failure?
 //

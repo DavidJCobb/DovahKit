@@ -70,23 +70,6 @@ namespace dovah {
                      form_type_t formType = lastFormType;
                      if (!formType) // probably shouldn't happen; invalid signatures should cause errors
                         continue;
-                     if (&group == &this->_groups[0]) { // is this a top-level group?
-                        uint32_t group_signature = _byteswap_ulong(group.header.label);
-                        if (record.signature() != group_signature) { // misplaced record?
-                           form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
-                           //
-                           file_read_warning warning;
-                           warning.code       = notice_code::record_found_in_wrong_top_level_group;
-                           warning.cause_file = this->owner->get_filename();
-                           warning.cause_form.localID = record.formID();
-                           warning.cause_form.type    = formType;
-                           warning.set_flag(file_read_warning::flag::has_cause_file | file_read_warning::flag::has_cause_form);
-                           warning.set_cause_signature(group_signature);
-                           warning.set_cause_form_type(group_type);
-                           //
-                           this->owner->load_order.log_load_warning(warning);
-                        }
-                     }
                      //
                      auto  stub = this->make_stub_for_record(*this->owner);
                      stub->groupInfo.type = (int)group.header.type;
@@ -103,6 +86,24 @@ namespace dovah {
                         continue;
                      }
                      this->extract_high_value_subrecords_for_stub(stub);
+                     //
+                     if (&group == &this->_groups[0]) { // is this a top-level group?
+                        uint32_t group_signature = _byteswap_ulong(group.header.label);
+                        if (record.signature() != group_signature) { // misplaced record?
+                           form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
+                           //
+                           file_read_warning warning;
+                           warning.code       = notice_code::record_found_in_wrong_top_level_group;
+                           warning.cause_file = this->owner->get_filename();
+                           warning.set_flag(file_read_warning::flag::has_cause_file);
+                           warning.set_cause_form(*stub);
+                           warning.set_cause_signature(group_signature);
+                           warning.set_cause_form_type(group_type);
+                           //
+                           this->owner->load_order.log_load_warning(warning);
+                        }
+                     }
+                     //
                      continue;
                   }
                }
@@ -411,8 +412,17 @@ namespace dovah {
                   if (ot == object_type::record) {
                      auto& record = this->get_current_record();
                      auto& group  = this->get_current_group();
-                     if (record.signature() != 'GMST')
-                        continue;
+                     if (record.signature() != 'GMST') { // misplaced record
+                        auto& error = this->owner->error;
+                        //
+                        error.code       = file_read_error::error_code::malformed_file;
+                        error.file       = this->as_file()->get_filename();
+                        error.fileOffset = this->getPos();
+                        cobb::sprintf(error.message, "Non-GMST record found inside of a GMST GRUP. This is incorrect, and we don't have code to load it anyway!");
+                        //
+                        this->owner->abort();
+                        break;
+                     }
                      //
                      bool found_data = false;
                      loaded_game_setting working;
