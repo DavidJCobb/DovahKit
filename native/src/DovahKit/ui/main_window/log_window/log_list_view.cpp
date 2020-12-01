@@ -427,6 +427,26 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             text = text.arg(file).arg(form_a).arg(form_b);
          }
          break;
+      case notice_code::record_found_in_wrong_top_level_group:
+         {
+            text = QObject::tr("File %1 contained form %2 inside of the %3 GRUP.", "log window");
+            QString file = QObject::tr("<unknown filename>",     "log window");
+            QString form = QObject::tr("<unknown form>",         "log window");
+            QString grup = QObject::tr("<unknown record group>", "log window");
+            //
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+               form = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+               file = QString::fromStdString(warning.cause_file);
+            }
+            if (warning.flags & dovah::file_read_warning::flag::has_cause_signature) {
+               grup = cobb::qt::four_cc_to_string(warning.cause_signature);
+            }
+            //
+            text = text.arg(file).arg(form).arg(grup);
+         }
+         break;
    }
 }
 LogListModelItem::LogListModelItem(const dovah::detailed_notice& error) {

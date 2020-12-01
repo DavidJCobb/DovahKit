@@ -22,6 +22,7 @@ namespace dovah {
             is_coalesced_record_data  = 0x00000080, // This warning applies to form data that is coalesced across multiple files/overrides.
             has_cause_form_index      = 0x00000100, // This warning applies to the Nth form provided by one or more cause subrecords.
             has_cause_editor_id       = 0x00000200,
+            has_cause_signature       = 0x00000400,
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
@@ -53,6 +54,7 @@ namespace dovah {
       std::string   cause_file;
       std::string   cause_editor_id;
       form_type_t   cause_form_type = form_type::none; // this IS NOT the same thing as the "cause form's type." if for example some form X referred to a form Y and Y had the wrong type, this would be the type X was expecting.
+      uint32_t      cause_signature = 0;
       std::vector<relevant_form> relevant_forms;
       std::vector<std::string>   relevant_files;
       std::array<uint32_t, 4>    extra_integers = {};
@@ -82,6 +84,7 @@ namespace dovah {
          return *this;
       }
       file_read_warning& set_cause_form_index(int) noexcept;
+      file_read_warning& set_cause_signature(uint32_t) noexcept;
       file_read_warning& set_subrecord_index(int) noexcept;
 
       inline bool is_defined() const noexcept { return this->code != default_notice_code; } // making this (operator bool) would be cool except that that breaks equality comparisons because this language sucks sometimes

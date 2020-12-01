@@ -77,6 +77,10 @@ namespace dovah {
       this->flags |= flag::has_cause_form_index;
       return *this;
    }
+   file_read_warning& file_read_warning::set_cause_signature(uint32_t s) noexcept {
+      this->cause_signature = s;
+      this->flags |= flag::has_cause_signature;
+   }
    file_read_warning& file_read_warning::set_subrecord_index(int i) noexcept {
       this->cause_subrecord_index = i;
       this->flags |= flag::has_cause_subrecord_index;
@@ -106,6 +110,9 @@ namespace dovah {
             return false;
       if (this->flags & flag::has_cause_editor_id)
          if (this->cause_editor_id != other.cause_editor_id)
+            return false;
+      if (this->flags & flag::has_cause_signature)
+         if (this->cause_signature != other.cause_signature)
             return false;
       if (this->cause_file != other.cause_file)
          return false;

@@ -6,7 +6,6 @@
 #include "../../../dovah/core.h"
 #include "../../../dovah/detailed_notice.h"
 #include "../../../dovah/files/file_read_warning.h"
-#include "../../../dovah/files/file_write_error.h"
 
 class LogListModel;
 class LogListModelItem {
