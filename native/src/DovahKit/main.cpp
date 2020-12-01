@@ -17,9 +17,6 @@
 //  - tes_file_reading::subrecord::to_string is unintuitive; that should just be a 
 //    template specialization of subrecord::read.
 //
-//  - FormsOfTypeCombobox won't automatically add newly-created forms. It doesn't 
-//    listen for the DovahKitCore::formCreated signal.
-//
 //  - Cell View
 //
 //     - Implement the "Sort loaded at top" checkbox.

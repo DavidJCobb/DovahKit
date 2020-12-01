@@ -34,6 +34,26 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
       if (index == si && this->_allowNone)
          this->setCurrentIndex(0);
    });
+   QObject::connect(&editor, &DovahKitCore::formCreated, this, [this](dovah::form_stub* stub) {
+      const auto blocker = QSignalBlocker(this);
+      if (!this->count()) // only auto-update for new forms after we've been populated at our owner's discretion
+         return;
+      if (!this->allowsFormType(stub->formType))
+         return;
+      auto* proxy = (_FormsOfTypeComboboxProxy*)this->model();
+      if (!proxy)
+         return;
+      auto* model = (QStandardItemModel*)proxy->sourceModel();
+      if (!model)
+         return;
+      int index = this->findData(stub->formID);
+      if (index >= 0)
+         return;
+      auto* item = new QStandardItem(QString::fromStdString(stub->get_editor_id()));
+      item->setData(stub->formID, FormIDRole);
+      item->setData(QVariant::fromValue((void*)stub), FormStubRole);
+      model->appendRow(item);
+   });
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
       const auto blocker = QSignalBlocker(this);
       int index = this->findData(stub->formID);
@@ -57,6 +77,8 @@ void FormsOfTypeCombobox::allowAllFormTypes() {
    this->_formTypes.clear();
 }
 bool FormsOfTypeCombobox::allowsFormType(dovah::form_type_t ft) const noexcept {
+   if (this->_formTypes.isEmpty())
+      return true;
    return this->_formTypes.indexOf(ft) >= 0;
 }
 dovah::bare_form_id_t FormsOfTypeCombobox::formID() const noexcept {
@@ -80,14 +102,19 @@ void FormsOfTypeCombobox::populate() {
    if (!editor.has_data())
       return;
    auto* model = new QStandardItemModel(this); // we need to do this indirectly instead of using QComboBox::addItem in order to get case-insensitive sorting
-   for (auto ft : this->_formTypes) {
-      editor.for_each_form_of_type(ft, [model](dovah::form_stub* stub) {
+   {
+      auto insert_lambda = [model](dovah::form_stub* stub) {
          auto* item = new QStandardItem(QString::fromStdString(stub->get_editor_id()));
          item->setData(stub->formID, FormIDRole);
          item->setData(QVariant::fromValue((void*)stub), FormStubRole);
          model->appendRow(item);
          return false;
-      });
+      };
+      //
+      for (auto ft : this->_formTypes)
+         editor.for_each_form_of_type(ft, insert_lambda);
+      if (this->_formTypes.isEmpty()) // allow all forms
+         editor.for_each_form(insert_lambda);
    }
    if (this->_allowUndefined) {
       QString text = this->_undefinedLabel;
