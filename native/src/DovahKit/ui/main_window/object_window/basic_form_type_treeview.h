@@ -22,7 +22,7 @@ class BasicFormTypeTreeModelItem { // represents a (sub)category
       void _destroyDescendants() noexcept;
       //
    public:
-      BasicFormTypeTreeModelItem(const QString& n, dovah::form_type_t ft) : _name(n), form_type(ft) {}
+      BasicFormTypeTreeModelItem(const QString& n, int ft) : _name(n), form_type(ft) {}
       //
       void appendChild(BasicFormTypeTreeModelItem*) noexcept;
       void removeChild(BasicFormTypeTreeModelItem*) noexcept;

@@ -29,7 +29,7 @@ void BasicFormTypeTreeModelItem::removeChild(BasicFormTypeTreeModelItem* child) 
 }
 
 void BasicFormTypeTreeModelItem::addToSet(QVector<dovah::form_type_t>& out) const noexcept {
-   if (this->form_type != no_filter) {
+   if (this->form_type >= 0) {
       if (!out.contains(this->form_type))
          out.push_back(this->form_type);
       return;
@@ -250,8 +250,15 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("Static Collection", disambig), dovah::form_type::static_collection));
       parent->appendChild(new model_item_type(tr("Tree", disambig), dovah::form_type::tree));
    }
-   model->invisibleRootItem()->appendChild(new model_item_type(tr("All", disambig), model_item_type::no_filter));
+   auto* item_all = new model_item_type(tr("All", disambig), model_item_type::no_filter);
+   model->invisibleRootItem()->appendChild(item_all);
    model->invisibleRootItem()->appendChild(new model_item_type(tr("Missing", disambig), dovah::form_type::none));
+   //
+   if (auto* sel = this->selectionModel()) {
+      int  row   = model->invisibleRootItem()->indexOf(item_all);
+      auto index = model->index(row, 0, QModelIndex());
+      sel->select(index, QItemSelectionModel::ClearAndSelect);
+   }
    //
    this->expandAll();
 }
@@ -268,8 +275,11 @@ QVector<dovah::form_type_t> BasicFormTypeTree::selectedFormTypes() const noexcep
    if (out.empty()) {
       auto model = (model_type*)this->model();
       auto root  = model->invisibleRootItem();
-      for (auto child : root->children())
+      for (auto child : root->children()) {
+         if (child->form_type == dovah::form_type::none)
+            continue;
          child->addToSet(out);
+      }
    }
    return out;
 }

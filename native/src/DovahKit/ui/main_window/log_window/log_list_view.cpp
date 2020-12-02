@@ -533,7 +533,7 @@ void LogListModel::dataAcquireComplete() {
    });
    if (none_stubs) {
       this->addTextEntry(
-         tr("Forms in the loaded files contain dangling references to %1 non-existent form(s). Check the \"Missing\" category in the Object Window for a list of the missing forms' form IDs.", "log window")
+         tr("Forms in the loaded files contain dangling references to %1 non-existent form(s). Check the \"Missing\" category in the Object Window for a list of the missing forms' form IDs, and view the Use Info on entries to see what's referring to them. It's normal for official game files to have this problem.", "log window")
             .arg(none_stubs)
       );
    }
