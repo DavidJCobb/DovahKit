@@ -117,7 +117,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    this->ui.table->setFilter(this->ui.filter);
    QObject::connect(this->ui.table, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto* stub = _get_selected_form(this->ui.table);
-      if (stub)
+      if (stub && !stub->is_none_stub())
          open_edit_dialog_for_form(stub, this);
    });
    //
@@ -223,13 +223,17 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       //
       auto* stub       = _get_selected_form(opener);
       auto  form_types = this->ui.tree->selectedFormTypes();
-      this->_actionCreateForm->setEnabled(form_types.size() == 1);
-      this->_formActionEdit->setVisible(stub != nullptr);
-      this->_formActionDuplicate->setVisible(stub != nullptr);
-      this->_formActionShowUseInfo->setVisible(stub != nullptr);
-      this->_formActionRenumber->setVisible(stub != nullptr);
-      this->_formActionRenumber->setEnabled(DovahKitCore::get().is_form_defined_in_active_file(stub));
-      this->_formActionDelete->setVisible(stub != nullptr);
+      //
+      bool form_exists  = (stub != nullptr);
+      bool is_alterable = form_exists && !stub->is_none_stub();
+      //
+      this->_actionCreateForm->setEnabled(form_types.size() == 1 && form_types[0] != dovah::form_type::none);
+      this->_formActionEdit->setVisible(is_alterable);
+      this->_formActionDuplicate->setVisible(is_alterable);
+      this->_formActionShowUseInfo->setVisible(form_exists);
+      this->_formActionRenumber->setVisible(is_alterable);
+      this->_formActionRenumber->setEnabled(is_alterable && DovahKitCore::get().is_form_defined_in_active_file(stub));
+      this->_formActionDelete->setVisible(is_alterable);
       //
       QMenu menu(opener);
       menu.addAction(this->_actionCreateForm);

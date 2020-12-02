@@ -83,10 +83,6 @@
 //     - Once this UI is working, retroactively add it to the existing UI (if any) 
 //       for CELL, FACT, and WRLD, respectively.
 //
-//  - The Object Window should allow the user to view a list of all none-stubs, when any 
-//    exist. The user should not be able to create new ones, obviously, but it would be 
-//    useful for them to be able to view Use Info on none-stubs.
-//
 //  - When loading the contents of cell GRUPs, we should log a warning if a record is 
 //    misplaced (e.g. WRLD/VTYP, WRLD/CELL/VTYP, etc.). We already log warnings for 
 //    misplaced records in top groups.
@@ -134,14 +130,6 @@
 //
 //        = TEST THAT FORM RENUMBERING PROPERLY DESTROYS ANY NONE-STUBS THAT ARE IN 
 //          THEIR WAY.
-//
-//     - It's tempting to do things like making (file_load_order) refuse to grant 
-//       access to none-type stubs, but that's a non-starter. First of all, those 
-//       stubs will already be accessible through the loaded form data of the 
-//       referencing forms. Second of all, it could actually be useful to allow 
-//       things like calling (file_load_order::for_each_form_of_type) with the 
-//       "none" type, in order to get a list of all referenced-but-undefined form 
-//       IDs.
 //
 //     = While I'm here: things like this may make it tempting to do form-to-form 
 //       reference error checking in the initial use info build step, in order to 

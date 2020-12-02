@@ -11,7 +11,9 @@ class BasicFormTypeTreeModel;
 class BasicFormTypeTreeModelItem { // represents a (sub)category
    friend BasicFormTypeTreeModel;
    public:
-      const dovah::form_type_t form_type;
+      static constexpr int no_filter = -1;
+      //
+      const int form_type = no_filter;
    protected:
       const QString _name;
       BasicFormTypeTreeModelItem* _parent = nullptr;

@@ -45,6 +45,7 @@ class LogListModel : public QAbstractTableModel {
       QHash<dovah::bare_form_id_t, QVector<item_type*>> warnings_cause_by_form; // used to avoid showing duplicate warnings for on-demand form loads
       //
    protected slots:
+      void dataAcquireComplete();
       void dataSaveImminent();
       void dataSaveComplete();
       void saveErrorReceived(const dovah::detailed_notice& error);

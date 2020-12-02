@@ -518,11 +518,28 @@ bool LogListModelItem::empty() const noexcept {
 LogListModel::LogListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::fileLoadWarningReceived, this, &LogListModel::loadWarningReceived);
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &LogListModel::dataAcquireComplete);
    QObject::connect(&editor, &DovahKitCore::dataSaveImminent,        this, &LogListModel::dataSaveImminent);
    QObject::connect(&editor, &DovahKitCore::dataSaveComplete,        this, &LogListModel::dataSaveComplete);
    QObject::connect(&editor, &DovahKitCore::dataSaveFailed,          this, &LogListModel::saveErrorReceived);
 }
 
+void LogListModel::dataAcquireComplete() {
+   int none_stubs = 0;
+   DovahKitCore::get().for_each_form_of_type(dovah::form_type::none, [&none_stubs](dovah::form_stub* stub) {
+      if (stub->is_none_stub())
+         ++none_stubs;
+      return false;
+   });
+   if (none_stubs) {
+      this->addTextEntry(
+         tr("Forms in the loaded files contain dangling references to %1 non-existent form(s). Check the \"Missing\" category in the Object Window for a list of the missing forms' form IDs.", "log window")
+            .arg(none_stubs)
+      );
+   }
+   //
+   this->addTextEntry(tr("All files have been loaded.", "log window"));
+}
 void LogListModel::dataSaveImminent() {
    this->addTextEntry(tr("Saving active file...", "log window"));
 }

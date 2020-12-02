@@ -29,7 +29,7 @@ void BasicFormTypeTreeModelItem::removeChild(BasicFormTypeTreeModelItem* child) 
 }
 
 void BasicFormTypeTreeModelItem::addToSet(QVector<dovah::form_type_t>& out) const noexcept {
-   if (this->form_type != dovah::form_type::none) {
+   if (this->form_type != no_filter) {
       if (!out.contains(this->form_type))
          out.push_back(this->form_type);
       return;
@@ -111,7 +111,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
    constexpr char* disambig = "object window";
    auto model = static_cast<model_type*>(this->model());
    {
-      auto parent = new model_item_type(tr("Actors", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("Actors", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("ActorBase", disambig), dovah::form_type::actor_base));
@@ -122,7 +122,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("TalkingActivator", disambig), dovah::form_type::talking_activator));
    }
    {
-      auto parent = new model_item_type(tr("Audio", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("Audio", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Acoustic Space", disambig), dovah::form_type::acoustic_space));
@@ -135,7 +135,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("Sound Output Model", disambig), dovah::form_type::sound_output_model));
    }
    {
-      auto parent = new model_item_type(tr("Character", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("Character", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Association Type", disambig), dovah::form_type::association_type));
@@ -152,7 +152,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("VoiceType", disambig), dovah::form_type::voicetype));
    }
    {
-      auto parent = new model_item_type(tr("Items", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("Items", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Ammo", disambig), dovah::form_type::ammo));
@@ -169,7 +169,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("Weapon", disambig), dovah::form_type::weapon));
    }
    {
-      auto parent = new model_item_type(tr("Magic", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("Magic", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Dual Cast Data", disambig), dovah::form_type::dual_cast_data));
@@ -183,7 +183,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("Word of Power", disambig), dovah::form_type::word_of_power));
    }
    {
-      auto parent = new model_item_type(tr("Miscellaneous", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("Miscellaneous", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Animation Prop", disambig), dovah::form_type::animation_prop));
@@ -202,7 +202,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("TextureSet", disambig), dovah::form_type::texture_set));
    }
    {
-      auto parent = new model_item_type(tr("Special Effects", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("Special Effects", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Add-on Node", disambig), dovah::form_type::addon_node));
@@ -221,7 +221,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("Projectile", disambig), dovah::form_type::projectile));
    }
    {
-      auto parent = new model_item_type(tr("World Data", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("World Data", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Climate", disambig), dovah::form_type::climate));
@@ -235,7 +235,7 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("Weather", disambig), dovah::form_type::weather));
    }
    {
-      auto parent = new model_item_type(tr("World Objects", disambig), dovah::form_type::none);
+      auto parent = new model_item_type(tr("World Objects", disambig), model_item_type::no_filter);
       model->invisibleRootItem()->appendChild(parent);
       //
       parent->appendChild(new model_item_type(tr("Activator", disambig), dovah::form_type::activator));
@@ -250,7 +250,8 @@ BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
       parent->appendChild(new model_item_type(tr("Static Collection", disambig), dovah::form_type::static_collection));
       parent->appendChild(new model_item_type(tr("Tree", disambig), dovah::form_type::tree));
    }
-   model->invisibleRootItem()->appendChild(new model_item_type(tr("All", disambig), dovah::form_type::none));
+   model->invisibleRootItem()->appendChild(new model_item_type(tr("All", disambig), model_item_type::no_filter));
+   model->invisibleRootItem()->appendChild(new model_item_type(tr("Missing", disambig), dovah::form_type::none));
    //
    this->expandAll();
 }

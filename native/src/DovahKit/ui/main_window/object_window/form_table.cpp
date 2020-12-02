@@ -170,10 +170,15 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
    auto column  = index.column();
    bool edited  = (item->stub && item->stub->is_edited());
    bool deleted = (item->stub && item->stub->is_deleted());
+   bool none    = (item->stub && item->stub->is_none_stub());
    switch (role) {
       case Qt::DisplayRole:
          switch (column) {
             case 0:
+               if (none) {
+                  return tr("<non-existent form>%1", "object window listing for none stubs")
+                     .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
+               }
                return tr("%1%2")
                   .arg(item->editorID)
                   .arg((edited || deleted) ? tr(" * ", "edited form editor ID marker") : "");
@@ -199,7 +204,10 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
          break;
       case Qt::UserRole + 1: // used for filtering
          switch (column) {
-            case 0: return item->editorID;
+            case 0:
+               if (none)
+                  return QVariant();
+               return item->editorID;
             case 1: return QString::asprintf("%08X", item->formID);
             case 2: return QVariant(); // don't allow filtering by the use count
          }
@@ -281,8 +289,16 @@ void FormTableModel::rebuild() {
       total += editor.count_forms_of_type(ft);
    if (!total)
       return;
-   for (auto ft : types)
-      editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) { this->insertItem(stub, true); return false; });
+   for (auto ft : types) {
+      if (ft == dovah::form_type::none)
+         editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) {
+            if (stub->is_none_stub())
+               this->insertItem(stub, true);
+            return false;
+         });
+      else
+         editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) { this->insertItem(stub, true); return false; });
+   }
    //
    auto count = this->pending_additions.size();
    if (!count)
