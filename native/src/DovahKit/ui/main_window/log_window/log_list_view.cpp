@@ -651,7 +651,7 @@ int LogListModel::columnCount(const QModelIndex& item) const {
 Qt::ItemFlags LogListModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
       return Qt::NoItemFlags;
-   return Qt::ItemFlag::ItemIsEnabled;
+   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
 }
 QVariant LogListModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
@@ -708,7 +708,28 @@ void LogListModel::clear() {
 #pragma endregion
 
 #pragma region LogList
-LogList::LogList(QWidget* parent) : QListView(parent) {
+LogList::LogList(QWidget* parent) : QTableView(parent) {
    this->setModel(new model_type(this));
+   this->verticalHeader()->setDefaultSectionSize(0);
+   //
+   // The next call is needed for proper word-wrapping in table cells. The "wordWrap" 
+   // property on table cells enables word-wrapping if the cell is tall enough, but 
+   // doesn't actually resize table cells, so by default, the table behaves exactly 
+   // as if word-wrapping were disabled. The next call automatically resizes cells 
+   // by way of the vertical header: even if we disable the vertical header, every 
+   // row still has a vertical header section associated with it, and that can be 
+   // configured to resize.
+   //
+   // Naturally, pretty much none of this information is mentioned in the Qt docs 
+   // for QTableView::setWordWrap, at least as of this writing.
+   //
+   this->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for proper word-wrapping in table cells
+   //
+   auto header  = this->horizontalHeader();
+   auto metrics = QFontMetrics(this->font());
+   header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+   header->setMinimumSectionSize(2);
+   header->setSectionResizeMode(0, QHeaderView::Stretch);
+   header->setSectionResizeMode(1, QHeaderView::Interactive);
 };
 #pragma endregion

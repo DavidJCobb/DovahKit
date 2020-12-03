@@ -36,17 +36,9 @@
 //     - If the user converts a file across games, and the existing file's name also 
 //       exists for the target game, then we should prompt to overwrite as well.
 //
-//  - Log window
-//
-//     - The log window should have a "message type" column, differentiating between 
-//       notices from the initial stub build, notices from on-demand form loading, 
-//       and notices from saves.
-//
-//     - The log window does not allow you to select entries, and offers no means to 
-//       copy them.
-//
-//     - The log window should ideally use a table view instead of a list view, with 
-//       columns for the filename (and potentially other details).
+//  - The log window should have a "message type" column, differentiating between 
+//    notices from the initial stub build, notices from on-demand form loading, and 
+//    notices from saves.
 //
 //  - Form duplication can fail in complex ways: even if we successfully duplicate the 
 //    target form, we may fail to duplicate child or descendant forms. We should create 

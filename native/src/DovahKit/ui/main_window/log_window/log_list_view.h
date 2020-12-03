@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <QAbstractItemModel>
-#include <QListView>
 #include <QString>
+#include <QTableView>
 #include "../../../dovah/core.h"
 #include "../../../dovah/detailed_notice.h"
 #include "../../../dovah/files/file_read_warning.h"
@@ -73,7 +73,7 @@ class LogListModel : public QAbstractTableModel {
       void clear();
 };
 
-class LogList : public QListView {
+class LogList : public QTableView {
    Q_OBJECT
    public:
       LogList(QWidget* parent);
