@@ -329,6 +329,8 @@
 //          This would effectively create either ITMs (when reverting to the last non-active 
 //          record) or allow easy reversion of changes made by other mods.
 //
+//        - What do we do if a form is *already* loaded?
+//
 //       But there are UX benefits:
 //
 //        - The backend tech needed for this could easily be used for undoing overrides 
@@ -343,7 +345,7 @@
 //
 //  - Localized string support
 //
-//     - The UI needs to physically prevent the user from entering glyphs that are not 
+//     - The UI should physically prevent the user from entering glyphs that are not 
 //       available in the current language. Alternatively, textboxes with bad glyphs 
 //       should be given a red outline, and the "OK" button should be greyed out.
 //
@@ -411,16 +413,7 @@
 //
 // UPCOMING TASKS:
 //
-//  - Add a "Windows" menu to the main window. It should list all open windows and 
-//    allow the user to bring them to the front.
-//
-//     - This includes Use Info and form-editing dialogs. But what if the user has 
-//       too many of those open?
-//
-//        - One thing's for sure: scrolling menus are a pain. We should see if we 
-//          can force a two-column one when items overflow, instead.
-//
-//     - Should we convert Use Info and form-editing dialogs to QMdiSubWindows?
+//  - Should we convert Use Info and form-editing dialogs to QMdiSubWindows?
 //
 // DISTANT TASKS:
 //

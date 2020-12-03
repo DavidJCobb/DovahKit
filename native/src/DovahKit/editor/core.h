@@ -25,6 +25,9 @@ namespace DovahKitEditorInternals {
    class load_task;
 }
 
+class FormDialogBaseTemplate;
+class FormUseInfoDialog;
+
 class DovahKitCore : public QObject {
    Q_OBJECT
    friend class DovahKitEditorInternals::load_task;
@@ -111,6 +114,9 @@ class DovahKitCore : public QObject {
 
       float assess_load_progress() const noexcept;
       const dovah::file_read_error& get_last_read_error() const noexcept;
+
+      bool for_each_form_edit_dialog(std::function<bool(FormDialogBaseTemplate*)>);
+      bool for_each_form_uses_dialog(std::function<bool(FormUseInfoDialog*)>);
 
       std::vector<const dovah::tes_file_reading::file_reader*> get_loaded_files() const noexcept;
       bool loaded_file_is_active(const dovah::tes_file_reading::file_reader&) const noexcept;

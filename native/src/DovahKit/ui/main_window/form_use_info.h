@@ -14,6 +14,8 @@ class FormUseInfoDialog : public QDialog {
       FormUseInfoDialog(QWidget* parent) = delete;
       FormUseInfoDialog(const dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
       //
+      inline const dovah::form_stub* formStub() const noexcept { return this->stub; }
+      //
    private slots:
       void rebuild();
       //

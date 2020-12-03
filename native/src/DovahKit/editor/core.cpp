@@ -20,6 +20,8 @@
 #include "core_internals/read_warning_dispatcher.h"
 #include "helpers/make_editor_id_for_duplicate.h"
 #include "../ui/main_window/delete_form_dialog.h"
+#include "../ui/main_window/form_use_info.h"
+#include "../ui/form_windows/_base.h"
 #include <QDebug>
 
 namespace {
@@ -189,6 +191,27 @@ float DovahKitCore::assess_load_progress() const noexcept {
 }
 const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept {
    return this->load_order->load_error;
+}
+
+bool DovahKitCore::for_each_form_edit_dialog(std::function<bool(FormDialogBaseTemplate*)> functor) {
+   for (auto& pair : this->extant_form_edit_dialogs) {
+      auto* dialog = pair.second;
+      auto* casted = dynamic_cast<FormDialogBaseTemplate*>(dialog);
+      if (casted)
+         if ((functor)(casted))
+            return true;
+   }
+   return false;
+}
+bool DovahKitCore::for_each_form_uses_dialog(std::function<bool(FormUseInfoDialog*)> functor) {
+   for (auto& pair : this->extant_use_info_dialogs) {
+      auto* dialog = pair.second;
+      auto* casted = dynamic_cast<FormUseInfoDialog*>(dialog);
+      if (casted)
+         if ((functor)(casted))
+            return true;
+   }
+   return false;
 }
 
 std::vector<const dovah::tes_file_reading::file_reader*> DovahKitCore::get_loaded_files() const noexcept {

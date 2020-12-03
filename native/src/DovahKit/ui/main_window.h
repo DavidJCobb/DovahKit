@@ -56,9 +56,15 @@ class MainWindow : public QMainWindow {
       GameSettingWindow*   game_setting_window   = nullptr;
       FileMetadataWindow*  metadata_window       = nullptr;
       //
+      QMenu* form_uses_window_menu = nullptr;
+      QMenu* form_edit_window_menu = nullptr;
+      //
       QMdiSubWindow* getSubwindowFor(QWidget*) const noexcept;
       //
    protected:
       virtual void closeEvent(QCloseEvent* event) override;
       virtual void showEvent(QShowEvent* event) override;
+
+      void updateFormEditWindowList();
+      void updateFormUsesWindowList();
 };

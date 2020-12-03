@@ -42,6 +42,8 @@ class FormDialogBaseTemplate : public QDialog {
       void load();
       void save();
       //
+      inline const dovah::form_stub* formStub() const noexcept { return this->stub; }
+      //
    private slots:
       //
    protected:

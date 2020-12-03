@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QShowEvent>
 #include <QtWinExtras/QWinTaskbarProgress.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
+#include "../helpers/qt/strings.h"
 #include "../editor/core.h"
 #include "../dovah/files/file_load_order.h"
 #include "main_window/load_window.h"
@@ -15,6 +16,10 @@
 
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
+
+// For the "Windows" menu
+#include "form_windows/_base.h"
+#include "main_window/form_use_info.h"
 
 #include <QFileDialog>
 #include <QInputDialog>
@@ -92,6 +97,50 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       action->setText(tr("Object Window", "main window - window menu"));
       QObject::connect(action, &QAction::triggered, this, [this]() { this->subwindows.object.open(this->ui.mdi); });
       menu->addAction(action);
+      //
+      this->form_edit_window_menu = new QMenu;
+      action = menu->addMenu(this->form_edit_window_menu);
+      action->setText(tr("Form dialogs", "main window - window menu"));
+      //
+      this->form_uses_window_menu = new QMenu;
+      action = menu->addMenu(this->form_uses_window_menu);
+      action->setText(tr("Use Info dialogs", "main window - window menu"));
+      //
+      #pragma region Form-editing window list
+      QObject::connect(this->form_edit_window_menu, &QMenu::aboutToShow, this, [this]() {
+         this->updateFormEditWindowList();
+      });
+      QObject::connect(this->form_edit_window_menu, &QMenu::triggered, this, [this](QAction* action) {
+         uint32_t formID = action->data().toUInt();
+         if (!formID)
+            return;
+         auto* form = DovahKitCore::get().get_form(formID);
+         if (form)
+            open_edit_dialog_for_form(form, this);
+      });
+      // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
+      /*QObject::connect(this->form_edit_window_menu, &QMenu::aboutToHide, this, [this]() {
+         this->form_edit_window_menu->clear();
+      });*/
+      #pragma endregion
+      //
+      #pragma region Use Info window list
+      QObject::connect(this->form_uses_window_menu, &QMenu::aboutToShow, this, [this]() {
+         this->updateFormUsesWindowList();
+      });
+      QObject::connect(this->form_uses_window_menu, &QMenu::triggered, this, [this](QAction* action) {
+         uint32_t formID = action->data().toUInt();
+         if (!formID)
+            return;
+         auto* form = DovahKitCore::get().get_form(formID);
+         if (form)
+            open_use_info_dialog_for_form(form, this);
+      });
+      // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
+      /*QObject::connect(this->form_uses_window_menu, &QMenu::aboutToHide, this, [this]() {
+         this->form_uses_window_menu->clear();
+      });*/
+      #pragma endregion
    }
    #pragma endregion
    //
@@ -312,4 +361,75 @@ void MainWindow::showEvent(QShowEvent* event) {
    //
    if (event->spontaneous()) // spontaneous events occur just after the window is visible; internal events, just before.
       emit shown();
+}
+
+void MainWindow::updateFormEditWindowList() {
+   this->form_edit_window_menu->clear();
+   //
+   auto& editor = DovahKitCore::get();
+   editor.for_each_form_edit_dialog([this](FormDialogBaseTemplate* dialog) {
+      auto* stub = dialog->formStub();
+      if (!stub)
+         return false;
+      //
+      auto& fi = dovah::form_type_info::lookup(stub->formType);
+      QString label = tr("[%1:%2]%3")
+         .arg(cobb::qt::four_cc_to_string(fi.signature))
+         .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
+         .arg(stub->editorID.c_str());
+      //
+      auto* action = new QAction(this->form_edit_window_menu);
+      action->setText(label);
+      action->setData(stub->formID);
+      QObject::connect(dialog, &QObject::destroyed, action, [action]() {
+         action->setData(0);
+         action->deleteLater();
+      });
+      this->form_edit_window_menu->addAction(action);
+      //
+      return false;
+   });
+   //
+   if (this->form_edit_window_menu->isEmpty()) {
+      auto* action = new QAction(this->form_edit_window_menu);
+      action->setText(tr("<none>"));
+      action->setData(0);
+      action->setEnabled(false);
+      this->form_edit_window_menu->addAction(action);
+   }
+}
+void MainWindow::updateFormUsesWindowList() {
+   this->form_uses_window_menu->clear();
+   //
+   auto& editor = DovahKitCore::get();
+   editor.for_each_form_uses_dialog([this](FormUseInfoDialog* dialog) {
+      auto* stub = dialog->formStub();
+      if (!stub)
+         return false;
+      //
+      auto& fi = dovah::form_type_info::lookup(stub->formType);
+      QString label = tr("[%1:%2]%3")
+         .arg(cobb::qt::four_cc_to_string(fi.signature))
+         .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
+         .arg(stub->editorID.c_str());
+      //
+      auto* action = new QAction(this->form_uses_window_menu);
+      action->setText(label);
+      action->setData(stub->formID);
+      QObject::connect(dialog, &QObject::destroyed, action, [action]() {
+         action->setData(0);
+         action->deleteLater();
+      });
+      this->form_uses_window_menu->addAction(action);
+      //
+      return false;
+   });
+   //
+   if (this->form_uses_window_menu->isEmpty()) {
+      auto* action = new QAction(this->form_uses_window_menu);
+      action->setText(tr("<none>"));
+      action->setData(0);
+      action->setEnabled(false);
+      this->form_uses_window_menu->addAction(action);
+   }
 }
