@@ -320,6 +320,21 @@ namespace dovah {
       return false;
    }
    bool form_stub::is_injected() const noexcept {
+      if (auto* first_file = this->get_file_at_index(0)) {
+         using df = owner_file_t::detail_flag;
+         //
+         // Always double-check the form's first file, if there is one, because that file might be one 
+         // of the "dummy" files used for things like none-stubs and hardcoded forms. We don't want 
+         // those forms to test as "injected."
+         //
+         if (first_file->header.details & (df::is_none_stub_dummy | df::is_hardcoded_dummy))
+            return false;
+      }
+      //
+      // Okay, we know that the form isn't contributed to by a "dummy" file. Let's grab the file that 
+      // we would *expect* the form to be defined in based on its form ID, and see if that file actually 
+      // contributes to the form. If not, then the form has been injected into that file.
+      //
       auto& lo     = this->_get_load_order();
       auto  prefix = file_prefix::from_form_id(this->formID, lo.get_current_game() == game::skyrim_classic);
       auto* file   = lo.get_file_by_prefix(prefix);
