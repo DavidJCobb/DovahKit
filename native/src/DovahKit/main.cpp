@@ -101,30 +101,15 @@
 //
 //     - If we make changes in this regard, then we need to update the form stub docs.
 //
-//  - None-stub support
+//  - On-demand form loading should emit a warning when loading a reference to a none-
+//    stub. Remember to use the getter on form_stub; don't just check the form type, or 
+//    we'll false-positive on the hardcoded "persistence forms."
 //
-//     - TASKS
+//     - The issue is, we have to load the reference in order to clear it, so that's 
+//       going to result in dumb errors.
 //
-//        - On-demand form loading should emit a warning when loading a reference to a 
-//          none-stub. Remember to use the getter on form_stub; don't just check the 
-//          form type, or we'll false-positive on the hardcoded "persistence forms."
-//
-//           - The issue is, we have to load the reference in order to clear it, so 
-//             that's going to result in dumb errors.
-//
-//           - We actually already generate an error: this is detected as a type-
-//             mismatched reference.
-//
-//     = While I'm here: things like this may make it tempting to do form-to-form 
-//       reference error checking in the initial use info build step, in order to 
-//       catch and log errors as early as possible, but I'm actually extremely not 
-//       a fan. Why? Because we still wouldn't be logging any other errors, and it'd 
-//       add redundancy between the load code and the use info build code. If we 
-//       really want to give the user the option to scour the file for every possible 
-//       data error on load, we can implement it by just loading and unloading every 
-//       form's full data (possibly with multi-threading if we can manage that) and 
-//       letting the on-demand load functions log the same warnings they would at any 
-//       other time.
+//     - We actually already generate an error: this is detected as a type-mismatched 
+//       reference.
 //
 //  - Add support for loading DOBJ and GMST records properly.
 //
@@ -268,46 +253,6 @@
 //       stub generation. We can generalize this situation -- allow form stubs to 
 //       optionally store an "ordered child form list."
 //
-//  - Support for reverting forms, and for removing an active file's overrides
-//
-//     - What if it were possible to right-click a form in the object window, mouse over 
-//       a "Revisions" context menu item, and pick which file (i.e. which record/override) 
-//       you want to work with?
-//
-//       Implementating this would require a few considerations:
-//
-//        - Form stubs would need to be able to store *which* file they've been told to 
-//          load from. An int16_t (with -1 meaning "use latest file") should do the trick.
-//
-//        - Reverting a form stub should flag it as edited.
-//
-//        - If we "revert" a form stub, then we need to clear all of its outbound use 
-//          info, and then use loaded_forms::Form::generateUseInfo on the selected file 
-//          to rebuild use info as it existed for that revision.
-//
-//           - We'd also need to re-load the form's editor ID, along with any other data 
-//             that gets stored on the stub during the initial stub-build process.
-//
-//       There are also UX considerations:
-//
-//        - Should a "reverted" form be treated as edited and written into the active file? 
-//          This would effectively create either ITMs (when reverting to the last non-active 
-//          record) or allow easy reversion of changes made by other mods.
-//
-//        - What do we do if a form is *already* loaded?
-//
-//       But there are UX benefits:
-//
-//        - The backend tech needed for this could easily be used for undoing overrides 
-//          that exist in the active file. Currently, the Creation Kit lets you do that via 
-//          the Data menu, but it requires a full reload (i.e. you aren't "reverting an 
-//          override" so much as you are "electing to not load a particular override").
-//
-//     - We'll want this for GMST as well, but that'll require different underlying code. 
-//       This could possibly include deletion of a GMST form stub, with the caveat that a 
-//       form could (incorrectly) have a reference to such a stub (same issue as with 
-//       renumbering a GMST).
-//
 //  - Localized string support
 //
 //     - The UI should physically prevent the user from entering glyphs that are not 
@@ -340,15 +285,6 @@
 //     - Test the severing of outbound references to a deleted form.
 //
 //        - Test keyword lists in specific.
-//
-//     - ObjectReference friendly delete question: why are actors that are "deleted" 
-//       in this manner flagged as persistent?
-//
-//        - Someone used git blame and found that it dates back to the initial Github 
-//          commit, i.e. when xEdit was migrated from an older source control system.
-//
-//        - REFRs defined in ESP files are de facto persistent, so this would have to 
-//          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
 //
 // THINGS TO LOOK INTO:
 //
@@ -404,29 +340,6 @@
 //        - We don't have a warnings dialog at present, and that's something that 
 //          would be valuable to have just in general.
 //
-//  - Miscellaneous technicalities
-//
-//     - When saving WRLD/CELL/REFR, if the REFR is persistent, then it should be saved 
-//       into the worldspace's persistent cell instead of into a normal exterior cell.
-//
-//        - Are we sure? On what basis does the CK itself do this? Test flagging a REFR 
-//          (in a normal exterior cell) as persistent in xEdit and see whether the CK 
-//          moves it when resaving. Test whether this occurs even when there isn't a 
-//          persistent cell to start with, and test whether the CK always generates a 
-//          persistent cell even when there are no persistent refs in the worldspace.
-//
-//        - If a WRLD doesn't have a persistent cell, and it contains any persistent 
-//          REFRs, then a persistent cell must be created.
-//
-//     - REFRs that have the "deleted" flag set at save time need to be subject to the 
-//       undelete-and-disable procedure, as deleted REFRs can crash the game on exit and, 
-//       if subsequently overridden, can reportedly crash when loaded.
-//
-//        - Presumably, deleted NAVMs need to be handled the same way, with the added work 
-//          of making them small or zero-size. However, no one seems to know how to then 
-//          update the associated NAVIs. xEdit's online documentation states that deleted 
-//          navmeshes cannot be automatically corrected and must be fixed manually.
-//
 //  - Support for DIAL and INFO
 //
 //     - DIAL/QNAM should use dialogue_form_id_t instead of form_id_t. Use info generation 
@@ -440,17 +353,6 @@
 //    Creation Kit to find all of these, if we care that much.
 //
 //     - REFR/DATA
-//
-//  - Code for changing a reference's base form
-//
-//     - What do we do if this would lead to a change in the reference's own form type, 
-//       as in the case of converting between REFR and ACHR, or REFR and a PHZD? Should 
-//       we even allow those kinds of changes? We can't simply turn one loaded_form 
-//       instance into an instance of a different class.
-//
-//        - We probably shouldn't allow those sorts of changes, to be honest. Base form 
-//          swaps should not be allowed to change a reference's form type. We'll just 
-//          need to be sure to indicate that in the UI.
 //
 //  - Lua scripting
 //
@@ -640,12 +542,131 @@
 //        - Access to this widget should require permission, just because scripts 
 //          could use it to draw rude things.
 //
+//  - World viewing
+//
+//     - Loading NIFs and being able to render them
+//
+//        - Use Qt's 3D drawing APIs for now. We can stress-test them and potentially 
+//          dive into OpenGL or something later.
+//
+//        - The goal isn't to match the game exactly or even all that well. Really, we 
+//          can just throw out all data besides verts, textures, and really basic shader 
+//          properties. All we want is to be able to render the world *well enough* for 
+//          basic viewing and editing in the future.
+//
+//     - Loading and unloading cells on-demand (along with their contained references, 
+//       and the assets for those references)
+//
+//        = WE MUST IMPLEMENT SUPPORT FOR PARTIAL RECORDS FIRST.
+//
+//        - Requires a singleton to manage form and asset (un)loading. We should retain 
+//          recently-unused forms and assets in memory for a brief while, to handle the 
+//          case of the camera repeatedly panning across a cell boundary (e.g. due to 
+//          rotation) and avoid having to repeatedly reload the same content.
+//
+//           - Singleton will also need to construct landscape meshes and water planes.
+//
+//           - Singleton needs to react to forms being created, modified, or destroyed.
+//
+//              - Creating/modifying/destroying references
+//
+//              - Modifying base forms used by references
+//
+//     - Rendering abstract elements
+//
+//        - Cell borders
+//
+//        - Navmeshes
+//
+//        - Collision-primitive references
+//
+//     - Reference selection and browsing
+//
+//        - References selected in the Cell View window should show bounding boxes in 
+//          the Render Window. There should be both hotkeys and context menu options 
+//          for rendering references intangible or invisible (compare to the "1" key 
+//          in the Creation Kit).
+//
+//        - References in the Render Window should be clickable to control selection, 
+//          show context menus, and similar.
+//
+//           - The Render Window should offer an API, available to the rest of the 
+//             program, to allow the user to "pick" a reference, point in space, etc.. 
+//             This should involve forcibly focusing the Render Window, and then when 
+//             the user clicks on a valid target, returning focus to the API's caller 
+//             along with results. We'll need this for "Pick Reference from Render 
+//             Window" buttons akin to those in the CK.
+//
+//     - Camera controls
+//
+//        - Keyboard-and-mouse controls should mimic the Creation Kit, while gamepad 
+//          controls should mimic Halo's Forge (classic controls, not Halo 5).
+//
+//  - World editing
+//
+//     - Requires backend R&D for correctness.
+//
+//        - Currently, form stubs retain information about the GRUP they loaded from, 
+//          and we use this information both to identify a worldspace's persistent cell 
+//          at run-time, and to decide which of a cell's two child GRUPs (temporary or 
+//          persistent) to write any given REFR into during the save process. Both of 
+//          these uses are incorrect. Most of the other bullet points here are going 
+//          to be related to replacing this approach with an actually correct approach. 
+//          We can implement world viewing before fixing this, though we'll mishandle 
+//          any files with unusual/incorrect data re: persistence flags.
+//
+//        - A worldspace's persistent cell is the first loaded child cell that has the 
+//          "persistent" flag.
+//
+//        - Under what circumstances does the Creation Kit write a persistent REFR into 
+//          a worldspace's persistent cell rather than the REFR's "proper" parent cell?
+//
+//           - We'll need code to create persistent cells for worldspaces that don't 
+//             have them, no?
+//
+//     - ObjectReference friendly delete question: why are actors that are "deleted" 
+//       in this manner flagged as persistent?
+//
+//        - Someone used git blame and found that it dates back to the initial Github 
+//          commit, i.e. when xEdit was migrated from an older source control system.
+//
+//        - REFRs defined in ESP files are de facto persistent, so this would have to 
+//          be a fix meant explicitly for ESMs, no? Or do ACHRs behave differently?
+//
+//     - REFRs that have the "deleted" flag set at save time need to be subject to the 
+//       undelete-and-disable procedure, as deleted REFRs can crash the game on exit and, 
+//       if subsequently overridden, can reportedly crash when loaded.
+//
+//        - Presumably, deleted NAVMs need to be handled the same way, with the added work 
+//          of making them small or zero-size. However, no one seems to know how to then 
+//          update the associated NAVIs. xEdit's online documentation states that deleted 
+//          navmeshes cannot be automatically corrected and must be fixed manually.
+//
+//     - Navmesh editing
+//
+//        - We can implement the ability to edit individual navmeshes within cells, but 
+//          any such edits will be incorrect by virtue of our present inability to edit 
+//          the NavMeshInfoMap. We need to reverse-engineer that class and its data, and 
+//          figure out how to properly maintain it when edits to individual navmeshes are 
+//          made.
+//
+//     - Changing a reference's base form
+//
+//        - What do we do if this would lead to a change in the reference's own form type, 
+//          as in the case of converting between REFR and ACHR, or REFR and a PHZD? Should 
+//          we even allow those kinds of changes? We can't simply turn one loaded_form 
+//          instance into an instance of a different class.
+//
+//           - We probably shouldn't allow those sorts of changes, to be honest. Base form 
+//             swaps should not be allowed to change a reference's form type. We'll just 
+//             need to be sure to indicate that in the UI.
+//
 //  - If the user has any unsaved changes, the main window should show a confirmation 
 //    prompt on exit. We already override MainWindow::closeEvent; we'll want to do what 
 //    we need to do in there.
 //
 //     - Checking for unsaved changes is easy: just see if any active file forms are 
-//       flagged as edited.
+//       flagged as edited, being sure to ignore non-canonical stubs for singleton forms.
 //
 //  - The (activate_ref) extra-data object has unknown fields, which are likely to 
 //    include at least one form ID.
@@ -687,6 +708,9 @@
 //
 //  - Seasonal/event themes, like we did for CobbPos
 //
+//  - An option to do comprehensive error checking on-demand. We'd do this by just forcing 
+//    all forms to load briefly.
+//
 //  - Mod merging could be useful, particularly if we write a co-save file that describes 
 //    the mapping of forms from the source files to the destination file (so that later 
 //    re-merges produce consistent results).
@@ -717,6 +741,46 @@
 //          means that while TES files might show mojibake for unsupported languages, 
 //          I'm pretty sure that STRINGS files would show nothing at all, which may or 
 //          may not be worse.
+//
+//  - Support for reverting forms, and for removing an active file's overrides
+//
+//     - What if it were possible to right-click a form in the object window, mouse over 
+//       a "Revisions" context menu item, and pick which file (i.e. which record/override) 
+//       you want to work with?
+//
+//       Implementating this would require a few considerations:
+//
+//        - Form stubs would need to be able to store *which* file they've been told to 
+//          load from. An int16_t (with -1 meaning "use latest file") should do the trick.
+//
+//        - Reverting a form stub should flag it as edited.
+//
+//        - If we "revert" a form stub, then we need to clear all of its outbound use 
+//          info, and then use loaded_forms::Form::generateUseInfo on the selected file 
+//          to rebuild use info as it existed for that revision.
+//
+//           - We'd also need to re-load the form's editor ID, along with any other data 
+//             that gets stored on the stub during the initial stub-build process.
+//
+//       There are also UX considerations:
+//
+//        - Should a "reverted" form be treated as edited and written into the active file? 
+//          This would effectively create either ITMs (when reverting to the last non-active 
+//          record) or allow easy reversion of changes made by other mods.
+//
+//        - What do we do if a form is *already* loaded?
+//
+//       But there are UX benefits:
+//
+//        - The backend tech needed for this could easily be used for undoing overrides 
+//          that exist in the active file. Currently, the Creation Kit lets you do that via 
+//          the Data menu, but it requires a full reload (i.e. you aren't "reverting an 
+//          override" so much as you are "electing to not load a particular override").
+//
+//     - We'll want this for GMST as well, but that'll require different underlying code. 
+//       This could possibly include deletion of a GMST form stub, with the caveat that a 
+//       form could (incorrectly) have a reference to such a stub (same issue as with 
+//       renumbering a GMST).
 //
 // FINALIZING TASKS:
 //
