@@ -314,13 +314,9 @@ namespace dovah {
    bool form_stub::is_edited_or_in_active_file() const noexcept {
       if (this->is_edited())
          return true;
-      auto&   lo = this->_get_load_order();
-      int16_t i  = this->source_file_count() - 1;
-      for (; i >= 0; --i) {
-         auto* file = this->get_file_at_index(i);
-         if (file && lo.file_is_active(*file))
-            return true;
-      }
+      auto& lo = this->_get_load_order();
+      if (lo.is_defined_in_active_file(*this))
+         return true;
       return false;
    }
    bool form_stub::is_injected() const noexcept {
@@ -329,10 +325,8 @@ namespace dovah {
       auto* file   = lo.get_file_by_prefix(prefix);
       if (!file)
          return false;
-      //
-      for (int16_t i = this->source_file_count() - 1; i >= 0; --i)
-         if (file == this->get_file_at_index(i))
-            return false;
+      if (this->file_list_includes(file))
+         return false;
       return true;
    }
    bool form_stub::is_non_overridden_hardcoded_form() const noexcept {

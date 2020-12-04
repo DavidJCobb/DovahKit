@@ -103,6 +103,9 @@ namespace {
          case notice_code::cannot_sever_references_to_none_stub:
             text = QObject::tr("The desired ID is the target of one or more dangling references, and DovahKit does not know how to sever those references.");
             break;
+         case notice_code::cannot_inject_form_overtop_none_stub:
+            text = QObject::tr("The desired ID is the target of one or more dangling references. These references are from forms defined outside of the active file, so DovahKit cannot sever them to make room for the injected form.");
+            break;
       }
       QMessageBox::critical(
          window,

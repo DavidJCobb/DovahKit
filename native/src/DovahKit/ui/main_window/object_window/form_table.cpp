@@ -207,11 +207,8 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
          }
          break;
       case Qt::ForegroundRole:
-         if (column == 1 && item->is_injected) { // show injected forms' IDs in color
-            if (item->is_active)
-               return QColor::fromRgb(0x309000);
-            return QColor::fromRgb(0x246010);
-         }
+         if (column == 1 && item->is_injected) // show injected forms' IDs in color
+            return QColor::fromRgb(0x309000);
          break;
       case Qt::UserRole:
          switch (column) {

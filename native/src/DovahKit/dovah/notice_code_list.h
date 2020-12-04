@@ -73,6 +73,7 @@ namespace dovah {
          cyclical_dependency_between_files           = 0x00000040, // The load order contains files whose master lists form a circular dependency.
          active_file_is_master_and_there_are_plugins = 0x00000041, // DovahKit can't place the active file at the end of the load order, because it's ESM-flagged and other files aren't.
          record_found_in_wrong_top_level_group       = 0x00000042,
+         cannot_inject_form_overtop_none_stub        = 0x00000043,
       };
    };
 }

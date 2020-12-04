@@ -235,26 +235,6 @@
 //        - The "save" code for parent forms will *also* need to check the record flags, 
 //          which means that the flags need to be set before we call (Form::save).
 //
-//  - Form renumbering
-//
-//     - Now that form stubs store all loaded files' offsets, we can identify active 
-//       file forms without having to rely on their load order prefix. Accordingly, 
-//       we should allow record injection.
-//
-//        - There are three functions used to check whether a form or form ID is 
-//          from the active file. The first two in this list use the load order 
-//          prefix, while the last uses the form stub's file list. In what situations 
-//          are these functions used? Does anything need to change in order for us to 
-//          handle injected records properly?
-//
-//           - file_load_order::is_active_file_formID
-//           - file_load_order::is_defined_in_active_file
-//           - file_load_order::is_defined_or_overridden_in_active_file
-//
-//        - Record injection needs to be extra careful to avoid form ID conflicts.
-//
-//        - We should also amend GMST renumbering to allow injecting those.
-//
 //  - Reverse-engineering
 //
 //     - A worldspace's persistent cell is the first persistent-flagged child cell to load.

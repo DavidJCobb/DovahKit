@@ -1848,8 +1848,21 @@ namespace dovah {
          assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
          if (occupier->is_none_stub()) {
             //
-            // If a none-stub is taking the desired form ID, then destroy it. If we 
-            // can't destroy it, then that's an error.
+            // If a none-stub is taking the desired form ID, then we need to destroy it. 
+            // However, we first need to check whether we *can* destroy it: does it come 
+            // solely from the active file?
+            //
+            for (auto& pair : occupier->inbound) {
+               auto& entry = pair.second;
+               if (!entry.other)
+                  continue;
+               if (!this->is_defined_in_active_file(*entry.other)) {
+                  request.error = notice_code::cannot_inject_form_overtop_none_stub;
+                  return;
+               }
+            }
+            //
+            // Okay, let's attempt destruction.
             //
             auto result = this->_destroy_none_stub(*occupier);
             if (result != default_notice_code) { // destruction failed
