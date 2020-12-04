@@ -241,13 +241,6 @@
 //       file forms without having to rely on their load order prefix. Accordingly, 
 //       we should allow record injection.
 //
-//        = Do we even handle loading and re-saving injected records properly?
-//
-//        = Incidentally, we can tell whether a record is injected by checking whether 
-//          its load order prefix matches that of any of the files in its stub's source 
-//          file list. We should implement a getter for this with the signature 
-//          (bool file_load_order::form_is_injected(const form_stub&) const noexcept).
-//
 //        - There are three functions used to check whether a form or form ID is 
 //          from the active file. The first two in this list use the load order 
 //          prefix, while the last uses the form stub's file list. In what situations 

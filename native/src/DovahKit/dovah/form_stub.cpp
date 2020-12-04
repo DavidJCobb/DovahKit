@@ -311,6 +311,30 @@ namespace dovah {
          return false;
       return true;
    }
+   bool form_stub::is_edited_or_in_active_file() const noexcept {
+      if (this->is_edited())
+         return true;
+      auto&   lo = this->_get_load_order();
+      int16_t i  = this->source_file_count() - 1;
+      for (; i >= 0; --i) {
+         auto* file = this->get_file_at_index(i);
+         if (file && lo.file_is_active(*file))
+            return true;
+      }
+      return false;
+   }
+   bool form_stub::is_injected() const noexcept {
+      auto& lo     = this->_get_load_order();
+      auto  prefix = file_prefix::from_form_id(this->formID, lo.get_current_game() == game::skyrim_classic);
+      auto* file   = lo.get_file_by_prefix(prefix);
+      if (!file)
+         return false;
+      //
+      for (int16_t i = this->source_file_count() - 1; i >= 0; --i)
+         if (file == this->get_file_at_index(i))
+            return false;
+      return true;
+   }
    bool form_stub::is_non_overridden_hardcoded_form() const noexcept {
       if (this->is_hardcoded()) {
          auto* info = this->get_source_file_info(-1); // get last file

@@ -23,6 +23,10 @@ class FormTableModelItem {
       form_id_t formID    = 0;
       uint32_t  userCount = 0;
       //
+      bool is_active   = false;
+      bool is_injected = false;
+      bool is_none     = false;
+      //
       FormTableModelItem() {}
       FormTableModelItem(dovah::form_stub*);
       //

@@ -6,16 +6,18 @@
 #include "../../../dovah/form_stub.h"
 
 FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
-   this->stub      = stub;
-   this->editorID  = QString::fromUtf8(stub->get_editor_id());
-   this->formID    = stub->formID;
-   this->userCount = stub->inbound.size();
+   this->stub = stub;
+   this->update();
 }
 void FormTableModelItem::update() {
    auto stub = this->stub;
    this->editorID  = QString::fromUtf8(stub->get_editor_id());
    this->formID    = stub->formID;
    this->userCount = stub->inbound.size();
+   //
+   this->is_active   = stub->is_edited_or_in_active_file();
+   this->is_injected = stub->is_injected();
+   this->is_none     = stub->is_none_stub();
 }
 bool FormTableModelItem::updateUserCount() {
    if (auto* stub = this->stub) {
@@ -166,11 +168,13 @@ Qt::ItemFlags FormTableModel::flags(const QModelIndex& index) const {
 QVariant FormTableModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
       return QVariant();
-   auto item    = (item_type*)index.internalPointer();
+   auto item = (item_type*)index.internalPointer();
+   if (!item->stub)
+      return QVariant();
    auto column  = index.column();
-   bool edited  = (item->stub && item->stub->is_edited());
-   bool deleted = (item->stub && item->stub->is_deleted());
-   bool none    = (item->stub && item->stub->is_none_stub());
+   bool edited  = item->is_active;
+   bool deleted = item->stub->is_deleted();
+   bool none    = item->is_none;
    switch (role) {
       case Qt::DisplayRole:
          switch (column) {
@@ -193,6 +197,20 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
             //
             // TODO: icons per form type
             //
+         }
+         break;
+      case Qt::FontRole:
+         if (column == 0 && none) { // show none-stubs in italics
+            QFont font;
+            font.setItalic(true);
+            return font;
+         }
+         break;
+      case Qt::ForegroundRole:
+         if (column == 1 && item->is_injected) { // show injected forms' IDs in color
+            if (item->is_active)
+               return QColor::fromRgb(0x309000);
+            return QColor::fromRgb(0x246010);
          }
          break;
       case Qt::UserRole:

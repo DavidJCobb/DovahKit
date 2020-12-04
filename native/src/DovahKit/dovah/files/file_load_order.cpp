@@ -1274,6 +1274,23 @@ namespace dovah {
       return -1;
    }
    //
+   const file_load_order::loaded_file* file_load_order::get_file_by_prefix(file_prefix p) const noexcept {
+      auto i = this->index_of_prefix(p);
+      if (i < 0)
+         return nullptr;
+      return this->get_file_by_index(i);
+   }
+   const file_load_order::loaded_file* file_load_order::get_file_by_index(int i) const noexcept {
+      auto size = this->files.size();
+      if (i < 0) {
+         i += size;
+         if (i < 0)
+            return nullptr;
+      } else if (i >= size)
+         return nullptr;
+      return this->files[i];
+   }
+   //
    bool file_load_order::file_is_active(const loaded_file& file) const noexcept {
       return &file == this->active_file;
    }

@@ -255,6 +255,9 @@ namespace dovah {
          int index_of_file(const loaded_file&) const noexcept;
          int index_of_prefix(file_prefix) const noexcept;
          //
+         const loaded_file* get_file_by_prefix(file_prefix) const noexcept;
+         const loaded_file* get_file_by_index(int) const noexcept;
+         //
          bool file_is_active(const loaded_file&) const noexcept;
          bool has_file(const std::filesystem::path& filename) const noexcept;
          bool has_non_active_file(const std::filesystem::path& filename) const noexcept;

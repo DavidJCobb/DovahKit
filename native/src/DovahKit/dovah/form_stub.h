@@ -298,6 +298,8 @@ namespace dovah {
          inline bool        is_deleted()   const noexcept { return (bool)(this->flags & flag::flagged_as_deleted); };
          inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
          inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
+         bool is_edited_or_in_active_file() const noexcept;
+         bool is_injected() const noexcept;
          bool is_non_overridden_hardcoded_form() const noexcept;
          bool is_none_stub() const noexcept;
          void set_edited(bool v);
