@@ -1411,7 +1411,7 @@ namespace dovah {
          return 0;
       auto min_id = active_prefix.min_form_id();
       auto max_id = active_prefix.max_form_id();
-      id = active_prefix.coerce_form_id(id);
+      id = id ? active_prefix.coerce_form_id(id) : min_id;
       //
       auto& map = this->active_file_forms.forms;
       if (map.size() >= (max_id - min_id)) // no form IDs available
@@ -1421,7 +1421,8 @@ namespace dovah {
       auto  guard        = std::lock_guard(this->form_creation_request_info.lock);
       //
       for (; id < max_id; ++id) {
-         if (!cobb::unordered_map_contains(map, id)) {
+         form_stub* stub = cobb::unordered_map_get_if_present(map, id);
+         if (!stub || stub->is_none_stub()) {
             auto it = std::find(reservations.begin(), reservations.end(), id);
             if (it != reservations.end())
                continue;
@@ -1623,7 +1624,7 @@ namespace dovah {
          auto guard = std::lock_guard(this->forms.lock);
          if (std::find(list.begin(), list.end(), formID) != list.end()) // if the form ID is reserved, then we need to find a new one
             formID = 0;
-         if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
+         if (!(formID & 0x00FFFFFF) || this->get_form(formID, true) != nullptr) {
             formID = this->find_first_free_form_id_in_active_file();
             if (!formID) { // no form ID available
                result.error = notice_code::form_id_unavailable_for_new_form;

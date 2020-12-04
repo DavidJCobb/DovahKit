@@ -36,6 +36,8 @@ namespace {
             text = QObject::tr("There is no active file, nor any room in the load order for a new file.");
             break;
          case notice_code::form_id_unavailable_for_game_setting:
+            [[fallthrough]];
+         case notice_code::form_id_unavailable_for_new_form:
             text = QObject::tr("You've used up all of the form IDs available to this file!");
             break;
          case notice_code::unimplemented_form_type:

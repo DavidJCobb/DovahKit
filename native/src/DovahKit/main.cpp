@@ -109,19 +109,11 @@
 //          none-stub. Remember to use the getter on form_stub; don't just check the 
 //          form type, or we'll false-positive on the hardcoded "persistence forms."
 //
-//        - (file_load_order::find_first_free_form_id_in_active_file) should take a 
-//          bool that will allow us to choose whether to avoid any none-stubs. Default 
-//          behavior is to not even bother.
+//           - The issue is, we have to load the reference in order to clear it, so 
+//             that's going to result in dumb errors.
 //
-//           - Avoiding form stubs requires us to check the normal form map, not just 
-//             the active file form map, as none-stubs shouldn't go in the active file 
-//             form map.
-//
-//        = TEST THAT FORM CREATION PROPERLY DESTROYS ANY NONE-STUBS THAT ARE IN 
-//          THEIR WAY.
-//
-//        = TEST THAT FORM RENUMBERING PROPERLY DESTROYS ANY NONE-STUBS THAT ARE IN 
-//          THEIR WAY.
+//           - We actually already generate an error: this is detected as a type-
+//             mismatched reference.
 //
 //     = While I'm here: things like this may make it tempting to do form-to-form 
 //       reference error checking in the initial use info build step, in order to 
