@@ -57,6 +57,7 @@ class GameSettingListModel : public QAbstractTableModel {
    protected:
       QVector<item_type*> children;
       QVector<item_type*> queued_additions;
+      dovah::game last_generated_game = dovah::game::skyrim_classic;
       //
    protected slots:
       void gameSettingValueChanged(const char* name);

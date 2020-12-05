@@ -238,6 +238,36 @@ namespace {
       _association("sVDSGPlate",                 QObject::tr("Unused. Decorative text shown in Fallout's loading screens.", disambig)),
       _association("sWeaponBreak",               QObject::tr("Unused. Notification shown when the player's equipped weapon breaks. Weapon and armor degradation did not appear in Skyrim.", disambig)),
       _association("sWhite",                     QObject::tr("Unused. A color option for Fallout's Pip-Boy and associated UI.", disambig)),
+      //
+      #pragma region Skyrim Special
+         _association("sCantInstallModDependency", QObject::tr("A string from the game's built-in mod browser: an error message telling the user that they cannot install a mod because they don't have all of its dependencies installed.", disambig)),
+         _association("sCantInstallModInvalid", QObject::tr("A string from the game's built-in mod browser: an error message telling the user that a mod is corrupt or invalid, cannot be used, and should be deleted.", disambig)),
+         _association("sCantLoadControls", QObject::tr("An error message stating that the player's control options could not be loaded, and that the defaults will be used.", disambig)),
+         _association("sCantLoadSettings", QObject::tr("An error message stating that the player's game options could not be loaded, and that the defaults will be used.", disambig)),
+         _association("sChangedModsResetConfirm", QObject::tr("Confirmation dialog asking the player whether they want to reload the game after changing their mod list via the in-game mod browser.", disambig)),
+         _association("sConfirmNewMods",       QObject::tr("Confirmation dialog for starting a new game when mods are enabled. Emphasizes that Xbox or Steam Achievements are disabled.", disambig)),
+         _association("sConfirmNewMods_Orbis", QObject::tr("Confirmation dialog for starting a new game when mods are enabled. Emphasizes that PlayStation Trophies are disabled.", disambig)),
+         _association("sDeleteAllModsConfirm",    QObject::tr("Confirmation dialog for deleting all installed mods via the game's built-in mod browser.", disambig)),
+         _association("sDeleteLibraryModConfirm", QObject::tr("Confirmation dialog for deleting an installed mod via the game's built-in mod browser. Emphasizes that if the mod is not available on Bethesda.net, it will not be recoverable", disambig)),
+         _association("sDeleteModConfirm",        QObject::tr("Confirmation dialog for deleting all installed mods via the game's built-in mod browser.", disambig)),
+         _association("sGamepadDisconnectedMessage", QObject::tr("Text of a dialog box instructing the player to connect a gamepad to continue.", disambig)),
+         _association("sGamepadDisconnectedTitle",   QObject::tr("Title of a dialog box instructing the player to connect a gamepad to continue.", disambig)),
+         _association("sLoadVanillaSaveWithMods",       QObject::tr("Confirmation dialog for loading a non-modded save when mods are enabled. Emphasizes that Xbox or Steam Achievements are disabled.", disambig)),
+         _association("sLoadVanillaSaveWithMods_Orbis", QObject::tr("Confirmation dialog for loading a non-modded save when mods are enabled. Emphasizes that PlayStation Trophies are disabled.", disambig)),
+         //
+         _association("sReportModCat_Explicit",      QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging contains explicit content.", disambig)),
+         _association("sReportModCat_General",       QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, a catch-all category.", disambig)),
+         _association("sReportModCat_Harassment",    QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging is harassing someone.", disambig)),
+         _association("sReportModCat_Impersonation", QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the user is impersonating someone.", disambig)),
+         _association("sReportModCat_PrivateInfo",   QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging includes someone's private information.", disambig)),
+         _association("sReportModCat_Profanity",     QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging contains profanity.", disambig)),
+         _association("sReportModCat_Racial",        QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging contains racist content.", disambig)),
+         _association("sReportModCat_Religious",     QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging expresses anti-religious prejudice.", disambig)),
+         _association("sReportModCat_Slander",       QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging is slanderous.", disambig)),
+         _association("sReportModCat_Spam",          QObject::tr("A string from the game's built-in mod browser: a terms of service violation -- in this case, that the mod or associated messaging is spam.", disambig)),
+         _association("sReportModChooseCategory",    QObject::tr("A string from the game's built-in mod browser: the text of a dialog box asking the user what terms of service violation they wish to report a mod for.", disambig)),
+         _association("sReportModConfirm",           QObject::tr("A string from the game's built-in mod browser: the confirmation dialog for reporting a mod that violates the terms of service.", disambig)),
+      #pragma endregion
    };
 }
 

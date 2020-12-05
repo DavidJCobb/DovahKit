@@ -235,13 +235,17 @@ void GameSettingListModel::build() {
    this->clear();
    //
    auto& editor = DovahKitCore::get();
+   auto  game   = editor.get_current_game();
    auto& queued = this->queued_additions;
    for (auto& definition : dovah::game_settings) {
       dovah::loaded_game_setting loaded;
       if (editor.get_loaded_game_setting(definition.name, loaded))
          queued.push_back(new item_type(loaded));
-      else
+      else {
+         if (!definition.exists_in_game(game))
+            continue;
          queued.push_back(new item_type(definition));
+      }
    }
    editor.for_each_loaded_game_setting([this, &editor](const dovah::loaded_game_setting& loaded) {
       if (!loaded.definition)
@@ -257,6 +261,8 @@ void GameSettingListModel::build() {
       this->children.push_back(item);
    queued.clear();
    this->endInsertRows();
+   //
+   this->last_generated_game = game;
 }
 #pragma endregion
 
