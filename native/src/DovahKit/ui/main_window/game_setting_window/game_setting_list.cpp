@@ -81,6 +81,7 @@ GameSettingListModel::GameSettingListModel(QObject* parent) : QAbstractTableMode
    QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse,  this, &GameSettingListModel::build);
    QObject::connect(&editor, &DovahKitCore::gameSettingValueChanged, this, &GameSettingListModel::gameSettingValueChanged);
    QObject::connect(&editor, &DovahKitCore::gameSettingRenumbered,   this, &GameSettingListModel::gameSettingRenumbered);
+   QObject::connect(&editor, &DovahKitCore::dataSaveComplete,        this, &GameSettingListModel::dataSaveComplete);
 }
 //
 void GameSettingListModel::gameSettingValueChanged(const char* name) {
@@ -116,6 +117,11 @@ void GameSettingListModel::gameSettingValueChanged(const char* name) {
 }
 void GameSettingListModel::gameSettingRenumbered(const char* name, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
    this->gameSettingValueChanged(name);
+}
+void GameSettingListModel::dataSaveComplete() {
+   auto& editor = DovahKitCore::get();
+   if (editor.get_current_game() != this->last_generated_game)
+      this->build();
 }
 //
 QModelIndex GameSettingListModel::index(int row, int column, const QModelIndex& parent) const {

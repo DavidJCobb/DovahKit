@@ -62,6 +62,7 @@ class GameSettingListModel : public QAbstractTableModel {
    protected slots:
       void gameSettingValueChanged(const char* name);
       void gameSettingRenumbered(const char* name, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
+      void dataSaveComplete();
       //
    public:
       GameSettingListModel(QObject* parent = nullptr);

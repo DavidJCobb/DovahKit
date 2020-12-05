@@ -113,16 +113,6 @@
 //
 //  - Add support for loading DOBJ and GMST records properly.
 //
-//     = MAINTAIN OUR INTERNAL DOCUMENTATION ON THIS, UNTIL WE'RE DONE WITH IT.
-//
-//     - Skyrim Special Edition adds more GMSTs. We'll need to find a list of those 
-//       definitions, and we'll need to make it possible for GMST definitions to 
-//       indicate what games they appear in (defaulting to "all").
-//
-//        - Our current list is every Skyrim Classic setting, pulled directly from 
-//          the game engine with no GMST records loaded -- all pristine executable-
-//          level defaults.
-//
 //     - GMST renumbering: test all error cases.
 //
 //     - The GMST loader needs to warn on the following, and currently doesn't:
