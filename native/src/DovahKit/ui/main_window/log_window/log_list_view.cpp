@@ -7,7 +7,7 @@
 #include "../../../editor/open_window_for_form.h"
 
 namespace {
-   QString _read_error_form_id_to_string(const dovah::file_read_warning::relevant_form& form) {
+   QString _read_error_form_id_to_string(const dovah::detailed_notice::relevant_form& form) {
       QString signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(form.type).signature);
       QString local     = QObject::tr("????????", "log window - missing form ID");
       QString fixed     = QObject::tr("--------", "log window - missing form ID");
@@ -26,15 +26,16 @@ LogListModelItem::LogListModelItem(const QString& t) {
    this->type = type_t::text;
    this->text = t;
 }
-LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
+LogListModelItem::LogListModelItem(const dovah::detailed_notice& warning) {
    using notice_code = dovah::notice_code;
    //
    this->data = warning;
-   this->type = type_t::file_read_warning;
-   if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+   this->type = type_t::detailed_notice;
+   if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
       this->file = QString::fromStdString(warning.cause_file);
    }
    //
+   bool non_continuable_success = false;
    switch (warning.code) {
       case notice_code::form_override_has_type_mismatch:
          {
@@ -44,10 +45,10 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form_a = QObject::tr("<unknown form>", "log window");
             QString form_b = form_a;
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form_a = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file_a = QString::fromStdString(warning.cause_file);
             }
             if (!warning.relevant_forms.empty()) {
@@ -69,11 +70,11 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form_b = form_a;
             QString final_signature = QObject::tr("????", "log window - unknown signature");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form_a = _read_error_form_id_to_string(warning.cause_form);
                final_signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(warning.cause_form.type).signature);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file_a = QString::fromStdString(warning.cause_file);
             }
             if (!warning.relevant_forms.empty()) {
@@ -90,10 +91,10 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          {
             QString form      = QObject::tr("<unknown cell>", "log window");
             QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
@@ -106,10 +107,10 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          {
             QString form      = QObject::tr("<unknown cell>", "log window");
             QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
@@ -122,10 +123,10 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          {
             QString form      = QObject::tr("<unknown cell>", "log window");
             QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
@@ -138,14 +139,14 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          {
             QString form      = QObject::tr("<unknown form>", "log window");
             QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                QString file = QString::fromStdString(warning.cause_file);
                text = QObject::tr("Form %1 in file %3 contained at least one unrecognized subrecord with signature %2.")
                   .arg(form).arg(subrecord).arg(file);
@@ -161,13 +162,13 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString referent  = referrer;
             QString subrecord = QObject::tr("<unknown subrecord>", "log window");
             QString desired   = QObject::tr("<unknown type", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                referrer = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form_type) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form_type) {
                desired = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(warning.cause_form_type).signature);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             if (!warning.relevant_forms.empty()) {
@@ -180,9 +181,9 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             // %4: Desired form type
             // %5: Subrecord or referent index
             //
-            bool has_desired_type = warning.flags & dovah::file_read_warning::flag::has_cause_form_type;
-            bool has_index        = warning.flags & dovah::file_read_warning::flag::has_cause_subrecord_index;
-            bool has_form_index   = warning.flags & dovah::file_read_warning::flag::has_cause_form_index;
+            bool has_desired_type = warning.flags & dovah::detailed_notice::flag::has_cause_form_type;
+            bool has_index        = warning.flags & dovah::detailed_notice::flag::has_cause_subrecord_index;
+            bool has_form_index   = warning.flags & dovah::detailed_notice::flag::has_cause_form_index;
             if (has_form_index) {
                if (has_desired_type)
                   text = QObject::tr("Form %1 refers to multiple forms using %2 subrecord(s); referent form #%5 was %3, but was supposed to refer to a form of type %4.");
@@ -206,7 +207,7 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
       case notice_code::shout_has_wrong_word_count:
          {
             QString form = QObject::tr("<unknown shout>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
             //
@@ -226,10 +227,10 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          {
             QString form      = QObject::tr("<unknown form>", "log window");
             QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
@@ -241,7 +242,7 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
       case notice_code::game_setting_record_is_nameless:
          {
             QString form = QObject::tr("<unknown GMST record>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
             //
@@ -252,10 +253,10 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          {
             QString form = QObject::tr("<unknown GMST record>", "log window");
             QString name = QObject::tr("", "log window - missing editor ID");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
                name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
             }
             //
@@ -266,14 +267,14 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
          {
             QString form      = QObject::tr("<unknown form>", "log window");
             QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_subrecord) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                subrecord = cobb::qt::four_cc_to_string(warning.cause_subrecord);
             }
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                QString file = QString::fromStdString(warning.cause_file);
                text = QObject::tr("Form %1 in file %3 contained a %2 subrecord with extra bytes at the end.")
                   .arg(form).arg(subrecord).arg(file);
@@ -291,16 +292,16 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form_b = form_a;
             QString name   = QObject::tr("", "log window - missing editor ID");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form_a = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
             if (!warning.relevant_forms.empty()) {
                form_b = _read_error_form_id_to_string(warning.relevant_forms[0]);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
                name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
             }
             //
@@ -314,13 +315,13 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form = QObject::tr("<unknown GMST record>", "log window");
             QString name = QObject::tr("", "log window - missing editor ID");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
                name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
             }
             //
@@ -334,13 +335,13 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form = QObject::tr("<unknown GMST record>", "log window");
             QString name = QObject::tr("", "log window - missing editor ID");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
                name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
             }
             //
@@ -354,13 +355,13 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form = QObject::tr("<unknown GMST record>", "log window");
             QString name = QObject::tr("", "log window - missing editor ID");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
                name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
             }
             //
@@ -374,13 +375,13 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form = QObject::tr("<unknown GMST record>", "log window");
             QString name = QObject::tr("", "log window - missing editor ID");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
                name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
             }
             //
@@ -394,13 +395,13 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form = QObject::tr("<unknown GMST record>", "log window");
             QString name = QObject::tr("", "log window - missing editor ID");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_editor_id) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
                name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(warning.cause_editor_id));
             }
             //
@@ -414,13 +415,13 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form_a = QObject::tr("<unknown GMST record>", "log window");
             QString form_b = form_a;
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form_a = _read_error_form_id_to_string(warning.cause_form);
             }
             if (!warning.relevant_forms.empty()) {
                form_b = _read_error_form_id_to_string(warning.relevant_forms[0]);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
             //
@@ -434,26 +435,19 @@ LogListModelItem::LogListModelItem(const dovah::file_read_warning& warning) {
             QString form = QObject::tr("<unknown form>",         "log window");
             QString grup = QObject::tr("<unknown record group>", "log window");
             //
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_form) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
                form = _read_error_form_id_to_string(warning.cause_form);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_file) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
                file = QString::fromStdString(warning.cause_file);
             }
-            if (warning.flags & dovah::file_read_warning::flag::has_cause_signature) {
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_signature) {
                grup = cobb::qt::four_cc_to_string(warning.cause_signature);
             }
             //
             text = text.arg(file).arg(form).arg(grup);
          }
          break;
-   }
-}
-LogListModelItem::LogListModelItem(const dovah::detailed_notice& error) {
-   using notice_code = dovah::notice_code;
-   //
-   bool non_continuable_success = false;
-   switch (error.code) {
       case notice_code::unknown_form_type:
          text = QObject::tr("One of the forms that needs to be saved is of a type that DovahKit has not yet been programmed to handle.", "write error");
          break;
@@ -499,13 +493,33 @@ LogListModelItem::LogListModelItem(const dovah::detailed_notice& error) {
          non_continuable_success = true;
          text = QObject::tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
          break;
+      case notice_code::container_item_has_bad_owner_form_type:
+         {
+            text = QObject::tr("Form %1 in file %2 has a malformed entry in its inventory: the item's owner is form %3, which is not an ActorBase or Faction. Because the owner is of an invalid type, the additional four-byte value paired with it is also of an invalid type and will be mishandled by the editor.", "log window");
+            QString file   = QObject::tr("<unknown filename>", "log window");
+            QString form_a = QObject::tr("<unknown form>",     "log window");
+            QString form_b = form_a;
+            //
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_form) {
+               form_a = _read_error_form_id_to_string(warning.cause_form);
+            }
+            if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
+               file = QString::fromStdString(warning.cause_file);
+            }
+            if (!warning.relevant_forms.empty()) {
+               form_b = _read_error_form_id_to_string(warning.relevant_forms[0]);
+            }
+            //
+            text = text.arg(form_a).arg(file).arg(form_b);
+         }
+         break;
       default:
          text = QObject::tr("Unknown error.", "write error");
          break;
    }
 }
-bool LogListModelItem::compare(const dovah::file_read_warning& warning) const noexcept {
-   if (this->type != type_t::file_read_warning)
+bool LogListModelItem::compare(const dovah::detailed_notice& warning) const noexcept {
+   if (this->type != type_t::detailed_notice)
       return false;
    return this->data == warning;
 }
@@ -559,10 +573,10 @@ void LogListModel::saveErrorReceived(const dovah::detailed_notice& error) {
    this->children.push_back(item);
    this->endInsertRows();
 }
-void LogListModel::loadWarningReceived(const dovah::file_read_warning& warning) {
-   using flag = dovah::file_read_warning::flag;
+void LogListModel::loadWarningReceived(const dovah::detailed_notice& warning) {
+   using flag = dovah::detailed_notice::flag;
    //
-   if (warning.context == dovah::file_read_warning::context_t::on_demand_form_load) {
+   if (warning.context == dovah::detailed_notice::notice_context::on_demand_form_load) {
       //
       // Don't log warnings from on-demand form loads, unless the specific data is 
       // coalesced.

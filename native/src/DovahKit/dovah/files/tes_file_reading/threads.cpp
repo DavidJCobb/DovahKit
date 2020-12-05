@@ -1,11 +1,11 @@
 #include "threads.h"
 #include "file.h"
 #include "../../../helpers/strings.h"
+#include "../../detailed_notice.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
 #include "../../notice_code_list.h"
 #include "localized_string_file.h"
-#include "../file_read_warning.h"
 
 namespace dovah {
    namespace tes_file_reading {
@@ -92,10 +92,10 @@ namespace dovah {
                         if (record.signature() != group_signature) { // misplaced record?
                            form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
                            //
-                           file_read_warning warning;
+                           detailed_notice warning;
                            warning.code       = notice_code::record_found_in_wrong_top_level_group;
                            warning.cause_file = this->owner->get_filename();
-                           warning.set_flag(file_read_warning::flag::has_cause_file);
+                           warning.set_flag(detailed_notice::flag::has_cause_file);
                            warning.set_cause_form(*stub);
                            warning.set_cause_signature(group_signature);
                            warning.set_cause_form_type(group_type);
@@ -437,26 +437,26 @@ namespace dovah {
                      }
                      while (auto& subrecord = record.next_subrecord()) {
                         if (subrecord.signature() == 'EDID') {
-                           file_read_warning warning;
+                           detailed_notice warning;
                            warning.code               = notice_code::game_setting_record_is_misordered;
                            warning.cause_form.localID = record.formID();
                            warning.cause_form.fixedID = 0;
                            warning.cause_form.type    = form_type::setting;
-                           warning.set_flag(file_read_warning::flag::has_cause_form);
+                           warning.set_flag(detailed_notice::flag::has_cause_form);
                            warning.cause_file = this->owner->get_filename();
-                           warning.set_flag(file_read_warning::flag::has_cause_file);
+                           warning.set_flag(detailed_notice::flag::has_cause_file);
                            warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
                            continue;
                         }
                         if (subrecord.signature() != 'DATA') {
-                           file_read_warning warning;
+                           detailed_notice warning;
                            warning.code               = notice_code::unrecognized_subrecord;
                            warning.cause_form.localID = record.formID();
                            warning.cause_form.fixedID = 0;
                            warning.cause_form.type    = form_type::setting;
                            warning.cause_file         = this->owner->get_filename();
-                           warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                           warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                            warning.set_cause_subrecord(subrecord);
                            warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
@@ -485,38 +485,38 @@ namespace dovah {
                               break;
                            default:
                               {
-                                 file_read_warning warning;
+                                 detailed_notice warning;
                                  warning.code               = notice_code::game_setting_record_has_bad_type;
                                  warning.cause_form.localID = record.formID();
                                  warning.cause_form.fixedID = 0;
                                  warning.cause_form.type    = form_type::setting;
                                  warning.cause_file         = this->owner->get_filename();
-                                 warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                                 warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                                  warning.set_cause_editor_id(working.name);
                                  lo.log_load_warning(warning);
                               }
                               break;
                         }
                         if (!no_read_error) {
-                           file_read_warning warning;
+                           detailed_notice warning;
                            warning.code               = notice_code::game_setting_record_unreadable_data;
                            warning.cause_form.localID = record.formID();
                            warning.cause_form.fixedID = 0;
                            warning.cause_form.type    = form_type::setting;
                            warning.cause_file         = this->owner->get_filename();
-                           warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                           warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                            warning.set_cause_subrecord(subrecord.signature());
                            warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
                         }
                         if (!subrecord.is_at_end()) {
-                           file_read_warning warning;
+                           detailed_notice warning;
                            warning.code               = notice_code::subrecord_has_extra_content;
                            warning.cause_form.localID = record.formID();
                            warning.cause_form.fixedID = 0;
                            warning.cause_form.type    = form_type::setting;
                            warning.cause_file         = this->owner->get_filename();
-                           warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                           warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                            warning.set_cause_subrecord(subrecord.signature());
                            warning.set_cause_editor_id(working.name);
                            lo.log_load_warning(warning);
@@ -524,13 +524,13 @@ namespace dovah {
                         break;
                      }
                      if (!found_data) {
-                        file_read_warning warning;
+                        detailed_notice warning;
                         warning.code               = notice_code::game_setting_record_has_no_data;
                         warning.cause_form.localID = record.formID();
                         warning.cause_form.fixedID = 0;
                         warning.cause_form.type    = form_type::setting;
                         warning.cause_file         = this->owner->get_filename();
-                        warning.set_flag(file_read_warning::flag::has_cause_form | file_read_warning::flag::has_cause_file);
+                        warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                         warning.set_cause_editor_id(working.name);
                         lo.log_load_warning(warning);
                      }

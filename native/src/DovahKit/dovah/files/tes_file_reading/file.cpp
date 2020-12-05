@@ -486,10 +486,10 @@ namespace dovah::tes_file_reading {
                   if (record.signature() != group_signature) { // misplaced record?
                      form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
                      //
-                     file_read_warning warning;
+                     detailed_notice warning;
                      warning.code       = notice_code::record_found_in_wrong_top_level_group;
                      warning.cause_file = this->get_filename();
-                     warning.set_flag(file_read_warning::flag::has_cause_file);
+                     warning.set_flag(detailed_notice::flag::has_cause_file);
                      warning.set_cause_form(*stub);
                      warning.set_cause_signature(group_signature);
                      warning.set_cause_form_type(group_type);

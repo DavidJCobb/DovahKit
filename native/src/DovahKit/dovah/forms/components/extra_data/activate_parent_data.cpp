@@ -18,7 +18,7 @@ namespace dovah::loaded_forms::components::extra {
                auto& entry = this->parents.emplace_back();
                subrecord.read(entry.ref);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, entry.ref)
+                  detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, entry.ref)
                );
                subrecord.read(entry.delay);
             }

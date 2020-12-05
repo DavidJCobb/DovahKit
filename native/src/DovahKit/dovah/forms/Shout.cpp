@@ -24,13 +24,13 @@ namespace dovah::loaded_forms {
             case 'MDOB':
                subrecord.read(this->menu_display_object);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::statik, *this->stub, this->menu_display_object)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::statik, *this->stub, this->menu_display_object)
                );
                break;
             case 'ETYP':
                subrecord.read(this->equip_type);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::equip_slot, *this->stub, this->equip_type)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::equip_slot, *this->stub, this->equip_type)
                );
                break;
             case 'DESC':
@@ -44,11 +44,11 @@ namespace dovah::loaded_forms {
                   subrecord.read(entry.recoveryTime);
                   //
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::word_of_power, *this->stub, entry.word_of_power)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::word_of_power, *this->stub, entry.word_of_power)
                         .set_subrecord_index(current_word)
                   );
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::spell, *this->stub, entry.spell)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, *this->stub, entry.spell)
                         .set_subrecord_index(current_word)
                   );
                }
@@ -56,7 +56,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
                );
                break;
          }
@@ -68,7 +68,7 @@ namespace dovah::loaded_forms {
          // this, by setting up tests with bad numbers of SNAM and using conditional breakpoints to see if 
          // the game fails to clear data.
          //
-         file_read_warning warning;
+         detailed_notice warning;
          warning.code = notice_code::shout_has_wrong_word_count;
          warning.set_cause_form(*this->stub);
          warning.extra_integers[0] = current_word;

@@ -5,7 +5,6 @@
 #include <QObject>
 #include "../dovah/core.h"
 #include "../dovah/files/file_load_order.h"
-#include "../dovah/files/file_read_warning.h"
 
 namespace dovah {
    class  bsa_archived_file;
@@ -73,7 +72,7 @@ class DovahKitCore : public QObject {
       void dataAcquireComplete(); // we have loaded new files and forms
       void dataAcquireFailed(const dovah::file_read_error&);   // we tried to load new files, but failed
       //
-      void fileLoadWarningReceived(const dovah::file_read_warning&);
+      void fileLoadWarningReceived(const dovah::detailed_notice&);
       void fileLoadStatisticsAvailable(const file_load_stats&);
       //
       void formModificationImminent(dovah::form_stub*); // emit this before changing a form, so that listeners can update any Use Info they are displaying

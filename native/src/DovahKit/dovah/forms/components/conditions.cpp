@@ -796,7 +796,7 @@ namespace dovah::loaded_forms::components {
       if (this->get_flags() & flag::compare_to_global) {
          subrecord.unchecked_read(this->compare_to_global);
          intfc.log_load_warning(
-            file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, this->compare_to_global)
+            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, this->compare_to_global)
          );
       } else {
          subrecord.unchecked_read(this->compare_to_constant);
@@ -815,11 +815,11 @@ namespace dovah::loaded_forms::components {
                   //
                   if (allowed.size() == 1) {
                      intfc.log_load_warning(
-                        file_read_warning::warn_if_wrong_type(subrecord.signature(), arg_type->allowedFormTypes[0], intfc.target_stub, value_form)
+                        detailed_notice::warn_if_wrong_type(subrecord.signature(), arg_type->allowedFormTypes[0], intfc.target_stub, value_form)
                      );
                   } else if (!arg_type->allows_form_type(value_form.get_form_stub()->formType)) {
                      intfc.log_load_warning(
-                        file_read_warning::warn_if_wrong_type(subrecord.signature(), {}, intfc.target_stub, value_form)
+                        detailed_notice::warn_if_wrong_type(subrecord.signature(), {}, intfc.target_stub, value_form)
                      );
                   }
                } else {
@@ -840,7 +840,7 @@ namespace dovah::loaded_forms::components {
             subrecord.unchecked_read(this->run_on_reference);
             subrecord.unchecked_read(this->run_on_index);
             intfc.log_load_warning(
-               file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->run_on_reference)
+               detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->run_on_reference)
             );
          }
       }

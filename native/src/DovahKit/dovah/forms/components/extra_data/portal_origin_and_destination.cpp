@@ -7,10 +7,10 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.read(this->origin);
       subrecord.read(this->destination);
       intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->origin)
+         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->origin)
       );
       intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->destination)
+         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->destination)
       );
       return load_result::succeeded;
    }

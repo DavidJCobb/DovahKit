@@ -511,15 +511,15 @@ namespace dovah {
             auto* file_a = target->get_file_at_index(0);
             auto* file_b = stub->get_file_at_index(-1);
             //
-            file_read_warning warning;
+            detailed_notice warning;
             warning.code               = is_armo_arma ? notice_code::form_override_has_armo_arma_mismatch : notice_code::form_override_has_type_mismatch;
             warning.cause_form.localID = target->formID;
             warning.cause_form.fixedID = formID;
             warning.cause_form.type    = type_a;
-            warning.set_flag(file_read_warning::flag::has_cause_form);
+            warning.set_flag(detailed_notice::flag::has_cause_form);
             if (file_a) {
                warning.cause_file = file_a->get_filename();
-               warning.set_flag(file_read_warning::flag::has_cause_file);
+               warning.set_flag(detailed_notice::flag::has_cause_file);
             }
             if (file_b) {
                warning.relevant_files.emplace_back() = file_b->get_filename();
@@ -577,14 +577,14 @@ namespace dovah {
             auto* pf = prior->get_source_file_info();
             auto* sf = stub->get_source_file_info();
             if (pf && sf && pf->pointer == sf->pointer) {
-               file_read_warning warning;
+               detailed_notice warning;
                warning.code               = notice_code::singleton_form_is_redundantly_defined;
                warning.cause_form.localID = stub->formID;
                warning.cause_form.fixedID = formID;
                warning.cause_form.type    = stub->formType;
-               warning.set_flag(file_read_warning::flag::has_cause_form);
+               warning.set_flag(detailed_notice::flag::has_cause_form);
                warning.cause_file = sf->pointer->get_filename();
-               warning.set_flag(file_read_warning::flag::has_cause_file);
+               warning.set_flag(detailed_notice::flag::has_cause_file);
                //
                auto& relevant = warning.relevant_forms.emplace_back();
                relevant.localID = 0;
@@ -639,27 +639,27 @@ namespace dovah {
          formID = 0;
       //
       if (working.name.empty()) {
-         file_read_warning warning;
+         detailed_notice warning;
          warning.code               = notice_code::game_setting_record_is_nameless;
          warning.cause_form.localID = localID;
          warning.cause_form.fixedID = formID;
          warning.cause_form.type    = form_type::setting;
-         warning.set_flag(file_read_warning::flag::has_cause_form);
+         warning.set_flag(detailed_notice::flag::has_cause_form);
          warning.cause_file = file->get_filename();
-         warning.set_flag(file_read_warning::flag::has_cause_file);
+         warning.set_flag(detailed_notice::flag::has_cause_file);
          this->log_load_warning(warning);
          return;
       }
       //
       if (!formID) {
-         file_read_warning warning;
+         detailed_notice warning;
          warning.code               = notice_code::game_setting_record_has_bad_form_id;
          warning.cause_form.localID = localID;
          warning.cause_form.fixedID = 0;
          warning.cause_form.type    = form_type::setting;
-         warning.set_flag(file_read_warning::flag::has_cause_form);
+         warning.set_flag(detailed_notice::flag::has_cause_form);
          warning.cause_file = file->get_filename();
-         warning.set_flag(file_read_warning::flag::has_cause_file);
+         warning.set_flag(detailed_notice::flag::has_cause_file);
          this->log_load_warning(warning);
       }
       //
@@ -674,15 +674,15 @@ namespace dovah {
             if (prior->formType == form_type::setting) {
                prior->_add_file(*const_cast<loaded_file*>(file), 0);
             } else {
-               file_read_warning warning;
+               detailed_notice warning;
                warning.code               = notice_code::form_override_has_type_mismatch;
                warning.cause_form.localID = localID;
                warning.cause_form.fixedID = formID;
                warning.cause_form.type    = prior->formType;
-               warning.set_flag(file_read_warning::flag::has_cause_form);
+               warning.set_flag(detailed_notice::flag::has_cause_form);
                if (auto* prior_file = prior->get_file_at_index(0)) {
                   warning.cause_file = prior_file->get_filename();
-                  warning.set_flag(file_read_warning::flag::has_cause_file);
+                  warning.set_flag(detailed_notice::flag::has_cause_file);
                }
                warning.relevant_files.emplace_back() = file->get_filename();
                //
@@ -729,14 +729,14 @@ namespace dovah {
             // This is a redundant game setting definition: the game setting was already defined in this file, 
             // but with a different form ID. Let's log a warning before we do anything else.
             //
-            file_read_warning warning;
+            detailed_notice warning;
             warning.code               = notice_code::game_setting_record_is_redundant;
             warning.cause_form.localID = localID;
             warning.cause_form.fixedID = formID;
             warning.cause_form.type    = form_type::setting;
-            warning.set_flag(file_read_warning::flag::has_cause_form);
+            warning.set_flag(detailed_notice::flag::has_cause_form);
             warning.cause_file = file->get_filename();
-            warning.set_flag(file_read_warning::flag::has_cause_file);
+            warning.set_flag(detailed_notice::flag::has_cause_file);
             //
             auto& relevant = warning.relevant_forms.emplace_back();
             relevant.localID = 0;
@@ -783,20 +783,20 @@ namespace dovah {
       if (entry.definition->is_none())
          entry.definition = nullptr;
       if (!entry.definition) {
-         file_read_warning warning;
+         detailed_notice warning;
          warning.code               = notice_code::game_setting_name_is_unrecognized;
          warning.cause_form.localID = localID;
          warning.cause_form.fixedID = formID;
          warning.cause_form.type    = form_type::setting;
-         warning.set_flag(file_read_warning::flag::has_cause_form);
+         warning.set_flag(detailed_notice::flag::has_cause_form);
          warning.cause_file = file->get_filename();
-         warning.set_flag(file_read_warning::flag::has_cause_file);
+         warning.set_flag(detailed_notice::flag::has_cause_file);
          warning.set_cause_editor_id(entry.name);
          this->log_load_warning(warning);
       }
    }
 
-   void file_load_order::log_load_warning(const file_read_warning& w) {
+   void file_load_order::log_load_warning(const detailed_notice& w) {
       if (!w.is_defined())
          return;
       if (this->on_read_warning)
@@ -3024,13 +3024,14 @@ namespace dovah {
 
    #pragma region Interfaces to file_load_order
    namespace load_order_interfaces {
-      void form_load::log_load_warning(file_read_warning& warning) {
-         warning.context = file_read_warning::context_t::on_demand_form_load;
-         warning.modify_flag(file_read_warning::flag::is_winning_record, this->is_winning_record);
+      void form_load::log_load_warning(detailed_notice& warning) {
+         warning.type    = detailed_notice::notice_type::warning;
+         warning.context = detailed_notice::notice_context::on_demand_form_load;
+         warning.modify_flag(detailed_notice::flag::is_winning_record, this->is_winning_record);
          //
          if (this->current_file && warning.cause_file.empty()) {
             warning.cause_file = this->current_file->get_filename();
-            warning.set_flag(file_read_warning::flag::has_cause_file);
+            warning.set_flag(detailed_notice::flag::has_cause_file);
          }
          //
          this->owner.log_load_warning(warning);

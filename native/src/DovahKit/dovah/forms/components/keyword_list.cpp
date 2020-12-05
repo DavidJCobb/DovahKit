@@ -17,7 +17,7 @@ namespace dovah::loaded_forms::components {
                if (subrecord.read(formID)) {
                   this->forms.push_back(formID);
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, formID)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, formID)
                         .set_cause_form_index(i)
                   );
                }

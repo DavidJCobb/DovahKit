@@ -5,7 +5,6 @@
 
 namespace dovah {
    struct detailed_notice;
-   struct file_read_warning;
 }
 
 class LogWindow : public QWidget {

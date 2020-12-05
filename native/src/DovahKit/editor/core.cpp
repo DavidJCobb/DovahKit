@@ -17,7 +17,7 @@
 #include "../dovah/utils/get_user_language_name.h"
 #include "../dovah/forms/DefaultObjectManager.h"
 #include "core_internals/load_task.h"
-#include "core_internals/read_warning_dispatcher.h"
+#include "core_internals/detailed_notice_dispatcher.h"
 #include "helpers/make_editor_id_for_duplicate.h"
 #include "../ui/main_window/delete_form_dialog.h"
 #include "../ui/main_window/form_use_info.h"
@@ -39,7 +39,7 @@ namespace {
    void _on_mass_renumber() {
       emit DovahKitCore::get().formsRenumberedEnMasse();
    }
-   void _on_read_warning(const dovah::file_read_warning& warning) {
+   void _on_read_warning(const dovah::detailed_notice& warning) {
       //
       // This callback can come from the initial file load (where form stubs are built), or 
       // when loading the full contents of a form. This particular frontend runs the initial 
@@ -56,7 +56,7 @@ namespace {
       // emitting from. Registering the metatype allows Qt to copy the data and trigger 
       // slots across threads.)
       //
-      DovahKitEditorInternals::read_warning_dispatcher::get().send(warning);
+      DovahKitEditorInternals::detailed_notice_dispatcher::get().send(warning);
    }
 }
 DovahKitCore::DovahKitCore() {
@@ -68,9 +68,9 @@ DovahKitCore::DovahKitCore() {
    this->set_encoding();
    //
    {
-      using dispatcher_t = DovahKitEditorInternals::read_warning_dispatcher;
+      using dispatcher_t = DovahKitEditorInternals::detailed_notice_dispatcher;
       dispatcher_t& dispatcher = dispatcher_t::get();
-      QObject::connect(&dispatcher, &dispatcher_t::received, this, [this](DovahKitEditorInternals::multithreadable_file_read_warning w) {
+      QObject::connect(&dispatcher, &dispatcher_t::received, this, [this](DovahKitEditorInternals::multithreadable_detailed_notice w) {
          emit this->fileLoadWarningReceived(w.warning);
       }, Qt::QueuedConnection);
    }

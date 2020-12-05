@@ -5,7 +5,6 @@
 #include <QTableView>
 #include "../../../dovah/core.h"
 #include "../../../dovah/detailed_notice.h"
-#include "../../../dovah/files/file_read_warning.h"
 
 class LogListModel;
 class LogListModelItem {
@@ -16,23 +15,22 @@ class LogListModelItem {
    friend LogListModel;
    public:
       using detailed_notice = dovah::detailed_notice;
-      using file_read_warning = dovah::file_read_warning;
+      using detailed_notice = dovah::detailed_notice;
       enum class type_t {
          text,
-         file_read_warning, // (text) stores the "rendered" output
+         detailed_notice, // (text) stores the "rendered" output
       };
       //
       type_t  type = type_t::text;
       QString text;
       QString file;
-      file_read_warning data;
+      detailed_notice data;
       //
       LogListModelItem() {}
       LogListModelItem(const QString&);
-      LogListModelItem(const file_read_warning&);
       LogListModelItem(const detailed_notice&);
       //
-      bool compare(const file_read_warning&) const noexcept;
+      bool compare(const detailed_notice&) const noexcept;
       bool empty() const noexcept;
 };
 
@@ -49,7 +47,7 @@ class LogListModel : public QAbstractTableModel {
       void dataSaveImminent();
       void dataSaveComplete();
       void saveErrorReceived(const dovah::detailed_notice& error);
-      void loadWarningReceived(const dovah::file_read_warning& warning);
+      void loadWarningReceived(const dovah::detailed_notice& warning);
       void gameSettingValueChangeFailed(const char* name, dovah::notice_code_t);
       //
    public:

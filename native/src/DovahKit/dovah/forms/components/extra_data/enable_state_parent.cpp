@@ -7,7 +7,7 @@ namespace dovah::loaded_forms::components::extra {
          return load_result::unrecognized;
       subrecord.read(this->ref);
       intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->ref)
+         detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->ref)
       );
       subrecord.read(this->flags);
       subrecord.read(this->pad05);

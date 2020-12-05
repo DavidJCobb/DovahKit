@@ -9,7 +9,6 @@
 #include <unordered_map>
 #include <vector>
 #include "file_load_order_normalizer.h"
-#include "file_read_warning.h"
 #include "../detailed_notice.h"
 #include "../form_stub.h"
 #include "../localized_strings.h"
@@ -78,12 +77,11 @@ namespace dovah {
             form_type_mismatch,
          };
          //
-         using form_create_callback_t   = void(*)(form_stub*);
-         using form_loss_callback_t     = void(*)(form_stub&);
-         using form_renumber_callback_t = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
-         using read_warning_callback_t  = void(*)(const file_read_warning&);
-         using save_warning_callback_t  = void(*)(const detailed_notice&);
-         using generic_callback_t       = void(*)();
+         using form_create_callback_t     = void(*)(form_stub*);
+         using form_loss_callback_t       = void(*)(form_stub&);
+         using form_renumber_callback_t   = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
+         using detailed_notice_callback_t = void(*)(const detailed_notice&);
+         using generic_callback_t         = void(*)();
          //
       protected:
          struct _form_map {
@@ -193,13 +191,13 @@ namespace dovah {
                bool allow_suspicious_record_signatures = false;
             } options;
          } queued_load;
-         file_read_error          load_error;
-         form_create_callback_t   on_form_create   = nullptr;
-         form_loss_callback_t     on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
-         form_renumber_callback_t on_form_renumber = nullptr;
-         generic_callback_t       on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
-         read_warning_callback_t  on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later. frontend is responsible for maintaining thread-safety.
-         save_warning_callback_t  on_save_warning  = nullptr; // warnings that occur when saving a file. frontend is responsible for maintaining thread-safety.
+         file_read_error            load_error;
+         form_create_callback_t     on_form_create   = nullptr;
+         form_loss_callback_t       on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
+         form_renumber_callback_t   on_form_renumber = nullptr;
+         generic_callback_t         on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
+         detailed_notice_callback_t on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later. frontend is responsible for maintaining thread-safety.
+         detailed_notice_callback_t on_save_warning  = nullptr; // warnings that occur when saving a file. frontend is responsible for maintaining thread-safety.
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -211,7 +209,7 @@ namespace dovah {
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
          bare_form_id_t remap_formID_for_save(bare_form_id_t) const noexcept;
-         void log_load_warning(const file_read_warning&);
+         void log_load_warning(const detailed_notice&);
          void log_save_warning(const detailed_notice&);
 
          // (acceptFormStub)
@@ -572,7 +570,7 @@ namespace dovah {
 
             // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 
             // called blindly to create and return warnings that only have a code if there's an actual problem.
-            void log_load_warning(file_read_warning&);
+            void log_load_warning(detailed_notice&);
 
             inline bool is_active_file() const noexcept {
                if (!this->current_file)

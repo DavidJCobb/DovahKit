@@ -20,7 +20,7 @@ namespace dovah::loaded_forms {
                   subrecord.read(entry.mod);
                   subrecord.read(entry.combat);
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::faction, *this->stub, entry.other)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, *this->stub, entry.other)
                   );
                }
                break;
@@ -30,37 +30,37 @@ namespace dovah::loaded_forms {
             case 'JAIL':
                subrecord.read(this->prison_marker);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->prison_marker)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->prison_marker)
                );
                break;
             case 'WAIT':
                subrecord.read(this->follower_wait_marker);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->follower_wait_marker)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->follower_wait_marker)
                );
                break;
             case 'STOL':
                subrecord.read(this->evidence_chest);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->evidence_chest)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->evidence_chest)
                );
                break;
             case 'PLCN':
                subrecord.read(this->player_belongings_chest);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->player_belongings_chest)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->player_belongings_chest)
                );
                break;
             case 'CRGR':
                subrecord.read(this->crime_group);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::formlist, *this->stub, this->crime_group)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::formlist, *this->stub, this->crime_group)
                );
                break;
             case 'JOUT':
                subrecord.read(this->jail_outfit);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::outfit, *this->stub, this->jail_outfit)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::outfit, *this->stub, this->jail_outfit)
                );
                break;
             case 'CRVA':
@@ -92,13 +92,13 @@ namespace dovah::loaded_forms {
             case 'VEND':
                subrecord.read(this->vendor_list);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::formlist, *this->stub, this->vendor_list)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::formlist, *this->stub, this->vendor_list)
                );
                break;
             case 'VENC':
                subrecord.read(this->vendor_chest);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->vendor_chest)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, *this->stub, this->vendor_chest)
                );
                break;
             case 'VENV':
@@ -137,7 +137,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
                );
                break;
          }

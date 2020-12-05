@@ -13,14 +13,14 @@ namespace dovah::loaded_forms::components {
             case 'INAM':
                subrecord.read(this->idle);
                intfc.log_load_warning(
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::idle, intfc.target_stub, this->idle)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::idle, intfc.target_stub, this->idle)
                );
                break;
             case 'TNAM':
                this->type = topic_type::ref;
                subrecord.read(this->topic);
                intfc.log_load_warning(
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
                );
                return true; // TESPackage::Data::Load aborts after reading TNAM
             case 'PDTO':
@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components {
                   if (this->type == topic_type::ref) {
                      subrecord.read(this->topic);
                      intfc.log_load_warning(
-                        file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
+                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
                      );
                   } else if (this->type == topic_type::subtype)
                      subrecord.read(this->topic_subtype);
@@ -37,7 +37,7 @@ namespace dovah::loaded_forms::components {
                return true; // TESPackage::Data::Load aborts after reading PDTO
             default:
                {
-                  file_read_warning warning;
+                  detailed_notice warning;
                   warning.code = notice_code::package_event_dialogue_unrecognized_subrecord;
                   warning.set_cause_form(intfc.target_stub);
                   warning.set_cause_subrecord(subrecord.signature());

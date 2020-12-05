@@ -8,19 +8,19 @@ namespace dovah::loaded_forms::components {
          case package_location_type::in_cell:
             subrecord.read(this->detail.form);
             intfc.log_load_warning(
-               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::cell, intfc.target_stub, this->detail.form)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::cell, intfc.target_stub, this->detail.form)
             );
             break;
          case package_location_type::near_reference:
             subrecord.read(this->detail.form);
             intfc.log_load_warning( // TODO: xEdit definitions claim that DOOR is valid here, but no other base forms. seems suspect imo but can we verify it?
-               file_read_warning::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->detail.form)
+               detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->detail.form)
             );
             break;
          case package_location_type::near_linked_reference: // KYWD
             subrecord.read(this->detail.form);
             intfc.log_load_warning(
-               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->detail.form)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->detail.form)
             );
             break;
          case package_location_type::object_id:

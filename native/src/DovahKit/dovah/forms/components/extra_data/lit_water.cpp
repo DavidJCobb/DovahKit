@@ -8,7 +8,7 @@ namespace dovah::loaded_forms::components::extra {
       auto& formID = this->refs.emplace_back();
       subrecord.read(formID);
       intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, formID)
+         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, formID)
       );
       return load_result::succeeded;
    }

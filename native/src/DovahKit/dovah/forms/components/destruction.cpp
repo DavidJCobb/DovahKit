@@ -31,11 +31,11 @@ namespace dovah::loaded_forms::components {
                      const auto& stub = intfc.target_stub;
                      auto index = this->stages.size() - 1;
                      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                        file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
+                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
                            .set_subrecord_index(index)
                      );
                      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                        file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
+                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
                            .set_subrecord_index(index)
                      );
                   }
@@ -74,11 +74,11 @@ namespace dovah::loaded_forms::components {
                   const auto& stub = intfc.target_stub;
                   auto index = this->stages.size() - 1;
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
                         .set_subrecord_index(index)
                   );
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
                         .set_subrecord_index(index)
                   );
                }

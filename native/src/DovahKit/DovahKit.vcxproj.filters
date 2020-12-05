@@ -465,9 +465,6 @@
     <ClCompile Include="ui\main_window\log_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\core_internals\read_warning_dispatcher.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\files\file_read_warning.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -508,6 +505,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\files\tes_file_writing\results.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1206,9 +1206,6 @@
     <QtMoc Include="ui\main_window\log_window.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\core_internals\read_warning_dispatcher.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ui\main_window\log_window\log_list_view.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -1222,6 +1219,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\default_object_window\default_object_list.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

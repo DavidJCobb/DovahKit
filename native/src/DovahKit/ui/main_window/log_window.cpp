@@ -1,7 +1,7 @@
 #include "log_window.h"
 #include "../../helpers/qt/strings.h"
 #include "../../editor/core.h"
-#include "../../dovah/files/file_read_warning.h"
+#include "../../dovah/detailed_notice.h"
 #include "../../dovah/notice_code_list.h"
 #include <QClipboard>
 

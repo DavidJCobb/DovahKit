@@ -12,7 +12,9 @@ namespace dovah {
 
    /*static*/ detailed_notice detailed_notice::warn_about_unrecognized_subrecord(uint32_t subrecord, const form_stub& referrer) {
       detailed_notice warning;
-      warning.code = notice_code::unrecognized_subrecord;
+      warning.type    = notice_type::warning;
+      warning.context = notice_context::on_demand_form_load;
+      warning.code    = notice_code::unrecognized_subrecord;
       warning.set_cause_form(referrer);
       warning.set_cause_subrecord(subrecord);
       return warning;
@@ -21,7 +23,9 @@ namespace dovah {
       if (reference.form_type_matches(desired))
          return detailed_notice();
       detailed_notice warning;
-      warning.code = notice_code::form_reference_is_of_incorrect_type;
+      warning.type    = notice_type::warning;
+      warning.context = notice_context::on_demand_form_load;
+      warning.code    = notice_code::form_reference_is_of_incorrect_type;
       warning.set_cause_form(referrer);
       warning.set_cause_form_type(desired);
       warning.set_cause_subrecord(subrecord_signature);
@@ -33,7 +37,9 @@ namespace dovah {
          if (reference.form_type_matches(ft))
             return detailed_notice();
       detailed_notice warning;
-      warning.code = notice_code::form_reference_is_of_incorrect_type;
+      warning.type    = notice_type::warning;
+      warning.context = notice_context::on_demand_form_load;
+      warning.code    = notice_code::form_reference_is_of_incorrect_type;
       warning.set_cause_form(referrer);
       warning.set_cause_subrecord(subrecord_signature);
       warning.add_relevant_form(*reference.get_form_stub());
@@ -45,7 +51,9 @@ namespace dovah {
             if (reference.form_type_matches(info.formType))
                return detailed_notice();
       detailed_notice warning;
-      warning.code = notice_code::form_reference_is_of_incorrect_type;
+      warning.type    = notice_type::warning;
+      warning.context = notice_context::on_demand_form_load;
+      warning.code    = notice_code::form_reference_is_of_incorrect_type;
       warning.set_cause_form(referrer);
       warning.set_cause_subrecord(subrecord_signature);
       warning.add_relevant_form(*reference.get_form_stub());
@@ -56,6 +64,11 @@ namespace dovah {
    detailed_notice& detailed_notice::set_cause_form_index(int i) noexcept {
       this->cause_form_index = i;
       this->flags |= flag::has_cause_form_index;
+      return *this;
+   }
+   detailed_notice& detailed_notice::set_cause_signature(uint32_t s) noexcept {
+      this->cause_signature = s;
+      this->flags |= flag::has_cause_signature;
       return *this;
    }
    detailed_notice& detailed_notice::set_file_offset(uint32_t o) noexcept {

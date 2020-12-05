@@ -36,7 +36,7 @@ namespace dovah::loaded_forms {
                   // Subrecord is not extra-data.
                   //
                   intfc.log_load_warning(
-                     file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
                   );
                }
                break;

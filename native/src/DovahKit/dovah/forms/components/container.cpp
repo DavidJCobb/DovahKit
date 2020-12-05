@@ -1,5 +1,6 @@
 #include "container.h"
 #include "../_common_cpp.h"
+#include "../../notice_code_list.h"
 
 namespace dovah::loaded_forms::components {
    void container_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
@@ -21,15 +22,25 @@ namespace dovah::loaded_forms::components {
          if (subrecord.read(entry.owner)) {
             auto ownerStub = subrecord.lookup_form_by_id(entry.owner);
             intfc.log_load_warning(
-               file_read_warning::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::faction }, intfc.target_stub, entry.owner)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::faction }, intfc.target_stub, entry.owner)
             );
             if (ownerStub && ownerStub->formType == form_type::actor_base) {
                subrecord.unchecked_read(entry.global);
                intfc.log_load_warning(
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, entry.global)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, entry.global)
                );
-            } else
+            } else {
                subrecord.unchecked_read(entry.factionRank);
+               //
+               if (ownerStub && ownerStub->formType != form_type::faction) {
+                  detailed_notice warning;
+                  warning.code = notice_code::container_item_has_bad_owner_form_type;
+                  warning.set_cause_form(intfc.target_stub);
+                  warning.set_cause_subrecord(subrecord.signature());
+                  warning.add_relevant_form(*ownerStub);
+                  intfc.log_load_warning(warning);
+               }
+            }
             subrecord.unchecked_read(entry.condition);
          }
          return;

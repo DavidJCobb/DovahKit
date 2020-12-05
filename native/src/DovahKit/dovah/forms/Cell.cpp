@@ -21,7 +21,7 @@ namespace dovah::loaded_forms {
                break;
             case 'XCLC':
                if (!loaded_cell_flags) {
-                  file_read_warning warning;
+                  detailed_notice warning;
                   warning.code = notice_code::cell_flags_not_yet_found;
                   warning.set_cause_form(*this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
@@ -31,7 +31,7 @@ namespace dovah::loaded_forms {
                   // Cells without flags would theoretically default to being exteriors, so don't early-out here.
                   //
                } else if (this->cell_flags & cell_flag::interior) {
-                  file_read_warning warning;
+                  detailed_notice warning;
                   warning.code = notice_code::exterior_cell_data_in_interior_cell;
                   warning.set_cause_form(*this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
@@ -45,7 +45,7 @@ namespace dovah::loaded_forms {
                break;
             case 'XCLL':
                if (!loaded_cell_flags) {
-                  file_read_warning warning;
+                  detailed_notice warning;
                   warning.code = notice_code::cell_flags_not_yet_found;
                   warning.set_cause_form(*this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
@@ -54,7 +54,7 @@ namespace dovah::loaded_forms {
                   break;
                }
                if (!(this->cell_flags & cell_flag::interior)) {
-                  file_read_warning warning;
+                  detailed_notice warning;
                   warning.code = notice_code::interior_cell_data_in_exterior_cell;
                   warning.set_cause_form(*this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
@@ -67,7 +67,7 @@ namespace dovah::loaded_forms {
             case 'LTMP':
                subrecord.read(this->interior.lighting_template_ID);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, *this->stub, this->interior.lighting_template_ID)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, *this->stub, this->interior.lighting_template_ID)
                );
                break;
             case 'TVDT':
@@ -107,7 +107,7 @@ namespace dovah::loaded_forms {
                   // Subrecord is not extra-data.
                   //
                   intfc.log_load_warning(
-                     file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
                   );
                }
                break;

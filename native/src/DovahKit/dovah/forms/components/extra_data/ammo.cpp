@@ -7,7 +7,7 @@ namespace dovah::loaded_forms::components::extra {
          case signature_type:
             subrecord.read(this->type);
             intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::ammo, intfc.target_stub, this->type)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::ammo, intfc.target_stub, this->type)
             );
             this->count = 999;
             break;

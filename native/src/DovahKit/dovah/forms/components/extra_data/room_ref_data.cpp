@@ -19,7 +19,7 @@ namespace dovah::loaded_forms::components::extra {
             auto& subrecord = record.next_subrecord();
             subrecord.read(this->lighting_template);
             intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, intfc.target_stub, this->lighting_template)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, intfc.target_stub, this->lighting_template)
             );
          }
       }
@@ -28,7 +28,7 @@ namespace dovah::loaded_forms::components::extra {
             auto& subrecord = record.next_subrecord();
             subrecord.read(this->imagespace);
             intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::imagespace, intfc.target_stub, this->imagespace)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::imagespace, intfc.target_stub, this->imagespace)
             );
          }
       }
@@ -46,7 +46,7 @@ namespace dovah::loaded_forms::components::extra {
             auto& formID    = this->linked_rooms.emplace_back();
             subrecord.read(formID);
             intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, formID)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, formID)
             );
          }
       }

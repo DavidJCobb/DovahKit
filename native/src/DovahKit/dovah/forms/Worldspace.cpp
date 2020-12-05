@@ -141,37 +141,37 @@ namespace dovah::loaded_forms {
             case 'CNAM':
                subrecord.read(this->climate);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::climate, *this->stub, this->climate)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::climate, *this->stub, this->climate)
                );
                break;
             case 'LTMP':
                subrecord.read(this->lighting_template);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, *this->stub, this->lighting_template)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, *this->stub, this->lighting_template)
                );
                break;
             case 'XEZN':
                subrecord.read(this->encounter_zone);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::encounter_zone, *this->stub, this->encounter_zone)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::encounter_zone, *this->stub, this->encounter_zone)
                );
                break;
             case 'XLCN':
                subrecord.read(this->location);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::location, *this->stub, this->location)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::location, *this->stub, this->location)
                );
                break;
             case 'NAM2':
                subrecord.read(this->water_type);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::water_type, *this->stub, this->water_type)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::water_type, *this->stub, this->water_type)
                );
                break;
             case 'NAM3':
                subrecord.read(this->water_type_lod);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::water_type, *this->stub, this->water_type_lod)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::water_type, *this->stub, this->water_type_lod)
                );
                break;
             case 'NAM4':
@@ -184,7 +184,7 @@ namespace dovah::loaded_forms {
             case 'WNAM':
                subrecord.read(this->parent.form);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::worldspace, *this->stub, this->parent.form)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::worldspace, *this->stub, this->parent.form)
                );
                break;
             case 'PNAM':
@@ -229,7 +229,7 @@ namespace dovah::loaded_forms {
             case 'ZNAM':
                subrecord.read(this->music);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  file_read_warning::warn_if_wrong_type(subrecord.signature(), form_type::music_type, *this->stub, this->music)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::music_type, *this->stub, this->music)
                );
                break;
             case 'NNAM':
@@ -257,7 +257,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  file_read_warning::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
                );
                break;
          }

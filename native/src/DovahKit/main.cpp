@@ -44,12 +44,7 @@
 //    target form, we may fail to duplicate child or descendant forms. We should create 
 //    a custom dialog box that can show multiple sets of error details for this case.
 //
-//  - We currently have multiple structs for file- and form-related errors and warnings, 
-//    including two different save warnings: (file_save_warning) and (file_write_warning). 
-//    We should consider replacing all of these with a (file_notice) struct based on 
-//    (file_read_warning), which seems to have just about everything we need already. We 
-//    should then also create documentation for each process that can return one of these 
-//    notices, like what we already have for file write errors.
+//  - Replace all bespoke error/warning structs with (detailed_notice).
 //
 //     - (file_write_error) SUCCESSFULLY REPLACED.
 //
@@ -61,7 +56,7 @@
 //
 //        - Already created most of the needed notice codes.
 //
-//     - (file_read_warning) PENDING.
+//     - (file_read_warning) SUCCESSFULLY REPLACED.
 //
 //     = Once this is done, we should audit and document every process that can return 
 //       notice codes, along with a full description of what notice codes can be returned 
@@ -84,23 +79,6 @@
 //     - The frontend doesn't allow it, but we should *probably* make sure it doesn't 
 //       cause the backend to choke.
 //
-//  - Currently, form stubs retain the GRUP they loaded from. This is used to identify 
-//    a worldspace's persistent cell, as well as to sort REFRs into a cell's persistent 
-//    and temporary child GRUPs when saving. Neither of these uses is going to be 
-//    tenable in the long run.
-//
-//     = As far as the game is concerned, the first persistent-flagged CELL that it 
-//       loads is the persistent cell for a WRLD.
-//
-//     = We need to investigate how exactly the CK sorts REFRs into persistent and 
-//       temporary CELL GRUPs, and how this differs for interior versus exterior cells.
-//
-//     - If we get rid of the group type, then that frees up one byte. We have three 
-//       bytes to spare already, so that leaves us with enough room to let a WRLD form 
-//       stub explicitly specify its persistent CELL's form ID.
-//
-//     - If we make changes in this regard, then we need to update the form stub docs.
-//
 //  - On-demand form loading should emit a warning when loading a reference to a none-
 //    stub. Remember to use the getter on form_stub; don't just check the form type, or 
 //    we'll false-positive on the hardcoded "persistence forms."
@@ -110,40 +88,6 @@
 //
 //     - We actually already generate an error: this is detected as a type-mismatched 
 //       reference.
-//
-//  - Add support for loading DOBJ and GMST records properly.
-//
-//     - GMST renumbering: test all error cases.
-//
-//     - The GMST loader needs to warn on the following, and currently doesn't:
-//
-//        - Settings that share form IDs with each other
-//        - Settings that share form IDs with real forms
-//           - These won't load reliably because we multi-thread file loading on a 
-//             GRUP by GRUP basis. Fixing that would require more intensive changes, 
-//             but if anything that's even more incentive to add a warning in the 
-//             event that we load them successfully.
-//
-//     - Singleton form support
-//
-//        - Our current system isn't going to manage use info super well. If you 
-//          check the use info of a form used by DOBJ, but there are multiple form 
-//          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
-//          get awkward.
-//
-//     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
-//       TESForm class and so it does have a form ID.
-//
-//        = If there is no DOBJ form and we fail to create one due to there being 
-//          no form IDs available, then we don't emit any errors. That said, that 
-//          should be impossible since DOBJ is hardcoded to form ID 0x00000031 by 
-//          default.
-//
-//     - NAVI
-//
-//        - If files define their own NAVI with a different form ID, then what form 
-//          ID does the final loaded NAVI use? This doesn't matter for DovahKit, but 
-//          I'm curious.
 //
 //  - Clean up the save process.
 //
@@ -209,6 +153,40 @@
 //
 //        - The "save" code for parent forms will *also* need to check the record flags, 
 //          which means that the flags need to be set before we call (Form::save).
+//
+//  - Esoteric records
+//
+//     - GMST renumbering: test all error cases.
+//
+//     - The GMST loader needs to warn on the following, and currently doesn't:
+//
+//        - Settings that share form IDs with each other
+//        - Settings that share form IDs with real forms
+//           - These won't load reliably because we multi-thread file loading on a 
+//             GRUP by GRUP basis. Fixing that would require more intensive changes, 
+//             but if anything that's even more incentive to add a warning in the 
+//             event that we load them successfully.
+//
+//     - Singleton form support
+//
+//        - Our current system isn't going to manage use info super well. If you 
+//          check the use info of a form used by DOBJ, but there are multiple form 
+//          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
+//          get awkward.
+//
+//     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
+//       TESForm class and so it does have a form ID.
+//
+//        = If there is no DOBJ form and we fail to create one due to there being 
+//          no form IDs available, then we don't emit any errors. That said, that 
+//          should be impossible since DOBJ is hardcoded to form ID 0x00000031 by 
+//          default.
+//
+//     - NAVI
+//
+//        - If files define their own NAVI with a different form ID, then what form 
+//          ID does the final loaded NAVI use? This doesn't matter for DovahKit, but 
+//          I'm curious.
 //
 //  - Reverse-engineering
 //
@@ -604,6 +582,13 @@
 //          to be related to replacing this approach with an actually correct approach. 
 //          We can implement world viewing before fixing this, though we'll mishandle 
 //          any files with unusual/incorrect data re: persistence flags.
+//
+//           - If we get rid of the group type, then that frees up one byte. We have 
+//             three bytes to spare already, so that leaves us with enough room to let 
+//             a WRLD form stub explicitly specify its persistent CELL's form ID.
+//
+//           - If we make changes in this regard, then we need to update the form stub 
+//             documentation.
 //
 //        - A worldspace's persistent cell is the first loaded child cell that has the 
 //          "persistent" flag.
