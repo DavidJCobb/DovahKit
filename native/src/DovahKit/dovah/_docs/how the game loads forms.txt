@@ -67,6 +67,12 @@ Rule of One in every  case where Bethesda does not consciously  apply the rule.
 Known examples  include various Location (LCTN) subrecords  that serve as lists 
 of ObjectReferences in a given Location.
 
+(It should also be noted that after an  already-existing form is asked to clear 
+its data,  it will then be  asked to "initialize" its  data. It seems  that the 
+"clear" function destroys pointed-to objects owned by the form, while the other 
+"initialize" function sets all of the form's members to their defaults, zeroing 
+pointers to owned resources redundantly.)
+
 If, on the other hand, the form does not already exist in memory, the game will 
 create a new  form in-memory as  appropriate. "As appropriate"  is an important 
 qualifier, because there are several  special cases that are handled here, such 
@@ -78,8 +84,9 @@ In practice, in order to know whether a given piece of data in a form type does
 or does not obey the Rule of One,  a reverse-engineer must check at least three 
 places:
 
-   virtual void TESForm::ClearData();                    // virtual method 0x05
    void TESForm::ClearAllComponentData();                // Classic: 0x00450D00
+   virtual void TESForm::ClearData();                    // virtual method 0x05
+   virtual void TESForm::InitializeData();               // virtual method 0x04
    virtual bool TESForm::LoadForm(TESFile*);             // virtual method 0x06
 
 For parent forms, a reverse-engineer must also check one more location in code: 
@@ -93,7 +100,7 @@ consistent struct layouts  with the game, though the fields  are usually marked
 with a comment indicating  that they're actually parents,  not members. You can 
 safely assume  that these fields  will have their  data cleared  when a form is 
 overridden (presuming the override lacks  the "deleted" flag). Clearing them is 
-the purpose of TESForm::ClearAllComponentData.
+the purpose of TESForm::ClearAllComponentData. [4]
 
 Papyrus data is also cleared off of overridden forms (again, presuming that the 
 override lacks the "deleted" flag).  The form loader communicates directly with 
@@ -215,3 +222,20 @@ a file offset. If the offset in question  is not equal to -1 (0xFFFFFFFF) or -2
 worldspace (WRLD), or interior cell (CELL with appropriate flag) that came from 
 the current GRUP.  The exact significance  of this file offset  is unknown, and 
 TOFT records have never been seen in the wild in any Bethesda RPG.
+
+
+[4] TESForm::ClearAllComponentData  works as follows.  First, it creates a list 
+of thirty-eight null pointers -- one for every one of the game's form component 
+classes. Then, it  calls a function which  dynamic-casts the  form to each such 
+component class, storing the resulting pointers. Once the list is filled, it is 
+looped over; for each non-null pointer, virtual member function 0x02 is called; 
+this, of course, is a member function  which clears data on the individual form 
+component. Each of  these three steps -- creating the list  and filling it with 
+null; storing dynamic-casted pointers into  the list; and looping over it -- is 
+performed by separate non-member functions which TESForm::ClearAllComponentData 
+calls. These are the penultimate  three calls made;  the last call, after them, 
+is a no-op, presumably the destructor for  the component pointer list. As such, 
+in order to determine  whether a form  type's components  are cleared, one must 
+check the second of the last four  function calls made in ClearAllComponentData 
+to see if that component is the subject of a dynamic cast; if so, one must then 
+check the component class's virtual member function 0x02.

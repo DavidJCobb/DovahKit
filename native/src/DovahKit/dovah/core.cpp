@@ -443,9 +443,6 @@ namespace dovah {
          return true;
       return this->stub->formType == ft;
    }
-   void form_reference_t::reset() {
-      this->stub = nullptr;
-   }
    void form_reference_t::unmanaged_set(form_stub* set_to) {
       this->stub = set_to;
    }

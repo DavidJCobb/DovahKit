@@ -7,10 +7,16 @@ namespace dovah::loaded_forms {
       Form::load(record, intfc);
       //
       #pragma region TESShout parents that get reset with each override
-      this->name.reset();                // TESFullName
-      this->description.reset();         // TESDescription
-      this->menu_display_object.reset(); // BGSMenuDisplayObject
-      this->equip_type.reset();          // BGSEquipType
+      this->name.reset();        // TESFullName
+      this->description.reset(); // TESDescription
+      this->menu_display_object.set(*this->stub, nullptr); // BGSMenuDisplayObject
+      this->equip_type.set(*this->stub, nullptr);          // BGSEquipType
+      //
+      // The words of a shout don't get reset in ClearData or InitializeData, presumably 
+      // because Bethesda expects  there to always be exactly  three of them. This means 
+      // that an override with fewer than three  words will cause the latter words of an 
+      // overridden record to "leak through."
+      //
       #pragma endregion
       //
       size_t current_word = 0;
@@ -77,11 +83,30 @@ namespace dovah::loaded_forms {
       }
    }
    /*static*/ void Shout::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
-      if (!uib.is_final_file())
+      int word_count = 0;
+      //
+      if (!uib.is_final_file()) {
          //
-         // There is no data in this form type that is coalesced across multiple files.
+         // There is no data in this form type that is coalesced across multiple files. However, 
+         // shout data defined in overridden records can "leak through" into the final form if the 
+         // winning override doesn't define enough words.
          //
+         // The use info builder interface gives us room to store some generic form IDs. In this 
+         // case, we'll store three words' worth of form IDs, such that if the winning record 
+         // doesn't supply enough words, we'll know what form IDs would "leak through" from the 
+         // overridden records; we can then add outbound references to those form IDs.
+         //
+         while (auto& subrecord = record.next_subrecord()) {
+            switch (subrecord.signature()) {
+               case 'SNAM':
+                  subrecord.read(uib.extra_form_ids[(word_count * 2) + 0]);
+                  subrecord.read(uib.extra_form_ids[(word_count * 2) + 1]);
+                  ++word_count;
+                  break;
+            }
+         }
          return;
+      }
       //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
@@ -92,6 +117,7 @@ namespace dovah::loaded_forms {
                   uib.add_outbound_reference(formID);
                break;
             case 'SNAM':
+               ++word_count;
                if (subrecord.read(formID)) {
                   uib.add_outbound_reference(formID);
                   if (subrecord.read(formID)) {
@@ -105,6 +131,10 @@ namespace dovah::loaded_forms {
             case 'DESC': // description
                break;
          }
+      }
+      for (; word_count < 3; ++word_count) {
+         uib.add_outbound_reference(uib.extra_form_ids[(word_count * 2) + 0]);
+         uib.add_outbound_reference(uib.extra_form_ids[(word_count * 2) + 1]);
       }
    }
    void Shout::setup(const file_load_order& load_order) noexcept {

@@ -168,6 +168,9 @@ namespace dovah {
          //
          inline const form_stub* stub() const noexcept { return &this->_stub; }
          inline bool is_final_file() const noexcept { return this->_is_final_file; }
+         //
+         // Generic state information, provided for form types that need it:
+         form_id_t extra_form_ids[10];
    };
    #pragma endregion
 

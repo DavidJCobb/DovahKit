@@ -5,6 +5,39 @@ namespace dovah::loaded_forms {
    void Faction::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
+      #pragma region TESFaction members that get reset with each override
+      //
+      // Data known to be cleared upon encountering an override (not including 
+      // run-time-exclusive data):
+      //
+      //  - TESForm::ClearAllComponentData
+      //     - TESFaction::TESFullName
+      //     - TESFaction::TESReactionForm
+      //  - TESFaction::ClearData
+      //     - Faction::ranks                   | TESFaction::ranks
+      //     - Faction::package_location_vendor | TESFaction::VendorData::packageLocation
+      //     - Faction::vendor_conditions       | TESFaction::VendorData::unk10
+      //  - TESFaction::InitializeData
+      //     - Faction::prison_marker           // All by way of a memset call.
+      //     - Faction::follower_wait_marker    // 
+      //     - Faction::evidence_chest          // 
+      //     - Faction::player_belongings_chest // 
+      //     - Faction::crime_group             // 
+      //     - Faction::jail_outfit             // 
+      //     - Faction::faction_flags
+      //     - Faction::crime_values
+      //     - Faction::vendor_list
+      //     - Faction::vendor_chest
+      //     - Faction::vendor_data
+      //     - Faction::package_location_vendor // Pointer abandoned but not freed. Would have already been freed by ClearData.
+      //
+      // In practice, it looks like absolutely all of a Faction's data is wiped with 
+      // each override, such that only the winning record's content is ever loaded.
+      //
+      if (!intfc.is_winning_record)
+         return;
+      #pragma endregion
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))

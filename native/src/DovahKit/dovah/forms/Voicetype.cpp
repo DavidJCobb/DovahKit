@@ -5,6 +5,9 @@ namespace dovah::loaded_forms {
    void Voicetype::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
+      if (!intfc.is_winning_record)
+         return;
+      //
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;

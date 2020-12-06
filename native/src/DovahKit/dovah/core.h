@@ -322,8 +322,6 @@ namespace dovah {
          void set(form_stub& owner, const form_reference_t& set_to);
          bool form_type_matches(form_type_t) const noexcept; // always returns (true) if (this->stub == nullptr)
          //
-         void reset(); // ONLY call this when loading form data
-         //
          inline operator bool() const noexcept { return this->stub != nullptr; }
          inline bool operator==(const form_reference_t& other) const noexcept { return this->stub == other.stub; };
          inline bool operator!=(const form_reference_t& other) const noexcept { return this->stub != other.stub; };

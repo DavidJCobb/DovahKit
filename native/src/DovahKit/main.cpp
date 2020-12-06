@@ -54,6 +54,8 @@
 //
 //     - (file_read_error) PENDING.
 //
+//        - We should also create (file_load_results) with the same motive as "save results."
+//
 //        - Already created most of the needed notice codes.
 //
 //     - (file_read_warning) SUCCESSFULLY REPLACED.
