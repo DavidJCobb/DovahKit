@@ -65,7 +65,7 @@ namespace dovah::tes_file_reading {
       return progress / count;
    }
 
-   file_reader::file_reader(file_load_order& lo) : basic_reader(nullptr), load_order(lo),
+   file_reader::file_reader(lo_interface_t& intfc) : basic_reader(nullptr), load_order(intfc.owner), load_interface(intfc),
       readers{ *this }
    {
       this->file = new cobb::mapped_file();
@@ -108,13 +108,13 @@ namespace dovah::tes_file_reading {
       return false;
    }
    //
-   bool file_reader::_load_header(load_order_interfaces::file_load& intfc) {
+   bool file_reader::_load_header() {
       if (this->next_record_or_group() != object_type::record) {
          detailed_notice error;
          error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
          error.set_cause_file(this->name);
          error.set_file_offset(this->getPos());
-         intfc.log_load_error(error);
+         this->load_interface.log_load_error(error);
          return false;
       }
       auto& r = this->get_current_record();
@@ -123,7 +123,7 @@ namespace dovah::tes_file_reading {
          error.code = notice_code::malformed_file; // Expected TES4 record; got something else.
          error.set_cause_file(this->name);
          error.set_file_offset(this->getPos());
-         intfc.log_load_error(error);
+         this->load_interface.log_load_error(error);
          return false;
       }
       this->header.flags = r.flags();
@@ -173,7 +173,7 @@ namespace dovah::tes_file_reading {
                      error.code = notice_code::file_has_too_many_dependencies; // Expected TES4 record; no record found.
                      error.set_cause_file(this->name);
                      error.set_file_offset(this->getPos());
-                     intfc.log_load_error(error);
+                     this->load_interface.log_load_error(error);
                      return false;
                   }
                   //
@@ -201,7 +201,7 @@ namespace dovah::tes_file_reading {
                   error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
                   error.set_cause_file(this->name);
                   error.set_file_offset(this->getPos());
-                  intfc.log_load_error(error);
+                  this->load_interface.log_load_error(error);
                   return false;
                } else {
                   auto& last = *this->header.masters.rbegin();
@@ -238,47 +238,59 @@ namespace dovah::tes_file_reading {
          return false;
       auto result = this->load_order.accept_form_stub(stub);
       switch (result) {
-         case file_load_order::form_id_status::missing_master:
+         case file_load_order::form_id_status::missing_master: // <-- this one in particular can only happen if we failed to load a master, which implies that a file was edited between us checking the header and us loading it
          case file_load_order::form_id_status::out_of_bounds:
-            this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
-            this->error.file       = this->name;
-            this->error.fileOffset = this->getPos();
-            this->error.formID    = stub->formID;
-            if (result == file_load_order::form_id_status::missing_master)
-               this->error.message = "This form's ID corresponds to a missing master.";
-            else
-               this->error.message = "This form ID's load order prefix is out of bounds.";
+            {
+               detailed_notice error;
+               error.code = notice_code::form_id_is_out_of_bounds;
+               if (result == file_load_order::form_id_status::missing_master) {
+                  error.code = notice_code::form_id_is_inside_of_a_missing_master;
+               }
+               error.set_cause_file(this->name);
+               error.set_file_offset(this->getPos());
+               error.cause_form.fixedID = 0;
+               error.cause_form.localID = stub->formID;
+               error.cause_form.type    = stub->formType;
+               error.set_flag(detailed_notice::flag::has_cause_form);
+               this->load_interface.log_load_error(error);
+            }
             this->abort();
             return false;
          case file_load_order::form_id_status::null_is_not_allowed:
-            this->error.code       = file_read_error::error_code::out_of_bounds_form_id;
-            this->error.file       = this->name;
-            this->error.fileOffset = this->getPos();
-            this->error.formID     = stub->formID;
-            this->error.message    = "A form cannot use xx000000 as its form ID.";
+            {
+               detailed_notice error;
+               error.code = notice_code::zero_is_not_an_allowed_form_id;
+               error.set_cause_file(this->name);
+               error.set_file_offset(this->getPos());
+               error.cause_form.fixedID = 0;
+               error.cause_form.localID = stub->formID;
+               error.cause_form.type    = stub->formType;
+               error.set_flag(detailed_notice::flag::has_cause_form);
+               this->load_interface.log_load_error(error);
+            }
             this->abort();
             return false;
       }
       return true;
    }
-   bool file_reader::load(const char* filepath, load_order_interfaces::file_load& intfc) {
+   bool file_reader::load(const char* filepath) {
       this->path = filepath;
       this->name = this->path.filename().string();
       {
          detailed_notice error;
          if (!this->open_mapped_file(nullptr, &error)) {
-            intfc.log_load_error(error);
+            this->load_interface.log_load_error(error);
             return false;
          }
       }
       //
       dovah::logging::print_line("Opened file: %s", this->name.c_str());
-      if (!this->_load_header(intfc)) {
+      if (!this->_load_header()) {
          detailed_notice error;
          error.code = notice_code::malformed_file;
          error.set_cause_file(this->name);
          error.set_file_offset(this->getPos());
-         intfc.log_load_error(error);
+         this->load_interface.log_load_error(error);
          return false;
       }
       dovah::logging::print_line("Read file header.");
@@ -392,7 +404,7 @@ namespace dovah::tes_file_reading {
                               }
                               error.set_cause_file(this->name);
                               error.set_file_offset(this->getPos());
-                              intfc.log_load_error(error);
+                              this->load_interface.log_load_error(error);
                               //
                               this->abort();
                               break;
@@ -493,7 +505,7 @@ namespace dovah::tes_file_reading {
                      warning.set_cause_signature(group_signature);
                      warning.set_cause_form_type(group_type);
                      //
-                     intfc.log_load_warning(warning);
+                     this->load_interface.log_load_warning(warning);
                   }
                }
             }

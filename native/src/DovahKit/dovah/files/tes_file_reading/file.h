@@ -10,9 +10,6 @@
 namespace dovah {
    class form_stub;
    class localized_string_store;
-   namespace load_order_interfaces {
-      class file_load;
-   }
    namespace tes_file_writing {
       class file_writer;
    }
@@ -31,8 +28,9 @@ namespace dovah {
          friend threads::game_setting;
          public:
             using flag = tes_file_flag;
-            using detail_flag   = tes_file_header::detail_flag;
-            using detail_flag_t = tes_file_header::detail_flag_t;
+            using detail_flag    = tes_file_header::detail_flag;
+            using detail_flag_t  = tes_file_header::detail_flag_t;
+            using lo_interface_t = load_order_interfaces::file_load;
             //
             struct master_entry {
                std::string master; // MAST
@@ -57,10 +55,10 @@ namespace dovah {
             };
             //
          public:
-            file_reader(file_load_order&);
+            file_reader(lo_interface_t&);
             ~file_reader();
             //
-            bool load(const char* filepath, load_order_interfaces::file_load& intfc);
+            bool load(const char* filepath);
             bool load_record_at(uint32_t pos); // for form_stub
             bool load_record_at(uint32_t pos, basic_reader* reader); // for form_stub (multi-threaded building of Use Info). the reader passed in must not be the "owner" of its mapped file. (this) will take ownership of (reader) by setting the latter's (owner).
             bool fetch_record_header(uint32_t pos, tes_file_record_header&, uint32_t& record_decompressed_size);
@@ -69,8 +67,9 @@ namespace dovah {
             void close(); // intended for use during the save process; not thread-safe; do not call during load
             //
          protected:
-            bool _load_header(load_order_interfaces::file_load& intfc);
+            bool _load_header();
             //
+            lo_interface_t load_interface;
             std::filesystem::path path;
             std::string name;
             struct _readers {

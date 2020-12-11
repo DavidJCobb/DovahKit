@@ -1,8 +1,10 @@
 #include "basic_reader.h"
 #include "file.h"
 #include "../../../helpers/strings.h"
+#include "../../detailed_notice.h"
 #include "../../form_stub.h"
 #include "../../logging.h"
+#include "../../notice_code_list.h"
 extern "C" {
    #include "../../../zlib/zlib.h"
 }
@@ -44,22 +46,15 @@ namespace dovah::tes_file_reading {
 
    namespace {
       void _log_bad_record_signature(basic_reader* reader, uint32_t pos, uint32_t sig, bool isUnknown) {
-         auto  file = reader->as_file();
+         auto* file = reader->as_file();
          assert(file && "TESPluginBaseReader should be or have an owning file.");
-         auto& filename = file->get_filename();
-         auto& error    = file->error;
          //
-         error.code = file_read_error::error_code::malformed_file;
-         error.file = filename;
-         error.fileOffset = pos;
-         if (isUnknown)
-            error.message = "Record with an unknown signature. (";
-         else
-            error.message = "Record with a suspicious signature. (";
-         char s[5];
-         dovah::logging::format_signature(sig, s);
-         error.message += s;
-         error.message += ')';
+         detailed_notice error;
+         error.code = notice_code::invalid_record_signature;
+         error.set_cause_file(file->get_filename());
+         error.set_file_offset(pos);
+         error.set_cause_signature(sig);
+         file->load_interface.log_load_error(error);
          //
          file->abort();
       }
@@ -107,22 +102,13 @@ namespace dovah::tes_file_reading {
       void _log_record_allocation_failure(basic_reader* reader, uint32_t pos, uint32_t size, const record& record) {
          auto  file = reader->as_file();
          assert(file && "TESPluginBaseReader should be or have an owning file.");
-         auto& filename = file->get_filename();
-         auto& error    = file->error;
          //
-         error.code       = file_read_error::error_code::insufficient_memory;
-         error.file       = filename;
-         error.fileOffset = pos;
-         error.formID     = record.formID();
-         cobb::sprintf(
-            error.message,
-            "Not enough memory to load the record's contents, even temporarily. A massive record size may indicate corrupted data or a parse error. The record claimed to be 0x%X bytes long",
-            size
-         );
-         if (record.body_is_compressed())
-            error.message += " after decompression.";
-         else
-            error.message += '.';
+         detailed_notice error;
+         error.code = notice_code::out_of_memory;
+         error.set_cause_file(file->get_filename());
+         error.set_file_offset(pos);
+         error.set_cause_size(size);
+         file->load_interface.log_load_error(error);
          //
          file->abort();
       }

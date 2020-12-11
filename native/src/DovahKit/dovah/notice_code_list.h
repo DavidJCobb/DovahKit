@@ -81,6 +81,9 @@ namespace dovah {
          filesystem_error                            = 0x00000048,
          interior_cell_block_has_no_parent_group     = 0x00000049, // Malformed file: an interior cell block GRUP has no parent GRUP.
          interior_cell_block_group_badly_nested      = 0x0000004A, // Malformed file: an interior cell block GRUP is nested under a parent GRUP of the wrong type or hierarchy.
+         invalid_record_signature                    = 0x0000004B, // Malformed file: a record had a suspicious (or just unknown) signature.
+         form_id_is_inside_of_a_missing_master       = 0x0000004C,
+         unexpected_nested_group_in_simple_top_group = 0x0000004D, // Malformed file: a "simple" top-level GRUP contained a nested GRUP.
       };
    };
 }

@@ -104,8 +104,10 @@ namespace dovah {
 
    #pragma region File loading
    void file_load_order::_make_hardcoded_forms() {
-      this->hardcoded_forms_file = new tes_file_reading::file_reader(*this);
+      load_order_interfaces::file_load dummy(*this);
+      this->hardcoded_forms_file = new tes_file_reading::file_reader(dummy);
       this->hardcoded_forms_file->header.details |= tes_file_reading::file_reader::detail_flag::is_hardcoded_dummy;
+      //
       add_hardcoded_forms_to_load_order(*this);
    }
    void file_load_order::_accept_hardcoded_form(form_stub* stub) noexcept {
@@ -121,7 +123,8 @@ namespace dovah {
       this->forms.forms[formID] = stub;
    }
    void file_load_order::_build_none_stubs() {
-      this->none_stubs_file = new tes_file_reading::file_reader(*this);
+      load_order_interfaces::file_load dummy(*this);
+      this->none_stubs_file = new tes_file_reading::file_reader(dummy);
       this->none_stubs_file->header.details |= tes_file_reading::file_reader::detail_flag::is_none_stub_dummy;
       //
       std::vector<bare_form_id_t> formIDs;
@@ -357,13 +360,13 @@ namespace dovah {
          auto lambda = [this, &intfc, &results](list_t& list) {
             for (auto* header : list) {
                std::string path = this->base_path + header->name;
-               auto file = new tes_file_reading::file_reader(*this);
+               auto file = new tes_file_reading::file_reader(intfc);
                this->save_load_state.loading_index = this->files.size();
                this->files.push_back(file);
                if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
                   this->active_file = file;
                }
-               if (!file->load(path.c_str(), intfc)) {
+               if (!file->load(path.c_str())) {
                   auto fn = header->name;
                   this->load_error.file = fn;
                   if (file->error.defined()) {
