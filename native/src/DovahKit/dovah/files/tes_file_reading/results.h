@@ -14,5 +14,6 @@ namespace dovah::tes_file_reading {
          read_results();
 
          detailed_notice& add_warning() noexcept;
+         void add_warning(detailed_notice&) noexcept;
    };
 }

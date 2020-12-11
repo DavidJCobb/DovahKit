@@ -351,7 +351,10 @@ namespace dovah {
       //
       {
          using list_t = decltype(this->normalizer.masters);
-         auto lambda = [this, &results](list_t& list) {
+         //
+         auto intfc = load_order_interfaces::file_load(*this);
+         //
+         auto lambda = [this, &intfc, &results](list_t& list) {
             for (auto* header : list) {
                std::string path = this->base_path + header->name;
                auto file = new tes_file_reading::file_reader(*this);
@@ -360,7 +363,7 @@ namespace dovah {
                if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
                   this->active_file = file;
                }
-               if (!file->load(path.c_str())) {
+               if (!file->load(path.c_str(), intfc)) {
                   auto fn = header->name;
                   this->load_error.file = fn;
                   if (file->error.defined()) {
@@ -2336,7 +2339,7 @@ namespace dovah {
       this->active_file->set_path(std::filesystem::path(this->base_path) / filename);
       //
       if (this->files.size() > 0xFE) {
-         results.error.code = notice_code::too_many_dependencies;
+         results.error.code = notice_code::file_has_too_many_dependencies;
          return false;
       }
       //
@@ -3008,6 +3011,24 @@ namespace dovah {
 
    #pragma region Interfaces to file_load_order
    namespace load_order_interfaces {
+      void file_load::log_load_warning(detailed_notice& warning) {
+         warning.type    = detailed_notice::notice_type::warning;
+         warning.context = detailed_notice::notice_context::file_load;
+         //
+         auto* results = this->owner.save_load_state.current_load_results;
+         if (results)
+            results->add_warning(warning);
+         this->owner.log_load_warning(warning);
+      }
+      void file_load::log_load_error(detailed_notice& error) {
+         error.type    = detailed_notice::notice_type::error;
+         error.context = detailed_notice::notice_context::file_load;
+         //
+         auto* results = this->owner.save_load_state.current_load_results;
+         if (results)
+            results->error = error;
+      }
+
       void form_load::log_load_warning(detailed_notice& warning) {
          warning.type    = detailed_notice::notice_type::warning;
          warning.context = detailed_notice::notice_context::on_demand_form_load;

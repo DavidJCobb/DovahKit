@@ -101,8 +101,7 @@ namespace dovah::tes_file_reading {
       errno_t err = fopen_s(&file, path, "rb");
       if (!file) {
          if (error) {
-            error->extra_integers[0] = true;
-            error->extra_integers[1] = err;
+            error->set_errno(err);
             switch (err) {
                case ENFILE:
                case EMFILE:

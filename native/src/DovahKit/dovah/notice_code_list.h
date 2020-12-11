@@ -18,7 +18,7 @@ namespace dovah {
          zlib_memory_error                           = 0x00000009,
          zlib_buffer_error                           = 0x0000000A,
          forms_out_of_esl_form_id_range              = 0x0000000B, // One or more relevant forms is outside of the range of form IDs available to an ESL.
-         too_many_dependencies                       = 0x0000000C,
+         file_has_too_many_dependencies              = 0x0000000C,
          no_active_file                              = 0x0000000D,
          save_complete_but_to_temporary_file         = 0x0000000E, // The file was saved successfully, but only to a temporary file. It was not possible to rename that temporary file to the desired filename.
          game_conversion_form_cleanup_failed         = 0x0000000F, // Some forms were not saved due to the file, but could not be deleted from memory. It is not safe to continue this editing session.
@@ -66,7 +66,7 @@ namespace dovah {
          form_id_unavailable_for_new_form            = 0x00000039, // A form creation request failed because a form ID wasn't available for use.
          form_id_is_out_of_bounds                    = 0x0000003A, // The requested form ID is out-of-bounds, e.g. form ID 0x05000000 in a load order with fewer than six files.
          post_save_none_stub_cleanup_failed          = 0x0000003B, // Failed to clean up none-stubs after an otherwise successful save operation. It is not safe to continue this editing session.
-         malformed_file                              = 0x0000003C,
+         malformed_file                              = 0x0000003C, // Generic error code for malformed files.
          missing_master                              = 0x0000003D, // Failed to load a file, because one of the file's masters is missing.
          missing_file                                = 0x0000003E, // Failed to load a file, because the file is missing.
          locked_file                                 = 0x0000003F, // DovahKit was unable to read a file because it is locked by the OS.
@@ -79,6 +79,8 @@ namespace dovah {
          active_file_is_dependency                   = 0x00000046, // The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.
          load_order_would_have_too_many_files        = 0x00000047, // We can't load this load order. It would have too many files (greater than 4096 lights, 255 heavies, or if an active file is selected, 255 or 254 total).
          filesystem_error                            = 0x00000048,
+         interior_cell_block_has_no_parent_group     = 0x00000049, // Malformed file: an interior cell block GRUP has no parent GRUP.
+         interior_cell_block_group_badly_nested      = 0x0000004A, // Malformed file: an interior cell block GRUP is nested under a parent GRUP of the wrong type or hierarchy.
       };
    };
 }

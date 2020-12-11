@@ -41,6 +41,7 @@ namespace dovah {
    class game_setting_renumber_request;
 
    namespace load_order_interfaces {
+      class file_load;
       class form_load;
    }
 
@@ -63,6 +64,7 @@ namespace dovah {
       //
       friend void add_hardcoded_forms_to_load_order(file_load_order&);
       friend class form_deletion_request;
+      friend class load_order_interfaces::file_load;
       friend class load_order_interfaces::form_load;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
@@ -562,6 +564,19 @@ namespace dovah {
    };
 
    namespace load_order_interfaces {
+      class file_load {
+         friend class file_load_order;
+         friend class tes_file_reading::file_reader;
+         public:
+            file_load_order& owner;
+
+            void log_load_warning(detailed_notice&);
+            void log_load_error(detailed_notice&);
+
+         protected:
+            file_load(file_load_order& o) : owner(o) {}
+      };
+
       class form_load {
          friend class form_stub;
          public:
@@ -583,6 +598,7 @@ namespace dovah {
          protected:
             form_load(file_load_order& o, const form_stub& t) : owner(o), target_stub(t) {}
       };
+
       class form_save {
          friend class tes_file_writing::file_writer;
          public:

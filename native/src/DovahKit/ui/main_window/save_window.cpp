@@ -248,7 +248,7 @@ void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::wr
       case dovah::notice_code::forms_out_of_esl_form_id_range:
          message = tr("You cannot convert a file to an ESL if any of its forms have IDs above XX000FFF.", "write error");
          break;
-      case dovah::notice_code::too_many_dependencies:
+      case dovah::notice_code::file_has_too_many_dependencies:
          message = tr("A file cannot have more than 254 dependencies.", "write error");
          break;
       case dovah::notice_code::load_order_would_overflow_into_lights:

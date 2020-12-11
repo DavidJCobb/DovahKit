@@ -108,20 +108,22 @@ namespace dovah::tes_file_reading {
       return false;
    }
    //
-   bool file_reader::_load_header() {
+   bool file_reader::_load_header(load_order_interfaces::file_load& intfc) {
       if (this->next_record_or_group() != object_type::record) {
-         this->error.code       = file_read_error::error_code::malformed_file;
-         this->error.file       = this->name;
-         this->error.fileOffset = this->getPos();
-         this->error.message    = "Expected TES4 record; no record found.";
+         detailed_notice error;
+         error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
+         error.set_cause_file(this->name);
+         error.set_file_offset(this->getPos());
+         intfc.log_load_error(error);
          return false;
       }
       auto& r = this->get_current_record();
       if (r.signature() != 'TES4') {
-         this->error.code       = file_read_error::error_code::malformed_file;
-         this->error.file       = this->name;
-         this->error.fileOffset = this->getPos();
-         this->error.message    = "Expected TES4 record; got something else.";
+         detailed_notice error;
+         error.code = notice_code::malformed_file; // Expected TES4 record; got something else.
+         error.set_cause_file(this->name);
+         error.set_file_offset(this->getPos());
+         intfc.log_load_error(error);
          return false;
       }
       this->header.flags = r.flags();
@@ -166,11 +168,12 @@ namespace dovah::tes_file_reading {
                   if (!subrecord.to_string(last.master)) {
                      return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                   }
-                  if (this->header.masters.size() > 253) {
-                     this->error.code       = file_read_error::error_code::malformed_file;
-                     this->error.file       = this->name;
-                     this->error.fileOffset = this->getPos();
-                     this->error.message    = "This file claims to have more than 253 masters.";
+                  if (this->header.masters.size() > 254) {
+                     detailed_notice error;
+                     error.code = notice_code::file_has_too_many_dependencies; // Expected TES4 record; no record found.
+                     error.set_cause_file(this->name);
+                     error.set_file_offset(this->getPos());
+                     intfc.log_load_error(error);
                      return false;
                   }
                   //
@@ -194,15 +197,11 @@ namespace dovah::tes_file_reading {
                break;
             case 'DATA': // always follows a MAST; vestigial; doesn't appear to be used
                if (last_subrecord != 'MAST') {
-                  this->error.code       = file_read_error::error_code::malformed_file;
-                  this->error.file       = this->name;
-                  this->error.fileOffset = this->getPos();
-                  if (last_subrecord) {
-                     char sig[5];
-                     dovah::logging::format_signature(last_subrecord, sig);
-                     cobb::sprintf(this->error.message, "Unexpected 'DATA' subrecord in the file header following %s.", sig);
-                  } else
-                     this->error.message = "Unexpected 'DATA' subrecord at the start of the file header.";
+                  detailed_notice error;
+                  error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
+                  error.set_cause_file(this->name);
+                  error.set_file_offset(this->getPos());
+                  intfc.log_load_error(error);
                   return false;
                } else {
                   auto& last = *this->header.masters.rbegin();
@@ -262,18 +261,24 @@ namespace dovah::tes_file_reading {
       }
       return true;
    }
-   bool file_reader::load(const char* filepath) {
+   bool file_reader::load(const char* filepath, load_order_interfaces::file_load& intfc) {
       this->path = filepath;
       this->name = this->path.filename().string();
-      if (!this->open_mapped_file())
-         return false;
+      {
+         detailed_notice error;
+         if (!this->open_mapped_file(nullptr, &error)) {
+            intfc.log_load_error(error);
+            return false;
+         }
+      }
       //
       dovah::logging::print_line("Opened file: %s", this->name.c_str());
-      if (!this->_load_header()) {
-         this->error.code       = file_read_error::error_code::malformed_file;
-         this->error.file       = this->name;
-         this->error.fileOffset = this->getPos();
-         this->error.message    = "Failed to read the file header.";
+      if (!this->_load_header(intfc)) {
+         detailed_notice error;
+         error.code = notice_code::malformed_file;
+         error.set_cause_file(this->name);
+         error.set_file_offset(this->getPos());
+         intfc.log_load_error(error);
          return false;
       }
       dovah::logging::print_line("Read file header.");
@@ -380,21 +385,15 @@ namespace dovah::tes_file_reading {
                            else if (_byteswap_ulong(parent->header.label) != 'CELL')
                               err = 3;
                            if (err) {
-                              this->error.code       = file_read_error::error_code::malformed_file;
-                              this->error.file       = this->name;
-                              this->error.fileOffset = this->getPos();
-                              this->error.message    = "Bad interior-cell-block group nesting. ";
-                              switch (err) {
-                                 case 1:
-                                    this->error.message += "(No parent group.)";
-                                    break;
-                                 case 2:
-                                    this->error.message += "(Parent group is not a top-level group for a form type.)";
-                                    break;
-                                 case 3:
-                                    this->error.message += "(Parent group is not a group for CELL records.)";
-                                    break;
+                              detailed_notice error;
+                              error.code = notice_code::interior_cell_block_group_badly_nested;
+                              if (err == 1) {
+                                 error.code = notice_code::interior_cell_block_has_no_parent_group;
                               }
+                              error.set_cause_file(this->name);
+                              error.set_file_offset(this->getPos());
+                              intfc.log_load_error(error);
+                              //
                               this->abort();
                               break;
                            }
@@ -494,7 +493,7 @@ namespace dovah::tes_file_reading {
                      warning.set_cause_signature(group_signature);
                      warning.set_cause_form_type(group_type);
                      //
-                     this->load_order.log_load_warning(warning);
+                     intfc.log_load_warning(warning);
                   }
                }
             }
@@ -517,7 +516,7 @@ namespace dovah::tes_file_reading {
          this->file = nullptr;
       }
    }
-   bool file_reader::open_mapped_file(const char* filepath) {
+   bool file_reader::open_mapped_file(const char* filepath, detailed_notice* error) {
       if (filepath)
          this->path = filepath;
       if (!this->file)
@@ -531,24 +530,11 @@ namespace dovah::tes_file_reading {
       //*/
       this->file->open(this->path.c_str());
       if (!*this->file) {
-         void* message;
-         uint32_t size = FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            nullptr,
-            this->file->get_error(),
-            LANG_USER_DEFAULT,
-            (LPTSTR)&message,
-            0,
-            nullptr
-         );
-         this->error.message.clear();
-         uint32_t i = 0;
-         while (wchar_t c = ((const wchar_t*)message)[i++])
-            this->error.message += c;
-         LocalFree(message);
-         //
-         this->error.code = file_read_error::error_code::filesystem_error;
-         this->error.file = this->name;
+         if (error) {
+            error->code = notice_code::filesystem_error;
+            error->set_cause_file(this->name);
+            error->set_winapi_error_code(this->file->get_error());
+         }
          delete this->file;
          this->file = nullptr;
          return false;

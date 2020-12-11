@@ -10,4 +10,7 @@ namespace dovah::tes_file_reading {
       notice.context = detailed_notice::notice_context::file_load;
       return notice;
    }
+   void read_results::add_warning(detailed_notice& n) noexcept {
+      this->warnings.push_back(n);
+   }
 }

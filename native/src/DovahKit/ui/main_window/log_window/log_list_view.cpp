@@ -476,8 +476,12 @@ LogListModelItem::LogListModelItem(const dovah::detailed_notice& warning) {
       case notice_code::forms_out_of_esl_form_id_range:
          text = QObject::tr("You cannot convert a file to an ESL if any of its forms have IDs above XX000FFF.", "write error");
          break;
-      case notice_code::too_many_dependencies:
-         text = QObject::tr("A file cannot have more than 254 dependencies.", "write error");
+      case notice_code::file_has_too_many_dependencies:
+         if (warning.context == dovah::detailed_notice::notice_context::file_load) {
+            text = QObject::tr("The file claims to have more than 254 dependencies. This is impossible.", "read error");
+         } else {
+            text = QObject::tr("A file cannot have more than 254 dependencies.", "write error");
+         }
          break;
       case notice_code::load_order_would_overflow_into_lights:
          text = QObject::tr("The current load order would not be possible in Skyrim Special. Too many files (besides the active file) are loaded; they are overflowing into the 0xFE slot.", "write error");

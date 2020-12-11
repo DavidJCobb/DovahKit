@@ -71,6 +71,16 @@ namespace dovah {
       this->flags |= flag::has_cause_signature;
       return *this;
    }
+   detailed_notice& detailed_notice::set_cause_size(uint32_t s) noexcept {
+      this->cause_size = s;
+      this->flags |= flag::has_cause_size;
+      return *this;
+   }
+   detailed_notice& detailed_notice::set_errno(errno_t e) noexcept {
+      this->errno_value = e;
+      this->flags |= flag::has_errno;
+      return *this;
+   }
    detailed_notice& detailed_notice::set_file_offset(uint32_t o) noexcept {
       this->offset = o;
       this->flags |= flag::has_file_offset;
@@ -79,6 +89,11 @@ namespace dovah {
    detailed_notice& detailed_notice::set_subrecord_index(int i) noexcept {
       this->cause_subrecord_index = i;
       this->flags |= flag::has_cause_subrecord_index;
+      return *this;
+   }
+   detailed_notice& detailed_notice::set_winapi_error_code(uint32_t c) noexcept {
+      this->winapi_error = c;
+      this->flags |= flag::has_winapi_error_code;
       return *this;
    }
    detailed_notice& detailed_notice::set_cause_file(const std::string& filename) {

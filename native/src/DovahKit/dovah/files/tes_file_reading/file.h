@@ -10,6 +10,9 @@
 namespace dovah {
    class form_stub;
    class localized_string_store;
+   namespace load_order_interfaces {
+      class file_load;
+   }
    namespace tes_file_writing {
       class file_writer;
    }
@@ -57,16 +60,16 @@ namespace dovah {
             file_reader(file_load_order&);
             ~file_reader();
             //
-            bool load(const char* filepath);
+            bool load(const char* filepath, load_order_interfaces::file_load& intfc);
             bool load_record_at(uint32_t pos); // for form_stub
             bool load_record_at(uint32_t pos, basic_reader* reader); // for form_stub (multi-threaded building of Use Info). the reader passed in must not be the "owner" of its mapped file. (this) will take ownership of (reader) by setting the latter's (owner).
             bool fetch_record_header(uint32_t pos, tes_file_record_header&, uint32_t& record_decompressed_size);
             //
-            bool open_mapped_file(const char* filepath = nullptr);
+            bool open_mapped_file(const char* filepath = nullptr, detailed_notice* out_error_if_any = nullptr);
             void close(); // intended for use during the save process; not thread-safe; do not call during load
             //
          protected:
-            bool _load_header();
+            bool _load_header(load_order_interfaces::file_load& intfc);
             //
             std::filesystem::path path;
             std::string name;

@@ -36,6 +36,9 @@ namespace dovah {
             has_cause_form_index      = 0x00000100, // This warning applies to the Nth form provided by one or more cause subrecords.
             has_cause_editor_id       = 0x00000200,
             has_cause_signature       = 0x00000400,
+            has_cause_size            = 0x00000800,
+            has_errno                 = 0x00001000,
+            has_winapi_error_code     = 0x00002000,
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;
@@ -64,10 +67,12 @@ namespace dovah {
       std::string    cause_editor_id;
       form_type_t    cause_form_type = form_type::none; // this IS NOT the same thing as the "cause form's type." if for example some form X referred to a form Y and Y had the wrong type, this would be the type X was expecting.
       uint32_t       cause_signature = 0;
+      uint32_t       cause_size      = 0;
+      errno_t        errno_value     = 0;
+      uint32_t       winapi_error    = 0;
       std::vector<relevant_form> relevant_forms;
       std::vector<std::string>   relevant_files;
       std::array<uint32_t, 4>    extra_integers = {};
-
 
       void add_relevant_form(const form_stub&);
 
@@ -95,8 +100,11 @@ namespace dovah {
       detailed_notice& set_cause_editor_id(const std::string&);
       detailed_notice& set_cause_form_index(int) noexcept;
       detailed_notice& set_cause_signature(uint32_t) noexcept;
+      detailed_notice& set_cause_size(uint32_t) noexcept;
+      detailed_notice& set_errno(errno_t) noexcept;
       detailed_notice& set_file_offset(uint32_t) noexcept;
       detailed_notice& set_subrecord_index(int) noexcept;
+      detailed_notice& set_winapi_error_code(uint32_t) noexcept;
 
       detailed_notice& add_relevant_file(const std::string& filename);
 
