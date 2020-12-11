@@ -13,7 +13,7 @@ namespace dovah {
 
    namespace tes_file_reading {
       class basic_reader;
-      class file_reader;
+      class file_loader;
       class subrecord;
       class record;
 
@@ -62,7 +62,7 @@ namespace dovah {
       };
       class record {
          friend basic_reader;
-         friend file_reader;
+         friend file_loader;
          friend subrecord;
          public:
             using header_t = dovah::tes_file_record_header;

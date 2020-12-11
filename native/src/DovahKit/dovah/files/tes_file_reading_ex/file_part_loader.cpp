@@ -11,6 +11,10 @@ namespace dovah::tes_file_reading {
          this->file_size = f.size();
       }
    }
+   void file_part_loader::_on_file_close() {
+      this->file_data = nullptr;
+      this->file_size = 0;
+   }
 
    bool file_part_loader::load_record_at(uint32_t pos) {
       this->_ensure_file();

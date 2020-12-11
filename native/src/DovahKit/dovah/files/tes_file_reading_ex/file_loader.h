@@ -27,16 +27,26 @@ namespace dovah::tes_file_reading {
          };
          //
          static constexpr int threads_for_simple_load          = 4;
+         static constexpr int threads_for_dialogue_load        = 1;
          static constexpr int threads_for_interior_cell_load   = 4;
          static constexpr int threads_for_worldspace_load      = 6;
          static constexpr int threads_for_worldspace_cell_load = 2;
-         static constexpr int threads_for_localization_load    = 1; // currently just here to be informative; there's no support for loading these on multiple threads yet
+         static constexpr int threads_for_game_settings        = 1;
+         static constexpr int total_threads = (
+            threads_for_simple_load
+          + threads_for_dialogue_load
+          + threads_for_interior_cell_load
+          + threads_for_worldspace_load
+          + threads_for_worldspace_cell_load
+          + threads_for_game_settings
+         );
          //
          tes_file_header header;
-         localized_string_store* localization_data = nullptr; // owned
+         localized_string_store* localization_data = nullptr; // pointer is owned by the (file_loader) once received
          //
          void  abort() noexcept;
          float assess_load_progress() const noexcept; // returns NaN if any threaded reader hasn't set up its maximum yet
+         bool  fetch_record_header(uint32_t pos, tes_file_record_header&, uint32_t& record_decompressed_size);
          bool  load_record_at(uint32_t pos);
          std::string get_filename() const noexcept;
          //
@@ -45,13 +55,16 @@ namespace dovah::tes_file_reading {
          object_type next_record_or_group(); // only called during the initial file read
          bool        next_subrecord(); // called after the initial file read, when loading a form_stub's full content
          //
+         bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any)
+         void close(); // intended for use during the save process
+         //
       protected:
          std::filesystem::path path;
          interface_t       load_interface;
          cobb::mapped_file file;
          std::vector<file_threaded_part_loader_base*> threads;
          //
-         bool aborted = false;
+         bool aborted = false; // TODO: make atomic?
          //
          bool _load_header();
          bool _start_threads();

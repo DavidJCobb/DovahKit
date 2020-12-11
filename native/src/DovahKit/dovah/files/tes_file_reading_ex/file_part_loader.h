@@ -6,6 +6,7 @@ namespace dovah::tes_file_reading {
 
    class file_part_loader : basic_reader {
       using interface_t = load_order_interfaces::file_load;
+      friend class file_loader;
       public:
          file_part_loader(file_loader&);
          //
@@ -18,5 +19,6 @@ namespace dovah::tes_file_reading {
          file_loader& owner;
          //
          bool _ensure_file();
+         void _on_file_close(); // called by file_loader::close
    };
 }

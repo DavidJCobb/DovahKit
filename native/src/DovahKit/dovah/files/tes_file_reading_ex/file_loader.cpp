@@ -3,6 +3,40 @@
 #include "file_threaded_part_loader_base.h"
 
 namespace dovah::tes_file_reading {
+   file_loader::file_loader(interface_t& intfc) : load_interface(intfc) {
+      this->threads.reserve(total_threads);
+      for (size_t i = 0; i < threads_for_simple_load; ++i) {
+         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
+         this->threads.push_back(t);
+      }
+      for (size_t i = 0; i < threads_for_dialogue_load; ++i) {
+         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
+         this->threads.push_back(t);
+      }
+      for (size_t i = 0; i < threads_for_interior_cell_load; ++i) {
+         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
+         this->threads.push_back(t);
+      }
+      for (size_t i = 0; i < threads_for_worldspace_load; ++i) {
+         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
+         this->threads.push_back(t);
+      }
+      for (size_t i = 0; i < threads_for_worldspace_cell_load; ++i) {
+         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
+         this->threads.push_back(t);
+      }
+      for (size_t i = 0; i < threads_for_game_settings; ++i) {
+         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
+         this->threads.push_back(t);
+      }
+   }
+   file_loader::~file_loader() {
+      if (auto*& p = this->localization_data) {
+         delete p;
+         p = nullptr;
+      }
+   }
+
    #pragma region Threading
    float file_loader::assess_load_progress() const noexcept {
       size_t count = 0;
@@ -32,6 +66,24 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
+   void file_loader::abort() noexcept {
+      this->aborted = true;
+   }
+   bool file_loader::fetch_record_header(uint32_t pos, tes_file_record_header& out_header, uint32_t& record_decompressed_size) {
+      this->reset_parse_state();
+      this->set_position(pos);
+      out_header = tes_file_record_header();
+      if (this->next_record_or_group() == object_type::record) {
+         out_header = this->_record.header;
+         if (out_header.body_is_compressed()) {
+            record_decompressed_size = this->_record.data.size();
+         } else {
+            record_decompressed_size = out_header.size;
+         }
+         return true;
+      }
+      return false;
+   }
    std::string file_loader::get_filename() const noexcept {
       return this->path.filename().string();
    }
@@ -55,6 +107,15 @@ namespace dovah::tes_file_reading {
       if (this->last_error.is_defined())
          this->load_interface.log_load_error(this->last_error);
       return result;
+   }
+
+   void file_loader::close() {
+      this->abort();
+      this->_wait_for_threads();
+      for (auto* thread : this->threads)
+         if (thread)
+            thread->_on_file_close();
+      this->file = cobb::mapped_file();
    }
 
    bool file_loader::_load_header() {
