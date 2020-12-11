@@ -64,6 +64,10 @@
 //       notice codes, along with a full description of what notice codes can be returned 
 //       and (in the case of any detailed notices) what other information may be present.
 //
+//  - Rename (notice_code::game_conversion_form_cleanup_failed) to (unsaved_form_cleanup_failed), 
+//    as there's nothing which says that a form can ONLY fail to save as the result of it 
+//    being lost in a conversion between games.
+//
 //  - UI for editing Papyrus script data
 //
 //     - We have a loader for ACTI; we can write form save code and then build a UI 
@@ -144,17 +148,22 @@
 //          a non-virtual function that checks the record flag and calls the appropriate 
 //          underlying virtual member function.
 //
-//     - Form stubs need to either cache the "partial" flag, or store record flags for each 
-//       entry in their file list. See, in order to save a child form, we also need to save 
-//       its parent and ancestor forms; however, if those forms haven't actually been edited, 
-//       we can simply save them as "partial" records to avoid actually overriding them. how 
-//       do we determine whether we've saved the parent form? well, we need to check whether 
-//       it was defined or overridden in the active file, but we also need to double-check 
-//       that any such override was not already partial, and that requires access to the 
-//       record flags.
+//     - Form stubs need to store record flags as part of source file information, in order 
+//       to allow us to check whether a record in any given file (i.e. the active file) was 
+//       partial when we loaded it.
 //
 //        - The "save" code for parent forms will *also* need to check the record flags, 
 //          which means that the flags need to be set before we call (Form::save).
+//
+//        - Saving needs to check whether each active file  form is partial and is not edited; 
+//          if so, we do a partial save instead of a full save. The fixup data in the file 
+//          writer needs to include whether we did a partial save, and we need to manage the 
+//          appropriate flag when updating the form stub's source file information.
+//
+//        - We need to save a parent form if any of its child forms need to be saved... But 
+//          we can have multi-level relationships, e.g. WRLD/CELL/REFR. If the WRLD and CELL 
+//          are both unedited and the REFR is edited or from the active file, then both 
+//          the WRLD and the CELL should save as partial.
 //
 //  - Esoteric records
 //
@@ -203,7 +212,7 @@
 //
 //  - Multiple-file form loading
 //
-//     - Examine all form types except SHOU (we already checked that one): double-check to 
+//     - Examine all form types except SHOU and FACT (we already checked those): check to 
 //       see what data they clear when loading overrides, and modify our load code to act 
 //       consistently with what we find.
 //
@@ -588,6 +597,11 @@
 //           - If we get rid of the group type, then that frees up one byte. We have 
 //             three bytes to spare already, so that leaves us with enough room to let 
 //             a WRLD form stub explicitly specify its persistent CELL's form ID.
+//
+//              - We can kill two birds with one stone, here. Replace the group type 
+//                with a pointer to a "form_stub_addenda" struct. This struct can be 
+//                used to link a worldspace with its persistent cell, and a topic with 
+//                its sequential list of topic infos.
 //
 //           - If we make changes in this regard, then we need to update the form stub 
 //             documentation.

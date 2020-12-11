@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 #include "../core.h"
-#include "file_read_error.h"
 
 namespace dovah {
+   class detailed_notice;
    namespace tes_file_reading {
       class file_header_reader;
    }
@@ -46,7 +46,7 @@ namespace dovah {
             return this->masters.size() + this->plugins.size();
          }
          //
-         bool add(file_read_error& out, const std::string& name, bool is_master_of_master = false);
+         bool add(detailed_notice& out_error_if_any, const std::string& name, bool is_master_of_master = false);
          bool contains(const std::string& name) const noexcept;
          //
          void delete_contents();

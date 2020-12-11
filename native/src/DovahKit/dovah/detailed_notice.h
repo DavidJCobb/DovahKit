@@ -14,6 +14,7 @@ namespace dovah {
          on_demand_form_load = 1,
          file_save           = 2,
          form_save           = 3,
+         file_load           = 4,
       };
       enum class notice_type {
          unspecified = 0,
@@ -87,6 +88,7 @@ namespace dovah {
          this->flags |= f;
          return *this;
       }
+      detailed_notice& set_cause_file(const std::string& filename);
       detailed_notice& set_cause_form(const form_stub&);
       detailed_notice& set_cause_form_type(form_type_t);
       detailed_notice& set_cause_subrecord(uint32_t signature);
@@ -95,6 +97,8 @@ namespace dovah {
       detailed_notice& set_cause_signature(uint32_t) noexcept;
       detailed_notice& set_file_offset(uint32_t) noexcept;
       detailed_notice& set_subrecord_index(int) noexcept;
+
+      detailed_notice& add_relevant_file(const std::string& filename);
 
       inline bool is_defined() const noexcept { return this->code != default_notice_code; } // making this (operator bool) would be cool except that that breaks equality comparisons because this language sucks sometimes
       inline bool is_winning_record() const noexcept { return this->flags & (flag::is_winning_record | flag::is_coalesced_record_data); }

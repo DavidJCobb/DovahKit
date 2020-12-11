@@ -1,7 +1,9 @@
 #include "file_header.h"
 #include <filesystem>
 #include "../../../helpers/files.h"
+#include "../../detailed_notice.h"
 #include "../../logging.h"
+#include "../../notice_code_list.h"
 
 #include <QDebug>
 
@@ -88,32 +90,35 @@ namespace dovah::tes_file_reading {
       this->author.clear();
       this->description.clear();
       this->masters.clear();
-      this->error = file_read_error();
    }
-   bool file_header_reader::load(const char* path) noexcept {
-      this->error.code = file_read_error::error_code::none;
-      this->error.file = std::filesystem::path(path).filename().string();
+   bool file_header_reader::load(const char* path, detailed_notice* error) noexcept {
+      if (error) {
+         error->code = notice_code::none;
+         error->set_cause_file(std::filesystem::path(path).filename().string());
+      }
       //
       FILE*   file;
       errno_t err = fopen_s(&file, path, "rb");
       if (!file) {
-         this->error.message = "Failed to parse the file header. ";
-         this->error.message += dovah::logging::file_error_code_to_string(err);
-         switch (err) {
-            case ENFILE:
-            case EMFILE:
-            case EINVAL:
-            case ELOOP:
-            case ENAMETOOLONG:
-               error.code = file_read_error::error_code::filesystem_error;
-               break;
-            case EACCES:
-            case EBUSY:
-               error.code = file_read_error::error_code::locked_file;
-               break;
-            case ENOENT:
-            default:
-               error.code = file_read_error::error_code::missing_file;
+         if (error) {
+            error->extra_integers[0] = true;
+            error->extra_integers[1] = err;
+            switch (err) {
+               case ENFILE:
+               case EMFILE:
+               case EINVAL:
+               case ELOOP:
+               case ENAMETOOLONG:
+                  error->code = notice_code::filesystem_error;
+                  break;
+               case EACCES:
+               case EBUSY:
+                  error->code = notice_code::locked_file;
+                  break;
+               case ENOENT:
+               default:
+                  error->code = notice_code::missing_file;
+            }
          }
          return false;
       }
@@ -125,26 +130,20 @@ namespace dovah::tes_file_reading {
          uint32_t signature;
          bool     read = _read(file, signature);
          if (!read || _byteswap_ulong(signature) != 'TES4') {
-            this->error.code       = file_read_error::error_code::malformed_file;
-            this->error.fileOffset = ftell(file);
-            if (!read)
-               this->error.message = "Failed to read the file header's record signature.";
-            else
-               this->error.message = "Expected a record with signature 'TES4'; got something else.";
+            error->code = notice_code::malformed_file;
+            error->set_file_offset(ftell(file));
             return false;
          }
       }
       if (!_read(file, recordSize) || !_read(file, this->flags)) {
-         this->error.code       = file_read_error::error_code::malformed_file;
-         this->error.fileOffset = ftell(file);
-         this->error.message    = "Failed to read the file header's record header.";
+         error->code = notice_code::malformed_file;
+         error->set_file_offset(ftell(file));
          return false;
       }
       _skip(file, 8); // form ID of TES4 record; version control bytes
       if (!_read(file, this->header_record_version)) {
-         this->error.code       = file_read_error::error_code::malformed_file;
-         this->error.fileOffset = ftell(file);
-         this->error.message    = "Failed to read the file header's record header.";
+         error->code = notice_code::malformed_file;
+         error->set_file_offset(ftell(file));
          return false;
       }
       _skip(file, 2); // unknown field
@@ -183,17 +182,8 @@ namespace dovah::tes_file_reading {
                break;
             case 'DATA':
                if (last_subrecord != 'MAST') {
-                  this->error.code       = file_read_error::error_code::malformed_file;
-                  this->error.fileOffset = ftell(file);
-                  if (last_subrecord) {
-                     this->error.message    = "Failed initial read of the file header. Unexpected 'DATA' subrecord in the file following another master.";
-                     this->error.dependency = *this->masters.rbegin();
-                  } else
-                     this->error.message = "Failed initial read of the file header. Unexpected 'DATA' subrecord at the start of the file header.";
-                  if (last_subrecord)
-                     dovah::logging::print_line("[TESPluginHeader] Error: Unexpected 'DATA' subrecord in the file header following %s.", dovah::logging::format_signature(last_subrecord));
-                  else
-                     dovah::logging::print_line("[TESPluginHeader] Error: Unexpected 'DATA' subrecord at the start of the file header.");
+                  error->code = notice_code::malformed_file;
+                  error->set_file_offset(ftell(file));
                   return false;
                }
                break;

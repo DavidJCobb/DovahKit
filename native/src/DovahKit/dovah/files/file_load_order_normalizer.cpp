@@ -1,6 +1,8 @@
 #include "file_load_order_normalizer.h"
 #include "../../helpers/strings.h"
 #include "tes_file_reading/file_header.h"
+#include "../detailed_notice.h"
+#include "../notice_code_list.h"
 
 namespace dovah {
    bool file_load_order_normalizer::has_master(const std::string& name) const {
@@ -31,8 +33,8 @@ namespace dovah {
       }
       this->masters.push_back(header);
    }
-   bool file_load_order_normalizer::add(file_read_error& error, const std::string& name, bool isMasterOfMaster) {
-      error.code = file_read_error::error_code::none;
+   bool file_load_order_normalizer::add(detailed_notice& error, const std::string& name, bool isMasterOfMaster) {
+      error.code = notice_code::none;
       if (this->contains(name)) {
          //
          // File is already in the normalized load order, probably because it was selected to load 
@@ -43,25 +45,20 @@ namespace dovah {
       //
       auto header = new file_header_reader;
       std::string path = this->base_path + name;
-      if (!header->load(path.c_str())) {
-         error.code       = file_read_error::error_code::malformed_file;
-         error.file       = name;
-         error.fileOffset = header->error.fileOffset;
-         error.message    = "Failed initial read of the file header. ";
-         error.message    += header->error.message;
+      if (!header->load(path.c_str(), &error)) {
+         error.code = notice_code::malformed_file;
          delete header;
          return false;
       }
       //
       if (this->seen.find(header->name) != seen.end()) {
-         error.code    = file_read_error::error_code::cyclical_dependency_between_files;
-         error.file    = name;
-         error.message = "Failed initial read of the file header. This file is part of a cyclical dependency.";
+         error.code = notice_code::cyclical_dependency_between_files;
+         error.set_cause_file(name);
          //
          auto& list = this->seen;
          if (list.size() > 1) {
             auto last = list.rbegin();
-            error.dependency = *last;
+            error.add_relevant_file(*last);
          }
          //
          delete header;
@@ -73,10 +70,9 @@ namespace dovah {
       for (auto it = header->masters.begin(); it != header->masters.end(); ++it) {
          if (!this->active_file.empty() && cobb::strieq(*it, this->active_file)) {
             auto& name = *it;
-            error.code       = file_read_error::error_code::active_file_is_dependency;
-            error.file       = name;
-            error.dependency = this->active_file;
-            error.message    = "The active file cannot be the master to another file in the load order.";
+            error.code = notice_code::active_file_is_dependency;
+            error.set_cause_file(name);
+            error.add_relevant_file(this->active_file);
             this->seen.erase(header->name);
             delete header;
             return false;
@@ -110,15 +106,14 @@ namespace dovah {
       this->seen.erase(header->name);
       //
       if (!this->active_file.empty() && this->size() > 255) {
-         error.code    = file_read_error::error_code::too_many_files;
-         error.file    = name;
-         error.message = "If an active file is selected, then the load order cannot contain more than 255 files (even if some of them are ESLs). When the active file is saved, all loaded files will be encoded as its masters, and the file format doesn't actually support ESL functionality when encoding form IDs, so loading this many files would cause form IDs in the active file to overflow into the 0xFF slot after saving.";
+         error.code = notice_code::load_order_would_have_too_many_files;
+         error.set_cause_file(name);
+         //error.message = "If an active file is selected, then the load order cannot contain more than 255 files (even if some of them are ESLs). When the active file is saved, all loaded files will be encoded as its masters, and the file format doesn't actually support ESL functionality when encoding form IDs, so loading this many files would cause form IDs in the active file to overflow into the 0xFF slot after saving.";
       }
       if (!game_supports_light_plugins(this->target_game)) {
          if (this->size() > 254) {
-            error.code    = file_read_error::error_code::too_many_files;
-            error.file    = name;
-            error.message = "The load order is too long.";
+            error.code = notice_code::load_order_would_have_too_many_files;
+            error.set_cause_file(name);
          }
       } else {
          int16_t light_count = -1;
@@ -136,17 +131,15 @@ namespace dovah {
                ++heavy_count;
          }
          if (light_count > 4096) {
-            error.code    = file_read_error::error_code::too_many_files;
-            error.file    = name;
-            error.message = "The load order contains too many light files.";
+            error.code = notice_code::load_order_would_have_too_many_files;
+            error.set_cause_file(name);
          }
          if (heavy_count > 255) {
-            error.code    = file_read_error::error_code::too_many_files;
-            error.file    = name;
-            error.message = "The load order contains too many non-light files.";
+            error.code = notice_code::load_order_would_have_too_many_files;
+            error.set_cause_file(name);
          }
       }
-      if (error.code != file_read_error::error_code::none) {
+      if (error.is_defined()) {
          delete header;
          return false;
       }

@@ -7,6 +7,7 @@
 #include "../form_stub_helpers.h"
 #include "tes_file_reading/file.h"
 #include "tes_file_reading/file_header.h"
+#include "tes_file_reading/results.h"
 #include "tes_file_writing/file_writer.h"
 #include "tes_file_writing/results.h"
 #include "../forms/factories/construct.h"
@@ -229,15 +230,16 @@ namespace dovah {
    void file_load_order::queue_active_file(const std::string& name) {
       this->queued_load.active_file = name;
    }
-   bool file_load_order::load_queued_files() {
+   bool file_load_order::load_queued_files(tes_file_reading::read_results& results) {
       this->load_error = file_read_error();
       //
       _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_loading);
       if (!save_load_lock_guard) {
-         this->load_error.code = file_read_error::error_code::cannot_load_right_now;
+         results.error.code = file_read_error::error_code::cannot_load_right_now;
          return false;
       }
       this->save_load_state.flags = save_load_flag::none;
+      this->save_load_state.current_load_results = &results;
       //
       if (!this->base_path.empty()) {
          char end = *this->base_path.rbegin();
@@ -249,10 +251,10 @@ namespace dovah {
       this->normalizer.active_file = this->queued_load.active_file;
       this->normalizer.target_game = this->current_game;
       for (auto it = this->queued_load.files.begin(); it != this->queued_load.files.end(); ++it) {
-         if (!this->normalizer.add(this->load_error, *it))
+         if (!this->normalizer.add(results.error, *it))
             return false;
       }
-      if (this->load_error.defined())
+      if (results.error.is_defined())
          return false;
       if (!this->queued_load.active_file.empty()) {  // Force the active file to the end of the load order
          //
@@ -273,9 +275,8 @@ namespace dovah {
          auto& name = this->queued_load.active_file;
          bool isMaster = this->normalizer.has_master(name);
          if (isMaster && !this->normalizer.plugins.empty()) {
-            this->load_error.code    = file_read_error::error_code::active_file_is_master_and_there_are_plugins;
-            this->load_error.file    = this->queued_load.active_file;
-            this->load_error.message = "The active file must be at the end of the load order. However, it is impossible to move it there, because it is ESM-flagged and there are non-ESM-flagged files in the load order.";
+            results.error.code = notice_code::active_file_is_master_and_there_are_plugins;
+            results.error.set_cause_file(this->queued_load.active_file);
             return false;
          }
          auto* list = &this->normalizer.plugins;
@@ -347,66 +348,46 @@ namespace dovah {
          for (auto* header : this->normalizer.plugins)
             dovah::logging::print_line("[P] %s", header->name.c_str());
       }
-      for (auto* header : this->normalizer.masters) {
-         std::string path = this->base_path + header->name;
-         auto file = new tes_file_reading::file_reader(*this);
-         this->save_load_state.loading_index = this->files.size();
-         this->files.push_back(file);
-         if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
-            this->active_file = file;
-         }
-         if (!file->load(path.c_str())) {
-            auto fn = header->name;
-            this->load_error.file = fn;
-            if (file->error.defined()) {
-               this->load_error = file->error;
-            } else {
-               this->load_error.code    = file_read_error::error_code::unknown_error;
-               this->load_error.message = "Failed to load a master.";
+      //
+      {
+         using list_t = decltype(this->normalizer.masters);
+         auto lambda = [this, &results](list_t& list) {
+            for (auto* header : list) {
+               std::string path = this->base_path + header->name;
+               auto file = new tes_file_reading::file_reader(*this);
+               this->save_load_state.loading_index = this->files.size();
+               this->files.push_back(file);
+               if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
+                  this->active_file = file;
+               }
+               if (!file->load(path.c_str())) {
+                  auto fn = header->name;
+                  this->load_error.file = fn;
+                  if (file->error.defined()) {
+                     static_assert(false, "convert this over once files are tracking errors as they should");
+                     this->load_error = file->error;
+                  } else {
+                     results.error.code = notice_code::unknown_error;
+                     results.error.set_cause_file(path);
+                  }
+                  if (this->archives)
+                     this->archives->abort_archive_load();
+                  return false;
+               }
+               //
+               // TODO: Split file loading into these steps:
+               //
+               // 1. Load the header.
+               // 2. Verify that there aren't any unexpected masters (i.e. file wasn't altered 
+               //    between constructing the load order and now). If there are, fail.
+               // 3. Load the rest of the file.
+               //
             }
-            if (this->archives)
-               this->archives->abort_archive_load();
-            return false;
-         }
-         //
-         // TODO: Split file loading into these steps:
-         //
-         // 1. Load the header.
-         // 2. Verify that there aren't any unexpected masters (i.e. file wasn't altered 
-         //    between constructing the load order and now). If there are, fail.
-         // 3. Load the rest of the file.
-         //
+         };
+         lambda(this->normalizer.masters);
+         lambda(this->normalizer.plugins);
       }
-      for (auto* header : this->normalizer.plugins) {
-         std::string path = this->base_path + header->name;
-         auto file = new tes_file_reading::file_reader(*this);
-         this->save_load_state.loading_index = this->files.size();
-         this->files.push_back(file);
-         if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
-            this->active_file = file;
-         }
-         if (!file->load(path.c_str())) {
-            auto fn = header->name;
-            this->load_error.file = fn;
-            if (file->error.defined()) {
-               this->load_error = file->error;
-            } else {
-               this->load_error.code    = file_read_error::error_code::unknown_error;
-               this->load_error.message = "Failed to load a master.";
-            }
-            if (this->archives)
-               this->archives->abort_archive_load();
-            return false;
-         }
-         //
-         // TODO: Split file loading into these steps:
-         //
-         // 1. Load the header.
-         // 2. Verify that there aren't any unexpected masters (i.e. file wasn't altered 
-         //    between constructing the load order and now). If there are, fail.
-         // 3. Load the rest of the file.
-         //
-      }
+      //
       this->save_load_state.flags |= save_load_flag::loading_is_complete;
       this->save_load_state.loading_index = 0;
       //
@@ -470,7 +451,8 @@ namespace dovah {
          }
       }
       //
-      return !this->load_error.defined();
+      this->save_load_state.current_load_results = nullptr;
+      return !results.error.is_defined();
    }
    //
    bool file_load_order::is_loading() const noexcept {
@@ -1065,6 +1047,7 @@ namespace dovah {
       return stub_count_for_this_id;
    }
 
+   #pragma region Changing the current game
    notice_code_t file_load_order::_can_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept {
       if (this->current_game == g)
          return notice_code::none;
@@ -1119,6 +1102,7 @@ namespace dovah {
    notice_code_t file_load_order::change_current_game(game g) {
       return this->_change_current_game(g, false);
    }
+   #pragma endregion
 
    bool file_load_order::is_light_plugin_support_enabled() const noexcept {
       return game_supports_light_plugins(this->current_game);

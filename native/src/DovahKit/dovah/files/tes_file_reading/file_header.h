@@ -2,7 +2,10 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "../file_read_error.h"
+
+namespace dovah {
+   class detailed_notice;
+}
 
 namespace dovah::tes_file_reading {
    class file_header_reader {
@@ -23,10 +26,9 @@ namespace dovah::tes_file_reading {
          std::string author;
          std::string description;
          std::vector<std::string> masters;
-         file_read_error error; // if error.defined() == false, then the load operation succeeded
          //
          void clear();
-         bool load(const char* path) noexcept; // if result.defined() == false, then the load operation succeeded
+         bool load(const char* path, detailed_notice* out_error_if_any = nullptr) noexcept; // if result.defined() == false, then the load operation succeeded
          inline bool is_light() const noexcept { return (this->flags & flag::light) != 0; }
          inline bool is_master() const noexcept { return (this->flags & flag::master) != 0; }
    };

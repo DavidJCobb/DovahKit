@@ -25,6 +25,7 @@ namespace dovah {
    namespace tes_file_reading {
       class file_reader;
       class file_header_reader;
+      class read_results;
    }
    namespace tes_file_writing {
       struct write_config;
@@ -145,6 +146,7 @@ namespace dovah {
             std::atomic<save_load_type> type  = save_load_type::none;
             save_load_flags_t           flags = save_load_flag::none; // helps with UI progress display
             uint8_t loading_index = 0; // which load order index we're loading, or 0 if none; set in (load_queued_files); see (_guidedLoadOrderPrefixFor)
+            tes_file_reading::read_results* current_load_results = nullptr;
          } save_load_state;
          #pragma endregion
          //
@@ -202,7 +204,7 @@ namespace dovah {
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
          void queue_active_file(const std::string& name); // TODO
-         bool load_queued_files();
+         bool load_queued_files(tes_file_reading::read_results& results);
          //
          bool is_loading() const noexcept;
          

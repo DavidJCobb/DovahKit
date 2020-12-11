@@ -5,7 +5,7 @@ namespace dovah {
    struct notice_code {
       notice_code()       = delete;
       enum type : notice_code_t {
-         none       = 0x00000000,
+         none = 0x00000000,
          //
          load_order_would_overflow_into_lights       = 0x00000001,
          load_order_contains_light_files             = 0x00000002,
@@ -69,12 +69,16 @@ namespace dovah {
          malformed_file                              = 0x0000003C,
          missing_master                              = 0x0000003D, // Failed to load a file, because one of the file's masters is missing.
          missing_file                                = 0x0000003E, // Failed to load a file, because the file is missing.
-         file_is_locked                              = 0x0000003F, // DovahKit was unable to read a file because it is locked by the OS.
+         locked_file                                 = 0x0000003F, // DovahKit was unable to read a file because it is locked by the OS.
          cyclical_dependency_between_files           = 0x00000040, // The load order contains files whose master lists form a circular dependency.
          active_file_is_master_and_there_are_plugins = 0x00000041, // DovahKit can't place the active file at the end of the load order, because it's ESM-flagged and other files aren't.
          record_found_in_wrong_top_level_group       = 0x00000042,
          cannot_inject_form_overtop_none_stub        = 0x00000043,
          container_item_has_bad_owner_form_type      = 0x00000044, // An item in a container is not owned by an NPC_ or a FACT.
+         unknown_error                               = 0x00000045,
+         active_file_is_dependency                   = 0x00000046, // The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.
+         load_order_would_have_too_many_files        = 0x00000047, // We can't load this load order. It would have too many files (greater than 4096 lights, 255 heavies, or if an active file is selected, 255 or 254 total).
+         filesystem_error                            = 0x00000048,
       };
    };
 }

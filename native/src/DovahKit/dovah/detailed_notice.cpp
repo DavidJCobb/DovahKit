@@ -81,6 +81,11 @@ namespace dovah {
       this->flags |= flag::has_cause_subrecord_index;
       return *this;
    }
+   detailed_notice& detailed_notice::set_cause_file(const std::string& filename) {
+      this->cause_file = filename;
+      this->set_flag(flag::has_cause_file);
+      return *this;
+   }
    detailed_notice& detailed_notice::set_cause_form(const form_stub& stub) {
       this->cause_form.type    = stub.formType;
       this->cause_form.fixedID = stub.formID;
@@ -103,6 +108,10 @@ namespace dovah {
       if (!ed.empty())
          this->set_flag(flag::has_cause_editor_id);
       return *this;
+   }
+
+   detailed_notice& detailed_notice::add_relevant_file(const std::string& filename) {
+      this->relevant_files.emplace_back(filename);
    }
 
    bool detailed_notice::operator==(const detailed_notice& other) const noexcept {
