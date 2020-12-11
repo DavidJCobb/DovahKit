@@ -60,6 +60,17 @@
 //          already existing interface. We need this so that everything can report errors 
 //          and warnings to and through the file load order.
 //
+//           = Actually, let's not *quite* do that. Let's specialize (basic_reader) to be 
+//             just a generic parser for groups, records, and subrecords. Then, let's add a 
+//             class *between* (basic_reader) and (file_reader) called (file_part_reader), 
+//             and have everything that currently subclasses (basic_reader) instead subclass 
+//             (file_part_reader). Then, we'll have (file_part_reader) be the thing that can 
+//             access the load order and be owned by a (file_reader).
+//
+//             We can clarify the distinction even more with some name changes: call the 
+//             superclass the basic "reader," versus the file part "loader" and the file 
+//             "loader."
+//
 //           - Since (threaded_load_order_use_info_builder) is a (basic_reader) subclass, 
 //             we will at this point want to move it into the /tes_file_reading/ folder.
 //
