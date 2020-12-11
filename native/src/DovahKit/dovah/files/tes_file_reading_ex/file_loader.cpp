@@ -35,6 +35,16 @@ namespace dovah::tes_file_reading {
          delete p;
          p = nullptr;
       }
+      for (auto* thread : this->threads) {
+         if (!thread)
+            continue;
+         #if _DEBUG
+            if (thread->is_running())
+               __debugbreak(); // why are you destroying a (file_loader) when one of its threaded readers is still running?
+         #endif
+         delete thread;
+      }
+      this->threads.clear();
    }
 
    #pragma region Threading
@@ -53,16 +63,12 @@ namespace dovah::tes_file_reading {
    }
    //
    bool file_loader::_start_threads() {
-      for (auto* thread : this->threads) {
-         assert(thread);
+      for (auto* thread : this->threads)
          thread->start();
-      }
    }
    bool file_loader::_wait_for_threads() {
-      for (auto* thread : this->threads) {
-         assert(thread);
+      for (auto* thread : this->threads)
          thread->wait_for();
-      }
    }
    #pragma endregion
 
@@ -109,6 +115,7 @@ namespace dovah::tes_file_reading {
       return result;
    }
 
+   bool file_loader::load(const std::filesystem::path& new_path);
    void file_loader::close() {
       this->abort();
       this->_wait_for_threads();

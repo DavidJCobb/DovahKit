@@ -2,7 +2,9 @@
 
 namespace dovah::tes_file_reading {
    /*static*/ void file_threaded_part_loader_base::_thread_handler(file_threaded_part_loader_base* instance) {
+      instance->running = true;
       instance->exec();
+      instance->running = false;
    }
    //
    void file_threaded_part_loader_base::start() {

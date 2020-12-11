@@ -55,14 +55,14 @@ namespace dovah::tes_file_reading {
          object_type next_record_or_group(); // only called during the initial file read
          bool        next_subrecord(); // called after the initial file read, when loading a form_stub's full content
          //
-         bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any)
-         void close(); // intended for use during the save process
+         bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any). calling this while a load is already in progress is undefined behavior
+         void close(); // intended for use during the save process, with the file then being reopened by the caller upon a successful save
          //
       protected:
          std::filesystem::path path;
          interface_t       load_interface;
          cobb::mapped_file file;
-         std::vector<file_threaded_part_loader_base*> threads;
+         std::vector<file_threaded_part_loader_base*> threads; // array elements should never be nullptr after the instance is constructed.
          //
          bool aborted = false; // TODO: make atomic?
          //
