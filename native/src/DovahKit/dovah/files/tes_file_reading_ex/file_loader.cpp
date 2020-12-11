@@ -1,33 +1,27 @@
 #include "file_loader.h"
 #include "../../notice_code_list.h"
 #include "file_threaded_part_loader_base.h"
+#include "threads.h"
 
 namespace dovah::tes_file_reading {
    file_loader::file_loader(interface_t& intfc) : load_interface(intfc) {
-      this->threads.reserve(total_threads);
-      for (size_t i = 0; i < threads_for_simple_load; ++i) {
-         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
-         this->threads.push_back(t);
+      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::basic>; ++i) {
+         this->threads.push_back(new threads::basic(*this));
       }
-      for (size_t i = 0; i < threads_for_dialogue_load; ++i) {
-         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
-         this->threads.push_back(t);
+      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::dialogue>; ++i) {
+         this->threads.push_back(new threads::dialogue(*this));
       }
-      for (size_t i = 0; i < threads_for_interior_cell_load; ++i) {
-         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
-         this->threads.push_back(t);
+      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::interior_cell>; ++i) {
+         this->threads.push_back(new threads::interior_cell(*this));
       }
-      for (size_t i = 0; i < threads_for_worldspace_load; ++i) {
-         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
-         this->threads.push_back(t);
+      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::worldspace_sub_block>; ++i) {
+         this->threads.push_back(new threads::worldspace_sub_block(*this));
       }
-      for (size_t i = 0; i < threads_for_worldspace_cell_load; ++i) {
-         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
-         this->threads.push_back(t);
+      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::worldspace_persistent_cell_children>; ++i) {
+         this->threads.push_back(new threads::worldspace_persistent_cell_children(*this));
       }
-      for (size_t i = 0; i < threads_for_game_settings; ++i) {
-         file_threaded_part_loader_base* t = static_assert(false, "heap-allocate the threaded reader");
-         this->threads.push_back(t);
+      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::game_setting>; ++i) {
+         this->threads.push_back(new threads::game_setting(*this));
       }
    }
    file_loader::~file_loader() {
@@ -70,6 +64,17 @@ namespace dovah::tes_file_reading {
       for (auto* thread : this->threads)
          thread->wait_for();
    }
+   //
+   file_threaded_part_loader_base* file_loader::_get_nth_thread_of_type_impl(const std::type_info& ti, size_t n) {
+      size_t i = 0;
+      for (auto* thread : this->threads) {
+         const auto& type = typeid(*thread);
+         if (type == ti)
+            if (n++ == i)
+               return thread;
+      }
+      return nullptr;
+   }
    #pragma endregion
 
    void file_loader::abort() noexcept {
@@ -93,6 +98,9 @@ namespace dovah::tes_file_reading {
    std::string file_loader::get_filename() const noexcept {
       return this->path.filename().string();
    }
+   file_load_order& file_loader::get_load_order() const noexcept {
+      return this->load_interface.owner;
+   }
 
    bool file_loader::load_record_at(uint32_t pos) {
       this->reset_parse_state();
@@ -115,7 +123,250 @@ namespace dovah::tes_file_reading {
       return result;
    }
 
-   bool file_loader::load(const std::filesystem::path& new_path);
+   bool file_loader::load(const std::filesystem::path& new_path) {
+      if (!new_path.empty())
+         this->path = new_path;
+      else if (this->path.empty()) {
+         static_assert(false, "log an error!");
+         return false;
+      }
+      if (!this->_open_mapped_file()) // logs an error on its own
+         return false;
+      //
+      if (!this->_load_header()) {
+         detailed_notice error;
+         error.code = notice_code::malformed_file;
+         error.set_cause_file(this->get_filename());
+         error.set_file_offset(this->get_position());
+         this->load_interface.log_load_error(error);
+         return false;
+      }
+      {
+         object_type ot;
+         struct {
+            uint32_t basic    = 0;
+            uint32_t dialogue = 0;
+            uint32_t interior_cell   = 0;
+            uint32_t world_sub_block = 0;
+            uint32_t exterior_cell   = 0;
+            uint32_t game_setting    = 0;
+         } thread_indices;
+         uint32_t last_worldspace_id = 0;
+         uint32_t last_world_cell_id = 0;
+         int16_t  last_ext_block_x = 0;
+         int16_t  last_ext_block_y = 0;
+         while (ot = this->next_record_or_group(), ot != object_type::none) {
+            //
+            // First, let's define some terms:
+            //
+            //  - Simple form type: A form type that cannot have child forms (i.e. no 
+            //    nested GRUPs).
+            //
+            //  - Top-group: A top-level GRUP.
+            //
+            // Okay, so here's what we're doing:
+            //
+            //  - Top-groups of simple form types: Divide these across multiple threads. 
+            //    Each thread will create FormStubs for each record in its assigned top-
+            //    groups.
+            //
+            //  - Dialogue topics:
+            //
+            //     - These are handled by a single loader, which also handles their 
+            //       child GRUPs and INFOs.
+            //
+            //  - Interior cells:
+            //
+            //     - Divide the interior cell block GRUPs across multiple threads. Each 
+            //       thread will handle the CELL records themselves and any GRUPs nested 
+            //       under the block GRUPs.
+            //
+            //  - Worldspace persistent cells:
+            //
+            //     - Load the cell here.
+            //
+            //     - Divide all of the cell's child GRUPs across multiple threads. Each 
+            //       thread will handle the records nested under those GRUPs.
+            //
+            //  - Worldspaces:
+            //
+            //     - Load the worldspace here.
+            //
+            //     - Divide the worldspace's cell sub-block GRUPs across multiple threads. 
+            //       Each thread will handle the CELL records themselves and any GRUPs 
+            //       nested under the sub-block GRUPs.
+            //
+            auto& group = this->get_current_group();
+            if (ot == object_type::group) {
+               switch (group.header.type) {
+                  //
+                  // In order to skip the group's contents, call (group.skip()) and then (continue). In order 
+                  // to enter the group's contents and parse them, (continue) without skipping the group.
+                  //
+                  case group::type::world_children:
+                     //
+                     // Parse direct children of the worldspace (i.e. the persistent cell).
+                     //
+                     continue;
+                  case group::type::cell_children:
+                  case group::type::cell_persistent_children:
+                  case group::type::cell_temporary_children:
+                     assert(last_world_cell_id != 0 && "We should be ignoring these GRUPs when they don't appear after a worldspace's persistent cell!");
+                     {
+                        auto* loader = this->_get_nth_thread_of_type<threads::worldspace_persistent_cell_children>(thread_indices.exterior_cell);
+                        assert(loader);
+                        loader->add_group(last_world_cell_id, group.pos);
+                     }
+                     group.skip();
+                     continue;
+                  case group::type::exterior_cell_block:
+                     last_ext_block_y = group.header.label & 0xFFFF;
+                     last_ext_block_x = group.header.label >> 0x10;
+                     continue;
+                  case group::type::exterior_cell_sub_block:
+                     assert(last_worldspace_id && "Exterior Cell Block GRUP must follow a WRLD record.");
+                     {
+                        auto* loader = this->_get_nth_thread_of_type<threads::worldspace_sub_block>(thread_indices.world_sub_block);
+                        assert(loader);
+                        int16_t sub_x = group.header.label >> 0x10;
+                        int16_t sub_y = group.header.label & 0xFFFF;
+                        loader->add_group(last_worldspace_id, last_ext_block_x, last_ext_block_y, sub_x, sub_y, group.pos);
+                     }
+                     group.skip();
+                     continue;
+                  case group::type::interior_cell_block:
+                     {
+                        {  // Error-checking.
+                           auto parent = group.get_parent();
+                           int  err = 0;
+                           if (!parent)
+                              err = 1;
+                           else if (parent->header.type != group::type::forms_of_type)
+                              err = 2;
+                           else if (_byteswap_ulong(parent->header.label) != 'CELL')
+                              err = 3;
+                           if (err) {
+                              detailed_notice error;
+                              error.code = notice_code::interior_cell_block_group_badly_nested;
+                              if (err == 1) {
+                                 error.code = notice_code::interior_cell_block_has_no_parent_group;
+                              }
+                              error.set_cause_file(this->get_filename());
+                              error.set_file_offset(this->get_position());
+                              this->load_interface.log_load_error(error);
+                              //
+                              this->abort();
+                              break;
+                           }
+                        }
+                        auto* loader = this->_get_nth_thread_of_type<threads::interior_cell>(thread_indices.interior_cell);
+                        assert(loader);
+                        loader->add_group(group.header.label, group.pos);
+                     }
+                     group.skip();
+                     continue;
+                  case group::type::forms_of_type:
+                     last_world_cell_id = 0;
+                     last_ext_block_x   = 0;
+                     last_ext_block_y   = 0;
+                     break;
+                  default:
+                     group.skip();
+                     continue;
+               }
+               bool is_dialogue = false;
+               bool is_gmst     = false;
+               switch (_byteswap_ulong(group.header.label)) {
+                  case 'CELL': // contents handled by the Interior Cell Block readers.
+                  case 'WRLD': // forms handled here; children handled by the worldspace sub-block readers.
+                     //
+                     // Don't skip the group; we want to read at least some of the content inside of it. 
+                     // However, don't assign the group to a simple-reader either.
+                     //
+                     continue;
+                  case 'DIAL':
+                     is_dialogue = true;
+                     break;
+                  case 'GMST':
+                     is_gmst = true;
+                     break;
+               }
+               if (is_gmst) {
+                  auto* loader = this->_get_nth_thread_of_type<threads::game_setting>(thread_indices.game_setting);
+                  assert(loader);
+                  loader->add_group(group.pos);
+               } else if (is_dialogue) {
+                  auto* loader = this->_get_nth_thread_of_type<threads::dialogue>(thread_indices.dialogue);
+                  assert(loader);
+                  loader->add_group(_byteswap_ulong(group.header.label), group.pos);
+               } else {
+                  auto* loader = this->_get_nth_thread_of_type<threads::basic>(thread_indices.basic);
+                  assert(loader);
+                  loader->add_group(_byteswap_ulong(group.header.label), group.pos);
+               }
+               //
+               // Skip the group's actual content; the main thread only cares about locating the groups 
+               // themselves and setting their contents up to be parsed on multiple threads.
+               //
+               group.skip();
+               continue;
+            }
+            if (ot == object_type::record) {
+               last_world_cell_id = 0;
+               last_ext_block_x = 0;
+               last_ext_block_y = 0;
+               //
+               // We should only hit records when we choose not to skip a group's contents. 
+               // We use this to load worldspaces and their persistent/temporary cells in 
+               // advance, so that we can multithread their contents a little more flexibly. 
+               // We can assign a worldspace's descendant GRUPs to different workers without 
+               // those workers having to care whether the worldspace is loaded; compare to 
+               // topics and infos, which share a worker such that the worker has to load 
+               // topics first (which is viable in that case because every topic has only 
+               // one child GRUP, so multi-threading within a single topic isn't useful).
+               //
+               auto& record = this->get_current_record();
+               form_type_t formType = form_type_info::signature_to_form_type(record.signature());
+               auto  stub = this->make_stub_for_record(*this);
+               stub->groupInfo.type = (int)group.header.type;
+               switch (group.header.type) {
+                  case group::type::world_children:
+                     stub->groupInfo.parentFormID = last_worldspace_id;
+                     last_world_cell_id = stub->formID;
+                     break;
+               }
+               if (!this->_insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+                  delete stub;
+                  continue;
+               }
+               this->extract_high_value_subrecords_for_stub(stub);
+               if (record.signature() == 'WRLD')
+                  last_worldspace_id = stub->formID;
+               //
+               if (&group == &this->_groups[0]) { // is this a top-level group?
+                  uint32_t group_signature = _byteswap_ulong(group.header.label);
+                  if (record.signature() != group_signature) { // misplaced record?
+                     form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
+                     //
+                     detailed_notice warning;
+                     warning.code       = notice_code::record_found_in_wrong_top_level_group;
+                     warning.cause_file = this->get_filename();
+                     warning.set_flag(detailed_notice::flag::has_cause_file);
+                     warning.set_cause_form(*stub);
+                     warning.set_cause_signature(group_signature);
+                     warning.set_cause_form_type(group_type);
+                     //
+                     this->load_interface.log_load_warning(warning);
+                  }
+               }
+            }
+         }
+      }
+      this->_start_threads();
+      this->_wait_for_threads();
+      //
+      return !this->aborted;
+   }
    void file_loader::close() {
       this->abort();
       this->_wait_for_threads();
@@ -125,6 +376,30 @@ namespace dovah::tes_file_reading {
       this->file = cobb::mapped_file();
    }
 
+   bool file_loader::_open_mapped_file() {
+      this->file = cobb::mapped_file();
+      //
+      /*//
+      std::wstring foo;
+      auto size = MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), 0);
+      foo.resize(size);
+      MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), size);
+      //*/
+      this->file.open(this->path.c_str());
+      if (!this->file) {
+         detailed_notice error;
+         error.code    = notice_code::filesystem_error;
+         error.type    = detailed_notice::notice_type::error;
+         error.context = detailed_notice::notice_context::file_load;
+         error.set_cause_file(this->get_filename());
+         error.set_winapi_error_code(this->file.get_error());
+         this->load_interface.log_load_error(error);
+         //
+         this->file = cobb::mapped_file();
+         return false;
+      }
+      return true;
+   }
    bool file_loader::_load_header() {
       if (this->next_record_or_group() != object_type::record) {
          detailed_notice error;

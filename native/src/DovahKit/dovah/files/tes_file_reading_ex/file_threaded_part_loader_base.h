@@ -5,6 +5,15 @@
 
 namespace dovah::tes_file_reading {
    class file_threaded_part_loader_base : public file_part_loader {
+      public:
+         //
+         // Subclasses should shadow at least (recommended_thread_count) with the desired number of 
+         // threads of that type. The (heavy_duty_thread_count) is an optional thread count that can 
+         // be used if hardware thread limits allow.
+         //
+         static constexpr int recommended_thread_count = 0;
+         static constexpr int heavy_duty_thread_count  = 0;
+         //
       protected:
          virtual void exec() = 0; // thread-local loading behavior should be defined in an override
          //
@@ -35,4 +44,15 @@ namespace dovah::tes_file_reading {
          //
          inline const std::thread& get_thread_object() const noexcept { return this->thread; }
    };
+
+   template<class C> struct _threaded_loader_recommended_thread_count {
+      static constexpr int value = C::recommended_thread_count;
+      static_assert(value != 0, "You forgot to specify a recommended thread count for a (file_threaded_part_loader_base) subclass that you're using!");
+   };
+   template<class C> struct _threaded_loader_heavy_duty_thread_count {
+      static constexpr int value = C::heavy_duty_thread_count ? C::heavy_duty_thread_count : C::recommended_thread_count;
+      static_assert(value != 0, "You forgot to specify a recommended thread count for a (file_threaded_part_loader_base) subclass that you're using!");
+   };
+   template<class C> constexpr int threaded_loader_recommended_thread_count = _threaded_loader_recommended_thread_count<C>::value;
+   template<class C> constexpr int threaded_loader_heavy_duty_thread_count  = _threaded_loader_heavy_duty_thread_count<C>::value;
 }

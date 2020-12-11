@@ -4,8 +4,7 @@
 namespace dovah::tes_file_reading {
    class file_loader;
 
-   class file_part_loader : basic_reader {
-      using interface_t = load_order_interfaces::file_load;
+   class file_part_loader : public basic_reader {
       friend class file_loader;
       public:
          file_part_loader(file_loader&);
