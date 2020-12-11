@@ -220,7 +220,9 @@ namespace dovah::tes_file_reading {
       if (!new_path.empty())
          this->path = new_path;
       else if (this->path.empty()) {
-         static_assert(false, "log an error!");
+         detailed_notice error;
+         error.code = notice_code::no_filename_specified;
+         this->load_interface.log_load_error(error);
          return false;
       }
       if (!this->_open_mapped_file()) // logs an error on its own

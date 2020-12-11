@@ -40,14 +40,11 @@ namespace dovah::tes_file_reading::threads {
                   break;
                }
                if (this->_groups[1].exists()) {
-                  auto& error = this->owner.error;
-                  //
-                  error.code       = file_read_error::error_code::malformed_file;
-                  error.file       = this->owner.get_filename();
-                  error.fileOffset = this->get_position();
-                  char sig[5];
-                  cobb::sprintf(error.message, "Unexpected nested group within \"simple\" top-group %s.", dovah::logging::format_signature(desired.signature, sig));
-                  //
+                  detailed_notice error;
+                  error.code = notice_code::unexpected_nested_group_in_simple_top_group;
+                  error.set_cause_file(this->owner.get_filename());
+                  error.set_file_offset(this->get_position());
+                  this->owner.log_load_error(*this, error);
                   this->owner.abort();
                   break;
                }
@@ -183,7 +180,7 @@ namespace dovah::tes_file_reading::threads {
                      warning.set_cause_signature(group_signature);
                      warning.set_cause_form_type(group_type);
                      //
-                     this->owner.get_load_order().log_load_warning(warning);
+                     this->owner.log_load_warning(*this, warning);
                   }
                }
                //
@@ -441,13 +438,11 @@ namespace dovah::tes_file_reading::threads {
                if (!first.exists() || first.pos != desired.pos)
                   break;
                if (this->_groups[1].exists()) {
-                  auto& error = this->owner.error;
-                  //
-                  error.code       = file_read_error::error_code::malformed_file;
-                  error.file       = this->owner.get_filename();
-                  error.fileOffset = this->get_position();
-                  cobb::sprintf(error.message, "Unexpected nested group within \"simple\" top-group GMST.");
-                  //
+                  detailed_notice error;
+                  error.code = notice_code::unexpected_nested_group_in_simple_top_group;
+                  error.set_cause_file(this->owner.get_filename());
+                  error.set_file_offset(this->get_position());
+                  this->owner.log_load_error(*this, error);
                   this->owner.abort();
                   break;
                }
