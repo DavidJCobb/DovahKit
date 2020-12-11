@@ -19,11 +19,14 @@ namespace dovah::tes_file_reading {
    class file_part_loader;
    class file_threaded_part_loader_base;
 
+   class form_stub_build_interface;
+
    class file_loader : basic_reader {
       using interface_t   = load_order_interfaces::file_load;
       using flag          = tes_file_flag;
       using detail_flag   = tes_file_header::detail_flag;
       using detail_flag_t = tes_file_header::detail_flag_t;
+      friend class form_stub_build_interface;
       public:
          file_loader(interface_t&); // TODO: threaded loaders should be created in the constructor, and so should never be nullptr during this object's lifetime
          ~file_loader();
@@ -74,5 +77,21 @@ namespace dovah::tes_file_reading {
          inline const cobb::mapped_file& get_raw_mapped_file() const noexcept { return this->file; };
          void log_load_warning(const file_part_loader& from, detailed_notice&);
          void log_load_error(const file_part_loader& from, detailed_notice&);
+   };
+   //
+   class form_stub_build_interface {
+      friend class file_loader;
+      protected:
+         form_stub_build_interface(file_loader& f, basic_reader& r) : owner(f), reader(r) {}
+         //
+      public:
+         form_stub_build_interface(file_loader& f, file_part_loader& r) : owner(f), reader(r) {}
+         //
+         file_loader&  owner;
+         basic_reader& reader;
+         //
+         form_stub* make_stub_for_record();
+         bool commit_stub(form_stub&);
+         void extract_high_value_subrecords_for_stub(form_stub&);
    };
 }

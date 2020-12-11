@@ -5,22 +5,22 @@
 
 namespace dovah::tes_file_reading {
    file_loader::file_loader(interface_t& intfc) : load_interface(intfc) {
-      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::basic>; ++i) {
+      for (size_t i = 0; i < threads::basic::recommended_thread_count; ++i) {
          this->threads.push_back(new threads::basic(*this));
       }
-      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::dialogue>; ++i) {
+      for (size_t i = 0; i < threads::dialogue::recommended_thread_count; ++i) {
          this->threads.push_back(new threads::dialogue(*this));
       }
-      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::interior_cell>; ++i) {
+      for (size_t i = 0; i < threads::interior_cell::recommended_thread_count; ++i) {
          this->threads.push_back(new threads::interior_cell(*this));
       }
-      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::worldspace_sub_block>; ++i) {
+      for (size_t i = 0; i < threads::worldspace_sub_block::recommended_thread_count; ++i) {
          this->threads.push_back(new threads::worldspace_sub_block(*this));
       }
-      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::worldspace_persistent_cell_children>; ++i) {
+      for (size_t i = 0; i < threads::worldspace_persistent_cell_children::recommended_thread_count; ++i) {
          this->threads.push_back(new threads::worldspace_persistent_cell_children(*this));
       }
-      for (size_t i = 0; i < threaded_loader_recommended_thread_count<threads::game_setting>; ++i) {
+      for (size_t i = 0; i < threads::game_setting::recommended_thread_count; ++i) {
          this->threads.push_back(new threads::game_setting(*this));
       }
    }
@@ -123,6 +123,99 @@ namespace dovah::tes_file_reading {
       return result;
    }
 
+   #pragma region form_stub_build_interface
+   form_stub* form_stub_build_interface::make_stub_for_record() {
+      auto& record = this->reader.get_current_record();
+      auto  stub   = new form_stub();
+      stub->_add_file(this->owner, record.head_pos);
+      stub->formID   = record.formID();
+      stub->formType = form_type_info::signature_to_form_type(record.signature());
+      if (record.flags() & tes_file_record_header::flag::deleted)
+         stub->flags |= form_stub::flag::flagged_as_deleted;
+      return stub;
+   }
+   bool form_stub_build_interface::commit_stub(form_stub& stub) {
+      if (this->owner.aborted)
+         return false;
+      auto result = this->owner.get_load_order().accept_form_stub(&stub);
+      switch (result) {
+         case file_load_order::form_id_status::missing_master: // <-- this one in particular can only happen if we failed to load a master, which implies that a file was edited between us checking the header and us loading it
+         case file_load_order::form_id_status::out_of_bounds:
+            {
+               detailed_notice error;
+               error.code = notice_code::form_id_is_out_of_bounds;
+               if (result == file_load_order::form_id_status::missing_master) {
+                  error.code = notice_code::form_id_is_inside_of_a_missing_master;
+               }
+               error.set_cause_file(this->owner.get_filename());
+               error.set_file_offset(this->owner.get_position());
+               error.cause_form.fixedID = 0;
+               error.cause_form.localID = stub.formID;
+               error.cause_form.type    = stub.formType;
+               error.set_flag(detailed_notice::flag::has_cause_form);
+               this->owner.load_interface.log_load_error(error);
+            }
+            this->owner.abort();
+            return false;
+         case file_load_order::form_id_status::null_is_not_allowed:
+            {
+               detailed_notice error;
+               error.code = notice_code::zero_is_not_an_allowed_form_id;
+               error.set_cause_file(this->owner.get_filename());
+               error.set_file_offset(this->owner.get_position());
+               error.cause_form.fixedID = 0;
+               error.cause_form.localID = stub.formID;
+               error.cause_form.type    = stub.formType;
+               error.set_flag(detailed_notice::flag::has_cause_form);
+               this->owner.load_interface.log_load_error(error);
+            }
+            this->owner.abort();
+            return false;
+      }
+      return true;
+   }
+   void form_stub_build_interface::extract_high_value_subrecords_for_stub(form_stub& stub) {
+      if (form_type_info::lookup(stub.formType).flags & form_type_info::flag::no_editor_id)
+         return;
+      //
+      struct _state {
+         _state() = delete;
+         enum {
+            found_editor_id   = 0x01,
+            found_cell_coords = 0x02,
+         };
+      };
+      constexpr int found_all = _state::found_editor_id | _state::found_cell_coords;
+      //
+      int   state  = 0;
+      auto& record = this->reader.get_current_record();
+      bool  is_ext = stub.is_exterior_cell();
+      if (!is_ext)
+         state |= _state::found_cell_coords;
+      //
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'EDID':
+               state |= _state::found_editor_id;
+               subrecord.to_string(stub.editorID);
+               break;
+            case 'XCLC':
+               state |= _state::found_cell_coords;
+               subrecord.read(stub.groupInfo.gridX);
+               subrecord.read(stub.groupInfo.gridY);
+               break;
+            default:
+               continue;
+         }
+         if (state == found_all)
+            return;
+      }
+      if (is_ext && !(state & _state::found_cell_coords)) {
+         stub.flags |= form_stub::flag::missing_coordinates;
+      }
+   }
+   #pragma endregion
+
    bool file_loader::load(const std::filesystem::path& new_path) {
       if (!new_path.empty())
          this->path = new_path;
@@ -155,6 +248,7 @@ namespace dovah::tes_file_reading {
          uint32_t last_world_cell_id = 0;
          int16_t  last_ext_block_x = 0;
          int16_t  last_ext_block_y = 0;
+         form_stub_build_interface fs_intfc = form_stub_build_interface(*this, *this);
          while (ot = this->next_record_or_group(), ot != object_type::none) {
             //
             // First, let's define some terms:
@@ -327,7 +421,7 @@ namespace dovah::tes_file_reading {
                //
                auto& record = this->get_current_record();
                form_type_t formType = form_type_info::signature_to_form_type(record.signature());
-               auto  stub = this->make_stub_for_record(*this);
+               auto* stub = fs_intfc.make_stub_for_record();
                stub->groupInfo.type = (int)group.header.type;
                switch (group.header.type) {
                   case group::type::world_children:
@@ -335,11 +429,11 @@ namespace dovah::tes_file_reading {
                      last_world_cell_id = stub->formID;
                      break;
                }
-               if (!this->_insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+               if (!fs_intfc.commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
                   continue;
                }
-               this->extract_high_value_subrecords_for_stub(stub);
+               fs_intfc.extract_high_value_subrecords_for_stub(*stub);
                if (record.signature() == 'WRLD')
                   last_worldspace_id = stub->formID;
                //

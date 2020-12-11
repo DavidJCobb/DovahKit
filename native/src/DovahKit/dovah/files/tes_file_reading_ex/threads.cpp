@@ -1,13 +1,14 @@
 #include "threads.h"
 #include "file_loader.h"
 #include "../../form_stub.h"
+#include "../../logging.h"
 #include "../../notice_code_list.h"
 
 namespace dovah::tes_file_reading::threads {
    #pragma region basic
    void basic::exec() {
-      this->file = this->owner.file;
       auto& lo = this->owner.get_load_order();
+      auto  fs_intfc = form_stub_build_interface(this->owner, *this);
       //
       auto size = this->queue.size();
       this->progress.maximum = size;
@@ -42,7 +43,7 @@ namespace dovah::tes_file_reading::threads {
                   auto& error = this->owner.error;
                   //
                   error.code       = file_read_error::error_code::malformed_file;
-                  error.file       = this->as_file()->get_filename();
+                  error.file       = this->owner.get_filename();
                   error.fileOffset = this->get_position();
                   char sig[5];
                   cobb::sprintf(error.message, "Unexpected nested group within \"simple\" top-group %s.", dovah::logging::format_signature(desired.signature, sig));
@@ -62,21 +63,21 @@ namespace dovah::tes_file_reading::threads {
                if (!formType) // probably shouldn't happen; invalid signatures should cause errors
                   continue;
                //
-               auto  stub = this->make_stub_for_record(*this->owner);
+               auto* stub = fs_intfc.make_stub_for_record();
                stub->groupInfo.type = (int)group.header.type;
                if (stub->formType == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   if (topicID) {
-                     lo.local_formID_to_global_formID(this->owner.as_file(), topicID);
+                     lo.local_formID_to_global_formID(this->owner, topicID);
                      stub->groupInfo.parentFormID = topicID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner.as_file()->get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner.get_filename(), stub->formID);
                }
-               if (!this->owner._insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+               if (!fs_intfc.commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
                   continue;
                }
-               this->extract_high_value_subrecords_for_stub(stub);
+               fs_intfc.extract_high_value_subrecords_for_stub(*stub);
                //
                if (&group == &this->_groups[0]) { // is this a top-level group?
                   uint32_t group_signature = _byteswap_ulong(group.header.label);
@@ -99,7 +100,6 @@ namespace dovah::tes_file_reading::threads {
             }
          }
       }
-      this->file = nullptr;
       //
       dovah::logging::print_line("[dovah::tes_file_reading::threads::basic] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
    }
@@ -110,8 +110,8 @@ namespace dovah::tes_file_reading::threads {
    
    #pragma region dialogue
    void dialogue::exec() {
-      this->file = this->owner.file;
       auto& lo = this->owner.get_load_order();
+      auto  fs_intfc = form_stub_build_interface(this->owner, *this);
       //
       auto size = this->queue.size();
       this->progress.maximum = size;
@@ -154,21 +154,21 @@ namespace dovah::tes_file_reading::threads {
                if (!formType) // probably shouldn't happen; invalid signatures should cause errors
                   continue;
                //
-               auto  stub = this->make_stub_for_record(*this->owner);
+               auto* stub = fs_intfc.make_stub_for_record();
                stub->groupInfo.type = (int)group.header.type;
                if (stub->formType == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   if (topicID) {
-                     lo.local_formID_to_global_formID(this->owner.as_file(), topicID);
+                     lo.local_formID_to_global_formID(this->owner, topicID);
                      stub->groupInfo.parentFormID = topicID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner.as_file()->get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner.get_filename(), stub->formID);
                }
-               if (!this->owner._insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+               if (!fs_intfc.commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
                   continue;
                }
-               this->extract_high_value_subrecords_for_stub(stub);
+               fs_intfc.extract_high_value_subrecords_for_stub(*stub);
                //
                if (&group == &this->_groups[0]) { // is this a top-level group?
                   uint32_t group_signature = _byteswap_ulong(group.header.label);
@@ -191,7 +191,6 @@ namespace dovah::tes_file_reading::threads {
             }
          }
       }
-      this->file = nullptr;
       //
       dovah::logging::print_line("[dovah::tes_file_reading::threads::basic] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
    }
@@ -202,8 +201,8 @@ namespace dovah::tes_file_reading::threads {
 
    #pragma region interior_cell
    void interior_cell::exec() {
-      this->file = this->owner.file;
       auto& lo = this->owner.get_load_order();
+      auto  fs_intfc = form_stub_build_interface(this->owner, *this);
       //
       auto size = this->queue.size();
       this->progress.maximum = size;
@@ -246,26 +245,25 @@ namespace dovah::tes_file_reading::threads {
                if (!formType)
                   continue;
                //
-               auto  stub = this->make_stub_for_record(*this->owner);
+               auto* stub = fs_intfc.make_stub_for_record();
                stub->groupInfo.type = (int)group.header.type;
                if (form_type_info::form_type_is_reference(stub->formType)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   if (cellID) {
-                     lo.local_formID_to_global_formID(this->owner.as_file(), cellID);
+                     lo.local_formID_to_global_formID(this->owner, cellID);
                      stub->groupInfo.parentFormID = cellID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->owner.as_file()->get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->owner.get_filename(), stub->formID);
                }
-               if (!this->owner._insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+               if (!fs_intfc.commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
                   continue;
                }
-               this->extract_high_value_subrecords_for_stub(stub);
+               fs_intfc.extract_high_value_subrecords_for_stub(*stub);
                continue;
             }
          }
       }
-      this->file = nullptr;
       //
       dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
    }
@@ -276,8 +274,8 @@ namespace dovah::tes_file_reading::threads {
 
    #pragma region worldspace_sub_block
    void worldspace_sub_block::exec() {
-      this->file = this->owner.file;
       auto& lo = this->owner.get_load_order();
+      auto  fs_intfc = form_stub_build_interface(this->owner, *this);
       //
       auto size = this->queue.size();
       this->progress.maximum = size;
@@ -317,28 +315,27 @@ namespace dovah::tes_file_reading::threads {
                if (!formType)
                   continue;
                //
-               auto  stub = this->make_stub_for_record(*this->owner);
+               auto* stub = fs_intfc.make_stub_for_record();
                stub->groupInfo.type = (int)group.header.type;
                if (record.signature() == 'CELL') {
                   stub->groupInfo.parentFormID = desired.worldspaceID; // already normalized
                } else if (form_type_info::form_type_is_reference(stub->formType)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   if (cellID) {
-                     lo.local_formID_to_global_formID(this->owner.as_file(), cellID);
+                     lo.local_formID_to_global_formID(this->owner, cellID);
                      stub->groupInfo.parentFormID = cellID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->owner.as_file()->get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->owner.get_filename(), stub->formID);
                }
-               if (!this->owner._insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+               if (!fs_intfc.commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
                   continue;
                }
-               this->extract_high_value_subrecords_for_stub(stub);
+               fs_intfc.extract_high_value_subrecords_for_stub(*stub);
                continue;
             }
          }
       }
-      this->file = nullptr;
       //
       dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
    }
@@ -349,8 +346,8 @@ namespace dovah::tes_file_reading::threads {
 
    #pragma region worldspace_persistent_cell_children
    void worldspace_persistent_cell_children::exec() {
-      this->file = this->owner.file;
       auto& lo = this->owner.get_load_order();
+      auto  fs_intfc = form_stub_build_interface(this->owner, *this);
       //
       auto size = this->queue.size();
       this->progress.maximum = size;
@@ -390,26 +387,25 @@ namespace dovah::tes_file_reading::threads {
                if (!formType)
                   continue;
                //
-               auto stub = this->make_stub_for_record(*this->owner);
+               auto* stub = fs_intfc.make_stub_for_record();
                stub->groupInfo.type = (int)group.header.type;
                if (form_type_info::form_type_is_reference(stub->formType)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   if (cellID) {
-                     lo.local_formID_to_global_formID(this->owner.as_file(), cellID);
+                     lo.local_formID_to_global_formID(this->owner, cellID);
                      stub->groupInfo.parentFormID = cellID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->owner.as_file()->get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->owner.get_filename(), stub->formID);
                }
-               if (!this->owner._insert_form(stub->formID, stub)) { // also normalizes (stub->formID)
+               if (!fs_intfc.commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
                   continue;
                }
-               this->extract_high_value_subrecords_for_stub(stub);
+               fs_intfc.extract_high_value_subrecords_for_stub(*stub);
                continue;
             }
          }
       }
-      this->file = nullptr;
       //
       dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
    }
@@ -420,8 +416,8 @@ namespace dovah::tes_file_reading::threads {
          
    #pragma region game_setting
    void game_setting::exec() {
-      this->file = this->owner.file;
       auto& lo = this->owner.get_load_order();
+      auto  fs_intfc = form_stub_build_interface(this->owner, *this);
       //
       auto size = this->queue.size();
       this->progress.maximum = size;
@@ -448,7 +444,7 @@ namespace dovah::tes_file_reading::threads {
                   auto& error = this->owner.error;
                   //
                   error.code       = file_read_error::error_code::malformed_file;
-                  error.file       = this->as_file()->get_filename();
+                  error.file       = this->owner.get_filename();
                   error.fileOffset = this->get_position();
                   cobb::sprintf(error.message, "Unexpected nested group within \"simple\" top-group GMST.");
                   //
@@ -463,7 +459,7 @@ namespace dovah::tes_file_reading::threads {
                   auto& error = this->owner.error;
                   //
                   error.code       = file_read_error::error_code::malformed_file;
-                  error.file       = this->as_file()->get_filename();
+                  error.file       = this->owner.get_filename();
                   error.fileOffset = this->get_position();
                   cobb::sprintf(error.message, "Non-GMST record found inside of a GMST GRUP. This is incorrect, and we don't have code to load it anyway!");
                   //
@@ -586,7 +582,6 @@ namespace dovah::tes_file_reading::threads {
             }
          }
       }
-      this->file = nullptr;
       //
       dovah::logging::print_line("[dovah::tes_file_reading::threads::game_setting] Thread %08X finished all of its work (%d queued entries).", std::this_thread::get_id(), this->queue.size());
    }
