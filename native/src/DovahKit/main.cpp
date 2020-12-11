@@ -54,9 +54,21 @@
 //
 //     - (file_read_error) PENDING.
 //
-//        - We should also create (file_load_results) with the same motive as "save results."
+//        - In order for this to be viable, we need to move the (load_interface) member 
+//          from (file_reader) to (basic_reader), and then require all (basic_reader) 
+//          constructors (including subclasses' constructors) to take a reference to an 
+//          already existing interface. We need this so that everything can report errors 
+//          and warnings to and through the file load order.
 //
-//        - Already created most of the needed notice codes.
+//           - Since (threaded_load_order_use_info_builder) is a (basic_reader) subclass, 
+//             we will at this point want to move it into the /tes_file_reading/ folder.
+//
+//           - Once this set of changes is complete, we can consider moving more stuff in 
+//             (file_load_order) to protected member functions accessible through the 
+//             (load_order_interfaces::file_load) class.
+//
+//              - file_load_order::accept_form_stub
+//              - file_load_order::accept_game_setting
 //
 //     - (file_read_warning) SUCCESSFULLY REPLACED.
 //
