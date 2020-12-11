@@ -10,6 +10,7 @@
 
 namespace dovah::tes_file_reading {
    class file_part_loader;
+   class file_threaded_part_loader_base;
 
    class file_loader : basic_reader {
       using interface_t   = load_order_interfaces::file_load;
@@ -17,7 +18,7 @@ namespace dovah::tes_file_reading {
       using detail_flag   = tes_file_header::detail_flag;
       using detail_flag_t = tes_file_header::detail_flag_t;
       public:
-         file_loader(interface_t&);
+         file_loader(interface_t&); // TODO: threaded loaders should be created in the constructor, and so should never be nullptr during this object's lifetime
          ~file_loader();
          //
          struct master_entry {
@@ -48,28 +49,13 @@ namespace dovah::tes_file_reading {
          std::filesystem::path path;
          interface_t       load_interface;
          cobb::mapped_file file;
-         //
-         struct _readers {
-            static_assert(false, "finish me");
-            /*// commented out until they're defined, so as not to confuse intellisense
-            threads::basic complex;
-            std::array<threads::basic,                               threads_for_simple_load>          simple;
-            std::array<threads::interior_cell,                       threads_for_interior_cell_load>   interior_cell;
-            std::array<threads::worldspace_sub_block,                threads_for_worldspace_load>      worldspace;
-            std::array<threads::worldspace_persistent_cell_children, threads_for_worldspace_cell_load> world_cell;
-            threads::game_setting game_setting;
-            //*/
-            //
-            _readers(file_loader&);
-            void start();
-            void wait_for();
-            //
-            float assess_progress() const noexcept; // returns NaN if any threaded reader hasn't set up its maximum yet
-         } readers;
+         std::vector<file_threaded_part_loader_base*> threads;
          //
          bool aborted = false;
          //
          bool _load_header();
+         bool _start_threads();
+         bool _wait_for_threads();
          //
       public:
          inline const cobb::mapped_file& get_raw_mapped_file() const noexcept { return this->file; };

@@ -122,6 +122,7 @@
     <ClCompile Include="dovah\files\tes_file_reading_ex\file_header.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading_ex\file_loader.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading_ex\file_part_loader.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading_ex\file_threaded_part_loader_base.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\config.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\elements.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\file_writer.cpp" />
@@ -299,6 +300,7 @@
     <ClInclude Include="dovah\files\tes_file_reading_ex\file_header.h" />
     <ClInclude Include="dovah\files\tes_file_reading_ex\file_loader.h" />
     <ClInclude Include="dovah\files\tes_file_reading_ex\file_part_loader.h" />
+    <ClInclude Include="dovah\files\tes_file_reading_ex\file_threaded_part_loader_base.h" />
     <ClInclude Include="dovah\files\tes_file_writing\config.h" />
     <ClInclude Include="dovah\files\tes_file_writing\elements.h" />
     <ClInclude Include="dovah\files\tes_file_writing\file_writer.h" />

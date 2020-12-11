@@ -1,7 +1,37 @@
 #include "file_loader.h"
 #include "../../notice_code_list.h"
+#include "file_threaded_part_loader_base.h"
 
 namespace dovah::tes_file_reading {
+   #pragma region Threading
+   float file_loader::assess_load_progress() const noexcept {
+      size_t count = 0;
+      float  total = 0.0F;
+      for (auto* thread : this->threads) {
+         if (!thread)
+            return NAN;
+         ++count;
+         total += thread->assess_progress();
+      }
+      if (!count)
+         return NAN;
+      return total / count;
+   }
+   //
+   bool file_loader::_start_threads() {
+      for (auto* thread : this->threads) {
+         assert(thread);
+         thread->start();
+      }
+   }
+   bool file_loader::_wait_for_threads() {
+      for (auto* thread : this->threads) {
+         assert(thread);
+         thread->wait_for();
+      }
+   }
+   #pragma endregion
+
    std::string file_loader::get_filename() const noexcept {
       return this->path.filename().string();
    }
