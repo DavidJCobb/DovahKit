@@ -522,6 +522,9 @@
     <ClCompile Include="dovah\files\tes_file_reading_ex\file_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading_ex\file_header.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1065,6 +1068,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\tes_file_reading_ex\file_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading_ex\file_header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

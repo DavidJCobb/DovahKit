@@ -1,6 +1,5 @@
 #pragma once
 #include "basic_reader.h"
-#include "../file_load_order.h"
 
 namespace dovah::tes_file_reading {
    class file_loader;
@@ -17,6 +16,7 @@ namespace dovah::tes_file_reading {
          //
       protected:
          file_loader& owner;
-         interface_t  load_interface;
+         //
+         bool _ensure_file();
    };
 }
