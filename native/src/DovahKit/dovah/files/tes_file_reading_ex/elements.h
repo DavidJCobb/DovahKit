@@ -103,6 +103,7 @@ namespace dovah {
             inline uint32_t size() const noexcept { return this->header.size; }
             inline uint16_t version() const noexcept { return this->header.version; }
             //
+            inline uint32_t header_pos() const noexcept { return this->head_pos; }
             inline uint32_t stream_pos() const noexcept { return this->offset + this->body_pos; }
             //
             bool read(void* destination, uint32_t size);

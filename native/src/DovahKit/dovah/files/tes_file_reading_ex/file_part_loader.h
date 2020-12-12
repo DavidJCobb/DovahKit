@@ -1,10 +1,10 @@
 #pragma once
-#include "basic_reader.h"
+#include "file_or_file_part_loader.h"
 
 namespace dovah::tes_file_reading {
    class file_loader;
 
-   class file_part_loader : public basic_reader {
+   class file_part_loader : public file_or_file_part_loader {
       friend class file_loader;
       public:
          file_part_loader(file_loader&);

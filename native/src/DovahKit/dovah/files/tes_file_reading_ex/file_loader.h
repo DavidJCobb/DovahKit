@@ -3,7 +3,7 @@
 #include <typeinfo>
 #include "../../../helpers/files.h"
 #include "../common.h"
-#include "basic_reader.h"
+#include "file_or_file_part_loader.h"
 #include "file_threaded_part_loader_base.h"
 #include "threads.h"
 #include "../../localization/localized_string_store.h"
@@ -21,7 +21,7 @@ namespace dovah::tes_file_reading {
 
    class form_stub_build_interface;
 
-   class file_loader : basic_reader {
+   class file_loader : file_or_file_part_loader {
       using interface_t   = load_order_interfaces::file_load;
       using flag          = tes_file_flag;
       using detail_flag   = tes_file_header::detail_flag;
@@ -39,7 +39,6 @@ namespace dovah::tes_file_reading {
          bool  fetch_record_header(uint32_t pos, tes_file_record_header&, uint32_t& record_decompressed_size);
          bool  load_record_at(uint32_t pos);
          std::string get_filename() const noexcept;
-         file_load_order& get_load_order() const noexcept;
          //
          inline bool is_aborted() const noexcept { return this->aborted; }
          //
@@ -53,8 +52,7 @@ namespace dovah::tes_file_reading {
          //
       protected:
          std::filesystem::path path;
-         interface_t       load_interface;
-         cobb::mapped_file file;
+         cobb::mapped_file     file;
          std::vector<file_threaded_part_loader_base*> threads; // array elements should never be nullptr after the instance is constructed.
          bool aborted = false; // TODO: make atomic?
          //
@@ -75,23 +73,5 @@ namespace dovah::tes_file_reading {
          //
       public:
          inline const cobb::mapped_file& get_raw_mapped_file() const noexcept { return this->file; };
-         void log_load_warning(const file_part_loader& from, detailed_notice&);
-         void log_load_error(const file_part_loader& from, detailed_notice&);
-   };
-   //
-   class form_stub_build_interface {
-      friend class file_loader;
-      protected:
-         form_stub_build_interface(file_loader& f, basic_reader& r) : owner(f), reader(r) {}
-         //
-      public:
-         form_stub_build_interface(file_loader& f, file_part_loader& r) : owner(f), reader(r) {}
-         //
-         file_loader&  owner;
-         basic_reader& reader;
-         //
-         form_stub* make_stub_for_record();
-         bool commit_stub(form_stub&);
-         void extract_high_value_subrecords_for_stub(form_stub&);
    };
 }
