@@ -1,4 +1,5 @@
 #include "basic_reader.h"
+#include "file_loader.h"
 #include "../../notice_code_list.h"
 extern "C" {
    #include "../../../zlib/zlib.h"
@@ -39,7 +40,7 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
-   bool basic_reader::_reset_last_error() {
+   void basic_reader::_reset_last_error() {
       this->last_error = detailed_notice();
       this->last_error.type = detailed_notice::notice_type::error;
    }
@@ -231,5 +232,11 @@ namespace dovah::tes_file_reading {
       if (!this->is_good() || !this->_record.is_in_bounds())
          return false;
       return true;
+   }
+
+   bool basic_reader::uses_string_table() const noexcept {
+      if (this->loader)
+         return this->loader->uses_string_table();
+      return this->options.uses_string_table;
    }
 }

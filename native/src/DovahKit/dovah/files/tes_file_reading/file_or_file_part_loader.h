@@ -5,15 +5,14 @@
 namespace dovah::tes_file_reading {
    class file_loader;
 
-   class file_or_file_part_loader : public basic_reader {
+   class file_or_file_part_loader : protected basic_reader {
       using lo_interface_t = load_order_interfaces::file_load;
-      private:
-         lo_interface_t load_interface;
-         //
       protected:
          file_or_file_part_loader(lo_interface_t&);
          //
          virtual file_loader& get_file_loader() const noexcept = 0;
+         //
+         lo_interface_t load_interface;
          //
       protected:
          object_type next_record_or_group(); // only called during the initial file read
@@ -29,5 +28,12 @@ namespace dovah::tes_file_reading {
          //
       public:
          file_load_order& get_load_order() const noexcept;
+         //
+         #pragma region Grant access to specific (basic_reader) fields
+         using basic_reader::load_record_at;
+         inline group& get_current_group() { return *(group*)&this->get_current_group(); }
+         inline record& get_current_record() { return *(record*)&this->_record; }
+         inline subrecord& get_current_subrecord() { return *(subrecord*)&this->_subrecord; }
+         #pragma endregion
    };
 }

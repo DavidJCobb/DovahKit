@@ -6,22 +6,22 @@
 namespace dovah::tes_file_reading {
    file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(intfc) {
       for (size_t i = 0; i < threads::basic::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::basic(*this));
+         this->threads.push_back(new threads::basic(*this, this->load_interface));
       }
       for (size_t i = 0; i < threads::dialogue::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::dialogue(*this));
+         this->threads.push_back(new threads::dialogue(*this, this->load_interface));
       }
       for (size_t i = 0; i < threads::interior_cell::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::interior_cell(*this));
+         this->threads.push_back(new threads::interior_cell(*this, this->load_interface));
       }
       for (size_t i = 0; i < threads::worldspace_sub_block::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::worldspace_sub_block(*this));
+         this->threads.push_back(new threads::worldspace_sub_block(*this, this->load_interface));
       }
       for (size_t i = 0; i < threads::worldspace_persistent_cell_children::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::worldspace_persistent_cell_children(*this));
+         this->threads.push_back(new threads::worldspace_persistent_cell_children(*this, this->load_interface));
       }
       for (size_t i = 0; i < threads::game_setting::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::game_setting(*this));
+         this->threads.push_back(new threads::game_setting(*this, this->load_interface));
       }
    }
    file_loader::~file_loader() {
@@ -56,11 +56,11 @@ namespace dovah::tes_file_reading {
       return total / count;
    }
    //
-   bool file_loader::_start_threads() {
+   void file_loader::_start_threads() {
       for (auto* thread : this->threads)
          thread->start();
    }
-   bool file_loader::_wait_for_threads() {
+   void file_loader::_wait_for_threads() {
       for (auto* thread : this->threads)
          thread->wait_for();
    }
@@ -406,6 +406,8 @@ namespace dovah::tes_file_reading {
       }
       this->header.record_version = r.version();
       //
+      this->options.uses_string_table = this->header.flags & flag::localized_string_table;
+      //
       uint32_t last_subrecord = 0;
       while (auto& subrecord = r.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -490,6 +492,7 @@ namespace dovah::tes_file_reading {
    void file_loader::adopt(basic_reader& br) const noexcept {
       br.file_data = (const uint8_t*)this->file.data();
       br.file_size = this->file.size();
+      br.loader    = const_cast<file_loader*>(this);
    }
 
    #pragma region Save interface

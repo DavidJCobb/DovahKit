@@ -5,6 +5,7 @@
 
 namespace dovah::tes_file_reading {
    file_or_file_part_loader::file_or_file_part_loader(lo_interface_t& intfc) : load_interface(intfc) {
+      this->loader = &this->get_file_loader();
    }
    
    basic_reader::object_type file_or_file_part_loader::next_record_or_group() {

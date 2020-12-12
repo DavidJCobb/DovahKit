@@ -2,7 +2,14 @@
 #include "../../detailed_notice.h"
 #include "elements.h"
 
+namespace dovah {
+   class localized_string_store;
+}
+
 namespace dovah::tes_file_reading {
+   class file_or_file_part_loader;
+   class file_loader;
+
    class basic_reader {
       //
       // A class capable of parsing groups, records, and subrecords. It's not strictly suitable 
@@ -50,7 +57,7 @@ namespace dovah::tes_file_reading {
          //
          void _read_impl(void* buffer, uint32_t size);
          //
-         bool _reset_last_error();
+         void _reset_last_error();
          bool _validate_record_signature();
          //
       public:
@@ -59,13 +66,15 @@ namespace dovah::tes_file_reading {
                this->_groups[i].initialize(this);
          };
          //
-         const uint8_t*  file_data = nullptr; // file data to read
-         uint32_t        file_size = 0;
+         const uint8_t*  file_data   = nullptr; // file data to read
+         uint32_t        file_size   = 0;
+         file_loader*    loader      = nullptr; // optional. needed for loading content that requires a load order
          detailed_notice last_error;
          struct {
             bool allow_suspicious_record_signatures = false;
             bool allow_unknown_record_signatures    = true;
-            bool log_file_syntax_errors = true; // for on-demand form loading, perf boost from disabling this after the initial file load
+            bool log_file_syntax_errors             = true;  // for on-demand form loading, perf boost from disabling this after the initial file load
+            bool uses_string_table                  = false; // only used when no (file_loader) is supplied; otherwise you must set this based on the file header's flags
          } options;
          //
          void     set_position(uint32_t);
@@ -104,5 +113,7 @@ namespace dovah::tes_file_reading {
          }
          inline record&    get_current_record()    { return this->_record; }
          inline subrecord& get_current_subrecord() { return this->_subrecord; }
+         //
+         bool uses_string_table() const noexcept;
    };
 }

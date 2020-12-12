@@ -16,6 +16,7 @@ namespace dovah {
    }
    namespace tes_file_reading {
       class basic_reader;
+      class file_or_file_part_loader;
       class file_loader;
       class threaded_load_order_use_info_builder;
    }

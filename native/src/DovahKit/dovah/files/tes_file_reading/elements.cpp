@@ -1,6 +1,6 @@
 #include "elements.h"
 #include "basic_reader.h"
-#include "file.h"
+#include "file_loader.h"
 #include <algorithm>
 #include <cassert>
 #include <filesystem>
@@ -16,7 +16,7 @@ namespace dovah {
       #pragma region group
       void group::skip() {
          assert(this->owner);
-         this->owner->setPos(this->end);
+         this->owner->set_position(this->end);
       }
       uint32_t group::depth() const noexcept {
          assert(this->owner);
@@ -111,18 +111,23 @@ namespace dovah {
       }
 
       form_stub* record::lookup_form_by_id(bare_form_id_t id) const noexcept {
-         return this->owner.as_file()->load_order.get_form(id, false);
+         auto* file = this->owner.loader;
+         if (!file)
+            return nullptr;
+         return file->get_load_order().get_form(id, false);
       }
       #pragma endregion
 
       #pragma region subrecord
-      void subrecord::_fixupFormID(uint32_t& id) const noexcept {
-         auto file = this->owner.as_file();
-         file->load_order.local_formID_to_global_formID(file, id);
+      void subrecord::_fix_up_form_id(uint32_t& id) const noexcept {
+         auto* file = this->owner.loader;
+         if (!file)
+            return;
+         file->get_load_order().local_formID_to_global_formID(file, id);
       }
       bool subrecord::_read_form_id(form_id_t& field) const noexcept {
          if (this->read(field.value)) {
-            this->_fixupFormID(field.value);
+            this->_fix_up_form_id(field.value);
             return true;
          }
          return false;
@@ -134,7 +139,7 @@ namespace dovah {
             return false;
          }
          if (id) {
-            this->_fixupFormID(id);
+            this->_fix_up_form_id(id);
             field.stub = this->lookup_form_by_id(id);
             if (!field.stub) {
                //
@@ -156,13 +161,13 @@ namespace dovah {
       }
       void subrecord::_unchecked_read_form_id(form_id_t& field) const noexcept {
          this->unchecked_read(field.value);
-         this->_fixupFormID(field.value);
+         this->_fix_up_form_id(field.value);
       }
       void subrecord::_unchecked_read_form_reference(form_reference_t& field) const noexcept {
          bare_form_id_t id;
          this->unchecked_read(id);
          if (id) {
-            this->_fixupFormID(id);
+            this->_fix_up_form_id(id);
             field.stub = this->lookup_form_by_id(id);
             if (!field.stub) {
                //
@@ -225,7 +230,7 @@ namespace dovah {
             bool result = this->read(field.index);
             //
             field.value = "<LOAD FAILED>";
-            if (auto* base = this->owner.as_file()) {
+            if (auto* base = this->owner.loader) {
                if (auto* store = base->localization_data) {
                   field.value     = store->lookup(field.type, field.index);
                   field.localized = store->get_default_language_enum();
@@ -239,7 +244,10 @@ namespace dovah {
       }
       
       form_stub* subrecord::lookup_form_by_id(bare_form_id_t id) const noexcept {
-         return this->owner.as_file()->load_order.get_form(id, false);
+         auto* file = this->owner.loader;
+         if (!file)
+            return nullptr;
+         return file->get_load_order().get_form(id, false);
       }
       #pragma endregion
    }

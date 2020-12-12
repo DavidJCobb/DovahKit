@@ -6,10 +6,11 @@ namespace dovah::tes_file_reading {
 
    class file_part_loader : public file_or_file_part_loader {
       friend class file_loader;
+      using lo_interface_t = load_order_interfaces::file_load;
       protected:
          virtual file_loader& get_file_loader() const noexcept override final { return this->owner; }
       public:
-         file_part_loader(file_loader&);
+         file_part_loader(file_loader&, lo_interface_t&);
          //
          bool load_record_at(uint32_t pos);
          //
@@ -19,7 +20,7 @@ namespace dovah::tes_file_reading {
       protected:
          file_loader& owner;
          //
-         bool _ensure_file();
+         void _ensure_file();
          void _on_file_close(); // called by file_loader::close
    };
 }

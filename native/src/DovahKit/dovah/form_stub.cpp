@@ -399,6 +399,7 @@ namespace dovah {
       }
       reader.file_data = nullptr;
       reader.file_size = 0;
+      reader.loader    = nullptr;
       this->_add_one_way_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
    }
    void form_stub::send_inbound_refs() noexcept {

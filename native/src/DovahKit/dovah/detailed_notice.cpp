@@ -127,6 +127,7 @@ namespace dovah {
 
    detailed_notice& detailed_notice::add_relevant_file(const std::string& filename) {
       this->relevant_files.emplace_back(filename);
+      return *this;
    }
 
    bool detailed_notice::operator==(const detailed_notice& other) const noexcept {

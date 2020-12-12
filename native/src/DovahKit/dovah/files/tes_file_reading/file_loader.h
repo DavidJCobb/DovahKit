@@ -48,6 +48,7 @@ namespace dovah::tes_file_reading {
          inline bool is_aborted() const noexcept { return this->aborted; }
          //
          inline bool is_light() const noexcept { return this->header.is_light(); }
+         inline bool uses_string_table() const noexcept { return this->header.flags & flag::localized_string_table; }
          //
          bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any). calling this while a load is already in progress is undefined behavior
          void close(); // intended for use during the save process, with the file then being reopened by the caller upon a successful save
@@ -62,8 +63,8 @@ namespace dovah::tes_file_reading {
          bool _open_mapped_file();
          bool _load_header();
          //
-         bool _start_threads();
-         bool _wait_for_threads();
+         void _start_threads();
+         void _wait_for_threads();
          file_threaded_part_loader_base* _get_nth_thread_of_type_impl(const std::type_info&, size_t);
          //
          template<class loader_type> loader_type* _get_nth_thread_of_type(uint32_t& s) {

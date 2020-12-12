@@ -5,6 +5,7 @@
 
 namespace dovah::tes_file_reading {
    class file_threaded_part_loader_base : public file_part_loader {
+      using lo_interface_t = load_order_interfaces::file_load;
       public:
          //
          // Subclasses should shadow at least (recommended_thread_count) with the desired number of 
@@ -35,7 +36,7 @@ namespace dovah::tes_file_reading {
          std::atomic<bool> running = false; // no, (std::thread::joinable) is not the same thing; it returns (true) until (std::thread::join) is manually called
          //
       public:
-         file_threaded_part_loader_base(file_loader& owner) : file_part_loader(owner) {}
+         file_threaded_part_loader_base(file_loader& owner, lo_interface_t& intfc) : file_part_loader(owner, intfc) {}
          //
          void  start();
          void  wait_for();

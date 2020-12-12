@@ -16,7 +16,7 @@ namespace dovah::tes_file_reading {
       auto& list = this->queue;
       this->progress.maximum = list.size();
       for (auto it = list.begin(); it != list.end(); ++it) {
-         (*it)->build_outbound_refs(this);
+         (*it)->build_outbound_refs(*this);
          ++this->progress.current;
          #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
             ftime(&bench_current);

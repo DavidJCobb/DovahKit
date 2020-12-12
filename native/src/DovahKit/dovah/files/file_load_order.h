@@ -565,7 +565,7 @@ namespace dovah {
    namespace load_order_interfaces {
       class file_load {
          friend class file_load_order;
-         friend class tes_file_reading::file_reader;
+         friend class tes_file_reading::file_loader;
          public:
             file_load_order& owner;
 
@@ -581,7 +581,7 @@ namespace dovah {
          public:
             file_load_order& owner;
             const form_stub& target_stub;
-            tes_file_reading::file_reader* current_file = nullptr;
+            tes_file_reading::file_loader* current_file = nullptr;
             bool is_winning_record = false;
 
             // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 

@@ -146,7 +146,7 @@ namespace dovah {
             uint32_t pos; // position in the file
             uint32_t end; // position in the file
             //
-            void _fixupFormID(uint32_t& id) const noexcept;
+            void _fix_up_form_id(uint32_t& id) const noexcept;
             bool _read_form_id(form_id_t& field) const noexcept;
             bool _read_form_reference(form_reference_t&) const noexcept;
             bool _read_form_reference(struct_form_reference_t&) const noexcept;

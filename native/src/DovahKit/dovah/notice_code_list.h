@@ -84,6 +84,7 @@ namespace dovah {
          invalid_record_signature                    = 0x0000004B, // Malformed file: a record had a suspicious (or just unknown) signature.
          form_id_is_inside_of_a_missing_master       = 0x0000004C,
          unexpected_nested_group_in_simple_top_group = 0x0000004D, // Malformed file: a "simple" top-level GRUP contained a nested GRUP.
+         extended_subrecord_with_no_length           = 0x0000004E, // Malformed file: an 'XXXX' subrecord contained no usable length value.
       };
    };
 }

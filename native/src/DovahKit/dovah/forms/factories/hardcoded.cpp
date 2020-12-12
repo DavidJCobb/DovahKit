@@ -1,7 +1,7 @@
 #include "hardcoded.h"
 #include "../../core.h"
 #include "../../form_stub.h"
-#include "../../files/tes_file_reading/file.h"
+#include "../../files/tes_file_reading/file_loader.h"
 #include "../../files/file_load_order.h"
 #include "../../data/actor_values.h"
 #include "../Activator.h"
@@ -48,7 +48,7 @@ namespace dovah {
          #endif
          return nullptr;
       }
-      auto& lo = file->load_order;
+      auto& lo = file->get_load_order();
       switch (stub.formID) {
          case 0x14:
             {
