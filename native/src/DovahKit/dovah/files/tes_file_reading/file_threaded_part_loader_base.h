@@ -5,6 +5,11 @@
 
 namespace dovah::tes_file_reading {
    class file_threaded_part_loader_base : public file_part_loader {
+      //
+      // Subclass of (file_part_loader) that automates a lot of the machinery behind managing 
+      // multi-threaded loading -- specifically, spawning the thread, kicking it off, waiting 
+      // for it to finish, and being able to report progress to the UI as it runs.
+      //
       using lo_interface_t = load_order_interfaces::file_load;
       public:
          //
@@ -13,7 +18,7 @@ namespace dovah::tes_file_reading {
          // be used if hardware thread limits allow.
          //
          static constexpr int recommended_thread_count = 0;
-         static constexpr int heavy_duty_thread_count  = 0;
+         static constexpr int heavy_duty_thread_count  = 0; // TODO: currently not used; can we get (file_loader) to take advantage of it?
          //
       protected:
          virtual void exec() = 0; // thread-local loading behavior should be defined in an override
@@ -36,7 +41,7 @@ namespace dovah::tes_file_reading {
          std::atomic<bool> running = false; // no, (std::thread::joinable) is not the same thing; it returns (true) until (std::thread::join) is manually called
          //
       public:
-         file_threaded_part_loader_base(file_loader& owner, lo_interface_t& intfc) : file_part_loader(owner, intfc) {}
+         file_threaded_part_loader_base(file_loader& owner) : file_part_loader(owner) {}
          //
          void  start();
          void  wait_for();

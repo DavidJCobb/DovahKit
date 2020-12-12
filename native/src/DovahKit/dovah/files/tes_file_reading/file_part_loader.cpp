@@ -2,11 +2,11 @@
 #include "file_loader.h"
 
 namespace dovah::tes_file_reading {
-   file_part_loader::file_part_loader(file_loader& o, lo_interface_t& intfc) : file_or_file_part_loader(intfc), owner(o) {}
+   file_part_loader::file_part_loader(file_loader& o) : file_or_file_part_loader(o) {}
 
    void file_part_loader::_ensure_file() {
       if (!this->is_available()) {
-         auto& f = this->owner.get_raw_mapped_file();
+         auto& f = this->loader->get_raw_mapped_file();
          this->file_data = (const uint8_t*)f.data();
          this->file_size = f.size();
       }

@@ -4,8 +4,8 @@
 #include "file_loader.h"
 
 namespace dovah::tes_file_reading {
-   file_or_file_part_loader::file_or_file_part_loader(lo_interface_t& intfc) : load_interface(intfc) {
-      this->loader = &this->get_file_loader();
+   file_or_file_part_loader::file_or_file_part_loader(file_loader& f) : load_interface(f.get_load_interface(*this)) {
+      this->loader = &f;
    }
    
    basic_reader::object_type file_or_file_part_loader::next_record_or_group() {

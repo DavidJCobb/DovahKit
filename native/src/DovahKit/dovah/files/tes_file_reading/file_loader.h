@@ -22,10 +22,7 @@ namespace dovah::tes_file_reading {
    class file_part_loader;
    class file_threaded_part_loader_base;
 
-   class form_stub_build_interface;
-
    class file_loader : public file_or_file_part_loader {
-      friend class form_stub_build_interface;
       using interface_t = load_order_interfaces::file_load;
       public:
          using flag          = tes_file_flag;
@@ -92,5 +89,6 @@ namespace dovah::tes_file_reading {
                void update_path(const std::filesystem::path&) const noexcept;
          };
          save_interface get_save_interface(const tes_file_writing::file_writer&) noexcept { return save_interface(*this); }
+         interface_t    get_load_interface(const file_or_file_part_loader&) noexcept { return this->load_interface; }
    };
 }

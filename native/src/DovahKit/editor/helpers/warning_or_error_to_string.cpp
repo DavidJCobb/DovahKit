@@ -618,7 +618,7 @@ namespace editor_helpers {
                      }
                   }
                   if (printable) {
-                     text = QObject::tr("The file is malformed: a record had an unknown or suspicious signature: %1.", "notice_code::invalid_record_signature (printable)").arg(signature)
+                     text = QObject::tr("The file is malformed: a record had an unknown or suspicious signature: %1.", "notice_code::invalid_record_signature (printable)").arg(signature);
                   } else {
                      signature = QObject::tr("0x%1 0x%2 0x%3 0x%4", "hex codes")
                         .arg((notice.cause_signature >> 0x18) & 0xFF)

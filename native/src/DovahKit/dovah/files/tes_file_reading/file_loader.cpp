@@ -4,24 +4,24 @@
 #include "threads.h"
 
 namespace dovah::tes_file_reading {
-   file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(intfc) {
+   file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(*this) {
       for (size_t i = 0; i < threads::basic::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::basic(*this, this->load_interface));
+         this->threads.push_back(new threads::basic(*this));
       }
       for (size_t i = 0; i < threads::dialogue::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::dialogue(*this, this->load_interface));
+         this->threads.push_back(new threads::dialogue(*this));
       }
       for (size_t i = 0; i < threads::interior_cell::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::interior_cell(*this, this->load_interface));
+         this->threads.push_back(new threads::interior_cell(*this));
       }
       for (size_t i = 0; i < threads::worldspace_sub_block::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::worldspace_sub_block(*this, this->load_interface));
+         this->threads.push_back(new threads::worldspace_sub_block(*this));
       }
       for (size_t i = 0; i < threads::worldspace_persistent_cell_children::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::worldspace_persistent_cell_children(*this, this->load_interface));
+         this->threads.push_back(new threads::worldspace_persistent_cell_children(*this));
       }
       for (size_t i = 0; i < threads::game_setting::recommended_thread_count; ++i) {
-         this->threads.push_back(new threads::game_setting(*this, this->load_interface));
+         this->threads.push_back(new threads::game_setting(*this));
       }
    }
    file_loader::~file_loader() {

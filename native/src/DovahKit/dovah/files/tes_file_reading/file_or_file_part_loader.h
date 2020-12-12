@@ -8,7 +8,7 @@ namespace dovah::tes_file_reading {
    class file_or_file_part_loader : protected basic_reader {
       using lo_interface_t = load_order_interfaces::file_load;
       protected:
-         file_or_file_part_loader(lo_interface_t&);
+         file_or_file_part_loader(file_loader&);
          //
          virtual file_loader& get_file_loader() const noexcept = 0;
          //
