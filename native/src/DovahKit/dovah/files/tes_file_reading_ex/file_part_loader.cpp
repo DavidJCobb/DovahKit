@@ -18,25 +18,15 @@ namespace dovah::tes_file_reading {
 
    bool file_part_loader::load_record_at(uint32_t pos) {
       this->_ensure_file();
-      this->reset_parse_state();
-      this->set_position(pos);
-      return this->next_record_or_group() == object_type::record;
+      return file_or_file_part_loader::load_record_at(pos);
    }
    //
    file_part_loader::object_type file_part_loader::next_record_or_group() {
       this->_ensure_file();
-      this->_reset_last_error();
-      auto result = basic_reader::next_record_or_group(); // call super
-      if (this->last_error.is_defined())
-         this->owner.log_load_error(*this, this->last_error);
-      return result;
+      return file_or_file_part_loader::next_record_or_group();
    }
    bool file_part_loader::next_subrecord() {
       this->_ensure_file();
-      this->_reset_last_error();
-      auto result = basic_reader::next_subrecord(); // call super
-      if (this->last_error.is_defined())
-         this->owner.log_load_error(*this, this->last_error);
-      return result;
+      return file_or_file_part_loader::next_subrecord();
    }
 }

@@ -99,27 +99,6 @@ namespace dovah::tes_file_reading {
       return this->path.filename().string();
    }
 
-   bool file_loader::load_record_at(uint32_t pos) {
-      this->reset_parse_state();
-      this->set_position(pos);
-      return this->next_record_or_group() == object_type::record;
-   }
-   //
-   file_loader::object_type file_loader::next_record_or_group() {
-      this->_reset_last_error();
-      auto result = basic_reader::next_record_or_group(); // call super
-      if (this->last_error.is_defined())
-         this->log_load_error(this->last_error);
-      return result;
-   }
-   bool file_loader::next_subrecord() {
-      this->_reset_last_error();
-      auto result = basic_reader::next_subrecord(); // call super
-      if (this->last_error.is_defined())
-         this->log_load_error(this->last_error);
-      return result;
-   }
-
    bool file_loader::load(const std::filesystem::path& new_path) {
       if (!new_path.empty())
          this->path = new_path;

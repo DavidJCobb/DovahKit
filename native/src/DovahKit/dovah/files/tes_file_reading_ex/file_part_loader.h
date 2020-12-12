@@ -6,6 +6,8 @@ namespace dovah::tes_file_reading {
 
    class file_part_loader : public file_or_file_part_loader {
       friend class file_loader;
+      protected:
+         virtual file_loader& get_file_loader() const noexcept override final { return this->owner; }
       public:
          file_part_loader(file_loader&);
          //
