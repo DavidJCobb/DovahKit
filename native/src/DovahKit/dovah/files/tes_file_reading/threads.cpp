@@ -93,9 +93,8 @@ namespace dovah {
                            form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
                            //
                            detailed_notice warning;
-                           warning.code       = notice_code::record_found_in_wrong_top_level_group;
-                           warning.cause_file = this->owner->get_filename();
-                           warning.set_flag(detailed_notice::flag::has_cause_file);
+                           warning.code = notice_code::record_found_in_wrong_top_level_group;
+                           warning.set_cause_file(this->owner->get_filename());
                            warning.set_cause_form(*stub);
                            warning.set_cause_signature(group_signature);
                            warning.set_cause_form_type(group_type);

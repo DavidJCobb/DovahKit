@@ -41,7 +41,6 @@ namespace dovah::tes_file_reading::threads {
                if (this->_groups[1].exists()) {
                   detailed_notice error;
                   error.code = notice_code::unexpected_nested_group_in_simple_top_group;
-                  error.set_cause_file(this->owner.get_filename());
                   error.set_file_offset(this->get_position());
                   this->log_load_error(error);
                   this->owner.abort();
@@ -171,9 +170,7 @@ namespace dovah::tes_file_reading::threads {
                      form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
                      //
                      detailed_notice warning;
-                     warning.code       = notice_code::record_found_in_wrong_top_level_group;
-                     warning.cause_file = this->owner.get_filename();
-                     warning.set_flag(detailed_notice::flag::has_cause_file);
+                     warning.code = notice_code::record_found_in_wrong_top_level_group;
                      warning.set_cause_form(*stub);
                      warning.set_cause_signature(group_signature);
                      warning.set_cause_form_type(group_type);
@@ -434,10 +431,8 @@ namespace dovah::tes_file_reading::threads {
                if (this->_groups[1].exists()) {
                   detailed_notice error;
                   error.code = notice_code::unexpected_nested_group_in_simple_top_group;
-                  error.set_cause_file(this->owner.get_filename());
                   error.set_file_offset(this->get_position());
-                  this->log_load_error(error);
-                  this->owner.abort();
+                  this->log_load_error(error); // also aborts the load
                   break;
                }
             }
@@ -445,14 +440,16 @@ namespace dovah::tes_file_reading::threads {
                auto& record = this->get_current_record();
                auto& group  = this->get_current_group();
                if (record.signature() != 'GMST') { // misplaced record
-                  auto& error = this->owner.error;
-                  //
-                  error.code       = file_read_error::error_code::malformed_file;
-                  error.file       = this->owner.get_filename();
-                  error.fileOffset = this->get_position();
-                  cobb::sprintf(error.message, "Non-GMST record found inside of a GMST GRUP. This is incorrect, and we don't have code to load it anyway!");
-                  //
-                  this->owner.abort();
+                  detailed_notice error;
+                  error.code = notice_code::record_found_in_wrong_top_level_group;
+                  error.set_flag(detailed_notice::flag::has_cause_file);
+                  error.cause_form.localID = record.formID();
+                  error.cause_form.type    = form_type_info::signature_to_form_type(record.signature());
+                  error.set_flag(detailed_notice::flag::has_cause_form);
+                  error.set_cause_signature('GMST');
+                  error.set_cause_form_type(form_type::setting);
+                  error.set_file_offset(this->get_position());
+                  this->log_load_error(error); // also aborts the load
                   break;
                }
                //

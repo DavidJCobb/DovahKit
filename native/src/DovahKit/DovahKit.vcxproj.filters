@@ -531,6 +531,12 @@
     <ClCompile Include="dovah\files\tes_file_reading_ex\threads.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading_ex\file_or_file_part_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading_ex\threaded_load_order_use_info_builder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1083,6 +1089,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\tes_file_reading_ex\threads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading_ex\file_or_file_part_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading_ex\threaded_load_order_use_info_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

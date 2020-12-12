@@ -114,7 +114,6 @@ namespace dovah::tes_file_reading {
       if (!this->_load_header()) {
          detailed_notice error;
          error.code = notice_code::malformed_file;
-         error.set_cause_file(this->get_filename());
          error.set_file_offset(this->get_position());
          this->log_load_error(error);
          return false;
@@ -229,7 +228,6 @@ namespace dovah::tes_file_reading {
                               if (err == 1) {
                                  error.code = notice_code::interior_cell_block_has_no_parent_group;
                               }
-                              error.set_cause_file(this->get_filename());
                               error.set_file_offset(this->get_position());
                               this->log_load_error(error);
                               //
@@ -327,9 +325,7 @@ namespace dovah::tes_file_reading {
                      form_type_t group_type = form_type_info::signature_to_form_type(group_signature);
                      //
                      detailed_notice warning;
-                     warning.code       = notice_code::record_found_in_wrong_top_level_group;
-                     warning.cause_file = this->get_filename();
-                     warning.set_flag(detailed_notice::flag::has_cause_file);
+                     warning.code = notice_code::record_found_in_wrong_top_level_group;
                      warning.set_cause_form(*stub);
                      warning.set_cause_signature(group_signature);
                      warning.set_cause_form_type(group_type);
@@ -369,7 +365,6 @@ namespace dovah::tes_file_reading {
          error.code    = notice_code::filesystem_error;
          error.type    = detailed_notice::notice_type::error;
          error.context = detailed_notice::notice_context::file_load;
-         error.set_cause_file(this->get_filename());
          error.set_winapi_error_code(this->file.get_error());
          this->log_load_error(error);
          //
@@ -382,7 +377,6 @@ namespace dovah::tes_file_reading {
       if (this->next_record_or_group() != object_type::record) {
          detailed_notice error;
          error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
-         error.set_cause_file(this->get_filename());
          error.set_file_offset(this->get_position());
          this->log_load_error(error);
          return false;
@@ -391,7 +385,6 @@ namespace dovah::tes_file_reading {
       if (r.signature() != 'TES4') {
          detailed_notice error;
          error.code = notice_code::malformed_file; // Expected TES4 record; got something else.
-         error.set_cause_file(this->get_filename());
          error.set_file_offset(this->get_position());
          this->log_load_error(error);
          return false;
@@ -444,7 +437,6 @@ namespace dovah::tes_file_reading {
                   if (this->header.masters.size() > 254) {
                      detailed_notice error;
                      error.code = notice_code::file_has_too_many_dependencies; // Expected TES4 record; no record found.
-                     error.set_cause_file(this->get_filename());
                      error.set_file_offset(this->get_position());
                      this->log_load_error(error);
                      return false;
@@ -458,7 +450,6 @@ namespace dovah::tes_file_reading {
                if (last_subrecord != 'MAST') {
                   detailed_notice error;
                   error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
-                  error.set_cause_file(this->get_filename());
                   error.set_file_offset(this->get_position());
                   this->log_load_error(error);
                   return false;
@@ -491,5 +482,10 @@ namespace dovah::tes_file_reading {
          last_subrecord = subrecord.signature();
       }
       return true;
+   }
+
+   void file_loader::adopt(basic_reader& br) const noexcept {
+      br.file_data = (const uint8_t*)this->file.data();
+      br.file_size = this->file.size();
    }
 }

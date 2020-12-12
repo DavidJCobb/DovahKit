@@ -29,11 +29,15 @@ namespace dovah::tes_file_reading {
    }
 
    void file_or_file_part_loader::log_load_warning(detailed_notice& n) {
+      auto& file = this->get_file_loader();
+      n.set_cause_file(file.get_filename());
       this->load_interface.log_load_warning(n);
    }
    void file_or_file_part_loader::log_load_error(detailed_notice& n) {
+      auto& file = this->get_file_loader();
+      n.set_cause_file(file.get_filename());
       this->load_interface.log_load_error(n);
-      this->get_file_loader().abort();
+      file.abort();
    }
 
    form_stub* file_or_file_part_loader::make_stub_for_record() {

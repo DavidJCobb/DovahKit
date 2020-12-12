@@ -71,5 +71,7 @@ namespace dovah::tes_file_reading {
          //
       public:
          inline const cobb::mapped_file& get_raw_mapped_file() const noexcept { return this->file; };
+         //
+         void adopt(basic_reader&) const noexcept; // set the passed-in reader to act on this file's loaded contents
    };
 }

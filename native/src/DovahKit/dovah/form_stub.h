@@ -191,6 +191,7 @@ namespace dovah {
       public:
          form_stub();
          ~form_stub();
+         //
          struct flag {
             flag() = delete;
             enum type : uint8_t {
