@@ -1,108 +1,108 @@
 #pragma once
-#include "../../helpers/files.h"
+#include "../../detailed_notice.h"
 #include "elements.h"
 
-namespace dovah {
-   class form_stub;
-   class file_read_error;
-
-   namespace tes_file_reading {
-      class file_reader;
-      
-      class basic_reader {
+namespace dovah::tes_file_reading {
+   class basic_reader {
+      //
+      // A class capable of parsing groups, records, and subrecords. It's not strictly suitable 
+      // for loading content; it doesn't have anything built-in for passing record content to 
+      // (file_load_order) or a similar class, or otherwise for loading and storing form data 
+      // properly; it's only suitable for reading raw file data.
+      //
+      friend group;
+      friend record;
+      friend subrecord;
+      public:
+         enum class object_type {
+            none,
+            group,
+            record,
+         };
          //
-         // This class can be used to read file out of an ESP/ESM/ESL file. It can be subclassed to provide 
-         // multi-threaded loading functionality.
+         static constexpr int max_group_depth = 7;
          //
-         friend file_reader;
-         friend group;
-         friend record;
-         friend subrecord;
-         public:
-            enum class object_type {
-               none,
-               group,
-               record,
-            };
-            //
-            file_reader* as_file() const noexcept {
-               if (this->owner)
-                  return this->owner;
-               return (file_reader*)this;
+      protected:
+         uint32_t  stream_position = 0;
+         std::array<group, max_group_depth> _groups;
+         record    _record;
+         subrecord _subrecord;
+         uint32_t  last_potential_group_parent = 0; // form ID: CELL, WRLD, DIAL
+         //
+         void read(void* buffer, uint32_t size) {
+            this->_read_impl(buffer, size);
+         }
+         void read(char* buffer, uint32_t size) {
+            this->_read_impl(buffer, size);
+         }
+         template<typename T> void read(T& field, uint32_t size) {
+            this->_read_impl(&field, size);
+         }
+         template<typename T> void read(T& field) {
+            this->_read_impl(&field, sizeof(T));
+         }
+         void reset_parse_state() {
+            for (uint32_t i = 0; i < this->_groups.size(); i++)
+               this->_groups[i].reset();
+            this->_record.reset();
+            this->_subrecord.reset();
+         }
+         //
+         void _read_impl(void* buffer, uint32_t size);
+         //
+         bool _reset_last_error();
+         bool _validate_record_signature();
+         //
+      public:
+         basic_reader() : _record(*this), _subrecord(*this) {
+            for (uint32_t i = 0; i < this->_groups.size(); i++)
+               this->_groups[i].initialize(this);
+         };
+         //
+         const uint8_t*  file_data = nullptr; // file data to read
+         uint32_t        file_size = 0;
+         detailed_notice last_error;
+         struct {
+            bool allow_suspicious_record_signatures = false;
+            bool allow_unknown_record_signatures    = true;
+            bool log_file_syntax_errors = true; // for on-demand form loading, perf boost from disabling this after the initial file load
+         } options;
+         //
+         void     set_position(uint32_t);
+         uint32_t get_position() const noexcept;
+         void     rewind(uint32_t by);
+         void     skip(uint32_t bytecount);
+         //
+         bool is_available() const noexcept;
+         bool is_eof() const noexcept;
+         bool is_good() const noexcept;
+         inline bool is_in_bounds(uint32_t bytes) const noexcept {
+            return ((uint64_t)this->stream_position + bytes) < this->file_size;
+         }
+         //
+         bool load_record_at(uint32_t pos);
+         object_type next_record_or_group(); // only called during the initial file read
+         bool        next_subrecord(); // called after the initial file read, when loading a form_stub's full content
+         //
+         inline group& get_current_group() {
+            for (signed int i = this->_groups.size() - 1; i >= 0; i--) {
+               auto& group = this->_groups[i];
+               if (group)
+                  return group;
             }
             //
-            static constexpr int max_group_depth = 7;
+            // We have to return a group& even if we're not in one, but groups have an 
+            // operator bool, so you can do
             //
-         protected:
-            file_reader*       owner = nullptr; // this should ONLY be nullptr if (this) is a (file_reader*)
-            cobb::mapped_file* file  = nullptr; // NOTE: an instance of basic_reader may not necessarily own the file it has a pointer to
-            uint32_t  stream_position = 0;
-            std::array<group, max_group_depth> _groups;
-            record    _record;
-            subrecord _subrecord;
-            uint32_t  last_potential_group_parent = 0; // form ID: CELL, WRLD, DIAL
+            // if (auto& g = file->getCurrentGroup()) {
+            //    //
+            //    // ...
+            //    //
+            // }
             //
-            bool is_skyrim_special() const noexcept;
-            bool uses_string_table() const noexcept;
-            //
-            void read(void* buffer, uint32_t size) {
-               this->stream_position += this->file->read_from(this->stream_position, buffer, size);
-            }
-            void read(char* buffer, uint32_t size) {
-               this->read((void*)buffer, size);
-            }
-            template<typename T> void read(T& field, uint32_t size) {
-               this->stream_position += this->file->read_from(this->stream_position, field, size);
-            }
-            template<typename T> void read(T& field) {
-               this->stream_position += this->file->read_from(this->stream_position, field);
-            }
-            void resetParseState() {
-               for (uint32_t i = 0; i < this->_groups.size(); i++)
-                  this->_groups[i].reset();
-               this->_record.reset();
-               this->_subrecord.reset();
-            }
-            //
-            form_stub* make_stub_for_record(file_reader& file);
-            void extract_high_value_subrecords_for_stub(form_stub*); // searches (the remainder of) the current record for EDID; if found, writes its value to the form stub
-            //
-         public:
-            basic_reader(file_reader* owner) : owner(owner), _record(*this), _subrecord(*this) {
-               for (uint32_t i = 0; i < this->_groups.size(); i++)
-                  this->_groups[i].initialize(this);
-            };
-            //
-            void     setPos(uint32_t pos);
-            uint32_t getPos();
-            void     rewind(uint32_t by);
-            void skipBytes(uint32_t count);
-            bool isEOF();
-            bool is_good();
-            //
-            object_type next_record_or_group(); // only called during the initial file read
-            bool        next_subrecord(file_read_error* out = nullptr); // called after the initial file read, when loading a form_stub's full content
-            //
-            inline group& get_current_group() {
-               for (signed int i = this->_groups.size() - 1; i >= 0; i--) {
-                  auto& group = this->_groups[i];
-                  if (group)
-                     return group;
-               }
-               //
-               // We have to return a group& even if we're not in one, but groups have an 
-               // operator bool, so you can do
-               //
-               // if (auto g = file->getCurrentGroup()) {
-               //    //
-               //    // ...
-               //    //
-               // }
-               //
-               return this->_groups[0];
-            }
-            inline record&    get_current_record()    { return this->_record; }
-            inline subrecord& get_current_subrecord() { return this->_subrecord; }
-      };
-   }
+            return this->_groups[0];
+         }
+         inline record&    get_current_record()    { return this->_record; }
+         inline subrecord& get_current_subrecord() { return this->_subrecord; }
+   };
 }

@@ -13,6 +13,9 @@
 namespace dovah {
    class file_load_order;
    class form_stub;
+   namespace tes_file_writing {
+      class file_writer;
+   }
 }
 
 namespace dovah::tes_file_reading {
@@ -21,12 +24,13 @@ namespace dovah::tes_file_reading {
 
    class form_stub_build_interface;
 
-   class file_loader : file_or_file_part_loader {
-      using interface_t   = load_order_interfaces::file_load;
-      using flag          = tes_file_flag;
-      using detail_flag   = tes_file_header::detail_flag;
-      using detail_flag_t = tes_file_header::detail_flag_t;
+   class file_loader : public file_or_file_part_loader {
       friend class form_stub_build_interface;
+      using interface_t = load_order_interfaces::file_load;
+      public:
+         using flag          = tes_file_flag;
+         using detail_flag   = tes_file_header::detail_flag;
+         using detail_flag_t = tes_file_header::detail_flag_t;
       protected:
          virtual file_loader& get_file_loader() const noexcept override final { return const_cast<file_loader&>(*this); }
       public:
@@ -47,6 +51,7 @@ namespace dovah::tes_file_reading {
          //
          bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any). calling this while a load is already in progress is undefined behavior
          void close(); // intended for use during the save process, with the file then being reopened by the caller upon a successful save
+         bool reopen(); // reopen the mapped file, without actually loading its contents; intended for use during the save process
          //
       protected:
          std::filesystem::path path;
@@ -73,5 +78,18 @@ namespace dovah::tes_file_reading {
          inline const cobb::mapped_file& get_raw_mapped_file() const noexcept { return this->file; };
          //
          void adopt(basic_reader&) const noexcept; // set the passed-in reader to act on this file's loaded contents
+         //
+         struct save_interface {
+            friend file_loader;
+            protected:
+               file_loader& wrapped;
+               save_interface(file_loader& r) : wrapped(r) {}
+            public:
+               inline const void* data_at(std::ptrdiff_t o) const noexcept {
+                  return this->wrapped.file.data_at(o);
+               }
+               void update_path(const std::filesystem::path&) const noexcept;
+         };
+         save_interface get_save_interface(const tes_file_writing::file_writer&) noexcept { return save_interface(*this); }
    };
 }

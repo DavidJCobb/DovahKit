@@ -11,7 +11,7 @@
 namespace dovah {
    class file_load_order;
    namespace tes_file_reading {
-      class file_reader;
+      class file_loader;
    }
 
    namespace tes_file_writing {
@@ -20,7 +20,7 @@ namespace dovah {
          friend record;
          friend subrecord;
          public:
-            using file_reader   = tes_file_reading::file_reader;
+            using file_loader   = tes_file_reading::file_loader;
             using file_offset_t = uint32_t;
             using stream_t      = std::basic_ofstream<uint8_t>;
             static constexpr int max_group_depth = 7;
@@ -37,7 +37,7 @@ namespace dovah {
          protected:
             mutable stream_t stream; // ofstream::tellp and friends aren't const despite not modifying the stream state
             file_load_order& owner;
-            file_reader&     source;
+            file_loader&     source;
             //
             std::array<group, max_group_depth> _groups;
             record    _record;
@@ -73,10 +73,11 @@ namespace dovah {
             bool _can_serialize_form(const form_stub*) const noexcept;
             //
          public:
-            file_writer(file_load_order&, file_reader&, const write_config& cfg);
+            file_writer(file_load_order&, file_loader&, const write_config& cfg);
             ~file_writer();
             //
             #pragma region config
+            std::filesystem::path path;
             write_config config;
             bool use_string_table; // constructor defaults this to whatever the source file did
             #pragma endregion
@@ -112,10 +113,11 @@ namespace dovah {
             void set_stream_position(file_offset_t) noexcept;
             uint32_t get_output_position() const noexcept; // stream position + record position if open + subrecord position if open. WARNING: this can't account for large subrecords that end up using 'XXXX'
 
-            void open(std::filesystem::path);
+            void open();
             bool write();
             void update_source_file_header();
             void close();
+            bool post_save_rename(const std::filesystem::path& desired);
 
             const form_stub_write_info* get_write_info_for_stub(const form_stub&) const noexcept;
       };

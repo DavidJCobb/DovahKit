@@ -349,6 +349,9 @@ namespace dovah::tes_file_reading {
             thread->_on_file_close();
       this->file = cobb::mapped_file();
    }
+   bool file_loader::reopen() {
+      return this->_open_mapped_file();
+   }
 
    bool file_loader::_open_mapped_file() {
       this->file = cobb::mapped_file();
@@ -488,4 +491,10 @@ namespace dovah::tes_file_reading {
       br.file_data = (const uint8_t*)this->file.data();
       br.file_size = this->file.size();
    }
+
+   #pragma region Save interface
+   void file_loader::save_interface::update_path(const std::filesystem::path& p) const noexcept {
+      this->wrapped.path = p;
+   }
+   #pragma endregion
 }

@@ -57,9 +57,6 @@
     <ClCompile Include="dovah\files\tes_file_reading\threads.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading\file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -136,9 +133,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\forms\factories\hardcoded.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\files\threaded_load_order_use_info_builder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\data\actor_values.cpp">
@@ -510,31 +504,19 @@
     <ClCompile Include="dovah\files\tes_file_reading\results.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\elements.cpp">
+    <ClCompile Include="dovah\files\tes_file_reading\file_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\basic_reader.cpp">
+    <ClCompile Include="dovah\files\tes_file_reading\file_or_file_part_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\file_part_loader.cpp">
+    <ClCompile Include="dovah\files\tes_file_reading\file_part_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\file_loader.cpp">
+    <ClCompile Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\file_header.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\file_threaded_part_loader_base.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\threads.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\file_or_file_part_loader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\files\tes_file_reading_ex\threaded_load_order_use_info_builder.cpp">
+    <ClCompile Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -573,9 +555,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\tes_file_reading\threads.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading\file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\strings.h">
@@ -681,9 +660,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\factories\hardcoded.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\threaded_load_order_use_info_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\actor_values.h">
@@ -1070,31 +1046,19 @@
     <ClInclude Include="dovah\files\tes_file_reading\results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\basic_reader.h">
+    <ClInclude Include="dovah\files\tes_file_reading\file_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\elements.h">
+    <ClInclude Include="dovah\files\tes_file_reading\file_or_file_part_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\file_part_loader.h">
+    <ClInclude Include="dovah\files\tes_file_reading\file_part_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\file_loader.h">
+    <ClInclude Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\file_header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\file_threaded_part_loader_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\threads.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\file_or_file_part_loader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\tes_file_reading_ex\threaded_load_order_use_info_builder.h">
+    <ClInclude Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

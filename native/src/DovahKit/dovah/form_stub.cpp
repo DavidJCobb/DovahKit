@@ -1,8 +1,7 @@
 #include "form_stub.h"
 #include <cassert>
 #include "../helpers/bitwise.h"
-#include "files/tes_file_reading/basic_reader.h"
-#include "files/tes_file_reading/file.h"
+#include "files/tes_file_reading/file_loader.h"
 #include "forms/factories/construct.h"
 #include "forms/factories/hardcoded.h"
 #include "forms/factories/use_info.h"
@@ -65,7 +64,7 @@ namespace dovah {
    file_load_order& form_stub::_get_load_order() const noexcept {
       auto* file = this->get_file_at_index(0);
       assert(file);
-      return file->load_order;
+      return file->get_load_order();
    }
    loaded_form_ptr<loaded_forms::Form> form_stub::_load(bool force) {
       if (this->form)
@@ -375,7 +374,7 @@ namespace dovah {
    }
 
    #pragma region form_stub use info functions
-   void form_stub::build_outbound_refs(tes_file_reading::basic_reader* reader) noexcept {
+   void form_stub::build_outbound_refs(tes_file_reading::basic_reader& reader) noexcept {
       file_data* arr;
       uint16_t   size;
       this->_get_source_file_list(arr, size);
@@ -389,14 +388,17 @@ namespace dovah {
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             build_hardcoded_form_outbound_refs(use_interface);
          } else {
-            if (file->load_record_at(arr[i].offset, reader)) {
-               auto& record = reader->get_current_record();
+            file->adopt(reader);
+            if (reader.load_record_at(arr[i].offset)) {
+               auto& record  = reader.get_current_record();
                auto  builder = get_outbound_uses_builder_by_type(this->formType);
                if (builder)
                   builder(record, use_interface);
             }
          }
       }
+      reader.file_data = nullptr;
+      reader.file_size = 0;
       this->_add_one_way_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
    }
    void form_stub::send_inbound_refs() noexcept {

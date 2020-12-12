@@ -1,6 +1,6 @@
 #include "file_writer.h"
 #include "../file_load_order.h"
-#include "../tes_file_reading/file.h"
+#include "../tes_file_reading/file_loader.h"
 #include "../../core.h"
 #include "../../form_stub.h"
 #include "../../form_stub_helpers.h"
@@ -16,7 +16,7 @@ namespace {
 }
 
 namespace dovah::tes_file_writing {
-   file_writer::file_writer(file_load_order& owner, file_reader& source, const write_config& cfg) : owner(owner), source(source), _record(*this), _subrecord(*this) {
+   file_writer::file_writer(file_load_order& owner, file_loader& source, const write_config& cfg) : owner(owner), source(source), _record(*this), _subrecord(*this) {
       this->config = cfg;
       //
       this->use_string_table = (this->source.header.flags & tes_file_flag::localized_string_table) != 0;
@@ -564,8 +564,8 @@ namespace dovah::tes_file_writing {
       return position;
    }
 
-   void file_writer::open(std::filesystem::path path) {
-      this->stream.open(path, std::ios_base::binary | std::ios_base::trunc);
+   void file_writer::open() {
+      this->stream.open(this->path, std::ios_base::binary | std::ios_base::trunc);
    }
    bool file_writer::write() {
       this->_write_header();
@@ -633,6 +633,15 @@ namespace dovah::tes_file_writing {
    }
    void file_writer::close() {
       this->stream.close();
+   }
+   bool file_writer::post_save_rename(const std::filesystem::path& desired) {
+      std::error_code code;
+      std::filesystem::rename(this->path, desired, code);
+      if (!code) {
+         this->path = desired;
+      }
+      this->source.get_save_interface(*this).update_path(this->path); // if the rename fails, then we want to set the saved file's path to the file path used when saving
+      return !code;
    }
 
    const file_writer::form_stub_write_info* file_writer::get_write_info_for_stub(const form_stub& stub) const noexcept {

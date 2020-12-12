@@ -13,7 +13,7 @@ namespace dovah {
 
    namespace tes_file_reading {
       class basic_reader;
-      class file_reader;
+      class file_loader;
       class subrecord;
       class record;
 
@@ -62,7 +62,7 @@ namespace dovah {
       };
       class record {
          friend basic_reader;
-         friend file_reader;
+         friend file_loader;
          friend subrecord;
          public:
             using header_t = dovah::tes_file_record_header;
@@ -103,6 +103,7 @@ namespace dovah {
             inline uint32_t size() const noexcept { return this->header.size; }
             inline uint16_t version() const noexcept { return this->header.version; }
             //
+            inline uint32_t header_pos() const noexcept { return this->head_pos; }
             inline uint32_t stream_pos() const noexcept { return this->offset + this->body_pos; }
             //
             bool read(void* destination, uint32_t size);

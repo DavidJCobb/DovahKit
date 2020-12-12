@@ -1,13 +1,13 @@
 #include "file_load_order.h"
-#include "threaded_load_order_use_info_builder.h"
 #include "../../helpers/performance.h"
 #include "../../helpers/strings.h"
 #include "../../helpers/unordered_map.h"
 #include "../form_stub.h"
 #include "../form_stub_helpers.h"
-#include "tes_file_reading/file.h"
+#include "tes_file_reading/file_loader.h"
 #include "tes_file_reading/file_header.h"
 #include "tes_file_reading/results.h"
+#include "tes_file_reading/threaded_load_order_use_info_builder.h"
 #include "tes_file_writing/file_writer.h"
 #include "tes_file_writing/results.h"
 #include "../forms/factories/construct.h"
@@ -105,8 +105,8 @@ namespace dovah {
    #pragma region File loading
    void file_load_order::_make_hardcoded_forms() {
       load_order_interfaces::file_load dummy(*this);
-      this->hardcoded_forms_file = new tes_file_reading::file_reader(dummy);
-      this->hardcoded_forms_file->header.details |= tes_file_reading::file_reader::detail_flag::is_hardcoded_dummy;
+      this->hardcoded_forms_file = new tes_file_reading::file_loader(dummy);
+      this->hardcoded_forms_file->header.details |= tes_file_reading::file_loader::detail_flag::is_hardcoded_dummy;
       //
       add_hardcoded_forms_to_load_order(*this);
    }
@@ -124,8 +124,8 @@ namespace dovah {
    }
    void file_load_order::_build_none_stubs() {
       load_order_interfaces::file_load dummy(*this);
-      this->none_stubs_file = new tes_file_reading::file_reader(dummy);
-      this->none_stubs_file->header.details |= tes_file_reading::file_reader::detail_flag::is_none_stub_dummy;
+      this->none_stubs_file = new tes_file_reading::file_loader(dummy);
+      this->none_stubs_file->header.details |= tes_file_reading::file_loader::detail_flag::is_none_stub_dummy;
       //
       std::vector<bare_form_id_t> formIDs;
       std::vector<form_stub*> users;
@@ -181,14 +181,14 @@ namespace dovah {
       {
          auto guard = std::lock_guard(this->use_info_build_threads_lock);
          for (auto& entry : builders)
-            entry = new threaded_load_order_use_info_builder;
+            entry = new tes_file_reading::threaded_load_order_use_info_builder;
       }
-      uint32_t which_thread = 0;
+      int which_thread = 0;
       // Inbound first, since we can multi-thread that
       for (auto it = this->forms.forms.begin(); it != this->forms.forms.end(); ++it) {
          form_stub* stub = it->second;
          builders[which_thread]->add_to_queue(stub);
-         if (++which_thread > 7)
+         if (++which_thread >= this->use_info_build_threads.size())
             which_thread = 0;
       }
       for (auto* thread : builders)
@@ -234,11 +234,9 @@ namespace dovah {
       this->queued_load.active_file = name;
    }
    bool file_load_order::load_queued_files(tes_file_reading::read_results& results) {
-      this->load_error = file_read_error();
-      //
       _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_loading);
       if (!save_load_lock_guard) {
-         results.error.code = file_read_error::error_code::cannot_load_right_now;
+         results.error.code = notice_code::cannot_load_right_now;
          return false;
       }
       this->save_load_state.flags = save_load_flag::none;
@@ -352,15 +350,14 @@ namespace dovah {
             dovah::logging::print_line("[P] %s", header->name.c_str());
       }
       //
+      auto file_load_interface = load_order_interfaces::file_load(*this);
       {
          using list_t = decltype(this->normalizer.masters);
          //
-         auto intfc = load_order_interfaces::file_load(*this);
-         //
-         auto lambda = [this, &intfc, &results](list_t& list) {
+         auto lambda = [this, &file_load_interface, &results](list_t& list) {
             for (auto* header : list) {
                std::string path = this->base_path + header->name;
-               auto file = new tes_file_reading::file_reader(intfc);
+               auto file = new tes_file_reading::file_loader(file_load_interface);
                this->save_load_state.loading_index = this->files.size();
                this->files.push_back(file);
                if (!this->queued_load.active_file.empty() && cobb::strieq(this->queued_load.active_file, header->name)) {
@@ -368,11 +365,7 @@ namespace dovah {
                }
                if (!file->load(path.c_str())) {
                   auto fn = header->name;
-                  this->load_error.file = fn;
-                  if (file->error.defined()) {
-                     static_assert(false, "convert this over once files are tracking errors as they should");
-                     this->load_error = file->error;
-                  } else {
+                  if (!results.error.is_defined()) {
                      results.error.code = notice_code::unknown_error;
                      results.error.set_cause_file(path);
                   }
@@ -413,7 +406,7 @@ namespace dovah {
       }
       //
       if (!this->active_file && this->files.size() < (this->is_light_plugin_support_enabled() ? 253 : 254)) {
-         auto file = new tes_file_reading::file_reader(*this);
+         auto file = new tes_file_reading::file_loader(file_load_interface);
          this->active_file = file;
          this->files.push_back(file);
       }
@@ -2234,7 +2227,7 @@ namespace dovah {
       return &this->active_file->header;
    }
 
-   bool file_load_order::save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
+   bool file_load_order::save_active_file(std::filesystem::path requested_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
       //
       // The process of saving an active file is somewhat complex, due to the need to support 
       // both Skyrim Classic  and Skyrim Special,  as well as the  need to support converting 
@@ -2332,23 +2325,23 @@ namespace dovah {
          return false;
       }
       //
-      std::filesystem::path filename = this->active_file->get_filename();
-      if (!replacement_filename.empty())
-         filename = replacement_filename;
-      if (filename.empty()) {
+      std::filesystem::path desired_filename = this->active_file->get_filename();
+      if (!requested_filename.empty())
+         desired_filename = requested_filename;
+      if (desired_filename.empty()) {
          results.error.code = notice_code::no_filename_specified;
          return false;
       }
-      this->active_file->set_path(std::filesystem::path(this->base_path) / filename);
       //
       if (this->files.size() > 0xFE) {
          results.error.code = notice_code::file_has_too_many_dependencies;
          return false;
       }
       //
-      filename = std::filesystem::path(this->base_path) / filename;
+      desired_filename = std::filesystem::path(this->base_path) / desired_filename;
+      std::filesystem::path temporary_filename = desired_filename;
       {  // opening the file for writing will clear its contents (which is bad for the user and will break our reading/writing), so we want to ALWAYS write to a temporary file first!
-         auto ext = filename.extension().string();
+         auto ext = temporary_filename.extension().string();
          if (_stricmp(ext.data(), ".tes") == 0) {
             //
             // This normally should never happen. The editor should never allow you to open a *.TES 
@@ -2357,7 +2350,7 @@ namespace dovah {
             // updating the file_reader's stored filename, so that should still point to the old name.
             //
          } else {
-            filename.replace_extension(".tes");
+            temporary_filename.replace_extension(".tes");
          }
       }
       //
@@ -2387,7 +2380,8 @@ namespace dovah {
       }
       //
       tes_file_writing::file_writer writer(*this, *this->active_file, cfg);
-      writer.open(filename);
+      writer.path = temporary_filename;
+      writer.open();
       if (writer.write()) {
          //
          // Okay, so we have successfully written the updated form data to a temporary file. Now, we 
@@ -2401,22 +2395,12 @@ namespace dovah {
          //
          this->_change_current_game(cfg.output_game, was_originally_light != save_as_light_plugin);
          //
-         std::error_code code;
-         std::filesystem::rename(filename, this->active_file->get_path(), code);
-         bool reopen_result = false;
-         if (code) {
+         if (!writer.post_save_rename(desired_filename)) {
             auto& warning = results.add_warning();
             warning.code = notice_code::save_complete_but_to_temporary_file;
-            warning.relevant_files.emplace_back(filename.filename().string());
-            reopen_result = this->active_file->open_mapped_file(filename.string().c_str());
-            assert(this->active_file->get_filename() != filename.string() && "file_reader::open_mapped_file should not change the file's stored name. The file should know what it's *supposed* to be called even if, due to an unexpected issue, we have to actually read its contents from a different name.");
-         } else {
-            //
-            // Reopen the active file.
-            //
-            reopen_result = this->active_file->open_mapped_file();
+            warning.relevant_files.emplace_back(temporary_filename.filename().string());
          }
-         if (!reopen_result) {
+         if (!this->active_file->reopen()) {
             //
             // We were unable to reopen the mapped file view after fully updating the active file, 
             // so we can't load form content for active file form stubs anymore. In other words, the 

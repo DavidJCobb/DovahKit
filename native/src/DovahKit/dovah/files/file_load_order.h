@@ -23,7 +23,7 @@ namespace dovah {
    struct tes_file_header;
    class  threaded_load_order_use_info_builder;
    namespace tes_file_reading {
-      class file_reader;
+      class file_loader;
       class file_header_reader;
       class read_results;
    }
@@ -48,7 +48,7 @@ namespace dovah {
    class loaded_game_setting {
       public:
          const game_setting_definition*       definition  = nullptr;
-         const tes_file_reading::file_reader* source_file = nullptr; // needed so we can deal with LSTRING values
+         const tes_file_reading::file_loader* source_file = nullptr; // needed so we can deal with LSTRING values
          std::string        name;  // needed separate from the definition so we can track GMSTs with invalid/no names
          game_setting_value value;
          bare_form_id_t     formID = 0;
@@ -69,7 +69,7 @@ namespace dovah {
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
          static constexpr uint8_t light_load_prefix   = 0xFE;
-         using loaded_file   = tes_file_reading::file_reader;
+         using loaded_file   = tes_file_reading::file_loader;
          using loaded_header = tes_file_reading::file_header_reader;
          //
          enum class form_id_status {
@@ -95,7 +95,7 @@ namespace dovah {
          
          file_load_order_normalizer normalizer;
          //
-         std::array<threaded_load_order_use_info_builder*, 8> use_info_build_threads{};
+         std::array<tes_file_reading::threaded_load_order_use_info_builder*, 8> use_info_build_threads{};
          mutable std::mutex use_info_build_threads_lock;
          //
          struct {
@@ -195,7 +195,6 @@ namespace dovah {
                bool allow_suspicious_record_signatures = false;
             } options;
          } queued_load;
-         file_read_error            load_error;
          form_create_callback_t     on_form_create   = nullptr;
          form_loss_callback_t       on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
          form_renumber_callback_t   on_form_renumber = nullptr;

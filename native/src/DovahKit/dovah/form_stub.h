@@ -11,13 +11,13 @@
 namespace dovah {
    class  file_load_order;
    struct tes_file_record_header;
-   class  threaded_load_order_use_info_builder;
    namespace loaded_forms {
       class Form;
    }
    namespace tes_file_reading {
       class basic_reader;
-      class file_reader;
+      class file_loader;
+      class threaded_load_order_use_info_builder;
    }
    namespace tes_file_writing {
       class file_writer;
@@ -182,10 +182,9 @@ namespace dovah {
       //
       template<typename loaded_form_t> friend class loaded_form_ptr;
       friend file_load_order;
-      friend tes_file_reading::basic_reader;
-      friend tes_file_reading::file_reader;
+      friend tes_file_reading::file_or_file_part_loader;
+      friend tes_file_reading::threaded_load_order_use_info_builder;
       friend tes_file_writing::file_writer;
-      friend threaded_load_order_use_info_builder;
       friend form_stub_use_info_builder;
       //
       public:
@@ -231,7 +230,7 @@ namespace dovah {
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;
-         using owner_file_t = tes_file_reading::file_reader;
+         using owner_file_t = tes_file_reading::file_loader;
          //
          struct file_data {
             owner_file_t* pointer = nullptr;
@@ -250,7 +249,7 @@ namespace dovah {
             file_data_list files;
          };
          std::atomic<uint32_t> refcount = 0;
-         void build_outbound_refs(tes_file_reading::basic_reader*) noexcept;
+         void build_outbound_refs(tes_file_reading::basic_reader&) noexcept;
          void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
          void receive_inbound_ref(form_stub* inbound, use_info_entry::flags_t flags = 0) noexcept;
          //

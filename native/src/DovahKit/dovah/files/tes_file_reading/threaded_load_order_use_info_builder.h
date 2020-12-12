@@ -2,9 +2,11 @@
 #include <thread>
 #include "basic_reader.h"
 
-namespace dovah::tes_file_reading {
+namespace dovah {
    class form_stub;
+}
 
+namespace dovah::tes_file_reading {
    class threaded_load_order_use_info_builder : basic_reader {
       protected:
          std::vector<form_stub*> queue;

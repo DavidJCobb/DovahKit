@@ -15,8 +15,7 @@ namespace dovah::tes_file_reading {
          //
          virtual file_loader& get_file_loader() const noexcept = 0;
          //
-         bool load_record_at(uint32_t pos);
-         //
+      protected:
          object_type next_record_or_group(); // only called during the initial file read
          bool        next_subrecord(); // called after the initial file read, when loading a form_stub's full content
          //
