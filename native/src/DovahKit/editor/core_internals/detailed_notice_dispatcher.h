@@ -34,4 +34,4 @@ namespace DovahKitEditorInternals {
 
 // IntelliSense doesn't like Q_DECLARE_METATYPE; ignore errors here unless they're compiler errors:
 Q_DECLARE_METATYPE(DovahKitEditorInternals::multithreadable_detailed_notice)
-// needed so that QObject::connect can pass these across threads (by copying them). refer to read_warning_dispatcher's constructor as well.
+// needed so that QObject::connect can pass these across threads (by copying them). refer to detailed_notice_dispatcher's constructor as well.

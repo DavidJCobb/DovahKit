@@ -210,6 +210,7 @@
     <ClCompile Include="editor\get_default_object_info.cpp" />
     <ClCompile Include="editor\get_game_setting_description.cpp" />
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
+    <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
@@ -420,6 +421,7 @@
     <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h" />
     <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
+    <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />

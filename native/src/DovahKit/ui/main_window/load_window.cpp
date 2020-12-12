@@ -2,6 +2,8 @@
 #include <array>
 #include <QErrorMessage>
 #include "../../editor/core.h"
+#include "../../editor/helpers/warning_or_error_to_string.h"
+#include "../../dovah/files/tes_file_reading/results.h"
 #include "../main_window.h"
 
 namespace {
@@ -140,23 +142,24 @@ LoadOrderOpenDialog::LoadOrderOpenDialog(dovah::game g, QWidget* parent) : QDial
       this->_load_poller.stop();
       this->accept();
    });
-   QObject::connect(&editor, &DovahKitCore::dataAcquireFailed, [this](const dovah::file_read_error& e) {
+   QObject::connect(&editor, &DovahKitCore::dataAcquireFailed, [this](const dovah::tes_file_reading::read_results& results) {
       if (!this->_loading)
          return;
       this->_loading = false;
       this->_load_poller.stop();
       MainWindow::get().setProgressEnableState(false);
       //
-      QString text = QString("%1<br/>File: %2<br/>Dependency: %3<br/><br/>%4<br/><br/>Form ID: %5<br/>Offset: %6")
-         .arg(e.code_string())
-         .arg(e.file.c_str())
-         .arg(e.dependency.c_str())
-         .arg(e.message.c_str())
-         .arg(e.formID)
-         .arg(e.fileOffset);
+      auto& e = results.error;
+      QString reason = editor_helpers::warning_or_error_to_string(e);
+      if (e.flags & dovah::detailed_notice::flag::has_cause_file) {
+         reason += QString("<br/>Cause file: %1").arg(e.cause_file.c_str());
+      }
+      if (e.flags & dovah::detailed_notice::flag::has_file_offset) {
+         reason += QString("<br/>File offset: 0x%1").arg(e.offset, 0, 16);
+      }
       //
       auto dialog = new QErrorMessage(this);
-      dialog->showMessage(text);
+      dialog->showMessage(reason);
       //
       this->reject();
    });

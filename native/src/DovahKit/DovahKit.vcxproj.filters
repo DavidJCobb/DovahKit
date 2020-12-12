@@ -519,6 +519,9 @@
     <ClCompile Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1059,6 +1062,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\warning_or_error_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

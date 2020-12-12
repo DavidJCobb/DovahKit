@@ -12,8 +12,8 @@
 #include "../dovah/notice_code_list.h"
 #include "../dovah/localized_strings.h"
 #include "../dovah/files/bsa/bsa_load_order.h"
-#include "../dovah/files/tes_file_reading/file.h"
 #include "../dovah/files/tes_file_writing/results.h"
+#include "../dovah/files/file_header.h"
 #include "../dovah/utils/get_user_language_name.h"
 #include "../dovah/forms/DefaultObjectManager.h"
 #include "core_internals/load_task.h"
@@ -149,12 +149,12 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       // Naturally, none of this is mentioned in their documentation or examples for QThread, at least 
       // as of this writing. It's far from the only thing missing, either.
       //
-      QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this](file_load_stats stats) {
-         emit dataAcquireComplete();
+      QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this, &worker](file_load_stats stats) {
+         emit dataAcquireComplete(worker->results);
          emit fileLoadStatisticsAvailable(stats);
       });
-      QObject::connect(worker, &DovahKitEditorInternals::load_task::failed, this, [this]() {
-         emit dataAcquireFailed(this->load_order->load_error);
+      QObject::connect(worker, &DovahKitEditorInternals::load_task::failed, this, [this, &worker]() {
+         emit dataAcquireFailed(worker->results);
       });
       QObject::connect(worker, &DovahKitEditorInternals::load_task::ended, this, [this, thread]() {
          //
@@ -174,10 +174,10 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
    auto task = DovahKitEditorInternals::load_task(*this);
    task.exec();
    if (task.result) {
-      emit dataAcquireComplete();
+      emit dataAcquireComplete(task.results);
       emit fileLoadStatisticsAvailable(task.stats);
    } else {
-      emit dataAcquireFailed(this->load_order->load_error);
+      emit dataAcquireFailed(task.results);
    }
    return task.result;
 }
@@ -188,9 +188,6 @@ dovah::game DovahKitCore::get_current_game() const noexcept {
 
 float DovahKitCore::assess_load_progress() const noexcept {
    return this->load_order->assess_load_progress();
-}
-const dovah::file_read_error& DovahKitCore::get_last_read_error() const noexcept {
-   return this->load_order->load_error;
 }
 
 bool DovahKitCore::for_each_form_edit_dialog(std::function<bool(FormDialogBaseTemplate*)> functor) {
@@ -214,10 +211,10 @@ bool DovahKitCore::for_each_form_uses_dialog(std::function<bool(FormUseInfoDialo
    return false;
 }
 
-std::vector<const dovah::tes_file_reading::file_reader*> DovahKitCore::get_loaded_files() const noexcept {
+std::vector<const dovah::tes_file_reading::file_loader*> DovahKitCore::get_loaded_files() const noexcept {
    return this->load_order->get_loaded_files();
 }
-bool DovahKitCore::loaded_file_is_active(const dovah::tes_file_reading::file_reader& file) const noexcept {
+bool DovahKitCore::loaded_file_is_active(const dovah::tes_file_reading::file_loader& file) const noexcept {
    return this->load_order->file_is_active(file);
 }
 bool DovahKitCore::active_file_has_name() const noexcept {

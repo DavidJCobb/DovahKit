@@ -108,12 +108,14 @@ namespace dovah {
       if (!this->active_file.empty() && this->size() > 255) {
          error.code = notice_code::load_order_would_have_too_many_files;
          error.set_cause_file(name);
+         error.extra_integers[0] = this->size();
          //error.message = "If an active file is selected, then the load order cannot contain more than 255 files (even if some of them are ESLs). When the active file is saved, all loaded files will be encoded as its masters, and the file format doesn't actually support ESL functionality when encoding form IDs, so loading this many files would cause form IDs in the active file to overflow into the 0xFF slot after saving.";
       }
       if (!game_supports_light_plugins(this->target_game)) {
          if (this->size() > 254) {
             error.code = notice_code::load_order_would_have_too_many_files;
             error.set_cause_file(name);
+            error.extra_integers[0] = this->size();
          }
       } else {
          int16_t light_count = -1;
@@ -137,6 +139,11 @@ namespace dovah {
          if (heavy_count > 255) {
             error.code = notice_code::load_order_would_have_too_many_files;
             error.set_cause_file(name);
+         }
+         if (error.code == notice_code::load_order_would_have_too_many_files) {
+            error.extra_integers[0] = this->size();
+            error.extra_integers[1] = heavy_count;
+            error.extra_integers[2] = light_count;
          }
       }
       if (error.is_defined()) {

@@ -13,7 +13,8 @@ namespace dovah {
    struct localized_string;
    struct tes_file_header;
    namespace tes_file_reading {
-      class file_reader;
+      class file_loader;
+      class read_results;
    }
    namespace tes_file_writing {
       struct write_config;
@@ -69,8 +70,8 @@ class DovahKitCore : public QObject {
    signals:
       void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption
       void dataAbandonComplete(); // we have abandoned all forms
-      void dataAcquireComplete(); // we have loaded new files and forms
-      void dataAcquireFailed(const dovah::file_read_error&);   // we tried to load new files, but failed
+      void dataAcquireComplete(const dovah::tes_file_reading::read_results&); // we have loaded new files and forms
+      void dataAcquireFailed(const dovah::tes_file_reading::read_results&);   // we tried to load new files, but failed
       //
       void fileLoadWarningReceived(const dovah::detailed_notice&);
       void fileLoadStatisticsAvailable(const file_load_stats&);
@@ -112,13 +113,12 @@ class DovahKitCore : public QObject {
       dovah::game get_current_game() const noexcept;
 
       float assess_load_progress() const noexcept;
-      const dovah::file_read_error& get_last_read_error() const noexcept;
 
       bool for_each_form_edit_dialog(std::function<bool(FormDialogBaseTemplate*)>);
       bool for_each_form_uses_dialog(std::function<bool(FormUseInfoDialog*)>);
 
-      std::vector<const dovah::tes_file_reading::file_reader*> get_loaded_files() const noexcept;
-      bool loaded_file_is_active(const dovah::tes_file_reading::file_reader&) const noexcept;
+      std::vector<const dovah::tes_file_reading::file_loader*> get_loaded_files() const noexcept;
+      bool loaded_file_is_active(const dovah::tes_file_reading::file_loader&) const noexcept;
       bool active_file_has_name() const noexcept;
       QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;
