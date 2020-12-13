@@ -1,8 +1,14 @@
 #include "file_threaded_part_loader_base.h"
+#include "file_loader.h"
 
 namespace dovah::tes_file_reading {
    /*static*/ void file_threaded_part_loader_base::_thread_handler(file_threaded_part_loader_base* instance) {
       instance->running = true;
+      {
+         auto& f = instance->loader->get_raw_mapped_file();
+         instance->file_data = (const uint8_t*)f.data();
+         instance->file_size = f.size();
+      }
       instance->exec();
       instance->running = false;
    }

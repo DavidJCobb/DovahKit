@@ -4,7 +4,7 @@
 #include "threads.h"
 
 namespace dovah::tes_file_reading {
-   file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(*this) {
+   file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(*this, intfc) {
       for (size_t i = 0; i < threads::basic::recommended_thread_count; ++i) {
          this->threads.push_back(new threads::basic(*this));
       }
@@ -69,9 +69,12 @@ namespace dovah::tes_file_reading {
       size_t i = 0;
       for (auto* thread : this->threads) {
          const auto& type = typeid(*thread);
-         if (type == ti)
-            if (n++ == i)
+         if (type == ti) {
+            if (i++ == n) {
+               ++n;
                return thread;
+            }
+         }
       }
       return nullptr;
    }
@@ -348,6 +351,10 @@ namespace dovah::tes_file_reading {
          if (thread)
             thread->_on_file_close();
       this->file = cobb::mapped_file();
+      //
+      this->file_data = nullptr;
+      this->file_size = 0;
+      this->loader    = nullptr;
    }
    bool file_loader::reopen() {
       return this->_open_mapped_file();
@@ -374,6 +381,7 @@ namespace dovah::tes_file_reading {
          this->file = cobb::mapped_file();
          return false;
       }
+      this->adopt(*this); // update our own (basic_reader) access to the file data
       return true;
    }
    bool file_loader::_load_header() {

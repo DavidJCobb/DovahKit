@@ -371,7 +371,7 @@ namespace dovah {
                   }
                   if (this->archives)
                      this->archives->abort_archive_load();
-                  return false;
+                  return;
                }
                //
                // TODO: Split file loading into these steps:

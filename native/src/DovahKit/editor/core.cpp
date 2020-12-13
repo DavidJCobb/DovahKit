@@ -123,8 +123,8 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       return false;
    this->loading = true;
    if (async) {
-      auto worker = new DovahKitEditorInternals::load_task(*this);
-      auto thread = this->async_loader;
+      auto* worker = new DovahKitEditorInternals::load_task(*this);
+      auto  thread = this->async_loader;
       if (!thread)
          thread = this->async_loader = new QThread;
       worker->moveToThread(thread);
@@ -149,11 +149,11 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       // Naturally, none of this is mentioned in their documentation or examples for QThread, at least 
       // as of this writing. It's far from the only thing missing, either.
       //
-      QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this, &worker](file_load_stats stats) {
+      QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this, worker](file_load_stats stats) {
          emit dataAcquireComplete(worker->results);
          emit fileLoadStatisticsAvailable(stats);
       });
-      QObject::connect(worker, &DovahKitEditorInternals::load_task::failed, this, [this, &worker]() {
+      QObject::connect(worker, &DovahKitEditorInternals::load_task::failed, this, [this, worker]() {
          emit dataAcquireFailed(worker->results);
       });
       QObject::connect(worker, &DovahKitEditorInternals::load_task::ended, this, [this, thread]() {

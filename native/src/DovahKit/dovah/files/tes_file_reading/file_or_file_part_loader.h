@@ -6,11 +6,16 @@ namespace dovah::tes_file_reading {
    class file_loader;
 
    class file_or_file_part_loader : protected basic_reader {
+      //
+      // Common base class for (file_loader) and friends. Manages critical communication with 
+      // the (file_load_order).
+      //
       using lo_interface_t = load_order_interfaces::file_load;
       protected:
-         file_or_file_part_loader(file_loader&);
+         file_or_file_part_loader(file_loader& owner); // yes, i know this is ugly
+         file_or_file_part_loader(file_loader& self, lo_interface_t&); // needed for the (file_loader) constructor itself
          //
-         virtual file_loader& get_file_loader() const noexcept = 0;
+         inline file_loader& get_file_loader() const noexcept { return *this->loader; }
          //
          lo_interface_t load_interface;
          //
@@ -31,9 +36,9 @@ namespace dovah::tes_file_reading {
          //
          #pragma region Grant access to specific (basic_reader) fields
          using basic_reader::load_record_at;
-         inline group& get_current_group() { return *(group*)&this->get_current_group(); }
-         inline record& get_current_record() { return *(record*)&this->_record; }
-         inline subrecord& get_current_subrecord() { return *(subrecord*)&this->_subrecord; }
+         using basic_reader::get_current_group;
+         using basic_reader::get_current_record;
+         using basic_reader::get_current_subrecord;
          #pragma endregion
    };
 }

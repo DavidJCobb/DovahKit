@@ -12,7 +12,7 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->owner.is_aborted()) {
+         if (this->loader->is_aborted()) {
             dovah::logging::print_line("[dovah::tes_file_reading::threads::basic] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
             break;
          }
@@ -43,7 +43,7 @@ namespace dovah::tes_file_reading::threads {
                   error.code = notice_code::unexpected_nested_group_in_simple_top_group;
                   error.set_file_offset(this->get_position());
                   this->log_load_error(error);
-                  this->owner.abort();
+                  this->loader->abort();
                   break;
                }
             }
@@ -63,10 +63,10 @@ namespace dovah::tes_file_reading::threads {
                if (stub->formType == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   if (topicID) {
-                     lo.local_formID_to_global_formID(&this->owner, topicID);
+                     lo.local_formID_to_global_formID(this->loader, topicID);
                      stub->groupInfo.parentFormID = topicID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner.get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
@@ -81,7 +81,7 @@ namespace dovah::tes_file_reading::threads {
                      //
                      detailed_notice warning;
                      warning.code       = notice_code::record_found_in_wrong_top_level_group;
-                     warning.cause_file = this->owner.get_filename();
+                     warning.cause_file = this->loader->get_filename();
                      warning.set_flag(detailed_notice::flag::has_cause_file);
                      warning.set_cause_form(*stub);
                      warning.set_cause_signature(group_signature);
@@ -110,7 +110,7 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->owner.is_aborted()) {
+         if (this->loader->is_aborted()) {
             dovah::logging::print_line("[dovah::tes_file_reading::threads::basic] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
             break;
          }
@@ -153,10 +153,10 @@ namespace dovah::tes_file_reading::threads {
                if (stub->formType == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   if (topicID) {
-                     lo.local_formID_to_global_formID(&this->owner, topicID);
+                     lo.local_formID_to_global_formID(this->loader, topicID);
                      stub->groupInfo.parentFormID = topicID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->owner.get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
@@ -198,7 +198,7 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->owner.is_aborted()) {
+         if (this->loader->is_aborted()) {
             dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
             break;
          }
@@ -241,10 +241,10 @@ namespace dovah::tes_file_reading::threads {
                if (form_type_info::form_type_is_reference(stub->formType)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   if (cellID) {
-                     lo.local_formID_to_global_formID(&this->owner, cellID);
+                     lo.local_formID_to_global_formID(this->loader, cellID);
                      stub->groupInfo.parentFormID = cellID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->owner.get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
@@ -270,7 +270,7 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->owner.is_aborted()) {
+         if (this->loader->is_aborted()) {
             dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
             break;
          }
@@ -312,10 +312,10 @@ namespace dovah::tes_file_reading::threads {
                } else if (form_type_info::form_type_is_reference(stub->formType)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   if (cellID) {
-                     lo.local_formID_to_global_formID(&this->owner, cellID);
+                     lo.local_formID_to_global_formID(this->loader, cellID);
                      stub->groupInfo.parentFormID = cellID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->owner.get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
@@ -341,7 +341,7 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->owner.is_aborted()) {
+         if (this->loader->is_aborted()) {
             dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
             break;
          }
@@ -381,10 +381,10 @@ namespace dovah::tes_file_reading::threads {
                if (form_type_info::form_type_is_reference(stub->formType)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   if (cellID) {
-                     lo.local_formID_to_global_formID(&this->owner, cellID);
+                     lo.local_formID_to_global_formID(this->loader, cellID);
                      stub->groupInfo.parentFormID = cellID;
                   } else
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->owner.get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
                   delete stub;
@@ -410,7 +410,7 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->owner.is_aborted()) {
+         if (this->loader->is_aborted()) {
             dovah::logging::print_line("[dovah::tes_file_reading::threads::game_setting] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
             break;
          }
@@ -472,7 +472,7 @@ namespace dovah::tes_file_reading::threads {
                      warning.cause_form.fixedID = 0;
                      warning.cause_form.type    = form_type::setting;
                      warning.set_flag(detailed_notice::flag::has_cause_form);
-                     warning.cause_file = this->owner.get_filename();
+                     warning.cause_file = this->loader->get_filename();
                      warning.set_flag(detailed_notice::flag::has_cause_file);
                      warning.set_cause_editor_id(working.name);
                      this->log_load_warning(warning);
@@ -484,7 +484,7 @@ namespace dovah::tes_file_reading::threads {
                      warning.cause_form.localID = record.formID();
                      warning.cause_form.fixedID = 0;
                      warning.cause_form.type    = form_type::setting;
-                     warning.cause_file         = this->owner.get_filename();
+                     warning.cause_file         = this->loader->get_filename();
                      warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                      warning.set_cause_subrecord(subrecord);
                      warning.set_cause_editor_id(working.name);
@@ -519,7 +519,7 @@ namespace dovah::tes_file_reading::threads {
                            warning.cause_form.localID = record.formID();
                            warning.cause_form.fixedID = 0;
                            warning.cause_form.type    = form_type::setting;
-                           warning.cause_file         = this->owner.get_filename();
+                           warning.cause_file         = this->loader->get_filename();
                            warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                            warning.set_cause_editor_id(working.name);
                            this->log_load_warning(warning);
@@ -532,7 +532,7 @@ namespace dovah::tes_file_reading::threads {
                      warning.cause_form.localID = record.formID();
                      warning.cause_form.fixedID = 0;
                      warning.cause_form.type    = form_type::setting;
-                     warning.cause_file         = this->owner.get_filename();
+                     warning.cause_file         = this->loader->get_filename();
                      warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                      warning.set_cause_subrecord(subrecord.signature());
                      warning.set_cause_editor_id(working.name);
@@ -544,7 +544,7 @@ namespace dovah::tes_file_reading::threads {
                      warning.cause_form.localID = record.formID();
                      warning.cause_form.fixedID = 0;
                      warning.cause_form.type    = form_type::setting;
-                     warning.cause_file         = this->owner.get_filename();
+                     warning.cause_file         = this->loader->get_filename();
                      warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                      warning.set_cause_subrecord(subrecord.signature());
                      warning.set_cause_editor_id(working.name);
@@ -558,12 +558,12 @@ namespace dovah::tes_file_reading::threads {
                   warning.cause_form.localID = record.formID();
                   warning.cause_form.fixedID = 0;
                   warning.cause_form.type    = form_type::setting;
-                  warning.cause_file         = this->owner.get_filename();
+                  warning.cause_file         = this->loader->get_filename();
                   warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
                   warning.set_cause_editor_id(working.name);
                   this->log_load_warning(warning);
                }
-               lo.accept_game_setting(&this->owner, working, record.formID());
+               lo.accept_game_setting(this->loader, working, record.formID());
                continue;
             }
          }

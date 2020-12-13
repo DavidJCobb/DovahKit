@@ -1,4 +1,5 @@
 #include "threaded_load_order_use_info_builder.h"
+#include "file_loader.h"
 #include "../../form_stub.h"
 
 namespace dovah::tes_file_reading {

@@ -28,9 +28,7 @@ namespace dovah::tes_file_reading {
          using flag          = tes_file_flag;
          using detail_flag   = tes_file_header::detail_flag;
          using detail_flag_t = tes_file_header::detail_flag_t;
-      protected:
-         virtual file_loader& get_file_loader() const noexcept override final { return const_cast<file_loader&>(*this); }
-      public:
+         //
          file_loader(interface_t&); // TODO: threaded loaders should be created in the constructor, and so should never be nullptr during this object's lifetime
          ~file_loader();
          //
@@ -65,8 +63,8 @@ namespace dovah::tes_file_reading {
          file_threaded_part_loader_base* _get_nth_thread_of_type_impl(const std::type_info&, size_t);
          //
          template<class loader_type> loader_type* _get_nth_thread_of_type(uint32_t& s) {
-            if (s >= threaded_loader_recommended_thread_count<loader_type>)
-               s -= threaded_loader_recommended_thread_count<loader_type>;
+            if (s >= loader_type::recommended_thread_count)
+               s -= loader_type::recommended_thread_count;
             auto* t = this->_get_nth_thread_of_type_impl(typeid(loader_type), s);
             ++s;
             return (loader_type*)t;

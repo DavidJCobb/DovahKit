@@ -2,7 +2,7 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include "../../../helpers/qt/strings.h"
-#include "../../../dovah/files/tes_file_reading/file.h"
+#include "../../../dovah/files/tes_file_reading/file_loader.h"
 #include "../../../editor/core.h"
 #include "../../../editor/get_game_setting_description.h"
 

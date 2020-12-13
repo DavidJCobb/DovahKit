@@ -7,6 +7,9 @@ namespace dovah::tes_file_reading {
    file_or_file_part_loader::file_or_file_part_loader(file_loader& f) : load_interface(f.get_load_interface(*this)) {
       this->loader = &f;
    }
+   file_or_file_part_loader::file_or_file_part_loader(file_loader& self, lo_interface_t& i) : load_interface(i) {
+      this->loader = &self;
+   }
    
    basic_reader::object_type file_or_file_part_loader::next_record_or_group() {
       this->_reset_last_error();
@@ -67,7 +70,6 @@ namespace dovah::tes_file_reading {
                error.set_flag(detailed_notice::flag::has_cause_form);
                this->log_load_error(error);
             }
-            file.abort();
             return false;
          case file_load_order::form_id_status::null_is_not_allowed:
             {
@@ -81,7 +83,6 @@ namespace dovah::tes_file_reading {
                error.set_flag(detailed_notice::flag::has_cause_form);
                this->log_load_error(error);
             }
-            file.abort();
             return false;
       }
       return true;

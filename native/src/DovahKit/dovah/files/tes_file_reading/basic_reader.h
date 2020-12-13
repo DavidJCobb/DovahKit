@@ -84,7 +84,6 @@ namespace dovah::tes_file_reading {
          //
          bool is_available() const noexcept;
          bool is_eof() const noexcept;
-         bool is_good() const noexcept;
          inline bool is_in_bounds(uint32_t bytes) const noexcept {
             return ((uint64_t)this->stream_position + bytes) < this->file_size;
          }

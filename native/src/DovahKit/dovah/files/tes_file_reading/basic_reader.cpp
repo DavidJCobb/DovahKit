@@ -32,9 +32,6 @@ namespace dovah::tes_file_reading {
    bool basic_reader::is_available() const noexcept {
       return (this->file_data) && (this->file_size > 0);
    }
-   bool basic_reader::is_good() const noexcept {
-      return !this->is_in_bounds(1);
-   }
    bool basic_reader::is_eof() const noexcept {
       return this->stream_position >= this->file_size;
    }
@@ -97,7 +94,7 @@ namespace dovah::tes_file_reading {
             group.reset();
       }
       //
-      if (!this->is_good())
+      if (this->is_eof())
          return object_type::none;
       uint32_t signature;
       this->read(signature);
@@ -134,7 +131,7 @@ namespace dovah::tes_file_reading {
       record.header.signature = _byteswap_ulong(record.header.signature);
       record.body_pos = this->get_position();
       record.end = record.body_pos + record.header.size;
-      if (!this->is_good())
+      if (this->is_eof())
          return object_type::none;
       if (!this->_validate_record_signature()) // also logs the appropriate error
          return object_type::none;
@@ -191,7 +188,6 @@ namespace dovah::tes_file_reading {
    }
    //
    bool basic_reader::next_subrecord() {
-      this->_reset_last_error();
       if (!this->is_available())
          return false;
       auto& r = this->_record;
@@ -229,7 +225,7 @@ namespace dovah::tes_file_reading {
       this->_subrecord.header.signature = _byteswap_ulong(this->_subrecord.header.signature);
       this->_subrecord.pos = this->_record.body_pos + this->_record.offset;
       this->_subrecord.end = this->_subrecord.pos + size;
-      if (!this->is_good() || !this->_record.is_in_bounds())
+      if (this->is_eof() || !this->_record.is_in_bounds())
          return false;
       return true;
    }
