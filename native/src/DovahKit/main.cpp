@@ -48,6 +48,14 @@
 //    description of what notice codes can be returned and (in the case of any detailed 
 //    notices) what other information may be present.
 //
+//  - Testing indicates that multithreading gives us diminishing returns. The "busiest" 
+//    threads by far are the worldspace sub block threads, which *each* tend to have 
+//    about 200 groups to process; however, doubling the number of threads didn't yield 
+//    a significant improvement in Skyrim.esm's load time.
+//
+//    This would suggest that file_threaded_part_loader_base::heavy_duty_thread_count is 
+//    superfluous. It's unused anyway, so maybe we should ditch it.
+//
 //  - Document the file read process in full, including the ways in which it is tangled.
 //
 //     - The (basic_reader) needs to be able to know about (file_reader) when used by 
