@@ -44,48 +44,44 @@
 //    target form, we may fail to duplicate child or descendant forms. We should create 
 //    a custom dialog box that can show multiple sets of error details for this case.
 //
-//  - Replace all bespoke error/warning structs with (detailed_notice).
+//  - Audit and document every process that can return notice codes, along with a full 
+//    description of what notice codes can be returned and (in the case of any detailed 
+//    notices) what other information may be present.
 //
-//     - (file_write_error) SUCCESSFULLY REPLACED.
+//  - Document the file read process in full, including the ways in which it is tangled.
 //
-//     - (file_write_warning) SUCCESSFULLY REPLACED.
+//     - The (basic_reader) needs to be able to know about (file_reader) when used by 
+//       one in order to allow (record) and (subrecord) to reach the (file_load_order), 
+//       which is needed for form ID fixup and the loading of localized strings. I had 
+//       wanted to separate things out with (basic_<element>) interfaces which subclass 
+//       the (<element>) interfaces, but that's not feasible because the interfaces need 
+//       to be able to return one another. Essentially, I need to be able to do something 
+//       like the following, which C++ does not allow:
 //
-//     - (file_save_warning) SUCCESSFULLY REPLACED. (Not that it was used to begin with...)
+//          struct basic_foo {};
+//          struct foo : public basic_foo {};
 //
-//     - (file_read_error) PENDING.
+//          struct basic_bar {
+//             basic_foo& get_my_foo();
+//          };
+//          struct bar : public basic_bar {
+//             basic_foo& get_my_foo() = delete;
+//             foo& get_my_foo();
+//          };
+//          
+//       The deletion is needed in order to prevent the two versions of (get_my_foo) from 
+//       being treated as overloads (which the compiler would then be unable to distinguish, 
+//       since they differ only by return type); however, it seems that deleting the one 
+//       unavoidably also deletes the other, presumably for the same reason. At least, 
+//       according to IntelliSense.
 //
-//        - In order for this to be viable, we need to move the (load_interface) member 
-//          from (file_reader) to (basic_reader), and then require all (basic_reader) 
-//          constructors (including subclasses' constructors) to take a reference to an 
-//          already existing interface. We need this so that everything can report errors 
-//          and warnings to and through the file load order.
-//
-//           = Actually, let's not *quite* do that. Let's specialize (basic_reader) to be 
-//             just a generic parser for groups, records, and subrecords. Then, let's add a 
-//             class *between* (basic_reader) and (file_reader) called (file_part_reader), 
-//             and have everything that currently subclasses (basic_reader) instead subclass 
-//             (file_part_reader). Then, we'll have (file_part_reader) be the thing that can 
-//             access the load order and be owned by a (file_reader).
-//
-//             We can clarify the distinction even more with some name changes: call the 
-//             superclass the basic "reader," versus the file part "loader" and the file 
-//             "loader."
-//
-//           - Since (threaded_load_order_use_info_builder) is a (basic_reader) subclass, 
-//             we will at this point want to move it into the /tes_file_reading/ folder.
-//
-//           - Once this set of changes is complete, we can consider moving more stuff in 
-//             (file_load_order) to protected member functions accessible through the 
-//             (load_order_interfaces::file_load) class.
-//
-//              - file_load_order::accept_form_stub
-//              - file_load_order::accept_game_setting
-//
-//     - (file_read_warning) SUCCESSFULLY REPLACED.
-//
-//     = Once this is done, we should audit and document every process that can return 
-//       notice codes, along with a full description of what notice codes can be returned 
-//       and (in the case of any detailed notices) what other information may be present.
+//     - The (file_or_file_part_loader) class handles communication with (file_load_order), 
+//       including error reporting and aborting a file load when any error is reported. These 
+//       latter two tasks require it to be able to access the most pertinent instance of its 
+//       own subclass, (file_loader): the former, to report the filename as part of the error; 
+//       the latter, to carry out the abort. This means that every (file_loader) ends up with 
+//       a pointer to itself. At least we're able to leverage the same (file_loader) pointer 
+//       that (basic_reader) unfortunately has to offer.
 //
 //  - Rename (notice_code::game_conversion_form_cleanup_failed) to (unsaved_form_cleanup_failed), 
 //    as there's nothing which says that a form can ONLY fail to save as the result of it 

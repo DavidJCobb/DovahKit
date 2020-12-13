@@ -39,9 +39,6 @@
     <ClCompile Include="ui\main_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\files\file_read_error.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\logging.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -543,9 +540,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\files\file_read_error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\logging.h">
