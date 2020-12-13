@@ -42,8 +42,6 @@ namespace dovah::tes_file_reading {
       this->last_error.type = detailed_notice::notice_type::error;
    }
    bool basic_reader::_validate_record_signature() {
-      this->_reset_last_error();
-      //
       auto& record    = this->_record;
       auto  signature = record.signature();
       if (this->options.log_file_syntax_errors) {

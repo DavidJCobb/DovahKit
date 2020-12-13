@@ -12,17 +12,23 @@ namespace dovah::tes_file_reading {
    }
    
    basic_reader::object_type file_or_file_part_loader::next_record_or_group() {
-      this->_reset_last_error();
-      auto result = basic_reader::next_record_or_group(); // call super
       if (this->last_error.is_defined())
+         return object_type::none;
+      auto result = basic_reader::next_record_or_group(); // call super
+      if (this->last_error.is_defined()) {
          this->log_load_error(this->last_error);
+         this->_reset_last_error();
+      }
       return result;
    }
    bool file_or_file_part_loader::next_subrecord() {
-      this->_reset_last_error();
-      auto result = basic_reader::next_subrecord(); // call super
       if (this->last_error.is_defined())
+         return false;
+      auto result = basic_reader::next_subrecord(); // call super
+      if (this->last_error.is_defined()) {
          this->log_load_error(this->last_error);
+         this->_reset_last_error();
+      }
       return result;
    }
 
