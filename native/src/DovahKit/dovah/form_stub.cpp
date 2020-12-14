@@ -104,6 +104,8 @@ namespace dovah {
             if (this->form)
                this->form->stub = this;
          } else {
+            if (arr[0].offset == 0)
+               return loaded_form_ptr<loaded_forms::Form>(this); // file has no actual data (unsaved new active file, etc.). skip it
             //
             // This file is a real file. Load from it.
             //
@@ -123,11 +125,14 @@ namespace dovah {
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
       //
       for (uint16_t i = 1; i < size; ++i) {
-         auto* file = arr[i].pointer;
+         auto  offset = arr[i].offset;
+         if (offset == 0)
+            continue;
+         auto* file   = arr[i].pointer;
          //
          intfc.is_winning_record = (i + 1 == size);
          intfc.current_file      = file;
-         if (file->load_record_at(arr[i].offset)) {
+         if (file->load_record_at(offset)) {
             auto& record = file->get_current_record();
             (loader)(this->form, record, intfc);
          }
