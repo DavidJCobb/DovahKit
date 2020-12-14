@@ -17,6 +17,8 @@ namespace dovah::tes_file_reading {
       this->thread = std::thread(_thread_handler, this);
    }
    void file_threaded_part_loader_base::wait_for() {
+      if (!this->thread.joinable())
+         return;
       this->thread.join();
    }
    float file_threaded_part_loader_base::assess_progress() const noexcept {

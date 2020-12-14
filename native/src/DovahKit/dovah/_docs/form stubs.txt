@@ -44,7 +44,8 @@ load its data in full. The full list of fields is:
 
    file info
       A list of file  reader pointers and,  for each file,  the offset into the 
-      file at which the form's record header is located.
+      file at which the form's  record header is  located, and the record flags 
+      seen in that file.
 
 Form stubs need to  be aware of their owning file load order.  However, they do 
 not need to actually retain a pointer to it. File reader instances already have 
