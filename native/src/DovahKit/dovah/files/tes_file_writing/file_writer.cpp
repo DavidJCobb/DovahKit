@@ -168,8 +168,7 @@ namespace dovah::tes_file_writing {
       if (loaded) {
          assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
-         record.header.flags = loaded->flags & ~tes_file_record_header::non_data_flags;
-         record.header.flags |= stub->get_record_flags();
+         record.header.flags = stub->get_record_flags() & ~tes_file_record_header::non_data_flags;
          //
          auto intfc = load_order_interfaces::form_save(this->owner);
          //

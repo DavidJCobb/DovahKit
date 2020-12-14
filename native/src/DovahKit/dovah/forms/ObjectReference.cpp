@@ -121,7 +121,7 @@ namespace dovah::loaded_forms {
       this->base_form.clear_if(*this->stub, other);
    }
    bool ObjectReference::_friendly_delete_impl(const file_load_order& load_order) noexcept {
-      this->flags |= form_flag::disabled;
+      this->stub->edit_record_flags(form_flag::disabled, true);
       //
       // Make the reference an opposite enable state child of the PlayerRef.
       //

@@ -260,16 +260,7 @@ namespace dovah {
    }
 
    const form_stub::file_data* form_stub::get_source_file_info(int16_t i) const noexcept {
-      if (!this->has_multiple_source_files()) {
-         if (i != 0 && i != -1)
-            return nullptr;
-         return &this->file;
-      }
-      if (i < 0)
-         i += this->files.count;
-      if (i >= this->files.count)
-         return nullptr;
-      return &this->files.entries[i];
+      return this->_get_source_file_info(i);
    }
 
    bool form_stub::has_source_files() const noexcept {
@@ -401,7 +392,7 @@ namespace dovah {
       return (info->flags & mask) == mask;
    }
    void form_stub::edit_record_flags(uint32_t mask, bool clear_or_set) noexcept {
-      auto* info = this->get_source_file_info();
+      auto* info = this->_get_source_file_info();
       if (!info)
          return;
       auto& lo     = this->_get_load_order();
@@ -516,6 +507,19 @@ namespace dovah {
       if (flags) {
          entry.flags |= flags;
       }
+   }
+
+   form_stub::file_data* form_stub::_get_source_file_info(int16_t i) const noexcept {
+      if (!this->has_multiple_source_files()) {
+         if (i != 0 && i != -1)
+            return nullptr;
+         return const_cast<file_data*>(&this->file);
+      }
+      if (i < 0)
+         i += this->files.count;
+      if (i >= this->files.count)
+         return nullptr;
+      return &this->files.entries[i];
    }
 
    bool form_stub::has_child_forms() const noexcept {

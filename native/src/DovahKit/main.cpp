@@ -183,12 +183,9 @@
 //          a non-virtual function that checks the record flag and calls the appropriate 
 //          underlying virtual member function.
 //
-//     - Form stubs need to store record flags as part of source file information, in order 
-//       to allow us to check whether a record in any given file (i.e. the active file) was 
-//       partial when we loaded it.
-//
-//        - Rename (form_stub::_set_active_file_data) to (form_stub::_set_source_file_offset), 
-//          and then use it with the function we'll make to set active file record flags.
+//     - When saving a form, we need to check whether it's been edited within the active 
+//       file. If not, then we must only be saving it because it's the parent of an active 
+//       file form, so we need to flag it as partial if it isn't flagged as such already.
 //
 //        - The "save" code for parent forms will *also* need to check the record flags, 
 //          which means that the flags need to be set before we call (Form::save).
@@ -202,6 +199,8 @@
 //          we can have multi-level relationships, e.g. WRLD/CELL/REFR. If the WRLD and CELL 
 //          are both unedited and the REFR is edited or from the active file, then both 
 //          the WRLD and the CELL should save as partial.
+//
+//     - Rename (form_stub::_set_active_file_data) to (form_stub::_set_source_file_offset).
 //
 //  - Esoteric records
 //
@@ -819,6 +818,16 @@
 //  - Saving an ESL should warn if the active file would have any CELL records, whether they 
 //    be new forms or overrides. Reportedly, CELLs in ESLs have issues, though I don't know 
 //    the source or the specific problems offhand.
+//
+//     = PER AERS, THERE IS A BUG WITH ESLs THAT DEFINE NEW CELLS. THE RESULT IS THAT IF THE 
+//       CELLS ARE OVERRIDDEN BY ANOTHER MOD, THE GAME WILL BECOME UNABLE TO LOAD TEMPORARY 
+//       REFS INSIDE OF THE CELL, APPARENTLY BECAUSE PART OF THE CELL-LOADING CODE MISHANDLES 
+//       LIGHT FORM IDs AND DOESN'T APPLY THE LIGHT INDEX (I.E. IT ALWAYS CHECKS FE000yyy 
+//       INSTEAD OF FExxxyyy, WHiCH ALSO MEANS THAT THIS BUG WON'T AFFECT THE FIRST ESL FILE 
+//       IN THE LOAD ORDER).
+//
+//        - We should probably warn on loading cells defined inside of ESLs, too, and double-
+//          warn if we load an override for any of them.
 //
 //     - GamerPoets here <https://youtu.be/g_urrHrGQOY?t=299> recommends against ESL-flagging 
 //       files that have interior cells, but gives no explanation as to why. Per aers, CELLs 

@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <vector>
 #include "core.h"
+#include "files/common.h"
 
 namespace dovah {
    class  file_load_order;
@@ -262,6 +263,8 @@ namespace dovah {
          //
          void _add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void _add_one_way_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         //
+         file_data* _get_source_file_info(int16_t file_index = -1) const noexcept; // defined this way so code internal to form_stub can actually modify the info in question
          //
       public:
          group_stub    groupInfo;
