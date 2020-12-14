@@ -48,6 +48,9 @@
 //    description of what notice codes can be returned and (in the case of any detailed 
 //    notices) what other information may be present.
 //
+//     - The (editor_helpers::warning_or_error_to_string) function is missing several 
+//       notice codes, presumably because they're handled in specific places. Fix this.
+//
 //  - Testing indicates that multithreading gives us diminishing returns. The "busiest" 
 //    threads by far are the worldspace sub block threads, which *each* tend to have 
 //    about 200 groups to process; however, doubling the number of threads didn't yield 
@@ -161,9 +164,14 @@
 //
 //  - Support for loading records flagged as "partial"
 //
-//     - If the flag is present on an injected record, then skip the record.
+//     - If a form is injected and the flag is present on the first loaded instance of the 
+//       injected record, then emit a warning and ignore the flag. If the flag is present 
+//       on a non-injected non-override, then ignore the flag.
 //
-//     - If the flag is present on a non-injected non-override, then it should be stripped.
+//        - Be sure to modify both (form_stub::_load) and (form_stub::build_outbound_refs)!
+//
+//           - Requires some way for (form_stub)'s load code to override the record header 
+//             flags currently stored on the record-reading interface.
 //
 //     - The loaders for WRLD, CELL, and DIAL need to check for the flag (they have access 
 //       to the record reader, so they should be capable of this) and if it's present, then 

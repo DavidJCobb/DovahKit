@@ -170,7 +170,7 @@ namespace dovah {
          next.flags   = record_flags;
          return;
       }
-      auto resized = new file_data[size_t(this->files.count) + 1]; // cast silences warning C26451 and is otherwise pointless
+      auto resized = new file_data[size_t(this->files.count) + 1]; /// cast silences warning C26451 and is otherwise pointless
       uint16_t i = 0;
       for (; i < this->files.count; ++i)
          resized[i] = this->files.entries[i];
@@ -219,7 +219,7 @@ namespace dovah {
       other->_get_source_file_list(array_a, count_a);
       this->_get_source_file_list(array_b, count_b);
       //
-      auto* resized = new file_data[size_t(count_a) + count_b]; // cast silences warning C26451 and is otherwise pointless
+      auto* resized = new file_data[size_t(count_a) + count_b]; /// cast silences warning C26451 and is otherwise pointless
       for (uint16_t i = 0; i < count_a; ++i)
          resized[i] = array_a[i];
       for (uint16_t i = 0; i < count_b; ++i)
@@ -437,8 +437,9 @@ namespace dovah {
             if (reader.load_record_at(arr[i].offset)) {
                auto& record  = reader.get_current_record();
                auto  builder = get_outbound_uses_builder_by_type(this->formType);
-               if (builder)
+               if (builder) {
                   builder(record, use_interface);
+               }
             }
          }
       }
