@@ -219,15 +219,10 @@ namespace dovah {
                //
                missing_coordinates = 0x04,
                //
-               // (flagged_as_deleted)
-               // Indicates that the form is flagged as deleted.
-               //
-               flagged_as_deleted = 0x08,
-               //
                // (has_multiple_source_files)
                // Indicates that the (file)/(files) union is (files).
                //
-               has_multiple_source_files = 0x10,
+               has_multiple_source_files = 0x08,
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;
@@ -236,6 +231,7 @@ namespace dovah {
          struct file_data {
             owner_file_t* pointer = nullptr;
             uint32_t      offset  = 0;
+            uint32_t      flags   = 0; // record flags
             //
             operator bool() const noexcept { return this->pointer != nullptr; }
          };
@@ -258,7 +254,7 @@ namespace dovah {
          loaded_form_ptr<loaded_forms::Form> _load(bool force = false);
          void _unload_form();
          //
-         void _add_file(owner_file_t&, uint32_t offset);
+         void _add_file(owner_file_t&, uint32_t offset, uint32_t record_flags = 0);
          void _set_active_file_data(owner_file_t&, uint32_t offset);
          void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept;
          void _adopt_source_file_list(const form_stub* other);
@@ -299,7 +295,7 @@ namespace dovah {
          inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
          inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
          inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
-         inline bool        is_deleted()   const noexcept { return (bool)(this->flags & flag::flagged_as_deleted); };
+         inline bool        is_deleted()   const noexcept { return this->test_record_flags(tes_file_record_header::flag::deleted); };
          inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
          inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
          bool is_edited_or_in_active_file() const noexcept;
@@ -307,6 +303,10 @@ namespace dovah {
          bool is_non_overridden_hardcoded_form() const noexcept;
          bool is_none_stub() const noexcept;
          void set_edited(bool v);
+
+         uint32_t get_record_flags() const noexcept;
+         bool test_record_flags(uint32_t mask) const noexcept;
+         void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
 
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;

@@ -1708,6 +1708,7 @@ namespace dovah {
       }
       //
       loaded_forms::Form* loaded = nullptr;
+      uint32_t record_flags = 0;
       if (!request.clone_of) {
          loaded = create_blank_loaded_form_by_type(request.form_type);
          if (!loaded) {
@@ -1743,6 +1744,12 @@ namespace dovah {
       }
       //
       if (request.clone_of) {
+         auto flags = request.clone_of->get_record_flags();
+         flags &= ~tes_file_record_header::flag::deleted;
+         flags &= ~tes_file_record_header::flag::partial;
+         flags &= ~tes_file_record_header::flag::compressed;
+         stub->edit_record_flags(flags, true); // clone record flags
+         //
          auto original = request.clone_of->load();
          if (original) {
             bool result = false;

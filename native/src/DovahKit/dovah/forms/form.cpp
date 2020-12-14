@@ -9,15 +9,13 @@ namespace dovah::loaded_forms {
       return this->stub ? this->stub->get_editor_id() : nullptr;
    }
    void Form::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
-      this->flags = record.flags();
    }
    Form* Form::clone(form_stub& receiving_stub, bool* out_complete) const noexcept {
       assert(receiving_stub.form == nullptr && "Cannot clone a loaded form into a stub that already has a loaded form.");
       auto instance = create_blank_loaded_form_by_type(this->formType);
       if (instance) {
          receiving_stub.form = instance;
-         instance->stub  = &receiving_stub;
-         instance->flags = this->flags;
+         instance->stub = &receiving_stub;
          receiving_stub.set_edited(true);
          bool result = this->_clone_impl(instance);
          receiving_stub.set_edited(true);
@@ -45,12 +43,10 @@ namespace dovah::loaded_forms {
    }
    void Form::friendly_delete_override(const file_load_order& load_order) noexcept {
       bool flag = !this->_friendly_delete_impl(load_order);
-      cobb::edit_bit(this->flags,       form_flag::deleted, flag);
-      cobb::edit_bit(this->stub->flags, form_stub::flag::flagged_as_deleted, flag);
+      this->stub->edit_record_flags(form_flag::deleted, flag);
    }
    void Form::flag_as_deleted() noexcept {
-      cobb::edit_bit(this->flags,       form_flag::deleted, true);
-      cobb::edit_bit(this->stub->flags, form_stub::flag::flagged_as_deleted, true);
+      this->stub->edit_record_flags(form_flag::deleted, true);
    }
    void Form::sever_outbound_references_to(form_stub& other) noexcept {
       this->_sever_outbound_references_impl(other);

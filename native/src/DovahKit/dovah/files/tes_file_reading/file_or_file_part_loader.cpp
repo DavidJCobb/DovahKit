@@ -47,11 +47,9 @@ namespace dovah::tes_file_reading {
    form_stub* file_or_file_part_loader::make_stub_for_record() {
       auto& record = this->get_current_record();
       auto  stub   = new form_stub();
-      stub->_add_file(this->get_file_loader(), record.header_pos());
+      stub->_add_file(this->get_file_loader(), record.header_pos(), record.flags());
       stub->formID   = record.formID();
       stub->formType = form_type_info::signature_to_form_type(record.signature());
-      if (record.flags() & tes_file_record_header::flag::deleted)
-         stub->flags |= form_stub::flag::flagged_as_deleted;
       return stub;
    }
    bool file_or_file_part_loader::commit_stub(form_stub& stub) {

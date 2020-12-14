@@ -103,6 +103,7 @@ namespace dovah {
          flag() = delete;
          enum {
             deleted    = 0x00000020,
+            partial    = 0x00004000,
             compressed = 0x00040000,
          };
       };

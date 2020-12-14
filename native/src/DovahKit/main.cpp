@@ -179,6 +179,9 @@
 //       to allow us to check whether a record in any given file (i.e. the active file) was 
 //       partial when we loaded it.
 //
+//        - Rename (form_stub::_set_active_file_data) to (form_stub::_set_source_file_offset), 
+//          and then use it with the function we'll make to set active file record flags.
+//
 //        - The "save" code for parent forms will *also* need to check the record flags, 
 //          which means that the flags need to be set before we call (Form::save).
 //

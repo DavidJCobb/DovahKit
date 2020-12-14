@@ -151,11 +151,12 @@ namespace dovah {
    }
 
    #pragma region form_stub file list
-   void form_stub::_add_file(owner_file_t& f, uint32_t offset) {
+   void form_stub::_add_file(owner_file_t& f, uint32_t offset, uint32_t record_flags) {
       if (!this->has_multiple_source_files()) {
          if (!this->file) {
             this->file.pointer = &f;
             this->file.offset  = offset;
+            this->file.flags   = record_flags;
             return;
          }
          auto prior = this->file;
@@ -163,18 +164,23 @@ namespace dovah {
          this->files.entries = new file_data[2];
          this->files.count   = 2;
          this->files.entries[0] = prior;
-         this->files.entries[1].pointer = &f;
-         this->files.entries[1].offset  = offset;
+         auto& next = this->files.entries[1];
+         next.pointer = &f;
+         next.offset  = offset;
+         next.flags   = record_flags;
          return;
       }
-      auto resized = new file_data[this->files.count + 1];
+      auto resized = new file_data[size_t(this->files.count) + 1]; // cast silences warning C26451 and is otherwise pointless
       uint16_t i = 0;
       for (; i < this->files.count; ++i)
          resized[i] = this->files.entries[i];
-      resized[i].pointer = &f;
-      resized[i].offset  = offset;
+      auto& last = resized[i];
+      last.pointer = &f;
+      last.offset  = offset;
+      last.flags   = record_flags;
       delete[] this->files.entries;
       this->files.entries = resized;
+      ++this->files.count;
    }
    void form_stub::_set_active_file_data(owner_file_t& f, uint32_t offset) {
       auto i = this->index_of_file(&f);
@@ -213,7 +219,7 @@ namespace dovah {
       other->_get_source_file_list(array_a, count_a);
       this->_get_source_file_list(array_b, count_b);
       //
-      auto* resized = new file_data[count_a + count_b];
+      auto* resized = new file_data[size_t(count_a) + count_b]; // cast silences warning C26451 and is otherwise pointless
       for (uint16_t i = 0; i < count_a; ++i)
          resized[i] = array_a[i];
       for (uint16_t i = 0; i < count_b; ++i)
@@ -233,9 +239,11 @@ namespace dovah {
          this->flags &= ~flag::has_multiple_source_files;
          this->file.offset  = 0;
          this->file.pointer = nullptr;
+         this->file.flags   = 0;
          if (size) {
             this->file.offset  = list[0].offset;
             this->file.pointer = list[0].pointer;
+            this->file.flags   = list[0].flags;
          }
          return;
       }
@@ -244,8 +252,10 @@ namespace dovah {
       this->files.count   = size;
       for (uint16_t i = 0; i < size; ++i) {
          auto& f = this->files.entries[i];
-         f.offset  = list[i].offset;
-         f.pointer = list[i].pointer;
+         auto& o = list[i];
+         f.offset  = o.offset;
+         f.pointer = o.pointer;
+         f.flags   = o.flags;
       }
    }
 
@@ -376,6 +386,36 @@ namespace dovah {
          if (this->refcount == 0)
             this->_unload_form();
       }
+   }
+
+   uint32_t form_stub::get_record_flags() const noexcept {
+      auto* info = this->get_source_file_info();
+      if (!info)
+         return 0;
+      return info->flags;
+   }
+   bool form_stub::test_record_flags(uint32_t mask) const noexcept {
+      auto* info = this->get_source_file_info();
+      if (!info)
+         return false;
+      return (info->flags & mask) == mask;
+   }
+   void form_stub::edit_record_flags(uint32_t mask, bool clear_or_set) noexcept {
+      auto* info = this->get_source_file_info();
+      if (!info)
+         return;
+      auto& lo     = this->_get_load_order();
+      auto* active = const_cast<owner_file_t*>(lo.get_active_file()); // HACK HACK HACK
+      if (!active)
+         return;
+      if (info->pointer == active) {
+         cobb::edit_bit(info->flags, mask, clear_or_set);
+         return;
+      }
+      if (!clear_or_set)
+         return;
+      this->set_edited(true);
+      this->_add_file(*active, 0, mask);
    }
 
    #pragma region form_stub use info functions

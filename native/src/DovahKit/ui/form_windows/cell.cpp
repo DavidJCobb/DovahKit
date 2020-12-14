@@ -318,8 +318,8 @@ void FormDialogCell::_load_impl() {
          this->_update_ownership_widgets();
          _load_extra_formID<extra::interior_lock_list, extra_data_type::interior_lock_list>(this->ui.interiorLockList, extra);
          this->ui.flagPublicArea->setChecked(this->form->cell_flags & cell_flag::public_area);
-         this->ui.flagOffLimits->setChecked(this->form->flags & form_flag::off_limits);
-         this->ui.flagCantWait->setChecked(this->form->flags & form_flag::cant_wait);
+         this->ui.flagOffLimits->setChecked(this->stub->test_record_flags(form_flag::off_limits));
+         this->ui.flagCantWait->setChecked(this->stub->test_record_flags(form_flag::cant_wait));
       #pragma endregion
    }
 }
@@ -445,8 +445,8 @@ void FormDialogCell::_save_impl() {
          }
          this->save_extra_form(this->ui.interiorLockList->formStub(), extra, extra_data_type::interior_lock_list);
          cobb::edit_bit(this->form->cell_flags, cell_flag::public_area, this->ui.flagPublicArea->isChecked());
-         cobb::edit_bit(this->form->flags,      form_flag::off_limits,  this->ui.flagOffLimits->isChecked());
-         cobb::edit_bit(this->form->flags,      form_flag::cant_wait,   this->ui.flagCantWait->isChecked());
+         this->stub->edit_record_flags(form_flag::off_limits, this->ui.flagOffLimits->isChecked());
+         this->stub->edit_record_flags(form_flag::cant_wait,  this->ui.flagCantWait->isChecked());
       #pragma endregion
    } else {
       //
@@ -464,8 +464,8 @@ void FormDialogCell::_save_impl() {
          extra.remove_by_type(extra_data_type::rank);
          extra.remove_by_type(extra_data_type::interior_lock_list);
          cobb::edit_bit(this->form->cell_flags, cell_flag::public_area, false);
-         cobb::edit_bit(this->form->flags,      form_flag::off_limits,  false);
-         cobb::edit_bit(this->form->flags,      form_flag::cant_wait,   false);
+         this->stub->edit_record_flags(form_flag::off_limits, false);
+         this->stub->edit_record_flags(form_flag::cant_wait,  false);
       #pragma endregion
    }
 }

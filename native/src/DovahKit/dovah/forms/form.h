@@ -28,8 +28,7 @@ namespace dovah {
                };
             };
             //
-            form_stub* stub  = nullptr;
-            uint32_t   flags = 0;
+            form_stub* stub = nullptr;
             //
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
