@@ -34,7 +34,7 @@ namespace dovah::loaded_forms::components {
    /*static*/ void interior_lighting::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       return;
    }
-   void interior_lighting::save(tes_subrecord_writer& subrecord) {
+   void interior_lighting::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       this->ambient.save(subrecord);
       this->directional.save(subrecord);
       this->fog_color_near.save(subrecord);

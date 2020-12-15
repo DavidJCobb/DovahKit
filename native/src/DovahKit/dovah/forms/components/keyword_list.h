@@ -7,7 +7,7 @@ namespace dovah::loaded_forms::components {
       //
       void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
       static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
-      void save(tes_record_writer&);
+      void save(tes_record_writer&, load_order_interfaces::form_save& intfc);
       //
       void clear(form_stub& my_owner) noexcept;
       void clone_from(const keyword_list& original, form_stub& owner_of_clone) noexcept;

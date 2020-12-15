@@ -14,7 +14,7 @@ namespace dovah::loaded_forms::components {
    /*static*/ void object_bounds::generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder& uib) {
       return; // no use info to generate
    }
-   void object_bounds::save(tes_subrecord_writer& subrecord) {
+   void object_bounds::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       subrecord.reserve_more(12);
       subrecord.write(this->min.x);
       subrecord.write(this->min.y);

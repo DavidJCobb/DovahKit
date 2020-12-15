@@ -531,10 +531,10 @@ namespace dovah::loaded_forms {
       //
       if (this->has_object_bounds) {
          auto& subrecord = record.open_next_subrecord('OBND');
-         this->object_bounds.save(subrecord);
+         this->object_bounds.save(subrecord, intfc);
          subrecord.close();
       }
-      this->script_data.save(record); // VMAD (won't write anything if no scripts are attached)
+      this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
       //
       return true;
    }

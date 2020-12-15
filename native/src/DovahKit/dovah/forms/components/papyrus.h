@@ -41,6 +41,8 @@ namespace dovah::loaded_forms::components {
       class script_data;
       class basic_fragment_data {
          public:
+            using save_interface_t = load_order_interfaces::form_save;
+         public:
             fragment_type type;
             //
             basic_fragment_data(fragment_type t) : type(t) {}
@@ -56,17 +58,19 @@ namespace dovah::loaded_forms::components {
          public:
             class script;
             class property;
+            using load_interface_t = load_order_interfaces::form_load;
+            using save_interface_t = load_order_interfaces::form_save;
          public:
             int16_t version;
             int16_t object_format; // format of "object" property values
             std::vector<script>  scripts;
             basic_fragment_data* fragment_data = nullptr;
             //
-            bool load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes we're at a VMAD subrecord
-            bool save(tes_subrecord_writer&);
+            bool load(tes_subrecord_reader&, load_interface_t&); // assumes we're at a VMAD subrecord
+            bool save(tes_subrecord_writer&, save_interface_t&);
             static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
             //
-            bool save(tes_record_writer&); // opens VMAD, writes, closes
+            bool save(tes_record_writer&, save_interface_t&); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
             void clone_from(const script_data& source, form_stub& owner_of_clone) noexcept;
             void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
             //

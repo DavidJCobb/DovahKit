@@ -141,16 +141,16 @@ namespace dovah::loaded_forms {
       return true;
    }
    bool Activator::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      this->script_data.save(record);
+      this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
-      this->bounds.save(OBND);
+      this->bounds.save(OBND, intfc);
       OBND.close();
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
       this->model.save(record, 'MODL', 'MODT', 'MODS');
-      this->destruction_data.save(record);
-      this->keywords.save(record);
+      this->destruction_data.save(record, intfc);
+      this->keywords.save(record, intfc);
       auto& PNAM = record.open_next_subrecord('PNAM');
       this->marker_color.save(PNAM);
       PNAM.close();

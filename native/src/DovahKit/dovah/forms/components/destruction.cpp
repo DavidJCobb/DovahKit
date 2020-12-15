@@ -118,7 +118,7 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
-   void destruction_stage_data::save(tes_record_writer& record) {
+   void destruction_stage_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& DEST = record.open_next_subrecord('DEST');
       DEST.write(this->health);
       DEST.write(uint32_t(this->stages.size()));

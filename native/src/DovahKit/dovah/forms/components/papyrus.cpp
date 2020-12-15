@@ -12,7 +12,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
    }
    //
-   bool script_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   bool script_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (!subrecord.read(this->version) || !subrecord.read(this->object_format))
          return false;
       {
@@ -51,7 +51,7 @@ namespace dovah::loaded_forms::components::papyrus {
          this->fragment_data->load(*this, subrecord);
       return subrecord.is_in_bounds();
    }
-   bool script_data::save(tes_subrecord_writer& subrecord) {
+   bool script_data::save(tes_subrecord_writer& subrecord, save_interface_t& intfc) {
       subrecord.write(this->version);
       subrecord.write(this->object_format);
       if (this->scripts.size() > std::numeric_limits<uint16_t>::max())
@@ -65,11 +65,11 @@ namespace dovah::loaded_forms::components::papyrus {
          this->fragment_data->save(*this, subrecord);
       return true;
    }
-   bool script_data::save(tes_record_writer& record) {
+   bool script_data::save(tes_record_writer& record, save_interface_t& intfc) {
       if (this->scripts.empty() && !this->fragment_data)
          return true;
       auto& VMAD = record.open_next_subrecord('VMAD');
-      auto result = this->save(VMAD);
+      auto result = this->save(VMAD, intfc);
       VMAD.close();
       return result;
    }

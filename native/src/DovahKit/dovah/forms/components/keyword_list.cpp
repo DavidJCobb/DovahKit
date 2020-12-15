@@ -39,7 +39,7 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
-   void keyword_list::save(tes_record_writer& record) {
+   void keyword_list::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       uint32_t size = this->forms.size();
       if (!size)
          return;
