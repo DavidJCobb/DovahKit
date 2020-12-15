@@ -650,6 +650,39 @@ namespace editor_helpers {
          case notice_code::extended_subrecord_with_no_length:
             text = QObject::tr("An extended subrecord did not supply an extended length.", "read error");
             break;
+         case notice_code::form_initial_record_is_partial:
+            {
+               text = QObject::tr("Form %1 in file %2 is flagged as a partial record but is the first loaded record for this form. The \"partial\" flag will not be honored.", "notice_code::form_initial_record_is_partial");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               QString file = QObject::tr("<unknown file>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
+                  file = QString::fromStdString(notice.cause_file);
+               }
+               //
+               text = text.arg(form).arg(file);
+            }
+            break;
+         case notice_code::form_initial_record_is_partial_and_injected:
+            {
+               text = QObject::tr("Form %1 in file %2 is flagged as a partial record but is the first loaded record for this form; it's also an injected record. We will load the form, but we will not honor the \"partial\" flag; the game would skip the record entirely, since there is no already-loaded record for this form that isn't both partial and injected.", "notice_code::form_initial_record_is_partial_and_injected");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               QString file = QObject::tr("<unknown file>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
+                  file = QString::fromStdString(notice.cause_file);
+               }
+               //
+               text = text.arg(form).arg(file);
+            }
+            break;
+            //
          case notice_code::unknown_error:
          default:
             text = QObject::tr("Unknown error.", "write error");

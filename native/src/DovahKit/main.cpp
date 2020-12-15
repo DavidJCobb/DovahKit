@@ -170,6 +170,8 @@
 //
 //        - Be sure to modify both (form_stub::_load) and (form_stub::build_outbound_refs)!
 //
+//        - DONE; TEST WARNINGS
+//
 //     - When saving a form, we need to check whether it's been edited within the active 
 //       file. If not, then we must only be saving it because it's the parent of an active 
 //       file form, so we need to flag it as partial if it isn't flagged as such already.
@@ -198,6 +200,8 @@
 //          function (_load_impl); add a (_load_partial_impl); and then add (Form::load) as 
 //          a non-virtual function that checks the record flag and calls the appropriate 
 //          underlying virtual member function.
+//
+//     - TESTopic::LoadPartial is a no-op and loads no data.
 //
 //  - Esoteric records
 //

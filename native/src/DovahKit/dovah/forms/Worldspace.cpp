@@ -81,6 +81,28 @@ namespace dovah::loaded_forms {
 
    void Worldspace::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
+      if (intfc.is_partial_record) { // TESWorldSpace::LoadPartial only loads NAM0 and NAM9
+         while (auto& subrecord = record.next_subrecord()) {
+            if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+               continue;
+            float temporary;
+            switch (subrecord.signature()) {
+               case 'NAM0':
+                  if (subrecord.read(temporary) && temporary > this->bounds.min.x)
+                     this->bounds.min.x = temporary;
+                  if (subrecord.read(temporary) && temporary > this->bounds.min.y)
+                     this->bounds.min.y = temporary;
+                  break;
+               case 'NAM9':
+                  if (subrecord.read(temporary) && temporary > this->bounds.max.x)
+                     this->bounds.max.x = temporary;
+                  if (subrecord.read(temporary) && temporary > this->bounds.max.y)
+                     this->bounds.max.y = temporary;
+                  break;
+            }
+         }
+         return;
+      }
       //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
@@ -264,6 +286,8 @@ namespace dovah::loaded_forms {
       }
    }
    /*static*/ void Worldspace::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (uib.is_partial_record) // TESWorldSpace::LoadPartial only pays attention to NAM0 and NAM9
+         return;
       if (!uib.is_final_file())
          //
          // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)

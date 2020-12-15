@@ -5,6 +5,8 @@
 namespace dovah::loaded_forms {
    void Cell::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
+      if (intfc.is_partial_record) // TESObjectCELL::LoadPartial is a no-op.
+         return;
       //
       form_id_t formID;
       bool      loaded_cell_flags = false;
@@ -115,6 +117,8 @@ namespace dovah::loaded_forms {
       }
    }
    /*static*/ void Cell::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (uib.is_partial_record) // TESObjectCELL::LoadPartial is a no-op.
+         return;
       if (!uib.is_final_file())
          //
          // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)

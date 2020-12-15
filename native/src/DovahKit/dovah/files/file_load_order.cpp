@@ -521,6 +521,22 @@ namespace dovah {
          stub->_adopt_source_file_list(target);
          delete target; // delete the overridden form stub
          target = nullptr; // needed to prevent the singleton-form special case below from crashing, if what we're deleting is the canonical stub
+      } else {
+         //
+         // This is not an override.
+         //
+         if (stub->source_file_count() == 1) {
+            if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
+               detailed_notice warning;
+               warning.code = notice_code::form_initial_record_is_partial;
+               if (stub->is_injected())
+                  warning.code = notice_code::form_initial_record_is_partial_and_injected;
+               warning.cause_form.localID = stub->formID;
+               warning.cause_form.fixedID = formID;
+               warning.cause_form.type    = stub->formType;
+               this->log_load_warning(warning);
+            }
+         }
       }
       auto& type = this->forms_by_type[stub->formType];
       std::lock_guard<std::mutex> guard_for_form_type(type.lock);
