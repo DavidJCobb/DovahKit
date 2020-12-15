@@ -72,6 +72,7 @@ namespace dovah {
             record(record& other) = delete; // no copy
             //
             inline bool is_skyrim_special() const noexcept { return this->header.version >= 44; }
+            inline uint32_t flags() const noexcept { return this->header.flags; }
             //
             operator bool() const noexcept { return this->exists(); }
             inline bool exists() const noexcept { return this->header.signature != 0; }

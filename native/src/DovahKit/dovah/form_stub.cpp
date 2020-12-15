@@ -185,19 +185,27 @@ namespace dovah {
       this->files.entries = resized;
       ++this->files.count;
    }
-   void form_stub::_set_active_file_data(owner_file_t& f, uint32_t offset) {
+   void form_stub::_set_source_file_offset(owner_file_t& f, uint32_t offset) {
       auto i = this->index_of_file(&f);
       if (i < 0) {
          this->_add_file(f, offset);
          return;
       }
       if (i == 0 && !this->has_multiple_source_files()) {
-         this->file.pointer = &f;
-         this->file.offset  = offset;
+         this->file.offset = offset;
          return;
       }
-      this->files.entries[i].pointer = &f;
-      this->files.entries[i].offset  = offset;
+      this->files.entries[i].offset = offset;
+   }
+   void form_stub::_modify_source_file_record_flags(owner_file_t& f, uint32_t mask, bool clear_or_set) {
+      auto i = this->index_of_file(&f);
+      if (i < 0)
+         return;
+      if (i == 0 && !this->has_multiple_source_files()) {
+         cobb::edit_bit(this->file.flags, mask, clear_or_set);
+         return;
+      }
+      cobb::edit_bit(this->files.entries[i].flags, mask, clear_or_set);
    }
    void form_stub::_get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept {
       out_arr   = nullptr;
@@ -271,7 +279,7 @@ namespace dovah {
          return this->file;
       return this->files.entries != nullptr;
    }
-   uint16_t form_stub::source_file_count() const noexcept {
+   int16_t form_stub::source_file_count() const noexcept {
       if (!this->has_multiple_source_files()) {
          if (!this->file)
             return 0;
@@ -389,10 +397,7 @@ namespace dovah {
       return info->flags;
    }
    bool form_stub::test_record_flags(uint32_t mask) const noexcept {
-      auto* info = this->get_source_file_info();
-      if (!info)
-         return false;
-      return (info->flags & mask) == mask;
+      return this->test_record_flags_for_file(mask, -1);
    }
    void form_stub::edit_record_flags(uint32_t mask, bool clear_or_set) noexcept {
       auto* info = this->_get_source_file_info();
@@ -404,12 +409,31 @@ namespace dovah {
          return;
       if (info->pointer == active) {
          cobb::edit_bit(info->flags, mask, clear_or_set);
+         if (!(mask & tes_file_record_header::flag::partial) || !clear_or_set) { // if we're not explicitly setting the "partial" flag for some reason
+            //
+            // Modifying the flags in any respect will also flag the form as "edited," which 
+            // means it won't save as partial... which means it effectively *is* no longer 
+            // partial, and keeping the flag will only cause confusion for the frontend.
+            //
+            info->flags &= ~tes_file_record_header::flag::partial;
+         }
          return;
       }
       if (!clear_or_set)
          return;
       this->set_edited(true);
       this->_add_file(*active, 0, mask);
+   }
+   bool form_stub::test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept {
+      if (file_index < 0)
+         return false;
+      auto* info = this->get_source_file_info(file_index);
+      if (!info)
+         return false;
+      return (info->flags & mask) == mask;
+   }
+   bool form_stub::test_record_flags_for_file(uint32_t mask, owner_file_t& f) const noexcept {
+      return this->test_record_flags_for_file(mask, this->index_of_file(&f));
    }
 
    #pragma region form_stub use info functions

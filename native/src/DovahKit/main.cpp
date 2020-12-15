@@ -162,47 +162,6 @@
 //             could sort of centralize and standardize things instead of having bespoke 
 //             warning and error codes and structs everywhere.
 //
-//  - Support for loading records flagged as "partial"
-//
-//     - If a form is injected and the flag is present on the first loaded instance of the 
-//       injected record, then emit a warning and ignore the flag. If the flag is present 
-//       on a non-injected non-override, then ignore the flag.
-//
-//        - Be sure to modify both (form_stub::_load) and (form_stub::build_outbound_refs)!
-//
-//        - DONE; TEST WARNINGS
-//
-//     - When saving a form, we need to check whether it's been edited within the active 
-//       file. If not, then we must only be saving it because it's the parent of an active 
-//       file form, so we need to flag it as partial if it isn't flagged as such already.
-//
-//        - The "save" code for parent forms will *also* need to check the record flags, 
-//          which means that the flags need to be set before we call (Form::save).
-//
-//        - Saving needs to check whether each active file  form is partial and is not edited; 
-//          if so, we do a partial save instead of a full save. The fixup data in the file 
-//          writer needs to include whether we did a partial save, and we need to manage the 
-//          appropriate flag when updating the form stub's source file information.
-//
-//        - We need to save a parent form if any of its child forms need to be saved... But 
-//          we can have multi-level relationships, e.g. WRLD/CELL/REFR. If the WRLD and CELL 
-//          are both unedited and the REFR is edited or from the active file, then both 
-//          the WRLD and the CELL should save as partial.
-//
-//     - Rename (form_stub::_set_active_file_data) to (form_stub::_set_source_file_offset).
-//
-//     - The loaders for WRLD, CELL, and DIAL need to check for the flag (they have access 
-//       to the record reader, so they should be capable of this) and if it's present, then 
-//       they need to match the behavior of the appropriate TESForm::LoadPartial override 
-//       in TESV.exe.
-//
-//        - Wondering if we should: change (EveryFormSubclass::load) into a virtual member 
-//          function (_load_impl); add a (_load_partial_impl); and then add (Form::load) as 
-//          a non-virtual function that checks the record flag and calls the appropriate 
-//          underlying virtual member function.
-//
-//     - TESTopic::LoadPartial is a no-op and loads no data.
-//
 //  - Esoteric records
 //
 //     - GMST renumbering: test all error cases.
@@ -304,6 +263,23 @@
 //        - Test keyword lists in specific.
 //
 // THINGS TO LOOK INTO:
+//
+//  - Wrap-up and testing for partial record support
+//
+//     - When saving a form, we need to check whether it's been edited within the active 
+//       file. If not, then we must only be saving it because it's the parent of an active 
+//       file form, so we need to flag it as partial if it isn't flagged as such already.
+//
+//        - We need to save a parent form if any of its child forms need to be saved... But 
+//          we can have multi-level relationships, e.g. WRLD/CELL/REFR. If the WRLD and CELL 
+//          are both unedited and the REFR is edited or from the active file, then both 
+//          the WRLD and the CELL should save as partial.
+//
+//     - Wondering if we should: change (EveryFormSubclass::load) into a virtual member 
+//       function (_load_impl); add a (_load_partial_impl); and then add (Form::load) as 
+//       a non-virtual function that checks the record flag and calls the appropriate 
+//
+//     - TESTopic::LoadPartial is a no-op and loads no data.
 //
 //  - Build a unit testing framework wherein we run automated correctness checks 
 //    on loaded data, use info, etc., for pre-chosen forms and compare the results 

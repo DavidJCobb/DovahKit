@@ -534,6 +534,11 @@ namespace dovah {
                warning.cause_form.localID = stub->formID;
                warning.cause_form.fixedID = formID;
                warning.cause_form.type    = stub->formType;
+               warning.set_flag(detailed_notice::flag::has_cause_form);
+               if (auto* file = stub->get_file_at_index(-1)) {
+                  warning.cause_file = file->get_filename();
+                  warning.set_flag(detailed_notice::flag::has_cause_file);
+               }
                this->log_load_warning(warning);
             }
          }
@@ -2483,7 +2488,8 @@ namespace dovah {
          for (auto& pair : writer.fixup_data.form_stubs) {
             auto& info = pair.second;
             auto* stub = info.stub;
-            stub->_set_active_file_data(*this->active_file, info.offset);
+            stub->_set_source_file_offset(*this->active_file, info.offset);
+            stub->_modify_source_file_record_flags(*this->active_file, tes_file_record_header::flag::partial, info.partial);
             if (!stub->is_edited()) {
                //
                // If the form stub was written to the file despite not having been flagged as edited, 

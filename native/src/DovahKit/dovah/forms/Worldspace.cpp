@@ -371,6 +371,18 @@ namespace dovah::loaded_forms {
       return true;
    }
    bool Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      if (record.flags() & tes_file_record_header::flag::partial) { // TESWorldSpace::LoadPartial only loads NAM0 and NAM9
+         auto& NAM0 = record.open_next_subrecord('NAM0');
+         NAM0.write(this->bounds.min.x);
+         NAM0.write(this->bounds.min.y);
+         NAM0.close();
+         auto& NAM9 = record.open_next_subrecord('NAM9');
+         NAM9.write(this->bounds.max.x);
+         NAM9.write(this->bounds.max.y);
+         NAM9.close();
+         return true;
+      }
+      //
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
       if (KEEP_WORLDSPACE_LARGE_REFERENCES) {
          for (auto& entry : this->large_references.entries) {

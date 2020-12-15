@@ -29,8 +29,9 @@ namespace dovah {
                //
                // This data should be transplanted into a form_stub after the full file write is complete.
                //
-               form_stub* stub   = nullptr;
-               uint32_t   offset = 0;
+               form_stub* stub    = nullptr;
+               uint32_t   offset  = 0;
+               bool       partial = false;
                std::vector<bare_form_id_t> sever_references_to;
             };
             //

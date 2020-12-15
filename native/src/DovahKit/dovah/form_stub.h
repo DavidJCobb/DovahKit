@@ -240,7 +240,7 @@ namespace dovah {
          };
          struct file_data_list {
             file_data* entries = nullptr;
-            uint16_t   count   = 0;
+            int16_t    count   = 0; // values below 0 are illegal
          };
          //
       protected:
@@ -258,7 +258,8 @@ namespace dovah {
          void _unload_form();
          //
          void _add_file(owner_file_t&, uint32_t offset, uint32_t record_flags = 0);
-         void _set_active_file_data(owner_file_t&, uint32_t offset);
+         void _set_source_file_offset(owner_file_t&, uint32_t offset);
+         void _modify_source_file_record_flags(owner_file_t&, uint32_t mask, bool clear_or_set);
          void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept;
          void _adopt_source_file_list(const form_stub* other);
          void _set_source_file_list(const std::vector<file_data>&);
@@ -289,7 +290,7 @@ namespace dovah {
          bool file_list_includes(const owner_file_t*) const noexcept;
          bool has_source_files() const noexcept;
          inline bool has_multiple_source_files() const noexcept { return this->flags & flag::has_multiple_source_files; }
-         uint16_t source_file_count() const noexcept;
+         int16_t source_file_count() const noexcept;
          int16_t index_of_file(const owner_file_t*) const noexcept;
          owner_file_t* get_file_at_index(int16_t) const noexcept;
          //
@@ -312,6 +313,8 @@ namespace dovah {
          uint32_t get_record_flags() const noexcept;
          bool test_record_flags(uint32_t mask) const noexcept;
          void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
+         bool test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept;
+         bool test_record_flags_for_file(uint32_t mask, owner_file_t&) const noexcept;
 
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;

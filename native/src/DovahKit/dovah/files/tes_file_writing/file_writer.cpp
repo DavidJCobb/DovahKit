@@ -169,13 +169,18 @@ namespace dovah::tes_file_writing {
          assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
          auto& record = this->_open_next_record(form_types[stub->formType].signature, stub->formID);
          record.header.flags = stub->get_record_flags() & ~tes_file_record_header::non_data_flags;
+         if (stub->is_edited())
+            record.header.flags &= ~tes_file_record_header::flag::partial; // if the stub was previously a partial record in the active file but is now edited, clear the "partial" flag
+         else if (!stub->file_list_includes(&this->source))
+            record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
          //
          auto intfc = load_order_interfaces::form_save(this->owner);
          //
          if (loaded->save(record, intfc)) {
             auto& write_info = this->fixup_data.form_stubs[stub->formID];
-            write_info.stub   = stub;
-            write_info.offset = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
+            write_info.stub    = stub;
+            write_info.offset  = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
+            write_info.partial = (record.header.flags & tes_file_record_header::flag::partial);
             for (auto& pair : stub->outbound) {
                auto  id    = pair.first;
                auto& entry = pair.second;
