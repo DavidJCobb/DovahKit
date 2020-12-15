@@ -4,11 +4,8 @@
 #include "../../../dovah/form_stub.h"
 
 CellListModelItem::CellListModelItem(const dovah::form_stub* stub) {
-   this->stub     = stub;
-   this->editorID = QString::fromUtf8(stub->get_editor_id());
-   this->formID   = stub->formID;
-   this->gridX    = stub->groupInfo.gridX;
-   this->gridY    = stub->groupInfo.gridY;
+   this->stub = stub;
+   this->update();
 }
 bool CellListModelItem::cellIsLoaded() {
    //
@@ -24,6 +21,9 @@ void CellListModelItem::update() {
    this->formID   = stub->formID;
    this->gridX    = stub->groupInfo.gridX;
    this->gridY    = stub->groupInfo.gridY;
+   //
+   this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
+   this->is_injected = stub->is_injected();
 }
 
 #pragma region CellListModel
@@ -129,8 +129,8 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
       return QVariant();
    auto item    = (item_type*)index.internalPointer();
    auto column  = index.column();
-   bool edited  = (item->stub && item->stub->is_edited());
-   bool deleted = (item->stub && item->stub->is_deleted());
+   bool edited  = item->is_active;
+   bool deleted = item->stub->is_deleted();
    switch (column) {
       case 0: // editor ID
          switch (role) {
@@ -161,6 +161,10 @@ QVariant CellListModel::data(const QModelIndex& index, int role) const {
          switch (role) {
             case Qt::DisplayRole:
                return QString::asprintf("%08X", item->formID) + ((edited || deleted) ? tr(" * ", "edited form ID marker") : "") + (deleted ? tr("D", "deleted form ID marker") : "");
+            case Qt::ForegroundRole:
+               if (item->is_injected)
+                  return QColor::fromRgb(0x309000);
+               break;
             case FilteringRole:
                return QString::asprintf("%08X", item->formID);
             case SortingRole:

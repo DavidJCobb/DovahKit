@@ -92,7 +92,7 @@ namespace dovah::loaded_forms {
       return true;
    }
    bool ObjectReference::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      this->script_data.save(record);
+      this->script_data.save(record, intfc);
       //
       auto& NAME = record.open_next_subrecord('NAME');
       NAME.write(this->base_form);

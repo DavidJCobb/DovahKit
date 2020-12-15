@@ -6,12 +6,8 @@
 #include "../../../dovah/form_stub_helpers.h"
 
 CellRefListModelItem::CellRefListModelItem(const dovah::form_stub* stub) {
-   this->stub     = stub;
-   this->base     = dovah::form_stub_helpers::get_base_form(stub);
-   this->editorID = QString::fromUtf8(stub->get_editor_id());
-   if (this->editorID.isEmpty() && this->base)
-      this->editorID = QString::fromUtf8(this->base->get_editor_id());
-   this->formID   = stub->formID;
+   this->stub = stub;
+   this->update();
 }
 dovah::form_type_t CellRefListModelItem::formType() const noexcept {
    if (this->base)
@@ -27,6 +23,9 @@ void CellRefListModelItem::update() {
       this->editorID = QString::fromUtf8(this->base->get_editor_id());
    //
    this->formID = stub->formID;
+   //
+   this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
+   this->is_injected = stub->is_injected();
 }
 
 #pragma region CellRefListModel
@@ -150,7 +149,7 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
       return QVariant();
    auto item    = (item_type*)index.internalPointer();
    auto column  = index.column();
-   bool edited  = (item->stub && item->stub->is_edited());
+   bool edited  = item->is_active;
    bool deleted = (item->stub && item->stub->is_deleted());
    switch (role) {
       case Qt::DisplayRole:
@@ -171,6 +170,10 @@ QVariant CellRefListModel::data(const QModelIndex& index, int role) const {
             // TODO: icons per form type
             //
          }
+         break;
+      case Qt::ForegroundRole:
+         if (column == 1 && item->is_injected) // show injected forms' IDs in color
+            return QColor::fromRgb(0x309000);
          break;
       case Qt::UserRole: // used for sorting
          switch (column) {

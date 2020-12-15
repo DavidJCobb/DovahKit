@@ -27,6 +27,9 @@ class CellRefListModelItem {
       bare_form_id_t   formID = 0;
       QString          editorID;
       //
+      bool is_active   = false;
+      bool is_injected = false;
+      //
       CellRefListModelItem() {}
       CellRefListModelItem(const form_stub*);
       //

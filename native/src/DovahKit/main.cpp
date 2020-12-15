@@ -266,6 +266,12 @@
 //
 //  - Wrap-up and testing for partial record support
 //
+//     - If a GMST is flagged as "partial" and is an injected record, then it should fail 
+//       to load. We only emit warnings for that sort of thing in (accept_form_stub), so 
+//       GMSTs can't warn. The (accept_game_setting) function doesn't take a (form_stub) 
+//       or a record header; the (file_or_file_part_loader) function would have to handle 
+//       this, I suspect.
+//
 //     - When saving a form, we need to check whether it's been edited within the active 
 //       file. If not, then we must only be saving it because it's the parent of an active 
 //       file form, so we need to flag it as partial if it isn't flagged as such already.

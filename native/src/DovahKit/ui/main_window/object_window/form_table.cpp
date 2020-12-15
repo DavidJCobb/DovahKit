@@ -4,6 +4,7 @@
 #include "basic_form_type_treeview.h"
 #include "../../../editor/core.h"
 #include "../../../dovah/form_stub.h"
+#include "../../../dovah/files/common.h"
 
 FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
    this->stub = stub;
@@ -15,7 +16,7 @@ void FormTableModelItem::update() {
    this->formID    = stub->formID;
    this->userCount = stub->inbound.size();
    //
-   this->is_active   = stub->is_edited_or_in_active_file();
+   this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
    this->is_injected = stub->is_injected();
    this->is_none     = stub->is_none_stub();
 }

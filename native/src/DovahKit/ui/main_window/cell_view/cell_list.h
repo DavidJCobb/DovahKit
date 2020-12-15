@@ -26,6 +26,9 @@ class CellListModelItem {
       int32_t   gridX     = 0;
       int32_t   gridY     = 0;
       //
+      bool is_active   = false;
+      bool is_injected = false;
+      //
       CellListModelItem() {}
       CellListModelItem(const dovah::form_stub*);
       //
