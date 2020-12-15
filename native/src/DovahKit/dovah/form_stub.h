@@ -165,6 +165,8 @@ namespace dovah {
          form_stub_use_info_builder(form_stub& s) : _stub(s) {}
          //
       public:
+         bool is_partial_record = false;
+         //
          void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
          //

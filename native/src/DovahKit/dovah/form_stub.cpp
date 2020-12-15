@@ -94,6 +94,7 @@ namespace dovah {
       auto* loader = get_form_loader_function(this->formType);
       if (!loader)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
+      bool can_be_parent = form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children;
       if (auto* file = arr[0].pointer) {
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             //
@@ -111,6 +112,7 @@ namespace dovah {
             //
             intfc.current_file      = file;
             intfc.is_winning_record = (1 == size);
+            intfc.is_partial_record = false;
             if (file->load_record_at(arr[0].offset)) {
                auto& record = file->get_current_record();
                this->form = create_blank_loaded_form_by_type(this->formType);
@@ -132,6 +134,7 @@ namespace dovah {
          //
          intfc.is_winning_record = (i + 1 == size);
          intfc.current_file      = file;
+         intfc.is_partial_record = can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
          if (file->load_record_at(offset)) {
             auto& record = file->get_current_record();
             (loader)(this->form, record, intfc);
@@ -416,6 +419,7 @@ namespace dovah {
       this->_get_source_file_list(arr, size);
       //
       form_stub_use_info_builder use_interface(*this);
+      bool can_be_parent = form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children;
       //
       for (uint16_t i = 0; i < size; ++i) {
          if (i == size - 1)
@@ -424,8 +428,12 @@ namespace dovah {
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             build_hardcoded_form_outbound_refs(use_interface);
          } else {
+            if (arr[i].offset == 0)
+               continue;
             file->adopt(reader);
             if (reader.load_record_at(arr[i].offset)) {
+               use_interface.is_partial_record = (i > 0) && can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
+               //
                auto& record  = reader.get_current_record();
                auto  builder = get_outbound_uses_builder_by_type(this->formType);
                if (builder) {

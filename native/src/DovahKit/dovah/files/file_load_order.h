@@ -583,6 +583,7 @@ namespace dovah {
             const form_stub& target_stub;
             tes_file_reading::file_loader* current_file = nullptr;
             bool is_winning_record = false;
+            bool is_partial_record = false; // you could also check the record flags, but there are certain cases where the flag should be ignored, and this bool better reflects those
 
             // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 
             // called blindly to create and return warnings that only have a code if there's an actual problem.

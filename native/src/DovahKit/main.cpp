@@ -170,19 +170,6 @@
 //
 //        - Be sure to modify both (form_stub::_load) and (form_stub::build_outbound_refs)!
 //
-//           - Requires some way for (form_stub)'s load code to override the record header 
-//             flags currently stored on the record-reading interface.
-//
-//     - The loaders for WRLD, CELL, and DIAL need to check for the flag (they have access 
-//       to the record reader, so they should be capable of this) and if it's present, then 
-//       they need to match the behavior of the appropriate TESForm::LoadPartial override 
-//       in TESV.exe.
-//
-//        - Wondering if we should: change (EveryFormSubclass::load) into a virtual member 
-//          function (_load_impl); add a (_load_partial_impl); and then add (Form::load) as 
-//          a non-virtual function that checks the record flag and calls the appropriate 
-//          underlying virtual member function.
-//
 //     - When saving a form, we need to check whether it's been edited within the active 
 //       file. If not, then we must only be saving it because it's the parent of an active 
 //       file form, so we need to flag it as partial if it isn't flagged as such already.
@@ -201,6 +188,16 @@
 //          the WRLD and the CELL should save as partial.
 //
 //     - Rename (form_stub::_set_active_file_data) to (form_stub::_set_source_file_offset).
+//
+//     - The loaders for WRLD, CELL, and DIAL need to check for the flag (they have access 
+//       to the record reader, so they should be capable of this) and if it's present, then 
+//       they need to match the behavior of the appropriate TESForm::LoadPartial override 
+//       in TESV.exe.
+//
+//        - Wondering if we should: change (EveryFormSubclass::load) into a virtual member 
+//          function (_load_impl); add a (_load_partial_impl); and then add (Form::load) as 
+//          a non-virtual function that checks the record flag and calls the appropriate 
+//          underlying virtual member function.
 //
 //  - Esoteric records
 //
