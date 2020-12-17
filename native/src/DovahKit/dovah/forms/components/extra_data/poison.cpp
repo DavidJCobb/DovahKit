@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result poison::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result poison::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       switch (subrecord.signature()) {
          case signature_type:
             subrecord.read(this->type);
@@ -18,7 +18,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return load_result::succeeded;
    }
-   void poison::save(tes_record_writer& record) {
+   void poison::save(tes_record_writer& record, save_interface_t& intfc) {
       if (!this->type)
          return;
       record.write_formID_subrecord(signature_type, this->type);

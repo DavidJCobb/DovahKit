@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result water_current_zone_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result water_current_zone_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       switch (subrecord.signature()) {
          case signature_vel_linear:
             subrecord.read(this->velocity.linear.x);
@@ -19,7 +19,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return load_result::succeeded;
    }
-   void water_current_zone_data::save(tes_record_writer& record) {
+   void water_current_zone_data::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& XCVL = record.open_next_subrecord(signature_vel_linear);
       XCVL.write(this->velocity.linear.x);
       XCVL.write(this->velocity.linear.y);

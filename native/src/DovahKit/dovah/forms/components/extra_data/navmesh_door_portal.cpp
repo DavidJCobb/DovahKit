@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result navmesh_door_portal::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result navmesh_door_portal::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->navmesh);
@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.read(this->pad06);
       return load_result::succeeded;
    }
-   void navmesh_door_portal::save(tes_record_writer& record) {
+   void navmesh_door_portal::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& subrecord = record.open_next_subrecord(signature);
       subrecord.write(this->navmesh);
       subrecord.write(this->triangle);

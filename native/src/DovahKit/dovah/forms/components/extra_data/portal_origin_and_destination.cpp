@@ -1,7 +1,7 @@
 #include "portal_origin_and_destination.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result portal_origin_and_destination::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result portal_origin_and_destination::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->origin);
@@ -14,7 +14,7 @@ namespace dovah::loaded_forms::components::extra {
       );
       return load_result::succeeded;
    }
-   void portal_origin_and_destination::save(tes_record_writer& record) {
+   void portal_origin_and_destination::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& subrecord = record.open_next_subrecord(signature);
       subrecord.write(this->origin);
       subrecord.write(this->destination);

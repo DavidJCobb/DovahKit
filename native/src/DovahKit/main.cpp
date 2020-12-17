@@ -149,18 +149,11 @@
 //
 //     - Logging save warnings from forms
 //
-//        - Form components need to receive the "form save" interface so that they can 
-//          also log warnings.
-//
 //        - Audit existing form types and extra data types, and add any appropriate 
 //          save warnings, particularly for converting between Classic and Special.
 //
 //        - Do we want to store "local" form IDs in the save warnings, as we do for read 
 //          warnings?
-//
-//           - How much can we share between the two warning structs? It'd be nice if we 
-//             could sort of centralize and standardize things instead of having bespoke 
-//             warning and error codes and structs everywhere.
 //
 //  - Esoteric records
 //

@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result patrol_ref_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result patrol_ref_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       switch (subrecord.signature()) {
          case signature_time:
             subrecord.read(this->idle_time);
@@ -14,10 +14,10 @@ namespace dovah::loaded_forms::components::extra {
       }
       return load_result::succeeded;
    }
-   bool patrol_ref_data::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+   bool patrol_ref_data::load(tes_record_reader& record, load_interface_t& intfc) {
       return this->event.load(record, intfc);
    }
-   void patrol_ref_data::save(tes_record_writer& record) {
+   void patrol_ref_data::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& XPRD = record.open_next_subrecord(signature_time);
       XPRD.write(this->idle_time);
       XPRD.close();

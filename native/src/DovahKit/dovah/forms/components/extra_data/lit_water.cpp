@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result lit_water::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result lit_water::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       auto& formID = this->refs.emplace_back();
@@ -12,7 +12,7 @@ namespace dovah::loaded_forms::components::extra {
       );
       return load_result::succeeded;
    }
-   void lit_water::save(tes_record_writer& record) {
+   void lit_water::save(tes_record_writer& record, save_interface_t& intfc) {
       if (this->refs.empty())
          return;
       for (auto ref : this->refs) {

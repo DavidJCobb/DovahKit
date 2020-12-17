@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result water_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result water_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       auto s = subrecord.signature();
       if (s == signature_base) {
          subrecord.read(this->count);
@@ -10,7 +10,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return load_result::unrecognized;
    }
-   bool water_data::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+   bool water_data::load(tes_record_reader& record, load_interface_t& intfc) {
       auto signature = record.peek_next_subrecord_type();
       if (signature == signature_vel) {
          auto& subrecord = record.next_subrecord();
@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return true;
    }
-   void water_data::save(tes_record_writer& record) {
+   void water_data::save(tes_record_writer& record, save_interface_t& intfc) {
       this->count = this->data.size();
       //
       auto& XWCN = record.open_next_subrecord(signature_base);

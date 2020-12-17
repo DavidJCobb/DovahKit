@@ -2,12 +2,12 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result map_marker::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result map_marker::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       return load_result::requires_record;
    }
-   bool map_marker::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+   bool map_marker::load(tes_record_reader& record, load_interface_t& intfc) {
       if (record.peek_next_subrecord_type() == 'FNAM') { // the game considers FNAM optional
          auto& subrecord = record.next_subrecord();
          subrecord.read(this->flags);
@@ -22,7 +22,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return true;
    }
-   void map_marker::save(tes_record_writer& record) {
+   void map_marker::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& XMRK = record.open_next_subrecord(signature);
       XMRK.close();
       auto& FNAM = record.open_next_subrecord('FNAM');

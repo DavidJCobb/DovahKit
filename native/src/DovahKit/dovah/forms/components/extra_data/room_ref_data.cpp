@@ -2,12 +2,12 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result room_ref_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result room_ref_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       return load_result::requires_record;
    }
-   bool room_ref_data::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+   bool room_ref_data::load(tes_record_reader& record, load_interface_t& intfc) {
       {
          auto& subrecord = record.get_current_subrecord();
          assert(subrecord.signature() == signature && "This function should only have been called after the other (load) overload verified that we were in an XRMR subrecord.");
@@ -52,7 +52,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return true;
    }
-   void room_ref_data::save(tes_record_writer& record) {
+   void room_ref_data::save(tes_record_writer& record, save_interface_t& intfc) {
       this->linked_room_count = this->linked_rooms.size();
       if (this->linked_rooms.size() > std::numeric_limits<decltype(this->linked_room_count)>::max()) // check for overflow
          this->linked_room_count = std::numeric_limits<decltype(this->linked_room_count)>::max();

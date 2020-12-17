@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result light::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result light::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->fov);
@@ -12,7 +12,7 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.read(this->unk10); // optional
       return load_result::succeeded;
    }
-   void light::save(tes_record_writer& record) {
+   void light::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& subrecord = record.open_next_subrecord(signature);
       subrecord.write(this->fov);
       subrecord.write(this->fade);

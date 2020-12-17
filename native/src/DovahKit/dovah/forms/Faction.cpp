@@ -321,7 +321,7 @@ namespace dovah::loaded_forms {
       CITC.write(uint32_t(this->vendor_conditions.size()));
       CITC.close();
       for (auto& condition : this->vendor_conditions)
-         condition.save(record);
+         condition.save(record, intfc);
       //
       if (this->has_object_bounds) {
          auto& subrecord = record.open_next_subrecord('OBND');

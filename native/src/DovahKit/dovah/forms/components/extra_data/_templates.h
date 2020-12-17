@@ -13,13 +13,13 @@ namespace dovah::loaded_forms::components {
          std::array<uint8_t, bytecount> bytes;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_interface_t& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             subrecord.read(this->bytes.data(), this->bytes.size());
             return load_result::succeeded;
          }
-         virtual void save(tes_record_writer& record) override {
+         virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             auto& subrecord = record.open_next_subrecord(signature);
             subrecord.write(this->bytes.data());
             subrecord.close();
@@ -43,7 +43,7 @@ namespace dovah::loaded_forms::components {
          std::vector<uint8_t> bytes;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_interface_t& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             auto size = subrecord.size();
@@ -51,7 +51,7 @@ namespace dovah::loaded_forms::components {
             subrecord.read(this->bytes.data(), size);
             return load_result::succeeded;
          }
-         virtual void save(tes_record_writer& record) override {
+         virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             auto& subrecord = record.open_next_subrecord(signature);
             subrecord.write(this->bytes.data(), this->bytes.size());
             subrecord.close();
@@ -75,12 +75,12 @@ namespace dovah::loaded_forms::components {
          static constexpr uint32_t signature = signature;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_interface_t& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             return load_result::succeeded;
          }
-         virtual void save(tes_record_writer& record) override {
+         virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             auto& subrecord = record.open_next_subrecord(signature);
             subrecord.close();
          }
@@ -97,14 +97,14 @@ namespace dovah::loaded_forms::components {
          float value = 0.0F;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_interface_t& intfc) override {
             if (subrecord.signature() == signature) {
                subrecord.read(this->value);
                return load_result::succeeded;
             }
             return load_result::unrecognized;
          }
-         virtual void save(tes_record_writer& record) override {
+         virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             auto& subrecord = record.open_next_subrecord(signature);
             subrecord.write(this->value);
             subrecord.close();
@@ -123,7 +123,7 @@ namespace dovah::loaded_forms::components {
          form_reference_t form;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_interface_t& intfc) override {
             if (subrecord.signature() == signature) {
                if (subrecord.read(this->form)) {
                   if (desired_form_type != form_type::none)
@@ -136,7 +136,7 @@ namespace dovah::loaded_forms::components {
             }
             return load_result::unrecognized;
          }
-         virtual void save(tes_record_writer& record) override {
+         virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             record.write_formID_subrecord(signature, this->form);
          }
          static void generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -169,7 +169,7 @@ namespace dovah::loaded_forms::components {
          std::string value;
          //
          virtual extra_data_type get_type() const noexcept { return et; }
-         virtual load_result load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) override {
+         virtual load_result load(tes_subrecord_reader& subrecord, load_interface_t& intfc) override {
             if (subrecord.signature() != signature)
                return load_result::unrecognized;
             auto size = subrecord.size();
@@ -180,7 +180,7 @@ namespace dovah::loaded_forms::components {
                this->value.resize(length + 1);
             return load_result::succeeded;
          }
-         virtual void save(tes_record_writer& record) override {
+         virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             auto& subrecord = record.open_next_subrecord(signature);
             subrecord.write(this->value.data(), this->value.size() + 1);
             subrecord.close();

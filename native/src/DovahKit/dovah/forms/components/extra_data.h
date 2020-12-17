@@ -117,13 +117,15 @@ namespace dovah::loaded_forms::components {
 
    class basic_extra_data {
       public:
-         using load_result = extra_data_load_result;
+         using load_result      = extra_data_load_result;
+         using load_interface_t = load_order_interfaces::form_load;
+         using save_interface_t = load_order_interfaces::form_save;
       public:
          virtual extra_data_type get_type() const noexcept = 0;
          //
-         virtual load_result load(tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
-         virtual bool        load(tes_record_reader&, load_order_interfaces::form_load&) { return false; };
-         virtual void        save(tes_record_writer&) = 0;
+         virtual load_result load(tes_subrecord_reader&, load_interface_t&) = 0;
+         virtual bool        load(tes_record_reader&,    load_interface_t&) { return false; };
+         virtual void        save(tes_record_writer&,    save_interface_t&) = 0;
          //
          // The general process for loading a subrecord works as follows:
          //
@@ -164,6 +166,8 @@ namespace dovah::loaded_forms::components {
       public:
          using load_result = extra_data_load_result;
          using list_t      = std::vector<basic_extra_data*>;
+         using load_interface_t = basic_extra_data::load_interface_t;
+         using save_interface_t = basic_extra_data::save_interface_t;
       protected:
          list_t content; // contents are owned. list should only allow one of each type.
          //
@@ -175,8 +179,8 @@ namespace dovah::loaded_forms::components {
          void remove(basic_extra_data*);
          void remove_by_type(extra_data_type);
          //
-         load_result load(tes_record_reader&, load_order_interfaces::form_load& intfc);
-         void save(tes_record_writer&);
+         load_result load(tes_record_reader&, load_interface_t&);
+         void save(tes_record_writer&, save_interface_t&);
          void clone_from(const extra_data_list& source, form_stub& owner_of_clone);
          void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
          //

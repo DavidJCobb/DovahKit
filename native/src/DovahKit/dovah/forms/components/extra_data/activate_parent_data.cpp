@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result activate_parent_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result activate_parent_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       switch (subrecord.signature()) {
          case signature_flags:
             if (subrecord.size() == 4) {
@@ -28,7 +28,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return load_result::succeeded;
    }
-   void activate_parent_data::save(tes_record_writer& record) {
+   void activate_parent_data::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& XAPD = record.open_next_subrecord(signature_flags);
       XAPD.write(this->flags);
       XAPD.close();

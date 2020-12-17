@@ -60,9 +60,9 @@ namespace dovah::loaded_forms::components {
       }
       return load_result::unrecognized;
    }
-   void extra_data_list::save(tes_record_writer& record) {
+   void extra_data_list::save(tes_record_writer& record, save_interface_t& intfc) {
       for (auto* extra : this->content)
-         extra->save(record);
+         extra->save(record, intfc);
    }
    void extra_data_list::clone_from(const extra_data_list& source, form_stub& my_owner) {
       for (auto* extra : this->content)

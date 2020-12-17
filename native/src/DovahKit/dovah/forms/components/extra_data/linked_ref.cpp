@@ -1,7 +1,7 @@
 #include "linked_ref.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result linked_ref::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result linked_ref::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       if (subrecord.size() >= 8) {
@@ -16,7 +16,7 @@ namespace dovah::loaded_forms::components::extra {
       );
       return load_result::succeeded;
    }
-   void linked_ref::save(tes_record_writer& record) {
+   void linked_ref::save(tes_record_writer& record, save_interface_t& intfc) {
       if (!this->ref)
          return;
       auto& subrecord = record.open_next_subrecord(signature);

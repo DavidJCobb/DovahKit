@@ -74,7 +74,7 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
-   void model::save(tes_subrecord_writer& subrecord) {
+   void model::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       switch (subrecord.signature()) {
          case 'MODL':
          case 'MOD2':
@@ -100,13 +100,13 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
-   void model::save(tes_record_writer& record, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap) {
+   void model::save(tes_record_writer& record, load_order_interfaces::form_save& intfc, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap) {
       if (!this->model_path.empty())
-         this->save(record.open_next_subrecord(signature_path));
+         this->save(record.open_next_subrecord(signature_path), intfc);
       if (this->has_texture_hashes())
-         this->save(record.open_next_subrecord(signature_hash));
+         this->save(record.open_next_subrecord(signature_hash), intfc);
       if (!this->texture_swaps.empty())
-         this->save(record.open_next_subrecord(signature_swap));
+         this->save(record.open_next_subrecord(signature_swap), intfc);
    }
    void model::clear(form_stub& my_owner) {
       this->model_path.clear();

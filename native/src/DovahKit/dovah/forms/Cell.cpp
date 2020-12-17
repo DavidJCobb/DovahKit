@@ -224,7 +224,7 @@ namespace dovah::loaded_forms {
       XNAM.write(this->water.noise_texture);
       XNAM.close();
       //
-      this->extra_data.save(record);
+      this->extra_data.save(record, intfc);
       //
       if (this->has_object_bounds) {
          auto& subrecord = record.open_next_subrecord('OBND');

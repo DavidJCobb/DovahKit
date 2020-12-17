@@ -10,8 +10,8 @@ namespace dovah::loaded_forms::components::extra {
          form_reference_t destination; // REFR
          //
          virtual extra_data_type get_type() const noexcept { return extra_data_type::portal_origin_and_destination; };
-         virtual extra_data_load_result load(tes_subrecord_reader&, load_order_interfaces::form_load&) override;
-         virtual void save(tes_record_writer&) override;
+         virtual extra_data_load_result load(tes_subrecord_reader&, load_interface_t&) override;
+         virtual void save(tes_record_writer&, save_interface_t&) override;
          //
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //

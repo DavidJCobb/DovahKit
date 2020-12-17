@@ -2,7 +2,7 @@
 #include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
-   extra_data_load_result ragdoll_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+   extra_data_load_result ragdoll_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       switch (subrecord.signature()) {
          case signature_base:
             this->has_rgd = true;
@@ -18,7 +18,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       return load_result::succeeded;
    }
-   void ragdoll_data::save(tes_record_writer& record) {
+   void ragdoll_data::save(tes_record_writer& record, save_interface_t& intfc) {
       if (this->has_rgd) {
          auto& subrecord = record.open_next_subrecord(signature_base);
          subrecord.write(this->data_rgd.data(), this->data_rgd.size());

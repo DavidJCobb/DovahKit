@@ -98,7 +98,7 @@ namespace dovah::loaded_forms {
       NAME.write(this->base_form);
       NAME.close();
       //
-      this->extra_data.save(record);
+      this->extra_data.save(record, intfc);
       //
       if (this->is_open) {
          record.open_next_subrecord('ONAM').close();

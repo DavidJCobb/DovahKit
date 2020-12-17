@@ -148,7 +148,7 @@ namespace dovah::loaded_forms {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
-      this->model.save(record, 'MODL', 'MODT', 'MODS');
+      this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
       this->destruction_data.save(record, intfc);
       this->keywords.save(record, intfc);
       auto& PNAM = record.open_next_subrecord('PNAM');

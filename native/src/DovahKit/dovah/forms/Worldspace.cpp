@@ -459,7 +459,7 @@ namespace dovah::loaded_forms {
          ICON.write(this->map_icon);
          ICON.close();
       }
-      this->cloud_model.save(record, 'MODL', 'MODT', 'MODS');
+      this->cloud_model.save(record, intfc, 'MODL', 'MODT', 'MODS');
       //
       if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_map)) {
          auto& MNAM = record.open_next_subrecord('MNAM');

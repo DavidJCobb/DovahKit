@@ -138,7 +138,7 @@ namespace dovah::loaded_forms::components {
          DSTD.close();
          //
          auto& model = stage.replacementModel;
-         model.save(record, 'DMDL', 'DMDT', 'DMDS');
+         model.save(record, intfc, 'DMDL', 'DMDT', 'DMDS');
       }
       if (!this->stages.empty()) {
          auto& DSTF = record.open_next_subrecord('DSTF');

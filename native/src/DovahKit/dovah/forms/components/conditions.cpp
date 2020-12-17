@@ -923,7 +923,7 @@ namespace dovah::loaded_forms::components {
       if (next == 'CIS2')
          record.next_subrecord();
    }
-   void condition::save(tes_record_writer& record) {
+   void condition::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& subrecord = record.open_next_subrecord('CTDA');
       subrecord.write(this->type);
       subrecord.skip_bytes(3);
