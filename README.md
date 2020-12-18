@@ -10,4 +10,4 @@ This program was built using Microsoft Visual Studio Community 2019 with the [Qt
 
 ## License
 
-Qt and its components have their own license; as do zlib and LZ4. My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain, etc.).
+Qt and its components have their own license; as do zlib, LZ4, and Lua. My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain, etc.).

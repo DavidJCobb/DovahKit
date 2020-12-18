@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "..\..\DovahKitSln\z
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lz4", "lz4\lz4.vcxproj", "{02C8F0A9-3325-46E7-8857-9FD6D7332BCE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lua", "Lua\Lua.vcxproj", "{C298946C-9949-4D6E-9802-4C614CDE3718}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -39,6 +41,14 @@ Global
 		{02C8F0A9-3325-46E7-8857-9FD6D7332BCE}.Release|x64.Build.0 = Release|x64
 		{02C8F0A9-3325-46E7-8857-9FD6D7332BCE}.Release|x86.ActiveCfg = Release|Win32
 		{02C8F0A9-3325-46E7-8857-9FD6D7332BCE}.Release|x86.Build.0 = Release|Win32
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Debug|x64.ActiveCfg = Debug|x64
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Debug|x64.Build.0 = Debug|x64
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Debug|x86.ActiveCfg = Debug|Win32
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Debug|x86.Build.0 = Debug|Win32
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Release|x64.ActiveCfg = Release|x64
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Release|x64.Build.0 = Release|x64
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Release|x86.ActiveCfg = Release|Win32
+		{C298946C-9949-4D6E-9802-4C614CDE3718}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

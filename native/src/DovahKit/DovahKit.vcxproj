@@ -211,6 +211,7 @@
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
+    <ClCompile Include="editor\scripting\core.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -420,6 +421,7 @@
     <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
+    <ClInclude Include="editor\scripting\core.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
@@ -518,6 +520,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\DovahKitSln\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Lua\Lua.vcxproj">
+      <Project>{c298946c-9949-4d6e-9802-4c614cde3718}</Project>
     </ProjectReference>
     <ProjectReference Include="..\lz4\lz4.vcxproj">
       <Project>{02c8f0a9-3325-46e7-8857-9fd6d7332bce}</Project>
