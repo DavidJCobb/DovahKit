@@ -513,6 +513,7 @@
     <QtUic Include="ui\main_window\log_window.ui" />
     <QtUic Include="ui\main_window\object_window.ui" />
     <QtUic Include="ui\main_window\save_window.ui" />
+    <QtUic Include="ui\main_window\script_window.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="ui\resources\resources.qrc" />
