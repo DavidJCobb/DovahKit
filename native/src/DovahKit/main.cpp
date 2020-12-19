@@ -152,9 +152,6 @@
 //        - Audit existing form types and extra data types, and add any appropriate 
 //          save warnings, particularly for converting between Classic and Special.
 //
-//        - Do we want to store "local" form IDs in the save warnings, as we do for read 
-//          warnings?
-//
 //  - Esoteric records
 //
 //     - GMST renumbering: test all error cases.

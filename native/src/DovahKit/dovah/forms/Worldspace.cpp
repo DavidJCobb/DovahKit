@@ -110,7 +110,7 @@ namespace dovah::loaded_forms {
             continue;
          switch (subrecord.signature()) {
             case 'RNAM':
-               if (record.is_skyrim_special()) {  // SSE-only, but we'll still load it if we see it in a Classic file.
+               if (record.is_skyrim_special()) {  // SSE-only data. If we see an SSE record in Classic (i.e. SSE version), then we'll load it anyway.
                   auto& data  = this->large_references;
                   auto& entry = data.entries.emplace_back();
                   subrecord.read(entry.y);

@@ -522,6 +522,12 @@
     <ClCompile Include="editor\scripting\core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\script_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1064,7 +1070,7 @@
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\scripting\core.h">
+    <ClInclude Include="editor\scripting\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1249,6 +1255,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\script_window.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\scripting\core.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

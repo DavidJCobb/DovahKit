@@ -1,9 +1,10 @@
 #include "core.h"
+#include "util.h"
 
 namespace {
    void _lua_debug_hook(lua_State* L, lua_Debug* ar) {
       auto& vm = DovahKitScriptVM::get();
-      if (vm.aborted) {
+      if (vm.is_aborted()) {
          luaL_error(L, "Script terminated at the user's request.");
          __assume(0); // luaL_error performs a jump and so does not return
       }
@@ -15,8 +16,8 @@ namespace {
          //
          // Stack now contains only an error object.
          //
-         if (DovahKitScriptVM::get().aborted) {
-            luaL_error(L, "error running function `f': %s", lua_tostring(L, -1));
+         if (DovahKitScriptVM::get().is_aborted()) {
+            luaL_error(L, lua_tostring(L, -1));
             __assume(0); // luaL_error performs a jump and so does not return
          }
          //
@@ -45,8 +46,42 @@ void DovahKitScriptVM::_setup_lua_vm() {
    lua_sethook(this->lua_vm, &_lua_debug_hook, LUA_MASKCOUNT, 8);
 }
 void DovahKitScriptVM::_teardown_lua_vm() {
+   this->running = false;
    if (!this->lua_vm)
       return;
    lua_close(this->lua_vm);
    this->lua_vm = nullptr;
+}
+
+void DovahKitScriptVM::abort() {
+   auto guard = std::lock_guard(this->exec_lock);
+   if (this->running)
+      this->aborted = true;
+}
+void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
+   auto guard = std::lock_guard(this->exec_lock);
+   if (this->running)
+      return;
+   this->running = true;
+   this->_teardown_lua_vm();
+   this->_setup_lua_vm();
+   //
+   auto buffer = code.toUtf8();
+   auto result = luaL_loadbufferx(this->lua_vm, buffer.data(), buffer.size(), name.toUtf8().data(), "t"); // equivalent to (lua_load) with a built-in lua_Reader
+   if (result == LUA_OK) {
+      editor_script::util::safe_call(this->lua_vm, 0, 0);
+      this->_teardown_lua_vm();
+      emit scriptEnded(false);
+      return;
+   }
+   switch (result) {
+      case LUA_ERRMEM:
+         // TODO: log the error somehow
+         break;
+      case LUA_ERRSYNTAX:
+         // TODO: log the error somehow
+         break;
+   }
+   this->_teardown_lua_vm();
+   emit scriptEnded(true);
 }

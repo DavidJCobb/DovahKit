@@ -212,6 +212,7 @@
     <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="editor\scripting\core.cpp" />
+    <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -265,6 +266,7 @@
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
     <ClCompile Include="ui\main_window\save_window.cpp" />
+    <ClCompile Include="ui\main_window\script_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
@@ -421,7 +423,8 @@
     <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
-    <ClInclude Include="editor\scripting\core.h" />
+    <QtMoc Include="editor\scripting\core.h" />
+    <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
@@ -431,6 +434,7 @@
     <QtMoc Include="ui\main_window\game_setting_window.h" />
     <QtMoc Include="ui\main_window\default_object_window.h" />
     <QtMoc Include="ui\main_window\default_object_window\default_object_list.h" />
+    <QtMoc Include="ui\main_window\script_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
