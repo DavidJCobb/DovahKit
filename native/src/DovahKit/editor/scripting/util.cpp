@@ -1,5 +1,6 @@
 #include "util.h"
 #include "editor_script_core.h"
+#include "messages/log_text.h"
 
 namespace {
    using namespace editor_script;
@@ -7,9 +8,10 @@ namespace {
    luastackchange_t _error_handler(lua_State* luaVM) {
       auto original = lua_tostring(luaVM, -1);
       luaL_traceback(luaVM, luaVM, original, 1);
-      //_MESSAGE("Lua error:\n%s\n\n--", lua_tostring(luaVM, -1));
       //
-      // TODO: Report errors
+      auto* message = new messages::log_text();
+      message->text = QString::fromUtf8(lua_tostring(luaVM, -1));
+      DovahKitScriptVM::get()._send_message(message);
       //
       return 1;
    }
