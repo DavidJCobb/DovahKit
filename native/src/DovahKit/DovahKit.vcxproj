@@ -424,6 +424,9 @@
     <ClInclude Include="editor\get_game_setting_description.h" />
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
     <QtMoc Include="editor\scripting\editor_script_core.h" />
+    <ClInclude Include="editor\scripting\messages.h" />
+    <ClInclude Include="editor\scripting\messages\all.h" />
+    <ClInclude Include="editor\scripting\messages\log_text.h" />
     <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />

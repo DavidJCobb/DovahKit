@@ -1,5 +1,6 @@
 #include "editor_script_core.h"
 #include "util.h"
+#include "messages/all.h"
 
 namespace {
    void _lua_debug_hook(lua_State* L, lua_Debug* ar) {
@@ -36,6 +37,10 @@ namespace {
 }
 
 DovahKitScriptVM::DovahKitScriptVM() {
+   this->main_thread_tick_timer.setSingleShot(false);
+   this->main_thread_tick_timer.setInterval(0);
+   QObject::connect(this, DovahKitScriptVM::scriptStarted, this, [this]() { this->main_thread_tick_timer.start(); });
+   QObject::connect(this, DovahKitScriptVM::scriptEnded,   this, [this]() { this->main_thread_tick_timer.stop(); });
 }
 DovahKitScriptVM::~DovahKitScriptVM() {
    this->_teardown_lua_vm();
@@ -54,6 +59,29 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    this->running = false;
 }
 
+void DovahKitScriptVM::_send_message(editor_script::message* message) {
+   auto  guard = std::lock_guard(this->message_queue.lock);
+   auto& list  = this->message_queue.list;
+   list.push_back(message);
+}
+
+void DovahKitScriptVM::take_all_messages(std::function<void(editor_script::message*)> functor) {
+   auto  guard = std::lock_guard(this->message_queue.lock);
+   auto& list  = this->message_queue.list;
+   for (auto* message : list) {
+      bool blocking = message->is_blocking();
+      (functor)(message);
+      message->seen = true;
+      if (!blocking)
+         delete message;
+   }
+   list.clear();
+}
+void DovahKitScriptVM::adopt_from_owner_thread() {
+   QObject::disconnect(&this->main_thread_tick_timer);
+   QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &DovahKitScriptVM::ownerThreadLoop);
+}
+
 void DovahKitScriptVM::abort() {
    auto guard = std::lock_guard(this->exec_lock);
    if (this->running)
@@ -63,6 +91,8 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    auto guard = std::lock_guard(this->exec_lock);
    if (this->running)
       return;
+   if (this->thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
+      this->thread.join();
    this->aborted = false;
    this->running = true;
    emit scriptStarted();
@@ -89,4 +119,23 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    }
    this->_teardown_lua_vm();
    emit scriptEnded(true);
+}
+
+void DovahKitScriptVM::ownerThreadLoop() {
+   this->take_all_messages([this](editor_script::message* message) {
+      using namespace editor_script;
+      //
+      switch (message->type) {
+         case message_type::log_text:
+            if (auto* casted = dynamic_cast<messages::log_text*>(message)) {
+               emit this->messageLogged(casted->text);
+            }
+            break;
+         default:
+            #if _DEBUG
+               __debugbreak(); // Unhandled message type!
+            #endif
+            break;
+      }
+   });
 }

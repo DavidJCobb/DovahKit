@@ -23,6 +23,7 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
    });
    //
    auto& vm = DovahKitScriptVM::get();
+   vm.adopt_from_owner_thread();
    QObject::connect(&vm, &DovahKitScriptVM::scriptStarted, this, [this]() {
       this->_setUILocked(true);
       QMessageBox::information(this, tr("Script started!", "script (debug)"), tr("The script has started."));
@@ -34,6 +35,13 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
          QMessageBox::information(this, tr("Script complete!", "editor script"), tr("The script ran to completion."));
       }
       this->_setUILocked(false);
+   });
+   QObject::connect(&vm, &DovahKitScriptVM::messageLogged, this, [this](const QString& text) {
+      auto* widget = this->ui.log;
+      auto  index  = widget->rowCount();
+      widget->insertRow(index);
+      auto* item   = new QTableWidgetItem(text);
+      widget->setItem(index, 0, item);
    });
    //
    // TODO: Closing the window should pop a confirmation prompt asking the user whether they want to terminate any currently-running script.
