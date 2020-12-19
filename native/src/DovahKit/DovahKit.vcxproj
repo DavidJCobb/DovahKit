@@ -427,6 +427,7 @@
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />
     <ClInclude Include="editor\scripting\messages\log_text.h" />
+    <ClInclude Include="editor\scripting\messages\test_call_and_response.h" />
     <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />

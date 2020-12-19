@@ -3,6 +3,8 @@
 #include "util.h"
 #include "messages/all.h"
 
+#include <QMessageBox> // for test_call_and_response
+
 namespace {
    void _lua_debug_hook(lua_State* L, lua_Debug* ar) {
       auto& vm = DovahKitScriptVM::get();
@@ -59,23 +61,32 @@ namespace _api { // APIs
             }
             m->text = QString::fromUtf8(out);
             //
-            DovahKitScriptVM::get()._send_message(m);
+            DovahKitScriptVMMessenger::get().send_message(m);
+            return 0;
+         }
+         luastackchange_t test_call_and_response(lua_State* L) {
+            auto* m = new editor_script::messages::test_call_and_response();
+            DovahKitScriptVMMessenger::get().send_message(m);
             return 0;
          }
       }
    }
    namespace declarations {
       std::array dovah = {
-         function{ "log_message", &definitions::dovah::log_message },
+         function{ "log_message",            &definitions::dovah::log_message },
+         function{ "test_call_and_response", &definitions::dovah::test_call_and_response },
       };
    }
 }
 
+#pragma region DovahKitScriptVM
 DovahKitScriptVM::DovahKitScriptVM() {
    this->main_thread_tick_timer.setSingleShot(false);
    this->main_thread_tick_timer.setInterval(0);
    QObject::connect(this, &DovahKitScriptVM::scriptStarted, this, [this]() { this->main_thread_tick_timer.start(); });
    QObject::connect(this, &DovahKitScriptVM::scriptEnded,   this, [this]() { this->main_thread_tick_timer.stop(); });
+   //
+   QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &DovahKitScriptVM::mainThreadLoop);
 }
 DovahKitScriptVM::~DovahKitScriptVM() {
    this->abort();
@@ -107,27 +118,29 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    }
 }
 
-void DovahKitScriptVM::_send_message(editor_script::message* message) {
-   auto  guard = std::lock_guard(this->message_queue.lock);
-   auto& list  = this->message_queue.list;
+void DovahKitScriptVM::_send_outbound_message(editor_script::message* message) {
+   auto  guard = std::lock_guard(this->outbound_message_queue.lock);
+   auto& list  = this->outbound_message_queue.list;
    list.push_back(message);
 }
 
-void DovahKitScriptVM::take_all_messages(std::function<void(editor_script::message*)> functor) {
-   auto  guard = std::lock_guard(this->message_queue.lock);
-   auto& list  = this->message_queue.list;
+void DovahKitScriptVM::view_messages(std::function<bool(editor_script::message*)> functor) {
+   auto  guard = std::lock_guard(this->outbound_message_queue.lock);
+   auto& list  = this->outbound_message_queue.list;
+   //
+   std::vector<editor_script::message*> remaining;
    for (auto* message : list) {
       bool blocking = message->is_blocking();
-      (functor)(message);
-      message->seen = true;
-      if (!blocking)
-         delete message;
+      bool resolved = (functor)(message);
+      if (resolved) {
+         message->seen = true;
+         if (!blocking)
+            delete message;
+      } else {
+         remaining.push_back(message);
+      }
    }
-   list.clear();
-}
-void DovahKitScriptVM::adopt_from_owner_thread() {
-   QObject::disconnect(&this->main_thread_tick_timer);
-   QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &DovahKitScriptVM::ownerThreadLoop);
+   std::swap(list, remaining);
 }
 
 void DovahKitScriptVM::abort() {
@@ -171,8 +184,15 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    emit scriptEnded(true);
 }
 
-void DovahKitScriptVM::ownerThreadLoop() {
-   this->take_all_messages([this](editor_script::message* message) {
+void DovahKitScriptVM::setUIParentWidget(QWidget* widget) {
+   auto guard = std::lock_guard(this->exec_lock);
+   if (this->running)
+      return;
+   this->ui_parent = widget;
+}
+
+void DovahKitScriptVM::mainThreadLoop() {
+   this->view_messages([this](editor_script::message* message) {
       using namespace editor_script;
       //
       switch (message->type) {
@@ -180,12 +200,28 @@ void DovahKitScriptVM::ownerThreadLoop() {
             if (auto* casted = dynamic_cast<messages::log_text*>(message)) {
                emit this->messageLogged(casted->text);
             }
-            break;
-         default:
-            #if _DEBUG
-               __debugbreak(); // Unhandled message type!
-            #endif
-            break;
+            return true;
+         case message_type::test_call_and_response:
+            if (auto* casted = dynamic_cast<messages::test_call_and_response*>(message)) {
+               QMessageBox::information(this->ui_parent, "Test", "This should block script execution until it is dismissed");
+            }
+            return true;
       }
+      #if _DEBUG
+         __debugbreak(); // Unhandled message type!
+      #endif
+      return message->is_blocking(); // don't let unrecognized blocking messages hang the script
    });
 }
+#pragma endregion
+
+#pragma region DovahKitScriptVMMessenger
+void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
+   auto& vm = DovahKitScriptVM::get();
+   vm._send_outbound_message(m);
+   if (m->is_blocking())
+      while (!m->seen)
+         if (vm.is_aborted())
+            break;
+}
+#pragma endregion 

@@ -49,9 +49,8 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
    });
    //
    auto& vm = DovahKitScriptVM::get();
-   vm.adopt_from_owner_thread();
    QObject::connect(&vm, &DovahKitScriptVM::scriptStarted, this, [this]() {
-      this->_setUILocked(true);
+      this->_onScriptStartStop(true);
       QMessageBox::information(this, tr("Script started!", "script (debug)"), tr("The script has started."));
    });
    QObject::connect(&vm, &DovahKitScriptVM::scriptEnded, this, [this](bool error) {
@@ -60,7 +59,7 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
       } else {
          QMessageBox::information(this, tr("Script complete!", "editor script"), tr("The script ran to completion."));
       }
-      this->_setUILocked(false);
+      this->_onScriptStartStop(false);
    });
    QObject::connect(&vm, &DovahKitScriptVM::messageLogged, this, [this](const QString& text) {
       auto* widget = this->ui.log;
@@ -72,12 +71,12 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
    // TODO: Closing the window should pop a confirmation prompt asking the user whether they want to terminate any currently-running script.
    // Anything that force-closes the window should force-terminate the script.
    //
-   this->_setUILocked(false);
+   this->_onScriptStartStop(false);
 }
-void EditorScriptWindow::_setUILocked(bool locked) { // TODO: rename this to reflect that it syncs the controls to whether a script is running
-   this->ui.buttonLoad->setDisabled(locked);
-   this->ui.buttonSave->setDisabled(locked);
-   this->ui.buttonRun->setDisabled(locked);
-   this->ui.buttonForceKill->setDisabled(!locked);
-   this->ui.script->setDisabled(locked);
+void EditorScriptWindow::_onScriptStartStop(bool script_running) {
+   this->ui.buttonLoad->setDisabled(script_running);
+   this->ui.buttonSave->setDisabled(script_running);
+   this->ui.buttonRun->setDisabled(script_running);
+   this->ui.buttonForceKill->setDisabled(!script_running);
+   this->ui.script->setDisabled(script_running);
 }

@@ -9,9 +9,8 @@ namespace {
       auto original = lua_tostring(luaVM, -1);
       luaL_traceback(luaVM, luaVM, original, 1);
       //
-      auto* message = new messages::log_text();
-      message->text = QString::fromUtf8(lua_tostring(luaVM, -1));
-      DovahKitScriptVM::get()._send_message(message);
+      auto message = QString::fromUtf8(lua_tostring(luaVM, -1));
+      emit DovahKitScriptVM::get().messageLogged(message);
       //
       return 1;
    }
