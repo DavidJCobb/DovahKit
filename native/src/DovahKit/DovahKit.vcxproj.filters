@@ -528,6 +528,9 @@
     <ClCompile Include="editor\scripting\editor_script_core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1083,6 +1086,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\messages\test_call_and_response.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\api\allowed_standard_apis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

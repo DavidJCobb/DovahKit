@@ -211,6 +211,7 @@
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
+    <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
@@ -424,6 +425,7 @@
     <ClInclude Include="editor\get_game_setting_description.h" />
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
     <QtMoc Include="editor\scripting\editor_script_core.h" />
+    <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />
     <ClInclude Include="editor\scripting\messages\log_text.h" />

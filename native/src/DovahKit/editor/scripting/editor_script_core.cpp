@@ -1,6 +1,7 @@
 #include "editor_script_core.h"
 #include <array>
 #include "util.h"
+#include "api/allowed_standard_apis.h"
 #include "messages/all.h"
 
 #include <QMessageBox> // for test_call_and_response
@@ -99,6 +100,22 @@ DovahKitScriptVM::~DovahKitScriptVM() {
 void DovahKitScriptVM::_setup_lua_vm() {
    this->lua_vm = luaL_newstate();
    lua_sethook(this->lua_vm, &_lua_debug_hook, LUA_MASKCOUNT, 8);
+   //
+   // Make the appropriate standard libraries available, and prune any functions that we 
+   // don't want the user having easy access to:
+   //
+   luaL_requiref(this->lua_vm, "_G",     luaopen_base,  1);
+   editor_script::prune_standard_library(this->lua_vm, "basic"); // also pops the library from the Lua stack
+   luaL_requiref(this->lua_vm, "debug",  luaopen_debug, 1);
+   editor_script::prune_standard_library(this->lua_vm, "debug");
+   luaL_requiref(this->lua_vm, "math",   luaopen_math, 1);
+   editor_script::prune_standard_library(this->lua_vm, "math");
+   luaL_requiref(this->lua_vm, "string", luaopen_string, 1);
+   editor_script::prune_standard_library(this->lua_vm, "string");
+   luaL_requiref(this->lua_vm, "table",  luaopen_table, 1);
+   editor_script::prune_standard_library(this->lua_vm, "table");
+   luaL_requiref(this->lua_vm, "utf8",   luaopen_utf8, 1);
+   editor_script::prune_standard_library(this->lua_vm, "utf8");
    //
    // Make API functions available via tables:
    //
