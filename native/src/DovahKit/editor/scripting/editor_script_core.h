@@ -20,8 +20,9 @@ class DovahKitScriptVM : public QObject {
       void _setup_lua_vm();
       void _teardown_lua_vm();
       //
-      void _send_message(editor_script::message*);
-      //
+   public:
+      void _send_message(editor_script::message*); // public because APIs we provide to Lua need to be able to access it :(
+   protected:
       std::recursive_mutex exec_lock;
       std::atomic<bool> aborted = false; // main thread can set this to kill the script
       bool running = false;

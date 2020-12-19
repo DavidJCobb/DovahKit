@@ -1,4 +1,5 @@
 #include "editor_script_core.h"
+#include <array>
 #include "util.h"
 #include "messages/all.h"
 
@@ -36,11 +37,45 @@ namespace {
    }
 }
 
+namespace _api { // APIs
+   using namespace editor_script;
+   struct function {
+      using ptr_t = luastackchange_t(*)(lua_State*);
+
+      const char* name;
+      ptr_t pointer = nullptr;
+   };
+
+   namespace definitions {
+      namespace dovah {
+         luastackchange_t log_message(lua_State* L) {
+            auto m = new editor_script::messages::log_text();
+            //
+            const char* out = nullptr;
+            if (lua_isstring(L, 1)) {
+               out = lua_tostring(L, 1);
+            } else {
+               out = ""; // TODO: stringify value if possible
+            }
+            m->text = QString::fromUtf8(out);
+            //
+            DovahKitScriptVM::get()._send_message(m);
+            return 0;
+         }
+      }
+   }
+   namespace declarations {
+      std::array dovah = {
+         function{ "log_message", &definitions::dovah::log_message },
+      };
+   }
+}
+
 DovahKitScriptVM::DovahKitScriptVM() {
    this->main_thread_tick_timer.setSingleShot(false);
    this->main_thread_tick_timer.setInterval(0);
-   QObject::connect(this, DovahKitScriptVM::scriptStarted, this, [this]() { this->main_thread_tick_timer.start(); });
-   QObject::connect(this, DovahKitScriptVM::scriptEnded,   this, [this]() { this->main_thread_tick_timer.stop(); });
+   QObject::connect(this, &DovahKitScriptVM::scriptStarted, this, [this]() { this->main_thread_tick_timer.start(); });
+   QObject::connect(this, &DovahKitScriptVM::scriptEnded,   this, [this]() { this->main_thread_tick_timer.stop(); });
 }
 DovahKitScriptVM::~DovahKitScriptVM() {
    this->_teardown_lua_vm();
@@ -49,6 +84,16 @@ DovahKitScriptVM::~DovahKitScriptVM() {
 void DovahKitScriptVM::_setup_lua_vm() {
    this->lua_vm = luaL_newstate();
    lua_sethook(this->lua_vm, &_lua_debug_hook, LUA_MASKCOUNT, 8);
+   //
+   // Make API functions available via tables:
+   //
+   lua_newtable(this->lua_vm); // create a new table
+   for (auto& entry : _api::declarations::dovah) {
+      lua_pushstring   (this->lua_vm, entry.name);    // key
+      lua_pushcfunction(this->lua_vm, entry.pointer); // value
+      lua_rawset(this->lua_vm, -3);
+   }
+   lua_setglobal(this->lua_vm, "dovah"); // assign the new table to a variable
 }
 void DovahKitScriptVM::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->exec_lock);
@@ -86,6 +131,8 @@ void DovahKitScriptVM::abort() {
    auto guard = std::lock_guard(this->exec_lock);
    if (this->running)
       this->aborted = true;
+   if (this->thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
+      this->thread.join();
 }
 void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    auto guard = std::lock_guard(this->exec_lock);
