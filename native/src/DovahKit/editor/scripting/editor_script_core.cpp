@@ -78,7 +78,11 @@ DovahKitScriptVM::DovahKitScriptVM() {
    QObject::connect(this, &DovahKitScriptVM::scriptEnded,   this, [this]() { this->main_thread_tick_timer.stop(); });
 }
 DovahKitScriptVM::~DovahKitScriptVM() {
+   this->abort();
+   if (this->thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
+      this->thread.join();
    this->_teardown_lua_vm();
+   this->running = false;
 }
 
 void DovahKitScriptVM::_setup_lua_vm() {
@@ -101,7 +105,6 @@ void DovahKitScriptVM::_teardown_lua_vm() {
       lua_close(this->lua_vm);
       this->lua_vm = nullptr;
    }
-   this->running = false;
 }
 
 void DovahKitScriptVM::_send_message(editor_script::message* message) {
@@ -131,8 +134,6 @@ void DovahKitScriptVM::abort() {
    auto guard = std::lock_guard(this->exec_lock);
    if (this->running)
       this->aborted = true;
-   if (this->thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
-      this->thread.join();
 }
 void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    auto guard = std::lock_guard(this->exec_lock);
@@ -152,6 +153,7 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
       this->thread = std::thread([this]() {
          editor_script::util::safe_call(this->lua_vm, 0, 0);
          this->_teardown_lua_vm();
+         this->running = false;
          emit this->scriptEnded(false);
       });
       return;
@@ -165,6 +167,7 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
          break;
    }
    this->_teardown_lua_vm();
+   this->running = false;
    emit scriptEnded(true);
 }
 

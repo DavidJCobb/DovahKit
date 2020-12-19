@@ -5,6 +5,32 @@
 EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
+   {  // Font for script editor
+      QFont font("Lucida Console", 10);
+      font.setStyleHint(QFont::Monospace);
+      this->ui.script->setFont(font);
+   }
+   {  // Visuals for log pane
+      auto* widget = this->ui.log;
+      widget->setAlternatingRowColors(true);
+      widget->setWordWrap(true);
+      //
+      widget->verticalHeader()->setDefaultSectionSize(0);
+      //
+      // The next call is needed for proper word-wrapping in table cells. The "wordWrap" 
+      // property on table cells enables word-wrapping if the cell is tall enough, but 
+      // doesn't actually resize table cells, so by default, the table behaves exactly 
+      // as if word-wrapping were disabled. The next call automatically resizes cells 
+      // by way of the vertical header: even if we disable the vertical header, every 
+      // row still has a vertical header section associated with it, and that can be 
+      // configured to resize.
+      //
+      // Naturally, pretty much none of this information is mentioned in the Qt docs 
+      // for QTableView::setWordWrap, at least as of this writing.
+      //
+      widget->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for proper word-wrapping in table cells
+   }
+   //
    QObject::connect(this->ui.buttonLoad, &QPushButton::clicked, this, [this]() {
       // TODO: let the user load the text of a script from a file
    });
@@ -40,8 +66,7 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
       auto* widget = this->ui.log;
       auto  index  = widget->rowCount();
       widget->insertRow(index);
-      auto* item   = new QTableWidgetItem(text);
-      widget->setItem(index, 0, item);
+      widget->setItem(index, 0, new QTableWidgetItem(text));
    });
    //
    // TODO: Closing the window should pop a confirmation prompt asking the user whether they want to terminate any currently-running script.
