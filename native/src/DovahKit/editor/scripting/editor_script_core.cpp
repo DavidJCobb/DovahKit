@@ -1,4 +1,4 @@
-#include "core.h"
+#include "editor_script_core.h"
 #include "util.h"
 
 namespace {
@@ -46,11 +46,12 @@ void DovahKitScriptVM::_setup_lua_vm() {
    lua_sethook(this->lua_vm, &_lua_debug_hook, LUA_MASKCOUNT, 8);
 }
 void DovahKitScriptVM::_teardown_lua_vm() {
+   auto guard = std::lock_guard(this->exec_lock);
+   if (this->lua_vm) {
+      lua_close(this->lua_vm);
+      this->lua_vm = nullptr;
+   }
    this->running = false;
-   if (!this->lua_vm)
-      return;
-   lua_close(this->lua_vm);
-   this->lua_vm = nullptr;
 }
 
 void DovahKitScriptVM::abort() {
@@ -62,16 +63,20 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    auto guard = std::lock_guard(this->exec_lock);
    if (this->running)
       return;
+   this->aborted = false;
    this->running = true;
+   emit scriptStarted();
    this->_teardown_lua_vm();
    this->_setup_lua_vm();
    //
    auto buffer = code.toUtf8();
    auto result = luaL_loadbufferx(this->lua_vm, buffer.data(), buffer.size(), name.toUtf8().data(), "t"); // equivalent to (lua_load) with a built-in lua_Reader
    if (result == LUA_OK) {
-      editor_script::util::safe_call(this->lua_vm, 0, 0);
-      this->_teardown_lua_vm();
-      emit scriptEnded(false);
+      this->thread = std::thread([this]() {
+         editor_script::util::safe_call(this->lua_vm, 0, 0);
+         this->_teardown_lua_vm();
+         emit this->scriptEnded(false);
+      });
       return;
    }
    switch (result) {

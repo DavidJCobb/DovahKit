@@ -6,7 +6,7 @@
 #include <QObject>
 #include <QString>
 
-class DovahKitScriptVM {
+class DovahKitScriptVM : public QObject {
    Q_OBJECT
    //
    protected:
@@ -33,6 +33,7 @@ class DovahKitScriptVM {
       inline bool is_running() const noexcept { return this->running; }
       //
    signals:
+      void scriptStarted();
       void scriptEnded(bool error);
       //
    public slots:

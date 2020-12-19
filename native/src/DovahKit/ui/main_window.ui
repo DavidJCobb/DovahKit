@@ -85,6 +85,8 @@
     <addaction name="menuTextEncoding"/>
     <addaction name="actionDefaultObjects"/>
     <addaction name="actionGameSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionRunEditorScript"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -195,6 +197,11 @@
   <action name="actionDebugListNoneStubs">
    <property name="text">
     <string>List all dangling references</string>
+   </property>
+  </action>
+  <action name="actionRunEditorScript">
+   <property name="text">
+    <string>Run Editor Script...</string>
    </property>
   </action>
  </widget>

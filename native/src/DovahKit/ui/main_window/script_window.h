@@ -12,4 +12,6 @@ class EditorScriptWindow : public QDialog {
       //
    private:
       Ui::EditorScriptWindow ui;
+      //
+      void _setUILocked(bool);
 };

@@ -1,5 +1,5 @@
 #include "util.h"
-#include "core.h"
+#include "editor_script_core.h"
 
 namespace {
    using namespace editor_script;

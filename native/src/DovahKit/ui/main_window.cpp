@@ -13,6 +13,7 @@
 #include "main_window/log_window.h"
 #include "main_window/game_setting_window.h"
 #include "main_window/default_object_window.h"
+#include "main_window/script_window.h"
 
 #include "../dovah/files/common.h"
 #include "../dovah/form_stub.h"
@@ -240,6 +241,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          }
       });
    #pragma endregion
+      
+   QObject::connect(this->ui.actionRunEditorScript, &QAction::triggered, this, [this]() {
+      auto modal = new EditorScriptWindow(this);
+      modal->setModal(true);
+      modal->exec();
+   });
 
    #pragma region Debugging
    QObject::connect(this->ui.actionDebugGetRecordSizeStats, &QAction::triggered, this, [this]() {
