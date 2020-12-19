@@ -69,7 +69,7 @@ namespace editor_script {
             if (!any) { // this is not an allowed key
                lua_pushvalue(L, -2); // lua_settable pops its key, so we need to push a second copy
                lua_pushnil(L);
-               lua_settable(L, base);
+               lua_rawset(L, base);
             }
          }
       }

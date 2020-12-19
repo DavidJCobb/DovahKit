@@ -246,6 +246,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       auto modal = new EditorScriptWindow(this);
       modal->setModal(true);
       modal->exec();
+      modal->deleteLater();
    });
 
    #pragma region Debugging

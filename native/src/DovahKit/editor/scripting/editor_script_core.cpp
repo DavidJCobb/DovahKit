@@ -104,7 +104,13 @@ void DovahKitScriptVM::_setup_lua_vm() {
    // Make the appropriate standard libraries available, and prune any functions that we 
    // don't want the user having easy access to:
    //
-   luaL_requiref(this->lua_vm, "_G",     luaopen_base,  1);
+   luaL_requiref(this->lua_vm, "_G",     luaopen_base,  1); // loads the library to the top of the Lua stack
+   {  // shim pcall
+      auto ti = lua_gettop(this->lua_vm);
+      lua_pushstring   (this->lua_vm, "pcall");
+      lua_pushcfunction(this->lua_vm, &_shimmed_pcall);
+      lua_rawset       (this->lua_vm, ti);
+   }
    editor_script::prune_standard_library(this->lua_vm, "basic"); // also pops the library from the Lua stack
    luaL_requiref(this->lua_vm, "debug",  luaopen_debug, 1);
    editor_script::prune_standard_library(this->lua_vm, "debug");

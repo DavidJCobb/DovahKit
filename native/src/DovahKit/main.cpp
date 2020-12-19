@@ -355,19 +355,7 @@
 //          as the root UI for scripts; this should include a button to forcibly kill 
 //          the script early.
 //
-//           - We need to develop a message-passing system for the two threads that 
-//             handles the following use cases:
-//
-//              - The script thread can blindly send messages to the main thread without 
-//                caring whether or how they're acknowledged (e.g. for logging).
-//
-//                 - TESTED. IT WORKS.
-//
-//              - The script thread can send a request to the main thread, and then block 
-//                until that request is acknowledged.
-//
-//                 - IMPLEMENT A TEST FUNCTION THAT DOES THIS, PERHAPS WITH A UI DIALOG 
-//                   OR SIMILAR, AND THEN SEE IF IT WORKS.
+//           = DONE.
 //
 //        - PHASE 2: FORM ACCESS
 //          Lua scripts need to be able to refer not only to forms, but to individual 
