@@ -40,6 +40,8 @@ namespace editor_script::classes {
          if (this->stub != other->stub)
             return false;
       }
-      return true;
+      if (typeid(this) != typeid(other))
+         return false;
+      return this->_is_equal_impl(other);
    }
 }

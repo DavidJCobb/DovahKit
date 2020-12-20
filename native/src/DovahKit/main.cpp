@@ -374,14 +374,6 @@
 //                "userdata" in native code contexts, especially since the userdata 
 //                itself is a pointer to the wrapper rather than the wrapper itself.
 //
-//              - Rename (_base::is_equal) to (_base::is_equal_impl) and make it pure. 
-//                Then, define a non-virtual (_base::is_equal) that does what the 
-//                current (is_equal) does before calling the impl version. That way, 
-//                we avoid the overhead of a virtual call for cases that are quick to 
-//                rule out.
-//
-//                 - Consider also performing a type check.
-//
 //           - The main thread needs to be able to send two kinds of messages to the 
 //             script thread. "Urgent" messages would be things like form deletion, 
 //             and the script thread must check for them at every opportunity: after 

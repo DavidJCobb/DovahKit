@@ -4,6 +4,8 @@
 
 namespace editor_script::classes {
    class form : public _base {
+      protected:
+         virtual bool _is_equal_impl(const _base* other) const noexcept override { return true; }
       public:
          static constexpr char* superclass_key = metatable_key;
          static constexpr char* metatable_key  = "dovah.classes.form";

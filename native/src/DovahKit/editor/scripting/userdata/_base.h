@@ -15,6 +15,8 @@ namespace editor_script::classes {
    };
 
    class _base {
+      protected:
+         virtual bool _is_equal_impl(const _base* other) const noexcept = 0;
       public:
          static constexpr char* superclass_key = nullptr;
          static constexpr char* metatable_key  = "dovah.classes._base";
@@ -23,7 +25,7 @@ namespace editor_script::classes {
          _base();
          ~_base();
 
-         virtual bool is_equal(const _base* other) const noexcept;
+         bool is_equal(const _base* other) const noexcept;
 
          userdata_base_type type = userdata_base_type::generic;
          uint32_t refcount = 0;

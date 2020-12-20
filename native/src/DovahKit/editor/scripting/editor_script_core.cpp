@@ -70,24 +70,11 @@ namespace _api { // APIs
                return 0;
             auto  id   = lua_tonumber(L, 1);
             auto* stub = editor.get_form(id);
-            auto& vm   = DovahKitScriptVM::get();
-            //
-            auto* wrapper = new classes::form(stub);
-            if (auto* existing = DovahKitScriptVMUserdataInterface::get().instance_is_redundant(wrapper)) {
-               delete wrapper;
-               wrapper = (classes::form*) existing;
-            }
-            ++wrapper->refcount;
-            auto* ptr = (classes::form**) lua_newuserdatauv(L, sizeof(void*), 0);
-            *ptr = wrapper;
-            lua_getfield(L, LUA_REGISTRYINDEX, classes::form::metatable_key);
-            if (lua_isnil(L, -1)) {
-               assert(false && "The wrapper-class wasn't set up properly; its metatable is undefined.");
-               lua_pop(L, 2);
+            if (!stub)
                return 0;
-            }
-            lua_setmetatable(L, -2);
-            return 1;
+            //
+            classes::_base* wrapper = new classes::form(stub);
+            return DovahKitScriptVMUserdataInterface::get().return_wrapper_to_lua(L, wrapper, classes::form::metatable_key);
          }
          luastackchange_t log_message(lua_State* L) {
             auto m = new editor_script::messages::log_text();
@@ -340,4 +327,22 @@ editor_script::classes::_base* DovahKitScriptVMUserdataInterface::instance_is_re
          return ud;
    }
    return nullptr;
+}
+//
+int DovahKitScriptVMUserdataInterface::return_wrapper_to_lua(lua_State* L, editor_script::classes::_base*& wrapper, const char* metatable_name) {
+   if (auto* existing = this->instance_is_redundant(wrapper)) {
+      delete wrapper;
+      wrapper = existing;
+   }
+   ++wrapper->refcount;
+   auto* ptr = (editor_script::classes::_base**) lua_newuserdatauv(L, sizeof(void*), 0);
+   *ptr = wrapper;
+   lua_getfield(L, LUA_REGISTRYINDEX, metatable_name);
+   if (lua_isnil(L, -1)) {
+      assert(false && "The wrapper-class wasn't set up properly; its metatable is undefined.");
+      lua_pop(L, 2);
+      return 0;
+   }
+   lua_setmetatable(L, -2);
+   return 1;
 }

@@ -135,4 +135,6 @@ class DovahKitScriptVMUserdataInterface {
       void insert(editor_script::classes::_base*);
       void remove(editor_script::classes::_base*);
       editor_script::classes::_base* instance_is_redundant(editor_script::classes::_base*);
+      //
+      int return_wrapper_to_lua(lua_State*, editor_script::classes::_base*&, const char* metatable_name);
 };
