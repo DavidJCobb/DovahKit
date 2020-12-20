@@ -10,8 +10,10 @@
 #include <QTimer>
 #include <QWidget>
 #include "messages.h"
+#include "userdata/_base.h"
 
 class DovahKitScriptVMMessenger;
+class DovahKitScriptVMUserdataInterface;
 
 class DovahKitScriptVM : public QObject {
    Q_OBJECT
@@ -22,6 +24,7 @@ class DovahKitScriptVM : public QObject {
    // to block script execution  while waiting for any needed  information from the main thread.
    //
    friend class DovahKitScriptVMMessenger;
+   friend class DovahKitScriptVMUserdataInterface;
    protected:
       DovahKitScriptVM();
       ~DovahKitScriptVM();
@@ -65,7 +68,7 @@ class DovahKitScriptVM : public QObject {
          } m2s;
       } message_queues;
       //
-
+      std::vector<editor_script::classes::_base*> userdata;
       
    public:
       static DovahKitScriptVM& get() {
@@ -113,4 +116,23 @@ class DovahKitScriptVMMessenger {
       //
       inline bool is_aborted() const noexcept { return vm.aborted; }
       inline bool is_running() const noexcept { return vm.running; }
+};
+
+class DovahKitScriptVMUserdataInterface {
+   //
+   // This is an interface to DovahKitScriptVM, provided for the benefit of our userdata internals.
+   //
+   protected:
+      DovahKitScriptVMUserdataInterface(DovahKitScriptVM& w) : vm(w) {}
+   public:
+      static DovahKitScriptVMUserdataInterface& get() {
+         static DovahKitScriptVMUserdataInterface instance(DovahKitScriptVM::get());
+         return instance;
+      }
+      //
+      DovahKitScriptVM& vm;
+      //
+      void insert(editor_script::classes::_base*);
+      void remove(editor_script::classes::_base*);
+      editor_script::classes::_base* instance_is_redundant(editor_script::classes::_base*);
 };

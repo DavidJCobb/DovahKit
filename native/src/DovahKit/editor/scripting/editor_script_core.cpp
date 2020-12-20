@@ -3,8 +3,11 @@
 #include "util.h"
 #include "api/allowed_standard_apis.h"
 #include "messages/all.h"
+#include "userdata/_build_metatables.h"
 
-#include <QMessageBox> // for test_call_and_response
+#include "../core.h" // for dovah.get_form_by_id
+#include "userdata/form.h"
+#include <QMessageBox> // for dovah.test_call_and_response
 
 namespace {
    void _lua_debug_hook(lua_State* L, lua_Debug* ar) {
@@ -60,6 +63,32 @@ namespace _api { // APIs
 
    namespace definitions {
       namespace dovah {
+         luastackchange_t get_form_by_id(lua_State* L) {
+            luaL_argcheck(L, lua_isnumber(L, 1), 1, "form ID (number) expected");
+            auto& editor = DovahKitCore::get();
+            if (!editor.has_data())
+               return 0;
+            auto  id   = lua_tonumber(L, 1);
+            auto* stub = editor.get_form(id);
+            auto& vm   = DovahKitScriptVM::get();
+            //
+            auto* wrapper = new classes::form(stub);
+            if (auto* existing = DovahKitScriptVMUserdataInterface::get().instance_is_redundant(wrapper)) {
+               delete wrapper;
+               wrapper = (classes::form*) existing;
+            }
+            ++wrapper->refcount;
+            auto* ptr = (classes::form**) lua_newuserdatauv(L, sizeof(void*), 0);
+            *ptr = wrapper;
+            lua_getfield(L, LUA_REGISTRYINDEX, classes::form::metatable_key);
+            if (lua_isnil(L, -1)) {
+               assert(false && "The wrapper-class wasn't set up properly; its metatable is undefined.");
+               lua_pop(L, 2);
+               return 0;
+            }
+            lua_setmetatable(L, -2);
+            return 1;
+         }
          luastackchange_t log_message(lua_State* L) {
             auto m = new editor_script::messages::log_text();
             //
@@ -83,6 +112,7 @@ namespace _api { // APIs
    }
    namespace declarations {
       std::array dovah = {
+         function{ "get_form_by_id",         &definitions::dovah::get_form_by_id },
          function{ "log_message",            &definitions::dovah::log_message },
          function{ "test_call_and_response", &definitions::dovah::test_call_and_response },
       };
@@ -155,6 +185,10 @@ void DovahKitScriptVM::_setup_lua_vm() {
    editor_script::prune_standard_library(this->lua_vm, "table");
    luaL_requiref(this->lua_vm, "utf8",   luaopen_utf8, 1);
    editor_script::prune_standard_library(this->lua_vm, "utf8");
+   //
+   // Prepare API classes:
+   //
+   editor_script::classes::build_all_userdata_class_metatables(this->lua_vm);
    //
    // Make API functions available via tables:
    //
@@ -288,3 +322,22 @@ void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
             break;
 }
 #pragma endregion 
+
+void DovahKitScriptVMUserdataInterface::insert(editor_script::classes::_base* wrapper) {
+   this->vm.userdata.push_back(wrapper);
+}
+void DovahKitScriptVMUserdataInterface::remove(editor_script::classes::_base* wrapper) {
+   auto& list = this->vm.userdata;
+   auto  it   = std::find(list.begin(), list.end(), wrapper);
+   if (it != list.end())
+      list.erase(it);
+}
+editor_script::classes::_base* DovahKitScriptVMUserdataInterface::instance_is_redundant(editor_script::classes::_base* instance) {
+   for (auto* ud : this->vm.userdata) {
+      if (ud == instance)
+         continue;
+      if (ud->is_equal(instance))
+         return ud;
+   }
+   return nullptr;
+}
