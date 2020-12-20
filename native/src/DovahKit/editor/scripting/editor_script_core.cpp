@@ -14,6 +14,15 @@ namespace {
          __assume(0); // luaL_error performs a jump and so does not return
       }
    }
+   int _shimmed_collectgarbage(lua_State* L) {
+      luaL_argcheck(L, lua_isstring(L, 1), 1, "The argument must be a string.");
+      if (strcmp(lua_tostring(L, 1), "collect") != 0) {
+         luaL_error(L, "The only garbage-collection feature that this script environment allows access to is \"collect\".");
+         __assume(0); // luaL_error performs a jump and so does not return
+      }
+      lua_gc(L, LUA_GCCOLLECT);
+      return 0;
+   }
    int _shimmed_pcall(lua_State* L) { // (pcall) shim to prevent userscripts from catching the error that (_lua_debug_hook) uses to force-kill a script
       int arg_count = lua_gettop(L) - 1;
       int status    = lua_pcall(L, arg_count, LUA_MULTRET, 0);
@@ -123,6 +132,12 @@ void DovahKitScriptVM::_setup_lua_vm() {
    // don't want the user having easy access to:
    //
    luaL_requiref(this->lua_vm, "_G",     luaopen_base,  1); // loads the library to the top of the Lua stack
+   {  // shim collectgarbage
+      auto ti = lua_gettop(this->lua_vm);
+      lua_pushstring   (this->lua_vm, "collectgarbage");
+      lua_pushcfunction(this->lua_vm, &_shimmed_collectgarbage);
+      lua_rawset       (this->lua_vm, ti);
+   }
    {  // shim pcall
       auto ti = lua_gettop(this->lua_vm);
       lua_pushstring   (this->lua_vm, "pcall");
@@ -167,6 +182,7 @@ void DovahKitScriptVM::_send_outbound_message(editor_script::message* message) {
 
 void DovahKitScriptVM::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
+   //
    while (this->_should_keep_running()) {
       this->message_queues.m2s.urgent.process([](editor_script::message* message) {
          return false; // TODO: actually process these messages
@@ -175,6 +191,7 @@ void DovahKitScriptVM::_script_thread_loop() {
          return false; // TODO: actually process these messages
       });
    }
+   //
    this->_teardown_lua_vm();
    this->running = false;
    emit this->scriptEnded(false);

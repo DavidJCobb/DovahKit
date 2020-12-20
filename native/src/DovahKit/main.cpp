@@ -376,6 +376,38 @@
 //             REFCOUNTED WRAPPERS FOR FORMS AND THEIR DATA RATHER THAN PERMANENT 
 //             HANDLES.
 //
+//              - I think what we'll want, then, is...
+//
+//                 - A vector of "data" structures which store their own refcount. 
+//                   These "data" structures will be heap-allocated and can use 
+//                   virtual member functions for things like retrieving their Lua 
+//                   class metatables. This will allow a syntax where we create a 
+//                   new instance of whatever "data" subclass we want, and then call 
+//                   a virtual member function to retrieve its metatable, followed 
+//                   by then just applying that metatable as normal.
+//
+//                    = Because the "data" structures are heap-allocated and stored 
+//                      in a central vector, we can properly mark them as "dead" if 
+//                      the objects that they wrap are destroyed (e.g. form deletion), 
+//                      and we can properly renumber them if they refer to elements in 
+//                      a sequential collection (e.g. the 3rd property on a Papyrus 
+//                      script).
+//
+//                 - Userdata consisting solely of pointers to "data" structures, 
+//                   with __gc metamethods which decrement the refcount on the target 
+//                   "data" structure. When a refcount hits zero, we delete the "data" 
+//                   structure.
+//
+//                    = This means that the "data" structures don't need to use 
+//                      numeric IDs, and that we can delete them when they're no 
+//                      longer in use.
+//
+//                    = We can use a "root" __gc metamethod on the superclass. Lua 
+//                      honors metatables-of-metatables when flagging tables as 
+//                      needing finalization, so as long as our metatables actually 
+//                      have __gc set at the time that we pass them into setmetatable, 
+//                      we oughta be good.
+//
 //           - The main thread needs to be able to send two kinds of messages to the 
 //             script thread. "Urgent" messages would be things like form deletion, 
 //             and the script thread must check for them at every opportunity: after 

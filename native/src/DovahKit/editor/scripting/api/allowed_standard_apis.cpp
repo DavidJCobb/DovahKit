@@ -20,6 +20,7 @@ namespace {
       //
       _lib( "basic", {
          "assert",
+         "collectgarbage", // but we're gonna override it
          "error",
          "_G",
          "getmetatable",
