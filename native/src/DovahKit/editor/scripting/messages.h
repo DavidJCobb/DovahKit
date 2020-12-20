@@ -5,6 +5,12 @@ namespace editor_script {
    enum class message_type {
       none = 0,
       //
+      // Main-to-script message types:
+      //
+
+      //
+      // Script-to-main message types:
+      //
       log_text,               // Write text to the log.
       test_call_and_response, // A test of the editor script engine's ability to wait for the main thread to acknowledge a request.
    };

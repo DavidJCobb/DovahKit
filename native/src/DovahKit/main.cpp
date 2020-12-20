@@ -345,6 +345,8 @@
 //
 //  - Lua scripting
 //
+//     = START MOVING A LOT OF THE EXPLANATIONS HERE TO A DOCUMENTATION TEXT FILE.
+//
 //     = DEVELOPMENT ROADMAP
 //
 //        - PHASE 1: BASIC ENVIRONMENT
@@ -364,6 +366,27 @@
 //          is created (or an existing form is renumbered). Additionally, variables that 
 //          point to parts of a form (e.g. a particular property on a particular script 
 //          attached to a particular form) need to be properly managed.
+//
+//           = PREVIOUSLY, WE ENVISIONED HAVING TO USE A "HANDLE" SYSTEM IN ORDER TO 
+//             MANAGE THE VALIDITY OF LUA REFERENCES TO NATIVE OBJECTS. HOWEVER, IT 
+//             TURNS OUT THAT USERDATA CAN BE GIVEN DESTRUCTORS VIA THEIR METATABLES, 
+//             AND OF COURSE THOSE DESTRUCTORS (BEING LUA-CALLABLE FUNCTIONS) CAN BE 
+//             NATIVE CODE. THIS MEANS THAT WE COULD HAVE USERDATA CONSISTING OF 
+//             ORDINARY POINTERS TO REFERENCE-TRACKED OBJECTS, I.E. WE SHOULD USE 
+//             REFCOUNTED WRAPPERS FOR FORMS AND THEIR DATA RATHER THAN PERMANENT 
+//             HANDLES.
+//
+//           - The main thread needs to be able to send two kinds of messages to the 
+//             script thread. "Urgent" messages would be things like form deletion, 
+//             and the script thread must check for them at every opportunity: after 
+//             sending any blocking message, during the debug hook, and when spinning 
+//             (we'll get to that). "Normal" messages would be things like UI events, 
+//             and the script thread should check for them only when spinning.
+//
+//             "Spinning," in this context, refers to the script thread having no 
+//             actual script to execute and simply waiting for events. It would only 
+//             be doing this after the initial script execution, when there are any 
+//             extant script windows visible.
 //
 //        - PHASE 3: UI ACCESS
 //          Lua scripts should be able to spawn windows and widgets, and should be able 

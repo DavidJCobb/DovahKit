@@ -80,6 +80,24 @@ namespace _api { // APIs
    }
 }
 
+void DovahKitScriptVM::_message_queue::process(std::function<bool(editor_script::message*)> functor) {
+   auto guard = std::lock_guard(this->lock);
+   //
+   std::vector<editor_script::message*> remaining;
+   for (auto* message : this->list) {
+      bool blocking = message->is_blocking();
+      bool resolved = (functor)(message);
+      if (resolved) {
+         message->seen = true;
+         if (!blocking)
+            delete message;
+      } else {
+         remaining.push_back(message);
+      }
+   }
+   std::swap(this->list, remaining);
+}
+
 #pragma region DovahKitScriptVM
 DovahKitScriptVM::DovahKitScriptVM() {
    this->main_thread_tick_timer.setSingleShot(false);
@@ -142,28 +160,38 @@ void DovahKitScriptVM::_teardown_lua_vm() {
 }
 
 void DovahKitScriptVM::_send_outbound_message(editor_script::message* message) {
-   auto  guard = std::lock_guard(this->outbound_message_queue.lock);
-   auto& list  = this->outbound_message_queue.list;
+   auto  guard = std::lock_guard(this->message_queues.s2m.lock);
+   auto& list  = this->message_queues.s2m.list;
    list.push_back(message);
 }
 
-void DovahKitScriptVM::view_messages(std::function<bool(editor_script::message*)> functor) {
-   auto  guard = std::lock_guard(this->outbound_message_queue.lock);
-   auto& list  = this->outbound_message_queue.list;
-   //
-   std::vector<editor_script::message*> remaining;
-   for (auto* message : list) {
-      bool blocking = message->is_blocking();
-      bool resolved = (functor)(message);
-      if (resolved) {
-         message->seen = true;
-         if (!blocking)
-            delete message;
-      } else {
-         remaining.push_back(message);
-      }
+void DovahKitScriptVM::_script_thread_loop() {
+   editor_script::util::safe_call(this->lua_vm, 0, 0);
+   while (this->_should_keep_running()) {
+      this->message_queues.m2s.urgent.process([](editor_script::message* message) {
+         return false; // TODO: actually process these messages
+      });
+      this->message_queues.m2s.normal.process([](editor_script::message* message) {
+         return false; // TODO: actually process these messages
+      });
    }
-   std::swap(list, remaining);
+   this->_teardown_lua_vm();
+   this->running = false;
+   emit this->scriptEnded(false);
+}
+
+bool DovahKitScriptVM::_should_keep_running() const noexcept {
+   //
+   // TODO: If the script has any script-spawned UI windows open and visible, then 
+   // this should return (true). If we want to be more sophisticated, then we can 
+   // double-check that the windows or any controls in them have any event listeners 
+   // registered.
+   //
+   // The basic thing we're checking for is, "We're not running script code *right 
+   // now*, but can we *end up* running them as a result of any extant event 
+   // listeners?"
+   //
+   return false;
 }
 
 void DovahKitScriptVM::abort() {
@@ -186,12 +214,7 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    auto buffer = code.toUtf8();
    auto result = luaL_loadbufferx(this->lua_vm, buffer.data(), buffer.size(), name.toUtf8().data(), "t"); // equivalent to (lua_load) with a built-in lua_Reader
    if (result == LUA_OK) {
-      this->thread = std::thread([this]() {
-         editor_script::util::safe_call(this->lua_vm, 0, 0);
-         this->_teardown_lua_vm();
-         this->running = false;
-         emit this->scriptEnded(false);
-      });
+      this->thread = std::thread(&DovahKitScriptVM::_script_thread_loop, this);
       return;
    }
    switch (result) {
@@ -215,7 +238,7 @@ void DovahKitScriptVM::setUIParentWidget(QWidget* widget) {
 }
 
 void DovahKitScriptVM::mainThreadLoop() {
-   this->view_messages([this](editor_script::message* message) {
+   this->message_queues.s2m.process([this](editor_script::message* message) {
       using namespace editor_script;
       //
       switch (message->type) {

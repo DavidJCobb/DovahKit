@@ -25,24 +25,47 @@ class DovahKitScriptVM : public QObject {
    protected:
       DovahKitScriptVM();
       ~DovahKitScriptVM();
+
+      struct _message_queue {
+         std::vector<editor_script::message*> list;
+         std::recursive_mutex lock;
+
+         //
+         // The receiving thread should use this function to view messages. The functor should return 
+         // (true) to acknowledge a message, allowing that message to be removed from the outbound 
+         // message queue. Non-blocking messages will be deleted when removed.
+         //
+         void process(std::function<bool(editor_script::message*)> functor);
+      };
       
       void _setup_lua_vm();
       void _teardown_lua_vm();
       
       void _send_outbound_message(editor_script::message*);
+
+      void _script_thread_loop();
+
+      //
+      // Returns (true) if the Lua VM should be kept alive even after the script has finished 
+      // executing. This would be the case if there are any script-spawned UI windows that are 
+      // still open and visible.
+      //
+      bool _should_keep_running() const noexcept;
       
       std::recursive_mutex exec_lock;
       std::atomic<bool> aborted = false; // main thread can set this to kill the script
       bool     running   = false;
       QWidget* ui_parent = nullptr;
-
-      //
-      // Lockable queue for messages outbound from the script thread to the main thread.
       //
       struct {
-         std::vector<editor_script::message*> list;
-         std::recursive_mutex lock;
-      } outbound_message_queue;
+         _message_queue s2m; // script-to-main
+         struct { // main-to-script
+            _message_queue urgent;
+            _message_queue normal;
+         } m2s;
+      } message_queues;
+      //
+
       
    public:
       static DovahKitScriptVM& get() {
@@ -56,13 +79,6 @@ class DovahKitScriptVM : public QObject {
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }
-
-      //
-      // The main thread should use this function to view messages. The functor should return (true) 
-      // to acknowledge a message, allowing that message to be removed from the outbound message 
-      // queue.
-      //
-      void view_messages(std::function<bool(editor_script::message*)> functor);
       
    signals:
       void messageLogged(const QString&);
