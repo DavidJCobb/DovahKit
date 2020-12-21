@@ -214,10 +214,10 @@
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
-    <ClCompile Include="editor\scripting\userdata\form.cpp" />
-    <ClCompile Include="editor\scripting\userdata\_base.cpp" />
-    <ClCompile Include="editor\scripting\userdata\_build_metatables.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
+    <ClCompile Include="editor\scripting\wrapper.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\form.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -435,10 +435,10 @@
     <ClInclude Include="editor\scripting\messages\all.h" />
     <ClInclude Include="editor\scripting\messages\log_text.h" />
     <ClInclude Include="editor\scripting\messages\test_call_and_response.h" />
-    <ClInclude Include="editor\scripting\userdata\form.h" />
-    <ClInclude Include="editor\scripting\userdata\_base.h" />
-    <ClInclude Include="editor\scripting\userdata\_build_metatables.h" />
     <ClInclude Include="editor\scripting\util.h" />
+    <ClInclude Include="editor\scripting\wrapper.h" />
+    <ClInclude Include="editor\scripting\wrappers\form.h" />
+    <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />

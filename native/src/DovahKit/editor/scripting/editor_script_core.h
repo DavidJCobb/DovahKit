@@ -10,7 +10,7 @@
 #include <QTimer>
 #include <QWidget>
 #include "messages.h"
-#include "userdata/_base.h"
+#include "wrapper.h"
 
 class DovahKitScriptVMMessenger;
 class DovahKitScriptVMUserdataInterface;
@@ -68,7 +68,7 @@ class DovahKitScriptVM : public QObject {
          } m2s;
       } message_queues;
       //
-      std::vector<editor_script::classes::_base*> userdata;
+      std::vector<editor_script::wrapper*> wrappers;
       
    public:
       static DovahKitScriptVM& get() {
@@ -131,10 +131,28 @@ class DovahKitScriptVMUserdataInterface {
       }
       //
       DovahKitScriptVM& vm;
+
       //
-      void insert(editor_script::classes::_base*);
-      void remove(editor_script::classes::_base*);
-      editor_script::classes::_base* instance_is_redundant(editor_script::classes::_base*);
+      // Remove a wrapper's metatable, and then remove it from the wrapper storage table. Effectively 
+      // "kills" the wrapper. The wrapper will be deleted later, when Lua garbage-collects it.
       //
-      int return_wrapper_to_lua(lua_State*, editor_script::classes::_base*&, const char* metatable_name);
+      void remove(editor_script::wrapper*);
+
+      //
+      // Check if there is already an existing wrapper in use by Lua that is identical to the input 
+      // wrapper; if so, delete the input wrapper and replace the pointer with one to the existing 
+      // wrapper. Either way, push the appropriate wrapper onto the Lua stack.
+      //
+      int push(lua_State*, editor_script::wrapper*&, const char* metatable_name);
+      template<typename T> inline int push(T*& instance) {
+         static_assert(std::is_base_of_v<editor_script::wrapper, T>, "You must pass a subclass of editor_script::wrapper*.");
+         static_assert(!std::is_same_v<editor_script::wrapper, T>,   "The pointer type that you pass must have a metatable key defined.");
+         //
+         // need some silly indirection here because (superclass*&) isn't strictly compatible with (subclass*)
+         //
+         editor_script::wrapper* dummy = instance;
+         auto result = this->push(this->vm.lua_vm, dummy, T::metatable_key);
+         instance = (T*)dummy;
+         return result;
+      }
 };

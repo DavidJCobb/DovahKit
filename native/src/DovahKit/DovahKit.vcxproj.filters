@@ -534,13 +534,13 @@
     <ClCompile Include="editor\scripting\classes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\scripting\userdata\form.cpp">
+    <ClCompile Include="editor\scripting\wrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\scripting\userdata\_build_metatables.cpp">
+    <ClCompile Include="editor\scripting\wrappers\form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\scripting\userdata\_base.cpp">
+    <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1106,13 +1106,13 @@
     <ClInclude Include="editor\scripting\classes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\scripting\userdata\form.h">
+    <ClInclude Include="editor\scripting\wrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\scripting\userdata\_base.h">
+    <ClInclude Include="editor\scripting\wrappers\form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\scripting\userdata\_build_metatables.h">
+    <ClInclude Include="editor\scripting\wrappers\_build_metatables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

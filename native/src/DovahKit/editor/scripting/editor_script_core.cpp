@@ -3,11 +3,15 @@
 #include "util.h"
 #include "api/allowed_standard_apis.h"
 #include "messages/all.h"
-#include "userdata/_build_metatables.h"
+#include "wrappers/_build_metatables.h"
 
 #include "../core.h" // for dovah.get_form_by_id
-#include "userdata/form.h"
+#include "wrappers/form.h"
 #include <QMessageBox> // for dovah.test_call_and_response
+
+namespace {
+   constexpr char* wrapper_storage_registry_key = "dovah.internals.extant_wrappers";
+}
 
 namespace {
    void _lua_debug_hook(lua_State* L, lua_Debug* ar) {
@@ -73,8 +77,8 @@ namespace _api { // APIs
             if (!stub)
                return 0;
             //
-            classes::_base* wrapper = new classes::form(stub);
-            return DovahKitScriptVMUserdataInterface::get().return_wrapper_to_lua(L, wrapper, classes::form::metatable_key);
+            auto* out = new wrappers::form(stub);
+            return DovahKitScriptVMUserdataInterface::get().push(out);
          }
          luastackchange_t log_message(lua_State* L) {
             auto m = new editor_script::messages::log_text();
@@ -175,7 +179,24 @@ void DovahKitScriptVM::_setup_lua_vm() {
    //
    // Prepare API classes:
    //
-   editor_script::classes::build_all_userdata_class_metatables(this->lua_vm);
+   #pragma region Wrapper storage table
+      //
+      // Create a weak table to hold all extant wrappers. This will allow us 
+      // to update wrappers as needed.
+      //
+      //    local wrapper_list = {}
+      //    local wrapper_meta = {}
+      //    wrapper_meta.__mode = "v"
+      //    setmetatable(wrapper_list, wrapper_meta)
+      //
+      lua_newtable    (this->lua_vm);
+      lua_newtable    (this->lua_vm);               // STACK: [wrapper_meta, wrapper_list]
+      lua_pushstring  (this->lua_vm, "v");          // STACK: ["v", wrapper_meta, wrapper_list]
+      lua_setfield    (this->lua_vm, -2, "__mode"); // STACK: [wrapper_meta, wrapper_list]
+      lua_setmetatable(this->lua_vm, -2);           // STACK: [wrapper_list]
+      lua_setfield    (this->lua_vm, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   #pragma endregion
+   editor_script::build_all_wrapper_metatables(this->lua_vm);
    //
    // Make API functions available via tables:
    //
@@ -257,10 +278,10 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    }
    switch (result) {
       case LUA_ERRMEM:
-         // TODO: log the error somehow
-         break;
       case LUA_ERRSYNTAX:
-         // TODO: log the error somehow
+      default:
+         auto message = QString::fromUtf8(lua_tostring(this->lua_vm, -1));
+         emit DovahKitScriptVM::get().messageLogged(message);
          break;
    }
    this->_teardown_lua_vm();
@@ -310,39 +331,69 @@ void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
 }
 #pragma endregion 
 
-void DovahKitScriptVMUserdataInterface::insert(editor_script::classes::_base* wrapper) {
-   this->vm.userdata.push_back(wrapper);
-}
-void DovahKitScriptVMUserdataInterface::remove(editor_script::classes::_base* wrapper) {
-   auto& list = this->vm.userdata;
-   auto  it   = std::find(list.begin(), list.end(), wrapper);
-   if (it != list.end())
-      list.erase(it);
-}
-editor_script::classes::_base* DovahKitScriptVMUserdataInterface::instance_is_redundant(editor_script::classes::_base* instance) {
-   for (auto* ud : this->vm.userdata) {
-      if (ud == instance)
-         continue;
-      if (ud->is_equal(instance))
-         return ud;
-   }
-   return nullptr;
+void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper* instance) {
+   auto* L = this->vm.lua_vm;
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   //
+   // Wipe the wrapper's metatable, so that its member functions are no longer callable.
+   //
+   lua_rawgeti(L, -1, instance->lua_key); // pop  0
+   lua_pushnil(L);                        // push 1
+   lua_setmetatable(L, -2);               // pop  1
+   lua_pop(L, 1);                         // pop  1
+   //
+   // Erase the wrapper from our wrapper storage.
+   //
+   luaL_unref(L, -1, instance->lua_key);
 }
 //
-int DovahKitScriptVMUserdataInterface::return_wrapper_to_lua(lua_State* L, editor_script::classes::_base*& wrapper, const char* metatable_name) {
-   if (auto* existing = this->instance_is_redundant(wrapper)) {
-      delete wrapper;
-      wrapper = existing;
+int DovahKitScriptVMUserdataInterface::push(lua_State* L, editor_script::wrapper*& instance, const char* metatable_name) {
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   auto table = lua_gettop(L);
+   //
+   lua_pushnil(L); // push 1
+   while (lua_next(L, table) != 0) { // push 2 (only if truthy)
+      //
+      // STACK:
+      // +1 | -3 | wrapper storage weak-table
+      // +2 | -2 | key
+      // +3 | -1 | value (pre-existing wrapper)
+      //
+      auto* existing = *((editor_script::wrapper**) lua_touserdata(L, -1));
+      if (existing->is_equal(instance)) {
+         delete instance;
+         instance = existing;
+         lua_remove(L, -2); // remove the key
+         lua_remove(L, -2); // remove the table
+         return 1;
+      }
+      lua_pop(L, 1); // pop the value; keep the key for the next iteration
    }
-   ++wrapper->refcount;
-   auto* ptr = (editor_script::classes::_base**) lua_newuserdatauv(L, sizeof(void*), 0);
-   *ptr = wrapper;
-   lua_getfield(L, LUA_REGISTRYINDEX, metatable_name);
+   //
+   // STACK:
+   // +1 | -1 | wrapper storage weak-table
+   //
+   auto* ptr = (editor_script::wrapper**) lua_newuserdatauv(L, sizeof(void*), 0); // push 1
+   *ptr = instance;
+   lua_getfield(L, LUA_REGISTRYINDEX, metatable_name); // push 1
    if (lua_isnil(L, -1)) {
       assert(false && "The wrapper-class wasn't set up properly; its metatable is undefined.");
       lua_pop(L, 2);
       return 0;
    }
-   lua_setmetatable(L, -2);
+   lua_setmetatable(L, -2); // pop 1
+   //
+   // STACK: [existing wrapper, wrapper storage]
+   // +1 | -2 | wrapper storage weak-table
+   // +2 | -1 | newly-created wrapper
+   //
+   lua_pushvalue(L, -1); // push 1 // push another reference to the wrapper onto the stack, as the next function will remove whichever reference it uses
+   luaL_ref(L, -3);
+   //
+   // STACK: [existing wrapper, wrapper storage]
+   // +1 | -2 | wrapper storage weak-table
+   // +2 | -1 | newly-created wrapper
+   //
+   lua_remove(L, -2);
    return 1;
 }

@@ -369,36 +369,11 @@
 //
 //           = Wrapper implementation
 //
-//              - We should move all wrapper-related code from the "classes" namespace 
-//                to a "wrappers" namespace. We should prefer the term "wrapper" over 
-//                "userdata" in native code contexts, especially since the userdata 
-//                itself is a pointer to the wrapper rather than the wrapper itself.
-//
-//              - Currently, we return wrappers to script in a very indirect way; 
-//                specifically, the userdata itself is a pointer to a heap-allocated 
-//                structure. This allows us to store that structure in a vector on 
-//                the VM; however, it also means that if there are four variables 
-//                that refer to the same wrapper, then there will be four individually 
-//                heap-allocated pointers to a struct that is itself heap-allocated.
-//
-//                We could potentially alleviate this issue if we did the following:
-//
-//                 - Create a weak table in the registry (<http://www.lua.org/pil/17.html>).
-//
-//                 - Have the wrappers themselves serve as userdata, and store them 
-//                   as entries in the weak table.
-//
-//                    - Use luaL_ref and luaL_unref to auto-generate keys, and have 
-//                      the wrappers be values?
-//
-//                 - When we need to update existing wrappers, or flag a wrapper as 
-//                   dead, we can do so by simply iterating over the weak table, 
-//                   instead of having a vector in the VM.
-//
-//                An additional benefit to this approach is that when we want to flag 
-//                a wrapper as dead, we can also strip off its metatable; its functions 
-//                will no longer be callable, and so they won't need to be coded to 
-//                double-check that their context-object is "alive" anymore.
+//              - It needs to be possible to define additional wrapper types for each 
+//                form type, all subclassing (form), and the script VM needs some kind 
+//                of helper function that will make sure to return a wrapper of the 
+//                correct type given a form stub. All code that currently returns forms 
+//                will need to be modified to use that helper function.
 //
 //              - If the script deletes a form, then we can have the script VM flag 
 //                the form's wrapper as "dead," but it'll still test as not being nil, 
@@ -406,6 +381,8 @@
 //                should allow us to at least prevent further calls to its members, 
 //                but can we either nil out the existing references or make them 
 //                pretend to be nil?
+//
+//                 - The __eq metamethod will not save us.
 //
 //                 - This person used dirty hacks to loop over every single variable 
 //                   in the running script and clear them as needed: <https://stackoverflow.com/a/14624223>
