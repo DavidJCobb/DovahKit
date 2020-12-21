@@ -402,6 +402,26 @@
 //
 //              - It needs to be possible to wrap individual components in a form.
 //
+//              - It needs to be possible for wrappers to be interdependent on one 
+//                another.
+//
+//                 - This is needed for parts of forms: deleting the form should "kill" 
+//                   its wrapper and should also "kill" the wrappers for its parts.
+//
+//                 - This is needed for wrappers of items in sequential collections, 
+//                   e.g. a wrapper for "the third Papyrus property on the script with 
+//                   the name 'foo.'" Removing or reordering any of these items will 
+//                   require us to update indices on the wrappers of other items in 
+//                   the collection.
+//
+//                 = There are a few ways to do this... We can take the "flat" approach, 
+//                   where wrappers are only stored in the weakmaps and we use a function 
+//                   to check whether any two wrappers belong to the same sequential 
+//                   collection; or we can take the "nested" approach, where wrappers can 
+//                   actually retain pointers to their parents along with multiple lists 
+//                   of child pointers (one list per collection, and maybe even data to 
+//                   indicate whether each collection is sequential).
+//
 //              - If the script deletes a form, then we can have the script VM flag 
 //                the form's wrapper as "dead," but it'll still test as not being nil, 
 //                and it'll still have callable member functions. The approach above 
