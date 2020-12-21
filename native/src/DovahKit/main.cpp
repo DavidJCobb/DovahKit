@@ -369,12 +369,6 @@
 //
 //           = Wrapper implementation
 //
-//              - It needs to be possible to define additional wrapper types for each 
-//                form type, all subclassing (form), and the script VM needs some kind 
-//                of helper function that will make sure to return a wrapper of the 
-//                correct type given a form stub. All code that currently returns forms 
-//                will need to be modified to use that helper function.
-//
 //              - The current wrapper implementation will be slow once large numbers of 
 //                wrapped objects are in play at a time. In order to return a wrapped 
 //                object from a Lua API, we must scan the full list of extant wrappers 
@@ -400,6 +394,14 @@
 //                   save just a *little* bit on memory by having them share the same 
 //                   metatable (it's the metatable that makes them weak).
 //
+//              - It needs to be possible to define additional wrapper types for each 
+//                form type, all subclassing (form), and the script VM needs some kind 
+//                of helper function that will make sure to return a wrapper of the 
+//                correct type given a form stub. All code that currently returns forms 
+//                will need to be modified to use that helper function.
+//
+//              - It needs to be possible to wrap individual components in a form.
+//
 //              - If the script deletes a form, then we can have the script VM flag 
 //                the form's wrapper as "dead," but it'll still test as not being nil, 
 //                and it'll still have callable member functions. The approach above 
@@ -418,11 +420,6 @@
 //             sending any blocking message, during the debug hook, and when spinning 
 //             (we'll get to that). "Normal" messages would be things like UI events, 
 //             and the script thread should check for them only when spinning.
-//
-//             "Spinning," in this context, refers to the script thread having no 
-//             actual script to execute and simply waiting for events. It would only 
-//             be doing this after the initial script execution, when there are any 
-//             extant script windows visible.
 //
 //        - PHASE 3: UI ACCESS
 //          Lua scripts should be able to spawn windows and widgets, and should be able 
