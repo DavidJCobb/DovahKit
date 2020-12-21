@@ -402,6 +402,8 @@
 //
 //              - It needs to be possible to wrap individual components in a form.
 //
+//                 - ...Does it actually?
+//
 //              - It needs to be possible for wrappers to be interdependent on one 
 //                another.
 //
@@ -421,6 +423,115 @@
 //                   actually retain pointers to their parents along with multiple lists 
 //                   of child pointers (one list per collection, and maybe even data to 
 //                   indicate whether each collection is sequential).
+//
+//                    - IF WE DECIDE TO IMPLEMENT NESTED WRAPPERS, THEN HERE'S HOW IT 
+//                      HAS TO GO (WRITTEN IN LUA, BUT WE'D IMPLEMENT IT IN C++):
+//
+//                         --
+//                         -- This runs during environment setup:
+//                         --
+//                         registry.weakmap_mt = { __mode: "v" }
+//                         registry.collection_mt = {
+//                            __mode = "v", -- weak table
+//                            index_of =
+//                               function(self, ud)
+//                                  for i, e in ipairs(self) do
+//                                     if e == ud then
+//                                        return i
+//                                     end
+//                                  end
+//                               end,
+//                            max =
+//                               function(self)
+//                                  local m = nil
+//                                  for i, _ in pairs(self) do
+//                                     if not m or i > m then
+//                                        m = i
+//                                     end
+//                                  end
+//                                  return m
+//                               end,
+//                            remove =
+//                               function(self, ud)
+//                                  if self.__indexed_by_string then
+//                                     self["!" .. ud.__collection_key] = nil -- prepend a char to avoid conflicts with our own keys
+//                                     return
+//                                  end
+//                                  local i = ud.__collection_key
+//                                  if not i then
+//                                     return
+//                                  end
+//                                  if self[i] ~= ud
+//                                     i = self:index_of(ud)
+//                                     if not i then
+//                                        return
+//                                     end
+//                                  end
+//                                  self[i] = nil
+//                                  if self.__is_sequential then
+//                                     ud.__parent     = nil
+//                                     ud.__collection = nil
+//                                     ud.__collection_key = nil
+//                                     local max = self:max()
+//                                     for j = 0, max do
+//                                        if j > i then
+//                                           self[j].__collection_key = j - 1
+//                                           self[j - 1] = self[j]
+//                                           self[j]     = nil
+//                                        end
+//                                     end
+//                                  end
+//                               end,
+//                         }
+//
+//                         --
+//                         -- This runs when we create and return a new userdata. Userdata 
+//                         -- can't have members, but obviously its metatable can, so what 
+//                         -- we do is give the userdata its own metatable, almost as if 
+//                         -- we're making a subclass for it on the fly -- every instance 
+//                         -- of Foo is a singleton subclass of Foo, sorta.
+//                         --
+//                         local ud_table = {}
+//                         setmetatable(ud_table, class_metatable) -- pretend we're also setting up __index, forwarding operators from the class, etc.
+//                         setmetatable(ud,       ud_table)
+//                         ud_table.__parent          = ud_parent
+//                         ud_table.__children        = {}
+//                         ud_table.__collection_name = "collection_name" -- the name of the collection in (ud_parent) that (ud_table) belongs to
+//                         ud_table.__collection_key  = 0                 -- string or integer. the key in the parent collection; cached here for speed
+//                         -- 
+//                         -- Thus, (ud.__children.collection_name[index] = child_ud).
+//
+//                         --
+//                         -- And here's how we'd handle various types of children. You 
+//                         -- see that each individual collection is a weak table. This 
+//                         -- means that parent and child userdata can refer to each other 
+//                         -- such that a child will keep its parent from being GC'd, but 
+//                         -- the parent will not keep its children from being GC'd.
+//                         --
+//                         form_ud.__children.papyrus = setmetatable({}, registry.collection_mt)
+//                         --
+//                         papyrus_ud.__children.scripts = { __indexed_by_string = true } -- indicates that the collection's keys are names
+//                         setmetatable(papyrus_ud.scripts, registry.collection_mt)
+//                         --
+//                         script_ud.__children.properties = { __is_sequential = true } -- indicates that if something is removed from the collection, all remaining elements must have their indices updated
+//                         setmetatable(papyrus_ud.properties, registry.collection_mt)
+//                      
+//                      THAT IMPLEMENTATION SHOULD ALLOW US TO MAINTAIN A HIERARCHY OF 
+//                      USERDATA, WHEREIN WE ONLY STORE THE "ROOT" USERDATA (I.E. THE 
+//                      FORM) IN A WEAK-TABLE IN THE REGISTRY, AND ALL "PART" USERDATA 
+//                      ARE THEN STORED AS ITS CHILDREN. THIS SAME BASIC PATTERN SHOULD 
+//                      ALSO WORK FOR QWidgets WHEN WE GET AROUND TO HANDLING THOSE.
+//                      
+//                      A NICE BENEFIT TO THIS IS THAT EACH USERDATA CAN NOW ACCESS ITS 
+//                      PARENT AND KNOW ITS PLACE WITHIN ITS PARENT. THIS MEANS THAT THE 
+//                      USERDATA FOR, SAY, A PAPYRUS PROPERTY DOESN'T NEED TO STORE AN 
+//                      FULL SET OF "HOW WE GOT HERE" DATA; IT CAN JUST TRAVERSE UP THE 
+//                      PARENTS TO FIND OUT HOW TO ACCESS ITS DATA (GIVEN A FORM STUB 
+//                      POINTER TO WORK WITH). I'M NOT 100% SURE THAT THAT'D BE FASTER, 
+//                      BUT IT SHOULD IDEALLY LEAD TO LESS WORK IN MANAGING THINGS LIKE 
+//                      SEQUENTIAL COLLECTION INDICES (WE ONLY NEED TO EDIT THEM WITHIN 
+//                      THE COLLECTION ITSELF, AND NOT WITHIN ALL DESCENDANTS OF ALL 
+//                      ELEMENTS IN THE COLLECTION).
 //
 //              - If the script deletes a form, then we can have the script VM flag 
 //                the form's wrapper as "dead," but it'll still test as not being nil, 
