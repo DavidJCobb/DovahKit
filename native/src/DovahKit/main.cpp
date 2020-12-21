@@ -424,6 +424,73 @@
 //                   of child pointers (one list per collection, and maybe even data to 
 //                   indicate whether each collection is sequential).
 //
+//                    - BELOW, I WROTE DOWN AN IMPLEMENTATION FOR NESTED WRAPPERS. HOWEVER, 
+//                      IT HAS A VERY IMPORTANT CAVEAT: WHILE IT MORE ACCURATELY REPRESENTS 
+//                      THE RELATIONSHIPS BETWEEN WRAPPERS, ACTUALLY ACCESSING THE WRAPPED 
+//                      DATA IS GOING TO BE QUITE A BIT SLOWER. WHY? WELL, SUPPOSE WE'RE 
+//                      CALLING AN API ON A NESTED WRAPPER. WE MUST FIRST TRAVERSE BACK UP 
+//                      TO THE TOPMOST WRAPPER, AND THEN DRILL DOWN INTO THE WRAPPERS AND 
+//                      THE FORM ALIKE. WE COULD ALLEVIATE THIS BY CREATING WRAPPER 
+//                      SUBCLASSES THAT STORE THE SAME INFORMATION, BUT THEN WE HAVE TO GO 
+//                      TO THE TROUBLE OF KEEPING THAT IN SYNCH WITH THE HIERARCHY 
+//                      INFORMATION. ULTIMATELY A HIERARCHY SACRIFICES PERF WHEN ACTUALLY 
+//                      USING THE WRAPPER IN ORDER TO SIMPLIFY AND OPTIMIZE PERF WHEN 
+//                      KILLING THE WRAPPER LATER.
+//                      
+//                      BY CONTRAST, A FLAT WRAPPER LIST (WHICH IS WHAT WE HAVE CURRENTLY) 
+//                      COULD BE STORED FOR EACH FORM ID, WITH THE HIERARCHY INFORMATION 
+//                      STORED IN THE WRAPPERS THEMSELVES. FOR A MULTI-LEVEL WRAPPER 
+//                      STRUCTURE, EACH WRAPPER WOULD REPRODUCE THE INFORMATION NEEDED 
+//                      FOR ACCESSING EACH LEVEL, BUT SINCE WE HAVE TO LOOP OVER THE FULL 
+//                      FLAT LIST TO DO FIX-UPS ANYWAY, IS THAT REALLY A PROBLEM?
+//                      
+//                      YEAH, I THINK WE OUGHT TO GO WITH A FLAT LIST OF WRAPPERS, PERHAPS 
+//                      IDENTIFYING COLLECTIONS USING uint64_t SIGNATURES SIMILAR TO WHAT 
+//                      WE DID WITH notice_code_t. SIGNATURES COULD INCLUDE:
+//                      
+//                       - Destruct // Destruction data
+//                       - DialInfo // DIAL info list
+//                       - FactCrim // FACT crime values
+//                       - FactRela // FACT relationship
+//                       - InfoLine // INFO response
+//                       - ObBounds // Object Bounds
+//                       - PapyBase // Papyrus data root
+//                       - PapyScri // Papyrus script
+//                       - PapyProp // Papyrus property
+//                       - RefrPosi // REFR position
+//                       - RefrRota // REFR rotation
+//                       - RefrXPSN // REFR extra-data: poison
+//                       - QueAlias // Quest alias
+//                       - ShouWord // Shout word
+//                       - SpelEfct // Spell effect entry
+//                      
+//                      SO ESSENTIALLY EACH WRAPPER WOULD HAVE:
+//                      
+//                       - form_stub*        stub;
+//                       - loaded_form_ptr_t form;
+//                       - struct step {
+//                            uint64_t signature;
+//                            union {
+//                               uint32_t    index;
+//                               const char* name;  // owned
+//                            }
+//                         } steps[5];
+//                      
+//                      VIRTUAL FUNCTIONS ON PER-FORM-TYPE WRAPPERS WOULD IMPLEMENT 
+//                      ACCESSING A PART OF THE LOADED FORM DATA VIA THE STEPS. ANOTHER 
+//                      FUNCTION SOMEWHERE COULD RETURN (true) IF THE PASSED-IN SIGNATURE 
+//                      CORRESPONDS TO A SEQUENTIAL COLLECTION (I.E. ONE WHERE IF WE 
+//                      REMOVE AN ELEMENT, WE MUST DECREMENT THE INDICES ON ALL WRAPPERS 
+//                      THAT COME AFTER IT IN THE SAME COLLECTION). SIMILARLY WE'D HAVE 
+//                      A FUNCTION WHICH INDICATES WHETHER A COLLECTION'S ENTRIES ARE 
+//                      IDENTIFIED WITH NUMERIC OR STRING INDICES.
+//                      
+//                      NOTABLY, THE CODE THAT MANAGES THINGS LIKE INDEX FIXUP DOESN'T 
+//                      NEED TO KNOW ANYTHING SPECIFIC ABOUT THE COLLECTIONS, SUCH AS 
+//                      HOW TO ACTUALLY ACCESS THE UNDERLYING DATA. IT JUST NEEDS TO 
+//                      MESS ABOUT WITH ALL WRAPPERS THAT ARE NESTED IN THE SAME PLACE 
+//                      AS INDICATED BY THEIR STUB, SIGNATURES, AND INDICES/NAMES.
+//
 //                    - IF WE DECIDE TO IMPLEMENT NESTED WRAPPERS, THEN HERE'S HOW IT 
 //                      HAS TO GO (WRITTEN IN LUA, BUT WE'D IMPLEMENT IT IN C++):
 //
@@ -469,8 +536,8 @@
 //                                  end
 //                                  self[i] = nil
 //                                  if self.__is_sequential then
-//                                     ud.__parent     = nil
-//                                     ud.__collection = nil
+//                                     ud.__parent         = nil
+//                                     ud.__collection     = nil
 //                                     ud.__collection_key = nil
 //                                     local max = self:max()
 //                                     for j = 0, max do
@@ -495,7 +562,7 @@
 //                         setmetatable(ud_table, class_metatable) -- pretend we're also setting up __index, forwarding operators from the class, etc.
 //                         setmetatable(ud,       ud_table)
 //                         ud_table.__parent          = ud_parent
-//                         ud_table.__children        = {}
+//                         ud_table.__children        = {}                -- map of collection names to collections
 //                         ud_table.__collection_name = "collection_name" -- the name of the collection in (ud_parent) that (ud_table) belongs to
 //                         ud_table.__collection_key  = 0                 -- string or integer. the key in the parent collection; cached here for speed
 //                         -- 
@@ -515,6 +582,9 @@
 //                         --
 //                         script_ud.__children.properties = { __is_sequential = true } -- indicates that if something is removed from the collection, all remaining elements must have their indices updated
 //                         setmetatable(papyrus_ud.properties, registry.collection_mt)
+//                         -- 
+//                         -- This system allows the use of arbitrary collection names, so 
+//                         -- each form type can define its own names as needed.
 //                      
 //                      THAT IMPLEMENTATION SHOULD ALLOW US TO MAINTAIN A HIERARCHY OF 
 //                      USERDATA, WHEREIN WE ONLY STORE THE "ROOT" USERDATA (I.E. THE 
