@@ -217,7 +217,9 @@
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
+    <ClCompile Include="editor\scripting\wrapper_util.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
     <ClCompile Include="helpers\files.cpp" />
@@ -438,8 +440,11 @@
     <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
+    <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
+    <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />
+    <ClInclude Include="editor\scripting\wrapper_util.h" />
     <ClInclude Include="helpers\eight_cc.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
@@ -564,6 +569,7 @@
     <Text Include="dovah\_docs\singleton forms.txt" />
     <Text Include="dovah\_docs\threading.txt" />
     <Text Include="editor\scripting\_docs\abstract.txt" />
+    <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

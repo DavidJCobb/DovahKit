@@ -2,14 +2,24 @@
 #include <cassert>
 #include "editor_script_core.h"
 #include "util.h"
+#include "wrapper_util.h"
+
+namespace editor_script { // base metatable
+   namespace {
+      namespace _methods {
+         luastackchange_t __gc(lua_State* L) {
+            auto* userdata = (wrapper*) lua_touserdata(L, 1);
+            userdata->~wrapper();
+            return 0;
+         }
+      }
+   }
+   /*static*/ luaL_Reg wrapper_metatable::metatable_methods[] = {
+      { "__gc",  &_methods::__gc },
+   };
+}
 
 namespace editor_script {
-   extern bool part_type_uses_name_key(part_type_t signature) {
-      switch (signature) {
-      }
-      return false;
-   }
-
    bool wrapper::part::operator==(const part& other) const noexcept {
       if (this->signature != other.signature)
          return false;
@@ -38,5 +48,10 @@ namespace editor_script {
          if (this->parts[i] != other->parts[i])
             return false;
       return true;
+   }
+   void wrapper::load_form() {
+      if (!this->stub)
+         return;
+      this->form = this->stub->load();
    }
 }

@@ -6,6 +6,7 @@
 #include "wrappers/_build_metatables.h"
 
 #include "../core.h" // for dovah.get_form_by_id
+#include "wrapper_util.h"
 #include "wrappers/form.h"
 #include <QMessageBox> // for dovah.test_call_and_response
 
@@ -77,8 +78,9 @@ namespace _api { // APIs
             if (!stub)
                return 0;
             //
-            auto* out = wrapper::wrap_form(stub);
-            return DovahKitScriptVMUserdataInterface::get().push<wrappers::form>(out);
+            wrapper out;
+            auto*   mt = wrap_form(out, stub);
+            return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
          }
          luastackchange_t log_message(lua_State* L) {
             auto m = new editor_script::messages::log_text();
@@ -347,7 +349,7 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper* instance)
    luaL_unref(L, -1, instance->lua_key);
 }
 //
-int DovahKitScriptVMUserdataInterface::push(lua_State* L, editor_script::wrapper*& instance, const char* metatable_name) {
+int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
    auto table = lua_gettop(L);
    //
@@ -359,10 +361,8 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, editor_script::wrapper
       // +2 | -2 | key
       // +3 | -1 | value (pre-existing wrapper)
       //
-      auto* existing = *((editor_script::wrapper**) lua_touserdata(L, -1));
-      if (existing->is_equal(instance)) {
-         delete instance;
-         instance = existing;
+      auto* existing = (editor_script::wrapper*) lua_touserdata(L, -1);
+      if (existing->is_equal(&instance)) {
          lua_remove(L, -2); // remove the key
          lua_remove(L, -2); // remove the table
          return 1;
@@ -373,8 +373,10 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, editor_script::wrapper
    // STACK:
    // +1 | -1 | wrapper storage weak-table
    //
-   auto* ptr = (editor_script::wrapper**) lua_newuserdatauv(L, sizeof(void*), 0); // push 1
+   auto* ptr = (editor_script::wrapper*) lua_newuserdatauv(L, sizeof(editor_script::wrapper), 0); // push 1
+   new (ptr) editor_script::wrapper;
    *ptr = instance;
+   //
    lua_getfield(L, LUA_REGISTRYINDEX, metatable_name); // push 1
    if (lua_isnil(L, -1)) {
       assert(false && "The wrapper-class wasn't set up properly; its metatable is undefined.");

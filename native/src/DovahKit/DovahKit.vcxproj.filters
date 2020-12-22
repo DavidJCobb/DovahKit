@@ -543,6 +543,12 @@
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\voicetype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrapper_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1121,6 +1127,15 @@
     <ClInclude Include="helpers\eight_cc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\voicetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrapper_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\_all_forms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1332,5 +1347,6 @@
     <Text Include="dovah\_docs\singleton forms.txt" />
     <Text Include="dovah\_docs\form stubs.txt" />
     <Text Include="editor\scripting\_docs\abstract.txt" />
+    <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
   </ItemGroup>
 </Project>

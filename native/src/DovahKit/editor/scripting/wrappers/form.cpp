@@ -3,6 +3,7 @@
 #include "../util.h"
 #include "../../../dovah/form_stub.h"
 #include "../editor_script_core.h"
+#include "../wrapper_util.h"
 
 namespace {
    using namespace editor_script;
@@ -44,8 +45,9 @@ namespace {
             auto& entry = pair.second;
             if (!entry.other)
                continue;
-            auto* user = wrapper::wrap_form(entry.other);
-            if (0 == vm.push<wrappers::form>(user))
+            wrapper out;
+            auto*   mt = wrap_form(out, stub);
+            if (0 == DovahKitScriptVMUserdataInterface::get().push(L, out, mt))
                continue;
             lua_seti(L, table, i);
             ++i;

@@ -1,12 +1,9 @@
 #pragma once
 #include <cstdint>
 #include "../../helpers/eight_cc.h"
+#include "../../dovah/form_stub.h"
 #include "../../../Lua/lua.hpp"
 #include "classes.h"
-
-namespace dovah {
-   class form_stub;
-}
 
 namespace editor_script {
    enum class wrapper_type {
@@ -18,10 +15,9 @@ namespace editor_script {
    using part_type_t = cobb::eight_cc; // signature, e.g. 'FormRoot'
    namespace wrapper_part_types {
    }
+   // see wrapper_util.h for stuff related to this
 
-   extern bool part_type_uses_name_key(part_type_t);
-
-   class wrapper {
+   class wrapper final {
       public:
          static wrapper* wrap_form(dovah::form_stub* s) {
             auto* instance = new wrapper;
@@ -42,11 +38,18 @@ namespace editor_script {
          };
 
          bool is_equal(const wrapper* other) const noexcept;
+         void load_form();
+
+         template<typename c> c* get_loaded_form_data() {
+            this->load_form();
+            return (c*)(dovah::loaded_forms::Form*)this->form;
+         }
 
          wrapper_type type = wrapper_type::generic;
          int lua_key = LUA_NOREF;
          //
          dovah::form_stub* stub = nullptr;
+         dovah::loaded_form_ptr<dovah::loaded_forms::Form> form;
          uint8_t depth = 0;
          bool    is_collection = false;
          part    parts[5];
@@ -60,25 +63,18 @@ namespace editor_script {
          wrapper_metatable() = delete;
       public:
          static constexpr char* superclass_key = nullptr;
-         static constexpr char* metatable_key  = nullptr;
-         //static luaL_Reg metatable_methods[]; // subclasses must define this, too
+         static constexpr char* metatable_key  = "dovah.classes.!base";
+         static luaL_Reg metatable_methods[]; // subclasses must define this, too
    };
 
    template<typename T> wrapper* wrapper_from_stack(lua_State* L, int pos) noexcept {
-      auto* ptr = (wrapper**) editor_script::cast_to_class(L, pos, T::metatable_key);
-      if (!ptr)
-         return nullptr;
-      return *ptr;
+      auto* ptr = (wrapper*) editor_script::cast_to_class(L, pos, T::metatable_key);
+      return ptr;
    }
    template<typename T> wrapper& get_wrapper_for_thiscall(lua_State* L, int pos = 1) noexcept {
-      auto* pself = (wrapper**) editor_script::cast_to_class(L, pos, T::metatable_key);
-      if (pself == nullptr) {
+      auto* self = (wrapper*) editor_script::cast_to_class(L, pos, T::metatable_key);
+      if (self == nullptr) {
          luaL_error(L, "function called with bad self (expected %s)", T::metatable_key);
-      }
-      __assume(pself != nullptr);
-      auto* self = *pself;
-      if (!self) {
-         luaL_error(L, "cannot call function; underlying object is missing somehow?", T::metatable_key);
       }
       __assume(self != nullptr);
       return *self;

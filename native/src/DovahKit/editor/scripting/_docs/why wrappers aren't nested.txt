@@ -1,0 +1,159 @@
+
+When we want Lua to be able to access  some sort of native data, such as a form 
+or part of a form,  we create a "wrapper" for that data;  that is, we create an 
+(editor_script::wrapper) as a piece of  Lua userdata, and store data on the new 
+wrapper which indicates precisely how to get to the wrapped data. We then store 
+the new userdata in a private weak-table before returning it to the script; the 
+private weak-table is a set of flat lists, one per form ID. Storing userdata in 
+a weak-table like  this allows us to access that userdata later,  e.g. to clear 
+the metatable off of a wrapper when its underlying data is deleted.
+
+The thing is, a lot of the data that  we're wrapping is interrelated; there may 
+be a wrapper for a form and then another wrapper for some data object inside of 
+that form. So why not store the wrappers in a hierarchy?
+
+Well, first of all, if we want to store wrappers in a hierarchy, then they need 
+to be able to  refer to each other. This means that we have  to take one of two 
+approaches for creating wrappers and tracking their relationships:
+
+
+   MANAGE RELATIONSHIPS IN NATIVE CODE, WITH A PRIVATE "KEEP-ALIVE" TABLE.
+   The main  issue with managing  relationships in  native code,  with wrappers 
+   stored as a hierarchy, is that we must  prevent "parent" wrappers from being 
+   deleted while they have  "child" wrappers.  The naive approach to this would 
+   be to create a private table in the Lua registry which holds all userdata. A 
+   userdata would be kept  in this table if  it has any  child wrappers, and it 
+   would be removed  from this table if its  last child is removed.  This would 
+   prevent  the garbage-collection of an  unreferenced parent  wrapper while it 
+   still has child wrappers.
+
+   The main problem with this approach is  that it interferes with Lua garbage-
+   collection. Suppose that between GC cycles,  a parent wrapper and all of its 
+   descendants all  become unreferenced. The  next GC cycle  would only collect 
+   the bottommost descendants;  the next  cycle  after that would collect their 
+   parents; and so on.
+
+
+   MANAGE RELATIONSHIPS IN NATIVE CODE.
+   The wrapper instances  maintain pointers to each other.  This makes things a 
+   bit more complicated, because Lua manages the memory for our wrappers and is 
+   responsible for  deleting them when the  script is no  longer using them. In 
+   order to keep track of  relationships in  native code, we'd  have to take on 
+   all of the memory management burdens ourselves.  In practice, every userdata 
+   would have to  contain a pointer to a  wrapper object that  we heap-allocate 
+   ourselves (such that the userdata itself is a (wrapper**)), and we'd have to 
+   put refcounts on the  wrappers and track those by using  the __gc metamethod 
+   on the userdata. Thus,  Lua can garbage-collect the  wrapper pointers at its 
+   leisure, and we can destroy wrappers at  our leisure... so long as we manage 
+   to put in a ton  of effort to  properly track everything.  Hm. Sounds error-
+   prone.
+
+
+   MANAGE RELATIONSHIPS IN LUA.
+   The wrapper instances don't maintain pointers to each other; rather, the Lua 
+   userdata maintain references to each other.  Userdata can't normally contain 
+   any Lua data,  but it can be given a metatable, and we can  apply metatables 
+   in a  manner that lets us store  unique data  on each userdata, while  still 
+   being able to create a metatable-based  class hierarchy. Thus, we attempt to 
+   define code to allow something like this:
+
+      parent_ud.__children.collection_name[index] = child_ud
+
+   To effect this, we first create a metatable for collections:
+
+      registry.collection_mt = {
+         __mode = "v", -- weak table
+         index_of =
+            function(self, ud)
+               for i, e in ipairs(self) do
+                  if e == ud then
+                     return i
+                  end
+               end
+            end,
+         max =
+            function(self)
+               local m = nil
+               for i, _ in pairs(self) do
+                  if not m or i > m then
+                     m = i
+                  end
+               end
+               return m
+            end,
+         remove =
+            function(self, ud)
+               if self.__indexed_by_string then
+                  self["!" .. ud.__collection_key] = nil -- prepend a char to avoid conflicts with our own keys
+                  return
+               end
+               local i = ud.__collection_key
+               if not i then
+                  return
+               end
+               if self[i] ~= ud
+                  i = self:index_of(ud)
+                  if not i then
+                     return
+                  end
+               end
+               self[i] = nil
+               if self.__is_sequential then
+                  ud.__parent         = nil
+                  ud.__collection     = nil
+                  ud.__collection_key = nil
+                  local max = self:max()
+                  for j = 0, max do
+                     if j > i then
+                        self[j].__collection_key = j - 1
+                        self[j - 1] = self[j]
+                        self[j]     = nil
+                     end
+                  end
+               end
+            end,
+      }
+
+   Then, we use code like this to instantiate a new userdata:
+   
+      local ud_table = {}
+      setmetatable(ud_table, class_metatable) -- pretend we're also setting up __index, forwarding operators from the class, etc.
+      setmetatable(ud,       ud_table)
+      ud_table.__parent          = ud_parent
+      ud_table.__children        = {}                -- map of collection names to collections
+      ud_table.__collection_name = "collection_name" -- the name of the collection in (ud_parent) that (ud_table) belongs to
+      ud_table.__collection_key  = 0                 -- string or integer. the key in the parent collection; cached here for speed
+      -- 
+      -- Thus, (ud.__children.collection_name[index] = child_ud).
+
+   Collections can be created like so:
+   
+      form_ud.__children.papyrus = setmetatable({}, registry.collection_mt)
+      --
+      papyrus_ud.__children.scripts = { __indexed_by_string = true } -- indicates that the collection's keys are names
+      setmetatable(papyrus_ud.scripts, registry.collection_mt)
+      --
+      script_ud.__children.properties = { __is_sequential = true } -- indicates that if something is removed from the collection, all remaining elements must have their indices updated
+      setmetatable(papyrus_ud.properties, registry.collection_mt)
+      -- 
+      -- This system allows the use of arbitrary collection names, so 
+      -- each form type can define its own names as needed.
+
+   Thus, the relationships are managed entirely in Lua.
+
+   
+The last described approach above would  properly solve the problem of actually 
+storing a hierarchy of wrappers, but storing wrappers as a hierarchy introduces 
+a new concern: how do we manage access  to the wrapped data? Consider: wrappers 
+need to know their place in the hierarchy in order for the Lua code which works 
+with the wrappers to access the wrapped data. If we only store the hierarchy in 
+Lua, then every time  we want to access the  wrapped data,  we need to traverse 
+from the wrapper we're working with all the way up to its topmost ancestor, and 
+then work our way back down.  If we give  each wrapper a  copy of its hierarchy 
+location, then we  need to keep that data in synch with the Lua  hierarchy when 
+we're managing the latter. So now we're  in a situation where we have to either 
+impair performance on actually using the wrappers, or spend more effort than we 
+actually need on managing them behind the scenes.
+
+The approach we've gone with  instead is to store  wrappers in flat lists, with 
+each wrapper having full knowledge of its hierarchy location.

@@ -67,8 +67,6 @@ class DovahKitScriptVM : public QObject {
             _message_queue normal;
          } m2s;
       } message_queues;
-      //
-      std::vector<editor_script::wrapper*> wrappers;
       
    public:
       static DovahKitScriptVM& get() {
@@ -139,12 +137,12 @@ class DovahKitScriptVMUserdataInterface {
       void remove(editor_script::wrapper*);
 
       //
-      // Check if there is already an existing wrapper in use by Lua that is identical to the input 
-      // wrapper; if so, delete the input wrapper and replace the pointer with one to the existing 
-      // wrapper. Either way, push the appropriate wrapper onto the Lua stack.
+      // Check if Lua already has an identical copy of the passed-in wrapper;  if so, push that copy 
+      // onto the Lua stack. Otherwise, copy the passed-in wrapper into Lua and push it onto the Lua 
+      // stack.
       //
-      int push(lua_State*, editor_script::wrapper*&, const char* metatable_name);
-      template<typename mt> inline int push(editor_script::wrapper*& instance) {
+      int push(lua_State*, const editor_script::wrapper&, const char* metatable_name);
+      template<typename mt> inline int push(const editor_script::wrapper& instance) {
          static_assert(std::is_base_of_v<editor_script::wrapper_metatable, mt>);
          static_assert(!std::is_same_v<editor_script::wrapper_metatable, mt>);
          //
