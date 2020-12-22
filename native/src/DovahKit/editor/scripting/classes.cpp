@@ -20,6 +20,19 @@ namespace editor_script {
          //       if a then
          //          return a
          //       end
+         //       --
+         //       -- Check for any getters:
+         //       --
+         //       a = rawget(meta, "__getters")
+         //       if a then
+         //          a = rawget(a, k)
+         //          if a then
+         //             return a(t) -- remember: selfcall is just self as arg 1
+         //          end
+         //       end
+         //       --
+         //       -- Traverse up the superclass chain:
+         //       --
          //       while true do
          //          local b = rawget(meta, "__superclass")
          //          if type(b) ~= "table" then
@@ -30,50 +43,109 @@ namespace editor_script {
          //          if c then
          //             return c
          //          end
+         //          c = rawget(meta, "__getters")
+         //          if c then
+         //             c = rawget(c, k)
+         //             if c then
+         //                return c(t) -- remember: selfcall is just self as arg 1
+         //             end
+         //          end
          //       end
          //    end
          //
-         if (!lua_getmetatable(luaVM, -2)) // STACK: [meta, k, t]
+         auto index_table = 1;
+         auto index_key   = 2;
+         if (!lua_getmetatable(luaVM, index_table)) // STACK: - [ t, k, meta ] +
             return 0;
-         lua_replace  (luaVM, -3); // STACK: [k, meta]
-         lua_pushvalue(luaVM, -1); // STACK: [k, k, meta]
-         lua_rawget   (luaVM, -3); // STACK: [meta[k], k, meta]
+         auto index_meta  = 3;
+         lua_pushvalue(luaVM, index_key);  // STACK: - [ t, k, meta, k       ] +
+         lua_rawget   (luaVM, index_meta); // STACK: - [ t, k, meta, meta[k] ] +
          if (!lua_isnil(luaVM, -1))
             return 1;
-         lua_pop(luaVM, 1); // STACK: [k, meta]
+         lua_settop(luaVM, index_meta); // STACK: - [ t, k, meta ] +
          //
-         // If we want to use fields instead of methods, then every metatable 
-         // needs to have a table of getters (field name as key; CFunction as 
-         // value), and we need to look up from that table at this point.
+         // Check for any getters:
          //
-         // If we go that route, then we'll want to update the documentation 
-         // comment at the top of this function, which is a Lua translation 
-         // of the C code.
+         lua_pushstring(luaVM, "__getters"); // STACK: - [ t, k, meta, "__getters" ] +
+         if (lua_rawget(luaVM, index_meta) == LUA_TTABLE) { // STACK: - [ t, k, meta, meta.__getters ] +
+            lua_pushvalue(luaVM, index_key); // STACK: - [ t, k, meta, meta.__getters, k ] +
+            lua_rawget   (luaVM, -2);        // STACK: - [ t, k, meta, meta.__getters, meta.__getters[k] ] +
+            if (!lua_isnil(luaVM, -1)) {
+               lua_copy  (luaVM, -1, 2); // STACK: - [ t, meta.__getters[k], meta, meta.__getters, meta.__getters[k] ] +
+               lua_settop(luaVM, 2);     // STACK: - [ t, meta.__getters[k] ] +
+               lua_rotate(luaVM, 2, 1);  // STACK: - [ meta.__getters[k], t ] +
+               lua_call  (luaVM, 1, 1);  // STACK: - [ meta.__getters[k](t) ] +
+               return 1;
+            }
+         }
+         lua_settop(luaVM, index_meta); // STACK: - [ t, k, meta ] +
+         //
+         // Traverse up the superclass chain:
          //
          while (true) {
-            lua_pushstring(luaVM, "__superclass"); // STACK: ["__superclass",    k, meta]
-            auto type = lua_rawget(luaVM, -3);     // STACK: [meta.__superclass, k, meta]
-            if (type != LUA_TTABLE)
+            lua_pushstring(luaVM, "__superclass");           // STACK: - [ t, k, meta, "__superclass"    ] +
+            if (lua_rawget(luaVM, index_meta) != LUA_TTABLE) // STACK: - [ t, k, meta, meta.__superclass ] +
                return 0;
-            lua_replace  (luaVM, -3); // STACK: [k, meta.__superclass]
+            lua_remove(luaVM, index_meta); // STACK: - [ t, k, meta.__superclass ] + // meta = meta.__superclass;
             //
-            // If we want to use fields instead of methods, then we need to 
-            // replace the rest of this loop with code equivalent to:
-            //
-            //    if meta.__superclass[k].__index then
-            //       return meta.__superclass[k].__index(meta.__superclass[k], k)
-            //    end
-            //
-            // If we go that route, then we'll want to update the documentation 
-            // comment at the top of this function, which is a Lua translation 
-            // of the C code.
-            //
-            lua_pushvalue(luaVM, -1); // STACK: [k, k, meta.__superclass]
-            lua_rawget   (luaVM, -3); // STACK: [meta.__superclass[k], k, meta.__superclass]
+            lua_pushvalue(luaVM, index_key);  // STACK: - [ t, k, meta, k       ] +
+            lua_rawget   (luaVM, index_meta); // STACK: - [ t, k, meta, meta[k] ] +
             if (!lua_isnil(luaVM, -1))
                return 1;
-            lua_pop(luaVM, 1); // STACK: [k, meta.__superclass]
+            lua_settop    (luaVM, index_meta);  // STACK: - [ t, k, meta              ] +
+            lua_pushstring(luaVM, "__getters"); // STACK: - [ t, k, meta, "__getters" ] +
+            if (lua_rawget(luaVM, index_meta) == LUA_TTABLE) { // STACK: - [ t, k, meta, meta.__getters ] +
+               lua_pushvalue(luaVM, index_key); // STACK: - [ t, k, meta, meta.__getters, k ] +
+               lua_rawget   (luaVM, -2);        // STACK: - [ t, k, meta, meta.__getters, meta.__getters[k] ] +
+               if (!lua_isnil(luaVM, -1)) {
+                  lua_copy  (luaVM, -1, 2); // STACK: - [ t, meta.__getters[k], meta, meta.__getters, meta.__getters[k] ] +
+                  lua_settop(luaVM, 2);     // STACK: - [ t, meta.__getters[k] ] +
+                  lua_rotate(luaVM, 2, 1);  // STACK: - [ meta.__getters[k], t ] +
+                  lua_call  (luaVM, 1, 1);  // STACK: - [ meta.__getters[k](t) ] +
+                  return 1;
+               }
+            }
+            lua_settop(luaVM, index_meta); // STACK: - [ t, k, meta ] +
          }
+      }
+      static luastackchange_t __newindex(lua_State* luaVM) {
+         //
+         // Code to power setters for userdata.
+         //
+         // LUA:
+         //    function __newindex(t, k, v)
+         //       local meta = getmetatable(t)
+         //       if not meta then
+         //          return nil
+         //       end
+         //       local a = meta.__setters
+         //       if a then
+         //          a = a[k]
+         //          if a then
+         //             a(t, v)
+         //          end
+         //       end
+         //    end
+         //
+         auto index_table = 1;
+         auto index_key   = 2;
+         auto index_value = 3;
+         if (!lua_getmetatable(luaVM, index_table)) // STACK: - [ t, k, v, meta ] +
+            return 0;
+         auto index_meta  = 4;
+         lua_pushstring(luaVM, "__setters"); // STACK: - [ t, k, v, meta, "__setters" ] +
+         if (lua_rawget(luaVM, index_meta) == LUA_TTABLE) { // STACK: - [ t, k, v, meta, meta.__setters ] +
+            lua_pushvalue(luaVM, index_key); // STACK: - [ t, k, v, meta, meta.__setters, k ] +
+            lua_rawget   (luaVM, -2);        // STACK: - [ t, k, v, meta, meta.__setters, meta.__setters[k] ] +
+            if (!lua_isnil(luaVM, -1)) {
+               lua_copy  (luaVM,  1, 2); // STACK: - [ t, t, v, meta, meta.__setters, meta.__setters[k] ] +
+               lua_copy  (luaVM, -1, 1); // STACK: - [ meta.__setters[k], t, v, meta, meta.__setters, meta.__setters[k] ] +
+               lua_settop(luaVM,  3);    // STACK: - [ meta.__setters[k], t, v ] +
+               lua_call  (luaVM, 2, 0);
+               return 0;
+            }
+         }
+         return 0;
       }
    }
    namespace { // helper functions
@@ -181,7 +253,7 @@ namespace editor_script {
       lua_settop(luaVM, top);
       return ud;
    }
-   extern void define_class(lua_State* luaVM, const char* className, const char* superclassName, const luaL_Reg* methods) {
+   extern void define_class(lua_State* luaVM, const char* className, const char* superclassName, const luaL_Reg* methods, const luaL_Reg* getters, const luaL_Reg* setters) {
       //
       // LUA:
       //    local meta = {}
@@ -200,6 +272,18 @@ namespace editor_script {
       //    if methods then
       //       for k, v in pairs(methods) do
       //          meta[k] = v
+      //       end
+      //    end
+      //    if getters then
+      //       meta.__getters = {}
+      //       for k, v in pairs(methods) do
+      //          meta.__getters[k] = v
+      //       end
+      //    end
+      //    if setters then
+      //       meta.__setters = {}
+      //       for k, v in pairs(methods) do
+      //          meta.__setters[k] = v
       //       end
       //    end
       //
@@ -234,8 +318,25 @@ namespace editor_script {
          lua_pop(luaVM, 1); // STACK: [newmeta]
       }
       //
-      if (methods)
+      if (methods) {
          luaL_setfuncs(luaVM, methods, 0); // import functions into the metatable
+      }
+      if (getters) {
+         lua_pushstring (luaVM, "__getters"); // push 1
+         lua_createtable(luaVM, 0, 0);        // push 1
+         luaL_setfuncs  (luaVM, getters, 0);  // push 0
+         lua_settable   (luaVM, -3);          // pop  2
+      }
+      if (setters) {
+         lua_pushstring   (luaVM, "__newindex"); // push 1
+         lua_pushcfunction(luaVM, &__newindex);  // push 1
+         lua_settable     (luaVM, -3);           // pop  2
+         //
+         lua_pushstring (luaVM, "__setters"); // push 1
+         lua_createtable(luaVM, 0, 0);        // push 1
+         luaL_setfuncs  (luaVM, setters, 0);  // push 0
+         lua_settable   (luaVM, -3);          // pop  2
+      }
       lua_pop(luaVM, 1); // pop metatable from the stack
    }
 

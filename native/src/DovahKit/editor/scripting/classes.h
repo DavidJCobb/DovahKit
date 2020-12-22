@@ -21,7 +21,7 @@ namespace editor_script {
    // (class_internal_name) as the key name. You can specify the key name of a super-
    // class in (superclass_internal_name).
    //
-   extern void define_class(lua_State* luaVM, const char* class_internal_name, const char* superclass_internal_name = nullptr, const luaL_Reg* methods = nullptr);
+   extern void define_class(lua_State* luaVM, const char* class_internal_name, const char* superclass_internal_name = nullptr, const luaL_Reg* methods = nullptr, const luaL_Reg* getters = nullptr, const luaL_Reg* setters = nullptr);
 
    //
    // Check registry key (class_internal_name) for a class metatable.

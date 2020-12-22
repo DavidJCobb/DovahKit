@@ -52,5 +52,6 @@ namespace editor_script::wrappers {
       { "set_allow_default_dialogue", &_methods::set_allow_default_dialogue },
       { "get_is_female", &_methods::get_is_female },
       { "set_is_female", &_methods::set_is_female },
+      { nullptr, nullptr },
    };
 }

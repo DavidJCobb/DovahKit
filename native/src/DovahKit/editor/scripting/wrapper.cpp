@@ -16,6 +16,7 @@ namespace editor_script { // base metatable
    }
    /*static*/ luaL_Reg wrapper_metatable::metatable_methods[] = {
       { "__gc",  &_methods::__gc },
+      { nullptr, nullptr },
    };
 }
 
