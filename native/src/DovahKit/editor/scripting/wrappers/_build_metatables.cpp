@@ -1,5 +1,5 @@
 #include "_build_metatables.h"
-#include "form.h"
+#include "_all.h"
 
 namespace editor_script {
    void build_all_wrapper_metatables(lua_State* L) {

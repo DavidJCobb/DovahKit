@@ -4,6 +4,25 @@
 #include "util.h"
 
 namespace editor_script {
+   extern bool part_type_uses_name_key(part_type_t signature) {
+      switch (signature) {
+      }
+      return false;
+   }
+
+   bool wrapper::part::operator==(const part& other) const noexcept {
+      if (this->signature != other.signature)
+         return false;
+      if (part_type_uses_name_key(this->signature)) {
+         if (strcmp(this->name, other.name) != 0)
+            return false;
+      } else {
+         if (this->index != other.index)
+            return false;
+      }
+      return true;
+   }
+
    bool wrapper::is_equal(const wrapper* other) const noexcept {
       if (this->type != other->type)
          return false;
@@ -11,8 +30,13 @@ namespace editor_script {
          if (this->stub != other->stub)
             return false;
       }
-      if (typeid(this) != typeid(other))
+      if (this->depth != other->depth)
          return false;
-      return this->_is_equal_impl(other);
+      if (this->is_collection != other->is_collection)
+         return false;
+      for (uint8_t i = 0; i < this->depth; ++i)
+         if (this->parts[i] != other->parts[i])
+            return false;
+      return true;
    }
 }

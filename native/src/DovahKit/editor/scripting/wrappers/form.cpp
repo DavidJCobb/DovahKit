@@ -44,8 +44,8 @@ namespace {
             auto& entry = pair.second;
             if (!entry.other)
                continue;
-            auto* user = new wrappers::form(entry.other);
-            if (0 == vm.push(user))
+            auto* user = wrapper::wrap_form(entry.other);
+            if (0 == vm.push<wrappers::form>(user))
                continue;
             lua_seti(L, table, i);
             ++i;

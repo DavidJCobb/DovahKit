@@ -144,15 +144,10 @@ class DovahKitScriptVMUserdataInterface {
       // wrapper. Either way, push the appropriate wrapper onto the Lua stack.
       //
       int push(lua_State*, editor_script::wrapper*&, const char* metatable_name);
-      template<typename T> inline int push(T*& instance) {
-         static_assert(std::is_base_of_v<editor_script::wrapper, T>, "You must pass a subclass of editor_script::wrapper*.");
-         static_assert(!std::is_same_v<editor_script::wrapper, T>,   "The pointer type that you pass must have a metatable key defined.");
+      template<typename mt> inline int push(editor_script::wrapper*& instance) {
+         static_assert(std::is_base_of_v<editor_script::wrapper_metatable, mt>);
+         static_assert(!std::is_same_v<editor_script::wrapper_metatable, mt>);
          //
-         // need some silly indirection here because (superclass*&) isn't strictly compatible with (subclass*)
-         //
-         editor_script::wrapper* dummy = instance;
-         auto result = this->push(this->vm.lua_vm, dummy, T::metatable_key);
-         instance = (T*)dummy;
-         return result;
+         return this->push(this->vm.lua_vm, instance, mt::metatable_key);
       }
 };

@@ -77,8 +77,8 @@ namespace _api { // APIs
             if (!stub)
                return 0;
             //
-            auto* out = new wrappers::form(stub);
-            return DovahKitScriptVMUserdataInterface::get().push(out);
+            auto* out = wrapper::wrap_form(stub);
+            return DovahKitScriptVMUserdataInterface::get().push<wrappers::form>(out);
          }
          luastackchange_t log_message(lua_State* L) {
             auto m = new editor_script::messages::log_text();

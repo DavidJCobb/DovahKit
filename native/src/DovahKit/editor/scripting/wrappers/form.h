@@ -1,18 +1,19 @@
 #pragma once
 #include "../wrapper.h"
 
+namespace editor_script::wrapper_part_types {
+   inline constexpr cobb::eight_cc destruction_root  = "Destruct";
+   inline constexpr cobb::eight_cc destruction_stage = "DesStage";
+   inline constexpr cobb::eight_cc object_bounds     = "ObBounds";
+   inline constexpr cobb::eight_cc papyrus_root      = "PapyRoot";
+   inline constexpr cobb::eight_cc papyrus_script    = "PapyScri";
+   inline constexpr cobb::eight_cc papyrus_property  = "PapyProp";
+}
+
 namespace editor_script::wrappers {
-   class form : public wrapper {
-      protected:
-         virtual bool _is_equal_impl(const wrapper* other) const noexcept override { return true; }
-      public:
-         static constexpr char* superclass_key = metatable_key;
-         static constexpr char* metatable_key  = "dovah.classes.form";
-         static luaL_Reg metatable_methods[];
-         //
-         form(dovah::form_stub* s) {
-            this->type = wrapper_type::form_data;
-            this->stub = s;
-         }
+   struct form : public wrapper_metatable {
+      static constexpr char* superclass_key = metatable_key;
+      static constexpr char* metatable_key  = "dovah.classes.form";
+      static luaL_Reg metatable_methods[];
    };
 }

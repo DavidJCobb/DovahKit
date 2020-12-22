@@ -1115,6 +1115,12 @@
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\eight_cc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1325,5 +1331,6 @@
     <Text Include="dovah\_docs\game settings.txt" />
     <Text Include="dovah\_docs\singleton forms.txt" />
     <Text Include="dovah\_docs\form stubs.txt" />
+    <Text Include="editor\scripting\_docs\abstract.txt" />
   </ItemGroup>
 </Project>
