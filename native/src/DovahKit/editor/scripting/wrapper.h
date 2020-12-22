@@ -51,7 +51,7 @@ namespace editor_script {
          dovah::form_stub* stub = nullptr;
          dovah::loaded_form_ptr<dovah::loaded_forms::Form> form;
          uint8_t depth = 0;
-         bool    is_collection = false;
+         bool    is_collection = false; // if this is (true), then parts[depth] has no index or name but rather identifies the collection itself (i.e. allowing Lua to refer to, say, `shout.words` and not just `shout` and `shout.words[2]`)
          part    parts[5];
    };
 

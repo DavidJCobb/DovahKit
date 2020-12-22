@@ -369,6 +369,17 @@
 //
 //           = Wrapper implementation
 //
+//              - Implement field access on metatable-based classes. That is, it should be 
+//                possible to make (userdata.foo) call some getter under the hood to return 
+//                a value, and likewise for (userdata.foo = bar).
+//                
+//                Class-metatables should be able to store this as (__getters.foo) and as 
+//                (__setters.foo), with the define-class function taking optional lists of 
+//                getters and setters; the (__index) metamethod for classes should then 
+//                search for getters, traversing up the metatable chain as appropriate; 
+//                meanwhile, we should also have a (__newindex) metamethod that checks for 
+//                setters.
+//
 //              - The current wrapper implementation will be slow once large numbers of 
 //                wrapped objects are in play at a time. In order to return a wrapped 
 //                object from a Lua API, we must scan the full list of extant wrappers 
@@ -390,11 +401,32 @@
 //                 - If a form is renumbered, we'll have to renumber its weakmap as 
 //                   well.
 //
+//                    - This means that we should implement urgent M2S messages FIRST, 
+//                      and we should have (DovahKitScriptVMMessenger::send_message) 
+//                      check them whenever it stops blocking after sending a blocking 
+//                      message (currently we only check for M2S messages between script 
+//                      invocations).
+//
 //                 - Since there are going to be multiple weakmaps, we could probably 
 //                   save just a *little* bit on memory by having them share the same 
 //                   metatable (it's the metatable that makes them weak).
 //
 //              - It needs to be possible to wrap individual components in a form.
+//
+//                 - We're going to need a system to pick the appropriate metatable for 
+//                   collections. That is: in order for Lua to be able to refer to stuff 
+//                   like (shout.words[2]), it must also be able to refer to (shout.words), 
+//                   and in turn we want to be able to do things like (#shout.words) to 
+//                   get the number of words. (Okay, that's a bad example because shouts 
+//                   always have three words, but there are other collections that are of 
+//                   arbitrary length, as well as collections that have non-integer keys 
+//                   that the user may want to iterate over.)
+//
+//                   Currently, the wrapper class has an (is_collection) bool with some 
+//                   conventions for indicating which collection, but we'll still need a 
+//                   way to create metatables for collections and return userdata that 
+//                   uses the appropriate metatable. Perhaps we could do that the same 
+//                   way we'll handle form components in general.
 //
 //              - It needs to be possible for wrappers to be interdependent on one 
 //                another.
@@ -407,81 +439,10 @@
 //                   the name 'foo.'" Removing or reordering any of these items will 
 //                   require us to update indices on the wrappers of other items in 
 //                   the collection.
-//
-//                 = There are a few ways to do this... We can take the "flat" approach, 
-//                   where wrappers are only stored in the weakmaps and we use a function 
-//                   to check whether any two wrappers belong to the same sequential 
-//                   collection; or we can take the "nested" approach, where wrappers can 
-//                   actually retain pointers to their parents along with multiple lists 
-//                   of child pointers (one list per collection, and maybe even data to 
-//                   indicate whether each collection is sequential).
-//
-//                    - BELOW, I WROTE DOWN AN IMPLEMENTATION FOR NESTED WRAPPERS. HOWEVER, 
-//                      IT HAS A VERY IMPORTANT CAVEAT: WHILE IT MORE ACCURATELY REPRESENTS 
-//                      THE RELATIONSHIPS BETWEEN WRAPPERS, ACTUALLY ACCESSING THE WRAPPED 
-//                      DATA IS GOING TO BE QUITE A BIT SLOWER. WHY? WELL, SUPPOSE WE'RE 
-//                      CALLING AN API ON A NESTED WRAPPER. WE MUST FIRST TRAVERSE BACK UP 
-//                      TO THE TOPMOST WRAPPER, AND THEN DRILL DOWN INTO THE WRAPPERS AND 
-//                      THE FORM ALIKE. WE COULD ALLEVIATE THIS BY CREATING WRAPPER 
-//                      SUBCLASSES THAT STORE THE SAME INFORMATION, BUT THEN WE HAVE TO GO 
-//                      TO THE TROUBLE OF KEEPING THAT IN SYNCH WITH THE HIERARCHY 
-//                      INFORMATION. ULTIMATELY A HIERARCHY SACRIFICES PERF WHEN ACTUALLY 
-//                      USING THE WRAPPER IN ORDER TO SIMPLIFY AND OPTIMIZE PERF WHEN 
-//                      KILLING THE WRAPPER LATER.
-//                      
-//                      BY CONTRAST, A FLAT WRAPPER LIST (WHICH IS WHAT WE HAVE CURRENTLY) 
-//                      COULD BE STORED FOR EACH FORM ID, WITH THE HIERARCHY INFORMATION 
-//                      STORED IN THE WRAPPERS THEMSELVES. FOR A MULTI-LEVEL WRAPPER 
-//                      STRUCTURE, EACH WRAPPER WOULD REPRODUCE THE INFORMATION NEEDED 
-//                      FOR ACCESSING EACH LEVEL, BUT SINCE WE HAVE TO LOOP OVER THE FULL 
-//                      FLAT LIST TO DO FIX-UPS ANYWAY, IS THAT REALLY A PROBLEM?
-//                      
-//                      YEAH, I THINK WE OUGHT TO GO WITH A FLAT LIST OF WRAPPERS, PERHAPS 
-//                      IDENTIFYING COLLECTIONS USING uint64_t SIGNATURES SIMILAR TO WHAT 
-//                      WE DID WITH notice_code_t. SIGNATURES COULD INCLUDE:
-//                      
-//                       - Destruct // Destruction data
-//                       - DialInfo // DIAL info list
-//                       - FactCrim // FACT crime values
-//                       - FactRela // FACT relationship
-//                       - InfoLine // INFO response
-//                       - ObBounds // Object Bounds
-//                       - PapyBase // Papyrus data root
-//                       - PapyScri // Papyrus script
-//                       - PapyProp // Papyrus property
-//                       - RefrPosi // REFR position
-//                       - RefrRota // REFR rotation
-//                       - RefrXPSN // REFR extra-data: poison
-//                       - QueAlias // Quest alias
-//                       - ShouWord // Shout word
-//                       - SpelEfct // Spell effect entry
-//                      
-//                      SO ESSENTIALLY EACH WRAPPER WOULD HAVE:
-//                      
-//                       - form_stub*        stub;
-//                       - loaded_form_ptr_t form;
-//                       - struct step {
-//                            uint64_t signature;
-//                            union {
-//                               uint32_t    index;
-//                               const char* name;  // owned
-//                            }
-//                         } steps[5];
-//                      
-//                      VIRTUAL FUNCTIONS ON PER-FORM-TYPE WRAPPERS WOULD IMPLEMENT 
-//                      ACCESSING A PART OF THE LOADED FORM DATA VIA THE STEPS. ANOTHER 
-//                      FUNCTION SOMEWHERE COULD RETURN (true) IF THE PASSED-IN SIGNATURE 
-//                      CORRESPONDS TO A SEQUENTIAL COLLECTION (I.E. ONE WHERE IF WE 
-//                      REMOVE AN ELEMENT, WE MUST DECREMENT THE INDICES ON ALL WRAPPERS 
-//                      THAT COME AFTER IT IN THE SAME COLLECTION). SIMILARLY WE'D HAVE 
-//                      A FUNCTION WHICH INDICATES WHETHER A COLLECTION'S ENTRIES ARE 
-//                      IDENTIFIED WITH NUMERIC OR STRING INDICES.
-//                      
-//                      NOTABLY, THE CODE THAT MANAGES THINGS LIKE INDEX FIXUP DOESN'T 
-//                      NEED TO KNOW ANYTHING SPECIFIC ABOUT THE COLLECTIONS, SUCH AS 
-//                      HOW TO ACTUALLY ACCESS THE UNDERLYING DATA. IT JUST NEEDS TO 
-//                      MESS ABOUT WITH ALL WRAPPERS THAT ARE NESTED IN THE SAME PLACE 
-//                      AS INDICATED BY THEIR STUB, SIGNATURES, AND INDICES/NAMES.
+//                   
+//                   Notably, this doesn't require any access to the underlying data; the 
+//                   VM can handle this just using the information that's on the wrappers 
+//                   to know which wrappers are "siblings" of the wrapper being adjusted.
 //
 //              - If the script deletes a form, then we can have the script VM flag 
 //                the form's wrapper as "dead," but it'll still test as not being nil, 
