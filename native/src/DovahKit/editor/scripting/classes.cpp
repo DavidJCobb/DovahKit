@@ -151,6 +151,36 @@ namespace editor_script {
       lua_settop(luaVM, top);
       return userdata;
    }
+   
+   extern void* cast_to_exact_class(lua_State* luaVM, int stackPos, const char* classKey) {
+      //
+      // LUA:
+      //    if not userdata then
+      //       return nil
+      //    end
+      //    local instanceMeta = getmetatable(userdata)
+      //    local classMeta    = getmetatable(classKey)
+      //    if classMeta ~= instanceMeta do
+      //       return nil
+      //    end
+      //    return userdata
+      //
+      lua_checkstack(luaVM, 2);
+      auto  top = lua_gettop(luaVM);
+      void* ud  = lua_touserdata(luaVM, stackPos);
+      if (!ud)
+         return nullptr;
+      if (!lua_getmetatable(luaVM, stackPos))
+         return nullptr;
+      luaL_getmetatable(luaVM, classKey);
+      // STACK: [classMeta, instanceMeta, ...]
+      if (!lua_rawequal(luaVM, -1, -2)) {
+         lua_settop(luaVM, top);
+         return nullptr;
+      }
+      lua_settop(luaVM, top);
+      return ud;
+   }
    extern void define_class(lua_State* luaVM, const char* className, const char* superclassName, const luaL_Reg* methods) {
       //
       // LUA:
@@ -208,6 +238,7 @@ namespace editor_script {
          luaL_setfuncs(luaVM, methods, 0); // import functions into the metatable
       lua_pop(luaVM, 1); // pop metatable from the stack
    }
+
    extern bool is_class_defined(lua_State* luaVM, const char* className) {
       bool result = luaL_getmetatable(luaVM, className) == LUA_TTABLE;
       lua_pop(luaVM, 1);

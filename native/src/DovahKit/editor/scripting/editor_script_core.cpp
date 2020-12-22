@@ -8,6 +8,7 @@
 #include "../core.h" // for dovah.get_form_by_id
 #include "wrapper_util.h"
 #include "wrappers/form.h"
+#include "classes/benchmark.h"
 #include <QMessageBox> // for dovah.test_call_and_response
 
 namespace {
@@ -68,6 +69,47 @@ namespace _api { // APIs
 
    namespace definitions {
       namespace dovah {
+         luastackchange_t benchmark_start(lua_State* L) {
+            auto* p = lua_newuserdata(L, sizeof(classes::benchmark)); // push 1
+            luaL_getmetatable(L, classes::benchmark::metatable_key); // push 1
+            lua_setmetatable(L, -2); // pop 1
+            new (p) classes::benchmark;
+            return 1;
+         }
+         luastackchange_t benchmark_stop(lua_State* L) {
+            auto* self = (classes::benchmark*) editor_script::cast_to_exact_class(L, 1, classes::benchmark::metatable_key);
+            if (self == nullptr) {
+               luaL_error(L, "bad argument #1 to dovah.benchmark_stop (expected %s)", classes::benchmark::metatable_key);
+            }
+            __assume(self != nullptr);
+            self->finish();
+            return 0;
+         }
+         luastackchange_t for_each_form_of_type(lua_State* L) {
+            luaL_argcheck(L, lua_isnumber(L, 1),   1, "form type (number) expected");
+            luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
+            auto& editor = DovahKitCore::get();
+            if (!editor.has_data())
+               return 0;
+            ::dovah::form_type_t ft = lua_tonumber(L, 1);
+            //
+            editor.for_each_form_of_type(ft, [L](::dovah::form_stub* stub) {
+               lua_pushvalue(L, 2); // push the function
+               wrapper out;
+               auto*   mt = wrap_form(out, stub);
+               if (DovahKitScriptVMUserdataInterface::get().push(L, out, mt)) {
+                  lua_call(L, 1, 1);
+                  if (lua_toboolean(L, -1) == 1) {
+                     return true;
+                  }
+               } else {
+                  lua_settop(L, 2);
+               }
+               return false;
+            });
+            //
+            return 0;
+         }
          luastackchange_t get_form_by_id(lua_State* L) {
             luaL_argcheck(L, lua_isnumber(L, 1), 1, "form ID (number) expected");
             auto& editor = DovahKitCore::get();
@@ -105,6 +147,9 @@ namespace _api { // APIs
    }
    namespace declarations {
       std::array dovah = {
+         function{ "benchmark_start",        &definitions::dovah::benchmark_start },
+         function{ "benchmark_stop",         &definitions::dovah::benchmark_stop },
+         function{ "for_each_form_of_type",  &definitions::dovah::for_each_form_of_type },
          function{ "get_form_by_id",         &definitions::dovah::get_form_by_id },
          function{ "log_message",            &definitions::dovah::log_message },
          function{ "test_call_and_response", &definitions::dovah::test_call_and_response },
@@ -199,6 +244,7 @@ void DovahKitScriptVM::_setup_lua_vm() {
       lua_setfield    (this->lua_vm, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
    #pragma endregion
    editor_script::build_all_wrapper_metatables(this->lua_vm);
+   editor_script::define_class(this->lua_vm, editor_script::classes::benchmark::metatable_key, nullptr, editor_script::classes::benchmark::metatable_methods);
    //
    // Make API functions available via tables:
    //

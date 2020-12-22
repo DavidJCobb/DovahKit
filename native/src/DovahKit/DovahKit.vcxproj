@@ -213,6 +213,7 @@
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
+    <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
@@ -433,6 +434,7 @@
     <QtMoc Include="editor\scripting\editor_script_core.h" />
     <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
     <ClInclude Include="editor\scripting\classes.h" />
+    <ClInclude Include="editor\scripting\classes\benchmark.h" />
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />
     <ClInclude Include="editor\scripting\messages\log_text.h" />

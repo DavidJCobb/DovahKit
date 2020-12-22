@@ -45,6 +45,9 @@ namespace {
          // the debug metatable APIs don't protect userdata, so don't whitelist them
          "traceback",
       }),
+      _lib("os", {
+         "clock",
+      }),
    };
 }
 

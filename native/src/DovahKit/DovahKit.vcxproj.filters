@@ -549,6 +549,9 @@
     <ClCompile Include="editor\scripting\wrapper_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\classes\benchmark.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1134,6 +1137,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\classes\benchmark.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

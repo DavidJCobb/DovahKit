@@ -10,6 +10,13 @@ namespace editor_script {
    extern void* cast_to_class(lua_State* luaVM, int stack_pos, const char* class_internal_name);
 
    //
+   // Same as (cast_to_class), except that it does not allow subclasses of the 
+   // desired class; the userdata on the stack must be an exact match. Suitable 
+   // for classes that you don't intend to ever subclass.
+   //
+   extern void* cast_to_exact_class(lua_State* luaVM, int stack_pos, const char* class_internal_name);
+
+   //
    // Define a metatable for a class, and store the metatable in the registry using 
    // (class_internal_name) as the key name. You can specify the key name of a super-
    // class in (superclass_internal_name).
