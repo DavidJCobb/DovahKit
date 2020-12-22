@@ -380,6 +380,11 @@
 //                meanwhile, we should also have a (__newindex) metamethod that checks for 
 //                setters.
 //
+//                 - Getters have been implemented, and are actually faster than equivalent 
+//                   member functions.
+//
+//                 - SETTERS ARE IMPLEMENTED BUT UNTESTED.
+//
 //              - The current wrapper implementation will be slow once large numbers of 
 //                wrapped objects are in play at a time. In order to return a wrapped 
 //                object from a Lua API, we must scan the full list of extant wrappers 

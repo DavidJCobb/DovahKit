@@ -73,8 +73,22 @@ namespace editor_script {
             if (!lua_isnil(luaVM, -1)) {
                lua_copy  (luaVM, -1, 2); // STACK: - [ t, meta.__getters[k], meta, meta.__getters, meta.__getters[k] ] +
                lua_settop(luaVM, 2);     // STACK: - [ t, meta.__getters[k] ] +
-               lua_rotate(luaVM, 2, 1);  // STACK: - [ meta.__getters[k], t ] +
+               lua_rotate(luaVM, 1, 1);  // STACK: - [ meta.__getters[k], t ] +
                lua_call  (luaVM, 1, 1);  // STACK: - [ meta.__getters[k](t) ] +
+               //
+               // Quick explanation for my own reference, since basically only one page on the entire Internet 
+               // has documented this and it's not the Lua manual: given the stack
+               //
+               //     A B C D E
+               //     1 2 3 4 5
+               //
+               // A call to lua_rotate(L, 3, 1) will produce:
+               //
+               //     A B | E C D
+               //     1 2 | 3 4 5
+               //
+               // Positive offsets rotate right; negative, left.
+               //
                return 1;
             }
          }
@@ -321,13 +335,13 @@ namespace editor_script {
       if (methods) {
          luaL_setfuncs(luaVM, methods, 0); // import functions into the metatable
       }
-      if (getters) {
+      if (getters && getters[0].name && getters[0].func) {
          lua_pushstring (luaVM, "__getters"); // push 1
          lua_createtable(luaVM, 0, 0);        // push 1
          luaL_setfuncs  (luaVM, getters, 0);  // push 0
          lua_settable   (luaVM, -3);          // pop  2
       }
-      if (setters) {
+      if (setters && setters[0].name && setters[0].func) {
          lua_pushstring   (luaVM, "__newindex"); // push 1
          lua_pushcfunction(luaVM, &__newindex);  // push 1
          lua_settable     (luaVM, -3);           // pop  2

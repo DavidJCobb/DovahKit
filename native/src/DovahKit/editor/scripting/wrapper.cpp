@@ -18,6 +18,8 @@ namespace editor_script { // base metatable
       { "__gc",  &_methods::__gc },
       { nullptr, nullptr },
    };
+   /*static*/ luaL_Reg wrapper_metatable::metatable_getters[] = { { nullptr, nullptr } };
+   /*static*/ luaL_Reg wrapper_metatable::metatable_setters[] = { { nullptr, nullptr } };
 }
 
 namespace editor_script {

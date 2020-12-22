@@ -64,7 +64,9 @@ namespace editor_script {
       public:
          static constexpr char* superclass_key = nullptr;
          static constexpr char* metatable_key  = "dovah.classes.!base";
-         static luaL_Reg metatable_methods[]; // subclasses must define this, too
+         static luaL_Reg metatable_methods[]; // subclasses MUST define their own variable for this even if they have no methods
+         static luaL_Reg metatable_getters[]; // optional
+         static luaL_Reg metatable_setters[]; // optional
    };
 
    template<typename T> wrapper* wrapper_from_stack(lua_State* L, int pos) noexcept {
@@ -85,6 +87,6 @@ namespace editor_script {
          return;
       if (is_class_defined(L, T::metatable_key))
          return;
-      define_class(L, T::metatable_key, T::superclass_key, T::metatable_methods);
+      define_class(L, T::metatable_key, T::superclass_key, T::metatable_methods, T::metatable_getters, T::metatable_setters);
    }
 }
