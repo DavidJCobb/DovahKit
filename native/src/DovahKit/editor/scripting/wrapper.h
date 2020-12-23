@@ -39,6 +39,7 @@ namespace editor_script {
 
          bool is_equal(const wrapper* other) const noexcept;
          void load_form();
+         void mark_form_as_edited();
 
          template<typename c> c* get_loaded_form_data() {
             this->load_form();
@@ -67,8 +68,6 @@ namespace editor_script {
          static luaL_Reg metatable_methods[]; // subclasses must override this even if they offer no methods
          static luaL_Reg metatable_getters[]; // subclasses must override this even if they offer no getters
          static luaL_Reg metatable_setters[]; // subclasses must override this even if they offer no setters
-
-         static luaL_Reg no_registrations[]; // default value offered for convenience
    };
 
    template<typename T> wrapper* wrapper_from_stack(lua_State* L, int pos) noexcept {

@@ -23,6 +23,7 @@ namespace {
          auto* form = self.get_loaded_form_data<Voicetype>();
          if (!form)
             return 0;
+         self.mark_form_as_edited();
          cobb::edit_bit(form->voicetype_flags, Voicetype::voicetype_flag::allow_default_dialogue, lua_toboolean(L, 2));
          return 0;
       }
@@ -40,6 +41,7 @@ namespace {
          auto* form = self.get_loaded_form_data<Voicetype>();
          if (!form)
             return 0;
+         self.mark_form_as_edited();
          cobb::edit_bit(form->voicetype_flags, Voicetype::voicetype_flag::female, lua_toboolean(L, 2));
          return 0;
       }
@@ -47,7 +49,7 @@ namespace {
 }
 
 namespace editor_script::wrappers {
-   /*static*/ luaL_Reg voicetype::metatable_methods[] = no_registrations;
+   /*static*/ luaL_Reg voicetype::metatable_methods[] = { { nullptr, nullptr } };
    
    /*static*/ luaL_Reg voicetype::metatable_getters[] = {
       { "allows_default_dialogue", &_methods::get_allow_default_dialogue },

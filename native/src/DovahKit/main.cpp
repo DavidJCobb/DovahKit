@@ -369,22 +369,6 @@
 //
 //           = Wrapper implementation
 //
-//              - Implement field access on metatable-based classes. That is, it should be 
-//                possible to make (userdata.foo) call some getter under the hood to return 
-//                a value, and likewise for (userdata.foo = bar).
-//                
-//                Class-metatables should be able to store this as (__getters.foo) and as 
-//                (__setters.foo), with the define-class function taking optional lists of 
-//                getters and setters; the (__index) metamethod for classes should then 
-//                search for getters, traversing up the metatable chain as appropriate; 
-//                meanwhile, we should also have a (__newindex) metamethod that checks for 
-//                setters.
-//
-//                 - Getters have been implemented, and are actually faster than equivalent 
-//                   member functions.
-//
-//                 - SETTERS ARE IMPLEMENTED BUT UNTESTED.
-//
 //              - The current wrapper implementation will be slow once large numbers of 
 //                wrapped objects are in play at a time. In order to return a wrapped 
 //                object from a Lua API, we must scan the full list of extant wrappers 
