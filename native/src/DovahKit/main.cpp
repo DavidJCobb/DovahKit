@@ -407,8 +407,6 @@
 //                    - euler
 //                    - matrix3x3
 //                    - quaternion
-//                    - vector2
-//                    - vector3 (incomplete)
 //
 //                 - Ways to instantiate new instances from inside of a script (ideally 
 //                   a singleton named after the class with methods like "new", "is", 

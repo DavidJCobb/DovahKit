@@ -214,6 +214,7 @@
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
     <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
+    <ClCompile Include="editor\scripting\classes\vector2.cpp" />
     <ClCompile Include="editor\scripting\classes\vector3.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
@@ -436,6 +437,7 @@
     <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
     <ClInclude Include="editor\scripting\classes.h" />
     <ClInclude Include="editor\scripting\classes\benchmark.h" />
+    <ClInclude Include="editor\scripting\classes\vector2.h" />
     <ClInclude Include="editor\scripting\classes\vector3.h" />
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />

@@ -3,9 +3,9 @@
 #include "../classes.h"
 
 namespace editor_script::classes {
-   class vector3 {
+   class vector2 {
       public:
-         static constexpr char* metatable_key = "dovah.classes.vector3";
+         static constexpr char* metatable_key = "dovah.classes.vector2";
          static luaL_Reg metatable_methods[];
 
          inline static bool check_arg_type(lua_State* L, int i) {
