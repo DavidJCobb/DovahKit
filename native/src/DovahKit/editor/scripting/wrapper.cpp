@@ -20,6 +20,8 @@ namespace editor_script { // base metatable
    };
    /*static*/ luaL_Reg wrapper_metatable::metatable_getters[] = { { nullptr, nullptr } };
    /*static*/ luaL_Reg wrapper_metatable::metatable_setters[] = { { nullptr, nullptr } };
+   //
+   /*static*/ luaL_Reg wrapper_metatable::no_registrations[] = { { nullptr, nullptr } };
 }
 
 namespace editor_script {

@@ -64,9 +64,11 @@ namespace editor_script {
       public:
          static constexpr char* superclass_key = nullptr;
          static constexpr char* metatable_key  = "dovah.classes.!base";
-         static luaL_Reg metatable_methods[]; // subclasses MUST define their own variable for this even if they have no methods
-         static luaL_Reg metatable_getters[]; // optional
-         static luaL_Reg metatable_setters[]; // optional
+         static luaL_Reg metatable_methods[]; // subclasses must override this even if they offer no methods
+         static luaL_Reg metatable_getters[]; // subclasses must override this even if they offer no getters
+         static luaL_Reg metatable_setters[]; // subclasses must override this even if they offer no setters
+
+         static luaL_Reg no_registrations[]; // default value offered for convenience
    };
 
    template<typename T> wrapper* wrapper_from_stack(lua_State* L, int pos) noexcept {

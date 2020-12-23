@@ -47,20 +47,16 @@ namespace {
 }
 
 namespace editor_script::wrappers {
-   /*static*/ luaL_Reg voicetype::metatable_methods[] = {
-      { "get_allow_default_dialogue", &_methods::get_allow_default_dialogue },
-      { "set_allow_default_dialogue", &_methods::set_allow_default_dialogue },
-      { "get_is_female", &_methods::get_is_female }, // TODO: field access via a native getter (defined below) is faster than function calls made from script, it seems, so maybe remove this?
-      { "set_is_female", &_methods::set_is_female },
-      { nullptr, nullptr },
-   };
+   /*static*/ luaL_Reg voicetype::metatable_methods[] = no_registrations;
    
    /*static*/ luaL_Reg voicetype::metatable_getters[] = {
-      { "is_female", &_methods::get_is_female },
+      { "allows_default_dialogue", &_methods::get_allow_default_dialogue },
+      { "is_female",               &_methods::get_is_female },
       { nullptr, nullptr },
    };
    /*static*/ luaL_Reg voicetype::metatable_setters[] = {
-      { "is_female", &_methods::set_is_female },
+      { "allows_default_dialogue", &_methods::set_allow_default_dialogue },
+      { "is_female",               &_methods::set_is_female },
       { nullptr, nullptr },
    };
 }
