@@ -400,6 +400,34 @@
 //                   save just a *little* bit on memory by having them share the same 
 //                   metatable (it's the metatable that makes them weak).
 //
+//              - Create Lua utility classes
+//
+//                 - Classes
+//
+//                    - euler
+//                    - matrix3x3
+//                    - quaternion
+//                    - vector2
+//                    - vector3 (incomplete)
+//
+//                 - Ways to instantiate new instances from inside of a script (ideally 
+//                   a singleton named after the class with methods like "new", "is", 
+//                   and so on)
+//
+//                    - euler
+//                    - matrix3x3
+//                    - quaternion
+//                    - vector2
+//                    - vector3
+//
+//                 - Ways to test whether any given value is an instance of the class
+//
+//                    - euler
+//                    - matrix3x3
+//                    - quaternion
+//                    - vector2
+//                    - vector3
+//
 //              - It needs to be possible to wrap individual components in a form.
 //
 //                 - We're going to need a system to pick the appropriate metatable for 
@@ -416,6 +444,9 @@
 //                   way to create metatables for collections and return userdata that 
 //                   uses the appropriate metatable. Perhaps we could do that the same 
 //                   way we'll handle form components in general.
+//                   
+//                    - Collection metatables need to override not just __index, but also 
+//                      the metamethods for pairs and ipairs.
 //
 //              - It needs to be possible for wrappers to be interdependent on one 
 //                another.

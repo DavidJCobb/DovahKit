@@ -53,7 +53,7 @@ namespace editor_script {
             //
             lua_pushvalue(luaVM, index_key);  // STACK: - [ t, k, meta, k       ] +
             lua_rawget   (luaVM, index_meta); // STACK: - [ t, k, meta, meta[k] ] +
-            if (!lua_isnil(luaVM, -1))
+            if (!lua_isnoneornil(luaVM, -1))
                return 1;
             lua_settop(luaVM, index_meta); // STACK: - [ t, k, meta ] +
             //
@@ -63,7 +63,7 @@ namespace editor_script {
             if (lua_rawget(luaVM, index_meta) == LUA_TTABLE) { // STACK: - [ t, k, meta, meta.__getters ] +
                lua_pushvalue(luaVM, index_key); // STACK: - [ t, k, meta, meta.__getters, k ] +
                lua_rawget   (luaVM, -2);        // STACK: - [ t, k, meta, meta.__getters, meta.__getters[k] ] +
-               if (!lua_isnil(luaVM, -1)) {
+               if (!lua_isnoneornil(luaVM, -1)) {
                   lua_copy  (luaVM, -1, 2); // STACK: - [ t, meta.__getters[k], meta, meta.__getters, meta.__getters[k] ] +
                   lua_settop(luaVM, 2);     // STACK: - [ t, meta.__getters[k] ] +
                   lua_rotate(luaVM, 1, 1);  // STACK: - [ meta.__getters[k], t ] +
@@ -154,7 +154,7 @@ namespace editor_script {
             if (lua_rawget(luaVM, index_meta) == LUA_TTABLE) { // STACK: - [ t, k, v, meta, meta.__setters ] +
                lua_pushvalue(luaVM, index_key); // STACK: - [ t, k, v, meta, meta.__setters, k ] +
                lua_rawget   (luaVM, -2);        // STACK: - [ t, k, v, meta, meta.__setters, meta.__setters[k] ] +
-               if (!lua_isnil(luaVM, -1)) {
+               if (!lua_isnoneornil(luaVM, -1)) {
                   lua_copy  (luaVM,  1, 2); // STACK: - [ t, t, v, meta, meta.__setters, meta.__setters[k] ] +
                   lua_copy  (luaVM, -1, 1); // STACK: - [ meta.__setters[k], t, v, meta, meta.__setters, meta.__setters[k] ] +
                   lua_settop(luaVM,  3);    // STACK: - [ meta.__setters[k], t, v ] +
@@ -168,7 +168,7 @@ namespace editor_script {
                if (lua_rawget(luaVM, index_meta) == LUA_TTABLE) { // STACK: - [ t, k, v, meta, meta.__getters ] +
                   lua_pushvalue(luaVM, index_key); // STACK: - [ t, k, v, meta, meta.__getters, k ] +
                   lua_rawget   (luaVM, -2);        // STACK: - [ t, k, v, meta, meta.__getters, meta.__getters[k] ] +
-                  if (!lua_isnil(luaVM, -1)) {
+                  if (!lua_isnoneornil(luaVM, -1)) {
                      has_getter = true;
                   }
                }

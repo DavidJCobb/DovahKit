@@ -47,9 +47,18 @@ namespace editor_script {
          return false;
       if (this->is_collection != other->is_collection)
          return false;
-      for (uint8_t i = 0; i < this->depth; ++i)
-         if (this->parts[i] != other->parts[i])
+      if (this->is_collection) {
+         uint8_t i = 0;
+         for (; i < (signed int)(this->depth) - 1; ++i)
+            if (this->parts[i] != other->parts[i])
+               return false;
+         if (this->parts[i].signature != other->parts[i].signature) // for collections, the last part has no index
             return false;
+      } else {
+         for (uint8_t i = 0; i < this->depth; ++i)
+            if (this->parts[i] != other->parts[i])
+               return false;
+      }
       return true;
    }
    void wrapper::load_form() {
