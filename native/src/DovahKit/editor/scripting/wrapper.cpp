@@ -26,11 +26,15 @@ namespace editor_script {
    bool wrapper::part::operator==(const part& other) const noexcept {
       if (this->signature != other.signature)
          return false;
-      if (part_type_uses_name_key(this->signature)) {
-         if (strcmp(this->name, other.name) != 0)
+      if (this->name.empty()) {
+         if (!other.name.empty())
+            return false;
+         if (this->index != other.index)
             return false;
       } else {
-         if (this->index != other.index)
+         if (other.name.empty())
+            return false;
+         if (this->name != other.name)
             return false;
       }
       return true;

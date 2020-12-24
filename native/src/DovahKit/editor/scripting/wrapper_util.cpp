@@ -2,12 +2,6 @@
 #include "wrappers/_all_forms.h"
 
 namespace editor_script {
-   extern bool part_type_uses_name_key(part_type_t signature) {
-      switch (signature) {
-      }
-      return false;
-   }
-
    extern const char* wrap_form(wrapper& out, dovah::form_stub* stub) {
       out.stub = stub;
       out.type = wrapper_type::form_data;

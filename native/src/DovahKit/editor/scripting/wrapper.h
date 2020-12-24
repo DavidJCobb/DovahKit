@@ -28,10 +28,8 @@ namespace editor_script {
 
          struct part {
             part_type_t signature = 0;
-            union {
-               uint32_t    index = 0;
-               const char* name;
-            };
+            uint32_t    index = 0;
+            std::string name;
             //
             bool operator==(const part& other) const noexcept;
             inline bool operator!=(const part& other) const noexcept { return !(*this == other); }

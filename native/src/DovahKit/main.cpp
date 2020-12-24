@@ -446,6 +446,40 @@
 //                   
 //                    - Collection metatables need to override not just __index, but also 
 //                      the metamethods for pairs and ipairs.
+//                   
+//                       - We have a fairly complicated stateful iterator for classes; we 
+//                         can use a much simpler one for collections. Consider the case 
+//                         of a named collection of Papyrus scripts. When the collection 
+//                         is first created (when `pairs()` is called), it can store the 
+//                         names of all of the scripts locally; then, when it is called, 
+//                         it can just return these names one by one, skipping a name if 
+//                         the underlying script has since been removed. This will fail 
+//                         to react to scripts being added, but adding to a table during 
+//                         a `pairs()` loop is incorrect anyway (because `pairs()` uses 
+//                         `next()` under the hood).
+//                   
+//                       - All collections should allow looping over entries by index, 
+//                         i.e. both `pairs()` and `ipairs()`. Metamethods allow us to 
+//                         overload both of those separately. The real challenge would 
+//                         be `__index` for collections: given a key, it should first 
+//                         check the key's type:
+//                         
+//                          - If the key is a number N, then access the Nth element in 
+//                            the collection, if any. If there is no Nth element, and 
+//                            if elements in this collection can have names, then cast 
+//                            N to a string and check for an element by that name.
+//                         
+//                          - If the key is a string S, and if elements in this collec-
+//                            tion can have names, then check for an element named S. 
+//                            If there is no such element, or if elements in this 
+//                            collection cannot have names, then try casting S to a 
+//                            number N; if that succeeds, retrieve the Nth element, if 
+//                            any.
+//                         
+//                         This sort of "overloading" should be explained in any script 
+//                         documentation we write, along with a note that Lua has some 
+//                         library functions to forcibly cast a value's type, mainly 
+//                         tonumber(x) and tostring(s).
 //
 //              - It needs to be possible for wrappers to be interdependent on one 
 //                another.
