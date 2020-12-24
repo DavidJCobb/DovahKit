@@ -31,75 +31,100 @@ namespace editor_script {
       static luastackchange_t __call(lua_State* L) {
          /*
          function(self, t, k)
-            local use = self.meta
-            if     self.place == 0 then -- base
-            elseif self.place == 1 then -- getters
-               use = use.__getters
-            else
-               return
+            while true do
+               local meta = self.meta
+               if self.getters then
+                  meta = meta.__getters
+               end
+               --
+               if meta then
+                  local k, v = next(meta)
+                  while _should_skip_name(k) do
+                     k, v = next(meta)
+                  end
+                  if v ~= nil then
+                     if self.getters then
+                        v = (v)(t)
+                     end
+                     return k, v
+                  end
+               end
+               --
+               if not self.getters then
+                  --
+                  -- Move on to the getters.
+                  --
+                  self.getters = true
+               else
+                  --
+                  -- Move on to the next superclass.
+                  --
+                  self.getters = false
+                  meta = meta.__superclass
+                  self.meta = meta
+                  if not meta then
+                     return
+                  end
+               end
             end
-            if use then
-               local k, v = next(use, k)
-               while _should_skip_name(k) do
-                  k, v = next(use, k)
-               end
-               if self.place == 1 then -- getters
-                  v = (v)(self.target)
-               end
-               if v ~= nil then
-                  return k, v
-               end
-            end
-            self.place = self.place + 1
-            return (self)(t, nil)
          end
          */
+         // STACK: - [ self, t, k ] +
          constexpr auto index_self = 1;
          constexpr auto index_tbl  = 2;
          constexpr auto index_key  = 3;
-         constexpr auto index_use  = 4;
-         lua_getfield(L, index_self, "meta");  // STACK: - [ self, t, k, use ] +
-         lua_getfield(L, index_self, "place"); // STACK: - [ self, t, k, use, place ] +
-         auto place = lua_tointeger(L, 5);
-         lua_settop(L, index_use); // STACK: - [ self, t, k, use ] +
-         switch (place) {
-            case 0:
-               break;
-            case 1:
-               lua_getfield(L, index_use, "__getters");
-               lua_replace (L, index_use);
-               break;
-            default:
-               return 0;
-         }
-         // STACK: - [ self, t, k, use ] +
-         if (!lua_isnoneornil(L, index_use)) {
-            lua_pushvalue(L, index_key); // STACK: - [ self, t, k, use, nk ] +
-            while (lua_next(L, index_use) != 0) {
-               constexpr auto index_nk = 5;
-               constexpr auto index_nv = 6; // STACK: - [ self, t, k, use, nk, nv ] +
-               //
-               if (!_should_skip_name(L, index_nk)) {
-                  if (place == 1) {
-                     //
-                     // Call the getter.
-                     //
-                     lua_getfield(L, index_self, "target");
-                     lua_call(L, 1, 1);
-                  }
-                  return 2; // return nk, nv
+         constexpr auto index_meta = 4;
+         constexpr auto index_nk   = 5;
+         constexpr auto index_nv   = 6;
+         do {
+            assert(lua_gettop(L) == index_key);
+            lua_getfield(L, index_self, "meta");
+            lua_getfield(L, index_self, "getters");
+            bool getters = lua_toboolean(L, -1);
+            lua_settop(L, index_meta);
+            //
+            if (!lua_isnoneornil(L, index_meta)) {
+               if (getters) {
+                  lua_getfield(L, index_meta, "__getters");
+                  lua_replace (L, index_meta);
                }
-               lua_settop(L, index_nk); // pop nv; call next again with nk
+               //
+               lua_pushvalue(L, index_key); // STACK: - [ self, t, k, meta, nk ] +
+               while (lua_next(L, index_meta) != 0) {
+                  if (!_should_skip_name(L, index_nk)) {
+                     if (getters) {
+                        //
+                        // Execute the getter.
+                        //
+                        lua_pushvalue(L, index_tbl);
+                        lua_call(L, 1, 1);
+                     }
+                     return 2;
+                  }
+                  lua_settop(L, index_nk);
+               }
             }
-         }
-         // STACK: - [ self, t, k, use ] +
-         lua_pushinteger(L, ++place);
-         lua_setfield(L, index_self, "place");
-         //
-         lua_settop (L, index_tbl);   // STACK: - [ self, t ] +
-         lua_pushnil(L);              // STACK: - [ self, t, nil ] +
-         lua_call(L, 3, LUA_MULTRET); // STACK: - [ ...results... ] + // (self)(t, nil)
-         return lua_gettop(L);
+            //
+            if (!getters) {
+               //
+               // Move on to the getters.
+               //
+               lua_pushboolean(L, true);
+               lua_setfield(L, index_self, "getters");
+            } else {
+               //
+               // Move on to the next superclass.
+               //
+               lua_pushboolean(L, false);
+               lua_setfield(L, index_self, "getters");
+               lua_getfield(L, index_meta, "__superclass");
+               if (lua_isnoneornil(L, -1))
+                  return 0;
+               lua_setfield(L, index_self, "meta");
+            }
+            lua_settop(L, index_key - 1);
+            lua_pushnil(L); // set the key to nil since we're now iterating a new table
+         } while (true);
       }
       //
       void _define_metatable(lua_State* L) {
@@ -316,15 +341,15 @@ namespace editor_script {
       }
       static luastackchange_t __pairs(lua_State* L) {
          lua_settop(L, 1);
-         lua_createtable(L, 0, 2); // 2 (iterator)
-         lua_pushvalue(L, 1);
-         lua_setfield(L, 2, "target");
+         //
+         lua_createtable(L, 0, 2); // index 2 (iterator)
          lua_getmetatable(L, 1);
          lua_setfield(L, 2, "meta");
-         lua_pushinteger(L, 0);
-         lua_setfield(L, 2, "place");
+         lua_pushboolean(L, false);
+         lua_setfield(L, 2, "getters");
          luaL_getmetatable(L, __pairs_iterators::metatable_key);
          lua_setmetatable(L, 2);
+         //
          lua_pushvalue(L, 1);
          lua_pushnil(L);
          return 3;
