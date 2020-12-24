@@ -2,8 +2,122 @@
 #include <cassert>
 #include <cstring>
 #include "util.h"
+#include "../../helpers/lua/metamethod_names.h"
+#include "../../helpers/lua/print_stack.h"
 
 namespace editor_script {
+   namespace __pairs_iterators { // code for __pairs iterators
+      constexpr char* metatable_key = "-cobb-class-helpers:pairs-iterator";
+      //
+      namespace {
+         bool _should_skip_name(lua_State* L, int index) {
+            index = lua_absindex(L, index);
+            if (lua_isstring(L, index)) {
+               auto nk = lua_tostring(L, index);
+               if (cobb::lua::is_metamethod_name(nk))
+                  return true;
+               else if (strcmp(nk, "__getters") == 0)
+                  return true;
+               else if (strcmp(nk, "__setters") == 0)
+                  return true;
+               else if (strcmp(nk, "__superclass") == 0)
+                  return true;
+               else if (strcmp(nk, "__name") == 0)
+                  return true;
+            }
+            return false;
+         }
+      }
+      static luastackchange_t __call(lua_State* L) {
+         /*
+         function(self, t, k)
+            local use = self.meta
+            if     self.place == 0 then -- base
+            elseif self.place == 1 then -- getters
+               use = use.__getters
+            else
+               return
+            end
+            if use then
+               local k, v = next(use, k)
+               while _should_skip_name(k) do
+                  k, v = next(use, k)
+               end
+               if self.place == 1 then -- getters
+                  v = (v)(self.target)
+               end
+               if v ~= nil then
+                  return k, v
+               end
+            end
+            self.place = self.place + 1
+            return (self)(t, nil)
+         end
+         */
+         constexpr auto index_self = 1;
+         constexpr auto index_tbl  = 2;
+         constexpr auto index_key  = 3;
+         constexpr auto index_use  = 4;
+         lua_getfield(L, index_self, "meta");  // STACK: - [ self, t, k, use ] +
+         lua_getfield(L, index_self, "place"); // STACK: - [ self, t, k, use, place ] +
+         auto place = lua_tointeger(L, 5);
+         lua_settop(L, index_use); // STACK: - [ self, t, k, use ] +
+         switch (place) {
+            case 0:
+               break;
+            case 1:
+               lua_getfield(L, index_use, "__getters");
+               lua_replace (L, index_use);
+               break;
+            default:
+               return 0;
+         }
+         // STACK: - [ self, t, k, use ] +
+         if (!lua_isnoneornil(L, index_use)) {
+            lua_pushvalue(L, index_key); // STACK: - [ self, t, k, use, nk ] +
+            while (lua_next(L, index_use) != 0) {
+               constexpr auto index_nk = 5;
+               constexpr auto index_nv = 6; // STACK: - [ self, t, k, use, nk, nv ] +
+               //
+               if (!_should_skip_name(L, index_nk)) {
+                  if (place == 1) {
+                     //
+                     // Call the getter.
+                     //
+                     lua_getfield(L, index_self, "target");
+                     lua_call(L, 1, 1);
+                  }
+                  return 2; // return nk, nv
+               }
+               lua_settop(L, index_nk); // pop nv; call next again with nk
+            }
+         }
+         // STACK: - [ self, t, k, use ] +
+         lua_pushinteger(L, ++place);
+         lua_setfield(L, index_self, "place");
+         //
+         lua_settop (L, index_tbl);   // STACK: - [ self, t ] +
+         lua_pushnil(L);              // STACK: - [ self, t, nil ] +
+         lua_call(L, 3, LUA_MULTRET); // STACK: - [ ...results... ] + // (self)(t, nil)
+         return lua_gettop(L);
+      }
+      //
+      void _define_metatable(lua_State* L) {
+         auto start   = lua_gettop(L);
+         bool defined = luaL_getmetatable(L, metatable_key) == LUA_TTABLE;
+         lua_settop(L, start);
+         if (defined)
+            return;
+         luaL_newmetatable(L, metatable_key);
+         auto index_mt = start + 1;
+         //
+         lua_pushcfunction(L, &__call);
+         lua_setfield(L, index_mt, "__call");
+         //
+         lua_settop(L, start);
+      }
+   }
+
    namespace { // member functions for the class metatables
       static luastackchange_t __index(lua_State* luaVM) {
          //
@@ -200,6 +314,21 @@ namespace editor_script {
          luaL_error(luaVM, "class %s does not offer a property named '%s'", classname, key);
          return 0;
       }
+      static luastackchange_t __pairs(lua_State* L) {
+         lua_settop(L, 1);
+         lua_createtable(L, 0, 2); // 2 (iterator)
+         lua_pushvalue(L, 1);
+         lua_setfield(L, 2, "target");
+         lua_getmetatable(L, 1);
+         lua_setfield(L, 2, "meta");
+         lua_pushinteger(L, 0);
+         lua_setfield(L, 2, "place");
+         luaL_getmetatable(L, __pairs_iterators::metatable_key);
+         lua_setmetatable(L, 2);
+         lua_pushvalue(L, 1);
+         lua_pushnil(L);
+         return 3;
+      }
    }
    namespace { // helper functions
       //
@@ -376,22 +505,27 @@ namespace editor_script {
       //    end
       //
       //
+      __pairs_iterators::_define_metatable(luaVM); // needed for __pairs
       if (superclassName)
          assert(strcmp(className, superclassName) != 0 && "The superclass and subclass can't use the same registry key name."); // (assert) should be no-op in Release, so this is fine
       lua_checkstack(luaVM, 3);
       //
       luaL_newmetatable(luaVM, className); // STACK: [newmeta]
+      auto index_mt = lua_gettop(luaVM);
       //
       lua_pushstring   (luaVM, "__index"); // STACK: ["__index", newmeta]
       lua_pushcfunction(luaVM, &__index);  // STACK: [CFunction:__index, "__index", newmeta]
-      lua_settable     (luaVM, -3);        // STACK: [newmeta]
+      lua_settable     (luaVM, index_mt);  // STACK: [newmeta]
+      lua_pushstring   (luaVM, "__pairs"); // STACK: ["__index", newmeta]
+      lua_pushcfunction(luaVM, &__pairs);  // STACK: [CFunction:__index, "__index", newmeta]
+      lua_settable     (luaVM, index_mt);  // STACK: [newmeta]
       //
       if (superclassName) {
          luaL_getmetatable(luaVM, superclassName); // STACK: [supermeta, newmeta]
          assert(!lua_isnil(luaVM, -1) && "The desired superclass doesn't yet have a metatable set up. Are you setting up your classes in the wrong order?");
          lua_pushstring(luaVM, "__superclass"); // STACK: ["__superclass", supermeta, newmeta]
          lua_pushvalue (luaVM, -2); // STACK: [supermeta, "__superclass", supermeta, newmeta]
-         lua_settable  (luaVM, -4); // STACK: [supermeta, newmeta]
+         lua_settable  (luaVM, index_mt); // STACK: [supermeta, newmeta]
          //
          // Lua only applies "operator" metamethods using rawget, so we can't rely 
          // on classes to inherit them automatically. We need to copy  them from 
@@ -413,7 +547,7 @@ namespace editor_script {
          lua_pushstring (luaVM, "__getters"); // push 1
          lua_createtable(luaVM, 0, 0);        // push 1
          luaL_setfuncs  (luaVM, getters, 0);  // push 0
-         lua_settable   (luaVM, -3);          // pop  2
+         lua_settable   (luaVM, index_mt);    // pop  2
       }
       if (setters && setters[0].name && setters[0].func) {
          lua_pushstring   (luaVM, "__newindex"); // push 1
@@ -423,7 +557,7 @@ namespace editor_script {
          lua_pushstring (luaVM, "__setters"); // push 1
          lua_createtable(luaVM, 0, 0);        // push 1
          luaL_setfuncs  (luaVM, setters, 0);  // push 0
-         lua_settable   (luaVM, -3);          // pop  2
+         lua_settable   (luaVM, index_mt);    // pop  2
       }
       lua_pop(luaVM, 1); // pop metatable from the stack
    }
