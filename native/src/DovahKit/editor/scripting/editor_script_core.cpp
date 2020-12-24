@@ -9,6 +9,7 @@
 #include "wrapper_util.h"
 #include "wrappers/form.h"
 #include "classes/_all.h"
+#include "../../helpers/lua/dump.h"
 #include <QMessageBox> // for dovah.test_call_and_response
 
 namespace {

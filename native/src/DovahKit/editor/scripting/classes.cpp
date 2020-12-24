@@ -3,7 +3,7 @@
 #include <cstring>
 #include "util.h"
 #include "../../helpers/lua/metamethod_names.h"
-#include "../../helpers/lua/print_stack.h"
+#include "../../helpers/lua/dump.h"
 
 namespace editor_script {
    namespace __pairs_iterators { // code for __pairs iterators
@@ -33,7 +33,7 @@ namespace editor_script {
          function(self, t, k)
             while true do
                local meta = self.meta
-               if self.getters then
+               if self.getters and meta then
                   meta = meta.__getters
                end
                --
@@ -60,7 +60,7 @@ namespace editor_script {
                   -- Move on to the next superclass.
                   --
                   self.getters = false
-                  meta = meta.__superclass
+                  meta = self.meta.__superclass
                   self.meta = meta
                   if not meta then
                      return
@@ -83,12 +83,11 @@ namespace editor_script {
             bool getters = lua_toboolean(L, -1);
             lua_settop(L, index_meta);
             //
+            if (getters && !lua_isnoneornil(L, index_meta)) {
+               lua_getfield(L, index_meta, "__getters");
+               lua_replace (L, index_meta);
+            }
             if (!lua_isnoneornil(L, index_meta)) {
-               if (getters) {
-                  lua_getfield(L, index_meta, "__getters");
-                  lua_replace (L, index_meta);
-               }
-               //
                lua_pushvalue(L, index_key); // STACK: - [ self, t, k, meta, nk ] +
                while (lua_next(L, index_meta) != 0) {
                   if (!_should_skip_name(L, index_nk)) {
@@ -117,6 +116,9 @@ namespace editor_script {
                //
                lua_pushboolean(L, false);
                lua_setfield(L, index_self, "getters");
+               //
+               lua_settop(L, index_key); // get the (meta) value again, since we may have overwritten the stack position with (meta.__getters)
+               lua_getfield(L, index_self, "meta");
                lua_getfield(L, index_meta, "__superclass");
                if (lua_isnoneornil(L, -1))
                   return 0;
