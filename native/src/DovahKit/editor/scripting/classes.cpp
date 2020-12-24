@@ -306,6 +306,41 @@ namespace editor_script {
       lua_settop(luaVM, top);
       return ud;
    }
+
+   extern bool check_for_class(lua_State* luaVM, int stack_pos, const char* class_internal_name) {
+      //
+      // LUA:
+      //    local meta = getmetatable(t)
+      //    if not meta then
+      //       return false
+      //    end
+      //    local cls  = getmetatable(classKey)
+      //    while cls ~= meta do
+      //       local a = meta.__superclass
+      //       if type(a) ~= "table" then
+      //          return false
+      //       end
+      //       meta = a
+      //    end
+      //    return true
+      //
+      lua_checkstack(luaVM, 3);
+      auto top = lua_gettop(luaVM);
+      //
+      if (!lua_getmetatable(luaVM, stack_pos))
+         return false;
+      luaL_getmetatable(luaVM, class_internal_name); // STACK: - [ ..., meta, cls ] +
+      while (!lua_rawequal(luaVM, -1, -2)) {
+         if (lua_getfield(luaVM, -2, "__superclass") != LUA_TTABLE) { // STACK: - [ ..., meta, cls, meta.__superclass ] +
+            lua_settop(luaVM, top);
+            return false;
+         }
+         lua_replace(luaVM, -3);
+      }
+      lua_settop(luaVM, top);
+      return true;
+   }
+
    extern void define_class(lua_State* luaVM, const char* className, const char* superclassName, const luaL_Reg* methods, const luaL_Reg* getters, const luaL_Reg* setters) {
       //
       // LUA:

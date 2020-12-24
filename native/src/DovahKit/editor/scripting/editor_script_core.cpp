@@ -8,7 +8,7 @@
 #include "../core.h" // for dovah.get_form_by_id
 #include "wrapper_util.h"
 #include "wrappers/form.h"
-#include "classes/benchmark.h"
+#include "classes/_all.h"
 #include <QMessageBox> // for dovah.test_call_and_response
 
 namespace {
@@ -245,6 +245,8 @@ void DovahKitScriptVM::_setup_lua_vm() {
    #pragma endregion
    editor_script::build_all_wrapper_metatables(this->lua_vm);
    editor_script::define_class(this->lua_vm, editor_script::classes::benchmark::metatable_key, nullptr, editor_script::classes::benchmark::metatable_methods);
+   editor_script::classes::vector2::setup(this->lua_vm);
+   editor_script::classes::vector3::setup(this->lua_vm);
    //
    // Make API functions available via tables:
    //

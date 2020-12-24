@@ -439,6 +439,7 @@
     <ClInclude Include="editor\scripting\classes\benchmark.h" />
     <ClInclude Include="editor\scripting\classes\vector2.h" />
     <ClInclude Include="editor\scripting\classes\vector3.h" />
+    <ClInclude Include="editor\scripting\classes\_all.h" />
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />
     <ClInclude Include="editor\scripting\messages\log_text.h" />

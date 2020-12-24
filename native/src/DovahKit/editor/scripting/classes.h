@@ -5,16 +5,26 @@ namespace editor_script {
    //
    // If the element at (stack_pos) is an instance of the class described by the 
    // (class_internal_name), then this returns the userdata pointer; otherwise, it 
-   // returns nullptr.
+   // returns nullptr. This only works for userdata, not for tables.
    //
    extern void* cast_to_class(lua_State* luaVM, int stack_pos, const char* class_internal_name);
 
    //
    // Same as (cast_to_class), except that it does not allow subclasses of the 
    // desired class; the userdata on the stack must be an exact match. Suitable 
-   // for classes that you don't intend to ever subclass.
+   // for classes that you don't intend to ever subclass. This only works for 
+   // userdata, not for tables.
    //
    extern void* cast_to_exact_class(lua_State* luaVM, int stack_pos, const char* class_internal_name);
+
+   //
+   // Similar to (cast_to_class), but returns a bool, and can be used on both 
+   // userdata and normal tables. This is useful for things like utility classes 
+   // backed by native code: scripts can be given the ability to instantiate 
+   // normal tables using the class metatables, and this function can then be 
+   // used by native code to validate these tables.
+   //
+   extern bool check_for_class(lua_State*, int stack_pos, const char* class_internal_name);
 
    //
    // Define a metatable for a class, and store the metatable in the registry using 

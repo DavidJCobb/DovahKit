@@ -415,16 +415,17 @@
 //                    - euler
 //                    - matrix3x3
 //                    - quaternion
-//                    - vector2
-//                    - vector3
 //
 //                 - Ways to test whether any given value is an instance of the class
 //
 //                    - euler
 //                    - matrix3x3
 //                    - quaternion
-//                    - vector2
-//                    - vector3
+//
+//                 = Note: it is theoretically possible to create a vector3 instance and 
+//                   then set its x/y/z values to tables with operator-overload metamethods. 
+//                   Native code will not *consistently* invoke these metamethods. Sometimes 
+//                   they'll work; sometimes they won't. Consider this UB.
 //
 //              - It needs to be possible to wrap individual components in a form.
 //

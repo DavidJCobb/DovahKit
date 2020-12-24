@@ -1154,6 +1154,9 @@
     <ClInclude Include="editor\scripting\classes\vector2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\classes\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
