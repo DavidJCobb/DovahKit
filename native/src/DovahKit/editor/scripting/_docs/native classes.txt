@@ -1,0 +1,242 @@
+
+Lua can be embedded in  C/C++ programs, and allows those  programs to pass data 
+to a running Lua script by  way of the "userdata" value type.  A userdata value 
+is essentially an untyped pointer (i.e. void*)  functioning as an opaque value. 
+Userdata cannot be modified by a Lua script, but normal userdata can be given a 
+"metatable" which can  be used to emulate normal table behavior,  while "light" 
+userdata cannot.
+
+The design goals for DovahKit's Lua API were to allow access not only to forms, 
+but to individual parts of forms;  and to provide an API that feels as "Lua" as 
+possible.  The "case studies" file goes into more detail about why  this design 
+was chosen, and what the alternatives were. Our specific priorities are:
+
+
+   IT SHOULD BE POSSIBLE TO POINT VARIABLES AT PARTS OF A FORM
+   We should  endeavor to  avoid Elder Scrolls Online's  issues  with accessing 
+   nested native-code data structures; there should be wrappers implemented for 
+   the nested  structures and  for collections of  nested structures.  Put more 
+   plainly, it should be possible to  access (form.papyrus), (shout.words), and 
+   so on, more-or-less as one would were this data "made of Lua."
+
+
+   AVOID PAIRS OF GETTER/SETTER MEMBER FUNCTIONS
+   To use an example, voicetype forms have an "is female" flag. The easiest way 
+   to grant access  to this flag would  be to implement paired  "get_is_female" 
+   and "set_is_female" member functions, but it would be much nicer if we could 
+   instead just allow users to access and assign to (form.is_female).
+
+
+   "EXPANDO" SUPPORT IS NOT REQUIRED OR USEFUL
+   Elder Scrolls Online  allows scripts to  set new properties  on userdata; we 
+   borrow the JavaScript term "expando"  for these. Zenimax Online Studios most 
+   likely implemented this by giving each  userdata its own unique, empty table 
+   as a metatable, and setting the class metatable as the metatable of that new 
+   table; you could think of this as every instance of some class Foo being its 
+   own subclass of Foo. Expandos are useful for userdata that wrap UI elements, 
+   which literally only exist to be  manipulated by script, but are less useful 
+   for something like forms  in an ESP file; moreover,  our class system can be 
+   applied  to userdata  or to normal tables, so implementing  expando  support 
+   risks being  redundant. Expandos  are not  urgent  and would complicate  our 
+   class implementation, so they have been omitted; the language-level default 
+   behavior for userdata is for them to reject modification including expandos, 
+   so it's reasonable for us not to mask that behavior.
+
+   That said, the lack of  expando support  will have some  effects on whatever 
+   documentation  we write for script authors. Functions that return  instances 
+   of classes  backed by  native code, like the  "vector3" utility  class, will 
+   need to specify whether they return a table or a userdata.
+
+
+To that end, I've  taken a generic "Lua classes" framework  that I built for an 
+unreleased project, and  I've upgraded it  to meet  these needs. The metatables 
+for userdata work as follows:
+
+ - Static class variables,  and instance member functions,  are stored directly 
+   on the metatable.
+
+ - Instance member fields  are backed by getters and setters.  If the class has 
+   any such fields,  then the metatable  will have "__getters" and  "__setters" 
+   fields,  which are tables;  these tables  will in turn  contain the  backing 
+   getters and setters. To continue with  our voicetype example from above, the 
+   metatable defines (meta.__getters.is_female) and (meta.__setters.is_female).
+
+ - Class metatables have a "__superclass" field, which is a direct reference to 
+   the metatable  of the superclass. This  field is used to  handle casting and 
+   inheritance.
+
+Our Lua  classes require special  implementations for "__index",  "__newindex", 
+and  "__pairs".
+
+
+===== INDEXING ================================================================
+
+The "__index" metamethod for classes is implemented in C++ using the Lua C API, 
+but is here translated into Lua for simplicity's sake. It works by checking for 
+a matching field (i.e. a static class variable or class member function) on the 
+metatable; if one is found, it is returned. It then checks for a getter and, if 
+one is found,  calls it and  returns the result. If  nothing is found,  then it 
+moves on  to the superclass (if any) and repeats the process,  stopping when it 
+advances past the topmost class.
+
+   function __index(t, k)
+      local meta = getmetatable(t)
+      if not meta then
+         return nil
+      end
+      while true do
+         local a = rawget(meta, k)
+         if a then
+            return a
+         end
+         --
+         -- Check for getters:
+         --
+         a = rawget(meta, "__getters")
+         if a then
+            a = rawget(a, k)
+            if a then
+               return a(t) -- remember: selfcall is just self as arg 1
+            end
+         end
+         --
+         -- Traverse up to the next superclass:
+         --
+         meta = meta.__superclass
+         if not meta then
+            return
+         end
+      end
+   end
+
+
+===== SETTING =================================================================
+
+The "__newindex" metamethod handles the underlying setters for instance members 
+but otherwise has no special behavior. It works very similarly to the "__index" 
+metamethod,  except that it only checks for setters,  and it throws an error if 
+no setter is found.  The text of the  error differs depending  on whether there 
+exists a matching getter on the userdata's class or any superclass.
+
+   function __newindex(t, k, v)
+      local meta = getmetatable(t)
+      if not meta then
+         return nil
+      end
+      local has_getter = false
+      while true do
+         local a = meta.__setters
+         if a then
+            a = a[k]
+            if a then
+               a(t, v)
+               return
+            end
+         end
+         if not has_getter then
+            a = meta.__getters
+            if a and a[k] then
+               has_getter = true
+            end
+         end
+         --
+         -- Traverse up to the next superclass:
+         --
+         meta = meta.__superclass
+         if not meta then
+            break
+         end
+      end
+      if has_getter then
+         error(string.format("DovahKit does not allow you to assign to property '%s' on this class", k))
+      end
+      error(string.format("class %s does not offer a property named '%s'", getmetatable(t).__name, k))
+   end
+
+
+===== ITERATING ===============================================================
+
+The "__pairs" metamethod makes it possible for the "pairs" function to properly 
+iterate over a userdata's fields, including those powered by native getters and 
+setters,  and those inherited from  superclasses. This one is quite a  bit more 
+complicated, so let's start with a simple explanation of how "pairs" works.
+
+The "__pairs"  metamethod must  return three things:  a callable  iterator, the 
+table to iterate on, and the zeroth (not first) key to iterate (typically nil). 
+A default implementation is stateless (or rather, relies on the Lua VM to store 
+state for it) and looks like this:
+
+   function meta.__pairs(self)
+      return next, self, nil
+   end
+
+Now, note that "__pairs" returns a "callable iterator." This doesn't have to be 
+a function; it can be a table with a "__call" metamethod, and this is the means 
+through which one would use a stateful iterator. Indeed, our class system needs 
+stateful iterators. Here, then, is the implementation for "__pairs" itself:
+
+   function meta.__pairs(self)
+      local iterator = {}
+      iterator.meta    = getmetatable(self)
+      iterator.getters = false
+      setmetatable(iterator, _iterator_metatable)
+      return iterator, self, nil
+   end
+   
+And below is the  implementation for "__call" on the  iterator metatable. It is 
+quite similar to the "__index" and  "__newindex" metamethods on the classes; it 
+uses a loop to traverse up the class hierarchy.  In this case, however, it uses 
+Lua's built-in  "next" function to  iterate over the members  of each metatable 
+and then the members of the metatable's "__getters" list.
+
+   function _iterator_metatable.__call(self, t, k)
+      while true do
+         local meta = self.meta
+         if self.getters and meta then
+            meta = meta.__getters
+         end
+         --
+         if meta then
+            local k, v = next(meta)
+            while _should_skip_name(k) do
+               k, v = next(meta)
+            end
+            if v ~= nil then
+               if self.getters then -- if it's a getter, return its result
+                  v = (v)(t)
+               end
+               return k, v
+            end
+         end
+         --
+         if not self.getters then
+            --
+            -- Move on to the getters.
+            --
+            self.getters = true
+         else
+            --
+            -- Move on to the next superclass.
+            --
+            self.getters = false
+            meta = self.meta.__superclass
+            self.meta = meta
+            if not meta then
+               return
+            end
+            k = nil -- iterating new table, so must iterate from the start
+         end
+      end
+   end
+   
+As of this writing (a week into developing the script API), you can use "pairs" 
+on a voicetype to produce the following output:
+
+   -- given: string.format("%s=%s", k, v)
+
+   allow_default_dialogue=false   -- member backed by a getter; value is result
+   is_female=true                 -- member backed by a getter; value is result
+   get_editor_id=function...      -- member function, inherited from superclass
+   get_form_id=function...        -- member function, inherited from superclass
+   get_form_type=function...      -- member function, inherited from superclass
+   get_user_forms=function...     -- member function, inherited from superclass

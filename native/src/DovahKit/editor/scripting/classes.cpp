@@ -65,6 +65,7 @@ namespace editor_script {
                   if not meta then
                      return
                   end
+                  k = nil -- iterating new table, so must iterate from the start
                end
             end
          end
@@ -276,6 +277,7 @@ namespace editor_script {
          //       if has_getter then
          //          error(string.format("DovahKit does not allow you to assign to property '%s' on this class", k))
          //       end
+         //       error(string.format("class %s does not offer a property named '%s'", getmetatable(t).__name, k))
          //    end
          //
          auto index_table = 1;

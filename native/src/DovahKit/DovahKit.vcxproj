@@ -580,6 +580,8 @@
     <Text Include="dovah\_docs\singleton forms.txt" />
     <Text Include="dovah\_docs\threading.txt" />
     <Text Include="editor\scripting\_docs\abstract.txt" />
+    <Text Include="editor\scripting\_docs\case studies.txt" />
+    <Text Include="editor\scripting\_docs\native classes.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

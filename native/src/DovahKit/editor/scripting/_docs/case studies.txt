@@ -1,0 +1,136 @@
+
+DovahKit allows users to write scripts in Lua, in order to automate batch tasks 
+and to extend the  editor with new features. It is worthwhile  to examine other 
+programs'  approaches to  scripting, and in this  document, we will  review the 
+script APIs provided by xEdit and by Elder Scrolls Online.
+
+
+===== THE xEDIT SCRIPTING API =================================================
+
+xEdit was written in Delphi, a variant of Pascal, and so are its scripts. As of 
+the last time I wrote any, xEdit relied on a third-party script interpreter for 
+Delphi: the JvInterpreter. This interpreter  was perfectly suitable for xEdit's 
+specific design goals: the automation of batch tasks.
+
+JvInterpreter was  a very rudimentary  script interpreter.  It offered a simple 
+"IInterface" comparable to light userdata in Lua: a simple interface for native 
+data, functioning  as an entirely  opaque type with  no support for  members or 
+member functions.  JvInterpreter also  offered a number  of paper-thin wrappers 
+around several built-in  Delphi classes and APIs, such  as TStringList and some 
+UI-related classes;  these wrappers were functional but  effectively unmanaged, 
+such that a script  error would cause instantiated classes  to leak. The script 
+interpreter's  language support was also  incomplete; Delphi normally  allows a 
+a programmer divide code into  "interfaces" and  "implementations," akin to C's 
+header and code files, but doing the same in JvInterpreter would trigger errors 
+about redundantly-defined functions and such.
+
+In short, JvInterpreter was exactly suitable enough to handle xEdit's use case, 
+and no more suitable  than that. Delphi itself doesn't seem  to have been meant 
+to be used as a scripting language, so it's understandable that the VM would be 
+flawed; it was nevertheless still useful.
+
+xEdit defined a hierarchy of  interfaces for different  elements within a file, 
+such as the root IwbElement and subclasses  like IwbMainRecord; scripts use the 
+typename IInterface for all of these. Because IInterface cannot have any member 
+functions,  xEdit defines globally-scoped  functions which take  IInterfaces as 
+arguments, including  an extension to  Delphi's native  (Assigned) function for 
+checking if an IInterface wraps a valid object, and (ElementType), which checks 
+an IInterface and  returns an enum value  representing its internal  type (e.g. 
+etMainRecord).
+
+xEdit's scripting API  takes the same approach to data  representation as xEdit 
+itself, which makes sense: scripts are  working with the raw building blocks of 
+files, represented as IInterfaces.
+
+
+===== THE ELDER SCROLLS ONLINE SCRIPTING API ==================================
+
+Elder Scrolls Online supports the use  of add-ons coded in Lua, and its vanilla 
+UI is constructed the same way as an add-on  (although vanilla content can make 
+use of "protected" functions  that are not made available  to add-ons). The API 
+provided to scripts therefore contains all  of the functions needed for showing 
+game state in the menus  and HUD, several of the functions  needed to influence 
+game state from the user interface, and several UI-related APIs.
+
+ESO makes use of  userdata to provide scripts  with access to  natively-managed 
+objects;  however, the only objects  that are made  accessible in such a manner 
+are elements in the UI. Userdata  in ESO contains member functions and supports 
+"expando" properties (that is, it is possible to create arbitrary properties on 
+a user interface element), but offers no native properties.
+
+   local x = control:GetParent():GetText()
+   -- This, as opposed to (control.parent.text).
+
+Game data is never wrapped  in userdata, but rather can  only be accessed using 
+global functions. This makes nested structures  of game data unpleasant to work 
+with, as you  must pass the indices of  every collection on  the way to a given 
+nested element.  Pay attenton to the GetAchievementId  function and its friends 
+in the code snippet below:
+
+   --
+   -- Categories can contain achievements;  they can also contain subcategories 
+   -- which themselves contain achievements.
+   --
+   local function _functor(achievementID)
+      local name, desc = GetAchievementInfo(achievementID)
+      --
+      -- ... and then you can print info about the achievement itself...
+      --
+   end
+   --
+   for i = 1, GetNumAchievementCategories() do
+      local name, subCount, achCount = GetAchievementCategoryInfo(i)
+      print("Category: " .. name)
+      --
+      -- Iterate category/achievement:
+      --
+      for k = 1, achCount do
+         local id = GetAchievementId(i, nil, k) -- args are: cat, subcat, index
+         _functor(id)
+      end
+      --
+      -- Iterate category/subcategory/achievement:
+      --
+      for j = 1, subCount do
+         local name, achCount = GetAchievementSubcategoryInfo(i, j)
+         print("Subcategory: " .. name)
+         for k = 1, achCount do
+            local id = GetAchievementId(i, j, k)
+            _functor(id)
+         end
+      end
+   end
+
+It is entirely possible to  design a Lua API in which  native data can at least 
+vaguely resemble an ordinary Lua table.  With such a design, the above could've 
+been expressed as follows:
+
+   local function _functor(achievement)
+      local name = achievement.name
+      local desc = achievement.desc
+      --
+      -- ... and then you can print info about the achievement itself...
+      --
+   end
+   --
+   for name, cat in pairs(game.achievements.by_category) do
+      print("Category: " .. name)
+      --
+      -- Iterate category/achievement:
+      --
+      for _, v in cat.achievements do
+         _functor(v)
+      end
+      --
+      -- Iterate category/subcategory/achievement:
+      --
+      for name, sub in cat.subcategories do
+         print("Subcategory: " .. name)
+         for _, v in sub.achievements do
+            _functor(v)
+         end
+      end
+   end
+   
+But such an API  is challenging to  implement, so Zenimax Online  Studios quite 
+understandably went with something more  basic.

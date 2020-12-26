@@ -522,43 +522,12 @@
 //          slots. The Lua VM should not be killed until after the script has run to 
 //          completion and all script-spawned windows (that have been shown) have closed.
 //
-//     - The Lua VM should be started up when the script begins, and should be killed 
-//       after the script has run to completion and all script-spawned windows (if any) 
-//       have closed.
+//     - We should redirect Lua's "print" function to the same place as "dovah.log_message".
 //
-//     - Scripts should run in a second thread, and the user should have the option to 
-//       forcibly terminate the script early, as a way of dealing with scripts that 
-//       have frozen.
-//
-//       In order to terminate a script early, we need to set a debug hook function to 
-//       run every few script instructions (i.e. a count hook set up with lua_sethook). 
-//       This hook function will need to check an atomic "abort" bool stored outside 
-//       of Lua (i.e. on a singleton); if the bool is true, then the hook function 
-//       should raise an error within Lua. If that error isn't caught, then it'll 
-//       end up halting the script properly.
-//
-//       So how do we make sure that the error isn't caught? Well, scripts can catch 
-//       errors using pcall and xpcall, so we can just make sure to only provide a 
-//       script with shimmed versions of those functions that have been rigged to 
-//       never catch the bogus error that we raise when trying to abort a script. 
-//       (Note that we need to check the content of the error AND the "abort" bool: 
-//       the debug hook only runs every few instructions, so it's possible for a 
-//       normal Lua error to occur before we see and react to the "abort" bool.)
-//
-//        - The debug hook only runs every few Lua instructions, so if the script 
-//          calls some long-running C function, then the "abort" bool won't be 
-//          checked until after that function runs. This means that if we provide 
-//          any long-running C functions to the script, those need to also check 
-//          the "abort" bool and terminate early if possible.
-//
-//          As an example, if we wanted to provide a sleep(ms) function, then we'd 
-//          want to program it roughly like this:
-//
-//             for(int slept = 0; slept < ms; slept += 50) { // sleep in 50ms increments
-//                Sleep(50);
-//                if (abort_bool)
-//                   return;
-//             }
+//     = When writing script documentation for functions that return class instances, it 
+//       must be specified whether they return tables or userdata (e.g. "vector3 table" 
+//       versus "vector3 userdata"), as userdata do not support expandos in our particular 
+//       implementation.
 //
 //     - The script execution window should consist of a status message and progress 
 //       bar. Scripts should be able to set the status message, the progress bar 
@@ -570,37 +539,6 @@
 //
 //        - If we really want to go the extra mile, we can have a log panel that 
 //          shows *every* call into any of the script APIs that we provide.
-//
-//     - Lua variables cannot be allowed to point directly to form_stubs or to data in 
-//       loaded forms, as we can't (easily) update all Lua variables as form data is 
-//       modified. Instead, the script singleton should retain a map of "handles" to 
-//       form information, and Lua variables should hold handles.
-//
-//       Handles should NOT include a form's ID, because forms can be renumbered, and 
-//       because two different forms could have the same ID if they exist at separate 
-//       points in time. Form IDs (as well as form_stub pointers) should only be kept 
-//       in the form information that a handle maps to.
-//
-//        - The backend doesn't allow you to delete a form_stub if its form is loaded, 
-//          so the script singleton will need to abandon all loaded_form_ptrs before 
-//          deleting a form.
-//
-//        - It also needs to be possible for a Lua variable to refer to an individual 
-//          part of a form, such as a Papyrus property or a quest alias. This, too, 
-//          needs to rely on handles rather than absolute indices or alias IDs, for 
-//          similar reasons to form IDs. (This is along with the added complication 
-//          that Papyrus properties are sequential. If variable `foo` refers to the 
-//          zeroth Papyrus property and `bar` refers to the first, and a separate 
-//          piece of code deletes the zeroth Papyrus property, then the property that 
-//          `foo` referred to will cease to exist and the property that `bar` referred 
-//          to will become the zeroth property. In this situation, `foo` needs to test 
-//          as referring to nothing, and `bar` needs to test as still referring to the 
-//          formerly-first, now-zeroth property.)
-//
-//           - This needs to be designed in a generic way, so that individual form 
-//             classes have executive authority over their parts. I don't want to have 
-//             to hardcode every form part (words in a shout, aliases or stages in a 
-//             quest, attack data entries in a race, and so on) into the script core.
 //
 //     - Scripts should be able to include Greasemonkey-style comments at the top of 
 //       the file as a way of specifying extended configuration options. Options that 
