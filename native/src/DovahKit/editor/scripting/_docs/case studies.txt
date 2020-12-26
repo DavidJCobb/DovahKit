@@ -133,4 +133,5 @@ been expressed as follows:
    end
    
 But such an API  is challenging to  implement, so Zenimax Online  Studios quite 
-understandably went with something more  basic.
+understandably went with something more  basic -- something easier to write and 
+test.

@@ -220,6 +220,7 @@
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
     <ClCompile Include="editor\scripting\wrapper_util.cpp" />
@@ -230,6 +231,7 @@
     <ClCompile Include="helpers\ini.cpp" />
     <ClCompile Include="helpers\lua\metamethod_names.cpp" />
     <ClCompile Include="helpers\lua\dump.cpp" />
+    <ClCompile Include="helpers\lua\setfuncs.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\qt\strings.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
@@ -449,6 +451,7 @@
     <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
+    <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
@@ -457,6 +460,7 @@
     <ClInclude Include="helpers\eight_cc.h" />
     <ClInclude Include="helpers\lua\metamethod_names.h" />
     <ClInclude Include="helpers\lua\dump.h" />
+    <ClInclude Include="helpers\lua\setfuncs.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />

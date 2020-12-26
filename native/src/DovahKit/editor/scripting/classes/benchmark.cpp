@@ -66,9 +66,8 @@ namespace {
    }
 }
 namespace editor_script::classes {
-   /*static*/ luaL_Reg benchmark::metatable_methods[] = {
+   /*static*/ std::initializer_list<luaL_Reg> benchmark::metatable_methods = {
       { "microseconds", &_methods::microseconds },
       { "milliseconds", &_methods::milliseconds },
-      { nullptr, nullptr },
    };
 }

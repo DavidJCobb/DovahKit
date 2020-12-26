@@ -49,16 +49,14 @@ namespace {
 }
 
 namespace editor_script::wrappers {
-   /*static*/ luaL_Reg voicetype::metatable_methods[] = { { nullptr, nullptr } };
+   /*static*/ std::initializer_list<luaL_Reg> voicetype::metatable_methods = no_functions;
    
-   /*static*/ luaL_Reg voicetype::metatable_getters[] = {
+   /*static*/ std::initializer_list<luaL_Reg> voicetype::metatable_getters = {
       { "allows_default_dialogue", &_methods::get_allow_default_dialogue },
       { "is_female",               &_methods::get_is_female },
-      { nullptr, nullptr },
    };
-   /*static*/ luaL_Reg voicetype::metatable_setters[] = {
+   /*static*/ std::initializer_list<luaL_Reg> voicetype::metatable_setters = {
       { "allows_default_dialogue", &_methods::set_allow_default_dialogue },
       { "is_female",               &_methods::set_is_female },
-      { nullptr, nullptr },
    };
 }

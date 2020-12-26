@@ -3,7 +3,7 @@
 #include <cstring>
 #include "util.h"
 #include "../../helpers/lua/metamethod_names.h"
-#include "../../helpers/lua/dump.h"
+#include "../../helpers/lua/setfuncs.h"
 
 namespace editor_script {
    namespace __pairs_iterators { // code for __pairs iterators
@@ -499,7 +499,7 @@ namespace editor_script {
       return true;
    }
 
-   extern void define_class(lua_State* luaVM, const char* className, const char* superclassName, const luaL_Reg* methods, const luaL_Reg* getters, const luaL_Reg* setters) {
+   extern void define_class(lua_State* luaVM, const char* className, const char* superclassName, const std::initializer_list<luaL_Reg>& methods, const std::initializer_list<luaL_Reg>& getters, const std::initializer_list<luaL_Reg>& setters) {
       //
       // LUA:
       //    local meta = {}
@@ -569,23 +569,23 @@ namespace editor_script {
          lua_pop(luaVM, 1); // STACK: [newmeta]
       }
       //
-      if (methods) {
-         luaL_setfuncs(luaVM, methods, 0); // import functions into the metatable
+      if (methods.size()) {
+         cobb::lua::setfuncs(luaVM, methods); // import functions into the metatable
       }
-      if (getters && getters[0].name && getters[0].func) {
+      if (getters.size()) {
          lua_pushstring (luaVM, "__getters"); // push 1
          lua_createtable(luaVM, 0, 0);        // push 1
-         luaL_setfuncs  (luaVM, getters, 0);  // push 0
+         cobb::lua::setfuncs(luaVM, getters); // push 0
          lua_settable   (luaVM, index_mt);    // pop  2
       }
-      if (setters && setters[0].name && setters[0].func) {
+      if (setters.size()) {
          lua_pushstring   (luaVM, "__newindex"); // push 1
          lua_pushcfunction(luaVM, &__newindex);  // push 1
          lua_settable     (luaVM, -3);           // pop  2
          //
          lua_pushstring (luaVM, "__setters"); // push 1
          lua_createtable(luaVM, 0, 0);        // push 1
-         luaL_setfuncs  (luaVM, setters, 0);  // push 0
+         cobb::lua::setfuncs(luaVM, setters); // push 0
          lua_settable   (luaVM, index_mt);    // pop  2
       }
       lua_pop(luaVM, 1); // pop metatable from the stack

@@ -257,7 +257,7 @@ namespace {
    }
 }
 namespace editor_script::classes {
-   /*static*/ luaL_Reg vector3::metatable_methods[] = {
+   /*static*/ std::initializer_list<luaL_Reg> vector3::metatable_methods = {
       { "__add",          &_methods::__add }, // operator+
       { "__div",          &_methods::__div }, // operator/
       { "__sub",          &_methods::__sub }, // operator-
@@ -269,7 +269,6 @@ namespace editor_script::classes {
       { "length",         &_methods::length },
       { "length_squared", &_methods::length_squared },
       { "sub",            &_methods::sub },   // operator-=
-      { nullptr, nullptr },
    };
 
    /*static*/ void vector3::setup(lua_State* L) {

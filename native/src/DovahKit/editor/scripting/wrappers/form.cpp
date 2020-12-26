@@ -59,11 +59,12 @@ namespace {
 }
 
 namespace editor_script::wrappers {
-   /*static*/ luaL_Reg form::metatable_methods[] = {
+   /*static*/ const std::initializer_list<luaL_Reg> form::metatable_methods = {
       { "get_editor_id",  &_methods::get_editor_id },
       { "get_form_id",    &_methods::get_form_id },
       { "get_form_type",  &_methods::get_form_type },
       { "get_user_forms", &_methods::get_user_forms },
-      { nullptr, nullptr },
    };
+   /*static*/ const std::initializer_list<luaL_Reg> form::metatable_getters = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> form::metatable_setters = no_functions;
 }

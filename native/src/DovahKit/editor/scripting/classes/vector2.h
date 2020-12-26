@@ -7,7 +7,7 @@ namespace editor_script::classes {
       public:
          static constexpr char* global_name   = "vector2";
          static constexpr char* metatable_key = "dovah.classes.vector2";
-         static luaL_Reg metatable_methods[];
+         static std::initializer_list<luaL_Reg> metatable_methods;
 
          inline static bool check_arg_type(lua_State* L, int i) {
             return editor_script::check_for_class(L, i, metatable_key);

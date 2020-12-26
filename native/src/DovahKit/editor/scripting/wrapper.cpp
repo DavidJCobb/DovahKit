@@ -14,12 +14,12 @@ namespace editor_script { // base metatable
          }
       }
    }
-   /*static*/ luaL_Reg wrapper_metatable::metatable_methods[] = {
+   /*static*/ const std::initializer_list<luaL_Reg> wrapper_metatable::metatable_methods = {
       { "__gc",  &_methods::__gc },
       { nullptr, nullptr },
    };
-   /*static*/ luaL_Reg wrapper_metatable::metatable_getters[] = { { nullptr, nullptr } };
-   /*static*/ luaL_Reg wrapper_metatable::metatable_setters[] = { { nullptr, nullptr } };
+   /*static*/ const std::initializer_list<luaL_Reg> wrapper_metatable::metatable_getters = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> wrapper_metatable::metatable_setters = no_functions;
 }
 
 namespace editor_script {

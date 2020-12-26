@@ -5,8 +5,8 @@ namespace editor_script::wrappers {
    struct voicetype : public form {
       static constexpr char* superclass_key = metatable_key;
       static constexpr char* metatable_key  = "dovah.classes.voicetype";
-      static luaL_Reg metatable_methods[];
-      static luaL_Reg metatable_getters[];
-      static luaL_Reg metatable_setters[];
+      static std::initializer_list<luaL_Reg> metatable_methods;
+      static std::initializer_list<luaL_Reg> metatable_getters;
+      static std::initializer_list<luaL_Reg> metatable_setters;
    };
 }
