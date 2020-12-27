@@ -28,52 +28,23 @@ namespace editor_script {
       part.index     = index;
       ++this->depth;
    }
-   void wrapper::append_part(part_type_t signature, const std::string& name) {
-      assert(this->depth < part_count && "Too many parts!");
-      auto& part = this->parts[this->depth];
-      part.signature = signature;
-      part.name      = name;
-      ++this->depth;
-   }
-   void wrapper::append_part(part_type_t signature, const char* name) {
-      assert(this->depth < part_count && "Too many parts!");
-      auto& part = this->parts[this->depth];
-      part.signature = signature;
-      part.name      = name;
-      ++this->depth;
-   }
    void wrapper::remove_part() {
       --this->depth;
       auto& removed = this->parts[this->depth];
       removed.signature = 0;
       removed.index     = 0;
-      removed.name.clear();
    }
    void wrapper::into_collection(uint32_t index) {
       assert(this->is_collection);
       this->is_collection = false;
       this->parts[this->depth - 1].index = index;
    }
-   void wrapper::into_collection(const char* name) {
-      assert(this->is_collection);
-      this->is_collection = false;
-      this->parts[this->depth - 1].name = name;
-   }
 
    bool wrapper::part::operator==(const part& other) const noexcept {
       if (this->signature != other.signature)
          return false;
-      if (this->name.empty()) {
-         if (!other.name.empty())
-            return false;
-         if (this->index != other.index)
-            return false;
-      } else {
-         if (other.name.empty())
-            return false;
-         if (this->name != other.name)
-            return false;
-      }
+      if (this->index != other.index)
+         return false;
       return true;
    }
 
@@ -120,29 +91,6 @@ namespace editor_script {
       if (this->parts[i].signature != other.parts[i].signature)
          return false;
       return true;
-   }
-   bool wrapper::innermost_part_has_index() const noexcept {
-      if (this->depth == 0)
-         return false;
-      if (this->is_collection)
-         return false;
-      if (this->parts[this->depth - 1].name.empty())
-         return true;
-      return false;
-   }
-   bool wrapper::innermost_part_matches(const wrapper& other) const noexcept {
-      auto& t_last = this->parts[this->depth - 1];
-      auto& o_last = other.parts[this->depth - 1];
-      if (t_last.index != o_last.index)
-         return false;
-      return true;
-   }
-   bool wrapper::innermost_part_precedes(const wrapper& other) const noexcept {
-      auto& t_last = this->parts[this->depth - 1];
-      auto& o_last = other.parts[this->depth - 1];
-      if (t_last.index < o_last.index)
-         return true;
-      return false;
    }
 
    void wrapper::load_form() {

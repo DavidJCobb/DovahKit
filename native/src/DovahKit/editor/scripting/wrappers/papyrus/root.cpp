@@ -33,6 +33,12 @@ namespace {
          return *self;
       }
 
+      luastackchange_t get_collection_length(lua_State* L) {
+         auto& self = get_collection_wrapper(L);
+         auto& root = _unwrap(L, self);
+         lua_pushnumber(L, root.scripts.size());
+         return 1;
+      }
       luastackchange_t lookup_item_by_name(lua_State* L) {
          //
          // args: wrapper<papyrus_root>, name
@@ -195,9 +201,10 @@ namespace editor_script::wrappers {
          wrappers::papyrus_root::script_collection_key,
          &wrapper::__gc,
          true,
-         &_collections::scripts::lookup_item_by_name,  // args: wrapper, name;  return: wrapper or nil
-         &_collections::scripts::lookup_item_by_index, // args: wrapper, index; return: wrapper or nil
-         &_collections::scripts::get_all_item_names    // args: wrapper;        return: table of names
+         &_collections::scripts::get_collection_length, // args: wrapper;        return: number
+         &_collections::scripts::lookup_item_by_name,   // args: wrapper, name;  return: wrapper or nil
+         &_collections::scripts::lookup_item_by_index,  // args: wrapper, index; return: wrapper or nil
+         &_collections::scripts::get_all_item_names     // args: wrapper;        return: table of names
       );
    }
 

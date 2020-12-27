@@ -56,18 +56,9 @@ namespace editor_script::wrappers {
       if (!root)
          return nullptr;
       auto& list = root->scripts;
-      auto& name = w.parts[1].name;
-      if (name.empty()) {
-         auto i = w.parts[1].index;
-         if (i >= list.size())
-            return nullptr;
-         return &list[i];
-      } else {
-         for (auto& script : list)
-            if (stricmp(script.name.c_str(), name.c_str()) == 0)
-               return &script;
+      auto  i    = w.parts[1].index;
+      if (i >= list.size())
          return nullptr;
-      }
-      return nullptr;
+      return &list[i];
    }
 }

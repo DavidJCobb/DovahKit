@@ -30,16 +30,12 @@ namespace editor_script {
          // ONLY use these when CREATING a wrapper:
          //
          void append_part(part_type_t signature, uint32_t index = 0);
-         void append_part(part_type_t signature, const std::string& name);
-         void append_part(part_type_t signature, const char* name);
          void remove_part();
          void into_collection(uint32_t index); // asserts if (is_collection) is false
-         void into_collection(const char* name); // asserts if (is_collection) is false
 
          struct part {
             part_type_t signature = 0;
-            uint32_t    index     = 0; // operator== only checks this if the name is empty
-            std::string name; // TODO: remove or limit support for this; it prevents us from deleting entries from sequential collections
+            uint32_t    index     = 0;
             //
             bool operator==(const part& other) const noexcept;
             inline bool operator!=(const part& other) const noexcept { return !(*this == other); }
@@ -53,9 +49,6 @@ namespace editor_script {
 
          bool is_equal(const wrapper* other) const noexcept;
          bool is_in_same_collection(const wrapper& other) const noexcept;
-         bool innermost_part_matches(const wrapper& other) const noexcept; // only checks index
-         bool innermost_part_precedes(const wrapper& other) const noexcept; // only checks index. am I a prior sibling of (other)?
-         bool innermost_part_has_index() const noexcept;
 
          void load_form();
          void mark_form_as_edited();

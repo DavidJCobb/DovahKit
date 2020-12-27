@@ -427,23 +427,6 @@
 //                   Native code will not *consistently* invoke these metamethods. Sometimes 
 //                   they'll work; sometimes they won't. Consider this UB.
 //
-//              - It needs to be possible to wrap individual components in a form.
-//
-//                 - When an element in a sequential collection is removed, all elements 
-//                   after it need to have their indices adjusted. This must occur even if 
-//                   the element was removed by name rather than by index.
-//
-//                    - We don't currently offer a way to add elements to collections or 
-//                      remove them from collections. We just implemented Papyrus wrappers, 
-//                      so that'd be the place to test all this.
-//
-//                    - Essentially, we need to search for all wrappers within the same 
-//                      collection and then, if they use indices rather than names, test 
-//                      whether they were located before or after the element that was 
-//                      removed. Notably, this can be done in a generic way as long as 
-//                      the code that carries out the removal always alerts the script VM 
-//                      to what index was removed.
-//
 //              - We need to handle signals like form deletion and similar, which should 
 //                exist as "urgent" main-to-script messages.
 //
