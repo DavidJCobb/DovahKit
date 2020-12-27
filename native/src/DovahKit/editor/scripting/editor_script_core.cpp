@@ -452,7 +452,7 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
 void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor_script::wrapper& copy_of_target) {
    if (!copy_of_target.stub)
       return;
-   assert(copy_of_target.depth && !copy_of_target.is_collection && "This is not an element in a sequential collection.");
+   assert(copy_of_target.depth && !copy_of_target.is_collection && "The (copy_of_target) argument must be an element in a sequential collection.");
    //
    // stack offers:
    constexpr auto soff_storage = 1;

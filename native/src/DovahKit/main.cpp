@@ -427,6 +427,18 @@
 //                   Native code will not *consistently* invoke these metamethods. Sometimes 
 //                   they'll work; sometimes they won't. Consider this UB.
 //
+//              - Lua collections work
+//
+//                 - The code for papyrus_root:remove_script(...) has a lot of boilerplate, 
+//                   to build a "to_remove" wrapper given an argument that can be a script 
+//                   name, a list index, or an existing script wrapper; when the argument 
+//                   isn't an existing wrapper, it takes quite a bit of work to convert it 
+//                   to a valid list index (even if it already is an unverified list index). 
+//                   How much of this code can we move to a helper function?
+//
+//                    - Perhaps that function can take a collection size, and a lambda that 
+//                      can be used to find the index of a named element in the collection.
+//
 //              - We need to handle signals like form deletion and similar, which should 
 //                exist as "urgent" main-to-script messages.
 //
@@ -435,10 +447,15 @@
 //
 //              - If the script deletes a form, then we can have the script VM flag 
 //                the form's wrapper as "dead," but it'll still test as not being nil, 
-//                and it'll still have callable member functions. The approach above 
-//                should allow us to at least prevent further calls to its members, 
-//                but can we either nil out the existing references or make them 
-//                pretend to be nil?
+//                and it'll still have callable member functions. Can we clear out its 
+//                metatable to prevent further function calls? Can we make the dead 
+//                userdata pretend to be nil, or nil out all references to it?
+//
+//                 - We tried simply removing the metatable to block further method 
+//                   calls, but that doesn't work because it causes us to lose the 
+//                   __gc metamethod, which results in us leaking owned resources and 
+//                   failing to properly tear down the smart pointers to loaded form 
+//                   data.
 //
 //                 - The __eq metamethod will not help here.
 //
