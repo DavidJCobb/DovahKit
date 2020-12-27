@@ -38,8 +38,8 @@ namespace editor_script {
 
          struct part {
             part_type_t signature = 0;
-            uint32_t    index = 0;
-            std::string name;
+            uint32_t    index     = 0; // operator== only checks this if the name is empty
+            std::string name; // TODO: remove or limit support for this; it prevents us from deleting entries from sequential collections
             //
             bool operator==(const part& other) const noexcept;
             inline bool operator!=(const part& other) const noexcept { return !(*this == other); }
@@ -52,6 +52,11 @@ namespace editor_script {
          }
 
          bool is_equal(const wrapper* other) const noexcept;
+         bool is_in_same_collection(const wrapper& other) const noexcept;
+         bool innermost_part_matches(const wrapper& other) const noexcept; // only checks index
+         bool innermost_part_precedes(const wrapper& other) const noexcept; // only checks index. am I a prior sibling of (other)?
+         bool innermost_part_has_index() const noexcept;
+
          void load_form();
          void mark_form_as_edited();
 
@@ -68,6 +73,12 @@ namespace editor_script {
          uint8_t depth         = 0;     // such that this->parts[this->depth - 1] is the innermost part
          bool    is_collection = false; // if this is (true), then parts[depth] has no index or name but rather identifies the collection itself (i.e. allowing Lua to refer to, say, `shout.words` and not just `shout` and `shout.words[2]`)
          std::array<part, part_count> parts;
+         
+         inline part& last_part() noexcept {
+            if (!this->depth)
+               return this->parts[0];
+            return this->parts[this->depth - 1];
+         }
    };
 
    struct wrapper_metatable {

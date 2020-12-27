@@ -44,13 +44,14 @@ namespace {
             return 0;
          auto& list = root.scripts;
          auto  size = list.size();
-         for (auto& script : list) {
+         for (size_t i = 0; i < size; ++i) {
+            auto& script = list[i];
             if (stricmp(script.name.c_str(), name) == 0) {
                wrapper out = self;
                assert(out.is_collection);
                assert(out.parts[0].signature == cobb::eight_cc("PapyRoot"));
                assert(out.parts[1].signature == cobb::eight_cc("PapyScri"));
-               out.into_collection(name);
+               out.into_collection(i);
                return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_script::metatable_key);
             }
          }
@@ -61,8 +62,9 @@ namespace {
          auto& root = _unwrap(L, self);
          auto  i    = lua_tointeger(L, 2);
          auto& list = root.scripts;
-         if (i >= list.size() || i < 0)
+         if (i > list.size() || i <= 0)
             return 0;
+         --i;
          wrapper out = self;
          assert(out.is_collection);
          assert(out.parts[0].signature == cobb::eight_cc("PapyRoot"));
@@ -91,6 +93,68 @@ namespace {
 namespace {
    using namespace editor_script;
    //
+   namespace _methods {
+      luastackchange_t remove_script(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         auto& root = _unwrap(L, self);
+         auto& list = root.scripts;
+         auto  size = list.size();
+         //
+         wrapper to_remove;
+         //
+         lua_settop(L, 2);
+         auto* script = wrapper_from_stack<wrappers::papyrus_script>(L, 2);
+         if (script) {
+            to_remove = *script;
+         } else {
+            auto type  = lua_type(L, 2);
+            bool found = false;
+            if (type == LUA_TNUMBER) {
+               uint32_t i = lua_tointeger(L, 2);
+               if (i > 0 && i < size) {
+                  --i;
+                  to_remove = self;
+                  to_remove.append_part(cobb::eight_cc("PapyScri"), i);
+               } else {
+                  lua_tolstring(L, 2, nullptr);
+                  type = LUA_TSTRING;
+               }
+            }
+            if (type == LUA_TTABLE || type == LUA_TUSERDATA) {
+               if (luaL_callmeta(L, 2, "__tostring")) {
+                  if (!lua_isstring(L, -1))
+                     return 0;
+                  lua_replace(L, 2);
+                  type = LUA_TSTRING;
+               } else {
+                  return 0;
+               }
+            }
+            if (type == LUA_TSTRING) {
+               auto*  name = lua_tolstring(L, 2, nullptr);
+               size_t i    = 0;
+               for (; i < size; ++i)
+                  if (stricmp(list[i].name.c_str(), name) == 0)
+                     break;
+               if (i >= size)
+                  return 0;
+               //
+               to_remove = self;
+               to_remove.append_part(cobb::eight_cc("PapyScri"), i);
+            }
+         }
+         if (!to_remove.depth) // didn't manage to build a useful wrapper
+            return 0;
+         auto index = to_remove.last_part().index;
+         if (index >= size)
+            return 0;
+         list.erase(list.begin() + index);
+         self.mark_form_as_edited();
+         //
+         DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(to_remove);
+         return 0;
+      }
+   }
    namespace _getters {
       luastackchange_t parent(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
@@ -116,7 +180,9 @@ namespace {
 }
 
 namespace editor_script::wrappers {
-   /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_methods = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_methods = {
+      { "remove_script", &_methods::remove_script },
+   };
    /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_getters = {
       { "parent",  &_getters::parent },
       { "scripts", &_getters::scripts },

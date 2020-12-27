@@ -102,6 +102,49 @@ namespace editor_script {
       }
       return true;
    }
+   bool wrapper::is_in_same_collection(const wrapper& other) const noexcept {
+      if (this->type != other.type)
+         return false;
+      if (this->type == wrapper_type::form_data) {
+         if (this->stub != other.stub)
+            return false;
+      }
+      if (this->depth != other.depth)
+         return false;
+      if (this->is_collection | other.is_collection)
+         return false;
+      uint8_t i = 0;
+      for (; i < (signed int)(this->depth) - 1; ++i)
+         if (this->parts[i] != other.parts[i])
+            return false;
+      if (this->parts[i].signature != other.parts[i].signature)
+         return false;
+      return true;
+   }
+   bool wrapper::innermost_part_has_index() const noexcept {
+      if (this->depth == 0)
+         return false;
+      if (this->is_collection)
+         return false;
+      if (this->parts[this->depth - 1].name.empty())
+         return true;
+      return false;
+   }
+   bool wrapper::innermost_part_matches(const wrapper& other) const noexcept {
+      auto& t_last = this->parts[this->depth - 1];
+      auto& o_last = other.parts[this->depth - 1];
+      if (t_last.index != o_last.index)
+         return false;
+      return true;
+   }
+   bool wrapper::innermost_part_precedes(const wrapper& other) const noexcept {
+      auto& t_last = this->parts[this->depth - 1];
+      auto& o_last = other.parts[this->depth - 1];
+      if (t_last.index < o_last.index)
+         return true;
+      return false;
+   }
+
    void wrapper::load_form() {
       if (!this->stub)
          return;

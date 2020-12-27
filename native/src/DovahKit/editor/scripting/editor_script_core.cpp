@@ -388,16 +388,16 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper* instance)
    //
    // Wipe the wrapper's metatable, so that its member functions are no longer callable.
    //
-   lua_rawgeti(L, -1, instance->lua_key); // pop  0
-   lua_pushnil(L);                        // push 1
-   lua_setmetatable(L, -2);               // pop  1
-   lua_pop(L, 1);                         // pop  1
+   //lua_rawgeti(L, -1, instance->lua_key); // pop  0
+   //lua_pushnil(L);                        // push 1
+   //lua_setmetatable(L, -2);               // pop  1 // TODO: this causes us to lose the __gc metamethod!
+   //lua_pop(L, 1);                         // pop  1
    //
    // Erase the wrapper from our wrapper storage.
    //
    luaL_unref(L, -1, instance->lua_key);
 }
-//
+
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
    auto table = lua_gettop(L);
@@ -447,4 +447,45 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    //
    lua_remove(L, -2);
    return 1;
+}
+
+void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor_script::wrapper& copy_of_target) {
+   if (!copy_of_target.stub)
+      return;
+   assert(copy_of_target.innermost_part_has_index());
+   //
+   // stack offers:
+   constexpr auto soff_storage = 1;
+   constexpr auto soff_nk      = 2;
+   constexpr auto soff_nv      = 3;
+   //
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   //
+   lua_pushnil(L);
+   while (lua_next(L, start + soff_storage) != 0) {
+      if (lua_type(L, start + soff_nv) == LUA_TUSERDATA) {
+         auto* other = (editor_script::wrapper*) lua_touserdata(L, start + soff_nv);
+         if (other && copy_of_target.is_in_same_collection(*other)) {
+            auto& t_last = copy_of_target.last_part();
+            auto& o_last = other->last_part();
+            if (t_last.index < o_last.index) {
+               //
+               // reduce (other), as a previous sibling has been deleted.
+               //
+               --o_last.index;
+            } else if (t_last.index == o_last.index) {
+               //
+               // destroy (other), as it's the object being deleted.
+               //
+               luaL_unref(L, start + soff_storage, other->lua_key); // remove from storage
+               //lua_pushnil(L);
+               //lua_setmetatable(L, start + soff_nv); // clear metatable to "kill" object // TODO: this causes us to lose the __gc metamethod!
+            }
+         }
+      }
+      lua_settop(L, start + soff_nk);
+   }
+   lua_settop(L, start);
 }
