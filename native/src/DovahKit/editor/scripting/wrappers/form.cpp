@@ -5,6 +5,8 @@
 #include "../editor_script_core.h"
 #include "../wrapper_util.h"
 
+#include "papyrus/root.h"
+
 namespace {
    using namespace editor_script;
    //
@@ -56,6 +58,17 @@ namespace {
          return 1;
       }
    }
+   namespace _getters {
+      luastackchange_t papyrus(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub)
+            return 0;
+         wrapper out;
+         wrap_form(out, self.stub);
+         out.append_part(wrapper_part_types::papyrus_root);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_root::metatable_key);
+      }
+   }
 }
 
 namespace editor_script::wrappers {
@@ -65,6 +78,8 @@ namespace editor_script::wrappers {
       { "get_form_type",  &_methods::get_form_type },
       { "get_user_forms", &_methods::get_user_forms },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> form::metatable_getters = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> form::metatable_getters = {
+      { "papyrus", &_getters::papyrus },
+   };
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_setters = no_functions;
 }

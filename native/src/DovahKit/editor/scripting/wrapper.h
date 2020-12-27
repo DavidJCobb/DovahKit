@@ -1,9 +1,11 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include "../../helpers/eight_cc.h"
 #include "../../dovah/form_stub.h"
 #include "../../../Lua/lua.hpp"
 #include "classes.h"
+#include "util.h"
 
 namespace editor_script {
    enum class wrapper_type {
@@ -19,12 +21,20 @@ namespace editor_script {
 
    class wrapper final {
       public:
-         static wrapper* wrap_form(dovah::form_stub* s) {
-            auto* instance = new wrapper;
-            instance->type = wrapper_type::form_data;
-            instance->stub = s;
-            return instance;
-         }
+         static constexpr int part_count = 5;
+         //
+         static luastackchange_t __gc(lua_State* L);
+         //
+      public:
+         //
+         // ONLY use these when CREATING a wrapper:
+         //
+         void append_part(part_type_t signature, uint32_t index = 0);
+         void append_part(part_type_t signature, const std::string& name);
+         void append_part(part_type_t signature, const char* name);
+         void remove_part();
+         void into_collection(uint32_t index); // asserts if (is_collection) is false
+         void into_collection(const char* name); // asserts if (is_collection) is false
 
          struct part {
             part_type_t signature = 0;
@@ -34,6 +44,12 @@ namespace editor_script {
             bool operator==(const part& other) const noexcept;
             inline bool operator!=(const part& other) const noexcept { return !(*this == other); }
          };
+
+         wrapper() {}
+         wrapper(const wrapper& other) {
+            *this = other;
+            this->lua_key = LUA_NOREF;
+         }
 
          bool is_equal(const wrapper* other) const noexcept;
          void load_form();
@@ -49,9 +65,9 @@ namespace editor_script {
          //
          dovah::form_stub* stub = nullptr;
          dovah::loaded_form_ptr<dovah::loaded_forms::Form> form;
-         uint8_t depth = 0;
+         uint8_t depth         = 0;     // such that this->parts[this->depth - 1] is the innermost part
          bool    is_collection = false; // if this is (true), then parts[depth] has no index or name but rather identifies the collection itself (i.e. allowing Lua to refer to, say, `shout.words` and not just `shout` and `shout.words[2]`)
-         part    parts[5];
+         std::array<part, part_count> parts;
    };
 
    struct wrapper_metatable {

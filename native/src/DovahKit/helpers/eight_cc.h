@@ -37,6 +37,11 @@ namespace cobb {
                this->value += do_not_use_more_than_eight_chars();
          }
          //
+         inline eight_cc& operator=(const eight_cc& other) {
+            this->value = other.value;
+            return *this;
+         }
+         //
          inline operator uint64_t() const noexcept { return this->value; }
    };
 }

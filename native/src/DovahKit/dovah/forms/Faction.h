@@ -98,6 +98,8 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
+         virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
+         //
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;

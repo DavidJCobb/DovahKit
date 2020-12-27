@@ -44,7 +44,7 @@ namespace {
             line += ' ';
          line += '}';
       } else {
-         cobb::sprintf(line, "%s = #%i", line.c_str(), std::distance(seen.begin(), it));
+         cobb::sprintf(line, "%s = #%i", line.c_str(), std::distance(seen.begin(), it) + 1);
       }
       return line;
    }

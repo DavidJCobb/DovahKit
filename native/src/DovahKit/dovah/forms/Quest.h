@@ -212,6 +212,8 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         //
+         virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->scriptData; }
 
          static const char* QuestTypeToString(QuestType);
 

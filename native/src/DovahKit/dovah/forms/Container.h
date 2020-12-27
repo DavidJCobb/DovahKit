@@ -37,5 +37,7 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
+         //
+         virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
    };
 }

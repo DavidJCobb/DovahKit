@@ -216,11 +216,13 @@
     <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
     <ClCompile Include="editor\scripting\classes\vector2.cpp" />
     <ClCompile Include="editor\scripting\classes\vector3.cpp" />
+    <ClCompile Include="editor\scripting\collections.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
     <ClCompile Include="editor\scripting\wrapper_util.cpp" />
@@ -444,6 +446,7 @@
     <ClInclude Include="editor\scripting\classes\vector2.h" />
     <ClInclude Include="editor\scripting\classes\vector3.h" />
     <ClInclude Include="editor\scripting\classes\_all.h" />
+    <ClInclude Include="editor\scripting\collections.h" />
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />
     <ClInclude Include="editor\scripting\messages\log_text.h" />
@@ -452,6 +455,8 @@
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
+    <ClInclude Include="editor\scripting\wrappers\papyrus\script.h" />
+    <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />

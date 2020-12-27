@@ -1,4 +1,5 @@
 #include "construct.h"
+#include "../Activator.h"
 #include "../Actor.h"
 #include "../Cell.h"
 #include "../Color.h"
@@ -47,6 +48,7 @@ namespace {
 
    _entry _builders[] = {
       { form_type::faction,                _handlers::make<loaded_forms::Faction>() },
+      { form_type::activator,              _handlers::make<loaded_forms::Activator>() },
       { form_type::cell,                   _handlers::make<loaded_forms::Cell>() },
       { form_type::reference,              _handlers::make<loaded_forms::ObjectReference>() },
       { form_type::actor,                  _handlers::make<loaded_forms::Actor>() },

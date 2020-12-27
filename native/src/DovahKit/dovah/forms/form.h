@@ -1,5 +1,6 @@
 #pragma once
 #include "../core.h"
+#include "components/papyrus.h" // include needed because MSVC is too stupid to properly recognize (papyrus_attachment_data) as a virtual function's return type if merely forward-declared, apparently
 
 namespace dovah {
    class file_load_order;
@@ -32,6 +33,8 @@ namespace dovah {
             //
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
+
+            virtual components::papyrus_attachment_data* get_papyrus_data() noexcept { return nullptr; }
 
             //
             // === Form* Form::clone(form_stub&) =================================================

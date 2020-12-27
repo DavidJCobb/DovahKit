@@ -7,6 +7,13 @@ namespace editor_script {
       //
       define_wrapper_metatable<wrapper_metatable>(L);
       define_wrapper_metatable<form>(L);
-      define_wrapper_metatable<voicetype>(L);
+      #pragma region Common form components
+         define_wrapper_metatable<papyrus_root>(L);
+         papyrus_root::build_collection_metatables(L);
+         define_wrapper_metatable<papyrus_script>(L);
+      #pragma endregion
+      #pragma region Form types
+         define_wrapper_metatable<voicetype>(L);
+      #pragma endregion
    }
 }

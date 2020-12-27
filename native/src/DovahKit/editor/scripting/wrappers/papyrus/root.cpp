@@ -1,98 +1,146 @@
 #include "root.h"
 #include "../../classes.h"
 #include "../../util.h"
-#include "../../../../dovah/form_stub.h"
 #include "../../editor_script_core.h"
 #include "../../wrapper_util.h"
-#include "../../../helpers/lua/metamethod_names.h"
+#include "../../collections.h"
 
+#include "../../../../dovah/forms/Form.h"
+#include "script.h"
+
+#pragma region Collection: "scripts"
 namespace {
    using namespace editor_script;
 
-   #pragma region __pairs iterator
-   namespace __pairs {
-      constexpr char* metatable_key = "pairs_iterator<dovah.classes.papyrus_root>";
-      //
-      namespace {
-         bool _should_skip_name(lua_State* L, int index) {
-            index = lua_absindex(L, index);
-            if (lua_isstring(L, index)) {
-               auto nk = lua_tostring(L, index);
-               if (cobb::lua::is_metamethod_name(nk))
-                  return true;
-               else if (strcmp(nk, "__getters") == 0)
-                  return true;
-               else if (strcmp(nk, "__setters") == 0)
-                  return true;
-               else if (strcmp(nk, "__superclass") == 0)
-                  return true;
-               else if (strcmp(nk, "__name") == 0)
-                  return true;
-            }
-            return false;
+   wrappers::papyrus_root::wrapped_t& _unwrap(lua_State* L, wrapper& w) {
+      auto* data = wrappers::papyrus_root::unwrap(w);
+      if (!data)
+         luaL_error(L, "wrapper `%s` has no underlying object", wrappers::papyrus_root::metatable_key);
+      __assume(data != nullptr);
+      return *data;
+   }
+
+   namespace _collections::scripts {
+      wrapper& get_collection_wrapper(lua_State* L) {
+         auto* self = (wrapper*)editor_script::cast_to_class(L, 1, wrappers::papyrus_root::script_collection_key);
+         if (self == nullptr) {
+            luaL_error(L, "function called with bad self (expected %s)", wrappers::papyrus_root::script_collection_key);
          }
+         return *self;
       }
-      static luastackchange_t __call(lua_State* L) {
-         /*
-         function(self, t, k)
-            local k, v = next(self.names)
-            while _should_skip_name(k) and _script_exists(t, k) do
-               k, v = next(self.names)
-            end
-            if v ~= nil then
-               return k, v
-            end
-            return
-         end
-         */
-         // STACK: - [ self, t, k ] +
-         constexpr auto index_self = 1;
-         constexpr auto index_tbl  = 2;
-         constexpr auto index_key  = 3;
-         constexpr auto index_list = 4;
-         constexpr auto index_nk   = 5;
-         constexpr auto index_nv   = 6;
+
+      luastackchange_t lookup_item_by_name(lua_State* L) {
          //
-         lua_getfield(L, index_self, "names");
-         lua_pushvalue(L, index_key); // nk
-         while (lua_next(L, index_self) != 0) {
-            if (!_should_skip_name(L, index_nk)) {
-               if (!false) { // if the papyrus root still has a script by this name
-                  return 2;
-               }
+         // args: wrapper<papyrus_root>, name
+         //
+         auto& self = get_collection_wrapper(L);
+         auto& root = _unwrap(L, self);
+         const char* name = lua_tostring(L, 2);
+         if (!name)
+            return 0;
+         auto& list = root.scripts;
+         auto  size = list.size();
+         for (auto& script : list) {
+            if (stricmp(script.name.c_str(), name) == 0) {
+               wrapper out = self;
+               assert(out.is_collection);
+               assert(out.parts[0].signature == cobb::eight_cc("PapyRoot"));
+               assert(out.parts[1].signature == cobb::eight_cc("PapyScri"));
+               out.into_collection(name);
+               return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_script::metatable_key);
             }
-            lua_settop(L, index_nk);
          }
          return 0;
       }
-      //
-      void _define_metatable(lua_State* L) {
-         auto start   = lua_gettop(L);
-         bool defined = luaL_getmetatable(L, metatable_key) == LUA_TTABLE;
-         lua_settop(L, start);
-         if (defined)
-            return;
-         luaL_newmetatable(L, metatable_key);
-         auto index_mt = start + 1;
+      luastackchange_t lookup_item_by_index(lua_State* L) {
+         auto& self = get_collection_wrapper(L);
+         auto& root = _unwrap(L, self);
+         auto  i    = lua_tointeger(L, 2);
+         auto& list = root.scripts;
+         if (i >= list.size() || i < 0)
+            return 0;
+         wrapper out = self;
+         assert(out.is_collection);
+         assert(out.parts[0].signature == cobb::eight_cc("PapyRoot"));
+         assert(out.parts[1].signature == cobb::eight_cc("PapyScri"));
+         out.into_collection(i);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_script::metatable_key);
+      }
+      luastackchange_t get_all_item_names(lua_State* L) {
+         auto& self = get_collection_wrapper(L);
+         auto& root = _unwrap(L, self);
+         auto& list = root.scripts;
          //
-         lua_pushcfunction(L, &__call);
-         lua_setfield(L, index_mt, "__call");
+         lua_createtable(L, 0, list.size());
+         auto index_tbl = lua_gettop(L);
          //
-         lua_settop(L, start);
+         for (auto& script : list) {
+            lua_pushboolean(L, true);
+            lua_setfield(L, index_tbl, script.name.c_str());
+         }
+         return 1;
       }
    }
-   #pragma endregion
 }
+#pragma endregion
 
 namespace {
    using namespace editor_script;
    //
-   namespace _methods {
+   namespace _getters {
+      luastackchange_t parent(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         if (!self.stub)
+            return 0;
+         //
+         // TODO: If we decide to use the same metatable for quest alias scripts, then we'll need to 
+         // check whether this script data is attached to an alias and if so, return that alias.
+         //
+         wrapper out;
+         auto* mt = wrap_form(out, self.stub);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+      }
+      luastackchange_t scripts(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         auto& root = _unwrap(L, self);
+         wrapper out = self;
+         out.append_part(cobb::eight_cc("PapyScri"));
+         out.is_collection = true;
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_root::script_collection_key);
+      }
    }
 }
 
 namespace editor_script::wrappers {
-   /*static*/ luaL_Reg papyrus_root::metatable_methods[] = {
-      { nullptr, nullptr },
+   /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_methods = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_getters = {
+      { "parent",  &_getters::parent },
+      { "scripts", &_getters::scripts },
    };
+   /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_setters = no_functions;
+
+   /*static*/ void papyrus_root::build_collection_metatables(lua_State* L) {
+      define_collection_metatable(
+         L,
+         wrappers::papyrus_root::script_collection_key,
+         &wrapper::__gc,
+         true,
+         &_collections::scripts::lookup_item_by_name,  // args: wrapper, name;  return: wrapper or nil
+         &_collections::scripts::lookup_item_by_index, // args: wrapper, index; return: wrapper or nil
+         &_collections::scripts::get_all_item_names    // args: wrapper;        return: table of names
+      );
+   }
+
+   /*static*/ papyrus_root::wrapped_t* papyrus_root::unwrap(wrapper& w) {
+      //
+      // TODO: If we decide to use the same metatable for quest alias scripts, then we'll need to 
+      // check whether this script data is attached to an alias and if so, return that alias.
+      //
+      if (w.parts[0].signature != cobb::eight_cc("PapyRoot"))
+         return nullptr;
+      auto* form = w.get_loaded_form_data<dovah::loaded_forms::Form>();
+      if (!form)
+         return nullptr;
+      return form->get_papyrus_data();
+   }
 }

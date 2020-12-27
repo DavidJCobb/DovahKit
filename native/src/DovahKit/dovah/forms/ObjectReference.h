@@ -51,8 +51,10 @@ namespace dovah::loaded_forms {
          cobb::vector3<float> position; // DATA
          cobb::vector3<float> rotation; // DATA // radians
 
-         void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         //
+         virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
          //
       protected:
          ObjectReference(form_type_t ft) : Form(ft) {}; // for subclasses
