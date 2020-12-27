@@ -429,73 +429,26 @@
 //
 //              - It needs to be possible to wrap individual components in a form.
 //
-//                 - We're going to need a system to pick the appropriate metatable for 
-//                   collections. That is: in order for Lua to be able to refer to stuff 
-//                   like (shout.words[2]), it must also be able to refer to (shout.words), 
-//                   and in turn we want to be able to do things like (#shout.words) to 
-//                   get the number of words. (Okay, that's a bad example because shouts 
-//                   always have three words, but there are other collections that are of 
-//                   arbitrary length, as well as collections that have non-integer keys 
-//                   that the user may want to iterate over.)
+//                 - When an element in a sequential collection is removed, all elements 
+//                   after it need to have their indices adjusted. This must occur even if 
+//                   the element was removed by name rather than by index.
 //
-//                   Currently, the wrapper class has an (is_collection) bool with some 
-//                   conventions for indicating which collection, but we'll still need a 
-//                   way to create metatables for collections and return userdata that 
-//                   uses the appropriate metatable. Perhaps we could do that the same 
-//                   way we'll handle form components in general.
-//                   
-//                    - Collection metatables need to override not just __index, but also 
-//                      the metamethods for pairs and ipairs.
-//                   
-//                       - We have a fairly complicated stateful iterator for classes; we 
-//                         can use a much simpler one for collections. Consider the case 
-//                         of a named collection of Papyrus scripts. When the collection 
-//                         is first created (when `pairs()` is called), it can store the 
-//                         names of all of the scripts locally; then, when it is called, 
-//                         it can just return these names one by one, skipping a name if 
-//                         the underlying script has since been removed. This will fail 
-//                         to react to scripts being added, but adding to a table during 
-//                         a `pairs()` loop is incorrect anyway (because `pairs()` uses 
-//                         `next()` under the hood).
-//                   
-//                       - All collections should allow looping over entries by index, 
-//                         i.e. both `pairs()` and `ipairs()`. Metamethods allow us to 
-//                         overload both of those separately. The real challenge would 
-//                         be `__index` for collections: given a key, it should first 
-//                         check the key's type:
-//                         
-//                          - If the key is a number N, then access the Nth element in 
-//                            the collection, if any. If there is no Nth element, and 
-//                            if elements in this collection can have names, then cast 
-//                            N to a string and check for an element by that name.
-//                         
-//                          - If the key is a string S, and if elements in this collec-
-//                            tion can have names, then check for an element named S. 
-//                            If there is no such element, or if elements in this 
-//                            collection cannot have names, then try casting S to a 
-//                            number N; if that succeeds, retrieve the Nth element, if 
-//                            any.
-//                         
-//                         This sort of "overloading" should be explained in any script 
-//                         documentation we write, along with a note that Lua has some 
-//                         library functions to forcibly cast a value's type, mainly 
-//                         tonumber(x) and tostring(s).
+//                    - We don't currently offer a way to add elements to collections or 
+//                      remove them from collections. We just implemented Papyrus wrappers, 
+//                      so that'd be the place to test all this.
 //
-//              - It needs to be possible for wrappers to be interdependent on one 
-//                another.
+//                    - Essentially, we need to search for all wrappers within the same 
+//                      collection and then, if they use indices rather than names, test 
+//                      whether they were located before or after the element that was 
+//                      removed. Notably, this can be done in a generic way as long as 
+//                      the code that carries out the removal always alerts the script VM 
+//                      to what index was removed.
+//
+//              - We need to handle signals like form deletion and similar, which should 
+//                exist as "urgent" main-to-script messages.
 //
 //                 - This is needed for parts of forms: deleting the form should "kill" 
 //                   its wrapper and should also "kill" the wrappers for its parts.
-//
-//                 - This is needed for wrappers of items in sequential collections, 
-//                   e.g. a wrapper for "the third Papyrus property on the script with 
-//                   the name 'foo.'" Removing or reordering any of these items will 
-//                   require us to update indices on the wrappers of other items in 
-//                   the collection.
-//                   
-//                   Notably, this doesn't require any access to the underlying data; the 
-//                   VM can handle this just using the information that's on the wrappers 
-//                   to know which wrappers are "siblings" of the wrapper being adjusted.
 //
 //              - If the script deletes a form, then we can have the script VM flag 
 //                the form's wrapper as "dead," but it'll still test as not being nil, 
@@ -504,10 +457,11 @@
 //                but can we either nil out the existing references or make them 
 //                pretend to be nil?
 //
-//                 - The __eq metamethod will not save us.
+//                 - The __eq metamethod will not help here.
 //
 //                 - This person used dirty hacks to loop over every single variable 
-//                   in the running script and clear them as needed: <https://stackoverflow.com/a/14624223>
+//                   in the running script and clear them as needed: <https://stackoverflow.com/a/14624223> 
+//                   No idea if GC will fire correctly when doing this.
 //
 //           - The main thread needs to be able to send two kinds of messages to the 
 //             script thread. "Urgent" messages would be things like form deletion, 
@@ -528,6 +482,11 @@
 //       must be specified whether they return tables or userdata (e.g. "vector3 table" 
 //       versus "vector3 userdata"), as userdata do not support expandos in our particular 
 //       implementation.
+//
+//     - Script execution window: save/load buttons; button to toggle the log; add a 
+//       button to clear the log. Basically the only parts of the UI that are functional 
+//       right now are the buttons to start and stop script execution, so we need to 
+//       finish the rest.
 //
 //     - The script execution window should consist of a status message and progress 
 //       bar. Scripts should be able to set the status message, the progress bar 
