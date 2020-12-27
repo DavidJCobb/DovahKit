@@ -8,7 +8,6 @@
 #include "../../../../dovah/forms/Form.h"
 #include "script.h"
 
-#pragma region Collection: "scripts"
 namespace {
    using namespace editor_script;
 
@@ -19,6 +18,11 @@ namespace {
       __assume(data != nullptr);
       return *data;
    }
+}
+
+#pragma region Collection: "scripts"
+namespace {
+   using namespace editor_script;
 
    namespace _collections::scripts {
       wrapper& get_collection_wrapper(lua_State* L) {

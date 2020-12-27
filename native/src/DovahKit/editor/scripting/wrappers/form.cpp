@@ -1,7 +1,7 @@
 #include "form.h"
 #include "../classes.h"
 #include "../util.h"
-#include "../../../dovah/form_stub.h"
+#include "../../../dovah/forms/Form.h"
 #include "../editor_script_core.h"
 #include "../wrapper_util.h"
 
@@ -61,8 +61,12 @@ namespace {
    namespace _getters {
       luastackchange_t papyrus(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
-         if (!self.stub)
+         auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
+         if (!form)
             return 0;
+         auto* root = form->get_papyrus_data();
+         if (!root)
+            return 0; // this form type can't have Papyrus data (or loading it isn't implemented yet)
          wrapper out;
          wrap_form(out, self.stub);
          out.append_part(wrapper_part_types::papyrus_root);

@@ -62,9 +62,6 @@ namespace dovah {
          //
          loaded_form_ptr() {}
          loaded_form_ptr(form_stub* stub) : wrapped(stub) { this->_inc(); };
-         template<typename other_form_t> loaded_form_ptr(const loaded_form_ptr<other_form_t>& other) {
-            *this = other;
-         }
          template<typename other_form_t> loaded_form_ptr(loaded_form_ptr<other_form_t>&& other) {
             this->wrapped = other.wrapped;
             other.wrapped = nullptr;
