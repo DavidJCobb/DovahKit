@@ -449,10 +449,8 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    return 1;
 }
 
-void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor_script::wrapper& copy_of_target) {
-   if (!copy_of_target.stub)
-      return;
-   assert(copy_of_target.depth && !copy_of_target.is_collection && "The (copy_of_target) argument must be an element in a sequential collection.");
+void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor_script::wrapper& to_remove) {
+   assert(to_remove.depth && !to_remove.is_collection && "The (to_remove) argument must be an element in a sequential collection.");
    //
    // stack offers:
    constexpr auto soff_storage = 1;
@@ -463,29 +461,26 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
    auto  start = lua_gettop(L);
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
    //
+   auto index = to_remove.last_part().index;
+   //
    lua_pushnil(L);
    while (lua_next(L, start + soff_storage) != 0) {
       if (lua_type(L, start + soff_nv) == LUA_TUSERDATA) {
          auto* other = (editor_script::wrapper*) lua_touserdata(L, start + soff_nv);
-         if (other && copy_of_target.is_in_same_collection(*other)) {
-            auto& t_last = copy_of_target.last_part();
+         if (other && to_remove.is_in_same_collection(*other)) {
             auto& o_last = other->last_part();
-            if (t_last.index < o_last.index) {
+            if (index < o_last.index) {
                //
                // reduce (other), as a previous sibling has been deleted.
                //
                --o_last.index;
-            } else if (t_last.index == o_last.index) {
-               //
-               // destroy (other), as it's the object being deleted.
-               //
-               luaL_unref(L, start + soff_storage, other->lua_key); // remove from storage
-               //lua_pushnil(L);
-               //lua_setmetatable(L, start + soff_nv); // clear metatable to "kill" object // TODO: this causes us to lose the __gc metamethod!
             }
          }
       }
       lua_settop(L, start + soff_nk);
    }
+   auto key = to_remove.lua_key;
+   luaL_unref(L, start + soff_storage, key); // remove the target from storage. // TODO: kill the target object, too?
+   to_remove.lua_key = LUA_NOREF;
    lua_settop(L, start);
 }

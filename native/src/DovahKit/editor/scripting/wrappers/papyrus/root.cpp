@@ -106,58 +106,52 @@ namespace {
          auto& list = root.scripts;
          auto  size = list.size();
          //
-         wrapper to_remove;
+         // The way this works is fairly simple. The first non-self argument can be a wrapped 
+         // collection item, the name of a collection item, or the index of a collection item. 
+         // How do we make use of this? Well, we need to remove the desired item from the 
+         // wrapped collection, and then we need to tell the VM to update all sibling wrappers. 
+         // Consider this collection:
          //
-         lua_settop(L, 2);
+         //    A B C D E
+         //
+         // If the script sets a variable to the fourth collection item, then that variable 
+         // will point at "D." If the script then removes the second collection item, we want 
+         // to make sure that the script variable that points at "D" still does point at "D," 
+         // despite "D" no longer being the fourth item but rather now being the third item. 
+         // This means that when we delete items from wrapped sequential collections, we need 
+         // to also update the wrappers for all items in the collection that came after the 
+         // deleted item.
+         //
+         lua_settop(L, 2); // remove extra arguments
          auto* script = wrapper_from_stack<wrappers::papyrus_script>(L, 2);
-         if (script) {
-            to_remove = *script;
-         } else {
-            auto type  = lua_type(L, 2);
-            bool found = false;
-            if (type == LUA_TNUMBER) {
-               uint32_t i = lua_tointeger(L, 2);
-               if (i > 0 && i < size) {
-                  --i;
-                  to_remove = self;
-                  to_remove.append_part(cobb::eight_cc("PapyScri"), i);
-               } else {
-                  lua_tolstring(L, 2, nullptr);
-                  type = LUA_TSTRING;
-               }
-            }
-            if (type == LUA_TTABLE || type == LUA_TUSERDATA) {
-               if (luaL_callmeta(L, 2, "__tostring")) {
-                  if (!lua_isstring(L, -1))
-                     return 0;
-                  lua_replace(L, 2);
-                  type = LUA_TSTRING;
-               } else {
-                  return 0;
-               }
-            }
-            if (type == LUA_TSTRING) {
-               auto*  name = lua_tolstring(L, 2, nullptr);
-               size_t i    = 0;
-               for (; i < size; ++i)
-                  if (stricmp(list[i].name.c_str(), name) == 0)
-                     break;
-               if (i >= size)
-                  return 0;
-               //
-               to_remove = self;
-               to_remove.append_part(cobb::eight_cc("PapyScri"), i);
-            }
+         if (!script) {
+            //
+            // We weren't given a wrapped script, so what we received was either an index, a 
+            // name, or an invalid argument. Pass it directly to the collection; that's the 
+            // easiest way to "convert it to a wrapper" while avoiding code duplication. 
+            // Essentially,
+            //
+            //    arg = self.scripts[arg]
+            //
+            lua_getfield(L, 1, "scripts"); // STACK: - [ self, arg, self.scripts ] +
+            lua_rotate  (L, 2, 1);         // STACK: - [ self, self.scripts, arg ] +
+            lua_gettable(L, 2);            // STACKL - [ self, self.scripts, self.scripts[arg] ] +
+            if (lua_isnoneornil(L, 3))
+               return 0;
+            script = wrapper_from_stack<wrappers::papyrus_script>(L, 3);
+            if (!script)
+               return 0;
          }
-         if (!to_remove.depth) // didn't manage to build a useful wrapper
+         if (!script->depth) // Didn't manage to build a usable wrapper for the search-and-remove. Exit early.
             return 0;
-         auto index = to_remove.last_part().index;
-         if (index >= size)
+         auto index = script->last_part().index;
+         if (index >= size) // Invalid index on the search-and-remove wrapper. Exit early.
             return 0;
-         list.erase(list.begin() + index);
+         //
+         list.erase(list.begin() + index); // remove the underlying wrapped object
          self.mark_form_as_edited();
          //
-         DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(to_remove);
+         DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(*script); // update sibling wrappers and kill the wrapper
          return 0;
       }
    }

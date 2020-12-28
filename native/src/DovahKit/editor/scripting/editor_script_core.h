@@ -149,5 +149,5 @@ class DovahKitScriptVMUserdataInterface {
          return this->push(this->vm.lua_vm, instance, mt::metatable_key);
       }
 
-      void remove_from_sequential_collection(editor_script::wrapper& copy_of_target);
+      void remove_from_sequential_collection(editor_script::wrapper& to_remove);
 };

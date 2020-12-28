@@ -414,9 +414,6 @@ namespace editor_script {
       //
       void* userdata = lua_touserdata(luaVM, stackPos);
       if (!userdata)
-         //
-         // TODO: Every case in which we return nullptr should also log an error.
-         //
          return nullptr;
       if (!lua_getmetatable(luaVM, stackPos))
          return nullptr;
@@ -557,7 +554,7 @@ namespace editor_script {
          lua_settable  (luaVM, index_mt); // STACK: [supermeta, newmeta]
          //
          // Lua only applies "operator" metamethods using rawget, so we can't rely 
-         // on classes to inherit them automatically. We need to copy  them from 
+         // on classes to inherit them automatically. We need to copy them from 
          // the superclass to the subclass by hand. We have a helper function for 
          // this.
          //
