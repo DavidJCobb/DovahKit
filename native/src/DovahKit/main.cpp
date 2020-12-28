@@ -463,7 +463,32 @@
 //                   in the running script and clear them as needed: <https://stackoverflow.com/a/14624223> 
 //                   No idea if GC will fire correctly when doing this.
 //
-//           - The main thread needs to be able to send two kinds of messages to the 
+//           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
+//             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
+//             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
+//             API BACKEND EARLIER IN DEVELOPMENT.
+//
+//              - For extra-data types, the wrappers should always act as though 
+//                there is underlying data, and create and destroy it as appropriate. 
+//                For example, if a weapon placed in the game world doesn't have any 
+//                poison preapplied (no REFR/XPSN), (weapon.extra.poison) should not 
+//                test as nil, and assigning to (weapon.extra.poison.type) or to 
+//                (weapon.extra.poison.count) should immediately create an underlying 
+//                XPSN. Setting both properties to nil, or the type to nil and the 
+//                dose count to zero or negative, should immediately destroy the 
+//                underlying object.
+//
+//                This approach is preferable to having to define "create" and "remove" 
+//                member functions on the extra-data-root wrapper for every extra-data 
+//                type. We can't allow (weapon.extra.poison = new_something()) because 
+//                that would require allowing wrapped objects to exist without any 
+//                underlying form, which isn't possible here (i.e. you can't call a 
+//                "new" function for XPSN, pre-configure the poison, and *then* put it 
+//                on a reference, unless we decide to store its properties in Lua and 
+//                then synchronize them with any underlying wrapped object, which is... 
+//                complicated.)
+//
+//           = The main thread needs to be able to send two kinds of messages to the 
 //             script thread. "Urgent" messages would be things like form deletion, 
 //             and the script thread must check for them at every opportunity: after 
 //             sending any blocking message, during the debug hook, and when spinning 
@@ -475,6 +500,45 @@
 //          to manipulate them and respond to important events by way of Qt signals and 
 //          slots. The Lua VM should not be killed until after the script has run to 
 //          completion and all script-spawned windows (that have been shown) have closed.
+//          
+//           - We need code to allow wrappers to wrap QWidgets.
+//          
+//           - "Write" operations in the UI should not block the script unless and until 
+//             the script performs a "read" or "write" operation that depends, or may 
+//             depend, on the results of a "write" operation that the main thread has 
+//             not yet attended to.
+//             
+//              - One way to account for this, for operations that are "local" to a widget, 
+//                would be to maintain a set of "change counts" on the UI wrappers. Calling 
+//                a "write" method would increment the change count, send a message to the 
+//                main thread, and then return to script execution immediately; the message 
+//                would decrement the change count when acknowledged; and APIs which access 
+//                related data would block if the change count is non-zero.
+//                
+//                (In order for the message to decrement the change count safely, it would 
+//                have to have a pointer to the target widget's wrapper.)
+//             
+//                An example of a "local" operation is adding a new row to a list view. 
+//                This could increment a "view contents change count" on the wrapper. If 
+//                you then added another row, that wouldn't have to block; but if you were 
+//                to try and modify a row, or check the state of the rows, then that would 
+//                block.
+//                
+//                An example of a "non-local" operation is modifying font properties on a 
+//                widget. It's my understanding that font properties are heritable, which 
+//                means that an "is in italics" getter would have to check not just the 
+//                widget that it's called on, but all ancestor widgets, were we to add a 
+//                per-widget change count for font properties. We could compromise a bit 
+//                and have a global font property change count that is shared across all 
+//                widgets; then, setting font properties, too, can be asynchronous.
+//                
+//                Another "non-local" operation would be getting a widget's rendered size 
+//                or bounds -- something that can be influenced by virtually any change 
+//                to a widget, its ancestors, or its descendants. That probably shouldn't 
+//                use a change count at all, but rather should probably block if there are 
+//                any unacknowledged UI-related script-to-main messages. Similarly, moving 
+//                widgets within layouts or structures, or removing widgets, should block 
+//                until the message queue is empty.
 //
 //     - We should redirect Lua's "print" function to the same place as "dovah.log_message".
 //
