@@ -94,6 +94,9 @@ namespace {
    #pragma endregion
    //
    void _define_collection_iterator_metatables(lua_State* L) {
+      //
+      // Define the collection iterator metatables if they don't yet exist.
+      //
       auto start = lua_gettop(L);
       //
       if (luaL_getmetatable(L, iterator_mt_pairs) != LUA_TTABLE) {

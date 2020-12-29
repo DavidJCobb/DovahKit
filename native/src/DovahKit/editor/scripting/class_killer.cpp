@@ -1,5 +1,6 @@
 #include "class_killer.h"
 #include <cassert>
+#include <cstdint>
 #include "../../helpers/lua/metamethod_names.h"
 
 namespace {
@@ -19,10 +20,13 @@ namespace {
             return true;
          else if (strcmp(nk, "__name") == 0)
             return true;
+         else if (strcmp(nk, "__iszombie") == 0) // unique to zombie classes
+            return true;
       }
       return false;
    }
 
+   #pragma region Zombie class metamethods and members
    luastackchange_t _dead_method(lua_State* L) {
       return luaL_error(L, "cannot call functions on a dead object");
    }
@@ -83,6 +87,17 @@ namespace {
    luastackchange_t _dead_newindex(lua_State* L) {
       return luaL_error(L, "cannot set properties on a dead object (property name was %s)", lua_tostring(L, 2));
    }
+   #pragma endregion
+
+   void _create_zombie_sentinel_userdata(lua_State* L) {
+      auto start = lua_gettop(L);
+      lua_getfield(L, LUA_REGISTRYINDEX, zombie_sentinel_key);
+      if (lua_isnoneornil(L, start + 1)) {
+         lua_newuserdatauv(L, 1, 0);
+         lua_setfield(L, LUA_REGISTRYINDEX, zombie_sentinel_key);
+      }
+      lua_settop(L, start);
+   }
 
    luastackchange_t _create_zombie_class(lua_State* L) {
       /*
@@ -120,6 +135,8 @@ namespace {
             end
          end
       */
+      _create_zombie_sentinel_userdata(L);
+      //
       auto index_meta  = 1;
       auto index_store = 2;
       auto index_last  = 3;
@@ -164,6 +181,9 @@ namespace {
          lua_pushfstring(L, "zombie<%s>", lua_tostring(L, -1));
          lua_setfield(L, index_dead, "__name");
          lua_pop(L, 1);
+         //
+         lua_getfield(L, LUA_REGISTRYINDEX, zombie_sentinel_key);
+         lua_setfield(L, index_dead, "__iszombie");
          //
          lua_getfield (L, index_meta, "__name");
          lua_pushvalue(L, index_dead);
@@ -215,5 +235,29 @@ namespace editor_script {
       assert(!lua_isnoneornil(L, index_dead));
       lua_setmetatable(L, index_ud);
       return 0;
+   }
+
+   extern bool userdata_is_zombie(lua_State* L, int stack_pos) {
+      //
+      // We mark zombie classes by setting an "__iszombie" field on them to point to a unique 
+      // userdata that isn't accessed by anything else.  This means that even if a class or a 
+      // userscript defines an "__iszombie" key on a metatable,  we can still tell that apart 
+      // from a real zombie, because that key's value won't be our sentinel userdata.
+      //
+      if (lua_type(L, stack_pos) != LUA_TUSERDATA)
+         return false;
+      //
+      auto start = lua_gettop(L);
+      bool out   = false;
+      //
+      lua_getmetatable(L, stack_pos); // start + 1
+      if (!lua_isnoneornil(L, start + 1)) {
+         lua_getfield(L, start + 1, "__iszombie");                // start + 2
+         lua_getfield(L, LUA_REGISTRYINDEX, zombie_sentinel_key); // start + 3 // NOTE: this will be nil if no zombies have been created yet!
+         if (!lua_isnoneornil(L, start + 2) && !lua_isnoneornil(L, start + 3))
+            out = lua_compare(L, start + 2, start + 3, LUA_OPEQ) == 1;
+      }
+      lua_settop(L, start);
+      return out;
    }
 }

@@ -216,6 +216,7 @@
     <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
     <ClCompile Include="editor\scripting\classes\vector2.cpp" />
     <ClCompile Include="editor\scripting\classes\vector3.cpp" />
+    <ClCompile Include="editor\scripting\class_killer.cpp" />
     <ClCompile Include="editor\scripting\collections.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
@@ -446,6 +447,7 @@
     <ClInclude Include="editor\scripting\classes\vector2.h" />
     <ClInclude Include="editor\scripting\classes\vector3.h" />
     <ClInclude Include="editor\scripting\classes\_all.h" />
+    <ClInclude Include="editor\scripting\class_killer.h" />
     <ClInclude Include="editor\scripting\collections.h" />
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />

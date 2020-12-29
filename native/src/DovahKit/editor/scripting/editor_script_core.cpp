@@ -58,6 +58,11 @@ namespace {
       lua_pushboolean(L, true);
       return return_count + 1;
    }
+   int _wrapper_is_zombie(lua_State* L) {
+      lua_settop(L, 1);
+      lua_pushboolean(L, editor_script::userdata_is_zombie(L, 1));
+      return 1;
+   }
 }
 
 namespace _api { // APIs
@@ -212,6 +217,12 @@ void DovahKitScriptVM::_setup_lua_vm() {
       auto ti = lua_gettop(this->lua_vm);
       lua_pushstring   (this->lua_vm, "pcall");
       lua_pushcfunction(this->lua_vm, &_shimmed_pcall);
+      lua_rawset       (this->lua_vm, ti);
+   }
+   {  // object_is_zombie
+      auto ti = lua_gettop(this->lua_vm);
+      lua_pushstring   (this->lua_vm, "object_is_zombie");
+      lua_pushcfunction(this->lua_vm, &_wrapper_is_zombie);
       lua_rawset       (this->lua_vm, ti);
    }
    editor_script::prune_standard_library(this->lua_vm, "basic"); // also pops the library from the Lua stack
