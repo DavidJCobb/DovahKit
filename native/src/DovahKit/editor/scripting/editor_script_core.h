@@ -134,7 +134,7 @@ class DovahKitScriptVMUserdataInterface {
       // Remove a wrapper's metatable, and then remove it from the wrapper storage table. Effectively 
       // "kills" the wrapper. The wrapper will be deleted later, when Lua garbage-collects it.
       //
-      void remove(editor_script::wrapper*);
+      void remove(editor_script::wrapper&);
 
       //
       // Check if Lua already has an identical copy of the passed-in wrapper;  if so, push that copy 

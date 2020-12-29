@@ -16,7 +16,7 @@ namespace {
          auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object");
+            luaL_error(L, "script wrapper has no underlying object (deleted?)");
          __assume(script != nullptr);
          //
          lua_pushstring(L, script->name.c_str());
@@ -25,10 +25,10 @@ namespace {
    }
    namespace _setters {
       luastackchange_t name(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
+         auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object");
+            luaL_error(L, "script wrapper has no underlying object (deleted?)");
          __assume(script != nullptr);
          //
          script->name = lua_tolstring(L, 2, nullptr);

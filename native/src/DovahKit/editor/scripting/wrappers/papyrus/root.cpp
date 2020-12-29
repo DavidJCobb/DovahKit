@@ -14,7 +14,7 @@ namespace {
    wrappers::papyrus_root::wrapped_t& _unwrap(lua_State* L, wrapper& w) {
       auto* data = wrappers::papyrus_root::unwrap(w);
       if (!data)
-         luaL_error(L, "wrapper `%s` has no underlying object", wrappers::papyrus_root::metatable_key);
+         luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", wrappers::papyrus_root::metatable_key);
       __assume(data != nullptr);
       return *data;
    }

@@ -4,6 +4,7 @@
 #include "api/allowed_standard_apis.h"
 #include "messages/all.h"
 #include "wrappers/_build_metatables.h"
+#include "class_killer.h"
 
 #include "../core.h" // for dovah.get_form_by_id
 #include "wrapper_util.h"
@@ -382,20 +383,17 @@ void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
 }
 #pragma endregion 
 
-void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper* instance) {
-   auto* L = this->vm.lua_vm;
+void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance) {
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   //
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
-   //
-   // Wipe the wrapper's metatable, so that its member functions are no longer callable.
-   //
-   //lua_rawgeti(L, -1, instance->lua_key); // pop  0
-   //lua_pushnil(L);                        // push 1
-   //lua_setmetatable(L, -2);               // pop  1 // TODO: this causes us to lose the __gc metamethod!
-   //lua_pop(L, 1);                         // pop  1
-   //
-   // Erase the wrapper from our wrapper storage.
-   //
-   luaL_unref(L, -1, instance->lua_key);
+   auto key = instance.lua_key;
+   lua_pushcfunction(L, &editor_script::zombify_userdata);
+   lua_rawgeti      (L, start + 1, key);
+   lua_call         (L, 1, 0);
+   luaL_unref(L, start + 1, key); // remove the target from storage.
+   instance.lua_key = LUA_NOREF;
 }
 
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
@@ -439,7 +437,7 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    // +2 | -1 | newly-created wrapper
    //
    lua_pushvalue(L, -1); // push 1 // push another reference to the wrapper onto the stack, as the next function will remove whichever reference it uses
-   luaL_ref(L, -3);
+   ptr->lua_key = luaL_ref(L, -3);
    //
    // STACK: [existing wrapper, wrapper storage]
    // +1 | -2 | wrapper storage weak-table
@@ -452,7 +450,7 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
 void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor_script::wrapper& to_remove) {
    assert(to_remove.depth && !to_remove.is_collection && "The (to_remove) argument must be an element in a sequential collection.");
    //
-   // stack offers:
+   // stack offsets:
    constexpr auto soff_storage = 1;
    constexpr auto soff_nk      = 2;
    constexpr auto soff_nv      = 3;
@@ -467,7 +465,7 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
    while (lua_next(L, start + soff_storage) != 0) {
       if (lua_type(L, start + soff_nv) == LUA_TUSERDATA) {
          auto* other = (editor_script::wrapper*) lua_touserdata(L, start + soff_nv);
-         if (other && to_remove.is_in_same_collection(*other)) {
+         if (other && other->lua_key != to_remove.lua_key && to_remove.is_in_same_collection(*other)) {
             auto& o_last = other->last_part();
             if (index < o_last.index) {
                //
@@ -480,6 +478,9 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
       lua_settop(L, start + soff_nk);
    }
    auto key = to_remove.lua_key;
+   lua_pushcfunction(L, &editor_script::zombify_userdata);
+   lua_rawgeti      (L, start + soff_storage, key);
+   lua_call         (L, 1, 0);
    luaL_unref(L, start + soff_storage, key); // remove the target from storage. // TODO: kill the target object, too?
    to_remove.lua_key = LUA_NOREF;
    lua_settop(L, start);

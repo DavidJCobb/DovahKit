@@ -446,22 +446,11 @@
 //                   its wrapper and should also "kill" the wrappers for its parts.
 //
 //              - If the script deletes a form, then we can have the script VM flag 
-//                the form's wrapper as "dead," but it'll still test as not being nil, 
-//                and it'll still have callable member functions. Can we clear out its 
-//                metatable to prevent further function calls? Can we make the dead 
-//                userdata pretend to be nil, or nil out all references to it?
-//
-//                 - We tried simply removing the metatable to block further method 
-//                   calls, but that doesn't work because it causes us to lose the 
-//                   __gc metamethod, which results in us leaking owned resources and 
-//                   failing to properly tear down the smart pointers to loaded form 
-//                   data.
-//
-//                 - The __eq metamethod will not help here.
-//
-//                 - This person used dirty hacks to loop over every single variable 
-//                   in the running script and clear them as needed: <https://stackoverflow.com/a/14624223> 
-//                   No idea if GC will fire correctly when doing this.
+//                the form's wrapper as "dead," but it'll still test as not being nil. 
+//                There isn't anything we can do about that directly (*believe* me, I've 
+//                looked at all the possible approaches; none would work), so we instead 
+//                need to give script authors some means of testing whether a class is 
+//                "dead."
 //
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
