@@ -8,6 +8,8 @@ namespace editor_script {
    /*static*/ luastackchange_t wrapper::__gc(lua_State* L) {
       auto* userdata = (wrapper*)lua_touserdata(L, 1);
       userdata->~wrapper();
+      lua_pushnil(L);
+      lua_setmetatable(L, 1); // Lua can't guarantee that __gc will only be called once, so make sure there *is* no __gc to call a second time
       return 0;
    }
 }

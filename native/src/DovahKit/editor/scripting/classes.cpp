@@ -6,28 +6,29 @@
 #include "../../helpers/lua/setfuncs.h"
 
 namespace editor_script {
+   namespace {
+      bool _should_skip_name(lua_State* L, int index) {
+         index = lua_absindex(L, index);
+         if (lua_isstring(L, index)) {
+            auto nk = lua_tostring(L, index);
+            if (cobb::lua::is_metamethod_name(nk))
+               return true;
+            else if (strcmp(nk, "__getters") == 0)
+               return true;
+            else if (strcmp(nk, "__setters") == 0)
+               return true;
+            else if (strcmp(nk, "__superclass") == 0)
+               return true;
+            else if (strcmp(nk, "__name") == 0)
+               return true;
+         }
+         return false;
+      }
+   }
+
    namespace __pairs_iterators { // code for __pairs iterators
       constexpr char* metatable_key = "-cobb-class-helpers:pairs-iterator";
       //
-      namespace {
-         bool _should_skip_name(lua_State* L, int index) {
-            index = lua_absindex(L, index);
-            if (lua_isstring(L, index)) {
-               auto nk = lua_tostring(L, index);
-               if (cobb::lua::is_metamethod_name(nk))
-                  return true;
-               else if (strcmp(nk, "__getters") == 0)
-                  return true;
-               else if (strcmp(nk, "__setters") == 0)
-                  return true;
-               else if (strcmp(nk, "__superclass") == 0)
-                  return true;
-               else if (strcmp(nk, "__name") == 0)
-                  return true;
-            }
-            return false;
-         }
-      }
       static luastackchange_t __call(lua_State* L) {
          /*
          function(self, t, k)
@@ -185,6 +186,10 @@ namespace editor_script {
          if (!lua_getmetatable(luaVM, index_table)) // STACK: - [ t, k, meta ] +
             return 0;
          auto index_meta  = 3;
+         //
+         if (_should_skip_name(luaVM, index_key)) { // don't allow script code to access class internals
+            return 0;
+         }
          #if _DEBUG
             const char* __key = lua_tostring(luaVM, index_key);
          #endif
