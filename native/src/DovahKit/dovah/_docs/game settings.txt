@@ -2,7 +2,7 @@
 If you've read the documentation on how the game loads forms, then you now know 
 that GMST records don't actually define  forms. Game settings are not forms and 
 do not have form IDs,  which means  that as long as their special-case  loading 
-code is  reached, they will load regardles s of their form ID. This  means that 
+code is  reached, they will load regardless  of their form ID. This  means that 
 game settings disobey the usual rules for form IDs in the following manner:
 
  - Multiple GMSTs can share the same form ID.
@@ -47,7 +47,7 @@ the game engine handles  them. This creates the need to  actually decide how to
 handle game settings, and to what extent we should support, retain, and re-save 
 anomalous GMST records.
 
-The vast majority of GMST anomalies are  quirks arising from the fact that the 
+The vast majority  of GMST anomalies are quirks arising from  the fact that the 
 file format is not, in this case, suited to the data it is being used to store: 
 GMSTs are not forms, yet are being encoded  in a format that requires form IDs, 
 instead of some special-case format.  This means that the vast majority of GMST 

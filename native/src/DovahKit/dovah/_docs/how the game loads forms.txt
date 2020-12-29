@@ -21,7 +21,7 @@ the mod that will win.
 Sounds pretty  straightforward, then, right?  Because of  the Rule of One, only 
 one definition of a form can be loaded,  which means a form can be edited by at 
 most one file  before conflicts  occur. Except it  isn't nearly  so simple. The 
-real process [3] is as follows:
+real process is as follows:
 
 Upon encountering a record, the game checks  to see if a form is already loaded 
 into memory with that  record's form ID (which would be  the case if the record 
@@ -81,7 +81,7 @@ as the loading of GMST records and  the loading of the TES4/ONAM subrecord. [2]
 -------------------------------------------------------------------------------
 
 In practice, in order to know whether a given piece of data in a form type does 
-or does not obey the Rule of One,  a reverse-engineer must check at least three 
+or does not obey  the Rule of One, a reverse-engineer must  check at least four 
 places:
 
    void TESForm::ClearAllComponentData();                // Classic: 0x00450D00
@@ -100,7 +100,7 @@ consistent struct layouts  with the game, though the fields  are usually marked
 with a comment indicating  that they're actually parents,  not members. You can 
 safely assume  that these fields  will have their  data cleared  when a form is 
 overridden (presuming the override lacks  the "deleted" flag). Clearing them is 
-the purpose of TESForm::ClearAllComponentData. [4]
+the purpose of TESForm::ClearAllComponentData. [3]
 
 Papyrus data is also cleared off of overridden forms (again, presuming that the 
 override lacks the "deleted" flag).  The form loader communicates directly with 
@@ -167,7 +167,7 @@ all subclasses); TES4; WRLD. Special-case behaviors are as follows:
 
    INFO (dialogue topic info)
       The form  is loaded as normal.  A pointer to it is retained for  use when 
-      opening TOFT records [3].
+      opening TOFT records [4].
 
    LAND (heightmapped landscape)
       An instance is created,  and some tasks are performed  using the instance 
@@ -210,21 +210,7 @@ all subclasses); TES4; WRLD. Special-case behaviors are as follows:
       worldspace.
 
 
-[3] Records with the signature TOFT are exempt from the process described above 
-and in fact do not  define forms at all.  There is a form  type value for TOFT, 
-but it does not correspond  to any TESForm subclass  (which is somewhat normal; 
-form type constants also exist for file structure elements like the file header 
-and GRUPs).
-
-In a TOFT record, the space normally used for a form ID is instead used to hold 
-a file offset. If the offset in question  is not equal to -1 (0xFFFFFFFF) or -2 
-(0xFFFFFFFE), then  it will be supplied  to the last-loaded  topic info (INFO), 
-worldspace (WRLD), or interior cell (CELL with appropriate flag) that came from 
-the current GRUP.  The exact significance  of this file offset  is unknown, and 
-TOFT records have never been seen in the wild in any Bethesda RPG.
-
-
-[4] TESForm::ClearAllComponentData  works as follows.  First, it creates a list 
+[3] TESForm::ClearAllComponentData  works as follows.  First, it creates a list 
 of thirty-eight null pointers -- one for every one of the game's form component 
 classes. Then, it  calls a function which  dynamic-casts the  form to each such 
 component class, storing the resulting pointers. Once the list is filled, it is 
@@ -239,3 +225,17 @@ in order to determine  whether a form  type's components  are cleared, one must
 check the second of the last four  function calls made in ClearAllComponentData 
 to see if that component is the subject of a dynamic cast; if so, one must then 
 check the component class's virtual member function 0x02.
+
+
+[4] Records with the signature TOFT are exempt from the process described above 
+and in fact do not  define forms at all.  There is a form  type value for TOFT, 
+but it does not correspond  to any TESForm subclass  (which is somewhat normal; 
+form type constants also exist for file structure elements like the file header 
+and GRUPs).
+
+In a TOFT record, the space normally used for a form ID is instead used to hold 
+a file offset. If the offset in question  is not equal to -1 (0xFFFFFFFF) or -2 
+(0xFFFFFFFE), then  it will be supplied  to the last-loaded  topic info (INFO), 
+worldspace (WRLD), or interior cell (CELL with appropriate flag) that came from 
+the current GRUP.  The exact significance  of this file offset  is unknown, and 
+TOFT records have never been seen in the wild in any Bethesda RPG.

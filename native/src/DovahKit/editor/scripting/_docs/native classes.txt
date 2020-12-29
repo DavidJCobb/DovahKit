@@ -84,6 +84,9 @@ advances past the topmost class.
       if not meta then
          return nil
       end
+      if _should_skip_name(k) then
+         return nil
+      end
       while true do
          local a = rawget(meta, k)
          if a then
@@ -108,6 +111,12 @@ advances past the topmost class.
          end
       end
    end
+
+The (_should_skip_name)  function shown  above is used  to prevent scripts from 
+accessing class internals through an instance. This is needed not only to avoid 
+"unauthorized" method calls with bad  "self" values, but also to prevent a user 
+from accessing the "__gc" metamethod, which could be used to run destructors on 
+native-code classes early (or call them on nullptr, et cetera).
 
 
 ===== SETTING =================================================================

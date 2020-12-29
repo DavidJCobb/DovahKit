@@ -464,6 +464,7 @@
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />
     <ClInclude Include="editor\scripting\wrapper_util.h" />
+    <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
     <ClInclude Include="helpers\eight_cc.h" />
     <ClInclude Include="helpers\lua\metamethod_names.h" />
     <ClInclude Include="helpers\lua\dump.h" />

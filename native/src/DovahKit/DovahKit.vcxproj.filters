@@ -1202,6 +1202,9 @@
     <ClInclude Include="editor\scripting\class_killer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

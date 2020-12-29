@@ -80,15 +80,15 @@ All nice and simple.
 
 == Anywho... ==================================================================
 
-There are other major and as-yet-unresolved complications that arise from these 
-forms. One is how to  handle their outbound references.  Consider the case of a 
-DOBJ singleton form that refers to some KYWD. Deleting the KYWD form would lead 
-DovahKit to try  and sever outbound references  from the DOBJ  form stub to the 
-KYWD being deleted.  Except here's the thing:  what if the  DOBJ singleton form 
-refers to the to-be-deleted  KYWD form in a dependency,  rather than the active 
-file? Well, that leads to use trying to sever outbound references from multiple 
-DOBJ stubs,  not just the canonical one,  which in turn leads to  each of these 
-stubs being flagged as edited.
+There are other major complications that  arise from these forms. One is how to 
+handle their  outbound references.  Consider the case of a DOBJ  singleton form 
+that refers to some KYWD. Deleting the KYWD form would lead DovahKit to try and 
+sever outbound  references from the DOBJ  form stub to the KYWD  being deleted. 
+Except here's the thing: what if the singleton form refers to the to-be-deleted 
+KYWD form in a dependency, rather than  the active file? Well, that leads to us 
+trying to sever outbound references from multiple DOBJ form stubs, not just the 
+canonical one, which in turn leads to each of these form stubs being flagged as 
+edited.
 
 With the approach in which we copy source  file information between stubs, this 
 doesn't have any immediately obvious  consequences. We're still identifying the 

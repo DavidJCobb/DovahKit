@@ -144,7 +144,10 @@ knowledge. If the new form is of an  inappropriate type, then this will produce
 a warning, but not  the right warning; however, if it's of  an appropriate type 
 for the dangling reference in question,  then no warning will occur: there will 
 be no indication that a change has occurred, even though this change could lead 
-to undesired behavior in-game.
+to undesired behavior in-game.  On top of all of this, if the user were to edit 
+this retroactively-created  form-to-form reference,  then form-to-form use info 
+would fall out of synch. (Imagine a form  claiming to use another form negative 
+one times, and then remember that use counts are unsigned. Yikes!)
 
 The solution to this is "none-stubs."  During the process in which we build all 
 inbound use info using the already-built outbound use info, we want to scan for 
