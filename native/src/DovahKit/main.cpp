@@ -427,35 +427,22 @@
 //                   Native code will not *consistently* invoke these metamethods. Sometimes 
 //                   they'll work; sometimes they won't. Consider this UB.
 //
-//              - Lua collections work
-//
-//                 - The code for papyrus_root:remove_script(...) has a lot of boilerplate, 
-//                   to build a "to_remove" wrapper given an argument that can be a script 
-//                   name, a list index, or an existing script wrapper; when the argument 
-//                   isn't an existing wrapper, it takes quite a bit of work to convert it 
-//                   to a valid list index (even if it already is an unverified list index). 
-//                   How much of this code can we move to a helper function?
-//
-//                    - Perhaps that function can take a collection size, and a lambda that 
-//                      can be used to find the index of a named element in the collection.
-//
 //              - We need to handle signals like form deletion and similar, which should 
 //                exist as "urgent" main-to-script messages.
 //
 //                 - This is needed for parts of forms: deleting the form should "kill" 
 //                   its wrapper and should also "kill" the wrappers for its parts.
 //
-//              - If the script deletes a form, then we can have the script VM flag 
-//                the form's wrapper as "dead," but it'll still test as not being nil. 
-//                There isn't anything we can do about that directly (*believe* me, I've 
-//                looked at all the possible approaches; none would work), so we instead 
-//                need to give script authors some means of testing whether a class is 
-//                "dead."
-//
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
 //             API BACKEND EARLIER IN DEVELOPMENT.
+//
+//              - Before we implement access to any more form data, we should implement 
+//                code for creating, renumbering, and deleting forms; and before we 
+//                implement even that, we should rearrange how wrappers are tracked 
+//                internally (indexing them by form ID as described above) in order to 
+//                optimize internal processes.
 //
 //              - For extra-data types, the wrappers should always act as though 
 //                there is underlying data, and create and destroy it as appropriate. 
