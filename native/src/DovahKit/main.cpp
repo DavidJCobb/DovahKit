@@ -409,22 +409,16 @@
 //
 //                 - Classes
 //
-//                    - euler
-//                    - matrix3x3
 //                    - quaternion
 //
 //                 - Ways to instantiate new instances from inside of a script (ideally 
 //                   a singleton named after the class with methods like "new", "is", 
 //                   and so on)
 //
-//                    - euler
-//                    - matrix3x3
 //                    - quaternion
 //
 //                 - Ways to test whether any given value is an instance of the class
 //
-//                    - euler
-//                    - matrix3x3
 //                    - quaternion
 //
 //                 = Note: it is theoretically possible to create a vector3 instance and 

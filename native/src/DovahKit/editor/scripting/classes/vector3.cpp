@@ -6,22 +6,6 @@ namespace {
    using namespace editor_script;
    using cls = classes::vector3;
 
-   void _make_vector(lua_State* L, double x, double y, double z) { // creates a new Vector3 (as a normal table with "x", "y", and "z" members) on the top of the stack
-      lua_createtable  (L, 0, 3);
-      auto index = lua_gettop(L);
-      luaL_getmetatable(L, cls::metatable_key);
-      lua_setmetatable (L, index);
-      lua_pushstring   (L, "x");
-      lua_pushnumber   (L, x);
-      lua_rawset       (L, index);
-      lua_pushstring   (L, "y");
-      lua_pushnumber   (L, y);
-      lua_rawset       (L, index);
-      lua_pushstring   (L, "z");
-      lua_pushnumber   (L, z);
-      lua_rawset       (L, index);
-   }
-
    int _simple_vector_operator_overload(lua_State* L, int op) { // returns new vector
       cls::require_self_type(L);
       auto rawtype = lua_type(L, 2);
@@ -42,7 +26,7 @@ namespace {
       lua_getfield(L, 2, "z");
       lua_arith(L, op);
       //
-      _make_vector(L, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+      cls::push_new_instance(L, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
       return 1;
    }
    int _simple_vector_assign_operator_overload(lua_State* L, int op) { // modifies and returns self
@@ -93,7 +77,7 @@ namespace {
          lua_pushnumber(L, scalar);
          lua_arith     (L, LUA_OPDIV); // 5
          //
-         _make_vector(L, lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+         cls::push_new_instance(L, lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
          return 1;
       }
       luastackchange_t __sub(lua_State* L) { // creates and returns new vector
@@ -147,7 +131,7 @@ namespace {
          y = lua_tonumber(L, 4);
          z = lua_tonumber(L, 5);
          //
-         _make_vector(L, x, y, z);
+         cls::push_new_instance(L, x, y, z);
          return 1;
       }
       luastackchange_t cross(lua_State* L) { // compute the cross product vector of two 3D vectors
@@ -175,7 +159,7 @@ namespace {
          lua_Number x = ay * bz - az * by;
          lua_Number y = az * bx - ax * bz;
          lua_Number z = ax * by - ay * bx;
-         _make_vector(L, x, y, z);
+         cls::push_new_instance(L, x, y, z);
          return 1;
       }
       luastackchange_t length(lua_State* L) {
@@ -231,7 +215,7 @@ namespace {
          // end
          //
          if (lua_isnumber(L, 1)) {
-            _make_vector(L, lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
+            cls::push_new_instance(L, lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
             return 1;
          }
          auto rawtype = lua_type(L, 1);
@@ -240,10 +224,10 @@ namespace {
             lua_getfield(L, 1, "x");
             lua_getfield(L, 1, "y");
             lua_getfield(L, 1, "z");
-            _make_vector(L, lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
+            cls::push_new_instance(L, lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
             return 1;
          }
-         _make_vector(L, 0.0, 0.0, 0.0);
+         cls::push_new_instance(L, 0.0, 0.0, 0.0);
          return 1;
       }
       luastackchange_t is(lua_State* L) {
@@ -270,6 +254,22 @@ namespace editor_script::classes {
       { "length_squared", &_methods::length_squared },
       { "sub",            &_methods::sub },   // operator-=
    };
+
+   /*static*/ void vector3::push_new_instance(lua_State* L, lua_Number x, lua_Number y, lua_Number z) {
+      lua_createtable  (L, 0, 3);
+      auto index = lua_gettop(L);
+      luaL_getmetatable(L, metatable_key);
+      lua_setmetatable (L, index);
+      lua_pushstring   (L, "x");
+      lua_pushnumber   (L, x);
+      lua_rawset       (L, index);
+      lua_pushstring   (L, "y");
+      lua_pushnumber   (L, y);
+      lua_rawset       (L, index);
+      lua_pushstring   (L, "z");
+      lua_pushnumber   (L, z);
+      lua_rawset       (L, index);
+   }
 
    /*static*/ void vector3::setup(lua_State* L) {
       editor_script::define_class(L, metatable_key, nullptr, metatable_methods);

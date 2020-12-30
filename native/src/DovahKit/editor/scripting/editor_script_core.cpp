@@ -16,6 +16,8 @@
 
 namespace {
    constexpr char* wrapper_storage_registry_key = "dovah.internals.extant_wrappers";
+
+   constexpr char* string_format_registry_key = "cached:string.format"; // key for a cached copy of (string.format), in case a script monkeypatches/replaces the original
 }
 
 namespace {
@@ -59,6 +61,23 @@ namespace {
       int return_count = lua_gettop(L);
       lua_pushboolean(L, true);
       return return_count + 1;
+   }
+   int _shimmed_print(lua_State* L) {
+      auto  m    = new editor_script::messages::log_text();
+      auto& text = m->text;
+      //
+      auto argcount = lua_gettop(L);
+      for (int i = 1; i <= argcount; ++i) {
+         size_t length;
+         auto*  content = luaL_tolstring(L, i, &length);
+         if (i > 1)
+            text += '\t';
+         text += QString::fromUtf8(content, length);
+         lua_pop(L, 1);
+      }
+      //
+      DovahKitScriptVMMessenger::get().send_message(m);
+      return 0;
    }
    int _wrapper_is_zombie(lua_State* L) {
       lua_settop(L, 1);
@@ -155,11 +174,18 @@ namespace _api { // APIs
          luastackchange_t log_message(lua_State* L) {
             auto m = new editor_script::messages::log_text();
             //
-            const char* out = nullptr;
-            if (lua_isstring(L, 1)) {
-               out = lua_tostring(L, 1);
-            } else {
-               out = ""; // TODO: stringify value if possible
+            auto argcount = lua_gettop(L);
+            if (!argcount)
+               return 0;
+            lua_getfield(L, LUA_REGISTRYINDEX, string_format_registry_key);
+            if (lua_isfunction(L, argcount + 1)) {
+               lua_rotate(L, 1, 1); // move (string.format) ahead of the other stack elements
+               lua_call  (L, argcount, 1);
+            }
+            //
+            const char* out = lua_tostring(L, 1);
+            if (!out) {
+               out = "";
             }
             m->text = QString::fromUtf8(out);
             //
@@ -240,6 +266,12 @@ void DovahKitScriptVM::_setup_lua_vm() {
       lua_pushcfunction(this->lua_vm, &_shimmed_pcall);
       lua_rawset       (this->lua_vm, ti);
    }
+   {  // shim print
+      auto ti = lua_gettop(this->lua_vm);
+      lua_pushstring   (this->lua_vm, "print");
+      lua_pushcfunction(this->lua_vm, &_shimmed_print);
+      lua_rawset       (this->lua_vm, ti);
+   }
    {  // object_is_zombie
       auto ti = lua_gettop(this->lua_vm);
       lua_pushstring   (this->lua_vm, "object_is_zombie");
@@ -257,6 +289,11 @@ void DovahKitScriptVM::_setup_lua_vm() {
    editor_script::prune_standard_library(this->lua_vm, "table");
    luaL_requiref(this->lua_vm, "utf8",   luaopen_utf8, 1);
    editor_script::prune_standard_library(this->lua_vm, "utf8");
+   //
+   lua_getglobal(this->lua_vm, "string");
+   lua_getfield (this->lua_vm, -1, "format");
+   lua_setfield (this->lua_vm, LUA_REGISTRYINDEX, string_format_registry_key);
+   lua_pop(this->lua_vm, 1);
    //
    editor_script::expose_form_types_to_lua(this->lua_vm);
    //
