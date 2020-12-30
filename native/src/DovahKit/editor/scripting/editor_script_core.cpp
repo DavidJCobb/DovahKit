@@ -281,6 +281,8 @@ void DovahKitScriptVM::_setup_lua_vm() {
    #pragma endregion
    editor_script::build_all_wrapper_metatables(this->lua_vm);
    editor_script::define_class(this->lua_vm, editor_script::classes::benchmark::metatable_key, nullptr, editor_script::classes::benchmark::metatable_methods);
+   editor_script::classes::euler::setup(this->lua_vm);
+   editor_script::classes::matrix3x3::setup(this->lua_vm);
    editor_script::classes::vector2::setup(this->lua_vm);
    editor_script::classes::vector3::setup(this->lua_vm);
    //
