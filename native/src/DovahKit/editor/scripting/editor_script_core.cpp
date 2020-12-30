@@ -7,6 +7,7 @@
 #include "class_killer.h"
 
 #include "../core.h" // for dovah.get_form_by_id
+#include "api/form_type_values.h"
 #include "wrapper_util.h"
 #include "wrappers/form.h"
 #include "classes/_all.h"
@@ -25,6 +26,7 @@ namespace {
          __assume(0); // luaL_error performs a jump and so does not return
       }
    }
+
    int _shimmed_collectgarbage(lua_State* L) {
       luaL_argcheck(L, lua_isstring(L, 1), 1, "The argument must be a string.");
       if (strcmp(lua_tostring(L, 1), "collect") != 0) {
@@ -98,7 +100,26 @@ namespace _api { // APIs
             auto& editor = DovahKitCore::get();
             if (!editor.has_data())
                return 0;
-            ::dovah::form_type_t ft = lua_tonumber(L, 1);
+            //
+            bool  valid = false;
+            auto  ft    = editor_script::get_form_type_from_stack(L, 1, valid);
+            if (!valid)
+               return 0;
+            auto& info  = ::dovah::form_type_info::lookup(ft);
+            if (info.flags & ::dovah::form_type_info::flag::is_singleton) {
+               //
+               // For singleton forms, only use the canonical stub.
+               //
+               auto* stub = editor.get_singleton_form(ft, false);
+               if (stub) {
+                  lua_pushvalue(L, 2); // push the function
+                  wrapper out;
+                  auto*   mt = wrap_form(out, stub);
+                  if (DovahKitScriptVMUserdataInterface::get().push(L, out, mt))
+                     lua_call(L, 1, 1);
+               }
+               return 0;
+            }
             //
             editor.for_each_form_of_type(ft, [L](::dovah::form_stub* stub) {
                lua_pushvalue(L, 2); // push the function
@@ -236,6 +257,8 @@ void DovahKitScriptVM::_setup_lua_vm() {
    editor_script::prune_standard_library(this->lua_vm, "table");
    luaL_requiref(this->lua_vm, "utf8",   luaopen_utf8, 1);
    editor_script::prune_standard_library(this->lua_vm, "utf8");
+   //
+   editor_script::expose_form_types_to_lua(this->lua_vm);
    //
    // Prepare API classes:
    //
@@ -405,6 +428,8 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
    lua_call         (L, 1, 0);
    luaL_unref(L, start + 1, key); // remove the target from storage.
    instance.lua_key = LUA_NOREF;
+   instance.stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
+   instance.form    = nullptr;
 }
 
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
@@ -494,5 +519,7 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
    lua_call         (L, 1, 0);
    luaL_unref(L, start + soff_storage, key); // remove the target from storage. // TODO: kill the target object, too?
    to_remove.lua_key = LUA_NOREF;
+   to_remove.stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
+   to_remove.form    = nullptr;
    lua_settop(L, start);
 }

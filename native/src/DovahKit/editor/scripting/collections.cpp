@@ -311,23 +311,20 @@ namespace editor_script {
          lua_setfield(L, index_mt, "__len");
       }
       //
-      if (lookup_item_by_name)
+      if (lookup_item_by_name) {
          lua_pushcfunction(L, lookup_item_by_name);
-      else
-         lua_pushnil(L);
-      lua_setfield(L, index_mt, "lookup_item_by_name");
+         lua_setfield(L, index_mt, "lookup_item_by_name");
+      }
       //
-      if (lookup_item_by_index)
+      if (lookup_item_by_index) {
          lua_pushcfunction(L, lookup_item_by_index);
-      else
-         lua_pushnil(L);
-      lua_setfield(L, index_mt, "lookup_item_by_index");
+         lua_setfield(L, index_mt, "lookup_item_by_index");
+      }
       //
-      if (get_all_item_names)
+      if (get_all_item_names) {
          lua_pushcfunction(L, get_all_item_names);
-      else
-         lua_pushnil(L);
-      lua_setfield(L, index_mt, "get_all_item_names");
+         lua_setfield(L, index_mt, "get_all_item_names");
+      }
       //
       lua_pop(L, 1); // pop metatable
    }

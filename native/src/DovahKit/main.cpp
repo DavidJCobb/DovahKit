@@ -172,6 +172,11 @@
 //          stubs for DOBJ, then there may be multiple using DOBJs listed. That may 
 //          get awkward.
 //
+//        - Could editing the record flags on a singleton form stub confuse the 
+//          file_load_order with respect to which stub is canonical? Editing the 
+//          record flags requires creating a new source file entry, no? And we use 
+//          the stub with the most such entries as the canonical stub.
+//
 //     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
 //       TESForm class and so it does have a form ID.
 //
@@ -527,6 +532,10 @@
 //       button to clear the log. Basically the only parts of the UI that are functional 
 //       right now are the buttons to start and stop script execution, so we need to 
 //       finish the rest.
+//
+//        - Attempting to close the window while a script is running should pop a 
+//          confirmation box asking whether to terminate the script. If the user 
+//          cancels, then don't close the window.
 //
 //     - The script execution window should consist of a status message and progress 
 //       bar. Scripts should be able to set the status message, the progress bar 

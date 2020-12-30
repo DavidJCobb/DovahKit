@@ -579,6 +579,9 @@
     <ClCompile Include="editor\scripting\class_killer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\api\form_type_values.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1203,6 +1206,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\api\form_type_values.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -212,6 +212,7 @@
     <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
+    <ClCompile Include="editor\scripting\api\form_type_values.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
     <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
     <ClCompile Include="editor\scripting\classes\vector2.cpp" />
@@ -442,6 +443,7 @@
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
     <QtMoc Include="editor\scripting\editor_script_core.h" />
     <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
+    <ClInclude Include="editor\scripting\api\form_type_values.h" />
     <ClInclude Include="editor\scripting\classes.h" />
     <ClInclude Include="editor\scripting\classes\benchmark.h" />
     <ClInclude Include="editor\scripting\classes\vector2.h" />
