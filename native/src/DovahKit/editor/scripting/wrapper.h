@@ -47,6 +47,7 @@ namespace editor_script {
             this->lua_key = LUA_NOREF;
          }
 
+         bool is_descendant_of(const wrapper& other) const noexcept;
          bool is_equal(const wrapper* other) const noexcept;
          bool is_in_same_collection(const wrapper& other) const noexcept;
 

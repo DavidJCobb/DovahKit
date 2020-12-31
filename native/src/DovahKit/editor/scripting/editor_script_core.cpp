@@ -459,16 +459,60 @@ void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
 void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance) {
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
+   auto  index = instance.last_part().index;
+   //
+   std::vector<int> refs_to_sever;
+   refs_to_sever.push_back(instance.lua_key);
+   //
+   constexpr auto soff_storage = 1;
+   constexpr auto soff_nk      = 2;
+   constexpr auto soff_nv      = 3;
    //
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
-   auto key = instance.lua_key;
-   lua_pushcfunction(L, &editor_script::zombify_userdata);
-   lua_rawgeti      (L, start + 1, key);
-   lua_call         (L, 1, 0);
-   luaL_unref(L, start + 1, key); // remove the target from storage.
-   instance.lua_key = LUA_NOREF;
-   instance.stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
-   instance.form    = nullptr;
+   //
+   // If the wrapper to be removed is in a sequential collection, fix up the indices of all 
+   // of its next-siblings. Either way, identify and track the keys of any child/descendant 
+   // wrappers.
+   //
+   lua_pushnil(L);
+   while (lua_next(L, start + soff_storage) != 0) {
+      editor_script::wrapper* other = nullptr;
+      if (lua_type(L, start + soff_nv) == LUA_TUSERDATA)
+         other = (editor_script::wrapper*) lua_touserdata(L, start + soff_nv);
+      //
+      lua_settop(L, start + soff_nk);
+      //
+      if (!other || other->lua_key == instance.lua_key)
+         continue;
+      if (instance.is_in_same_collection(*other)) {
+         auto& o_last = other->last_part();
+         if (index < o_last.index)
+            //
+            // reduce (other), as a previous sibling has been deleted.
+            //
+            --o_last.index;
+      } else if (other->is_descendant_of(instance)) {
+         refs_to_sever.push_back(other->lua_key);
+      }
+   }
+   //
+   // Zombify and forget the wrapper and all of its descendants.
+   //
+   lua_settop(L, start + soff_storage);
+   for (auto key : refs_to_sever) {
+      lua_pushcfunction(L, &editor_script::zombify_userdata); // prepare to make a Lua call...
+      lua_rawgeti      (L, start + soff_storage, key);
+      //
+      auto* target = (editor_script::wrapper*) lua_touserdata(L, -1);
+      assert(target && target->lua_key == key);
+      target->lua_key = LUA_NOREF;
+      target->stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
+      target->form    = nullptr;
+      //
+      lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
+      //
+      luaL_unref(L, start + soff_storage, key); // remove the target from storage.
+   }
 }
 
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
@@ -524,41 +568,5 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
 
 void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor_script::wrapper& to_remove) {
    assert(to_remove.depth && !to_remove.is_collection && "The (to_remove) argument must be an element in a sequential collection.");
-   //
-   // stack offsets:
-   constexpr auto soff_storage = 1;
-   constexpr auto soff_nk      = 2;
-   constexpr auto soff_nv      = 3;
-   //
-   auto* L     = this->vm.lua_vm;
-   auto  start = lua_gettop(L);
-   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
-   //
-   auto index = to_remove.last_part().index;
-   //
-   lua_pushnil(L);
-   while (lua_next(L, start + soff_storage) != 0) {
-      if (lua_type(L, start + soff_nv) == LUA_TUSERDATA) {
-         auto* other = (editor_script::wrapper*) lua_touserdata(L, start + soff_nv);
-         if (other && other->lua_key != to_remove.lua_key && to_remove.is_in_same_collection(*other)) {
-            auto& o_last = other->last_part();
-            if (index < o_last.index) {
-               //
-               // reduce (other), as a previous sibling has been deleted.
-               //
-               --o_last.index;
-            }
-         }
-      }
-      lua_settop(L, start + soff_nk);
-   }
-   auto key = to_remove.lua_key;
-   lua_pushcfunction(L, &editor_script::zombify_userdata);
-   lua_rawgeti      (L, start + soff_storage, key);
-   lua_call         (L, 1, 0);
-   luaL_unref(L, start + soff_storage, key); // remove the target from storage. // TODO: kill the target object, too?
-   to_remove.lua_key = LUA_NOREF;
-   to_remove.stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
-   to_remove.form    = nullptr;
-   lua_settop(L, start);
+   this->remove(to_remove);
 }

@@ -50,6 +50,24 @@ namespace editor_script {
       return true;
    }
 
+   bool wrapper::is_descendant_of(const wrapper& other) const noexcept {
+      if (this->depth < other.depth)
+         return false;
+      if (this->depth == other.depth) {
+         if (!other.is_collection)
+            return false;
+         if (this->is_collection)
+            return false;
+      }
+      if (this->type == wrapper_type::form_data) {
+         if (this->stub != other.stub)
+            return false;
+      }
+      for (uint8_t i = 0; i < other.depth; ++i)
+         if (this->parts[i] != other.parts[i])
+            return false;
+      return true;
+   }
    bool wrapper::is_equal(const wrapper* other) const noexcept {
       if (this->type != other->type)
          return false;

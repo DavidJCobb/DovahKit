@@ -173,7 +173,7 @@ complicated, so let's start with a simple explanation of how "pairs" works.
 The "__pairs"  metamethod must  return three things:  a callable  iterator, the 
 table to iterate on, and the zeroth (not first) key to iterate (typically nil). 
 A default implementation is stateless (or rather, relies on the Lua VM to store 
-state for it) and looks like this:
+state for it as part of the functionality for "next") and looks like this:
 
    function meta.__pairs(self)
       return next, self, nil
