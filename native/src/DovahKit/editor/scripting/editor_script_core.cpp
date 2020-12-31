@@ -177,6 +177,13 @@ namespace _api { // APIs
             auto argcount = lua_gettop(L);
             if (!argcount)
                return 0;
+            //
+            if (lua_type(L, 1) != LUA_TSTRING) { // coerce argument 1 to a string if it isn't one, as string.format doesn't do this automatically
+               luaL_tolstring(L, 1, nullptr);
+               lua_copy(L, argcount + 1, 1);
+               lua_pop(L, 1);
+            }
+            //
             lua_getfield(L, LUA_REGISTRYINDEX, string_format_registry_key);
             if (lua_isfunction(L, argcount + 1)) {
                lua_rotate(L, 1, 1); // move (string.format) ahead of the other stack elements

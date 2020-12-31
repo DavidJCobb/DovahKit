@@ -66,7 +66,7 @@ namespace {
    }
 
    namespace _singleton_functions {
-      luastackchange_t new_obj(lua_State* L) {
+      luastackchange_t _new_obj(lua_State* L, bool degrees) {
          //
          // function euler.new(a, b, c)
          //    if tonumber(a) then
@@ -87,7 +87,13 @@ namespace {
          // -- euler.new()
          //
          if (lua_isnumber(L, 1)) {
-            cls::push_new_instance(L, { lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3) });
+            double coords[3];
+            for (int i = 0; i < 3; ++i) {
+               coords[i] = lua_tonumber(L, 1 + i);
+               if (degrees)
+                  coords[i] = cobb::degrees_to_radians(coords[i]);
+            }
+            cls::push_new_instance(L, { coords[0], coords[1], coords[2] });
             return 1;
          }
          auto rawtype = lua_type(L, 1);
@@ -110,6 +116,8 @@ namespace {
                   }
                }
                coords[i] = lua_tonumber(L, 2);
+               if (degrees)
+                  coords[i] = cobb::degrees_to_radians(coords[i]);
                lua_settop(L, 1);
             }
             //
@@ -118,6 +126,13 @@ namespace {
          }
          cls::push_new_instance(L, {});
          return 1;
+      }
+      //
+      luastackchange_t from_degrees(lua_State* L) {
+         return _new_obj(L, true);
+      }
+      luastackchange_t from_radians(lua_State* L) {
+         return _new_obj(L, false);
       }
       luastackchange_t is(lua_State* L) {
          if (cls::check_arg_type(L, 1)) {
@@ -159,10 +174,12 @@ namespace editor_script::classes {
       // Create singleton:
       //
       lua_createtable(L, 0, 2);
-      lua_pushcfunction(L, &_singleton_functions::new_obj);
-      lua_setfield(L, -2, "new");
+      lua_pushcfunction(L, &_singleton_functions::from_degrees);
+      lua_setfield     (L, -2, "from_degrees");
+      lua_pushcfunction(L, &_singleton_functions::from_radians);
+      lua_setfield     (L, -2, "from_radians");
       lua_pushcfunction(L, &_singleton_functions::is);
-      lua_setfield(L, -2, "is");
+      lua_setfield     (L, -2, "is");
       lua_setglobal(L, cls::global_name);
    }
 }
