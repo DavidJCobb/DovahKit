@@ -320,6 +320,7 @@ void DovahKitScriptVM::_setup_lua_vm() {
    editor_script::define_class(this->lua_vm, editor_script::classes::benchmark::metatable_key, nullptr, editor_script::classes::benchmark::metatable_methods);
    editor_script::classes::euler::setup(this->lua_vm);
    editor_script::classes::matrix3x3::setup(this->lua_vm);
+   editor_script::classes::quaternion::setup(this->lua_vm);
    editor_script::classes::vector2::setup(this->lua_vm);
    editor_script::classes::vector3::setup(this->lua_vm);
    //

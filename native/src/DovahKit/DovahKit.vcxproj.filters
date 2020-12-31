@@ -591,6 +591,9 @@
     <ClCompile Include="editor\scripting\classes\matrix3x3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\classes\quaternion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1230,6 +1233,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\classes\matrix3x3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\classes\quaternion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\lua\set_top_on_exit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

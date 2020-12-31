@@ -4,6 +4,7 @@
 
 #include "../../../helpers/rotation.h"
 #include "euler.h"
+#include "quaternion.h"
 #include "vector3.h"
 
 namespace {
@@ -163,9 +164,7 @@ namespace {
          cls::require_self_type(L);
          lua_settop(L, 1);
          //
-         cobb::rotation_matrix dupe = cls::extract_from_stack(L, 1);
-         //
-         cls::push_new_instance(L, dupe);
+         cls::push_new_instance(L, cls::extract_from_stack(L, 1));
          return 1;
       }
       luastackchange_t determinant(lua_State* L) {
@@ -224,9 +223,16 @@ namespace {
          cls::require_self_type(L);
          lua_settop(L, 1);
          //
-         auto instance  = cls::extract_from_stack(L, 1);
-         auto converted = (cobb::euler)instance;
+         auto converted = (cobb::euler) cls::extract_from_stack(L, 1);
          classes::euler::push_new_instance(L, converted);
+         return 1;
+      }
+      luastackchange_t to_quaternion(lua_State* L) {
+         cls::require_self_type(L);
+         lua_settop(L, 1);
+         //
+         auto converted = (cobb::quaternion) cls::extract_from_stack(L, 1);
+         classes::quaternion::push_new_instance(L, converted);
          return 1;
       }
       luastackchange_t set_row(lua_State* L) {
@@ -290,6 +296,7 @@ namespace editor_script::classes {
       { "mul",                &_methods::mul }, // modifies self (unless operand is not a matrix3x3)
       { "set_row",            &_methods::set_row },
       { "to_euler",           &_methods::to_euler },
+      { "to_quaternion",      &_methods::to_quaternion },
       { "trace",              &_methods::trace },
       { "transpose",          &_methods::transpose },
       { "transpose_in_place", &_methods::transpose_in_place },

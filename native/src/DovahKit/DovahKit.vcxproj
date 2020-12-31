@@ -217,6 +217,7 @@
     <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
     <ClCompile Include="editor\scripting\classes\euler.cpp" />
     <ClCompile Include="editor\scripting\classes\matrix3x3.cpp" />
+    <ClCompile Include="editor\scripting\classes\quaternion.cpp" />
     <ClCompile Include="editor\scripting\classes\vector2.cpp" />
     <ClCompile Include="editor\scripting\classes\vector3.cpp" />
     <ClCompile Include="editor\scripting\class_killer.cpp" />
@@ -451,6 +452,7 @@
     <ClInclude Include="editor\scripting\classes\benchmark.h" />
     <ClInclude Include="editor\scripting\classes\euler.h" />
     <ClInclude Include="editor\scripting\classes\matrix3x3.h" />
+    <ClInclude Include="editor\scripting\classes\quaternion.h" />
     <ClInclude Include="editor\scripting\classes\vector2.h" />
     <ClInclude Include="editor\scripting\classes\vector3.h" />
     <ClInclude Include="editor\scripting\classes\_all.h" />
@@ -476,6 +478,7 @@
     <ClInclude Include="helpers\lua\metamethod_names.h" />
     <ClInclude Include="helpers\lua\dump.h" />
     <ClInclude Include="helpers\lua\setfuncs.h" />
+    <ClInclude Include="helpers\lua\set_top_on_exit.h" />
     <ClInclude Include="helpers\matrix.h" />
     <ClInclude Include="helpers\rotation.h" />
     <ClInclude Include="helpers\windows_environment.h" />

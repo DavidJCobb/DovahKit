@@ -4,6 +4,7 @@
 
 #include "../../../helpers/rotation.h"
 #include "matrix3x3.h"
+#include "quaternion.h"
 
 namespace {
    using namespace editor_script;
@@ -49,12 +50,25 @@ namespace {
          classes::matrix3x3::push_new_instance(L, converted);
          return 1;
       }
+      luastackchange_t to_quaternion(lua_State* L) { // compute the cross product vector of two 3D vectors
+         cls::require_self_type(L);
+         lua_settop(L, 1);
+         //
+         lua_getfield(L, 1, "x");
+         lua_getfield(L, 1, "y");
+         lua_getfield(L, 1, "z");
+         auto converted = (cobb::quaternion) cobb::euler{ lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4) };
+         lua_settop(L, 1);
+         //
+         classes::quaternion::push_new_instance(L, converted);
+         return 1;
+      }
    }
 
    namespace _singleton_functions {
       luastackchange_t new_obj(lua_State* L) {
          //
-         // function euler:new(a, b, c)
+         // function euler.new(a, b, c)
          //    if tonumber(a) then
          //       return _make_instance(a, b, c)
          //    end
@@ -64,6 +78,14 @@ namespace {
          //    return _make_instance(0, 0, 0)
          // end
          //
+         // -- euler.new(1, 2, 3)
+         // -- euler.new({ 1, 2, 3 })
+         // -- euler.new({ x = 1, y = 2, z = 3 })
+         // -- euler.new({ 1, 2, z = 3})
+         // -- euler.new({ 1, 2 })        -- warns and uses zeroes for missing values
+         // -- euler.new({ foo = "bar" }) -- warns and uses zeroes for missing values
+         // -- euler.new()
+         //
          if (lua_isnumber(L, 1)) {
             cls::push_new_instance(L, { lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3) });
             return 1;
@@ -71,10 +93,27 @@ namespace {
          auto rawtype = lua_type(L, 1);
          if (rawtype == LUA_TTABLE || rawtype == LUA_TUSERDATA) {
             lua_settop(L, 1);
-            lua_getfield(L, 1, "x");
-            lua_getfield(L, 1, "y");
-            lua_getfield(L, 1, "z");
-            cls::push_new_instance(L, { lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4) });
+            //
+            double coords[3];
+            char   s[2]   = "x";
+            bool   warned = false;
+            for (s[0] = 'x'; s[0] <= 'z'; ++s[0]) {
+               int i = s[0] - 'x';
+               //
+               lua_getfield(L, 1, s);
+               if (!lua_isnumber(L, 2)) {
+                  lua_settop(L, 1);
+                  lua_geti  (L, 1, i + 1);
+                  if (!warned && !lua_isnumber(L, 2)) {
+                     lua_warning(L, "attempting to construct an euler from a table unsuited to the task (non-numeric or absent array or x/y/z members)", 0);
+                     warned = true;
+                  }
+               }
+               coords[i] = lua_tonumber(L, 2);
+               lua_settop(L, 1);
+            }
+            //
+            cls::push_new_instance(L, { coords[0], coords[1], coords[2] });
             return 1;
          }
          cls::push_new_instance(L, {});
@@ -92,9 +131,10 @@ namespace {
 }
 namespace editor_script::classes {
    /*static*/ std::initializer_list<luaL_Reg> euler::metatable_methods = {
-      { "__tostring", &_methods::__tostring },
-      { "copy",       &_methods::copy },
-      { "to_matrix",  &_methods::to_matrix },
+      { "__tostring",    &_methods::__tostring },
+      { "copy",          &_methods::copy },
+      { "to_matrix",     &_methods::to_matrix },
+      { "to_quaternion", &_methods::to_quaternion },
    };
 
    /*static*/ void euler::push_new_instance(lua_State* L, const cobb::euler& raw) {
