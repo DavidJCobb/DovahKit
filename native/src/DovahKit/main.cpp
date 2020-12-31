@@ -405,21 +405,7 @@
 //                   save just a *little* bit on memory by having them share the same 
 //                   metatable (it's the metatable that makes them weak).
 //
-//              - Create Lua utility classes
-//
-//                 - Classes
-//
-//                    - quaternion
-//
-//                 - Ways to instantiate new instances from inside of a script (ideally 
-//                   a singleton named after the class with methods like "new", "is", 
-//                   and so on)
-//
-//                    - quaternion
-//
-//                 - Ways to test whether any given value is an instance of the class
-//
-//                    - quaternion
+//              = Lua utility classes
 //
 //                 = Note: it is theoretically possible to create a vector3 instance and 
 //                   then set its x/y/z values to tables with operator-overload metamethods. 

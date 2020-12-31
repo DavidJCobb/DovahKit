@@ -68,7 +68,7 @@ namespace {
    namespace _singleton_functions {
       luastackchange_t _new_obj(lua_State* L, bool degrees) {
          //
-         // function euler.new(a, b, c)
+         // function _new_obj(a, b, c)
          //    if tonumber(a) then
          //       return _make_instance(a, b, c)
          //    end
@@ -78,13 +78,13 @@ namespace {
          //    return _make_instance(0, 0, 0)
          // end
          //
-         // -- euler.new(1, 2, 3)
-         // -- euler.new({ 1, 2, 3 })
-         // -- euler.new({ x = 1, y = 2, z = 3 })
-         // -- euler.new({ 1, 2, z = 3})
-         // -- euler.new({ 1, 2 })        -- warns and uses zeroes for missing values
-         // -- euler.new({ foo = "bar" }) -- warns and uses zeroes for missing values
-         // -- euler.new()
+         // -- _new_obj(1, 2, 3)
+         // -- _new_obj({ 1, 2, 3 })
+         // -- _new_obj({ x = 1, y = 2, z = 3 })
+         // -- _new_obj({ 1, 2, z = 3})
+         // -- _new_obj({ 1, 2 })        -- warns and uses zeroes for missing values
+         // -- _new_obj({ foo = "bar" }) -- warns and uses zeroes for missing values
+         // -- _new_obj()
          //
          if (lua_isnumber(L, 1)) {
             double coords[3];
@@ -134,6 +134,12 @@ namespace {
       luastackchange_t from_radians(lua_State* L) {
          return _new_obj(L, false);
       }
+      luastackchange_t new_(lua_State* L) {
+         if (lua_gettop(L) > 0)
+            luaL_error(L, "the euler.new function should not be called with a colon or passed any arguments; use euler.from_degrees or euler.from_radians to initialize an euler with non-zero values");
+         cls::push_new_instance(L, {});
+         return 1;
+      }
       luastackchange_t is(lua_State* L) {
          if (cls::check_arg_type(L, 1)) {
             lua_pushboolean(L, 1);
@@ -178,6 +184,8 @@ namespace editor_script::classes {
       lua_setfield     (L, -2, "from_degrees");
       lua_pushcfunction(L, &_singleton_functions::from_radians);
       lua_setfield     (L, -2, "from_radians");
+      lua_pushcfunction(L, &_singleton_functions::new_);
+      lua_setfield     (L, -2, "new");
       lua_pushcfunction(L, &_singleton_functions::is);
       lua_setfield     (L, -2, "is");
       lua_setglobal(L, cls::global_name);

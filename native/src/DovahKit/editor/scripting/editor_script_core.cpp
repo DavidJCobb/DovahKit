@@ -29,6 +29,19 @@ namespace {
       }
    }
 
+   void _lua_warning_function(void* ud, const char* msg, int tocont) {
+      static QString text = "[Warning] "; // we could use (ud) to hold this, but since the VM is itself a singleton, no point in trying to allow multiple warning handlers to exist simultaneously
+      text += msg;
+      //
+      if (!tocont) {
+         auto  m = new editor_script::messages::log_text();
+         m->text = text;
+         DovahKitScriptVMMessenger::get().send_message(m);
+         //
+         text = "[Warning] ";
+      }
+   }
+
    int _shimmed_collectgarbage(lua_State* L) {
       luaL_argcheck(L, lua_isstring(L, 1), 1, "The argument must be a string.");
       if (strcmp(lua_tostring(L, 1), "collect") != 0) {
@@ -256,6 +269,7 @@ DovahKitScriptVM::~DovahKitScriptVM() {
 void DovahKitScriptVM::_setup_lua_vm() {
    this->lua_vm = luaL_newstate();
    lua_sethook(this->lua_vm, &_lua_debug_hook, LUA_MASKCOUNT, 8);
+   lua_setwarnf(this->lua_vm, &_lua_warning_function, nullptr);
    //
    // Make the appropriate standard libraries available, and prune any functions that we 
    // don't want the user having easy access to:
