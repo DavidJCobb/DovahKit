@@ -15,7 +15,8 @@
 #include <QMessageBox> // for dovah.test_call_and_response
 
 namespace {
-   constexpr char* wrapper_storage_registry_key = "dovah.internals.extant_wrappers";
+   constexpr char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
+   constexpr char* wrapper_weakmap_metatable_key = "__weakmap_mode_metatable";
 
    constexpr char* string_format_registry_key = "cached:string.format"; // key for a cached copy of (string.format), in case a script monkeypatches/replaces the original
 }
@@ -331,11 +332,18 @@ void DovahKitScriptVM::_setup_lua_vm() {
       //    setmetatable(wrapper_list, wrapper_meta)
       //
       lua_newtable    (this->lua_vm);
+      /*//
       lua_newtable    (this->lua_vm);               // STACK: [wrapper_meta, wrapper_list]
       lua_pushstring  (this->lua_vm, "v");          // STACK: ["v", wrapper_meta, wrapper_list]
       lua_setfield    (this->lua_vm, -2, "__mode"); // STACK: [wrapper_meta, wrapper_list]
       lua_setmetatable(this->lua_vm, -2);           // STACK: [wrapper_list]
+      //*/
       lua_setfield    (this->lua_vm, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+      //
+      lua_newtable(this->lua_vm);
+      lua_pushstring(this->lua_vm, "v");
+      lua_setfield  (this->lua_vm, -2, "__mode");
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key);
    #pragma endregion
    editor_script::build_all_wrapper_metatables(this->lua_vm);
    editor_script::define_class(this->lua_vm, editor_script::classes::benchmark::metatable_key, nullptr, editor_script::classes::benchmark::metatable_methods);
@@ -482,27 +490,42 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    auto  index = instance.last_part().index;
+   void* light = instance.get_pertinent_pointer();
    //
    std::vector<int> refs_to_sever;
    refs_to_sever.push_back(instance.lua_key);
    //
-   constexpr auto soff_storage = 1;
-   constexpr auto soff_nk      = 2;
-   constexpr auto soff_nv      = 3;
+   auto si_storage = start + 1;
+   auto si_nk      = start + 2;
+   auto si_nv      = start + 3;
    //
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   lua_pushlightuserdata(L, light);
+   lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[light] ] +
+   assert(lua_istable(L, -1));
+   lua_copy  (L, -1, si_storage);
+   lua_settop(L, si_storage); // STACK: - [ ..., storage_root[light] ] +
    //
    // If the wrapper to be removed is in a sequential collection, fix up the indices of all 
    // of its next-siblings. Either way, identify and track the keys of any child/descendant 
    // wrappers.
    //
-   lua_pushnil(L);
-   while (lua_next(L, start + soff_storage) != 0) {
-      editor_script::wrapper* other = nullptr;
-      if (lua_type(L, start + soff_nv) == LUA_TUSERDATA)
-         other = (editor_script::wrapper*) lua_touserdata(L, start + soff_nv);
+   lua_pushnil(L); // nk
+   while (lua_next(L, si_storage) != 0) {
+      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
+         //
+         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
+         // manually ignore it.
+         //
+         lua_settop(L, si_nk);
+         continue;
+      }
       //
-      lua_settop(L, start + soff_nk);
+      editor_script::wrapper* other = nullptr;
+      if (lua_type(L, si_nv) == LUA_TUSERDATA)
+         other = (editor_script::wrapper*) lua_touserdata(L, si_nv);
+      //
+      lua_settop(L, si_nk);
       //
       if (!other || other->lua_key == instance.lua_key)
          continue;
@@ -520,10 +543,10 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
    //
    // Zombify and forget the wrapper and all of its descendants.
    //
-   lua_settop(L, start + soff_storage);
+   lua_settop(L, si_storage);
    for (auto key : refs_to_sever) {
       lua_pushcfunction(L, &editor_script::zombify_userdata); // prepare to make a Lua call...
-      lua_rawgeti      (L, start + soff_storage, key);
+      lua_rawgeti      (L, si_storage, key);
       //
       auto* target = (editor_script::wrapper*) lua_touserdata(L, -1);
       assert(target && target->lua_key == key);
@@ -533,56 +556,96 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
       //
       lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
       //
-      luaL_unref(L, start + soff_storage, key); // remove the target from storage.
+      luaL_unref(L, si_storage, key); // remove the target from storage.
    }
+   //
+   lua_pushnil(L);
+   if (lua_next(L, si_storage) == 0) { // table is empty
+      //
+      // If the list of wrappers for this pointer is empty, delete the list itself.
+      //
+      lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+      lua_pushlightuserdata(L, light);
+      lua_pushnil(L);
+      lua_rawset(L, -3);
+   }
+   //
+   lua_settop(L, start);
 }
 
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
+   auto  start = lua_gettop(L);
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
-   auto table = lua_gettop(L);
+   auto  table = lua_gettop(L);
+   //
+   auto si_storage = start + 1;
+   auto si_nk      = start + 2;
+   auto si_nv      = start + 3;
+   auto si_created = si_storage + 1;
+   //
+   void* light = instance.get_pertinent_pointer();
+   {  // Get the list of wrappers for this pointer
+      lua_pushlightuserdata(L, light); // push 1
+      lua_rawget(L, table);            // push 0 // STACK: - [ ..., storage_root, storage_root[light] ] +
+      if (!lua_istable(L, -1)) {
+         lua_settop(L, table);
+         //
+         lua_createtable (L, 0, 0); // push 1 // storage_sub = {}
+         lua_getfield    (L, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key);
+         lua_setmetatable(L, -2);
+         lua_pushlightuserdata(L, light);     // push 1
+         lua_pushvalue        (L, table + 1); // push 1
+         lua_rawset           (L, table);     // pop  2 // STACK: - [ ..., storage_root, storage_root[light] ] + // storage_root[wrapper_pointer] = storage_sub
+      }
+      lua_copy  (L, -1, table);
+      lua_settop(L, table); // STACK: - [ ..., storage_root[light] ] + // table = registry[wrapper_storage_registry_key][wrapper_pointer] or {}
+   }
+   //
+   // Check for an existing identical wrapper:
    //
    lua_pushnil(L); // push 1
    while (lua_next(L, table) != 0) { // push 2 (only if truthy)
-      //
-      // STACK:
-      // +1 | -3 | wrapper storage weak-table
-      // +2 | -2 | key
-      // +3 | -1 | value (pre-existing wrapper)
-      //
-      auto* existing = (editor_script::wrapper*) lua_touserdata(L, -1);
+      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
+         //
+         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
+         // manually ignore it.
+         //
+         lua_settop(L, si_nk);
+         continue;
+      }
+      auto* existing = (editor_script::wrapper*) lua_touserdata(L, si_nv);
+      #if _DEBUG
+         if (!existing) {
+            cobb::lua::print_stack_and_vars(L);
+            __debugbreak();
+         }
+      #endif
       if (existing->is_equal(&instance)) {
-         lua_remove(L, -2); // remove the key
-         lua_remove(L, -2); // remove the table
+         lua_copy  (L, si_nv, table); // move the value
+         lua_settop(L, table);
          return 1;
       }
       lua_pop(L, 1); // pop the value; keep the key for the next iteration
    }
    //
-   // STACK:
-   // +1 | -1 | wrapper storage weak-table
+   assert(lua_gettop(L) == si_storage);
+   //
+   // Create a new wrapper.
    //
    auto* ptr = (editor_script::wrapper*) lua_newuserdatauv(L, sizeof(editor_script::wrapper), 0); // push 1
    new (ptr) editor_script::wrapper;
    *ptr = instance;
    //
    lua_getfield(L, LUA_REGISTRYINDEX, metatable_name); // push 1
-   if (lua_isnil(L, -1)) {
+   if (lua_isnoneornil(L, -1)) {
       assert(false && "The wrapper-class wasn't set up properly; its metatable is undefined.");
-      lua_pop(L, 2);
+      lua_settop(L, start);
       return 0;
    }
-   lua_setmetatable(L, -2); // pop 1
+   lua_setmetatable(L, si_created); // pop 1
    //
-   // STACK: [existing wrapper, wrapper storage]
-   // +1 | -2 | wrapper storage weak-table
-   // +2 | -1 | newly-created wrapper
-   //
-   lua_pushvalue(L, -1); // push 1 // push another reference to the wrapper onto the stack, as the next function will remove whichever reference it uses
-   ptr->lua_key = luaL_ref(L, -3);
-   //
-   // STACK: [existing wrapper, wrapper storage]
-   // +1 | -2 | wrapper storage weak-table
-   // +2 | -1 | newly-created wrapper
+   lua_pushvalue(L, si_created); // push 1 // push another reference to the wrapper onto the stack, as the next function will remove whichever reference it uses
+   ptr->lua_key = luaL_ref(L, si_storage);
    //
    lua_remove(L, -2);
    return 1;

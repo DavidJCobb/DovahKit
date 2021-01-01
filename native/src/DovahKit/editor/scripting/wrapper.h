@@ -73,6 +73,17 @@ namespace editor_script {
                return this->parts[0];
             return this->parts[this->depth - 1];
          }
+         inline void* get_pertinent_pointer() const noexcept {
+            switch (this->type) {
+               case wrapper_type::generic:
+                  break;
+               case wrapper_type::form_data:
+                  return this->stub;
+               case wrapper_type::ui:
+                  break;
+            }
+            return nullptr;
+         }
    };
 
    struct wrapper_metatable {
