@@ -322,25 +322,10 @@ void DovahKitScriptVM::_setup_lua_vm() {
    // Prepare API classes:
    //
    #pragma region Wrapper storage table
-      //
-      // Create a weak table to hold all extant wrappers. This will allow us 
-      // to update wrappers as needed.
-      //
-      //    local wrapper_list = {}
-      //    local wrapper_meta = {}
-      //    wrapper_meta.__mode = "v"
-      //    setmetatable(wrapper_list, wrapper_meta)
-      //
-      lua_newtable    (this->lua_vm);
-      /*//
-      lua_newtable    (this->lua_vm);               // STACK: [wrapper_meta, wrapper_list]
-      lua_pushstring  (this->lua_vm, "v");          // STACK: ["v", wrapper_meta, wrapper_list]
-      lua_setfield    (this->lua_vm, -2, "__mode"); // STACK: [wrapper_meta, wrapper_list]
-      lua_setmetatable(this->lua_vm, -2);           // STACK: [wrapper_list]
-      //*/
-      lua_setfield    (this->lua_vm, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
-      //
       lua_newtable(this->lua_vm);
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+      //
+      lua_newtable  (this->lua_vm);
       lua_pushstring(this->lua_vm, "v");
       lua_setfield  (this->lua_vm, -2, "__mode");
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key);
@@ -381,9 +366,7 @@ void DovahKitScriptVM::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
    //
    while (this->_should_keep_running()) {
-      this->message_queues.m2s.urgent.process([](editor_script::message* message) {
-         return false; // TODO: actually process these messages
-      });
+      this->_process_urgent_messages_from_main();
       this->message_queues.m2s.normal.process([](editor_script::message* message) {
          return false; // TODO: actually process these messages
       });
@@ -392,6 +375,11 @@ void DovahKitScriptVM::_script_thread_loop() {
    this->_teardown_lua_vm();
    this->running = false;
    emit this->scriptEnded(false);
+}
+void DovahKitScriptVM::_process_urgent_messages_from_main() {
+   this->message_queues.m2s.urgent.process([](editor_script::message* message) {
+      return false; // TODO: actually process these messages
+   });
 }
 
 bool DovahKitScriptVM::_should_keep_running() const noexcept {
@@ -479,10 +467,12 @@ void DovahKitScriptVM::mainThreadLoop() {
 void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
    auto& vm = DovahKitScriptVM::get();
    vm._send_outbound_message(m);
-   if (m->is_blocking())
+   if (m->is_blocking()) {
       while (!m->seen)
          if (vm.is_aborted())
             break;
+      vm._process_urgent_messages_from_main();
+   }
 }
 #pragma endregion 
 

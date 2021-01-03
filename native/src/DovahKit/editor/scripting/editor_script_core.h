@@ -47,6 +47,7 @@ class DovahKitScriptVM : public QObject {
       void _send_outbound_message(editor_script::message*);
 
       void _script_thread_loop();
+      void _process_urgent_messages_from_main();
 
       //
       // Returns (true) if the Lua VM should be kept alive even after the script has finished 

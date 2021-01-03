@@ -393,6 +393,11 @@
 //                 - This is needed for parts of forms: deleting the form should "kill" 
 //                   its wrapper and should also "kill" the wrappers for its parts.
 //
+//                 - We check for urgent M2S messages after script invocations and after 
+//                   sending any blocking S2M message. Now, we just need to write actual 
+//                   message types for things like form deletion, and then write the code 
+//                   to react to those messages.
+//
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
@@ -403,6 +408,10 @@
 //                implement even that, we should rearrange how wrappers are tracked 
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
+//
+//              - Scripts should have none-stubs masked unless they explicitly request 
+//                access to them. If some property on a form points to a none-stub, 
+//                then accessing it should yield nil, not a userdata.
 //
 //              - For extra-data types, the wrappers should always act as though 
 //                there is underlying data, and create and destroy it as appropriate. 
