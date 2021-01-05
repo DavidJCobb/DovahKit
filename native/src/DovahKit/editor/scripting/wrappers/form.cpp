@@ -5,12 +5,25 @@
 #include "../editor_script_core.h"
 #include "../wrapper_util.h"
 
+#include "../messages/delete_form.h"
+
 #include "papyrus/root.h"
 
 namespace {
    using namespace editor_script;
    //
    namespace _methods {
+      luastackchange_t delete_(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub)
+            return 0;
+         auto* m = new messages::delete_form;
+         m->stub = self.stub;
+         DovahKitScriptVMMessenger::get().send_message(m);
+         return 0;
+      }
       luastackchange_t get_editor_id(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          if (!self.stub)
@@ -77,6 +90,7 @@ namespace {
 
 namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_methods = {
+      { "delete",         &_methods::delete_ },
       { "get_editor_id",  &_methods::get_editor_id },
       { "get_form_id",    &_methods::get_form_id },
       { "get_form_type",  &_methods::get_form_type },

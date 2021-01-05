@@ -460,6 +460,7 @@
     <ClInclude Include="editor\scripting\collections.h" />
     <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\messages\all.h" />
+    <ClInclude Include="editor\scripting\messages\delete_form.h" />
     <ClInclude Include="editor\scripting\messages\log_text.h" />
     <ClInclude Include="editor\scripting\messages\m2s\urgent\form_deleted.h" />
     <ClInclude Include="editor\scripting\messages\m2s\urgent\_all.h" />

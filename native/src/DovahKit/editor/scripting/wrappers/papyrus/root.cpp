@@ -101,6 +101,8 @@ namespace {
    //
    namespace _methods {
       luastackchange_t remove_script(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
          auto& root = _unwrap(L, self);
          auto& list = root.scripts;

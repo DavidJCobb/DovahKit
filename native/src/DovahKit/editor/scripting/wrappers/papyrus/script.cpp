@@ -25,6 +25,8 @@ namespace {
    }
    namespace _setters {
       luastackchange_t name(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self);
          if (script == nullptr)

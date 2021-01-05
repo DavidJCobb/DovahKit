@@ -423,14 +423,6 @@
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
 //
-//              = WE SHOULD DEFINE (void DovahKitScriptVM::verify_form_write_permission) 
-//                WHICH GETS THE VM INSTANCE, GETS ITS LUA STATE POINTER, AND THROWS A 
-//                LUA ERROR IF THE CURRENTLY-RUNNING SCRIPT DOES NOT HAVE PERMISSION TO 
-//                MODIFY FORMS. ALL APIS THAT EDIT FORMS (SETTERS, ETC.) SHOULD LEAD 
-//                WITH A CALL TO THIS FUNCTION. CURRENTLY, THE FUNCTION WILL JUST RETURN 
-//                TRUE, BUT IN THE FUTURE, I WANT TO ALLOW SCRIPTS TO SPECIFY WHAT PERMS 
-//                THEY DO AND DO NOT NEED (E.G. HAVING "READ-ONLY" SCRIPTS).
-//
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 
 //                then accessing it should yield nil, not a userdata.

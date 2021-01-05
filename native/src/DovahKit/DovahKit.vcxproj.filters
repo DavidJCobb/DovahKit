@@ -1250,6 +1250,9 @@
     <ClInclude Include="editor\scripting\messages\m2s\urgent\_all.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\messages\delete_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

@@ -18,6 +18,8 @@ namespace {
          return 1;
       }
       luastackchange_t set_allow_default_dialogue(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          auto& self = get_wrapper_for_thiscall<wrappers::voicetype>(L);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          auto* form = self.get_loaded_form_data<Voicetype>();
@@ -36,6 +38,8 @@ namespace {
          return 1;
       }
       luastackchange_t set_is_female(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          auto& self = get_wrapper_for_thiscall<wrappers::voicetype>(L);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          auto* form = self.get_loaded_form_data<Voicetype>();

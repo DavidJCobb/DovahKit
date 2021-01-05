@@ -258,6 +258,16 @@ DovahKitScriptVM::DovahKitScriptVM() {
    QObject::connect(this, &DovahKitScriptVM::scriptEnded,   this, [this]() { this->main_thread_tick_timer.stop(); });
    //
    QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &DovahKitScriptVM::mainThreadLoop);
+   //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
+      auto* message = new editor_script::messages::form_deleted;
+      message->stub = stub;
+      //
+      auto  guard   = std::lock_guard(this->message_queues.m2s.urgent.lock);
+      auto& list    = this->message_queues.m2s.urgent.list;
+      list.push_back(message);
+   });
 }
 DovahKitScriptVM::~DovahKitScriptVM() {
    this->abort();
@@ -484,6 +494,16 @@ void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
    }
 }
 #pragma endregion 
+
+#pragma region
+/*static*/ void DovahKitScriptVMPermissionInterface::verify_form_write_permissions() {
+   auto& intfc = DovahKitScriptVMPermissionInterface::get();
+   if (false) { // TODO: permission check, when we implement those
+      luaL_error(intfc.vm.lua_vm, "The script does not have permission to use APIs that modify form data.");
+      __assume(0);
+   }
+}
+#pragma endregion
 
 void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance) {
    auto* L     = this->vm.lua_vm;

@@ -17,6 +17,7 @@ namespace dovah {
 }
 
 class DovahKitScriptVMMessenger;
+class DovahKitScriptVMPermissionInterface;
 class DovahKitScriptVMUserdataInterface;
 
 class DovahKitScriptVM : public QObject {
@@ -28,6 +29,7 @@ class DovahKitScriptVM : public QObject {
    // to block script execution  while waiting for any needed  information from the main thread.
    //
    friend class DovahKitScriptVMMessenger;
+   friend class DovahKitScriptVMPermissionInterface;
    friend class DovahKitScriptVMUserdataInterface;
    protected:
       DovahKitScriptVM();
@@ -119,6 +121,20 @@ class DovahKitScriptVMMessenger {
       //
       inline bool is_aborted() const noexcept { return vm.aborted; }
       inline bool is_running() const noexcept { return vm.running; }
+};
+
+class DovahKitScriptVMPermissionInterface {
+   protected:
+      DovahKitScriptVMPermissionInterface(DovahKitScriptVM& w) : vm(w) {}
+   public:
+      static DovahKitScriptVMPermissionInterface& get() {
+         static DovahKitScriptVMPermissionInterface instance(DovahKitScriptVM::get());
+         return instance;
+      }
+      //
+      DovahKitScriptVM& vm;
+
+      static void verify_form_write_permissions();
 };
 
 class DovahKitScriptVMUserdataInterface {
