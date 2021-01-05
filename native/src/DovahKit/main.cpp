@@ -423,6 +423,10 @@
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
 //
+//                 - Form deletion is implemented, but it tries to destroy a form with 
+//                   a non-zero refcount because the script API can't manage the 
+//                   deletion request (and zombify wrappers) on its own.
+//
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 
 //                then accessing it should yield nil, not a userdata.

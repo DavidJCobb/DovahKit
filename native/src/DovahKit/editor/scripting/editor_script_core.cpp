@@ -473,6 +473,13 @@ void DovahKitScriptVM::mainThreadLoop() {
                QMessageBox::information(this->ui_parent, "Test", "This should block script execution until it is dismissed");
             }
             return true;
+         case message_type::delete_form:
+            if (auto* casted = dynamic_cast<messages::delete_form*>(message)) {
+               assert(casted->stub);
+               auto& editor = DovahKitCore::get();
+               editor.delete_form(*casted->stub); // TODO: this will pop dialog boxes for errors, as it's designed to handle UI stuff, too. we need something that'll let us access the request directly
+            }
+            return true;
       }
       #if _DEBUG
          __debugbreak(); // Unhandled message type!
