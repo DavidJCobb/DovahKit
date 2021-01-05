@@ -9,7 +9,7 @@
 #include <QString>
 #include <QTimer>
 #include <QWidget>
-#include "messages.h"
+#include "cross_thread_tasks/base.h"
 #include "wrapper.h"
 
 namespace dovah {
@@ -35,25 +35,22 @@ class DovahKitScriptVM : public QObject {
       DovahKitScriptVM();
       ~DovahKitScriptVM();
 
-      struct _message_queue {
-         std::vector<editor_script::message*> list;
+      struct _task_queue {
+         using task = editor_script::cross_thread_task;
+         //
+         std::vector<task*> list;
          std::recursive_mutex lock;
 
          //
-         // The receiving thread should use this function to view messages. The functor should return 
-         // (true) to acknowledge a message, allowing that message to be removed from the outbound 
-         // message queue. Non-blocking messages will be deleted when removed.
+         // The receiving thread should use this function to execute tasks.
          //
-         void process(std::function<bool(editor_script::message*)> functor);
+         void process();
       };
       
       void _setup_lua_vm();
       void _teardown_lua_vm();
-      
-      void _send_outbound_message(editor_script::message*);
 
       void _script_thread_loop();
-      void _process_urgent_messages_from_main();
 
       //
       // Returns (true) if the Lua VM should be kept alive even after the script has finished 
@@ -68,12 +65,12 @@ class DovahKitScriptVM : public QObject {
       QWidget* ui_parent = nullptr;
       //
       struct {
-         _message_queue s2m; // script-to-main
+         _task_queue s2m; // script-to-main
          struct { // main-to-script
-            _message_queue urgent;
-            _message_queue normal;
+            _task_queue urgent;
+            _task_queue normal;
          } m2s;
-      } message_queues;
+      } task_queues;
       
    public:
       static DovahKitScriptVM& get() {
@@ -87,6 +84,8 @@ class DovahKitScriptVM : public QObject {
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }
+
+      inline QWidget* get_ui_parent_widget() const noexcept { return this->ui_parent; }
       
    signals:
       void messageLogged(const QString&);
@@ -117,7 +116,7 @@ class DovahKitScriptVMMessenger {
       //
       DovahKitScriptVM& vm;
       //
-      void send_message(editor_script::message* m); // blocks until the main thread acknowledges the message, if (m->is_blocking()) returns true
+      void send_message(editor_script::cross_thread_task* m); // blocks until the main thread acknowledges the message, if (m->is_blocking()) returns true
       //
       inline bool is_aborted() const noexcept { return vm.aborted; }
       inline bool is_running() const noexcept { return vm.running; }

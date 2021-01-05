@@ -2,7 +2,7 @@
 #include <array>
 #include "util.h"
 #include "api/allowed_standard_apis.h"
-#include "messages/all.h"
+#include "cross_thread_tasks/_all.h"
 #include "wrappers/_build_metatables.h"
 #include "class_killer.h"
 
@@ -12,7 +12,6 @@
 #include "wrappers/form.h"
 #include "classes/_all.h"
 #include "../../helpers/lua/dump.h"
-#include <QMessageBox> // for dovah.test_call_and_response
 
 namespace {
    constexpr char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
@@ -35,11 +34,11 @@ namespace {
       text += msg;
       //
       if (!tocont) {
-         auto  m = new editor_script::messages::log_text();
+         auto* m = new editor_script::tasks::s2m::log_message();
          m->text = text;
          DovahKitScriptVMMessenger::get().send_message(m);
          //
-         text = "[Warning] ";
+         text = "[warning] ";
       }
    }
 
@@ -77,7 +76,7 @@ namespace {
       return return_count + 1;
    }
    int _shimmed_print(lua_State* L) {
-      auto  m    = new editor_script::messages::log_text();
+      auto  m    = new editor_script::tasks::s2m::log_message();
       auto& text = m->text;
       //
       auto argcount = lua_gettop(L);
@@ -186,7 +185,7 @@ namespace _api { // APIs
             return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
          }
          luastackchange_t log_message(lua_State* L) {
-            auto m = new editor_script::messages::log_text();
+            auto m = new editor_script::tasks::s2m::log_message();
             //
             auto argcount = lua_gettop(L);
             if (!argcount)
@@ -214,7 +213,7 @@ namespace _api { // APIs
             return 0;
          }
          luastackchange_t test_call_and_response(lua_State* L) {
-            auto* m = new editor_script::messages::test_call_and_response();
+            auto* m = new editor_script::tasks::s2m::test_call_and_response();
             DovahKitScriptVMMessenger::get().send_message(m);
             return 0;
          }
@@ -232,22 +231,17 @@ namespace _api { // APIs
    }
 }
 
-void DovahKitScriptVM::_message_queue::process(std::function<bool(editor_script::message*)> functor) {
-   auto guard = std::lock_guard(this->lock);
+void DovahKitScriptVM::_task_queue::process() {
+   auto  guard = std::lock_guard(this->lock);
+   auto& list  = this->list;
    //
-   std::vector<editor_script::message*> remaining;
-   for (auto* message : this->list) {
-      bool blocking = message->is_blocking();
-      bool resolved = (functor)(message);
-      if (resolved) {
-         message->seen = true;
-         if (!blocking)
-            delete message;
-      } else {
-         remaining.push_back(message);
-      }
+   for (auto* task : list) {
+      bool blocking = task->is_blocking();
+      task->execute();
+      if (!blocking && task->is_fire_and_forget())
+         delete task;
    }
-   std::swap(this->list, remaining);
+   list.clear();
 }
 
 #pragma region DovahKitScriptVM
@@ -261,11 +255,11 @@ DovahKitScriptVM::DovahKitScriptVM() {
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
-      auto* message = new editor_script::messages::form_deleted;
+      auto* message = new editor_script::tasks::m2s::form_deleted;
       message->stub = stub;
       //
-      auto  guard   = std::lock_guard(this->message_queues.m2s.urgent.lock);
-      auto& list    = this->message_queues.m2s.urgent.list;
+      auto  guard   = std::lock_guard(this->task_queues.m2s.urgent.lock);
+      auto& list    = this->task_queues.m2s.urgent.list;
       list.push_back(message);
    });
 }
@@ -366,39 +360,17 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    }
 }
 
-void DovahKitScriptVM::_send_outbound_message(editor_script::message* message) {
-   auto  guard = std::lock_guard(this->message_queues.s2m.lock);
-   auto& list  = this->message_queues.s2m.list;
-   list.push_back(message);
-}
-
 void DovahKitScriptVM::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
    //
    while (this->_should_keep_running()) {
-      this->_process_urgent_messages_from_main();
-      this->message_queues.m2s.normal.process([](editor_script::message* message) {
-         return false; // TODO: actually process these messages
-      });
+      this->task_queues.m2s.urgent.process();
+      this->task_queues.m2s.normal.process();
    }
    //
    this->_teardown_lua_vm();
    this->running = false;
    emit this->scriptEnded(false);
-}
-void DovahKitScriptVM::_process_urgent_messages_from_main() {
-   this->message_queues.m2s.urgent.process([this](editor_script::message* message) {
-      using namespace editor_script;
-      //
-      switch (message->type) {
-         case message_type::delete_form:
-            if (auto* casted = dynamic_cast<messages::form_deleted*>(message)) {
-               DovahKitScriptVMUserdataInterface::get().remove_form(*casted->stub);
-            }
-            return true;
-      }
-      return false; // TODO: actually process these messages
-   });
 }
 
 bool DovahKitScriptVM::_should_keep_running() const noexcept {
@@ -459,56 +431,23 @@ void DovahKitScriptVM::setUIParentWidget(QWidget* widget) {
 }
 
 void DovahKitScriptVM::mainThreadLoop() {
-   this->message_queues.s2m.process([this](editor_script::message* message) {
-      using namespace editor_script;
-      //
-      switch (message->type) {
-         case message_type::log_text:
-            if (auto* casted = dynamic_cast<messages::log_text*>(message)) {
-               emit this->messageLogged(casted->text);
-            }
-            return true;
-         case message_type::test_call_and_response:
-            if (auto* casted = dynamic_cast<messages::test_call_and_response*>(message)) {
-               QMessageBox::information(this->ui_parent, "Test", "This should block script execution until it is dismissed");
-            }
-            return true;
-         case message_type::delete_form:
-            if (auto* casted = dynamic_cast<messages::delete_form*>(message)) {
-               assert(casted->stub);
-               auto& editor = DovahKitCore::get();
-               editor.delete_form(*casted->stub,
-                  [this](const dovah::form_deletion_request& request) {
-                     //
-                     // TODO: if there are errors, store error information on the message.
-                     //
-                     auto forms = request.get_forms_pending_delete(false); // only include forms that we will erase from memory, not simply ones we'll slap the "deleted" flag on
-                     for (auto* stub : forms)
-                        DovahKitScriptVMUserdataInterface::get().remove_form(*stub);
-                     return true;
-                  },
-                  [](const dovah::form_deletion_request& request) {}
-               );
-            }
-            return true;
-      }
-      #if _DEBUG
-         __debugbreak(); // Unhandled message type!
-      #endif
-      return message->is_blocking(); // don't let unrecognized blocking messages hang the script
-   });
+   this->task_queues.s2m.process();
 }
 #pragma endregion
 
 #pragma region DovahKitScriptVMMessenger
-void DovahKitScriptVMMessenger::send_message(editor_script::message* m) {
+void DovahKitScriptVMMessenger::send_message(editor_script::cross_thread_task* m) {
    auto& vm = DovahKitScriptVM::get();
-   vm._send_outbound_message(m);
+   {
+      auto  guard = std::lock_guard(vm.task_queues.s2m.lock);
+      auto& list  = vm.task_queues.s2m.list;
+      list.push_back(m);
+   }
    if (m->is_blocking()) {
       while (!m->seen)
          if (vm.is_aborted())
             break;
-      vm._process_urgent_messages_from_main();
+      vm.task_queues.m2s.urgent.process();
    }
 }
 #pragma endregion 

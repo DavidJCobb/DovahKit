@@ -387,31 +387,6 @@
 //                   Native code will not *consistently* invoke these metamethods. Sometimes 
 //                   they'll work; sometimes they won't. Consider this UB.
 //
-//              - We need to handle signals like form deletion and similar, which should 
-//                exist as "urgent" main-to-script messages.
-//
-//                 - This is needed for parts of forms: deleting the form should "kill" 
-//                   its wrapper and should also "kill" the wrappers for its parts.
-//
-//                 - We check for urgent M2S messages after script invocations and after 
-//                   sending any blocking S2M message. Now, we just need to write actual 
-//                   message types for things like form deletion, and then write the code 
-//                   to react to those messages.
-//
-//                    - Our current message code sucks: messages have a "type" enum and we 
-//                      use giant switch-cases to act on them. For now, let's not fix that; 
-//                      write everything to do with form deletion first. When we have that 
-//                      working (the VM properly kills all wrappers for the to-be-deleted 
-//                      form upon receiving the urgent message, AND the API for deleting 
-//                      forms from script works), THEN we can redesign messages: we can 
-//                      give them a virtual "exec" function which effectively "responds to 
-//                      the message," and then we can just have the "process message queue" 
-//                      function call that. Then, we can ditch the type enum and so on.
-//
-//                       - Better yet: a private virtual "_exec_impl", and an outer "exec" 
-//                         function that isn't virtual and handles tasks like flagging the 
-//                         message as acknowledged.
-//
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
@@ -423,9 +398,12 @@
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
 //
-//                 - Form deletion is implemented, but it tries to destroy a form with 
-//                   a non-zero refcount because the script API can't manage the 
-//                   deletion request (and zombify wrappers) on its own.
+//                 - Form deletion is implemented, but it can't signal deletion failures 
+//                   to the script.
+//
+//                 - Form renumbering
+//
+//                 - Form creation
 //
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 

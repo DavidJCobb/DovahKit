@@ -5,7 +5,7 @@
 #include "../editor_script_core.h"
 #include "../wrapper_util.h"
 
-#include "../messages/delete_form.h"
+#include "../cross_thread_tasks/s2m/delete_form.h"
 
 #include "papyrus/root.h"
 
@@ -19,9 +19,15 @@ namespace {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          if (!self.stub)
             return 0;
-         auto* m = new messages::delete_form;
+         auto* m = new tasks::s2m::delete_form;
          m->stub = self.stub;
          DovahKitScriptVMMessenger::get().send_message(m);
+         if (false) {
+            //
+            // TODO: check (m) to see if it has any error information
+            //
+         }
+         delete m;
          return 0;
       }
       luastackchange_t get_editor_id(lua_State* L) {

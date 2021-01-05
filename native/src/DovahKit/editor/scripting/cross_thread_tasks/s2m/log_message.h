@@ -1,15 +1,16 @@
 #pragma once
-#include "../messages.h"
+#include "../base.h"
 #include <QString>
 
-namespace editor_script::messages {
-   class log_text : public message {
+namespace editor_script::tasks::s2m {
+   class log_message : public cross_thread_task {
       //
       // Message for sending text to the main window to be displayed in a script output pane.
       //
       public:
-         log_text() : message(message_type::log_text) {}
-         //
          QString text;
+         //
+      protected:
+         virtual void _exec_impl() override;
    };
 }
