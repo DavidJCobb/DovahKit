@@ -429,13 +429,6 @@
 //                then synchronize them with any underlying wrapped object, which is... 
 //                complicated.)
 //
-//           = The main thread needs to be able to send two kinds of messages to the 
-//             script thread. "Urgent" messages would be things like form deletion, 
-//             and the script thread must check for them at every opportunity: after 
-//             sending any blocking message, during the debug hook, and when spinning 
-//             (we'll get to that). "Normal" messages would be things like UI events, 
-//             and the script thread should check for them only when spinning.
-//
 //        - PHASE 3: UI ACCESS
 //          Lua scripts should be able to spawn windows and widgets, and should be able 
 //          to manipulate them and respond to important events by way of Qt signals and 
@@ -481,6 +474,12 @@
 //                widgets within layouts or structures, or removing widgets, should block 
 //                until the message queue is empty.
 //          
+//           - Scripts need to be able to register Lua functions to be called when certain 
+//             UI events occur.
+//
+//              - The UI events themselves will occur on the main thread, and should result 
+//                in a non-urgent cross-thread-task being sent from main to script.
+//          
 //           - Scripts will need an API to queue the form-edit dialog for a form. See, we 
 //             need to block the editor while a script is running, so if for example a 
 //             script searches for forms matching some criteria, then the user won't simply 
@@ -513,8 +512,6 @@
 //                      ends.
 //                    - Main thread acquires form lock when looking up forms, etc., 
 //                      waiting on the script thread if that already has the lock.
-//
-//     - We should redirect Lua's "print" function to the same place as "dovah.log_message".
 //
 //     = When writing script documentation for functions that return class instances, it 
 //       must be specified whether they return tables or userdata (e.g. "vector3 table" 
@@ -567,15 +564,6 @@
 //       i.e. the user is shown a list of permissions that the script is requesting and 
 //       must explicitly grant those permissions before the script can run.
 //
-//     - Since we don't reveal every single form through a unified interface as xEdit 
-//       does, it will need to be possible for scripts to define forms (as in sheets 
-//       of values, not as in game data) that the user can fill out to provide values 
-//       to the script (e.g. to tell it what forms, as in game data, to operate on). 
-//       We *could* create Lua wrappers for creating and managing Qt UI, but that 
-//       feels like it'd be very involved; a data format for describing "script 
-//       arguments" could work better but would require us to account for every 
-//       possible case. Bad trade-off either way, it looks like.
-//
 //     - Scripts should be able to spawn UI windows and widgets, and to register Lua 
 //       functions to run in response to Qt signals on these widgets.
 //
@@ -587,9 +575,6 @@
 //          that scripts cannot block access to the editor UI.
 //
 //        - We'll probably want to provide generic table, list, and tree views to Lua.
-//
-//        - UI widgets will need to be referred to using handles managed by our script 
-//          singleton, similarly to form data.
 //
 //        = Lua-spawned windows must exist on the main thread (QWidgets can only 
 //          function there), which means that in order to allow Lua to influence and 

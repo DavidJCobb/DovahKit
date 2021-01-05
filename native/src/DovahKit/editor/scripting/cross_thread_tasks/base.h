@@ -4,7 +4,16 @@
 namespace editor_script {
    class cross_thread_task {
       //
-      // Allocate these on the heap, please
+      // Lua scripts are run in a separate thread from the main thread. This class is used to 
+      // allow the main and script threads to issue commands to each other. It is functionally 
+      // identical to a lambda, except it's possible for the sender-thread to check whether they 
+      // have finished executing, to block until they have finished executing, and to check their 
+      // results, all despite their being executed on the recipient-thread.
+      //
+      // These are made to function with the "task queues" stored on the script singleton. Lua 
+      // functions should send them using the DovahKitScriptVMMessenger interface.
+      //
+      // Allocate these on the heap, please.
       //
       public:
          bool seen = false; // has this message been received and acknowledged by its recipient?
