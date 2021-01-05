@@ -7,7 +7,7 @@ namespace editor_script {
       //
       // Main-to-script message types:
       //
-
+      delete_form,
       //
       // Script-to-main message types:
       //

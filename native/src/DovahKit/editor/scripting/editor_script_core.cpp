@@ -377,7 +377,16 @@ void DovahKitScriptVM::_script_thread_loop() {
    emit this->scriptEnded(false);
 }
 void DovahKitScriptVM::_process_urgent_messages_from_main() {
-   this->message_queues.m2s.urgent.process([](editor_script::message* message) {
+   this->message_queues.m2s.urgent.process([this](editor_script::message* message) {
+      using namespace editor_script;
+      //
+      switch (message->type) {
+         case message_type::delete_form:
+            if (auto* casted = dynamic_cast<messages::form_deleted*>(message)) {
+               DovahKitScriptVMUserdataInterface::get().remove_form(*casted->stub);
+            }
+            return true;
+      }
       return false; // TODO: actually process these messages
    });
 }
@@ -559,6 +568,64 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
       lua_pushnil(L);
       lua_rawset(L, -3);
    }
+   //
+   lua_settop(L, start);
+}
+
+void DovahKitScriptVMUserdataInterface::remove_form(dovah::form_stub& stub) {
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   //
+   auto si_storage = start + 1;
+   auto si_nk      = start + 2;
+   auto si_nv      = start + 3;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   lua_pushlightuserdata(L, &stub);
+   lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[light] ] +
+   if (!lua_istable(L, -1)) {
+      lua_settop(L, start);
+      return;
+   }
+   lua_copy  (L, -1, si_storage);
+   lua_settop(L, si_storage); // STACK: - [ ..., storage_root[light] ] +
+   //
+   // Zombify all wrappers for this form and its parts.
+   //
+   lua_pushnil(L); // nk
+   while (lua_next(L, si_storage) != 0) {
+      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
+         //
+         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
+         // manually ignore it.
+         //
+         lua_settop(L, si_nk);
+         continue;
+      }
+      //
+      editor_script::wrapper* other = nullptr;
+      if (lua_type(L, si_nv) == LUA_TUSERDATA) {
+         if (auto* target = (editor_script::wrapper*) lua_touserdata(L, si_nv)) {
+            assert(target->stub == &stub);
+            target->lua_key = LUA_NOREF;
+            target->stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
+            target->form    = nullptr;
+            //
+            lua_pushcfunction(L, &editor_script::zombify_userdata);
+            lua_pushvalue    (L, si_nv);
+            lua_call(L, 1, 0);
+         }
+      }
+      //
+      lua_settop(L, si_nk);
+   }
+   //
+   // Erase the table for this form.
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_pushlightuserdata(L, &stub);
+   lua_pushnil(L);
+   lua_rawset(L, -3);
    //
    lua_settop(L, start);
 }

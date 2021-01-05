@@ -12,6 +12,10 @@
 #include "messages.h"
 #include "wrapper.h"
 
+namespace dovah {
+   class form_stub;
+}
+
 class DovahKitScriptVMMessenger;
 class DovahKitScriptVMUserdataInterface;
 
@@ -136,6 +140,11 @@ class DovahKitScriptVMUserdataInterface {
       // "kills" the wrapper. The wrapper will be deleted later, when Lua garbage-collects it.
       //
       void remove(editor_script::wrapper&);
+
+      //
+      // Kills all wrappers for the given form and any of its parts.
+      //
+      void remove_form(dovah::form_stub&);
 
       //
       // Check if Lua already has an identical copy of the passed-in wrapper;  if so, push that copy 

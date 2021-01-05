@@ -398,6 +398,20 @@
 //                   message types for things like form deletion, and then write the code 
 //                   to react to those messages.
 //
+//                    - Our current message code sucks: messages have a "type" enum and we 
+//                      use giant switch-cases to act on them. For now, let's not fix that; 
+//                      write everything to do with form deletion first. When we have that 
+//                      working (the VM properly kills all wrappers for the to-be-deleted 
+//                      form upon receiving the urgent message, AND the API for deleting 
+//                      forms from script works), THEN we can redesign messages: we can 
+//                      give them a virtual "exec" function which effectively "responds to 
+//                      the message," and then we can just have the "process message queue" 
+//                      function call that. Then, we can ditch the type enum and so on.
+//
+//                       - Better yet: a private virtual "_exec_impl", and an outer "exec" 
+//                         function that isn't virtual and handles tasks like flagging the 
+//                         message as acknowledged.
+//
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
@@ -408,6 +422,14 @@
 //                implement even that, we should rearrange how wrappers are tracked 
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
+//
+//              = WE SHOULD DEFINE (void DovahKitScriptVM::verify_form_write_permission) 
+//                WHICH GETS THE VM INSTANCE, GETS ITS LUA STATE POINTER, AND THROWS A 
+//                LUA ERROR IF THE CURRENTLY-RUNNING SCRIPT DOES NOT HAVE PERMISSION TO 
+//                MODIFY FORMS. ALL APIS THAT EDIT FORMS (SETTERS, ETC.) SHOULD LEAD 
+//                WITH A CALL TO THIS FUNCTION. CURRENTLY, THE FUNCTION WILL JUST RETURN 
+//                TRUE, BUT IN THE FUTURE, I WANT TO ALLOW SCRIPTS TO SPECIFY WHAT PERMS 
+//                THEY DO AND DO NOT NEED (E.G. HAVING "READ-ONLY" SCRIPTS).
 //
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 
@@ -484,6 +506,39 @@
 //                any unacknowledged UI-related script-to-main messages. Similarly, moving 
 //                widgets within layouts or structures, or removing widgets, should block 
 //                until the message queue is empty.
+//          
+//           - Scripts will need an API to queue the form-edit dialog for a form. See, we 
+//             need to block the editor while a script is running, so if for example a 
+//             script searches for forms matching some criteria, then the user won't simply 
+//             be able to double-click forms in that listing to jump to viewing and editing 
+//             those forms. The best we can do, for now, is allowing scripts to queue a 
+//             dialog to open for a given form (with a hardcoded confirmation prompt for 
+//             the user, like "Open this form for editing after the script finishes?" so 
+//             they know what's going on).
+//
+//              - If we want to go the extra mile, then we could allow the editor and its 
+//                scripts to work asynch from each other IF all main-thread form lookups 
+//                hit a lock while a script is running, with scripts acquiring that lock 
+//                at the start of execution, temporarily releasing it during the Lua debug 
+//                hook, and releasing it for good at the end of execution. That would force 
+//                a lot of changes to the frontend core.
+//                
+//                This is NOT necessary and probably not a good use of development time, 
+//                so once script implementation is done we should move this to the bottom 
+//                of the to-do list where we put the other speculative tasks.
+//
+//                 - That is:
+//
+//                    - Script thread acquires form lock when script execution starts.
+//                    - Script thread releases form lock temporarily at start of debug 
+//                      hook.
+//                    - Script thread reacquires form lock at end of debug hook. If main 
+//                      thread already has lock, script thread waits for main thread to 
+//                      release.
+//                    - Script thread releases form lock for good when script execution 
+//                      ends.
+//                    - Main thread acquires form lock when looking up forms, etc., 
+//                      waiting on the script thread if that already has the lock.
 //
 //     - We should redirect Lua's "print" function to the same place as "dovah.log_message".
 //
