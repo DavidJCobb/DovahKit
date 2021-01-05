@@ -444,41 +444,63 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
 }
 
 void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent) {
+   this->delete_form(target,
+      //
+      // After-gather callback:
+      //
+      [this, dialog_parent](const dovah::form_deletion_request& request) {
+         auto result  = request.get_result_code();
+         if (result != dovah::form_deletion_request::result_code::pending) {
+            using result_code = dovah::form_deletion_request::result_code;
+            //
+            QString text;
+            switch (result) {
+               case result_code::error_cannot_delete_hardcoded_form:
+                  text = tr("The form is hardcoded into the game engine and cannot be deleted.");
+                  break;
+               case result_code::error_cannot_load_form:
+                  text = tr("DovahKit doesn't currently support this form type, which means that it cannot flag the form as deleted.");
+                  break;
+               case result_code::error_cannot_load_user:
+                  text = tr("One of the forms that uses this form is of an unsupported type, which means that that use cannot be severed.");
+                  break;
+            }
+            QMessageBox::critical(
+               dialog_parent,
+               QObject::tr("Error", "delete form error"),
+               QObject::tr("Unable to delete this form. %1").arg(text)
+            );
+            return false;
+         }
+         if (dialog_parent) {
+            //
+            // Show a confirmation prompt.
+            //
+            auto* confirm = new DeleteFormDialog(dialog_parent);
+            confirm->updateFromDeletionRequest(request);
+            auto  result = confirm->exec();
+            delete confirm;
+            if (result == QDialog::Rejected)
+               return false;
+         }
+         return true;
+      },
+      //
+      // After-complete callback:
+      //
+      [](const dovah::form_deletion_request& request) {}
+   );
+}
+void DovahKitCore::delete_form(
+   dovah::form_stub& target,
+   std::function<bool(const dovah::form_deletion_request&)> after_gather,
+   std::function<void(const dovah::form_deletion_request&)> after_complete
+) {
    auto request = this->load_order->request_form_deletion(target);
-   auto result  = request.get_result_code();
-   if (result != dovah::form_deletion_request::result_code::pending) {
-      using result_code = dovah::form_deletion_request::result_code;
-      //
-      QString text;
-      switch (result) {
-         case result_code::error_cannot_delete_hardcoded_form:
-            text = tr("The form is hardcoded into the game engine and cannot be deleted.");
-            break;
-         case result_code::error_cannot_load_form:
-            text = tr("DovahKit doesn't currently support this form type, which means that it cannot flag the form as deleted.");
-            break;
-         case result_code::error_cannot_load_user:
-            text = tr("One of the forms that uses this form is of an unsupported type, which means that that use cannot be severed.");
-            break;
-      }
-      QMessageBox::critical(
-         dialog_parent,
-         QObject::tr("Error", "delete form error"),
-         QObject::tr("Unable to delete this form. %1").arg(text)
-      );
+   if (!after_gather(request))
       return;
-   }
-   if (dialog_parent) {
-      //
-      // Show a confirmation prompt.
-      //
-      auto* confirm = new DeleteFormDialog(dialog_parent);
-      confirm->updateFromDeletionRequest(request);
-      auto  result = confirm->exec();
-      delete confirm;
-      if (result == QDialog::Rejected)
-         return;
-   }
+   if (request.get_result_code() != dovah::form_deletion_request::result_code::pending)
+      return;
    //
    struct _entry {
       dovah::bare_form_id_t id;
@@ -498,22 +520,17 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
    }
    //
    request.commit();
-   //
-   result = request.get_result_code();
-   if (result != dovah::form_deletion_request::result_code::success) {
-      using result_code = dovah::form_deletion_request::result_code;
+   assert(request.get_result_code() == dovah::form_deletion_request::result_code::success);
       //
-      QString text;
-      QMessageBox::critical(
-         dialog_parent,
-         QObject::tr("Error", "delete form error"),
-         QObject::tr("Unable to delete this form. %1").arg(text)
-      );
-      return;
-   }
-   //
+      // (form_deletion_request::commit) should never produce any errors. If it were to for some 
+      // reason, those errors would be impossible to handle: there isn't enough information 
+      // retained to know what form failed to delete, and the operation wouldn't be recoverable 
+      // anyway because other forms may have already been deleted, including parent forms.
+      //
    for (auto& entry : formIDs)
       emit this->formDeletionComplete(entry.id, entry.flagged);
+   //
+   after_complete(request);
 }
 
 bool DovahKitCore::get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out) {

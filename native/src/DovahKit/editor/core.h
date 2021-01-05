@@ -9,6 +9,7 @@
 namespace dovah {
    class  bsa_archived_file;
    struct detailed_notice;
+   class  form_deletion_request;
    class  form_stub;
    struct localized_string;
    struct tes_file_header;
@@ -151,6 +152,11 @@ class DovahKitCore : public QObject {
       dovah::form_stub* duplicate_form(dovah::form_stub& original, QWidget* dialog_parent = nullptr); // handles UI, error reporting, etc., for you
 
       void delete_form(dovah::form_stub& target, QWidget* dialog_parent = nullptr);
+      void delete_form(
+         dovah::form_stub& target,
+         std::function<bool(const dovah::form_deletion_request&)> after_gather, // return false to cancel; this is a good place to report errors or show a confirmation prompt
+         std::function<void(const dovah::form_deletion_request&)> after_complete
+      );
 
       bool get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out);
       bool for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)>);

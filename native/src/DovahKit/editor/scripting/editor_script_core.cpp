@@ -477,7 +477,18 @@ void DovahKitScriptVM::mainThreadLoop() {
             if (auto* casted = dynamic_cast<messages::delete_form*>(message)) {
                assert(casted->stub);
                auto& editor = DovahKitCore::get();
-               editor.delete_form(*casted->stub); // TODO: this will pop dialog boxes for errors, as it's designed to handle UI stuff, too. we need something that'll let us access the request directly
+               editor.delete_form(*casted->stub,
+                  [this](const dovah::form_deletion_request& request) {
+                     //
+                     // TODO: if there are errors, store error information on the message.
+                     //
+                     auto forms = request.get_forms_pending_delete(false); // only include forms that we will erase from memory, not simply ones we'll slap the "deleted" flag on
+                     for (auto* stub : forms)
+                        DovahKitScriptVMUserdataInterface::get().remove_form(*stub);
+                     return true;
+                  },
+                  [](const dovah::form_deletion_request& request) {}
+               );
             }
             return true;
       }
