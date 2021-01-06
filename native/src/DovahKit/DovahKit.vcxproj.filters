@@ -1271,6 +1271,9 @@
     <ClInclude Include="editor\scripting\cross_thread_tasks\_all.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\cross_thread_tasks\generic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

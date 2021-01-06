@@ -387,6 +387,9 @@
 //                   Native code will not *consistently* invoke these metamethods. Sometimes 
 //                   they'll work; sometimes they won't. Consider this UB.
 //
+//           - The script VM should force-quit if it receives data-abandon signals from the 
+//             editor.
+//
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
@@ -397,9 +400,6 @@
 //                implement even that, we should rearrange how wrappers are tracked 
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
-//
-//                 - Form deletion is implemented, but it can't signal deletion failures 
-//                   to the script.
 //
 //                 - Form renumbering
 //

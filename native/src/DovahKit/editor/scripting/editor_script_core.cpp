@@ -255,6 +255,8 @@ DovahKitScriptVM::DovahKitScriptVM() {
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
+      if (!will_be_flagged)
+         return;
       auto* message = new editor_script::tasks::m2s::form_deleted;
       message->stub = stub;
       //

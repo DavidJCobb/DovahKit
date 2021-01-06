@@ -1,6 +1,5 @@
 #include "util.h"
 #include "editor_script_core.h"
-#include "messages/log_text.h"
 
 namespace {
    using namespace editor_script;

@@ -22,10 +22,10 @@ namespace {
          auto* m = new tasks::s2m::delete_form;
          m->stub = self.stub;
          DovahKitScriptVMMessenger::get().send_message(m);
-         if (false) {
-            //
-            // TODO: check (m) to see if it has any error information
-            //
+         if (m->error) {
+            if (!m->error_text)
+               m->error_text = "";
+            luaL_error(L, m->error_text);
          }
          delete m;
          return 0;
