@@ -401,9 +401,9 @@
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
 //
-//                 - Form renumbering
-//
 //                 - Form creation
+//
+//                 - Form duplication
 //
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 

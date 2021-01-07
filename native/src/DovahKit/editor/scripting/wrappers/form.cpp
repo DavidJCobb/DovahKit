@@ -6,6 +6,7 @@
 #include "../wrapper_util.h"
 
 #include "../cross_thread_tasks/s2m/delete_form.h"
+#include "../cross_thread_tasks/s2m/renumber_form.h"
 
 #include "papyrus/root.h"
 
@@ -30,18 +31,30 @@ namespace {
          delete m;
          return 0;
       }
+      luastackchange_t form_id_to_string(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub) {
+            lua_pushstring(L, "00000000");
+            return 1;
+         }
+         auto  formID = self.stub->formID;
+         char  str[9] = "00000000";
+         char* digit  = &str[7];
+         for (; digit >= str; --digit, formID >>= 0x4) {
+            auto d = formID & 0xF;
+            if (d < 0xA)
+               *digit = ('0' + d);
+            else
+               *digit = ('A' + d - 0xA);
+         }
+         lua_pushstring(L, str);
+         return 1;
+      }
       luastackchange_t get_editor_id(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          if (!self.stub)
             return 0;
          lua_pushstring(L, self.stub->get_editor_id());
-         return 1;
-      }
-      luastackchange_t get_form_id(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
-         if (!self.stub)
-            return 0;
-         lua_pushnumber(L, self.stub->formID);
          return 1;
       }
       luastackchange_t get_form_type(lua_State* L) {
@@ -78,6 +91,13 @@ namespace {
       }
    }
    namespace _getters {
+      luastackchange_t form_id(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub)
+            return 0;
+         lua_pushinteger(L, self.stub->formID);
+         return 1;
+      }
       luastackchange_t papyrus(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
@@ -92,18 +112,48 @@ namespace {
          return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_root::metatable_key);
       }
    }
+   namespace _setters {
+      luastackchange_t form_id(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         luaL_argcheck(L, lua_type(L, 2) == LUA_TNUMBER, 2, "form ID (number) expected");
+         //
+         int result;
+         dovah::bare_form_id_t formID = lua_tointegerx(L, 2, &result);
+         luaL_argcheck(L, result, 2, "form ID must be an integer");
+         //
+         if (formID == self.stub->formID) // (form.form_id = form.form_id) should be treated as a no-op
+            return 0;
+         //
+         auto* m = new tasks::s2m::renumber_form;
+         m->stub      = self.stub;
+         m->desiredID = formID;
+         DovahKitScriptVMMessenger::get().send_message(m);
+         if (m->error) {
+            if (!m->error_text)
+               m->error_text = "";
+            luaL_error(L, m->error_text);
+         }
+         delete m;
+         return 0;
+      }
+   }
 }
 
 namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_methods = {
-      { "delete",         &_methods::delete_ },
-      { "get_editor_id",  &_methods::get_editor_id },
-      { "get_form_id",    &_methods::get_form_id },
-      { "get_form_type",  &_methods::get_form_type },
-      { "get_user_forms", &_methods::get_user_forms },
+      { "delete",            &_methods::delete_ },
+      { "form_id_to_string", &_methods::form_id_to_string },
+      { "get_editor_id",     &_methods::get_editor_id },
+      { "get_form_type",     &_methods::get_form_type },
+      { "get_user_forms",    &_methods::get_user_forms },
    };
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_getters = {
+      { "form_id", &_getters::form_id },
       { "papyrus", &_getters::papyrus },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> form::metatable_setters = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> form::metatable_setters = {
+      { "form_id", &_setters::form_id },
+   };
 }
