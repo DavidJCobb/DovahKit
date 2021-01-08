@@ -405,6 +405,12 @@
 //
 //                 - Form duplication
 //
+//              - Form deletion is exposed through script, but the implementation is 
+//                imperfect. I forgot to switch the backend for this over to notice 
+//                codes, and it also doesn't have an error code for when there's no 
+//                active file. We should address both of those, and then of course 
+//                allow the Lua wrapper to signal the "no active file" error.
+//
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 
 //                then accessing it should yield nil, not a userdata.
