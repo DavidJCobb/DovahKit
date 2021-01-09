@@ -390,6 +390,9 @@
 //           - The script VM should force-quit if it receives data-abandon signals from the 
 //             editor.
 //
+//           - When the script finishes execution or is force-quit, the message queues 
+//             should be emptied by the main thread after the script thread terminates.
+//
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
@@ -403,11 +406,20 @@
 //
 //                 - Form duplication
 //
+//                    - Implemented. Allow the script to pass an options struct as an 
+//                      argument. Options should include:
+//
+//                       - Editor ID for the cloned form
+//                       - Alternate parent form for the cloned form
+//                       - Cell coordinates for use when cloning an exterior cell
+//
 //              - Form deletion is exposed through script, but the implementation is 
 //                imperfect. I forgot to switch the backend for this over to notice 
 //                codes, and it also doesn't have an error code for when there's no 
 //                active file. We should address both of those, and then of course 
 //                allow the Lua wrapper to signal the "no active file" error.
+//
+//              - API for changing a form's editor ID
 //
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 

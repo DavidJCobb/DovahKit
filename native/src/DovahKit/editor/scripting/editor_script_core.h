@@ -113,11 +113,19 @@ class DovahKitScriptVMMessenger {
          static DovahKitScriptVMMessenger instance(DovahKitScriptVM::get());
          return instance;
       }
-      //
+      
       DovahKitScriptVM& vm;
+      
       //
-      void send_message(editor_script::cross_thread_task* m); // blocks until the main thread acknowledges the message, if (m->is_blocking()) returns true. if the script is aborted while a blocking message is being sent, calls luaL_error
+      // Sends a cross-thread-task to the main thread to be executed. If the task indicates that it's 
+      // blocking, then blocks the caller (i.e. the script thread) until the main thread acknowledges 
+      // the message. If the script is aborted while a blocking message is in transit, then this 
+      // function will call luaL_error the same way our debug hook does, to ensure that the message 
+      // sender doesn't continue execution with the message potentially unacknowledged or otherwise 
+      // in an invalid state.
       //
+      void send_message(editor_script::cross_thread_task* m);
+      
       inline bool is_aborted() const noexcept { return vm.aborted; }
       inline bool is_running() const noexcept { return vm.running; }
 };

@@ -615,6 +615,9 @@
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\create_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\duplicate_form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1284,6 +1287,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\create_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\duplicate_form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

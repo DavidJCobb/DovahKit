@@ -127,6 +127,8 @@ namespace _api { // APIs
             return 0;
          }
          luastackchange_t create_form(lua_State* L) {
+            DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+            //
             luaL_argcheck(L, lua_isnumber(L, 1), 1, "form type (number) expected");
             auto& editor = DovahKitCore::get();
             if (!editor.has_data())

@@ -23,7 +23,10 @@ namespace {
             // shouldn't be possible from dovah.create_form(type)
             //
             return "cannot create a new form because the specified parent form cannot have a child form of this type";
-         case notice_code::exterior_grid_coordinates_already_taken: // shouldn't be possible from dovah.create_form(type)
+         case notice_code::exterior_grid_coordinates_already_taken:
+            //
+            // shouldn't be possible from dovah.create_form(type)
+            //
             return "cannot create a new cell because the specified worldspace already has an exterior cell at the desired grid coordinates";
          case notice_code::cannot_create_reference_with_no_parent_cell:
             //

@@ -6,6 +6,7 @@
 #include "../wrapper_util.h"
 
 #include "../cross_thread_tasks/s2m/delete_form.h"
+#include "../cross_thread_tasks/s2m/duplicate_form.h"
 #include "../cross_thread_tasks/s2m/renumber_form.h"
 
 #include "papyrus/root.h"
@@ -30,6 +31,31 @@ namespace {
          }
          delete m;
          return 0;
+      }
+      luastackchange_t duplicate(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         // TODO: accept an optional second argument consisting of a table with named options, such 
+         // as the editor ID to use for the duplicate, a different parent cell to use for the duplicate, 
+         // and so on.
+         //
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub)
+            return 0;
+         auto* m = new tasks::s2m::duplicate_form;
+         m->source = self.stub;
+         DovahKitScriptVMMessenger::get().send_message(m);
+         if (m->error) {
+            if (!m->error_text)
+               m->error_text = "";
+            luaL_error(L, m->error_text);
+         }
+         auto* stub = m->result;
+         delete m;
+         //
+         wrapper out;
+         auto* mt = wrap_form(out, stub);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t form_id_to_string(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
@@ -144,6 +170,7 @@ namespace {
 namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_methods = {
       { "delete",            &_methods::delete_ },
+      { "duplicate",         &_methods::duplicate },
       { "form_id_to_string", &_methods::form_id_to_string },
       { "get_editor_id",     &_methods::get_editor_id },
       { "get_form_type",     &_methods::get_form_type },
