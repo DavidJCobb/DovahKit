@@ -126,6 +126,31 @@ namespace _api { // APIs
             self->finish();
             return 0;
          }
+         luastackchange_t create_form(lua_State* L) {
+            luaL_argcheck(L, lua_isnumber(L, 1), 1, "form type (number) expected");
+            auto& editor = DovahKitCore::get();
+            if (!editor.has_data())
+               luaL_error(L, "cannot create a new form because no data is loaded in the editor");
+            bool  valid = false;
+            auto  ft    = editor_script::get_form_type_from_stack(L, 1, valid);
+            if (!valid)
+               luaL_error(L, "cannot create a new form because no valid form type was supplied");
+            
+            auto* m = new tasks::s2m::create_form;
+            m->form_type = ft;
+            DovahKitScriptVMMessenger::get().send_message(m);
+            if (m->error) {
+               if (!m->error_text)
+                  m->error_text = "";
+               luaL_error(L, m->error_text);
+            }
+            auto* stub = m->result;
+            delete m;
+            //
+            wrapper out;
+            auto* mt = wrap_form(out, stub);
+            return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         }
          luastackchange_t for_each_form_of_type(lua_State* L) {
             luaL_argcheck(L, lua_isnumber(L, 1),   1, "form type (number) expected");
             luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
@@ -223,6 +248,7 @@ namespace _api { // APIs
       std::array dovah = {
          function{ "benchmark_start",        &definitions::dovah::benchmark_start },
          function{ "benchmark_stop",         &definitions::dovah::benchmark_stop },
+         function{ "create_form",            &definitions::dovah::create_form },
          function{ "for_each_form_of_type",  &definitions::dovah::for_each_form_of_type },
          function{ "get_form_by_id",         &definitions::dovah::get_form_by_id },
          function{ "log_message",            &definitions::dovah::log_message },
@@ -449,7 +475,13 @@ void DovahKitScriptVMMessenger::send_message(editor_script::cross_thread_task* m
       while (!m->seen)
          if (vm.is_aborted())
             break;
-      vm.task_queues.m2s.urgent.process();
+      if (!vm.is_aborted()) {
+         vm.task_queues.m2s.urgent.process();
+      }
+      if (vm.is_running() && vm.is_aborted()) {
+         luaL_error(vm.lua_vm, "Script terminated at the user's request.");
+         __assume(0); // luaL_error performs a jump and so does not return
+      }
    }
 }
 #pragma endregion 

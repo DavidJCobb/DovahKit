@@ -25,7 +25,7 @@ namespace {
          case notice_code::cannot_load_all_users_of_this_form:
             return "cannot renumber the form because one of the forms that uses it is of a type that DovahKit doesn't yet know how to load";
          case notice_code::no_active_file:
-            return "cannot renumber the form because there is no active file, nor any room in the load order for a new file";
+            return "cannot renumber the form because there is neither an active file nor any room in the load order for a new file";
          case notice_code::cannot_sever_references_to_none_stub:
             return "cannot renumber the form because the requested form ID is the target of one or more dangling references, and at least one such reference is outbound from a form of a type that DovahKit doesn't yet know how to load";
          case notice_code::cannot_inject_form_overtop_none_stub:

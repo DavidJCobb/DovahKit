@@ -401,8 +401,6 @@
 //                internally (indexing them by form ID as described above) in order to 
 //                optimize internal processes.
 //
-//                 - Form creation
-//
 //                 - Form duplication
 //
 //              - Form deletion is exposed through script, but the implementation is 
