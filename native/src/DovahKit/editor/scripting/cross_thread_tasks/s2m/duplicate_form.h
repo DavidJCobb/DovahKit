@@ -10,7 +10,10 @@ namespace editor_script::tasks::s2m {
    class duplicate_form : public cross_thread_task {
       public:
          dovah::form_stub* source = nullptr;
+         dovah::form_stub* parent = nullptr;
          dovah::form_stub* result = nullptr;
+         std::string editorID;
+         //
          bool        error      = false;
          const char* error_text = nullptr;
          //

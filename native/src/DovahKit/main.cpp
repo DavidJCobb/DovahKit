@@ -409,8 +409,6 @@
 //                    - Implemented. Allow the script to pass an options struct as an 
 //                      argument. Options should include:
 //
-//                       - Editor ID for the cloned form
-//                       - Alternate parent form for the cloned form
 //                       - Cell coordinates for use when cloning an exterior cell
 //
 //              - Form deletion is exposed through script, but the implementation is 

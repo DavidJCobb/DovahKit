@@ -3,6 +3,7 @@
 #include "../../../core.h"
 #include "../../../../dovah/files/file_load_order.h"
 #include "../../../../dovah/notice_code_list.h"
+#include "../../../helpers/make_editor_id_for_duplicate.h"
 
 namespace {
    const char* _explain_error_code(dovah::notice_code_t code) {
@@ -28,23 +29,11 @@ namespace {
             //
             return "cannot duplicate the exterior cell because its parent worldspace already has a cell at these coordinates";
          case notice_code::cannot_create_reference_with_no_parent_cell:
-            //
-            // TODO: consider allowing the duplicate API to specify an alternate parent form, and if so, re-word
-            //       this error message.
-            //
             return "cannot duplicate the reference because no parent cell was supplied (wait, what? shouldn't we have used the original reference's parent?)";
          case notice_code::interior_cell_clone_cannot_have_parent:
-            //
-            // TODO: consider allowing the duplicate API to specify an alternate parent form, and if so, re-word
-            //       this error message.
-            //
-            return "cannot duplicate the interior cell because a parent cell was supplied (wait, what? how did that happen?)";
+            return "cannot duplicate the interior cell if a parent worldspace is specified, as interior cells must have a parent worldspace";
          case notice_code::exterior_cell_clone_must_have_parent:
-            //
-            // TODO: consider allowing the duplicate API to specify an alternate parent form, and if so, re-word
-            //       this error message.
-            //
-            return "cannot duplicate the exterior cell because no parent cell was supplied (wait, what? shouldn't we have used the original cell's parent?)";
+            return "cannot duplicate the exterior cell because no parent worldspace was supplied (wait, what? shouldn't we have used the original cell's parent?)";
       }
       return "cannot duplicate the form (or one of its child forms) for an unknown reason";
    }
@@ -56,6 +45,12 @@ namespace editor_script::tasks::s2m {
       auto& editor  = DovahKitCore::get();
       auto  request = editor.request_form_duplication();
       request.set_target(this->source);
+      request.set_parent_form(this->parent);
+      if (this->editorID.empty()) {
+         request.editorID = editor_helpers::make_editor_id_for_duplicate(this->source->get_editor_id()).toStdString();
+      } else {
+         request.editorID = this->editorID;
+      }
       //
       if (request.has_error()) {
          this->error = true;

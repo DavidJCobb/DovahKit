@@ -140,6 +140,39 @@ namespace _api { // APIs
             
             auto* m = new tasks::s2m::create_form;
             m->form_type = ft;
+            if (lua_gettop(L) > 1 && lua_type(L, 2) == LUA_TTABLE) { // if an options table was passed
+               lua_settop(L, 2);
+               //
+               lua_getfield(L, 2, "parent");
+               if (!lua_isnoneornil(L, 3)) {
+                  auto* wrap = (wrapper*)editor_script::cast_to_class(L, 3, wrappers::form::metatable_key);
+                  if (wrap) {
+                     m->parent = wrap->stub;
+                  } else {
+                     lua_warning(L, "dovah.create_form() call tried to specify a parent but didn't pass a form", 0);
+                  }
+               }
+               lua_settop(L, 2);
+               //
+               lua_getfield(L, 2, "grid_coordinates");
+               if (!lua_isnoneornil(L, 3)) {
+                  if (lua_type(L, 3) == LUA_TTABLE) {
+                     lua_getfield(L, 3, "x");
+                     lua_getfield(L, 3, "y");
+                     m->cell_grid_coordinates.x = lua_tonumber(L, 4);
+                     m->cell_grid_coordinates.y = lua_tonumber(L, 5);
+                  } else {
+                     lua_warning(L, "dovah.create_form() call tried to specify grid coordinates for an exterior cell, but didn't pass valid numbers", 0);
+                  }
+               }
+               lua_settop(L, 2);
+               //
+               lua_getfield(L, 2, "editor_id");
+               if (!lua_isnoneornil(L, 3)) {
+                  m->editorID = luaL_tolstring(L, 3, nullptr);
+               }
+               lua_settop(L, 2);
+            }
             DovahKitScriptVMMessenger::get().send_message(m);
             if (m->error) {
                if (!m->error_text)

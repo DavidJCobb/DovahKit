@@ -44,6 +44,26 @@ namespace {
             return 0;
          auto* m = new tasks::s2m::duplicate_form;
          m->source = self.stub;
+         if (lua_gettop(L) > 1 && lua_type(L, 2) == LUA_TTABLE) { // if an options table was passed
+            lua_settop(L, 2);
+            //
+            lua_getfield(L, 2, "parent");
+            if (!lua_isnoneornil(L, 3)) {
+               auto* wrap = (wrapper*)editor_script::cast_to_class(L, 3, wrappers::form::metatable_key);
+               if (wrap) {
+                  m->parent = wrap->stub;
+               } else {
+                  lua_warning(L, "form:duplicate() call tried to specify a parent but didn't pass a form", 0);
+               }
+            }
+            lua_settop(L, 2);
+            //
+            lua_getfield(L, 2, "editor_id");
+            if (!lua_isnoneornil(L, 3)) {
+               m->editorID = luaL_tolstring(L, 3, nullptr);
+            }
+            lua_settop(L, 2);
+         }
          DovahKitScriptVMMessenger::get().send_message(m);
          if (m->error) {
             if (!m->error_text)
