@@ -3,6 +3,7 @@
 #include "editor_script_core.h"
 #include "util.h"
 #include "wrapper_util.h"
+#include "../core.h"
 
 namespace editor_script {
    /*static*/ luastackchange_t wrapper::__gc(lua_State* L) {
@@ -118,9 +119,15 @@ namespace editor_script {
          return;
       this->form = this->stub->load();
    }
-   void wrapper::mark_form_as_edited() {
+   void wrapper::before_edit() {
+      if (!this->stub)
+         return;
+      emit DovahKitCore::get().formModificationImminent(this->stub);
+   }
+   void wrapper::after_edit() {
       if (!this->stub)
          return;
       this->stub->set_edited(true);
+      emit DovahKitCore::get().formModified(this->stub);
    }
 }

@@ -52,7 +52,14 @@ namespace editor_script {
          bool is_in_same_collection(const wrapper& other) const noexcept;
 
          void load_form();
-         void mark_form_as_edited();
+
+         //
+         // Call these functions before and after modifying data on a form, to ensure that DovahKitCore 
+         // emits the correct signals to the program UI and to ensure that the form stub is properly 
+         // flagged as edited.
+         //
+         void before_edit();
+         void after_edit();
 
          template<typename c> c* get_loaded_form_data() {
             this->load_form();

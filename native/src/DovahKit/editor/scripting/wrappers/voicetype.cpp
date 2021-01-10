@@ -25,8 +25,9 @@ namespace {
          auto* form = self.get_loaded_form_data<Voicetype>();
          if (!form)
             return 0;
-         self.mark_form_as_edited();
+         self.before_edit();
          cobb::edit_bit(form->voicetype_flags, Voicetype::voicetype_flag::allow_default_dialogue, lua_toboolean(L, 2));
+         self.after_edit();
          return 0;
       }
       luastackchange_t get_is_female(lua_State* L) {
@@ -34,7 +35,9 @@ namespace {
          auto* form = self.get_loaded_form_data<Voicetype>();
          if (!form)
             return 0;
+         self.before_edit();
          lua_pushboolean(L, (form->voicetype_flags & Voicetype::voicetype_flag::female));
+         self.after_edit();
          return 1;
       }
       luastackchange_t set_is_female(lua_State* L) {
@@ -45,8 +48,9 @@ namespace {
          auto* form = self.get_loaded_form_data<Voicetype>();
          if (!form)
             return 0;
-         self.mark_form_as_edited();
+         self.before_edit();
          cobb::edit_bit(form->voicetype_flags, Voicetype::voicetype_flag::female, lua_toboolean(L, 2));
+         self.after_edit();
          return 0;
       }
    }

@@ -58,6 +58,19 @@ namespace {
             }
             lua_settop(L, 2);
             //
+            lua_getfield(L, 2, "grid_coordinates");
+            if (!lua_isnoneornil(L, 3)) {
+               if (lua_type(L, 3) == LUA_TTABLE) {
+                  lua_getfield(L, 3, "x");
+                  lua_getfield(L, 3, "y");
+                  m->cell_grid_coordinates.x = lua_tonumber(L, 4);
+                  m->cell_grid_coordinates.y = lua_tonumber(L, 5);
+               } else {
+                  lua_warning(L, "form:duplicate() call tried to specify grid coordinates for an exterior cell, but didn't pass valid numbers", 0);
+               }
+            }
+            lua_settop(L, 2);
+            //
             lua_getfield(L, 2, "editor_id");
             if (!lua_isnoneornil(L, 3)) {
                m->editorID = luaL_tolstring(L, 3, nullptr);
@@ -96,13 +109,6 @@ namespace {
          lua_pushstring(L, str);
          return 1;
       }
-      luastackchange_t get_editor_id(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
-         if (!self.stub)
-            return 0;
-         lua_pushstring(L, self.stub->get_editor_id());
-         return 1;
-      }
       luastackchange_t get_form_type(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          if (!self.stub)
@@ -137,6 +143,13 @@ namespace {
       }
    }
    namespace _getters {
+      luastackchange_t editor_id(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub)
+            return 0;
+         lua_pushstring(L, self.stub->get_editor_id());
+         return 1;
+      }
       luastackchange_t form_id(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          if (!self.stub)
@@ -159,11 +172,31 @@ namespace {
       }
    }
    namespace _setters {
+      luastackchange_t editor_id(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "editor ID (string) expected");
+         if (!self.stub)
+            return 0;
+         //
+         auto editorID = lua_tostring(L, 2);
+         if (self.stub->editorID == editorID)
+            return 0;
+         //
+         self.before_edit();
+         self.stub->editorID = editorID;
+         self.after_edit();
+         //
+         return 0;
+      }
       luastackchange_t form_id(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          luaL_argcheck(L, lua_type(L, 2) == LUA_TNUMBER, 2, "form ID (number) expected");
+         if (!self.stub)
+            return 0;
          //
          int result;
          dovah::bare_form_id_t formID = lua_tointegerx(L, 2, &result);
@@ -197,10 +230,12 @@ namespace editor_script::wrappers {
       { "get_user_forms",    &_methods::get_user_forms },
    };
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_getters = {
-      { "form_id", &_getters::form_id },
-      { "papyrus", &_getters::papyrus },
+      { "editor_id", &_getters::editor_id },
+      { "form_id",   &_getters::form_id },
+      { "papyrus",   &_getters::papyrus },
    };
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_setters = {
-      { "form_id", &_setters::form_id },
+      { "editor_id", &_setters::editor_id },
+      { "form_id",   &_setters::form_id },
    };
 }

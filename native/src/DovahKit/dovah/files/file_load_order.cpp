@@ -2739,6 +2739,8 @@ namespace dovah {
       if (!this->main_request)
          return nullptr;
       this->main_request->editorID = this->editorID;
+      this->main_request->cell_grid_coordinates.x = this->cell_grid_coordinates.x;
+      this->main_request->cell_grid_coordinates.y = this->cell_grid_coordinates.y;
       if (!this->parent) {
          auto parentID = this->main_request->clone_of->groupInfo.parentFormID;
          if (parentID)
@@ -2914,6 +2916,8 @@ namespace dovah {
       return out;
    }
    void form_deletion_request::commit() {
+      if (this->result != result_code::pending)
+         return;
       auto* file = owner.active_file;
       bare_form_id_t lowestID = 0xFFFFFFFF;
       for (auto* stub : this->forms_needing_delete) {

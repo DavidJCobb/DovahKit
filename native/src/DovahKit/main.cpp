@@ -398,26 +398,11 @@
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
 //             API BACKEND EARLIER IN DEVELOPMENT.
 //
-//              - Before we implement access to any more form data, we should implement 
-//                code for creating, renumbering, and deleting forms; and before we 
-//                implement even that, we should rearrange how wrappers are tracked 
-//                internally (indexing them by form ID as described above) in order to 
-//                optimize internal processes.
-//
-//                 - Form duplication
-//
-//                    - Implemented. Allow the script to pass an options struct as an 
-//                      argument. Options should include:
-//
-//                       - Cell coordinates for use when cloning an exterior cell
-//
 //              - Form deletion is exposed through script, but the implementation is 
 //                imperfect. I forgot to switch the backend for this over to notice 
 //                codes, and it also doesn't have an error code for when there's no 
 //                active file. We should address both of those, and then of course 
 //                allow the Lua wrapper to signal the "no active file" error.
-//
-//              - API for changing a form's editor ID
 //
 //              - Scripts should have none-stubs masked unless they explicitly request 
 //                access to them. If some property on a form points to a none-stub, 

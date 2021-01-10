@@ -33,8 +33,9 @@ namespace {
             luaL_error(L, "script wrapper has no underlying object (deleted?)");
          __assume(script != nullptr);
          //
+         self.before_edit();
          script->name = lua_tolstring(L, 2, nullptr);
-         self.mark_form_as_edited();
+         self.after_edit();
          return 0;
       }
    }

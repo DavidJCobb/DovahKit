@@ -419,6 +419,10 @@ namespace dovah {
          ~form_duplication_request();
          //
          std::string editorID;
+         struct {
+            int32_t x = 0;
+            int32_t y = 0;
+         } cell_grid_coordinates; // grid coordinates to use when duplicating an exterior cell
          //
          void set_target(form_stub* original);
          //
@@ -471,7 +475,7 @@ namespace dovah {
          std::vector<form_stub*> get_forms_pending_flagging() const noexcept;
          inline result_code get_result_code() const noexcept { return this->result; }
          //
-         void commit();
+         void commit(); // cannot produce or signal errors. if no errors already occurred, then once you call this, you're locked in.
    };
 
    class form_renumber_request {

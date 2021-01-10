@@ -150,8 +150,9 @@ namespace {
          if (index >= size) // Invalid index on the search-and-remove wrapper. Exit early.
             return 0;
          //
+         self.before_edit();
          list.erase(list.begin() + index); // remove the underlying wrapped object
-         self.mark_form_as_edited();
+         self.after_edit();
          //
          DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(*script); // update sibling wrappers and kill the wrapper
          return 0;

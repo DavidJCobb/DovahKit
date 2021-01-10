@@ -22,12 +22,7 @@ namespace {
          case notice_code::cannot_sever_references_to_none_stub:
             return "cannot duplicate the form (or one of its child forms) because the form ID that DovahKit wants to use is the target of one or more dangling references, and at least one is outbound from a form that DovahKit doesn't yet know how to load";
          case notice_code::exterior_grid_coordinates_already_taken:
-            //
-            // TODO: form:duplicate() currently has no way to specify alternate coordinates for duplicating an 
-            //       exterior cell. when we add a way to dupe exterior cells, this error message should suggest 
-            //       that to the user
-            //
-            return "cannot duplicate the exterior cell because its parent worldspace already has a cell at these coordinates";
+            return "cannot duplicate the exterior cell because its parent worldspace already has a cell at the specified coordinates (or 0, 0) if none were specified";
          case notice_code::cannot_create_reference_with_no_parent_cell:
             return "cannot duplicate the reference because no parent cell was supplied (wait, what? shouldn't we have used the original reference's parent?)";
          case notice_code::interior_cell_clone_cannot_have_parent:
@@ -51,6 +46,8 @@ namespace editor_script::tasks::s2m {
       } else {
          request.editorID = this->editorID;
       }
+      request.cell_grid_coordinates.x = this->cell_grid_coordinates.x;
+      request.cell_grid_coordinates.y = this->cell_grid_coordinates.y;
       //
       if (request.has_error()) {
          this->error = true;
