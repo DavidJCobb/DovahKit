@@ -396,6 +396,13 @@
 //                access to them. If some property on a form points to a none-stub, 
 //                then accessing it should yield nil, not a userdata.
 //
+//              - We should not allow scripts to look up singleton forms; rather, we 
+//                should provide unique top-level accessors for the singleton data. 
+//                Mainly, this covers DOBJ and NAVI.
+//
+//              - We need to provide special accessors for GMST, since those don't 
+//                map 1:1 to form IDs.
+//
 //              - For extra-data types, the wrappers should always act as though 
 //                there is underlying data, and create and destroy it as appropriate. 
 //                For example, if a weapon placed in the game world doesn't have any 
