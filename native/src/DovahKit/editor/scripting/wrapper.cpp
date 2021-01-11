@@ -51,6 +51,19 @@ namespace editor_script {
       return true;
    }
 
+   bool wrapper::should_expose_to_script() const noexcept {
+      if (this->type == wrapper_type::form_data) {
+         if (!this->stub)
+            return false;
+         auto* stub = this->stub;
+         if (stub->formType == dovah::form_type::setting)
+            return false;
+         if (stub->is_none_stub())
+            return false;
+      }
+      return true;
+   }
+
    bool wrapper::is_descendant_of(const wrapper& other) const noexcept {
       if (this->depth < other.depth)
          return false;
@@ -129,5 +142,12 @@ namespace editor_script {
          return;
       this->stub->set_edited(true);
       emit DovahKitCore::get().formModified(this->stub);
+   }
+
+   void wrapper::error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type_t ft, bool loose) {
+      luaL_argcheck(L, this->type == wrapper_type::form_data, arg_index, "form expected");
+      luaL_argcheck(L, this->depth == 0, arg_index, "form expected");
+      if (this->stub)
+         luaL_argcheck(L, this->stub->formType == ft, arg_index, "incorrect form type");
    }
 }

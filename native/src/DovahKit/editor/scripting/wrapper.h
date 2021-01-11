@@ -47,6 +47,13 @@ namespace editor_script {
             this->lua_key = LUA_NOREF;
          }
 
+         //
+         // There are certain objects that we actually *don't* want to provide to scripts, like none-stubs 
+         // and GMST form stubs. It's easiest to just check for that stuff at the very last possible second, 
+         // when actually sending (or not) the wrapper to Lua.
+         //
+         bool should_expose_to_script() const noexcept;
+
          bool is_descendant_of(const wrapper& other) const noexcept;
          bool is_equal(const wrapper* other) const noexcept;
          bool is_in_same_collection(const wrapper& other) const noexcept;
@@ -60,6 +67,20 @@ namespace editor_script {
          //
          void before_edit();
          void after_edit();
+
+         //
+         // Emits a Lua error if the wrapped form's type isn't the expected type. You should set the 
+         // "loose" argument to true if allowing a mismatched type would be technically incorrect but 
+         // wouldn't break the file, or false if it would break the file. As an example, setting a 
+         // shout's first word to point to an ACTI would be incorrect, but the file would still be 
+         // readable; however, setting the owner of an inventory item to something that is not a FACT 
+         // or NPC_ would actually make it impossible to read the next four bytes of the inventory 
+         // data, as those depend on the form type.
+         //
+         // We may at some point in the future allow scripts to disable "loose" form type errors. 
+         // Maybe.
+         //
+         void error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type_t, bool loose = true);
 
          template<typename c> c* get_loaded_form_data() {
             this->load_form();

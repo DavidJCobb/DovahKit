@@ -392,13 +392,21 @@
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
 //             API BACKEND EARLIER IN DEVELOPMENT.
 //
-//              - Scripts should have none-stubs masked unless they explicitly request 
-//                access to them. If some property on a form points to a none-stub, 
-//                then accessing it should yield nil, not a userdata.
+//              - Currently, we prevent scripts from receiving none-stubs by way of 
+//                the (wrapper::should_expose_to_script) function. However, we may 
+//                want to add some sort of script-wide pref that can be used to 
+//                gain access to none-stubs, chiefly because a script may actually 
+//                want to do something with them specifically.
 //
-//              - We should not allow scripts to look up singleton forms; rather, we 
-//                should provide unique top-level accessors for the singleton data. 
-//                Mainly, this covers DOBJ and NAVI.
+//              - Provide special top-level accessors for default objects and NAVI 
+//                data (when that's decoded). We should still allow scripts to look 
+//                up the forms, but not have classes for them. (Why? The alternative 
+//                is to not allow lookups to return singleton forms, but that leads 
+//                to odd situations where a form ID is taken but you can't tell by 
+//                what.)
+//
+//                 - This is the general approach that should be taken for any 
+//                   singleton forms.
 //
 //              - We need to provide special accessors for GMST, since those don't 
 //                map 1:1 to form IDs.

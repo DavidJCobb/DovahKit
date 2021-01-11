@@ -696,6 +696,9 @@ void DovahKitScriptVMUserdataInterface::remove_form(dovah::form_stub& stub) {
 }
 
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
+   if (!instance.should_expose_to_script())
+      return 0;
+   //
    auto  start = lua_gettop(L);
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
    auto  table = lua_gettop(L);

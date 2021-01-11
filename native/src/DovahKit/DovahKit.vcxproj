@@ -236,7 +236,10 @@
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\word_of_power.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
     <ClCompile Include="editor\scripting\wrapper_util.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
@@ -485,7 +488,10 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\script.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
+    <ClInclude Include="editor\scripting\wrappers\shout.h" />
+    <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
+    <ClInclude Include="editor\scripting\wrappers\word_of_power.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />

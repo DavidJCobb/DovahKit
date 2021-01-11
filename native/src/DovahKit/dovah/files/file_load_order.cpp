@@ -2918,8 +2918,7 @@ namespace dovah {
    void form_deletion_request::commit() {
       if (this->done || this->error != default_notice_code)
          return;
-      auto* file = owner.active_file;
-      if (!file) {
+      if (!owner.active_file) {
          this->error = notice_code::no_active_file;
          return;
       }
