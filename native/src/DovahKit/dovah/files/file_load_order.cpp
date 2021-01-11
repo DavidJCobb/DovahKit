@@ -2602,7 +2602,7 @@ namespace dovah {
             bool is_none_stub = stub->is_none_stub();
             auto request      = this->request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
             request.commit();
-            if (request.get_result_code() != form_deletion_request::result_code::success) {
+            if (request.get_error_code() != default_notice_code) {
                results.error.code = notice_code::game_conversion_form_cleanup_failed;
                if (is_none_stub)
                   results.error.code = notice_code::post_save_none_stub_cleanup_failed;
@@ -2806,7 +2806,7 @@ namespace dovah {
    #pragma region form_deletion_request
    form_deletion_request::form_deletion_request(file_load_order& o, form_stub& t) : owner(o), target(t) {
       if (this->target.is_hardcoded() || this->target.formID < minimum_plugin_form_id) {
-         this->result = result_code::error_cannot_delete_hardcoded_form;
+         this->error = notice_code::cannot_delete_hardcoded_form;
          return;
       }
       this->active_file_prefix = this->owner.active_file_prefix();
@@ -2820,7 +2820,7 @@ namespace dovah {
       this->_gather_others(&this->target);
    }
    form_deletion_request::form_deletion_request(form_deletion_request&& other) : owner(other.owner), target(other.target) {
-      this->result = other.result;
+      this->error = other.error;
       std::swap(this->forms_needing_delete, other.forms_needing_delete);
       std::swap(this->seen_stubs, other.seen_stubs);
       //
@@ -2843,13 +2843,13 @@ namespace dovah {
       // not only all of the to-be-deleted forms, but also all of their users, in order to sever 
       // uses and set "deleted" flags as necessary.
       //
-      if (this->result != result_code::pending)
+      if (this->error != default_notice_code)
          return;
       if (!start)
          start = &this->target;
       //
       if (!start->load()) {
-         this->result = result_code::error_cannot_load_form;
+         this->error = notice_code::unimplemented_form_type;
          return;
       }
       //
@@ -2861,7 +2861,7 @@ namespace dovah {
          this->seen_stubs.insert(entry.other);
          //
          if (!ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE && !entry.other->load()) { // Check to ensure we can load all users.
-            this->result = result_code::error_cannot_load_user;
+            this->error = notice_code::cannot_load_all_users_of_this_form;
             return;
          }
          //
@@ -2873,7 +2873,7 @@ namespace dovah {
                this->forms_needing_delete.insert(entry.other);
             }
             this->_gather_others(entry.other);
-            if (this->result != result_code::pending)
+            if (this->error != default_notice_code)
                return;
          }
       }
@@ -2916,9 +2916,13 @@ namespace dovah {
       return out;
    }
    void form_deletion_request::commit() {
-      if (this->result != result_code::pending)
+      if (this->done || this->error != default_notice_code)
          return;
       auto* file = owner.active_file;
+      if (!file) {
+         this->error = notice_code::no_active_file;
+         return;
+      }
       bare_form_id_t lowestID = 0xFFFFFFFF;
       for (auto* stub : this->forms_needing_delete) {
          this->_prep_for_delete(*stub);
@@ -2933,6 +2937,7 @@ namespace dovah {
          //
          delete stub;
       }
+      this->forms_needing_delete.clear();
       if (auto* file = owner.active_file) {
          if (file->header.nextFormID > lowestID)
             file->header.nextFormID = lowestID;
@@ -2943,7 +2948,7 @@ namespace dovah {
          stub->load()->friendly_delete_override(this->owner);
          stub->set_edited(true);
       }
-      this->result = result_code::success;
+      this->done = true;
    }
    #pragma endregion
 

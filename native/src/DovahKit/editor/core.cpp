@@ -449,19 +449,22 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
       // After-gather callback:
       //
       [this, dialog_parent](const dovah::form_deletion_request& request) {
-         auto result  = request.get_result_code();
-         if (result != dovah::form_deletion_request::result_code::pending) {
-            using result_code = dovah::form_deletion_request::result_code;
+         auto error = request.get_error_code();
+         if (error != dovah::default_notice_code) {
+            using notice_code = dovah::notice_code;
             //
             QString text;
-            switch (result) {
-               case result_code::error_cannot_delete_hardcoded_form:
+            switch (error) {
+               case notice_code::no_active_file:
+                  text = tr("There is neither an active file nor room in the load order for an active file.");
+                  break;
+               case notice_code::cannot_delete_hardcoded_form:
                   text = tr("The form is hardcoded into the game engine and cannot be deleted.");
                   break;
-               case result_code::error_cannot_load_form:
+               case notice_code::unimplemented_form_type:
                   text = tr("DovahKit doesn't currently support this form type, which means that it cannot flag the form as deleted.");
                   break;
-               case result_code::error_cannot_load_user:
+               case notice_code::cannot_load_all_users_of_this_form:
                   text = tr("One of the forms that uses this form is of an unsupported type, which means that that use cannot be severed.");
                   break;
             }
@@ -499,7 +502,7 @@ void DovahKitCore::delete_form(
    auto request = this->load_order->request_form_deletion(target);
    if (!after_gather(request))
       return;
-   if (request.get_result_code() != dovah::form_deletion_request::result_code::pending)
+   if (request.get_error_code() != dovah::default_notice_code)
       return;
    //
    struct _entry {
@@ -520,7 +523,7 @@ void DovahKitCore::delete_form(
    }
    //
    request.commit();
-   assert(request.get_result_code() == dovah::form_deletion_request::result_code::success);
+   assert(request.get_error_code() == dovah::default_notice_code);
       //
       // (form_deletion_request::commit) should never produce any errors. If it were to for some 
       // reason, those errors would be impossible to handle: there isn't enough information 

@@ -4,6 +4,7 @@
 #include "../../../dovah/forms/Form.h"
 #include "../editor_script_core.h"
 #include "../wrapper_util.h"
+#include "../api/form_type_values.h"
 
 #include "../cross_thread_tasks/s2m/delete_form.h"
 #include "../cross_thread_tasks/s2m/duplicate_form.h"
@@ -113,7 +114,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          if (!self.stub)
             return 0;
-         lua_pushnumber(L, self.stub->formType);
+         editor_script::push_form_type_to_stack(L, self.stub->formType);
          return 1;
       }
       luastackchange_t get_user_forms(lua_State* L) {
@@ -225,7 +226,6 @@ namespace editor_script::wrappers {
       { "delete",            &_methods::delete_ },
       { "duplicate",         &_methods::duplicate },
       { "form_id_to_string", &_methods::form_id_to_string },
-      { "get_editor_id",     &_methods::get_editor_id },
       { "get_form_type",     &_methods::get_form_type },
       { "get_user_forms",    &_methods::get_user_forms },
    };

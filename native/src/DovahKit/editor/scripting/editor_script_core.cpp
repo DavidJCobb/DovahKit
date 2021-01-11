@@ -304,6 +304,15 @@ void DovahKitScriptVM::_task_queue::process() {
    }
    list.clear();
 }
+void DovahKitScriptVM::_task_queue::clear() {
+   auto  guard = std::lock_guard(this->lock);
+   auto& list = this->list;
+   //
+   for (auto* task : list)
+      if (!task->is_blocking() && task->is_fire_and_forget())
+         delete task;
+   list.clear();
+}
 
 #pragma region DovahKitScriptVM
 DovahKitScriptVM::DovahKitScriptVM() {
@@ -313,6 +322,15 @@ DovahKitScriptVM::DovahKitScriptVM() {
    QObject::connect(this, &DovahKitScriptVM::scriptEnded,   this, [this]() { this->main_thread_tick_timer.stop(); });
    //
    QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &DovahKitScriptVM::mainThreadLoop);
+   QObject::connect(this, &DovahKitScriptVM::scriptEnded, this, [this]() {
+      //
+      // Delete script-to-main tasks in the case of a script being terminated early, and delete 
+      // main-to-script tasks when a script finishes execution for any reason.
+      //
+      this->task_queues.m2s.normal.clear();
+      this->task_queues.m2s.urgent.clear();
+      this->task_queues.s2m.clear();
+   });
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
@@ -325,6 +343,7 @@ DovahKitScriptVM::DovahKitScriptVM() {
       auto& list    = this->task_queues.m2s.urgent.list;
       list.push_back(message);
    });
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &DovahKitScriptVM::abort);
 }
 DovahKitScriptVM::~DovahKitScriptVM() {
    this->abort();

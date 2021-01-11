@@ -45,6 +45,8 @@ class DovahKitScriptVM : public QObject {
          // The receiving thread should use this function to execute tasks.
          //
          void process();
+
+         void clear();
       };
       
       void _setup_lua_vm();
@@ -61,7 +63,7 @@ class DovahKitScriptVM : public QObject {
       
       std::recursive_mutex exec_lock;
       std::atomic<bool> aborted = false; // main thread can set this to kill the script
-      bool     running   = false;
+      std::atomic<bool> running = false;
       QWidget* ui_parent = nullptr;
       //
       struct {

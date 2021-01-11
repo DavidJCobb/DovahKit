@@ -87,6 +87,7 @@ namespace dovah {
          extended_subrecord_with_no_length           = 0x0000004E, // Malformed file: an 'XXXX' subrecord contained no usable length value.
          form_initial_record_is_partial              = 0x0000004F, // A form's initial record is flagged as "partial." The flag will not be honored when loading form data on-demand.
          form_initial_record_is_partial_and_injected = 0x00000050, // A form's initial record is flagged as "partial," and is injected. We will not honor the flag when loading form data on-demand; we'll keep the form, but the game would skip the record entirely.
+         cannot_delete_hardcoded_form                = 0x00000051,
       };
    };
 }

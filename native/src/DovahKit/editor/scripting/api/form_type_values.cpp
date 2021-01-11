@@ -176,4 +176,7 @@ namespace editor_script {
       //
       return ft;
    }
+   void push_form_type_to_stack(lua_State* L, dovah::form_type_t ft) {
+      lua_pushinteger(L, ::dovah::form_type_info::lookup(ft).signature);
+   }
 }

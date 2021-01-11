@@ -441,19 +441,12 @@ namespace dovah {
    
    class form_deletion_request {
       friend file_load_order;
-      public:
-         enum class result_code {
-            pending,
-            success,
-            error_cannot_delete_hardcoded_form,
-            error_cannot_load_form, // we could not load the to-be-deleted form to set its "deleted" flag
-            error_cannot_load_user, // unable to sever use info: we could not load a form that uses the to-be-deleted form
-         };
       protected:
          file_load_order& owner;
          form_stub&       target;
-         result_code      result = result_code::pending;
+         notice_code_t    error = default_notice_code;
          file_prefix      active_file_prefix; // cached for faster checks
+         bool             done = false;
          //
          std::set<form_stub*> seen_stubs;
          std::set<form_stub*> forms_needing_delete;
@@ -473,7 +466,7 @@ namespace dovah {
          //
          std::vector<form_stub*> get_forms_pending_delete(bool include_flagged = true) const noexcept;
          std::vector<form_stub*> get_forms_pending_flagging() const noexcept;
-         inline result_code get_result_code() const noexcept { return this->result; }
+         inline notice_code_t get_error_code() const noexcept { return this->error; }
          //
          void commit(); // cannot produce or signal errors. if no errors already occurred, then once you call this, you're locked in.
    };
