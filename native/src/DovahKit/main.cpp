@@ -389,22 +389,6 @@
 //
 //           = Collection implementation
 //
-//              - THE CURRENT COLLECTION IMPLEMENTATION DOESN'T SUPPORT ASSIGNING 
-//                TO A COLLECTION ELEMENT. WE'RE GOING TO NEED THIS FOR CERTAIN 
-//                COLLECTIONS, SUCH AS (form_list.entries), WHICH IS A COLLECTION 
-//                OF FORMS; WE WANT THE USER TO BE ABLE TO DO THINGS LIKE...
-//
-//                 - form_list.entries[3] = nil -- set an entry to nil, shrinking the list if it's the last entry
-//                 - form_list.entries[#form_list.entries]     = some_form -- append (some_form)
-//                 - form_list.entries[#form_list.entries + 3] = some_form -- append nil entries and then (some_form)
-//
-//                THE FUNCTION TO DEFINE A COLLECTION METATABLE SHOULD TAKE AN 
-//                OPTIONAL lua_CFunction WHICH TAKES AS ARGUMENTS THE COLLECTION, 
-//                THE INDEX (int or, if names are supported, name), AND THE VALUE 
-//                TO SET. IF NO SUCH FUNCTION IS PROVIDED, THEN THE METATABLE'S 
-//                __newindex FUNCTION SHOULD THROW A LUA ERROR WITH APPROPRIATE 
-//                TEXT.
-//
 //              - We can remove the separate "items are named" bool and just use 
 //                the presence or absence of a "lookup by name" function instead.
 //
@@ -418,6 +402,18 @@
 //                want to add some sort of script-wide pref that can be used to 
 //                gain access to none-stubs, chiefly because a script may actually 
 //                want to do something with them specifically.
+//
+//              - FLST wrapper
+//
+//                 - Assigning (nil) to a FormList entry sets it to NONE, but does 
+//                   not remove it. We should define a global (no_form) constant 
+//                   that can be assigned to FormList entries to intentionally 
+//                   create gaps in the list, and then make it so that assigning 
+//                   (nil) instead removes entries from the list (leaving no gaps 
+//                   or empty endcaps).
+//
+//                    - We'll probably want to take this same approach for any 
+//                      collection that's just a list of forms.
 //
 //              - Provide special top-level accessors for default objects and NAVI 
 //                data (when that's decoded). We should still allow scripts to look 
@@ -632,6 +628,17 @@
 //          could use it to draw rude things.
 //
 //  - UI for editing Activators
+//
+//  - UI for editing Factions
+//
+//  - UI for editing FormLists
+//
+//     - Make it possible to reorder items in the FormList window by dragging them. 
+//       Ensure that this doesn't conflict with Object-Window-to-FormList drags (i.e. 
+//       ensure it doesn't duplicate items, allow dragging to other windows, etc.).
+//
+//        - That said, it should be possible to drag a form from one FormList window 
+//          to another to copy it to the latter FormList.
 //
 //  - Finish code for: DIAL, INFO, LCTN, MGEF, NPC_, QUST
 //
