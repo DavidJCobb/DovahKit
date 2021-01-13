@@ -210,6 +210,67 @@ namespace {
       }
       return 0;
    }
+   luastackchange_t __newindex(lua_State* L) {
+      /*
+      function(self, key, value)
+         local meta = getmetatable(self)
+         if not meta.set_item then
+            error("you cannot overwrite items in collections of this type")
+         end
+         if not meta.items_are_named then
+            if not tonumber(key) then
+               error("collections of this type do not support named elements")
+            end
+         end
+         (meta.set_item)(self, key, value)
+      end
+      */
+      constexpr auto index_self  = 1;
+      constexpr auto index_key   = 2;
+      constexpr auto index_value = 3;
+      constexpr auto index_meta  = 4;
+      constexpr auto index_func  = 5;
+      lua_getmetatable(L, index_self);
+      lua_getfield(L, index_meta, "set_item");
+      if (!lua_isfunction(L, index_func)) {
+         lua_getfield(L, index_meta, "__name");
+         const char* name = lua_tostring(L, 6);
+         if (!name)
+            name = "?";
+         return luaL_error(L, "you cannot overwrite items in collections of type %1", name);
+      }
+      lua_getfield(L, index_meta, "items_are_named");
+      if (!lua_toboolean(L, 6)) {
+         if (!lua_isnumber(L, index_key)) {
+            lua_getfield(L, index_meta, "__name");
+            const char* name = lua_tostring(L, 7);
+            if (!name)
+               name = "?";
+            return luaL_error(L, "collections of type %1 do not support named elements", name);
+         }
+      }
+      lua_settop(L, index_func);
+      //
+      // STACK:
+      // 1 | self
+      // 2 | key
+      // 3 | value
+      // 4 | meta
+      // 5 | func
+      //
+      lua_rotate(L, 1, 1);
+      //
+      // STACK:
+      // 1 | func
+      // 2 | self
+      // 3 | key
+      // 4 | value
+      // 5 | meta
+      //
+      lua_settop(L, 4);
+      lua_call(L, 3, 0);
+      return 0;
+   }
    luastackchange_t __pairs(lua_State* L) {
       /*
       function(self)
@@ -284,7 +345,8 @@ namespace editor_script {
       lua_CFunction get_collection_length, // args: wrapper;        return: number
       lua_CFunction lookup_item_by_name,   // args: wrapper, name;  return: wrapper or nil
       lua_CFunction lookup_item_by_index,  // args: wrapper, index; return: wrapper or nil
-      lua_CFunction get_all_item_names     // args: wrapper;        return: table of names
+      lua_CFunction get_all_item_names,    // args: wrapper;        return: table of names
+      lua_CFunction set_item               // args: wrapper, key, value; return: nothing
    ) {
       _define_collection_iterator_metatables(L);
       //
@@ -293,6 +355,8 @@ namespace editor_script {
       //
       lua_pushcfunction(L, &__index);
       lua_setfield(L, index_mt, "__index");
+      lua_pushcfunction(L, &__newindex);
+      lua_setfield(L, index_mt, "__newindex");
       lua_pushcfunction(L, &__pairs);
       lua_setfield(L, index_mt, "__pairs");
       lua_pushcfunction(L, &__ipairs);
@@ -324,6 +388,10 @@ namespace editor_script {
       if (get_all_item_names) {
          lua_pushcfunction(L, get_all_item_names);
          lua_setfield(L, index_mt, "get_all_item_names");
+      }
+      if (set_item) {
+         lua_pushcfunction(L, set_item);
+         lua_setfield(L, index_mt, "set_item");
       }
       //
       lua_pop(L, 1); // pop metatable

@@ -7,6 +7,8 @@ namespace editor_script {
       out.type = wrapper_type::form_data;
       if (stub) {
          switch (stub->formType) { // TODO: an actual list would maybe be more efficient than a switch-case once we end up with a large number of metatables here
+            case dovah::form_type::formlist:
+               return wrappers::formlist::metatable_key;
             case dovah::form_type::shout:
                return wrappers::shout::metatable_key;
             case dovah::form_type::voicetype:
