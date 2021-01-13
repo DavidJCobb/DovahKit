@@ -72,6 +72,10 @@ class FormListListviewModel : public QAbstractTableModel {
       virtual bool moveRows(const QModelIndex& from_parent, int first_row_index, int count, const QModelIndex& to_parent, int to_position) override;
       
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+      bool canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent);
+      bool dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent);
+      virtual QStringList mimeTypes() const override;
+      Qt::DropActions supportedDropActions() const;
       
       inline void reserve(int i) { this->children.reserve(i); }
       

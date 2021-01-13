@@ -7,6 +7,9 @@ FormDialogFormList::FormDialogFormList(dovah::form_stub* stub, QWidget* parent) 
    QObject::connect(this->ui.buttonMoveUp,   &QPushButton::clicked, this, [this]() { this->ui.forms->moveSelected(-1); });
    QObject::connect(this->ui.buttonMoveDown, &QPushButton::clicked, this, [this]() { this->ui.forms->moveSelected(1); });
    QObject::connect(this->ui.buttonRemove, &QPushButton::clicked, this, [this]() { this->ui.forms->removeSelected(); });
+   //
+   this->ui.forms->setAcceptDrops(true);
+   //
    this->load();
    //
    auto& editor = DovahKitCore::get();

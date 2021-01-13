@@ -1,6 +1,7 @@
 #include "formlist_listview.h"
 #include <QHeaderView>
 #include <QKeyEvent>
+#include <QMimeData>
 #include "../../../helpers/qt/strings.h"
 #include "../../../editor/core.h"
 #include "../../../editor/open_window_for_form.h"
@@ -215,7 +216,7 @@ int FormListListviewModel::columnCount(const QModelIndex& item) const {
 }
 Qt::ItemFlags FormListListviewModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
-      return Qt::NoItemFlags;
+      return Qt::ItemIsDropEnabled;
    return Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled;
 }
 QVariant FormListListviewModel::data(const QModelIndex& index, int role) const {
@@ -346,6 +347,59 @@ QVariant FormListListviewModel::headerData(int section, Qt::Orientation orientat
    }
    return QVariant();
 }
+bool FormListListviewModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) {
+   if (!data->hasFormat("application/dovah-kit.form-id-array"))
+      return false;
+   return true;
+}
+bool FormListListviewModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) {
+   if (!canDropMimeData(data, action, row, column, parent))
+      return false;
+   if (action == Qt::IgnoreAction)
+      return true;
+   if (row == -1) {
+      if (parent.isValid())
+         row = parent.row();
+      else
+         row = this->children.size();
+   }
+   //
+   QByteArray  bytes = data->data("application/dovah-kit.form-id-array");
+   QDataStream stream(&bytes, QIODevice::ReadOnly);
+   QVector<uint32_t> formIDs;
+   while (!stream.atEnd()) {
+      uint32_t id;
+      uint8_t  delim;
+      stream.readRawData((char*)&id, 4);
+      stream.readRawData((char*)&delim, 1);
+      assert(!delim);
+      formIDs.push_back(id);
+   }
+   //
+   auto& editor = DovahKitCore::get();
+   QVector<item_type*> queued;
+   for (auto id : formIDs) {
+      auto* stub = editor.get_form(id);
+      if (stub)
+         queued.push_back(new item_type(stub));
+   }
+   auto first_inserted = row;
+   auto last_inserted  = first_inserted + queued.size() - 1;
+   this->beginInsertRows(QModelIndex(), first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
+   this->children.reserve(this->children.size() + queued.size());
+   for (int i = 0; i < queued.size(); ++i) {
+      auto* item = queued[i];
+      this->children.insert(row + i, item);
+   }
+   this->endInsertRows();
+   return true;
+}
+QStringList FormListListviewModel::mimeTypes() const {
+   return QStringList(QString("application/dovah-kit.form-id-array"));
+}
+Qt::DropActions FormListListviewModel::supportedDropActions() const {
+   return Qt::CopyAction;
+}
 
 void FormListListviewModel::clear() {
    this->beginResetModel();
@@ -362,6 +416,9 @@ FormListListview::FormListListview(QWidget* parent) : QTableView(parent) {
    this->setSelectionBehavior(QAbstractItemView::SelectRows);
    this->setSelectionMode(QAbstractItemView::ExtendedSelection);
    this->verticalHeader()->setDefaultSectionSize(0);
+   //
+   this->setAcceptDrops(true);
+   this->setDragDropOverwriteMode(false);
    //
    auto header  = this->horizontalHeader();
    auto metrics = QFontMetrics(this->font());

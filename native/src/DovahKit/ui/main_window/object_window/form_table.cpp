@@ -1,6 +1,7 @@
 #include "form_table.h"
 #include <QHeaderView>
 #include <QLineEdit>
+#include <QMimeData>
 #include "basic_form_type_treeview.h"
 #include "../../../editor/core.h"
 #include "../../../dovah/form_stub.h"
@@ -164,7 +165,7 @@ int FormTableModel::columnCount(const QModelIndex& item) const {
 Qt::ItemFlags FormTableModel::flags(const QModelIndex& index) const {
    if (!index.isValid())
       return Qt::NoItemFlags;
-   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
+   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsDragEnabled;
 }
 QVariant FormTableModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
@@ -245,6 +246,43 @@ QVariant FormTableModel::headerData(int section, Qt::Orientation orientation, in
          break;
    }
    return QVariant();
+}
+QMimeData* FormTableModel::mimeData(const QModelIndexList& indexes) const {
+   //
+   // We want the user to be able to drag selected forms out of the Object Window and into 
+   // things like a FormList's form list. To do that, we have to send the data along with 
+   // a MIME type. We've chosen "application/dovah-kit.form-id-array" as our MIME type; 
+   // the underlying data is just form IDs binary-encoded, separated with null bytes.
+   //
+
+   QMimeData* out = new QMimeData;
+   QByteArray data;
+
+   QDataStream stream(&data, QIODevice::WriteOnly);
+
+   auto& list = this->children;
+   auto  size = list.size();
+   for (const QModelIndex& index : indexes) {
+      if (index.column() != 0) // row selection + table with multiple columns = multiple indices that represent the same row, one for each column. skip the extras
+         continue;
+      if (index.isValid()) {
+         auto i = index.row();
+         if (i < 0 || i >= size)
+            continue;
+         auto* item = this->children[index.row()];
+         if (!item->stub)
+            continue;
+         char id[5] = "\0\0\0\0";
+         *(uint32_t*)id = item->stub->formID;
+         data.append(id, 5);
+      }
+   }
+
+   out->setData("application/dovah-kit.form-id-array", data);
+   return out;
+}
+QStringList FormTableModel::mimeTypes() const {
+   return QStringList(QString("application/dovah-kit.form-id-array"));
 }
 
 void FormTableModel::doUseInfoUpdate() {
@@ -354,6 +392,10 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
    this->setModel(proxy);
    this->verticalHeader()->setDefaultSectionSize(0);
    this->sortByColumn(0, Qt::AscendingOrder);
+   //
+   this->setDragDropMode(QAbstractItemView::DragOnly);
+   this->setDragEnabled(true);
+   this->setDragDropOverwriteMode(false);
    //
    auto header  = this->horizontalHeader();
    auto metrics = QFontMetrics(this->font());

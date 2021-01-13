@@ -76,6 +76,8 @@ class FormTableModel : public QAbstractTableModel {
       QVariant data(const QModelIndex& index, int role) const override;
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+      QMimeData* mimeData(const QModelIndexList& indexes) const;
+      virtual QStringList mimeTypes() const override;
       //
       void rebuild();
       void rebuild(const form_type_set&);
