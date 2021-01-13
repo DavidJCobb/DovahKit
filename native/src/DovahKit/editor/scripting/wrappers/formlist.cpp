@@ -25,7 +25,11 @@ namespace {
       }
 
       luastackchange_t get_collection_length(lua_State* L) {
-         lua_pushnumber(L, 3);
+         auto& self = get_collection_wrapper(L);
+         auto* form = self.get_loaded_form_data<_loaded_form_t>();
+         if (!form)
+            return 0;
+         lua_pushinteger(L, form->contents.size());
          return 1;
       }
       luastackchange_t lookup_item_by_index(lua_State* L) {
@@ -43,6 +47,8 @@ namespace {
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t set_item(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          constexpr auto index_self  = 1;
          constexpr auto index_key   = 2;
          constexpr auto index_value = 3;
@@ -68,8 +74,8 @@ namespace {
          //
          auto& list = form->contents;
          auto  size = list.size();
-         if (i > size) {
-            if (i > size + 1) {
+         if (i >= size) {
+            if (i > size) {
                lua_warning(L, "index ", 1);
                const char* tostr = lua_tolstring(L, index_key, nullptr);
                lua_warning(L, tostr, 1);
@@ -77,7 +83,16 @@ namespace {
             }
             list.resize(i + 1);
          }
+         self.before_edit();
          list[i].set(*form->stub, target);
+         if (!target && i == size - 1) {
+            //
+            // TODO: Setting a FormList entry to (nil) should remove the entry, shortening the 
+            //       list. We can define a special (no_form) constant (a userdata) for scripts 
+            //       to use to actually insert [NONE:00000000] into list indices.
+            //
+         }
+         self.after_edit();
          return 0;
       }
    }
