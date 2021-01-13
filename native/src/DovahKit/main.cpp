@@ -387,12 +387,33 @@
 //                   Native code will not *consistently* invoke these metamethods. Sometimes 
 //                   they'll work; sometimes they won't. Consider this UB.
 //
+//           = Collection implementation
+//
+//              - THE CURRENT COLLECTION IMPLEMENTATION DOESN'T SUPPORT ASSIGNING 
+//                TO A COLLECTION ELEMENT. WE'RE GOING TO NEED THIS FOR CERTAIN 
+//                COLLECTIONS, SUCH AS (form_list.entries), WHICH IS A COLLECTION 
+//                OF FORMS; WE WANT THE USER TO BE ABLE TO DO THINGS LIKE...
+//
+//                 - form_list.entries[3] = nil -- set an entry to nil, shrinking the list if it's the last entry
+//                 - form_list.entries[#form_list.entries]     = some_form -- append (some_form)
+//                 - form_list.entries[#form_list.entries + 3] = some_form -- append nil entries and then (some_form)
+//
+//                THE FUNCTION TO DEFINE A COLLECTION METATABLE SHOULD TAKE AN 
+//                OPTIONAL lua_CFunction WHICH TAKES AS ARGUMENTS THE COLLECTION, 
+//                THE INDEX (int or, if names are supported, name), AND THE VALUE 
+//                TO SET. IF NO SUCH FUNCTION IS PROVIDED, THEN THE METATABLE'S 
+//                __newindex FUNCTION SHOULD THROW A LUA ERROR WITH APPROPRIATE 
+//                TEXT.
+//
+//              - We can remove the separate "items are named" bool and just use 
+//                the presence or absence of a "lookup by name" function instead.
+//
 //           = ALL DATA THAT DovahKit IS CAPABLE OF LOADING IN FULL SHOULD BE MADE 
 //             ACCESSIBLE TO SCRIPTS BEFORE WE MOVE ON TO IMPLEMENTING UI ACCESS. 
 //             THIS WILL ALLOW US TO IDENTIFY AND ADDRESS PAIN POINTS IN THE SCRIPT 
 //             API BACKEND EARLIER IN DEVELOPMENT.
 //
-//              - Currently, we prevent scripts from receiving none-stubs by way of 
+//              = Currently, we prevent scripts from receiving none-stubs by way of 
 //                the (wrapper::should_expose_to_script) function. However, we may 
 //                want to add some sort of script-wide pref that can be used to 
 //                gain access to none-stubs, chiefly because a script may actually 
@@ -609,6 +630,10 @@
 //
 //        - Access to this widget should require permission, just because scripts 
 //          could use it to draw rude things.
+//
+//  - UI for editing Activators
+//
+//  - Finish code for: DIAL, INFO, LCTN, MGEF, NPC_, QUST
 //
 //  - World viewing
 //
