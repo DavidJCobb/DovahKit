@@ -450,6 +450,15 @@
 //                      type is NOT a primitive (e.g. Bool); if the definition 
 //                      matches, then return its type. Otherwise, fall back to 
 //                      "Form" and "Form[]".
+//
+//                       - We may want to provide a "fast" accessor as well, to 
+//                         cut down on file lookups where they may not strictly 
+//                         be needed.
+//
+//                          - property.type versus property.simple_type? The 
+//                            former can run checks on access to get a full 
+//                            typename, and can do auto-pruning when changed 
+//                            between form types as described below.
 //                   
 //                    - When the user sets a property's type, check whether there 
 //                      is a compiled script file for the current script. If so, 
@@ -462,6 +471,11 @@
 //                   
 //                       - Of course, if the typename is invalid (e.g. "F[]oo"), 
 //                         then we should just throw an error immediately.
+//                   
+//                       - We should remember which typenames we warn for being 
+//                         unrecognized, and only warn for them once; that way, we 
+//                         don't spam the log during (potentially large-scale) 
+//                         batch operations.
 //                   
 //                       - When the user changes a property's type to a form type, 
 //                         the property's value should be cleaned if possible: 
