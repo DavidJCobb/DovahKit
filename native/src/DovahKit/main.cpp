@@ -415,6 +415,61 @@
 //                    - We'll probably want to take this same approach for any 
 //                      collection that's just a list of forms.
 //
+//              - Any further wrappers will depend on having UI implemented for 
+//                the respective form types or wrapped data, so that we can actually 
+//                verify that our scripted changes are being made and persisted 
+//                properly -- and that the script is even reading data properly in 
+//                the first place.
+//
+//              - Papyrus wrappers
+//
+//                 - Script properties. Implement them as elements in a named 
+//                   collection, and give them "name," "type," and "value" 
+//                   properties, e.g.
+//
+//                      script.properties["foo"].name  == foo
+//                      script.properties["foo"].type  == "Activator[]"
+//                      script.properties["foo"].value -- table of forms
+//                   
+//                   If the property's type is an array, then its value should be a 
+//                   collection of unnamed elements, and attempting to set an entry 
+//                   to an incorrect type should warn or fail as appropriate. (If 
+//                   it's an array of any form type, then warn if setting a form of 
+//                   the wrong type, e.g. inserting a Container into an Activator 
+//                   array. For all other type mismatches, hard error.)
+//
+//                   If the property's type is a scalar, then its value should be 
+//                   a scalar. Same type-checking as for array elements.
+//
+//                   If the property's type is changed to one incompatible with the 
+//                   existing value (including switching between array and scalar 
+//                   types), then blank the existing value. Treat unrecognized 
+//                   typenames as script names (i.e. scripts that subclass Form), 
+//                   and warn if there is no matching script file (whether source 
+//                   or compiled) available as a loose file or in any loaded BSA.
+//
+//                   When changing a property's type from an array to a scalar, 
+//                   zombify any existing wrappers for that array. A change back 
+//                   from scalar to array should lead to new wrappers being created, 
+//                   such that:
+//
+//                      local p = script.properties["foo"]
+//                      p.type  = "Form[]"
+//                      local a = p.value
+//                      p.type  = "Form"
+//                      p.type  = "Form[]"
+//                      object_is_zombie(a) == true
+//                   
+//                   When changing a property's name, we should emit a warning if 
+//                   there exists on the script another property which already has 
+//                   that case-insensitive name.
+//
+//                 - Fragment data for supported forms, and reimplementation of the 
+//                   script-data access so that these work for scripts on aliases.
+//
+//                    - Requires implementing all form types that have these sorts 
+//                      of script data, so we'll have to do it later.
+//
 //              - Provide special top-level accessors for default objects and NAVI 
 //                data (when that's decoded). We should still allow scripts to look 
 //                up the forms, but not have classes for them. (Why? The alternative 
@@ -628,6 +683,15 @@
 //          could use it to draw rude things.
 //
 //  - UI for editing Activators
+//
+//     - UI for editing Papyrus data
+//
+//        - Allow users to open the contents of a script file in an external editor. 
+//          If the script file is stored in a BSA, then unpack it to %TEMP% and, if 
+//          changes are made to it, prompt the user as to whether they want to copy 
+//          it to the Data directory. See if it's possible to monitor how long the 
+//          temporary file is open in any external editor; we should track changes 
+//          for as long as it's open, and delete it once it's closed.
 //
 //  - UI for editing Factions
 //
