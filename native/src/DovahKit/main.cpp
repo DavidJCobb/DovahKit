@@ -405,15 +405,12 @@
 //
 //              - FLST wrapper
 //
-//                 - Assigning (nil) to a FormList entry sets it to NONE, but does 
-//                   not remove it. We should define a global (no_form) constant 
-//                   that can be assigned to FormList entries to intentionally 
-//                   create gaps in the list, and then make it so that assigning 
-//                   (nil) instead removes entries from the list (leaving no gaps 
-//                   or empty endcaps).
-//
-//                    - We'll probably want to take this same approach for any 
-//                      collection that's just a list of forms.
+//                 - Define formlist:remove(x) where x can be a list index to delete, 
+//                   or a form (where we then find the first occurrence and remove 
+//                   it from the list, leaving no gaps). Assigning (nil) to list 
+//                   entries should create gaps in the list. (This is a change in 
+//                   the originally intended design, so comments in the collection 
+//                   setter need to be updated as well.)
 //
 //              - Any further wrappers will depend on having UI implemented for 
 //                the respective form types or wrapped data, so that we can actually 
@@ -433,20 +430,60 @@
 //                   
 //                   If the property's type is an array, then its value should be a 
 //                   collection of unnamed elements, and attempting to set an entry 
-//                   to an incorrect type should warn or fail as appropriate. (If 
-//                   it's an array of any form type, then warn if setting a form of 
-//                   the wrong type, e.g. inserting a Container into an Activator 
-//                   array. For all other type mismatches, hard error.)
-//
-//                   If the property's type is a scalar, then its value should be 
-//                   a scalar. Same type-checking as for array elements.
+//                   to an incorrect type should warn or fail as appropriate. If the 
+//                   property's type is a scalar, then its value should be a scalar; 
+//                   same type-checking as for array elements.
 //
 //                   If the property's type is changed to one incompatible with the 
 //                   existing value (including switching between array and scalar 
-//                   types), then blank the existing value. Treat unrecognized 
-//                   typenames as script names (i.e. scripts that subclass Form), 
-//                   and warn if there is no matching script file (whether source 
-//                   or compiled) available as a loose file or in any loaded BSA.
+//                   types), then blank the existing value.
+//                   
+//                   Form types are going to be complicated because the loaded form 
+//                   data (and the file format itself) doesn't distinguish between 
+//                   different kinds of forms; "Container[]" and "Activator[]" are 
+//                   encoded the same way.
+//                   
+//                    - When a form or form-array property's type is queried, check 
+//                      whether there is a compiled script file for the current 
+//                      script. If so, check whether that file contains a property 
+//                      definition with the same name and whether that definition's 
+//                      type is NOT a primitive (e.g. Bool); if the definition 
+//                      matches, then return its type. Otherwise, fall back to 
+//                      "Form" and "Form[]".
+//                   
+//                    - When the user sets a property's type, check whether there 
+//                      is a compiled script file for the current script. If so, 
+//                      and if the type that the user is setting doesn't match the 
+//                      type in that file, then log a warning. Furthermore, if the 
+//                      type that the user sets is unrecognized, then assume that 
+//                      it's a script name, and warn if there is no script with 
+//                      that name among the loose files or files in loaded BSAs 
+//                      (this check should be satisfied by PSC or PEX).
+//                   
+//                       - Of course, if the typename is invalid (e.g. "F[]oo"), 
+//                         then we should just throw an error immediately.
+//                   
+//                       - When the user changes a property's type to a form type, 
+//                         the property's value should be cleaned if possible: 
+//                         if for example the property currently holds Container 
+//                         form(s) and we change it to an Activator or Activator[] 
+//                         property, then those forms should be cleared. We can't 
+//                         clear the property blindly, because the user may change 
+//                         a superclass property to a subclass such that some of 
+//                         the existing values still match the subclass (e.g. if 
+//                         we change a Form[] property to a Container[] property).
+//                         
+//                         We can run this cleaning if the user changes the property 
+//                         type to a scriptname only if the script is findable and 
+//                         we can identify what form type it extends. This may 
+//                         involve loading multiple scripts, if the script extends 
+//                         other non-built-in scripts.
+//                         
+//                         We may wish to offer a setter method that *doesn't* do 
+//                         auto-cleaning, or make it so that the property doesn't 
+//                         auto-clean and a setter function does. The latter may 
+//                         be best, as we can then give the setter function a name 
+//                         that states its side-effects: (set_type_and_clean_value).
 //
 //                   When changing a property's type from an array to a scalar, 
 //                   zombify any existing wrappers for that array. A change back 
