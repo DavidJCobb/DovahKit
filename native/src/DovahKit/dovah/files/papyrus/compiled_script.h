@@ -1,17 +1,70 @@
 #pragma once
+#include <array>
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace dovah {
+   struct papyrus_assembly_opcode {
+      const char* name;
+      uint8_t     fixed_arg_count;
+      bool        varargs;
+      //
+      static std::array<papyrus_assembly_opcode, 36> list;
+   };
+
    class compiled_papyrus_script {
       public:
+         class read_exception : public std::runtime_error {
+            public:
+               const uint32_t offset;
+               //
+               explicit read_exception(uint32_t o) : runtime_error(""), offset(o) {}
+         };
+         class not_a_papyrus_file_exception : public read_exception {
+            public:
+               explicit not_a_papyrus_file_exception(uint32_t o) : read_exception(o) {}
+         };
+         class invalid_opcode_exception : read_exception {
+            public:
+               const uint8_t opcode;
+               //
+               explicit invalid_opcode_exception(uint32_t o, uint8_t op) : read_exception(o), opcode(op) {}
+         };
+         class unexpected_eof_exception : read_exception {
+            public:
+               const size_t desired_size;
+               //
+               explicit unexpected_eof_exception(uint32_t o, size_t s) : read_exception(o), desired_size(s) {}
+         };
+         class varargs_count_type_exception : read_exception {
+            public:
+               const uint8_t type;
+               //
+               explicit varargs_count_type_exception(uint32_t o, uint8_t t) : read_exception(o), type(t) {}
+         };
+         //
+      public:
+         enum class raw_type : uint8_t {
+            none    = 0,
+            object  = 1,
+            string  = 2,
+            integer = 3,
+            float32 = 4,
+            boolean = 5,
+         };
+         //
          struct debug_function {
             std::wstring object;
             std::wstring state;
             std::wstring name; // function name
-            uint8_t type;
+            uint8_t type; // valid values range from 0 to 3
             std::vector<uint16_t> line_numbers;
+         };
+         struct user_flag {
+            std::wstring name;
+            uint8_t bit_index;
          };
          //
          struct variable { // "Variable Type" on UESP
@@ -19,7 +72,7 @@ namespace dovah {
             std::wstring type;
          };
          struct value { // "Variable Data" on UESP
-            uint8_t underlying_type;
+            raw_type underlying_type;
             union {
                int32_t i = 0;
                float   f;
@@ -86,6 +139,7 @@ namespace dovah {
             std::wstring name;
             std::wstring superclass;
             std::wstring docstring;
+            uint32_t     user_flags;
             std::wstring auto_state_name;
             std::vector<variable> variables;
             std::vector<property> properties;
@@ -96,23 +150,29 @@ namespace dovah {
          struct {
             const void* _buffer = nullptr;
             uint32_t    _pos    = 0;
+            size_t      _size   = 0;
          } file;
+         bool _needs_endian_swap = false;
+         std::vector<std::wstring> _string_table;
          //
-         void read(void* to, size_t);
-         template<typename T> inline void read(T& v) {
+         void _read(void* to, size_t);
+         void _read(std::wstring&);
+         void _read_string_index(std::wstring&);
+         template<typename T> inline void _read(T& v) {
             this->read(&v, sizeof(T));
          }
          //
-         void read(debug_function&);
-         void read(variable&);
-         void read(value&);
-         void read(global_variable&);
-         void read(instruction&);
-         void read(function&);
-         void read(named_function&);
-         void read(property&);
-         void read(state&);
-         void read(object&);
+         void _read(debug_function&); // all of these functions can throw exceptions
+         void _read(user_flag&);
+         void _read(variable&);
+         void _read(value&);
+         void _read(global_variable&);
+         void _read(instruction&);
+         void _read(function&);
+         void _read(named_function&);
+         void _read(property&);
+         void _read(state&);
+         void _read(object&);
          //
       public:
          struct {
@@ -121,10 +181,20 @@ namespace dovah {
          } version;
          uint16_t game_id = 1;
          //
+         uint64_t     compile_time;
          std::wstring source_file;
          struct {
             std::wstring username;
             std::wstring computer;
          } author;
+         struct {
+            bool     present = false;
+            uint64_t modification_time;
+            std::vector<debug_function> functions;
+         } debug;
+         std::vector<user_flag> user_flags;
+         std::vector<object> objects;
+         //
+         void read_file(const void* buffer, size_t size);
    };
 }

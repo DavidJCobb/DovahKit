@@ -636,6 +636,9 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\formlist_listview.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\papyrus\compiled_script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1320,6 +1323,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\formlist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\papyrus\compiled_script.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
