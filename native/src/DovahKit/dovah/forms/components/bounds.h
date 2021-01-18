@@ -22,5 +22,6 @@ namespace dovah::loaded_forms::components {
       void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
       static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
       void save(tes_subrecord_writer&, load_order_interfaces::form_save& intfc); // open the subrecord before calling
+      void clear() noexcept;
    };
 }

@@ -97,4 +97,11 @@ namespace dovah::loaded_forms::components {
    void package_location::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
       this->detail.form.clear_if(my_owner, target);
    }
+   void package_location::clear(form_stub& my_owner) {
+      this->detail.form.set(my_owner, nullptr);
+      this->detail.object_type =  0;
+      this->detail.alias_id    = -1;
+      this->detail.padding     =  0;
+      this->radius = 0;
+   }
 }

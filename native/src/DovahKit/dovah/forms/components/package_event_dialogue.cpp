@@ -98,6 +98,11 @@ namespace dovah::loaded_forms::components {
       this->idle.clear_if(my_owner, target);
       this->topic.clear_if(my_owner, target);
    }
+   void package_event_dialogue::clear(form_stub& my_owner) {
+      this->idle.set(my_owner, nullptr);
+      this->topic.set(my_owner, nullptr);
+      this->topic_subtype = 0;
+   }
 
    bool package_event_dialogue::empty() const noexcept {
       if (this->idle)

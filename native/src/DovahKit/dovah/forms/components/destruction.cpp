@@ -179,4 +179,12 @@ namespace dovah::loaded_forms::components {
          stage.explosion.clear_if(my_owner, target);
       }
    }
+   void destruction_stage_data::clear(form_stub& my_owner) {
+      for (auto& stage : this->stages) {
+         stage.debris.set(my_owner, nullptr);
+         stage.explosion.set(my_owner, nullptr);
+         stage.replacementModel.clear(my_owner);
+      }
+      this->stages.clear();
+   }
 }

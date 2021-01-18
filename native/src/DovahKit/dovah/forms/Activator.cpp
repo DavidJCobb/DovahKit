@@ -179,4 +179,18 @@ namespace dovah::loaded_forms {
       this->water_type.clear_if(*this->stub, other);
       this->interact_keyword.clear_if(*this->stub, other);
    }
+   void Activator::_clear_impl() noexcept {
+      this->script_data.clear(*this->stub);
+      this->bounds.clear();
+      this->model.clear(*this->stub);
+      this->destruction_data.clear(*this->stub);
+      this->keywords.clear(*this->stub);
+      this->name.reset();
+      this->looping_sound.set(*this->stub, nullptr);
+      this->activation_sound.set(*this->stub, nullptr);
+      this->water_type.set(*this->stub, nullptr);
+      this->interact_keyword.set(*this->stub, nullptr);
+      this->activation_verb.reset();
+      this->activator_flags = 0;
+   }
 }

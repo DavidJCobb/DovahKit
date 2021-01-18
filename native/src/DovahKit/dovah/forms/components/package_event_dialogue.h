@@ -19,6 +19,7 @@ namespace dovah::loaded_forms::components {
       void save(tes_record_writer&);
       void clone_from(const package_event_dialogue& original, form_stub& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+      void clear(form_stub& my_owner);
 
       bool empty() const noexcept;
    };

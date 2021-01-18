@@ -65,6 +65,9 @@ namespace dovah::loaded_forms::components {
                clone->bytes[i] = this->bytes[i];
             return clone;
          }
+         virtual void clear(form_stub& my_owner) override {
+            this->bytes.clear();
+         }
    };
    template<uint32_t signature, extra_data_type et> class empty_extra_data : public basic_extra_data {
       //

@@ -57,6 +57,9 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('LNAM', entry);
       return true;
    }
+   void FormList::_clear_impl() noexcept {
+      clear_form_reference_list(this->contents, *this->stub);
+   }
    void FormList::_sever_outbound_references_impl(form_stub& other) noexcept {
       auto& list  = this->contents;
       bool  edits = false;

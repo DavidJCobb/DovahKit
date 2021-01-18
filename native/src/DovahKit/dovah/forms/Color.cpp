@@ -52,4 +52,6 @@ namespace dovah::loaded_forms {
       FNAM.close();
       return true;
    }
+   void Color::_clear_impl() noexcept {
+   }
 }

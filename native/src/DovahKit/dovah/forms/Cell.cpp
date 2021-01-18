@@ -235,6 +235,20 @@ namespace dovah::loaded_forms {
       //
       return true;
    }
+   void Cell::_clear_impl() noexcept {
+      this->name.reset();
+      this->cell_flags = 0;
+      this->land_flags = 0;
+      this->extra_data.clear(*this->stub);
+      this->interior.lighting_template_ID.set(*this->stub, nullptr);
+      this->exterior.max_height_data.clear();
+      this->exterior.occlusion_data.clear();
+      this->water.height = 0.0F;
+      this->water.noise_texture.clear();
+      this->has_object_bounds = false;
+      this->object_bounds.clear();
+      this->script_data.clear(*this->stub);
+   }
    void Cell::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->extra_data.sever_outbound_references_to(other, *this->stub);
       this->script_data.sever_outbound_references_to(other, *this->stub);

@@ -73,6 +73,7 @@ namespace dovah::loaded_forms::components {
             bool save(tes_record_writer&, save_interface_t&); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
             void clone_from(const script_data& source, form_stub& owner_of_clone) noexcept;
             void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+            void clear(form_stub& my_owner) noexcept;
             //
             void for_each_script(std::function<bool(script*)>);
             //
@@ -124,6 +125,7 @@ namespace dovah::loaded_forms::components {
                   bool save(script_data& owner, tes_subrecord_writer&);
                   void clone_from(const property& source, form_stub& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+                  void clear(form_stub& my_owner) noexcept;
             };
             class script {
                friend script_data;
@@ -137,6 +139,7 @@ namespace dovah::loaded_forms::components {
                   void clear_properties(form_stub& owner);
                   void clone_from(const script& source, form_stub& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+                  void clear(form_stub& my_owner) noexcept;
             };
       };
       

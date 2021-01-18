@@ -78,6 +78,12 @@ namespace dovah::loaded_forms {
          );
       }
    }
+   void Worldspace::large_reference_t::clear(form_stub& my_owner) {
+      for (auto& entry : this->entries)
+         for (auto& ref : entry.refs)
+            ref.form.set(my_owner, nullptr);
+      this->entries.clear();
+   }
 
    void Worldspace::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -549,7 +555,47 @@ namespace dovah::loaded_forms {
       this->water_type_lod.clear_if(*this->stub, other);
       this->parent.form.clear_if(*this->stub, other);
       this->music.clear_if(*this->stub, other);
-      this->climate.clear_if(*this->stub, other);
-      this->climate.clear_if(*this->stub, other);
+   }
+   void Worldspace::_clear_impl() noexcept {
+      this->large_references.clear(*this->stub);
+      this->name.reset();
+      this->max_height_data.clear();
+      this->center_cell_coordinates = { 0, 0 };
+      this->climate.set(*this->stub, nullptr);
+      this->lighting_template.set(*this->stub, nullptr);
+      this->encounter_zone.set(*this->stub, nullptr);
+      this->location.set(*this->stub, nullptr);
+      this->music.set(*this->stub, nullptr);
+      this->water_type.set(*this->stub, nullptr);
+      this->water_type_lod.set(*this->stub, nullptr);
+      this->lod_water_height = 0.0F;
+      this->land_data.default_land_height  = 0.0F;
+      this->land_data.default_water_height = 0.0F;
+      this->parent.form.set(*this->stub, nullptr);
+      this->parent.flags = 0;
+      this->map_icon.clear();
+      this->cloud_model.clear(*this->stub);
+      this->map_data.usable_dimensions     = { 0, 0 };
+      this->map_data.coordinates.northwest = { 0, 0 };
+      this->map_data.coordinates.southeast = { 0, 0 };
+      this->map_data.camera.height_min     = 0.0F;
+      this->map_data.camera.height_max     = 0.0F;
+      this->map_data.camera.initial_pitch  = 0.0F;
+      this->map_offset_data.scale  = 0.0F;
+      this->map_offset_data.offset = { 0, 0, 0 };
+      this->distant_lod_multiplier = 1.0F;
+      this->world_flags            = 0;
+      this->bounds.min = { 0, 0 };
+      this->bounds.max = { 0, 0 };
+      this->tree_canopy_shadow.clear();
+      this->water_noise_texture.clear();
+      this->hd_lod_diffuse_texture.clear();
+      this->hd_lod_normal_texture.clear();
+      this->water_environment_map.clear();
+      this->offset_data.clear();
+      //
+      this->has_object_bounds = false;
+      this->object_bounds.clear();
+      this->script_data.clear(*this->stub);
    }
 }

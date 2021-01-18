@@ -45,4 +45,8 @@ namespace dovah::loaded_forms {
       TNAM.close();
       return true;
    }
+   void WordOfPower::_clear_impl() noexcept {
+      this->dragon_name.reset();
+      this->human_name.reset();
+   }
 }

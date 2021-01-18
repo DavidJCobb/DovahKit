@@ -369,4 +369,29 @@ namespace dovah::loaded_forms {
       this->vendor_list.clear_if(*this->stub, other);
       this->vendor_chest.clear_if(*this->stub, other);
    }
+   void Faction::_clear_impl() noexcept {
+      this->name.reset();
+      //
+      for (auto& entry : this->relationships)
+         entry.other.set(*this->stub, nullptr);
+      this->relationships.clear();
+      //
+      this->faction_flags = 0;
+      this->prison_marker.set(*this->stub, nullptr);
+      this->follower_wait_marker.set(*this->stub, nullptr);
+      this->evidence_chest.set(*this->stub, nullptr);
+      this->player_belongings_chest.set(*this->stub, nullptr);
+      this->crime_group.set(*this->stub, nullptr);
+      this->jail_outfit.set(*this->stub, nullptr);
+      this->ranks.clear();
+      this->vendor_list.set(*this->stub, nullptr);
+      this->vendor_chest.set(*this->stub, nullptr);
+      this->package_location_vendor.clear(*this->stub);
+      for (auto& cnd : this->vendor_conditions)
+         cnd.clear(*this->stub);
+      //
+      this->has_object_bounds = false;
+      this->object_bounds.clear();
+      this->script_data.clear(*this->stub);
+   }
 }

@@ -147,4 +147,12 @@ namespace dovah::loaded_forms::components {
          entry.ownership.global.clear_if(my_owner, target);
       }
    }
+   void container_data::clear(form_stub& my_owner) {
+      for (auto& entry : this->entries) {
+         entry.item.set(my_owner, nullptr);
+         entry.ownership.owner.set(my_owner, nullptr);
+         entry.ownership.global.set(my_owner, nullptr);
+      }
+      this->entries.clear();
+   }
 }

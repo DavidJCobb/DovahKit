@@ -64,6 +64,7 @@ namespace dovah::loaded_forms {
             //
             void clone_from(const large_reference_t& original, form_stub& my_owner) noexcept;
             void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+            void clear(form_stub& my_owner);
          };
 
          struct max_height_data_t {
@@ -84,6 +85,11 @@ namespace dovah::loaded_forms {
             } max;
             bool present = false;
             std::vector<quad_heights> cells;
+            //
+            void clear() {
+               this->present = false;
+               this->cells.clear();
+            }
          };
 
          struct offset_data_t {
@@ -99,6 +105,11 @@ namespace dovah::loaded_forms {
             //
             bool present = false;
             std::vector<uint32_t> offsets; // single-dimensional array
+            //
+            void clear() {
+               this->present = false;
+               this->offsets.clear();
+            }
          };
 
          large_reference_t large_references;
@@ -192,5 +203,6 @@ namespace dovah::loaded_forms {
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
+         virtual void _clear_impl() noexcept override;
    };
 }

@@ -1005,6 +1005,27 @@ namespace dovah::loaded_forms::components {
       this->run_on_reference.clear_if(my_owner, target);
       this->eventFormID.clear_if(my_owner, target);
    }
+   void condition::clear(form_stub& my_owner) {
+      this->compare_to_global.set(my_owner, nullptr);
+      //
+      auto func = condition_info::function::lookup_by_id(this->function);
+      for (int i = 0; i < 2; i++) {
+         auto& param = this->parameters[i];
+         if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID) {
+            param.form.set(my_owner, nullptr);
+         }
+      }
+      //
+      this->run_on_reference.set(my_owner, nullptr);
+      this->eventFormID.set(my_owner, nullptr);
+      //
+      this->function = 0;
+      this->type = 0;
+      this->compare_to_constant = 0.0F;
+      this->run_on_index = 0;
+      this->eventFunction = 0;
+      this->eventMember = 0;
+   }
 
    void condition::to_string(std::string& out) const {
       out.clear();

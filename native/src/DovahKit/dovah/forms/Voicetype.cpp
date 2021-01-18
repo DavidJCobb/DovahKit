@@ -39,4 +39,7 @@ namespace dovah::loaded_forms {
       DNAM.close();
       return true;
    }
+   void Voicetype::_clear_impl() noexcept {
+      this->voicetype_flags = 0;
+   }
 }

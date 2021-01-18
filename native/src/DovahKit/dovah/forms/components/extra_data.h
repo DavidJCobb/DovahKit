@@ -181,6 +181,7 @@ namespace dovah::loaded_forms::components {
          //
          load_result load(tes_record_reader&, load_interface_t&);
          void save(tes_record_writer&, save_interface_t&);
+         void clear(form_stub& my_owner);
          void clone_from(const extra_data_list& source, form_stub& owner_of_clone);
          void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
          //

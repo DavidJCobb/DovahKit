@@ -101,6 +101,12 @@ namespace dovah::loaded_forms::components::papyrus {
       if (this->fragment_data)
          this->fragment_data->sever_outbound_references_to(target, my_owner);
    }
+   void script_data::clear(form_stub& my_owner) noexcept {
+      for (auto& script : this->scripts)
+         script.clear(my_owner);
+      if (this->fragment_data)
+         this->fragment_data->clear(my_owner);
+   }
 
    #pragma region Script sub-objects loading
    bool script_data::script::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -161,6 +167,10 @@ namespace dovah::loaded_forms::components::papyrus {
    void script_data::script::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
       for (auto& prop : this->properties)
          prop.sever_outbound_references_to(target, my_owner);
+   }
+   void script_data::script::clear(form_stub& my_owner) noexcept {
+      for (auto& prop : this->properties)
+         prop.clear(my_owner);
    }
 
    bool script_data::property_object_value::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -357,6 +367,17 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       for (auto& value : this->values)
          value.object.sever_outbound_references_to(target, my_owner);
+   }
+   void script_data::property::clear(form_stub& my_owner) noexcept {
+      switch (this->type) {
+         case property_type::object:
+         case property_type::array_of_object:
+            break;
+         default:
+            return;
+      }
+      for (auto& value : this->values)
+         value.object.clear(my_owner);
    }
    #pragma endregion
 

@@ -64,6 +64,13 @@ namespace dovah::loaded_forms::components {
       for (auto* extra : this->content)
          extra->save(record, intfc);
    }
+   void extra_data_list::clear(form_stub& my_owner) {
+      for (auto* extra : this->content) {
+         extra->clear_contained_formIDs(my_owner);
+         delete extra;
+      }
+      this->content.clear();
+   }
    void extra_data_list::clone_from(const extra_data_list& source, form_stub& my_owner) {
       for (auto* extra : this->content)
          extra->clear_contained_formIDs(my_owner);

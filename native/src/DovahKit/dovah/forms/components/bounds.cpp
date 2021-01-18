@@ -23,4 +23,8 @@ namespace dovah::loaded_forms::components {
       subrecord.write(this->max.y);
       subrecord.write(this->max.z);
    }
+   void object_bounds::clear() noexcept {
+      this->min = { 0, 0, 0 };
+      this->max = { 0, 0, 0 };
+   }
 }

@@ -100,4 +100,15 @@ namespace dovah::loaded_forms {
       this->open_sound.clear_if(*this->stub, other);
       this->close_sound.clear_if(*this->stub, other);
    }
+   void Container::_clear_impl() noexcept {
+      this->script_data.clear(*this->stub);
+      this->model.clear(*this->stub);
+      this->bounds.clear();
+      this->name.reset();
+      this->inventory.clear(*this->stub);
+      this->container_flags = 0;
+      this->weight = 0.0F;
+      this->open_sound.set(*this->stub, nullptr);
+      this->close_sound.set(*this->stub, nullptr);
+   }
 }

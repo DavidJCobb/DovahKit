@@ -26,5 +26,6 @@ namespace dovah::loaded_forms::components {
       static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
       void clone_from(const container_data& original, form_stub& my_owner) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+      void clear(form_stub& my_owner);
    };
 }

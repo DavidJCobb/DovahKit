@@ -185,4 +185,15 @@ namespace dovah::loaded_forms {
          word.spell.clear_if(*this->stub, other);
       }
    }
+   void Shout::_clear_impl() noexcept {
+      this->name.reset();
+      this->description.reset();
+      this->equip_type.set(*this->stub, nullptr);
+      this->menu_display_object.set(*this->stub, nullptr);
+      for (auto& word : this->words) {
+         word.word_of_power.set(*this->stub, nullptr);
+         word.spell.set(*this->stub, nullptr);
+         word.recoveryTime = 0.0F;
+      }
+   }
 }

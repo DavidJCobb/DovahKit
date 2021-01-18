@@ -51,10 +51,19 @@ namespace dovah::loaded_forms {
             float offset;
             std::array<std::array<int8_t, 32>, 32> grid;
             bool  present = false;
+            //
+            void clear() {
+               this->present = false;
+            }
          };
          struct occlusion_data_t {
             std::vector<uint8_t> bytes;
             bool present = false;
+            //
+            void clear() {
+               this->bytes.clear();
+               this->present = false;
+            }
          };
 
          localized_string name; // FULL
@@ -92,6 +101,7 @@ namespace dovah::loaded_forms {
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
+         virtual void _clear_impl() noexcept override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
    };
 }

@@ -24,6 +24,9 @@ namespace dovah::loaded_forms {
       }
       return instance;
    }
+   void Form::clear() {
+      this->_clear_impl();
+   }
    bool Form::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (this->stub->is_deleted()) {
          //

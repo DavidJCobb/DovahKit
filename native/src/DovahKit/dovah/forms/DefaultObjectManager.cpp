@@ -112,4 +112,9 @@ namespace dovah::loaded_forms {
       for (auto& pair : this->entries)
          pair.second.form.clear_if(*this->stub, other);
    }
+   void DefaultObjectManager::_clear_impl() noexcept {
+      for (auto& pair : this->entries)
+         pair.second.form.set(*this->stub, nullptr);
+      this->entries.clear();
+   }
 }

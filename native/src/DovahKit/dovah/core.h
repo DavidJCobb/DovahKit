@@ -375,6 +375,7 @@ namespace dovah {
          void set(form_stub& owner, const struct_form_reference_t& set_to);
    };
 
+   extern void clear_form_reference_list(std::vector<form_reference_t>&, form_stub& owner);
    extern void clear_from_form_reference_list(std::vector<form_reference_t>&, form_stub& target, form_stub& owner);
    #pragma endregion
 

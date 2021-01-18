@@ -38,5 +38,6 @@ namespace dovah::loaded_forms::components {
       void save(tes_subrecord_writer&);
       void clone_from(const package_location& original, form_stub& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+      void clear(form_stub& my_owner);
    };
 }

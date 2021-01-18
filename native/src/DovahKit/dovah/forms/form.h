@@ -56,6 +56,8 @@ namespace dovah {
             //
             Form* clone(form_stub& receiving_stub, bool* out_complete = nullptr) const noexcept;
 
+            void clear(); // clear absolutely all data on the form
+
             bool save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc); // returns a success bool. will write EDID for you.
 
             void friendly_delete_override(const file_load_order&) noexcept;
@@ -75,6 +77,7 @@ namespace dovah {
          protected:
             virtual bool _clone_impl(Form* out) const noexcept { return false; }; // TODO: implement on existing forms; then, make pure
             virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save&) { return false; }; // TODO: implement on existing forms; then, make pure
+            virtual void _clear_impl() noexcept {}; // TODO: implement on existing forms; then, make pure
 
             //
             // === void Form::_friendly_delete_impl() ============================================
