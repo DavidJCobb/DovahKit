@@ -30,13 +30,13 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.signature() == signature_event)
          package_event_dialogue::generate_use_info(record, uib);
    }
-   basic_extra_data* patrol_ref_data::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* patrol_ref_data::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new patrol_ref_data;
       clone->idle_time = this->idle_time;
       clone->event.clone_from(this->event, clone_owner);
       return clone;
    }
-   void patrol_ref_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void patrol_ref_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->event.sever_outbound_references_to(target, my_owner);
    }
 }

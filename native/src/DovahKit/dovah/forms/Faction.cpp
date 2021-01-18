@@ -214,18 +214,18 @@ namespace dovah::loaded_forms {
          for (size_t i = 0; i < size; ++i) {
             auto& entry = copy->relationships[i];
             auto& from  = this->relationships[i];
-            entry.other.set(*copy->stub, from.other);
+            entry.other.set(*copy, from.other);
             entry.combat = from.combat;
             entry.mod    = from.mod;
          }
       }
       copy->faction_flags = this->faction_flags;
-      copy->prison_marker.set(*copy->stub, this->prison_marker);
-      copy->follower_wait_marker.set(*copy->stub, this->follower_wait_marker);
-      copy->evidence_chest.set(*copy->stub, this->evidence_chest);
-      copy->player_belongings_chest.set(*copy->stub, this->player_belongings_chest);
-      copy->crime_group.set(*copy->stub, this->crime_group);
-      copy->jail_outfit.set(*copy->stub, this->jail_outfit);
+      copy->prison_marker.set(*copy, this->prison_marker);
+      copy->follower_wait_marker.set(*copy, this->follower_wait_marker);
+      copy->evidence_chest.set(*copy, this->evidence_chest);
+      copy->player_belongings_chest.set(*copy, this->player_belongings_chest);
+      copy->crime_group.set(*copy, this->crime_group);
+      copy->jail_outfit.set(*copy, this->jail_outfit);
       copy->crime_values = this->crime_values;
       {
          size_t size = this->ranks.size();
@@ -233,19 +233,19 @@ namespace dovah::loaded_forms {
          for (size_t i = 0; i < size; ++i)
             copy->ranks[i] = this->ranks[i];
       }
-      copy->vendor_list.set(*copy->stub, this->vendor_list);
-      copy->vendor_chest.set(*copy->stub, this->vendor_chest);
+      copy->vendor_list.set(*copy, this->vendor_list);
+      copy->vendor_chest.set(*copy, this->vendor_chest);
       copy->vendor_data = this->vendor_data;
-      copy->package_location_vendor.clone_from(this->package_location_vendor, *copy->stub);
+      copy->package_location_vendor.clone_from(this->package_location_vendor, *copy);
       {
          size_t size = this->vendor_conditions.size();
          copy->vendor_conditions.resize(size);
          for (size_t i = 0; i < size; ++i)
-            copy->vendor_conditions[i].clone_from(this->vendor_conditions[i], *copy->stub);
+            copy->vendor_conditions[i].clone_from(this->vendor_conditions[i], *copy);
       }
       copy->has_object_bounds = this->has_object_bounds;
       copy->object_bounds = this->object_bounds;
-      copy->script_data.clone_from(this->script_data, *copy->stub);
+      copy->script_data.clone_from(this->script_data, *copy);
       return true;
    }
    bool Faction::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -333,13 +333,13 @@ namespace dovah::loaded_forms {
       return true;
    }
    void Faction::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->script_data.sever_outbound_references_to(other, *this->stub);
-      this->package_location_vendor.sever_outbound_references_to(other, *this->stub);
+      this->script_data.sever_outbound_references_to(other, *this);
+      this->package_location_vendor.sever_outbound_references_to(other, *this);
       //
       bool removals = false;
       for (auto& entry : this->relationships) {
          if (entry.other == &other) {
-            entry.other.set(*this->stub, nullptr);
+            entry.other.set(*this, nullptr);
             removals = true;
          }
       }
@@ -358,40 +358,40 @@ namespace dovah::loaded_forms {
       }
       //
       for (auto& cnd : this->vendor_conditions)
-         cnd.sever_outbound_references_to(other, *this->stub);
+         cnd.sever_outbound_references_to(other, *this);
       //
-      this->prison_marker.clear_if(*this->stub, other);
-      this->follower_wait_marker.clear_if(*this->stub, other);
-      this->evidence_chest.clear_if(*this->stub, other);
-      this->player_belongings_chest.clear_if(*this->stub, other);
-      this->crime_group.clear_if(*this->stub, other);
-      this->jail_outfit.clear_if(*this->stub, other);
-      this->vendor_list.clear_if(*this->stub, other);
-      this->vendor_chest.clear_if(*this->stub, other);
+      this->prison_marker.clear_if(*this, other);
+      this->follower_wait_marker.clear_if(*this, other);
+      this->evidence_chest.clear_if(*this, other);
+      this->player_belongings_chest.clear_if(*this, other);
+      this->crime_group.clear_if(*this, other);
+      this->jail_outfit.clear_if(*this, other);
+      this->vendor_list.clear_if(*this, other);
+      this->vendor_chest.clear_if(*this, other);
    }
    void Faction::_clear_impl() noexcept {
       this->name.reset();
       //
       for (auto& entry : this->relationships)
-         entry.other.set(*this->stub, nullptr);
+         entry.other.set(*this, nullptr);
       this->relationships.clear();
       //
       this->faction_flags = 0;
-      this->prison_marker.set(*this->stub, nullptr);
-      this->follower_wait_marker.set(*this->stub, nullptr);
-      this->evidence_chest.set(*this->stub, nullptr);
-      this->player_belongings_chest.set(*this->stub, nullptr);
-      this->crime_group.set(*this->stub, nullptr);
-      this->jail_outfit.set(*this->stub, nullptr);
+      this->prison_marker.set(*this, nullptr);
+      this->follower_wait_marker.set(*this, nullptr);
+      this->evidence_chest.set(*this, nullptr);
+      this->player_belongings_chest.set(*this, nullptr);
+      this->crime_group.set(*this, nullptr);
+      this->jail_outfit.set(*this, nullptr);
       this->ranks.clear();
-      this->vendor_list.set(*this->stub, nullptr);
-      this->vendor_chest.set(*this->stub, nullptr);
-      this->package_location_vendor.clear(*this->stub);
+      this->vendor_list.set(*this, nullptr);
+      this->vendor_chest.set(*this, nullptr);
+      this->package_location_vendor.clear(*this);
       for (auto& cnd : this->vendor_conditions)
-         cnd.clear(*this->stub);
+         cnd.clear(*this);
       //
       this->has_object_bounds = false;
       this->object_bounds.clear();
-      this->script_data.clear(*this->stub);
+      this->script_data.clear(*this);
    }
 }

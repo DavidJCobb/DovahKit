@@ -21,7 +21,7 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->unk10);
       subrecord.close();
    }
-   basic_extra_data* light::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* light::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new light;
       clone->fov   = this->fov;
       clone->fade  = this->fade;

@@ -5,6 +5,9 @@
 
 namespace dovah {
    class form_stub;
+   namespace loaded_forms {
+      class Form;
+   }
    namespace tes_file_reading {
       class subrecord;
    }
@@ -319,9 +322,9 @@ namespace dovah {
          bare_form_id_t formID() const noexcept;
          inline form_stub* get_form_stub() const noexcept { return this->stub; }
          //
-         void clear_if(form_stub& owner, form_stub& clear_if);
-         void set(form_stub& owner, form_stub* set_to);
-         void set(form_stub& owner, const form_reference_t& set_to);
+         void clear_if(loaded_forms::Form& owner, form_stub& clear_if);
+         void set(loaded_forms::Form& owner, form_stub* set_to);
+         void set(loaded_forms::Form& owner, const form_reference_t& set_to);
          bool form_type_matches(form_type_t) const noexcept; // always returns (true) if (this->stub == nullptr)
          //
          inline operator bool() const noexcept { return this->stub != nullptr; }
@@ -335,15 +338,7 @@ namespace dovah {
          // load process, to set up form-to-form references that are present in hardcoded data 
          // (in lieu of having a file to load this data from).
          //
-         // One other acceptable use is if the UI needs to wholly duplicate form data to work 
-         // with and only commit changes when the user clicks some "save" button. In those 
-         // cases it may be easier to use loaded-form structures that include (form_reference_t) 
-         // and just use (unmanaged_set) to...
-         //
-         // Look, just don't call this directly on an actual form's actual data, okay?
-         //
          void unmanaged_set(form_stub* set_to); // FOR INTERNAL USE ONLY
-         void unmanaged_clear_if(form_stub&); // refer to documentation for (unmanaged_set)
          
       protected:
          inline form_reference_t& operator=(form_stub* other) { this->stub = other; return *this; };
@@ -372,11 +367,11 @@ namespace dovah {
       public:
          uint32_t padding = 0;
          //
-         void set(form_stub& owner, const struct_form_reference_t& set_to);
+         void set(loaded_forms::Form& owner, const struct_form_reference_t& set_to);
    };
 
-   extern void clear_form_reference_list(std::vector<form_reference_t>&, form_stub& owner);
-   extern void clear_from_form_reference_list(std::vector<form_reference_t>&, form_stub& target, form_stub& owner);
+   extern void clear_form_reference_list(std::vector<form_reference_t>&, loaded_forms::Form& owner);
+   extern void remove_form_from_reference_list(std::vector<form_reference_t>&, form_stub& target, loaded_forms::Form& owner);
    #pragma endregion
 
    struct form_id_t {

@@ -124,7 +124,7 @@ namespace dovah::loaded_forms {
       //
       record.open_next_subrecord('ALED').close(); // Alias end marker.
    }
-   void LocationAlias::sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept {
+   void LocationAlias::sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       this->fill_from_location.clear_if(my_owner, target);
       this->fill_from_location_keyword.clear_if(my_owner, target);
       this->fill_from_quest.clear_if(my_owner, target);
@@ -351,7 +351,7 @@ namespace dovah::loaded_forms {
       //
       record.open_next_subrecord('ALED').close(); // Alias end marker.
    }
-   void ReferenceAlias::sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept {
+   void ReferenceAlias::sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       this->create_object_of_type.clear_if(my_owner, target);
       this->fill_from_quest.clear_if(my_owner, target);
       this->fill_from_reference.clear_if(my_owner, target);
@@ -364,9 +364,9 @@ namespace dovah::loaded_forms {
       this->package_override_lists.observe_corpse.clear_if(my_owner, target);
       this->package_override_lists.guard_warn.clear_if(my_owner, target);
       this->package_override_lists.combat.clear_if(my_owner, target);
-      clear_from_form_reference_list(this->spells, target, my_owner);
-      clear_from_form_reference_list(this->factions, target, my_owner);
-      clear_from_form_reference_list(this->packages, target, my_owner);
+      remove_form_from_reference_list(this->spells, target, my_owner);
+      remove_form_from_reference_list(this->factions, target, my_owner);
+      remove_form_from_reference_list(this->packages, target, my_owner);
       this->additional_voicetype.clear_if(my_owner, target);
    }
    #pragma endregion
@@ -398,7 +398,7 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('NAM0', this->next_quest_id, true);
          return true;
       }
-      void Quest::LogEntry::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+      void Quest::LogEntry::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& cnd : this->conditions)
             cnd.sever_outbound_references_to(other, my_owner);
          this->next_quest_id.clear_if(my_owner, other);
@@ -424,7 +424,7 @@ namespace dovah::loaded_forms {
             entry.save(record, intfc);
          return true;
       }
-      void Quest::Stage::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+      void Quest::Stage::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& entry : this->entries)
             entry.sever_outbound_references(other, my_owner);
       }
@@ -450,7 +450,7 @@ namespace dovah::loaded_forms {
             cnd.save(record, intfc);
          return true;
       }
-      void Quest::Target::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+      void Quest::Target::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& cnd : this->conditions)
             cnd.sever_outbound_references_to(other, my_owner);
       }
@@ -508,7 +508,7 @@ namespace dovah::loaded_forms {
             t.save(record, intfc);
          return true;
       }
-      void Quest::Objective::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+      void Quest::Objective::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& t : this->targets)
             t.sever_outbound_references(other, my_owner);
       }
@@ -801,17 +801,17 @@ namespace dovah::loaded_forms {
       return true;
    }
    void Quest::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->script_data.sever_outbound_references_to(other, *this->stub);
+      this->script_data.sever_outbound_references_to(other, *this);
       for (auto& cnd : this->conditions.dialogue)
-         cnd.sever_outbound_references_to(other, *this->stub);
+         cnd.sever_outbound_references_to(other, *this);
       for (auto& cnd : this->conditions.event)
-         cnd.sever_outbound_references_to(other, *this->stub);
+         cnd.sever_outbound_references_to(other, *this);
       for (auto& obj : this->stages)
-         obj.sever_outbound_references(other, *this->stub);
+         obj.sever_outbound_references(other, *this);
       for (auto& obj : this->objectives)
-         obj.sever_outbound_references(other, *this->stub);
+         obj.sever_outbound_references(other, *this);
       for (auto* obj : this->aliases)
-         obj->sever_outbound_references(other, *this->stub);
-      clear_from_form_reference_list(this->text_display_globals, other, *this->stub);
+         obj->sever_outbound_references(other, *this);
+      remove_form_from_reference_list(this->text_display_globals, other, *this);
    }
 }

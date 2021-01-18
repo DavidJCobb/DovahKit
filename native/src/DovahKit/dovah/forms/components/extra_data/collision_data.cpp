@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->layer);
       subrecord.close();
    }
-   basic_extra_data* collision_data::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* collision_data::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new collision_data;
       clone->layer = this->layer;
       return clone;

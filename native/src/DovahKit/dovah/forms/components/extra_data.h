@@ -158,9 +158,9 @@ namespace dovah::loaded_forms::components {
          //
          static void generate_use_info(tes_record_reader&, form_stub*) = delete;
          //
-         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept = 0;
-         virtual void clear_contained_formIDs(form_stub& my_owner) {}
-         virtual void sever_outbound_references_to(form_stub& target, form_stub& my_owner) {}
+         virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept = 0;
+         virtual void clear_contained_formIDs(loaded_forms::Form& my_owner) {}
+         virtual void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {}
    };
    class extra_data_list {
       public:
@@ -181,9 +181,9 @@ namespace dovah::loaded_forms::components {
          //
          load_result load(tes_record_reader&, load_interface_t&);
          void save(tes_record_writer&, save_interface_t&);
-         void clear(form_stub& my_owner);
-         void clone_from(const extra_data_list& source, form_stub& owner_of_clone);
-         void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
+         void clear(loaded_forms::Form& my_owner);
+         void clone_from(const extra_data_list& source, loaded_forms::Form& owner_of_clone);
+         void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          //
          static extra_data_load_result generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //

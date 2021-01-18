@@ -86,7 +86,7 @@ namespace dovah::loaded_forms::components {
       }
       subrecord.write(this->radius);
    }
-   void package_location::clone_from(const package_location& other, form_stub& my_owner) noexcept {
+   void package_location::clone_from(const package_location& other, loaded_forms::Form& my_owner) noexcept {
       this->type = other.type;
       this->detail.form.set(my_owner, other.detail.form);
       this->detail.object_type = other.detail.object_type;
@@ -94,10 +94,10 @@ namespace dovah::loaded_forms::components {
       this->detail.padding     = other.detail.padding;
       this->radius = other.radius;
    }
-   void package_location::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void package_location::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       this->detail.form.clear_if(my_owner, target);
    }
-   void package_location::clear(form_stub& my_owner) {
+   void package_location::clear(loaded_forms::Form& my_owner) {
       this->detail.form.set(my_owner, nullptr);
       this->detail.object_type =  0;
       this->detail.alias_id    = -1;

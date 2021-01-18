@@ -49,7 +49,7 @@ namespace dovah::loaded_forms {
       size_t size = this->contents.size();
       copy->contents.resize(size);
       for (size_t i = 0; i < size; ++i)
-         copy->contents[i].set(*copy->stub, this->contents[i]);
+         copy->contents[i].set(*copy, this->contents[i]);
       return true;
    }
    bool FormList::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -58,28 +58,29 @@ namespace dovah::loaded_forms {
       return true;
    }
    void FormList::_clear_impl() noexcept {
-      clear_form_reference_list(this->contents, *this->stub);
+      clear_form_reference_list(this->contents, *this);
    }
    void FormList::_sever_outbound_references_impl(form_stub& other) noexcept {
-      auto& list  = this->contents;
-      bool  edits = false;
-      for (auto& id : list) {
+      std::vector<form_reference_t> replacement;
+      bool edits = false;
+      //
+      auto& list = this->contents;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& id = list[i];
          if (id == &other) {
-            id.set(*this->stub, nullptr);
-            edits = true;
+            if (!edits) {
+               edits = true;
+               replacement.reserve(size);
+               replacement.insert(replacement.begin(), list.begin(), list.begin() + i);
+            }
+            id.set(*this, nullptr);
+         } else if (edits) {
+            replacement.push_back(id);
          }
       }
       if (edits) {
-         list.erase(
-            std::remove_if(
-               list.begin(),
-               list.end(),
-               [](form_reference_t& id) {
-                  return id == nullptr;
-               }
-            ),
-            list.end()
-         );
+         list = replacement;
       }
    }
 }

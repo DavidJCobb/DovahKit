@@ -51,38 +51,17 @@ namespace dovah::loaded_forms::components {
          KWDA.write(k);
       KWDA.close();
    }
-   void keyword_list::clear(form_stub& my_owner) noexcept {
-      for (auto& id : this->forms)
-         id.set(my_owner, nullptr);
-      this->forms.clear();
+   void keyword_list::clear(loaded_forms::Form& my_owner) noexcept {
+      clear_form_reference_list(this->forms, my_owner);
    }
-   void keyword_list::clone_from(const keyword_list& other, form_stub& my_owner) noexcept {
+   void keyword_list::clone_from(const keyword_list& other, loaded_forms::Form& my_owner) noexcept {
       size_t size = other.forms.size();
       this->clear(my_owner);
       this->forms.resize(size);
       for (size_t i = 0; i < size; ++i)
          this->forms[i].set(my_owner, other.forms[i]);
    }
-   void keyword_list::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
-      auto& list  = this->forms;
-      bool  edits = false;
-      for (auto& id : list) {
-         if (id == &target) {
-            id.set(my_owner, nullptr);
-            edits = true;
-         }
-      }
-      if (edits) {
-         list.erase(
-            std::remove_if(
-               list.begin(),
-               list.end(),
-               [](form_reference_t& id) {
-                  return id == nullptr;
-               }
-            ),
-            list.end()
-         );
-      }
+   void keyword_list::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
+      remove_form_from_reference_list(this->forms, target, my_owner);
    }
 }

@@ -15,7 +15,7 @@ namespace dovah::loaded_forms::components::extra {
       this->end.save(subrecord);
       subrecord.close();
    }
-   basic_extra_data* linked_ref_color::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* linked_ref_color::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new linked_ref_color;
       clone->start = this->start;
       clone->end   = this->end;

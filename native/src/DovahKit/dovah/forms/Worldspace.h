@@ -62,9 +62,9 @@ namespace dovah::loaded_forms {
             //
             std::vector<entry> entries;
             //
-            void clone_from(const large_reference_t& original, form_stub& my_owner) noexcept;
-            void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
-            void clear(form_stub& my_owner);
+            void clone_from(const large_reference_t& original, loaded_forms::Form& my_owner) noexcept;
+            void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+            void clear(loaded_forms::Form& my_owner);
          };
 
          struct max_height_data_t {

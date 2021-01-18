@@ -59,7 +59,7 @@ namespace dovah::loaded_forms {
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) = 0;
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) = 0;
-         virtual void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept = 0;
+         virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept = 0;
    };
    class LocationAlias : public Alias {
       friend class Quest;
@@ -81,7 +81,7 @@ namespace dovah::loaded_forms {
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
-         virtual void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept override;
+         virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
    };
    class ReferenceAlias : public Alias {
       friend class Quest;
@@ -126,7 +126,7 @@ namespace dovah::loaded_forms {
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
-         virtual void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept override;
+         virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
    };
 
    class Quest : public Form {
@@ -188,7 +188,7 @@ namespace dovah::loaded_forms {
                void load(tes_record_reader&,    load_order_interfaces::form_load&); // assumes QSTD subrecord has already been opened
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
-               void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept;
+               void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          };
          class Stage {
             friend class Quest;
@@ -210,7 +210,7 @@ namespace dovah::loaded_forms {
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes INDX subrecord has already been opened
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
-               void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept;
+               void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          };
 
          class Target { // QSTA
@@ -231,7 +231,7 @@ namespace dovah::loaded_forms {
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes QSTA subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
-               void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept;
+               void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          };
          class Objective {
             friend class Quest;
@@ -251,7 +251,7 @@ namespace dovah::loaded_forms {
             protected:
                void load(tes_record_reader&, load_order_interfaces::form_load&); // assumes QOBJ subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
-               void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept;
+               void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          };
 
          localized_string name;

@@ -145,7 +145,7 @@ namespace dovah::loaded_forms::components {
          DSTF.close();
       }
    }
-   void destruction_stage_data::clone_from(const destruction_stage_data& other, form_stub& my_owner) noexcept {
+   void destruction_stage_data::clone_from(const destruction_stage_data& other, loaded_forms::Form& my_owner) noexcept {
       this->health = other.health;
       this->flags  = other.flags;
       //
@@ -173,13 +173,13 @@ namespace dovah::loaded_forms::components {
          stage.replacementModel.clone_from(from.replacementModel, my_owner);
       }
    }
-   void destruction_stage_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void destruction_stage_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       for (auto& stage : this->stages) {
          stage.debris.clear_if(my_owner, target);
          stage.explosion.clear_if(my_owner, target);
       }
    }
-   void destruction_stage_data::clear(form_stub& my_owner) {
+   void destruction_stage_data::clear(loaded_forms::Form& my_owner) {
       for (auto& stage : this->stages) {
          stage.debris.set(my_owner, nullptr);
          stage.explosion.set(my_owner, nullptr);

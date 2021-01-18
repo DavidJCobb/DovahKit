@@ -93,22 +93,22 @@ namespace dovah::loaded_forms {
       }
    }
    void Container::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->script_data.sever_outbound_references_to(other, *this->stub);
-      this->model.sever_outbound_references_to(other, *this->stub);
-      this->inventory.sever_outbound_references_to(other, *this->stub);
+      this->script_data.sever_outbound_references_to(other, *this);
+      this->model.sever_outbound_references_to(other, *this);
+      this->inventory.sever_outbound_references_to(other, *this);
       //
-      this->open_sound.clear_if(*this->stub, other);
-      this->close_sound.clear_if(*this->stub, other);
+      this->open_sound.clear_if(*this, other);
+      this->close_sound.clear_if(*this, other);
    }
    void Container::_clear_impl() noexcept {
-      this->script_data.clear(*this->stub);
-      this->model.clear(*this->stub);
+      this->script_data.clear(*this);
+      this->model.clear(*this);
       this->bounds.clear();
       this->name.reset();
-      this->inventory.clear(*this->stub);
+      this->inventory.clear(*this);
       this->container_flags = 0;
       this->weight = 0.0F;
-      this->open_sound.set(*this->stub, nullptr);
-      this->close_sound.set(*this->stub, nullptr);
+      this->open_sound.set(*this, nullptr);
+      this->close_sound.set(*this, nullptr);
    }
 }

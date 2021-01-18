@@ -30,7 +30,7 @@ namespace dovah::loaded_forms::components::extra {
          subrecord.close();
       }
    }
-   basic_extra_data* ragdoll_data::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* ragdoll_data::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new ragdoll_data;
       clone->has_rgd = this->has_rgd;
       clone->has_rgb = this->has_rgb;

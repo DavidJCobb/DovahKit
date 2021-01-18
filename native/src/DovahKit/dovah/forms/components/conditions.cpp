@@ -964,7 +964,7 @@ namespace dovah::loaded_forms::components {
          CIS1.close();
       }
    }
-   void condition::clone_from(const condition& other, form_stub& my_owner) noexcept {
+   void condition::clone_from(const condition& other, loaded_forms::Form& my_owner) noexcept {
       this->type = other.type;
       this->compare_to_constant = other.compare_to_constant;
       this->compare_to_global.set(my_owner, other.compare_to_global);
@@ -991,7 +991,7 @@ namespace dovah::loaded_forms::components {
          this->eventFormID.set(my_owner, other.eventFormID);
       }
    }
-   void condition::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void condition::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       this->compare_to_global.clear_if(my_owner, target);
       //
       auto func = condition_info::function::lookup_by_id(this->function);
@@ -1005,7 +1005,7 @@ namespace dovah::loaded_forms::components {
       this->run_on_reference.clear_if(my_owner, target);
       this->eventFormID.clear_if(my_owner, target);
    }
-   void condition::clear(form_stub& my_owner) {
+   void condition::clear(loaded_forms::Form& my_owner) {
       this->compare_to_global.set(my_owner, nullptr);
       //
       auto func = condition_info::function::lookup_by_id(this->function);

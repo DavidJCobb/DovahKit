@@ -23,7 +23,7 @@ namespace dovah::loaded_forms {
             return notice_code::default_object_rejected_for_bad_type;
       }
       auto& entry = this->entries[signature];
-      entry.form.set(*this->stub, stub);
+      entry.form.set(*this, stub);
       entry.is_active_file = true;
       this->stub->set_edited(true);
       if (!definition)
@@ -74,20 +74,18 @@ namespace dovah::loaded_forms {
       auto copy = dynamic_cast<DefaultObjectManager*>(out);
       if (!copy)
          return false;
-      assert(copy->stub);
-      auto& clone_stub = *copy->stub;
       //
       if (!copy->entries.empty()) {
          for (auto& pair : copy->entries) {
             if (pair.second.form)
-               pair.second.form.set(clone_stub, nullptr);
+               pair.second.form.set(*copy, nullptr);
          }
          copy->entries.clear();
       }
       for (auto& pair : this->entries) {
          auto& data = copy->entries[pair.first];
          data.is_active_file = pair.second.is_active_file;
-         data.form.set(clone_stub, pair.second.form);
+         data.form.set(*copy, pair.second.form);
       }
       return true;
    }
@@ -110,11 +108,11 @@ namespace dovah::loaded_forms {
    }
    void DefaultObjectManager::_sever_outbound_references_impl(form_stub& other) noexcept {
       for (auto& pair : this->entries)
-         pair.second.form.clear_if(*this->stub, other);
+         pair.second.form.clear_if(*this, other);
    }
    void DefaultObjectManager::_clear_impl() noexcept {
       for (auto& pair : this->entries)
-         pair.second.form.set(*this->stub, nullptr);
+         pair.second.form.set(*this, nullptr);
       this->entries.clear();
    }
 }

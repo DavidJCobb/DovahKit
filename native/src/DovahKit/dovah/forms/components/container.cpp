@@ -122,7 +122,7 @@ namespace dovah::loaded_forms::components {
          assert(false && "ContainerData::generateUseInfo should only be called for COCT, CNTO, and COED subrecords!");
       #endif
    }
-   void container_data::clone_from(const container_data& other, form_stub& my_owner) noexcept {
+   void container_data::clone_from(const container_data& other, loaded_forms::Form& my_owner) noexcept {
       size_t size = other.entries.size();
       this->entries.clear();
       this->entries.resize(size);
@@ -139,7 +139,7 @@ namespace dovah::loaded_forms::components {
          entry.condition = from.condition;
       }
    }
-   void container_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void container_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       bare_form_id_t formID = target.formID;
       for (auto& entry : this->entries) {
          entry.item.clear_if(my_owner, target);
@@ -147,7 +147,7 @@ namespace dovah::loaded_forms::components {
          entry.ownership.global.clear_if(my_owner, target);
       }
    }
-   void container_data::clear(form_stub& my_owner) {
+   void container_data::clear(loaded_forms::Form& my_owner) {
       for (auto& entry : this->entries) {
          entry.item.set(my_owner, nullptr);
          entry.ownership.owner.set(my_owner, nullptr);

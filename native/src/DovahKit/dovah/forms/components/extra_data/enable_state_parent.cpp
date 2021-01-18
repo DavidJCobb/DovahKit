@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components::extra {
             uib.add_outbound_reference(formID);
       }
    }
-   basic_extra_data* enable_state_parent::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* enable_state_parent::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new enable_state_parent;
       clone->ref.set(clone_owner, this->ref);
       clone->flags = this->flags;
@@ -38,7 +38,7 @@ namespace dovah::loaded_forms::components::extra {
       clone->pad05[2] = this->pad05[2];
       return clone;
    }
-   void enable_state_parent::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void enable_state_parent::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->ref.clear_if(my_owner, target);
    }
 }

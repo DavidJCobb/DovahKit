@@ -44,7 +44,7 @@ namespace dovah::loaded_forms::components::extra {
       }
       XWCU.close();
    }
-   basic_extra_data* water_data::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* water_data::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new water_data;
       //
       size_t size = this->data.size();

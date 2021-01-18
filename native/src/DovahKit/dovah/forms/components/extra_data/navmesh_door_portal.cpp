@@ -27,14 +27,14 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          uib.add_outbound_reference(formID);
    }
-   basic_extra_data* navmesh_door_portal::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* navmesh_door_portal::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new navmesh_door_portal;
       clone->navmesh.set(clone_owner, this->navmesh);
       clone->triangle = this->triangle;
       clone->pad06    = this->pad06;
       return clone;
    }
-   void navmesh_door_portal::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void navmesh_door_portal::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->navmesh.clear_if(my_owner, target);
    }
 }

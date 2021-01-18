@@ -36,7 +36,7 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          uib.add_outbound_reference(formID);
    }
-   basic_extra_data* lock::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* lock::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new lock;
       clone->level = this->level;
       clone->pad01[0] = this->pad01[0];
@@ -51,7 +51,7 @@ namespace dovah::loaded_forms::components::extra {
       clone->unk10 = this->unk10;
       return clone;
    }
-   void lock::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void lock::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->key.clear_if(my_owner, target);
    }
 }

@@ -135,7 +135,7 @@ namespace {
          if (!form)
             return 0;
          self.before_edit();
-         form->equip_type.set(*self.stub, other->stub);
+         form->equip_type.set(*form, other->stub);
          self.after_edit();
          return 0;
       }
@@ -149,7 +149,7 @@ namespace {
          if (!form)
             return 0;
          self.before_edit();
-         form->menu_display_object.set(*self.stub, other->stub);
+         form->menu_display_object.set(*form, other->stub);
          self.after_edit();
          return 0;
       }

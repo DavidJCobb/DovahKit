@@ -31,7 +31,7 @@ namespace dovah::loaded_forms::components::extra {
       XCVR.write(this->velocity.angular.z);
       XCVR.close();
    }
-   basic_extra_data* water_current_zone_data::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* water_current_zone_data::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new water_current_zone_data;
       clone->velocity.linear  = this->velocity.linear;
       clone->velocity.angular = this->velocity.angular;

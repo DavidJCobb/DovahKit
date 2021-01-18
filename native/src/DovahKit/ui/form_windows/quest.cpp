@@ -83,6 +83,7 @@ void FormDialogQuest::_save_impl() {
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
    //
+   /*//
    auto&  list  = this->form->contents;
    auto   stubs = this->ui.forms->stubs();
    size_t i     = 0;
@@ -90,14 +91,15 @@ void FormDialogQuest::_save_impl() {
    if (list.size() < size)
       list.resize(size);
    for (; i < size; ++i)
-      list[i].set(*this->stub, stubs[i]);
+      list[i].set(*this, stubs[i]);
    //
    // Delete excess elements, if any were removed:
    //
    auto s = list.size();
    if (s != size) {
       for (; i < s; ++i)
-         list[i].set(*this->stub, nullptr);
+         list[i].set(*this, nullptr);
       list.resize(size);
    }
+   //*/
 }

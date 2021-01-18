@@ -39,7 +39,7 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          uib.add_outbound_reference(formID);
    }
-   basic_extra_data* teleport::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* teleport::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new teleport;
       clone->target_door.set(clone_owner, this->target_door);
       clone->position = this->position;
@@ -47,7 +47,7 @@ namespace dovah::loaded_forms::components::extra {
       clone->flags    = this->flags;
       return clone;
    }
-   void teleport::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void teleport::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->target_door.clear_if(my_owner, target);
    }
 }

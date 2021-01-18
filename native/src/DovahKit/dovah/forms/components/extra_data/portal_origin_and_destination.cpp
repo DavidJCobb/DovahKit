@@ -29,13 +29,13 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          uib.add_outbound_reference(formID);
    }
-   basic_extra_data* portal_origin_and_destination::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* portal_origin_and_destination::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new portal_origin_and_destination;
       clone->origin.set(clone_owner, this->origin);
       clone->destination.set(clone_owner, this->destination);
       return clone;
    }
-   void portal_origin_and_destination::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void portal_origin_and_destination::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->origin.clear_if(my_owner, target);
       this->destination.clear_if(my_owner, target);
    }

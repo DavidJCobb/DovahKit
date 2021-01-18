@@ -76,7 +76,7 @@ namespace dovah::loaded_forms::components::extra::deprecated {
          //
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}
          //
-         virtual basic_extra_data* clone(form_stub& clone_owner) const noexcept override;
+         virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept override;
    };
    class XSOL : public empty_extra_data<'XSOL', extra_data_type::deprecated_xsol> {
       // The game skips loading this subrecord. In TES4, it indicated the contained soul size in a ref.

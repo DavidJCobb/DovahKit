@@ -18,7 +18,6 @@ namespace dovah {
             has_onam = 0x0004,
             is_hardcoded_dummy = 0x0008, // used by file_reader
             is_none_stub_dummy = 0x0010, // used by file_reader
-            is_temporary_clone_dummy = 0x0020,
          };
       };
       using detail_flag_t = std::underlying_type_t<detail_flag::type>;

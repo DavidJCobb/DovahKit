@@ -37,14 +37,14 @@ void FormDialogFormList::_save_impl() {
    if (list.size() < size)
       list.resize(size);
    for (; i < size; ++i)
-      list[i].set(*this->stub, stubs[i]);
+      list[i].set(*this->form, stubs[i]);
    //
    // Delete excess elements, if any were removed:
    //
    auto s = list.size();
    if (s != size) {
       for (; i < s; ++i)
-         list[i].set(*this->stub, nullptr);
+         list[i].set(*this->form, nullptr);
       list.resize(size);
    }
 }

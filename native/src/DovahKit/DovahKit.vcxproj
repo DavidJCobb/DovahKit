@@ -265,6 +265,7 @@
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\formlist_listview.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
@@ -527,6 +528,7 @@
     <QtMoc Include="ui\form_windows\formlist.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\formlist_listview.h" />
     <QtMoc Include="ui\form_windows\quest.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\condition_list.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
@@ -594,6 +596,7 @@
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
     <QtUic Include="ui\form_windows\quest.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />

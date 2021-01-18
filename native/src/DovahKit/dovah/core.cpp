@@ -1,5 +1,6 @@
 #include "core.h"
 #include "form_stub.h"
+#include "forms/form.h"
 
 namespace dovah {
    #pragma region huge arrays
@@ -424,18 +425,20 @@ namespace dovah {
    bare_form_id_t form_reference_t::formID() const noexcept {
       return this->stub ? this->stub->formID : 0;
    }
-   void form_reference_t::clear_if(form_stub& owner, form_stub& clear_if) {
+   void form_reference_t::clear_if(loaded_forms::Form& owner, form_stub& clear_if) {
       if (this->stub == &clear_if)
          this->set(owner, nullptr);
    }
-   void form_reference_t::set(form_stub& owner, form_stub* set_to) {
+   void form_reference_t::set(loaded_forms::Form& owner, form_stub* set_to) {
       if (this->stub == set_to)
          return;
-      bare_form_id_t old = this->stub ? this->stub->formID : 0;
-      owner.replace_outbound_reference(old, set_to, this->use_info_flags);
+      if (owner.stub) {
+         bare_form_id_t old = this->stub ? this->stub->formID : 0;
+         owner.stub->replace_outbound_reference(old, set_to, this->use_info_flags);
+      }
       this->stub = set_to;
    }
-   void form_reference_t::set(form_stub& owner, const form_reference_t& set_to) {
+   void form_reference_t::set(loaded_forms::Form& owner, const form_reference_t& set_to) {
       this->set(owner, set_to.stub);
    }
    bool form_reference_t::form_type_matches(form_type_t ft) const noexcept {
@@ -446,10 +449,6 @@ namespace dovah {
    void form_reference_t::unmanaged_set(form_stub* set_to) {
       this->stub = set_to;
    }
-   void form_reference_t::unmanaged_clear_if(form_stub& clear_if) {
-      if (this->stub == &clear_if)
-         this->unmanaged_set(nullptr);
-   }
    //
    base_form_reference_t::base_form_reference_t() : form_reference_t(use_info_entry::flag::object_reference) {};
    base_form_reference_t::base_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::object_reference, s) {};
@@ -457,17 +456,17 @@ namespace dovah {
    dialogue_form_reference_t::dialogue_form_reference_t() : form_reference_t(use_info_entry::flag::dialogue) {};
    dialogue_form_reference_t::dialogue_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue, s) {};
    //
-   void struct_form_reference_t::set(form_stub& owner, const struct_form_reference_t& set_to) {
+   void struct_form_reference_t::set(loaded_forms::Form& owner, const struct_form_reference_t& set_to) {
       form_reference_t::set(owner, set_to.stub);
       this->padding = set_to.padding;
    }
 
-   void clear_form_reference_list(std::vector<form_reference_t>& list, form_stub& owner) {
+   void clear_form_reference_list(std::vector<form_reference_t>& list, loaded_forms::Form& owner) {
       for (auto& id : list)
          id.set(owner, nullptr);
       list.clear();
    }
-   void clear_from_form_reference_list(std::vector<form_reference_t>& list, form_stub& target, form_stub& owner) {
+   void remove_form_from_reference_list(std::vector<form_reference_t>& list, form_stub& target, loaded_forms::Form& owner) {
       bool edits = false;
       for (auto& id : list) {
          if (id == &target) {

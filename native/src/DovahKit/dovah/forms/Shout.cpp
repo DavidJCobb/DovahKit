@@ -9,8 +9,8 @@ namespace dovah::loaded_forms {
       #pragma region TESShout parents that get reset with each override
       this->name.reset();        // TESFullName
       this->description.reset(); // TESDescription
-      this->menu_display_object.set(*this->stub, nullptr); // BGSMenuDisplayObject
-      this->equip_type.set(*this->stub, nullptr);          // BGSEquipType
+      this->menu_display_object.set(*this, nullptr); // BGSMenuDisplayObject
+      this->equip_type.set(*this, nullptr);          // BGSEquipType
       //
       // The words of a shout don't get reset in ClearData or InitializeData, presumably 
       // because Bethesda expects  there to always be exactly  three of them. This means 
@@ -146,13 +146,13 @@ namespace dovah::loaded_forms {
       // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
       copy->name        = this->name;
       copy->description = this->description;
-      copy->menu_display_object.set(*copy->stub, this->menu_display_object);
+      copy->menu_display_object.set(*copy, this->menu_display_object);
       //
       for (size_t i = 0; i < this->words.size(); ++i) {
          auto& word = copy->words[i];
          auto& from = this->words[i];
-         word.word_of_power.set(*copy->stub, from.word_of_power);
-         word.spell.set(*copy->stub, from.spell);
+         word.word_of_power.set(*copy, from.word_of_power);
+         word.spell.set(*copy, from.spell);
          word.recoveryTime = from.recoveryTime;
       }
       return true;
@@ -178,21 +178,21 @@ namespace dovah::loaded_forms {
       return true;
    }
    void Shout::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->equip_type.clear_if(*this->stub, other);
-      this->menu_display_object.clear_if(*this->stub, other);
+      this->equip_type.clear_if(*this, other);
+      this->menu_display_object.clear_if(*this, other);
       for (auto& word : this->words) {
-         word.word_of_power.clear_if(*this->stub, other);
-         word.spell.clear_if(*this->stub, other);
+         word.word_of_power.clear_if(*this, other);
+         word.spell.clear_if(*this, other);
       }
    }
    void Shout::_clear_impl() noexcept {
       this->name.reset();
       this->description.reset();
-      this->equip_type.set(*this->stub, nullptr);
-      this->menu_display_object.set(*this->stub, nullptr);
+      this->equip_type.set(*this, nullptr);
+      this->menu_display_object.set(*this, nullptr);
       for (auto& word : this->words) {
-         word.word_of_power.set(*this->stub, nullptr);
-         word.spell.set(*this->stub, nullptr);
+         word.word_of_power.set(*this, nullptr);
+         word.spell.set(*this, nullptr);
          word.recoveryTime = 0.0F;
       }
    }

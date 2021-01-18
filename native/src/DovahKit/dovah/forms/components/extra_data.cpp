@@ -64,14 +64,14 @@ namespace dovah::loaded_forms::components {
       for (auto* extra : this->content)
          extra->save(record, intfc);
    }
-   void extra_data_list::clear(form_stub& my_owner) {
+   void extra_data_list::clear(loaded_forms::Form& my_owner) {
       for (auto* extra : this->content) {
          extra->clear_contained_formIDs(my_owner);
          delete extra;
       }
       this->content.clear();
    }
-   void extra_data_list::clone_from(const extra_data_list& source, form_stub& my_owner) {
+   void extra_data_list::clone_from(const extra_data_list& source, loaded_forms::Form& my_owner) {
       for (auto* extra : this->content)
          extra->clear_contained_formIDs(my_owner);
       this->content.clear();
@@ -87,7 +87,7 @@ namespace dovah::loaded_forms::components {
          this->content.push_back(clone);
       }
    }
-   void extra_data_list::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void extra_data_list::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       for (auto* extra : this->content)
          extra->sever_outbound_references_to(target, my_owner);
    }

@@ -73,7 +73,7 @@ namespace dovah::loaded_forms::components::papyrus {
       VMAD.close();
       return result;
    }
-   void script_data::clone_from(const script_data& other, form_stub& owner_of_clone) noexcept {
+   void script_data::clone_from(const script_data& other, loaded_forms::Form& owner_of_clone) noexcept {
       this->version       = other.version;
       this->object_format = other.object_format;
       //
@@ -95,13 +95,13 @@ namespace dovah::loaded_forms::components::papyrus {
       if (other.fragment_data)
          this->fragment_data = other.fragment_data->clone(owner_of_clone);
    }
-   void script_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void script_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       for (auto& script : this->scripts)
          script.sever_outbound_references_to(target, my_owner);
       if (this->fragment_data)
          this->fragment_data->sever_outbound_references_to(target, my_owner);
    }
-   void script_data::clear(form_stub& my_owner) noexcept {
+   void script_data::clear(loaded_forms::Form& my_owner) noexcept {
       for (auto& script : this->scripts)
          script.clear(my_owner);
       if (this->fragment_data)
@@ -144,7 +144,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   void script_data::script::clear_properties(form_stub& owner) {
+   void script_data::script::clear_properties(loaded_forms::Form& owner) {
       for (auto& prop : this->properties) {
          if (prop.type == property_type::object || prop.type == property_type::array_of_object) {
             for (auto& value : prop.values)
@@ -153,7 +153,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       this->properties.clear();
    }
-   void script_data::script::clone_from(const script& other, form_stub& owner_of_clone) noexcept {
+   void script_data::script::clone_from(const script& other, loaded_forms::Form& owner_of_clone) noexcept {
       this->name   = other.name;
       this->status = other.status;
       //
@@ -164,11 +164,11 @@ namespace dovah::loaded_forms::components::papyrus {
          this->properties[i].clone_from(other.properties[i], owner_of_clone);
       }
    }
-   void script_data::script::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void script_data::script::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       for (auto& prop : this->properties)
          prop.sever_outbound_references_to(target, my_owner);
    }
-   void script_data::script::clear(form_stub& my_owner) noexcept {
+   void script_data::script::clear(loaded_forms::Form& my_owner) noexcept {
       for (auto& prop : this->properties)
          prop.clear(my_owner);
    }
@@ -199,15 +199,15 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   void script_data::property_object_value::clone_from(const property_object_value& other, form_stub& owner) noexcept {
+   void script_data::property_object_value::clone_from(const property_object_value& other, loaded_forms::Form& owner) noexcept {
       this->form.set(owner, other.form);
       this->aliasID     = other.aliasID;
       this->always_zero = other.always_zero;
    }
-   void script_data::property_object_value::clear(form_stub& owner) {
+   void script_data::property_object_value::clear(loaded_forms::Form& owner) {
       this->form.set(owner, nullptr);
    }
-   void script_data::property_object_value::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void script_data::property_object_value::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       this->form.clear_if(my_owner, target);
    }
 
@@ -267,7 +267,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   void script_data::property::value_t::clone_from(property_type type, const value_t& source, form_stub& owner_of_clone) noexcept {
+   void script_data::property::value_t::clone_from(property_type type, const value_t& source, loaded_forms::Form& owner_of_clone) noexcept {
       switch (type) {
          case property_type::object:
          case property_type::array_of_object:
@@ -340,7 +340,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   void script_data::property::clone_from(const property& source, form_stub& owner_of_clone) noexcept {
+   void script_data::property::clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept {
       if (this->type == property_type::object || this->type == property_type::array_of_object) {
          for (auto& value : this->values)
             value.object.clear(owner_of_clone);
@@ -357,7 +357,7 @@ namespace dovah::loaded_forms::components::papyrus {
          this->values[i].clone_from(this->type, source.values[i], owner_of_clone);
       }
    }
-   void script_data::property::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void script_data::property::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       switch (this->type) {
          case property_type::object:
          case property_type::array_of_object:
@@ -368,7 +368,7 @@ namespace dovah::loaded_forms::components::papyrus {
       for (auto& value : this->values)
          value.object.sever_outbound_references_to(target, my_owner);
    }
-   void script_data::property::clear(form_stub& my_owner) noexcept {
+   void script_data::property::clear(loaded_forms::Form& my_owner) noexcept {
       switch (this->type) {
          case property_type::object:
          case property_type::array_of_object:
@@ -418,7 +418,7 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
    }
-   basic_fragment_data* topic_info_fragment_data::clone(form_stub& stub) const noexcept {
+   basic_fragment_data* topic_info_fragment_data::clone(loaded_forms::Form& stub) const noexcept {
       auto* copy = new topic_info_fragment_data;
       copy->unknown  = this->unknown;
       copy->flags    = this->flags;
@@ -476,7 +476,7 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
    }
-   basic_fragment_data* package_fragment_data::clone(form_stub& stub) const noexcept {
+   basic_fragment_data* package_fragment_data::clone(loaded_forms::Form& stub) const noexcept {
       auto* copy = new package_fragment_data;
       copy->unknown  = this->unknown;
       copy->flags    = this->flags;
@@ -520,7 +520,7 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
    }
-   basic_fragment_data* perk_fragment_data::clone(form_stub& stub) const noexcept {
+   basic_fragment_data* perk_fragment_data::clone(loaded_forms::Form& stub) const noexcept {
       auto* copy = new perk_fragment_data;
       copy->unknown  = this->unknown;
       copy->filename = this->filename;
@@ -594,7 +594,7 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   basic_fragment_data* quest_fragment_data::clone(form_stub& stub) const noexcept {
+   basic_fragment_data* quest_fragment_data::clone(loaded_forms::Form& stub) const noexcept {
       auto* copy = new quest_fragment_data;
       copy->unknown  = this->unknown;
       copy->filename = this->filename;
@@ -623,7 +623,7 @@ namespace dovah::loaded_forms::components::papyrus {
       //
       return copy;
    }
-   void quest_fragment_data::clear(form_stub& owner) {
+   void quest_fragment_data::clear(loaded_forms::Form& owner) {
       for (auto& alias : this->aliasScriptData) {
          alias.alias.clear(owner);
          for (auto& script : alias.scripts) {
@@ -633,7 +633,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       this->aliasScriptData.clear();
    }
-   void quest_fragment_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void quest_fragment_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       for (auto& alias : this->aliasScriptData)
          for (auto& script : alias.scripts)
             script.sever_outbound_references_to(target, my_owner);
@@ -698,7 +698,7 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.write_length_prefixed_string<2>(frag.function);
       }
    }
-   basic_fragment_data* scene_fragment_data::clone(form_stub& stub) const noexcept {
+   basic_fragment_data* scene_fragment_data::clone(loaded_forms::Form& stub) const noexcept {
       auto* copy = new scene_fragment_data;
       copy->unknown  = this->unknown;
       copy->flags    = this->flags;

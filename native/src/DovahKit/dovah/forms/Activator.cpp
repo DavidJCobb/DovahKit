@@ -125,17 +125,17 @@ namespace dovah::loaded_forms {
       auto copy = dynamic_cast<Activator*>(out);
       if (!copy)
          return false;
-      copy->script_data.clone_from(this->script_data, *copy->stub);
+      copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
-      copy->model.clone_from(this->model, *copy->stub);
-      copy->destruction_data.clone_from(this->destruction_data, *copy->stub);
-      copy->keywords.clone_from(this->keywords, *copy->stub);
+      copy->model.clone_from(this->model, *copy);
+      copy->destruction_data.clone_from(this->destruction_data, *copy);
+      copy->keywords.clone_from(this->keywords, *copy);
       copy->name = this->name;
       copy->marker_color = this->marker_color;
-      copy->looping_sound.set(*copy->stub, this->looping_sound);
-      copy->activation_sound.set(*copy->stub, this->activation_sound);
-      copy->water_type.set(*copy->stub, this->water_type);
-      copy->interact_keyword.set(*copy->stub, this->interact_keyword);
+      copy->looping_sound.set(*copy, this->looping_sound);
+      copy->activation_sound.set(*copy, this->activation_sound);
+      copy->water_type.set(*copy, this->water_type);
+      copy->interact_keyword.set(*copy, this->interact_keyword);
       copy->activation_verb = this->activation_verb;
       copy->activator_flags = this->activator_flags;
       return true;
@@ -169,27 +169,27 @@ namespace dovah::loaded_forms {
       return true;
    }
    void Activator::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->script_data.sever_outbound_references_to(other, *this->stub);
-      this->model.sever_outbound_references_to(other, *this->stub);
-      this->destruction_data.sever_outbound_references_to(other, *this->stub);
-      this->keywords.sever_outbound_references_to(other, *this->stub);
+      this->script_data.sever_outbound_references_to(other, *this);
+      this->model.sever_outbound_references_to(other, *this);
+      this->destruction_data.sever_outbound_references_to(other, *this);
+      this->keywords.sever_outbound_references_to(other, *this);
       //
-      this->looping_sound.clear_if(*this->stub, other);
-      this->activation_sound.clear_if(*this->stub, other);
-      this->water_type.clear_if(*this->stub, other);
-      this->interact_keyword.clear_if(*this->stub, other);
+      this->looping_sound.clear_if(*this, other);
+      this->activation_sound.clear_if(*this, other);
+      this->water_type.clear_if(*this, other);
+      this->interact_keyword.clear_if(*this, other);
    }
    void Activator::_clear_impl() noexcept {
-      this->script_data.clear(*this->stub);
+      this->script_data.clear(*this);
       this->bounds.clear();
-      this->model.clear(*this->stub);
-      this->destruction_data.clear(*this->stub);
-      this->keywords.clear(*this->stub);
+      this->model.clear(*this);
+      this->destruction_data.clear(*this);
+      this->keywords.clear(*this);
       this->name.reset();
-      this->looping_sound.set(*this->stub, nullptr);
-      this->activation_sound.set(*this->stub, nullptr);
-      this->water_type.set(*this->stub, nullptr);
-      this->interact_keyword.set(*this->stub, nullptr);
+      this->looping_sound.set(*this, nullptr);
+      this->activation_sound.set(*this, nullptr);
+      this->water_type.set(*this, nullptr);
+      this->interact_keyword.set(*this, nullptr);
       this->activation_verb.reset();
       this->activator_flags = 0;
    }

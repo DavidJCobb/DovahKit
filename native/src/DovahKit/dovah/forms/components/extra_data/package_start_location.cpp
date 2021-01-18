@@ -21,7 +21,7 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->unk10);
       subrecord.close();
    }
-   basic_extra_data* package_start_location::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* package_start_location::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new package_start_location;
       clone->unk00 = this->unk00;
       clone->unk04 = this->unk04;

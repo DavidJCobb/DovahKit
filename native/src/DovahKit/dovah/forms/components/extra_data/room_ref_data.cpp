@@ -120,7 +120,7 @@ namespace dovah::loaded_forms::components::extra {
          }
       }
    }
-   basic_extra_data* room_ref_data::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* room_ref_data::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new room_ref_data;
       clone->flags = this->flags;
       clone->pad02 = this->pad02;
@@ -135,7 +135,7 @@ namespace dovah::loaded_forms::components::extra {
       //
       return clone;
    }
-   void room_ref_data::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void room_ref_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->lighting_template.clear_if(my_owner, target);
       this->imagespace.clear_if(my_owner, target);
       if (!this->lighting_template)

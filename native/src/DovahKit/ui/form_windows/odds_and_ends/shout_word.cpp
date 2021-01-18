@@ -67,5 +67,5 @@ void FormShoutWordEditor::save_form_id(dovah::form_reference_t& target, dovah::b
    this->save_form_id(target, value);
 }
 void FormShoutWordEditor::save_form_id(dovah::form_reference_t& target, dovah::form_stub* value) {
-   target.set(*this->stub, value);
+   target.set(*this->form, value);
 }

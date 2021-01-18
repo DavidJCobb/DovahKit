@@ -81,12 +81,10 @@ namespace dovah::loaded_forms {
       auto copy = dynamic_cast<ObjectReference*>(out);
       if (!copy)
          return false;
-      assert(copy->stub);
-      auto& clone_stub = *copy->stub;
-      copy->extra_data.clone_from(this->extra_data, clone_stub);
-      copy->script_data.clone_from(this->script_data, clone_stub);
-      copy->base_form.set(clone_stub, this->base_form);
-      copy->is_open = this->is_open;
+      copy->extra_data.clone_from(this->extra_data, *copy);
+      copy->script_data.clone_from(this->script_data, *copy);
+      copy->base_form.set(*copy, this->base_form);
+      copy->is_open  = this->is_open;
       copy->position = this->position;
       copy->rotation = this->rotation;
       return true;
@@ -115,15 +113,15 @@ namespace dovah::loaded_forms {
       return true;
    }
    void ObjectReference::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->script_data.sever_outbound_references_to(other, *this->stub);
-      this->extra_data.sever_outbound_references_to(other, *this->stub);
+      this->script_data.sever_outbound_references_to(other, *this);
+      this->extra_data.sever_outbound_references_to(other, *this);
       //
-      this->base_form.clear_if(*this->stub, other);
+      this->base_form.clear_if(*this, other);
    }
    void ObjectReference::_clear_impl() noexcept {
-      this->extra_data.clear(*this->stub);
-      this->script_data.clear(*this->stub);
-      this->base_form.set(*this->stub, nullptr);
+      this->extra_data.clear(*this);
+      this->script_data.clear(*this);
+      this->base_form.set(*this, nullptr);
       this->is_open = false;
       //this->position = { 0, 0, 0 }; // don't reset this as that might change the parent cell
       this->rotation = { 0, 0, 0 };
@@ -137,7 +135,7 @@ namespace dovah::loaded_forms {
       assert(player_ref && "ObjectReference::_friendly_delete_impl: Why is the PlayerRef form not reachable by ID?");
       auto* extra = this->extra_data.get_or_create<components::extra::enable_state_parent>(components::extra_data_type::enable_state_parent);
       extra->flags = components::extra::enable_state_parent::flag::opposite;
-      extra->ref.set(*this->stub, player_ref);
+      extra->ref.set(*this, player_ref);
 
       //
       // TODO: xEdit uses -30000 as its preferred Z-coordinate, and it makes any actors that 

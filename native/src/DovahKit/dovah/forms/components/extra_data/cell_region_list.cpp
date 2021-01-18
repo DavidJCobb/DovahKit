@@ -36,7 +36,7 @@ namespace dovah::loaded_forms::components::extra {
          }
       }
    }
-   basic_extra_data* cell_region_list::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* cell_region_list::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new cell_region_list;
       //
       size_t size = this->regions.size();
@@ -46,7 +46,7 @@ namespace dovah::loaded_forms::components::extra {
       //
       return clone;
    }
-   void cell_region_list::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void cell_region_list::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       auto& list = this->regions;
       for (auto& id : list)
          id.clear_if(my_owner, target);

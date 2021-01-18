@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->value);
       subrecord.close();
    }
-   basic_extra_data* health::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* health::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new health;
       clone->value = this->value;
       return clone;

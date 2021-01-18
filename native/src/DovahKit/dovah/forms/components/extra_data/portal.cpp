@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.write(this->rotation.d);
       subrecord.close();
    }
-   basic_extra_data* portal::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* portal::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new portal;
       clone->width    = this->width;
       clone->height   = this->height;

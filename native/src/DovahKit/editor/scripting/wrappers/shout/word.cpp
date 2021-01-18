@@ -55,7 +55,7 @@ namespace {
          if (!word)
             return 0;
          self.before_edit();
-         word->word_of_power.set(*self.stub, other->stub);
+         word->word_of_power.set(*self.stub->form, other->stub);
          self.after_edit();
          return 0;
       }
@@ -69,7 +69,7 @@ namespace {
          if (!word)
             return 0;
          self.before_edit();
-         word->spell.set(*self.stub, other->stub);
+         word->spell.set(*self.stub->form, other->stub);
          self.after_edit();
          return 0;
       }

@@ -467,6 +467,13 @@
 //
 //                             - A "clear all data" function feels neater.
 //
+//                                - Wouldn't doing it in _clone_impl be easier to 
+//                                  maintain, though? We'd be grouping form ops 
+//                                  together into one place.
+//
+//                                   = bro we JUST wrote clear functions for all 
+//                                     form types
+//
 //                       - Class
 //
 //                       - Basic Data

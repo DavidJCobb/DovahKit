@@ -10,7 +10,7 @@ namespace {
 }
 
 namespace dovah::loaded_forms {
-   void Worldspace::large_reference_t::clone_from(const large_reference_t& original, form_stub& my_owner) noexcept {
+   void Worldspace::large_reference_t::clone_from(const large_reference_t& original, loaded_forms::Form& my_owner) noexcept {
       if (!this->entries.empty()) {
          for (auto& entry : this->entries) {
             for (auto& ref : entry.refs)
@@ -38,7 +38,7 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   void Worldspace::large_reference_t::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void Worldspace::large_reference_t::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       bool removals_pending = false;
       for (auto& entry : this->entries) {
          bool edited = false;
@@ -78,7 +78,7 @@ namespace dovah::loaded_forms {
          );
       }
    }
-   void Worldspace::large_reference_t::clear(form_stub& my_owner) {
+   void Worldspace::large_reference_t::clear(loaded_forms::Form& my_owner) {
       for (auto& entry : this->entries)
          for (auto& ref : entry.refs)
             ref.form.set(my_owner, nullptr);
@@ -336,44 +336,43 @@ namespace dovah::loaded_forms {
    void Worldspace::setup(const file_load_order& load_order) noexcept {
       auto* default_water = load_order.get_form(hardcoded_form_ids::DefaultWater);
       //
-      this->water_type.set(*this->stub, default_water);
-      this->water_type_lod.set(*this->stub, default_water);
+      this->water_type.set(*this, default_water);
+      this->water_type_lod.set(*this, default_water);
    }
    bool Worldspace::_clone_impl(Form* out) const noexcept {
       auto* copy = dynamic_cast<Worldspace*>(out);
       if (!copy)
          return false;
-      auto& clone = *copy;
-      clone.large_references.clone_from(this->large_references, *clone.stub);
-      clone.name = this->name;
-      clone.max_height_data = this->max_height_data;
-      clone.center_cell_coordinates = this->center_cell_coordinates;
-      clone.climate.set(*clone.stub, this->climate);
-      clone.lighting_template.set(*clone.stub, this->lighting_template);
-      clone.encounter_zone.set(*clone.stub, this->encounter_zone);
-      clone.location.set(*clone.stub, this->location);
-      clone.water_type.set(*clone.stub, this->water_type);
-      clone.water_type_lod.set(*clone.stub, this->water_type_lod);
-      clone.lod_water_height = this->lod_water_height;
-      clone.land_data = this->land_data;
-      clone.parent.form.set(*clone.stub, this->parent.form);
-      clone.parent.flags = this->parent.flags;
-      clone.map_icon = this->map_icon;
-      clone.cloud_model.clone_from(this->cloud_model, *clone.stub);
-      clone.map_data = this->map_data;
-      clone.map_offset_data = this->map_offset_data;
-      clone.distant_lod_multiplier = this->distant_lod_multiplier;
-      clone.world_flags = this->world_flags;
-      clone.bounds = this->bounds;
-      clone.music.set(*clone.stub, this->music);
-      clone.tree_canopy_shadow = this->tree_canopy_shadow;
-      clone.water_noise_texture = this->water_noise_texture;
-      clone.hd_lod_diffuse_texture = this->hd_lod_diffuse_texture;
-      clone.hd_lod_normal_texture = this->hd_lod_normal_texture;
-      clone.offset_data = this->offset_data;
-      clone.has_object_bounds = this->has_object_bounds;
-      clone.object_bounds = this->object_bounds;
-      clone.script_data.clone_from(this->script_data, *clone.stub);
+      copy->large_references.clone_from(this->large_references, *copy);
+      copy->name = this->name;
+      copy->max_height_data = this->max_height_data;
+      copy->center_cell_coordinates = this->center_cell_coordinates;
+      copy->climate.set(*copy, this->climate);
+      copy->lighting_template.set(*copy, this->lighting_template);
+      copy->encounter_zone.set(*copy, this->encounter_zone);
+      copy->location.set(*copy, this->location);
+      copy->water_type.set(*copy, this->water_type);
+      copy->water_type_lod.set(*copy, this->water_type_lod);
+      copy->lod_water_height = this->lod_water_height;
+      copy->land_data = this->land_data;
+      copy->parent.form.set(*copy, this->parent.form);
+      copy->parent.flags = this->parent.flags;
+      copy->map_icon = this->map_icon;
+      copy->cloud_model.clone_from(this->cloud_model, *copy);
+      copy->map_data = this->map_data;
+      copy->map_offset_data = this->map_offset_data;
+      copy->distant_lod_multiplier = this->distant_lod_multiplier;
+      copy->world_flags = this->world_flags;
+      copy->bounds = this->bounds;
+      copy->music.set(*copy, this->music);
+      copy->tree_canopy_shadow = this->tree_canopy_shadow;
+      copy->water_noise_texture = this->water_noise_texture;
+      copy->hd_lod_diffuse_texture = this->hd_lod_diffuse_texture;
+      copy->hd_lod_normal_texture = this->hd_lod_normal_texture;
+      copy->offset_data = this->offset_data;
+      copy->has_object_bounds = this->has_object_bounds;
+      copy->object_bounds = this->object_bounds;
+      copy->script_data.clone_from(this->script_data, *copy);
       return true;
    }
    bool Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -545,36 +544,36 @@ namespace dovah::loaded_forms {
       return true;
    }
    void Worldspace::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->script_data.sever_outbound_references_to(other, *this->stub);
+      this->script_data.sever_outbound_references_to(other, *this);
       //
-      this->climate.clear_if(*this->stub, other);
-      this->lighting_template.clear_if(*this->stub, other);
-      this->encounter_zone.clear_if(*this->stub, other);
-      this->location.clear_if(*this->stub, other);
-      this->water_type.clear_if(*this->stub, other);
-      this->water_type_lod.clear_if(*this->stub, other);
-      this->parent.form.clear_if(*this->stub, other);
-      this->music.clear_if(*this->stub, other);
+      this->climate.clear_if(*this, other);
+      this->lighting_template.clear_if(*this, other);
+      this->encounter_zone.clear_if(*this, other);
+      this->location.clear_if(*this, other);
+      this->water_type.clear_if(*this, other);
+      this->water_type_lod.clear_if(*this, other);
+      this->parent.form.clear_if(*this, other);
+      this->music.clear_if(*this, other);
    }
    void Worldspace::_clear_impl() noexcept {
-      this->large_references.clear(*this->stub);
+      this->large_references.clear(*this);
       this->name.reset();
       this->max_height_data.clear();
       this->center_cell_coordinates = { 0, 0 };
-      this->climate.set(*this->stub, nullptr);
-      this->lighting_template.set(*this->stub, nullptr);
-      this->encounter_zone.set(*this->stub, nullptr);
-      this->location.set(*this->stub, nullptr);
-      this->music.set(*this->stub, nullptr);
-      this->water_type.set(*this->stub, nullptr);
-      this->water_type_lod.set(*this->stub, nullptr);
+      this->climate.set(*this, nullptr);
+      this->lighting_template.set(*this, nullptr);
+      this->encounter_zone.set(*this, nullptr);
+      this->location.set(*this, nullptr);
+      this->music.set(*this, nullptr);
+      this->water_type.set(*this, nullptr);
+      this->water_type_lod.set(*this, nullptr);
       this->lod_water_height = 0.0F;
       this->land_data.default_land_height  = 0.0F;
       this->land_data.default_water_height = 0.0F;
-      this->parent.form.set(*this->stub, nullptr);
+      this->parent.form.set(*this, nullptr);
       this->parent.flags = 0;
       this->map_icon.clear();
-      this->cloud_model.clear(*this->stub);
+      this->cloud_model.clear(*this);
       this->map_data.usable_dimensions     = { 0, 0 };
       this->map_data.coordinates.northwest = { 0, 0 };
       this->map_data.coordinates.southeast = { 0, 0 };
@@ -596,6 +595,6 @@ namespace dovah::loaded_forms {
       //
       this->has_object_bounds = false;
       this->object_bounds.clear();
-      this->script_data.clear(*this->stub);
+      this->script_data.clear(*this);
    }
 }

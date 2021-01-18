@@ -108,13 +108,13 @@ namespace dovah::loaded_forms::components {
       if (!this->texture_swaps.empty())
          this->save(record.open_next_subrecord(signature_swap), intfc);
    }
-   void model::clear(form_stub& my_owner) {
+   void model::clear(loaded_forms::Form& my_owner) {
       this->model_path.clear();
       this->texture_hashes.data.clear();
       for (auto& entry : this->texture_swaps)
          entry.texture_set.set(my_owner, nullptr);
    }
-   void model::clone_from(const model& other, form_stub& my_owner) noexcept {
+   void model::clone_from(const model& other, loaded_forms::Form& my_owner) noexcept {
       this->model_path     = other.model_path;
       this->texture_hashes = other.texture_hashes;
       //
@@ -133,7 +133,7 @@ namespace dovah::loaded_forms::components {
          entry.texture_set.set(my_owner, from.texture_set);
       }
    }
-   void model::sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept {
+   void model::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       for (auto& entry : this->texture_swaps)
          entry.texture_set.clear_if(my_owner, target);
    }

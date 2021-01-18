@@ -84,7 +84,7 @@ namespace {
             list.resize(i + 1);
          }
          self.before_edit();
-         list[i].set(*form->stub, target);
+         list[i].set(*form, target);
          if (!target && i == size - 1) {
             //
             // TODO: Setting a FormList entry to (nil) should remove the entry, shortening the 

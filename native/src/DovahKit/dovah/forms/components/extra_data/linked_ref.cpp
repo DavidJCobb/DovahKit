@@ -36,13 +36,13 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          uib.add_outbound_reference(formID);
    }
-   basic_extra_data* linked_ref::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* linked_ref::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new linked_ref;
       clone->keyword.set(clone_owner, this->keyword);
       clone->ref.set(clone_owner, this->ref);
       return clone;
    }
-   void linked_ref::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void linked_ref::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       this->keyword.clear_if(my_owner, target);
       this->ref.clear_if(my_owner, target);
    }

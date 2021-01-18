@@ -92,9 +92,9 @@ namespace dovah::loaded_forms::components {
       bool read(tes_record_reader&, load_order_interfaces::form_load&); // assumes we've already opened a CTDA subrecord
       static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
       void save(tes_record_writer&, load_order_interfaces::form_save&); // call with no subrecord open
-      void clone_from(const condition& original, form_stub& owner_of_clone) noexcept;
-      void sever_outbound_references_to(form_stub& target, form_stub& my_owner) noexcept;
-      void clear(form_stub& my_owner);
+      void clone_from(const condition& original, loaded_forms::Form& owner_of_clone) noexcept;
+      void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+      void clear(loaded_forms::Form& my_owner);
       //
       void to_string(std::string& out) const;
    };

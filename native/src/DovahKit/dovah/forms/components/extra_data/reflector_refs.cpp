@@ -31,7 +31,7 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          uib.add_outbound_reference(formID);
    }
-   basic_extra_data* reflector_refs::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* reflector_refs::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new reflector_refs;
       //
       size_t size = this->entries.size();
@@ -45,7 +45,7 @@ namespace dovah::loaded_forms::components::extra {
       //
       return clone;
    }
-   void reflector_refs::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void reflector_refs::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       auto& list = this->entries;
       for (auto& entry : list)
          entry.target.clear_if(my_owner, target);

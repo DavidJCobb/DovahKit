@@ -165,16 +165,16 @@ namespace dovah::loaded_forms {
       copy->name = this->name;
       copy->cell_flags = this->cell_flags;
       copy->land_flags = this->land_flags;
-      copy->extra_data.clone_from(this->extra_data, *copy->stub);
+      copy->extra_data.clone_from(this->extra_data, *copy);
       copy->interior.lighting = this->interior.lighting;
-      copy->interior.lighting_template_ID.set(*copy->stub, this->interior.lighting_template_ID);
+      copy->interior.lighting_template_ID.set(*copy, this->interior.lighting_template_ID);
       copy->exterior.occlusion_data = this->exterior.occlusion_data;
       copy->exterior.max_height_data = this->exterior.max_height_data;
       copy->water.height = this->water.height;
       copy->water.noise_texture = this->water.noise_texture;
       copy->has_object_bounds = this->has_object_bounds;
       copy->object_bounds = this->object_bounds;
-      copy->script_data.clone_from(this->script_data, *copy->stub);
+      copy->script_data.clone_from(this->script_data, *copy);
       return true;
    }
    bool Cell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -239,20 +239,20 @@ namespace dovah::loaded_forms {
       this->name.reset();
       this->cell_flags = 0;
       this->land_flags = 0;
-      this->extra_data.clear(*this->stub);
-      this->interior.lighting_template_ID.set(*this->stub, nullptr);
+      this->extra_data.clear(*this);
+      this->interior.lighting_template_ID.set(*this, nullptr);
       this->exterior.max_height_data.clear();
       this->exterior.occlusion_data.clear();
       this->water.height = 0.0F;
       this->water.noise_texture.clear();
       this->has_object_bounds = false;
       this->object_bounds.clear();
-      this->script_data.clear(*this->stub);
+      this->script_data.clear(*this);
    }
    void Cell::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->extra_data.sever_outbound_references_to(other, *this->stub);
-      this->script_data.sever_outbound_references_to(other, *this->stub);
+      this->extra_data.sever_outbound_references_to(other, *this);
+      this->script_data.sever_outbound_references_to(other, *this);
       //
-      this->interior.lighting_template_ID.clear_if(*this->stub, other);
+      this->interior.lighting_template_ID.clear_if(*this, other);
    }
 }

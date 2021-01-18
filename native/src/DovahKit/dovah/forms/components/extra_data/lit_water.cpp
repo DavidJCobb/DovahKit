@@ -28,7 +28,7 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.read(formID) && formID)
          uib.add_outbound_reference(formID);
    }
-   basic_extra_data* lit_water::clone(form_stub& clone_owner) const noexcept {
+   basic_extra_data* lit_water::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new lit_water;
       //
       size_t size = this->refs.size();
@@ -38,7 +38,7 @@ namespace dovah::loaded_forms::components::extra {
       //
       return clone;
    }
-   void lit_water::sever_outbound_references_to(form_stub& target, form_stub& my_owner) {
+   void lit_water::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) {
       auto& list = this->refs;
       for (auto& id : list)
          id.clear_if(my_owner, target);
