@@ -335,7 +335,15 @@ namespace dovah {
          // load process, to set up form-to-form references that are present in hardcoded data 
          // (in lieu of having a file to load this data from).
          //
+         // One other acceptable use is if the UI needs to wholly duplicate form data to work 
+         // with and only commit changes when the user clicks some "save" button. In those 
+         // cases it may be easier to use loaded-form structures that include (form_reference_t) 
+         // and just use (unmanaged_set) to...
+         //
+         // Look, just don't call this directly on an actual form's actual data, okay?
+         //
          void unmanaged_set(form_stub* set_to); // FOR INTERNAL USE ONLY
+         void unmanaged_clear_if(form_stub&); // refer to documentation for (unmanaged_set)
          
       protected:
          inline form_reference_t& operator=(form_stub* other) { this->stub = other; return *this; };

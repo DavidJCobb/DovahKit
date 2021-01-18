@@ -446,6 +446,10 @@ namespace dovah {
    void form_reference_t::unmanaged_set(form_stub* set_to) {
       this->stub = set_to;
    }
+   void form_reference_t::unmanaged_clear_if(form_stub& clear_if) {
+      if (this->stub == &clear_if)
+         this->unmanaged_set(nullptr);
+   }
    //
    base_form_reference_t::base_form_reference_t() : form_reference_t(use_info_entry::flag::object_reference) {};
    base_form_reference_t::base_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::object_reference, s) {};

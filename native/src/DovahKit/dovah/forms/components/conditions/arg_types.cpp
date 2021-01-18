@@ -72,7 +72,7 @@ namespace dovah::loaded_forms::components {
       namespace arg_types {
          arg_type      None            = arg_type("None", arg_underlying_type::none);
          arg_form_type Actor           = arg_form_type("Actor", { form_type::actor }, true);
-         arg_form_type ActorBase       = arg_form_type("actor_base", { form_type::actor_base });
+         arg_form_type ActorBase       = arg_form_type("ActorBase", { form_type::actor_base });
          arg_enum_type ActorValue      = arg_enum_type("ActorValue", 0, {
             "Aggression",
             "Confidence",

@@ -428,6 +428,36 @@
 //
 //                    - Quest UI
 //
+//                       = THIS IS MUCH MORE COMPLICATED THAN WE FIRST THOUGHT, 
+//                         SINCE WE DON'T LIVE-UPDATE THE FORM. IN PRACTICE, WE 
+//                         NEED THE ABILITY TO CREATE A TEMPORARY CLONE OF A FORM 
+//                         FOR EDITING. LIKE, AN ENTIRE FORM. THE ONLY OTHER 
+//                         ALTERNATIVE IS TO MANUALLY WRITE "MIRROR" CLASSES FOR 
+//                         EVERY SINGLE PART OF A QUEST FORM, INCLUDING CONDITIONS, 
+//                         WHICH... WELL, WE'RE TRYING THAT, AND IT'S NOT GOING WELL 
+//                         AT ALL.
+//
+//                          - Loaded-form data has to have an owning form stub, and 
+//                            all set operations for form_reference_t must use that 
+//                            stub to update use info. This means that temporary 
+//                            clones of a form will need a dummy form stub, and that 
+//                            the use info functions on form_stub will need to be 
+//                            coded to act as no-ops when called on a dummy.
+//
+//                          - For creating a temporary clone, we can leverage the 
+//                            existing Form::_clone_impl function.
+//
+//                          - We can also use Form::_clone_impl to write the contents 
+//                            of the temporary clone back overtop the original, in 
+//                            order to "commit" the changes that the temporary clone 
+//                            holds. However, we'd need to first clear all data in 
+//                            the original form. We can write a function explicitly 
+//                            for that, or we can modify the _clone_impl functions 
+//                            to (likely redundantly) clear all data on the form 
+//                            that is being cloned over.
+//
+//                             - A "clear all data" function feels neater.
+//
 //                       - Class
 //
 //                       - Basic Data
