@@ -267,6 +267,7 @@
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\formlist_listview.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
+    <ClCompile Include="ui\form_windows\quest.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
@@ -525,6 +526,7 @@
     <QtMoc Include="ui\main_window\script_window.h" />
     <QtMoc Include="ui\form_windows\formlist.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\formlist_listview.h" />
+    <QtMoc Include="ui\form_windows\quest.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />

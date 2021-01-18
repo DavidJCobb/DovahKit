@@ -645,6 +645,9 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\property.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\quest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1540,6 +1543,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\formlist_listview.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

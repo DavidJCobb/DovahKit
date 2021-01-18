@@ -70,9 +70,10 @@ void FormListListviewModelItem::updateFromStub() {
 
 FormListListviewModel::FormListListviewModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &FormListListviewModel::formDeletionImminent);
-   QObject::connect(&editor, &DovahKitCore::formRenumbered,       this, &FormListListviewModel::formRenumbered);
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &FormListListviewModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent,   this, &FormListListviewModel::formDeletionImminent);
+   QObject::connect(&editor, &DovahKitCore::formRenumbered,         this, &FormListListviewModel::formRenumbered);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,    this, &FormListListviewModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, &FormListListviewModel::formsRenumberedEnMasse);
 }
 
 void FormListListviewModel::removeStub(item_type* item) {
@@ -82,14 +83,51 @@ void FormListListviewModel::removeStub(item_type* item) {
 void FormListListviewModel::updateStub(item_type* item) {
    item->updateFromStub();
    //
-   auto i = this->children.indexOf(item);
-   auto root = QModelIndex();
+   auto i     = this->children.indexOf(item);
+   auto root  = QModelIndex();
    auto start = this->index(i, 0, root);
-   auto end = this->index(i, this->columnCount(root), root);
+   auto end   = this->index(i, this->columnCount(root), root);
    emit dataChanged(start, end);
+}
+void FormListListviewModel::_pruneItems(std::function<bool(const item_type&)> functor) {
+   bool any_removed = false;
+   for (auto*& item : this->children) {
+      if (!item) {
+         any_removed = true;
+         continue;
+      }
+      if (functor(*item)) {
+         delete item;
+         item = nullptr;
+         any_removed = true;
+      }
+   }
+   //
+   // The model system makes pruning the list a pain in the neck...
+   //
+   if (!any_removed)
+      return;
+   QModelIndex dummy;
+   int size = this->children.size();
+   for (int i = 0; i < size; ++i) {
+      auto* item = this->children[i];
+      if (!item) {
+         this->beginRemoveRows(dummy, i, i);
+         this->children.remove(i);
+         --size;
+         --i;
+         this->endRemoveRows();
+      }
+   }
 }
 
 void FormListListviewModel::addStub(dovah::form_stub* stub, bool queued) {
+   if (!stub && !this->allow_gaps)
+      return;
+   if (stub && !this->allowed_form_types.isEmpty()) {
+      if (!this->allowed_form_types.contains(stub->formType))
+         return;
+   }
    auto item = new item_type(stub);
    if (queued) {
       this->queued_additions.push_back(item);
@@ -164,6 +202,24 @@ void FormListListviewModel::removeStubs(QModelIndexList l) {
       indices.push_back(i.row());
    this->removeStubs(indices);
 }
+void FormListListviewModel::setAllowedFormTypes(QVector<form_type_t> l) {
+   this->allowed_form_types = l;
+   if (l.isEmpty())
+      return;
+   this->_pruneItems([this](const item_type& item) {
+      if (!item.stub)
+         return !this->allow_gaps;
+      return !this->allowed_form_types.contains(item.stub->formType);
+   });
+}
+void FormListListviewModel::setAllowGaps(bool g) {
+   this->allow_gaps = g;
+   if (g)
+      return;
+   this->_pruneItems([this](const item_type& item) {
+      return !item.stub;
+   });
+}
 QVector<dovah::form_stub*> FormListListviewModel::stubs() const noexcept {
    QVector<dovah::form_stub*> s;
    s.reserve(this->children.size());
@@ -193,6 +249,15 @@ void FormListListviewModel::formRenumbered(const dovah::form_stub* stub, dovah::
          return;
       }
    }
+}
+void FormListListviewModel::formsRenumberedEnMasse() {
+   //
+   // We don't store enough information to check which list items have had their 
+   // form IDs changed, so just blindly update the form IDs for all list items.
+   //
+   QModelIndex upper_left  = this->index(0, 2, QModelIndex());
+   QModelIndex lower_right = this->index(this->children.size() - 1, 2, QModelIndex());
+   emit dataChanged(upper_left, lower_right);
 }
 //
 QModelIndex FormListListviewModel::index(int row, int column, const QModelIndex& parent) const {
@@ -377,10 +442,16 @@ bool FormListListviewModel::dropMimeData(const QMimeData* data, Qt::DropAction a
    //
    auto& editor = DovahKitCore::get();
    QVector<item_type*> queued;
+   queued.reserve(formIDs.size());
    for (auto id : formIDs) {
       auto* stub = editor.get_form(id);
-      if (stub)
+      if (stub) {
+         if (!this->allowed_form_types.isEmpty()) {
+            if (!this->allowed_form_types.contains(stub->formType))
+               continue;
+         }
          queued.push_back(new item_type(stub));
+      }
    }
    auto first_inserted = row;
    auto last_inserted  = first_inserted + queued.size() - 1;

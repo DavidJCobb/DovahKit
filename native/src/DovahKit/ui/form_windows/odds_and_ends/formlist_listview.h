@@ -30,18 +30,24 @@ class FormListListviewModelItem {
 class FormListListviewModel : public QAbstractTableModel {
    Q_OBJECT
    public:
-      using item_type = FormListListviewModelItem;
-      using form_stub = dovah::form_stub;
+      using item_type   = FormListListviewModelItem;
+      using form_stub   = dovah::form_stub;
+      using form_type_t = dovah::form_type_t;
    protected:
-      QVector<item_type*> children;
-      QVector<item_type*> queued_additions;
+      QVector<item_type*>  children;
+      QVector<item_type*>  queued_additions;
+      QVector<form_type_t> allowed_form_types; // if empty, then no limit
+      bool allow_gaps = true;
       //
+      void addStub(dovah::form_stub*, bool queued);
       void removeStub(item_type*);
       void updateStub(item_type*);
+      void _pruneItems(std::function<bool(const item_type&)>);
       //
    protected slots:
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
+      void formsRenumberedEnMasse();
       //
    public:
       FormListListviewModel(QObject* parent = nullptr);
@@ -49,11 +55,16 @@ class FormListListviewModel : public QAbstractTableModel {
          this->clear();
       }
       
-      void addStub(dovah::form_stub*, bool queued = false); // takes care of all appropriate filtering based on (relationship_mode) and so on
+      inline void addStub(dovah::form_stub* s) { this->addStub(s, false); }
+      inline bool allowGaps() const noexcept { return this->allow_gaps; }
+      inline const QVector<form_type_t>& allowedFormTypes() const noexcept { return this->allowed_form_types; }
       void moveStubs(QModelIndexList, int down);
       void removeStub(int index);
       void removeStubs(QVector<int> indices);
       void removeStubs(QModelIndexList);
+      inline void reserve(int i) { this->children.reserve(i); }
+      void setAllowedFormTypes(QVector<form_type_t>);
+      void setAllowGaps(bool);
       QVector<dovah::form_stub*> stubs() const noexcept;
       
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
@@ -77,8 +88,6 @@ class FormListListviewModel : public QAbstractTableModel {
       virtual QStringList mimeTypes() const override;
       Qt::DropActions supportedDropActions() const;
       
-      inline void reserve(int i) { this->children.reserve(i); }
-      
    public slots:
       void clear();
 };
@@ -99,6 +108,10 @@ class FormListListview : public QTableView {
       //
       void moveSelected(int down); // negative values move up
       void removeSelected();
+      //
+      inline model_type* fullModel() {
+         return (model_type*)this->model();
+      }
       //
    protected:
       const dovah::form_stub* target = nullptr;

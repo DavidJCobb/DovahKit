@@ -11,23 +11,19 @@ FormDialogFormList::FormDialogFormList(dovah::form_stub* stub, QWidget* parent) 
    this->ui.forms->setAcceptDrops(true);
    //
    this->load();
-   //
-   auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, &FormDialogFormList::rebuildList);
-}
-void FormDialogFormList::rebuildList() {
-   auto* widget = this->ui.forms;
-   auto& list   = this->form->contents;
-   widget->clear();
-   widget->reserve(list.size());
-   for (auto& ref : list)
-      widget->addStub(ref.get_form_stub());
 }
 void FormDialogFormList::_load_impl() {
    auto& editor = DovahKitCore::get();
    //
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-   this->rebuildList();
+   {
+      auto* widget = this->ui.forms;
+      auto& list   = this->form->contents;
+      widget->clear();
+      widget->reserve(list.size());
+      for (auto& ref : list)
+         widget->addStub(ref.get_form_stub());
+   }
 }
 void FormDialogFormList::_save_impl() {
    auto& editor = DovahKitCore::get();

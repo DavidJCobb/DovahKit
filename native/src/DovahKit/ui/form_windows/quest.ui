@@ -201,7 +201,7 @@
         </widget>
        </item>
        <item row="4" column="0" colspan="5">
-        <layout class="QHBoxLayout" name="horizontalLayout">
+        <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
@@ -212,11 +212,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>TODO: GLOBAL FORM LIST HERE</string>
-             </property>
-            </widget>
+            <widget class="FormListListview" name="textDisplayGlobals"/>
            </item>
           </layout>
          </item>
@@ -570,6 +566,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FormListListview</class>
+   <extends>QTableView</extends>
+   <header>odds_and_ends/formlist_listview.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>editorID</tabstop>

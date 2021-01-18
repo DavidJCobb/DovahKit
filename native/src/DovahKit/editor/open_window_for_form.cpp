@@ -6,6 +6,7 @@
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/formlist.h"
+#include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
@@ -73,6 +74,9 @@ void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
          break;
       case dovah::form_type::formlist:
          opened = new FormDialogFormList(stub, parent);
+         break;
+      case dovah::form_type::quest:
+         opened = new FormDialogQuest(stub, parent);
          break;
       case dovah::form_type::shout:
          opened = new FormDialogShout(stub, parent);
