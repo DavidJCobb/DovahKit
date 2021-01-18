@@ -457,5 +457,21 @@ namespace dovah {
       form_reference_t::set(owner, set_to.stub);
       this->padding = set_to.padding;
    }
+
+   void clear_from_form_reference_list(std::vector<form_reference_t>& list, form_stub& target, form_stub& owner) {
+      bool edits = false;
+      for (auto& id : list) {
+         if (id == &target) {
+            id.set(owner, nullptr);
+            edits = true;
+         }
+      }
+      if (edits) {
+         list.erase(
+            std::remove_if(list.begin(), list.end(), [](const form_reference_t& id) { return id == nullptr; }),
+            list.end()
+         );
+      }
+   }
    #pragma endregion
 }

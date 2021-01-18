@@ -4,13 +4,13 @@
 
 namespace dovah::loaded_forms::components {
    void container_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
-      if (subrecord.signature() == 'CNTO') {
+      if (subrecord.signature() == 'CNTO') { // CoNTainer Object
          auto& entry = this->entries.emplace_back();
          subrecord.unchecked_read(entry.item);
          subrecord.unchecked_read(entry.count);
          return;
       }
-      if (subrecord.signature() == 'COED') {
+      if (subrecord.signature() == 'COED') { // Container Object Extra Data
          //
          // There's a formID followed by an integer/formID union whose type depends on the form 
          // type of the formID preceding it. Fortunately, we load all form stubs before we load 
@@ -18,19 +18,19 @@ namespace dovah::loaded_forms::components {
          //
          if (!this->entries.size())
             return;
-         auto& entry = *this->entries.rbegin();
-         if (subrecord.read(entry.owner)) {
-            auto ownerStub = subrecord.lookup_form_by_id(entry.owner);
+         auto& entry = this->entries.back();
+         if (subrecord.read(entry.ownership.owner)) {
+            auto ownerStub = subrecord.lookup_form_by_id(entry.ownership.owner);
             intfc.log_load_warning(
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::faction }, intfc.target_stub, entry.owner)
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::faction }, intfc.target_stub, entry.ownership.owner)
             );
             if (ownerStub && ownerStub->formType == form_type::actor_base) {
-               subrecord.unchecked_read(entry.global);
+               subrecord.unchecked_read(entry.ownership.global);
                intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, entry.global)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, entry.ownership.global)
                );
             } else {
-               subrecord.unchecked_read(entry.factionRank);
+               subrecord.unchecked_read(entry.ownership.faction_rank);
                //
                if (ownerStub && ownerStub->formType != form_type::faction) {
                   detailed_notice warning;
@@ -41,7 +41,8 @@ namespace dovah::loaded_forms::components {
                   intfc.log_load_warning(warning);
                }
             }
-            subrecord.unchecked_read(entry.condition);
+            entry.condition.present = true;
+            subrecord.unchecked_read(entry.condition.value);
          }
          return;
       }
@@ -56,6 +57,34 @@ namespace dovah::loaded_forms::components {
       #else
          assert(false && "ContainerData::load should only be called for COCT, CNTO, and COED subrecords!");
       #endif
+   }
+   bool container_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      if (this->entries.empty())
+         return true;
+      auto& COCT = record.open_next_subrecord('COCT');
+      COCT.write(uint32_t(this->entries.size()));
+      COCT.close();
+      for (auto& entry : this->entries) {
+         auto& CNTO = record.open_next_subrecord('CNTO');
+         CNTO.write(entry.item);
+         CNTO.write(entry.count);
+         CNTO.close();
+         if (entry.ownership.owner || entry.condition.present) {
+            auto& COED = record.open_next_subrecord('COED');
+            COED.write(entry.ownership.owner);
+            if (auto* stub = entry.ownership.owner.get_form_stub()) {
+               if (stub->formType == form_type::actor_base) {
+                  COED.write(entry.ownership.global);
+               } else {
+                  COED.write(entry.ownership.faction_rank);
+               }
+            } else {
+               COED.write(uint32_t(0));
+            }
+            COED.write(entry.condition.value);
+            COED.close();
+         }
+      }
    }
    /*static*/ void container_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
@@ -104,9 +133,9 @@ namespace dovah::loaded_forms::components {
          //
          entry.item.set(my_owner, from.item);
          entry.count = from.count;
-         entry.owner.set(my_owner, from.owner);
-         entry.factionRank = from.factionRank;
-         entry.global.set(my_owner, from.global);
+         entry.ownership.owner.set(my_owner, from.ownership.owner);
+         entry.ownership.faction_rank = from.ownership.faction_rank;
+         entry.ownership.global.set(my_owner, from.ownership.global);
          entry.condition = from.condition;
       }
    }
@@ -114,8 +143,8 @@ namespace dovah::loaded_forms::components {
       bare_form_id_t formID = target.formID;
       for (auto& entry : this->entries) {
          entry.item.clear_if(my_owner, target);
-         entry.owner.clear_if(my_owner, target);
-         entry.global.clear_if(my_owner, target);
+         entry.ownership.owner.clear_if(my_owner, target);
+         entry.ownership.global.clear_if(my_owner, target);
       }
    }
 }

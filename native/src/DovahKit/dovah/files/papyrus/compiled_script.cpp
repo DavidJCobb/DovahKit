@@ -44,30 +44,20 @@ namespace dovah {
 
    void compiled_papyrus_script::_read(void* to, size_t s) {
       assert(to);
-      if (s + this->file._pos >= this->file._size)
+      if (s + this->file._pos > this->file._size)
          throw unexpected_eof_exception(this->file._pos, s);
       const void* target = (void*)((std::intptr_t)this->file._buffer + this->file._pos);
       memcpy(to, target, s);
-      if (this->_needs_endian_swap && s > 1) {
-         auto* b = (uint8_t*)to;
-         for (size_t i = 0; i < s / 2; ++i) {
-            auto&   x = *b;
-            auto&   y = *(b + s - i);
-            uint8_t t = x;
-            x = y;
-            y = t;
-         }
-      }
       this->file._pos += s;
    }
-   void compiled_papyrus_script::_read(std::wstring& s) {
+   void compiled_papyrus_script::_read(std::string& s) {
       uint16_t size;
       this->_read(size);
       s.resize(size);
       for (auto& c : s)
          this->_read(c);
    }
-   void compiled_papyrus_script::_read_string_index(std::wstring& s) {
+   void compiled_papyrus_script::_read_string_index(std::string& s) {
       uint16_t si = 0;
       this->_read(si);
       s.clear();
@@ -92,8 +82,8 @@ namespace dovah {
       this->_read(data.bit_index);
    }
    void compiled_papyrus_script::_read(variable& data) {
-      this->_read(data.name);
-      this->_read(data.type);
+      this->_read_string_index(data.name);
+      this->_read_string_index(data.type);
    }
    void compiled_papyrus_script::_read(value& data) {
       this->_read(data.underlying_type);
@@ -136,6 +126,10 @@ namespace dovah {
          this->_read(c);
          if (c.underlying_type != raw_type::integer)
             throw varargs_count_type_exception(pos, (uint8_t)c.underlying_type);
+         #if _DEBUG
+            if (c.i > 10)
+               __debugbreak(); // suspicious vararg count
+         #endif
          //
          auto size = definition.fixed_arg_count + c.i;
          data.operands.resize(size);
@@ -167,7 +161,7 @@ namespace dovah {
          this->_read(e);
    }
    void compiled_papyrus_script::_read(named_function& data) {
-      this->_read(data.name);
+      this->_read_string_index(data.name);
       //
       function* cast = &data;
       this->_read(*cast);

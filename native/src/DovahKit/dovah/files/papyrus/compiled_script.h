@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "../../../helpers/endianness.h"
 
 namespace dovah {
    struct papyrus_assembly_opcode {
@@ -26,19 +27,19 @@ namespace dovah {
             public:
                explicit not_a_papyrus_file_exception(uint32_t o) : read_exception(o) {}
          };
-         class invalid_opcode_exception : read_exception {
+         class invalid_opcode_exception : public read_exception {
             public:
                const uint8_t opcode;
                //
                explicit invalid_opcode_exception(uint32_t o, uint8_t op) : read_exception(o), opcode(op) {}
          };
-         class unexpected_eof_exception : read_exception {
+         class unexpected_eof_exception : public read_exception {
             public:
                const size_t desired_size;
                //
                explicit unexpected_eof_exception(uint32_t o, size_t s) : read_exception(o), desired_size(s) {}
          };
-         class varargs_count_type_exception : read_exception {
+         class varargs_count_type_exception : public read_exception {
             public:
                const uint8_t type;
                //
@@ -46,6 +47,12 @@ namespace dovah {
          };
          //
       public:
+         enum class function_type : uint8_t {
+            normal = 0,
+            getter = 1,
+            setter = 2,
+            // UESP says that "3" can appear here, too?
+         };
          enum class raw_type : uint8_t {
             none    = 0,
             object  = 1,
@@ -56,20 +63,26 @@ namespace dovah {
          };
          //
          struct debug_function {
-            std::wstring object;
-            std::wstring state;
-            std::wstring name; // function name
-            uint8_t type; // valid values range from 0 to 3
-            std::vector<uint16_t> line_numbers;
+            std::string   object;
+            std::string   state;
+            std::string   name; // function name
+            function_type type; // valid values range from 0 to 3
+            std::vector<uint16_t> line_numbers; // maps instructions in the function to their original line numbers in the source code
          };
          struct user_flag {
-            std::wstring name;
+            //
+            // Flags like "Hidden" and "Conditional" don't have fixed bits. Instead, they're 
+            // encoded into the script's "user_flags" section and given bits there. Then, each 
+            // object that can have these flags will have a flags-mask whose bits should match 
+            // the bits given to user-flags in the header.
+            //
+            std::string name;
             uint8_t bit_index;
          };
          //
          struct variable { // "Variable Type" on UESP
-            std::wstring name;
-            std::wstring type;
+            std::string name;
+            std::string type;
          };
          struct value { // "Variable Data" on UESP
             raw_type underlying_type;
@@ -78,13 +91,13 @@ namespace dovah {
                float   f;
                uint8_t b;
             };
-            std::wstring s;
+            std::string s;
          };
          struct global_variable { // "Variable" on UESP
-            std::wstring name;
-            std::wstring type;
-            uint32_t     flags;
-            value        value;
+            std::string name;
+            std::string type;
+            uint32_t    flags; // user_flags
+            value       value;
          };
          //
          struct instruction {
@@ -100,16 +113,16 @@ namespace dovah {
                };
             };
             //
-            std::wstring return_type;
-            std::wstring docstring;
-            uint32_t     flags;
-            uint32_t     function_flags; // function::flag
+            std::string return_type;
+            std::string docstring;
+            uint32_t    flags; // user_flags
+            uint8_t     function_flags; // function::flag
             std::vector<variable> arguments;
             std::vector<variable> locals;
             std::vector<instruction> instructions;
          };
          struct named_function : function {
-            std::wstring name;
+            std::string name;
          };
          //
          struct property {
@@ -122,26 +135,26 @@ namespace dovah {
                };
             };
             //
-            std::wstring name;
-            std::wstring type;
-            std::wstring docstring;
-            uint32_t     flags;
-            uint8_t      property_flags; // property::flag
-            std::wstring autovar_name;
-            function     getter; // if (read)  flag and no (autovar) flag
-            function     setter; // if (write) flag and no (autovar) flag
+            std::string name;
+            std::string type;
+            std::string docstring;
+            uint32_t    flags; // user_flags
+            uint8_t     property_flags; // property::flag
+            std::string autovar_name;
+            function    getter; // if (read)  flag and no (autovar) flag
+            function    setter; // if (write) flag and no (autovar) flag
          };
          struct state {
-            std::wstring name; // empty string for default state
+            std::string name; // empty string for default state
             std::vector<named_function> functions;
          };
          struct object {
-            std::wstring name;
-            std::wstring superclass;
-            std::wstring docstring;
-            uint32_t     user_flags;
-            std::wstring auto_state_name;
-            std::vector<variable> variables;
+            std::string name;
+            std::string superclass;
+            std::string docstring;
+            uint32_t    user_flags; // user_flags
+            std::string auto_state_name;
+            std::vector<global_variable> variables;
             std::vector<property> properties;
             std::vector<state> states;
          };
@@ -153,13 +166,17 @@ namespace dovah {
             size_t      _size   = 0;
          } file;
          bool _needs_endian_swap = false;
-         std::vector<std::wstring> _string_table;
+         std::vector<std::string> _string_table;
          //
          void _read(void* to, size_t);
-         void _read(std::wstring&);
-         void _read_string_index(std::wstring&);
+         void _read(std::string&);
+         void _read_string_index(std::string&);
          template<typename T> inline void _read(T& v) {
-            this->read(&v, sizeof(T));
+            this->_read(&v, sizeof(T));
+            if constexpr (sizeof(T) > 1) {
+               if (this->_needs_endian_swap)
+                  v = cobb::byteswap(v);
+            }
          }
          //
          void _read(debug_function&); // all of these functions can throw exceptions
@@ -182,10 +199,10 @@ namespace dovah {
          uint16_t game_id = 1;
          //
          uint64_t     compile_time;
-         std::wstring source_file;
+         std::string source_file;
          struct {
-            std::wstring username;
-            std::wstring computer;
+            std::string username;
+            std::string computer;
          } author;
          struct {
             bool     present = false;

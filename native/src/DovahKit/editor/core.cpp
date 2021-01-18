@@ -14,6 +14,8 @@
 #include "../dovah/files/bsa/bsa_load_order.h"
 #include "../dovah/files/tes_file_writing/results.h"
 #include "../dovah/files/file_header.h"
+#include "../dovah/files/bsa/bsa_archived_file.h"
+#include "../dovah/files/papyrus/compiled_script.h"
 #include "../dovah/utils/get_user_language_name.h"
 #include "../dovah/forms/DefaultObjectManager.h"
 #include "core_internals/load_task.h"
@@ -688,6 +690,24 @@ dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::string& pat
    if (!archives)
       return nullptr;
    return archives->lookup_file(path, true);
+}
+dovah::compiled_papyrus_script DovahKitCore::parse_compiled_script(const std::string& scriptname) {
+   using out_t  = dovah::compiled_papyrus_script;
+   using file_t = dovah::bsa_archived_file*;
+   //
+   std::string path = "scripts/" + scriptname + ".pex";
+   //
+   auto*  archives = this->load_order->get_archive_list();
+   file_t file = nullptr;
+   if (archives)
+      file = archives->lookup_file(path, true);
+   if (!file) {
+      return out_t(); // TODO: allow loose files
+   }
+   out_t data;
+   data.read_file(file->data(), file->size()); // NOTE: can throw exceptions
+   delete file;
+   return data;
 }
 
 namespace {

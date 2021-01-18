@@ -8,6 +8,7 @@
 
 namespace dovah {
    class  bsa_archived_file;
+   class  compiled_papyrus_script;
    struct detailed_notice;
    class  form_deletion_request;
    class  form_stub;
@@ -166,7 +167,8 @@ class DovahKitCore : public QObject {
       void set_default_object(uint32_t signature, dovah::form_stub*);
       void set_default_object(uint32_t signature, bare_form_id_t);
 
-      dovah::bsa_archived_file* lookup_game_asset(const std::string&); // path should be relative to, and should not include, the Data directory
+      dovah::bsa_archived_file* lookup_game_asset(const std::string&); // path should be relative to, and should not include, the Data directory. delete the returned object, if any
+      dovah::compiled_papyrus_script parse_compiled_script(const std::string& scriptname); // can throw exceptions; see definition for dovah::compiled_papyrus_script
 
       inline const std::string& get_encoding() const noexcept { return this->encoding; }
       void set_encoding(const std::string& name) noexcept; // use the Qt names

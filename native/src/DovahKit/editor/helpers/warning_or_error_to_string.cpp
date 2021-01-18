@@ -682,6 +682,22 @@ namespace editor_helpers {
                text = text.arg(form).arg(file);
             }
             break;
+         case notice_code::quest_objective_unexpected_subrecord:
+            {
+               QString form      = QObject::tr("<unknown form>", "log window");
+               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
+                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
+               }
+               //
+               text = QObject::tr("A quest objective in form %1 contained at least one unrecognized subrecord with signature %2. This could be a serious problem, as a quest objective will blindly consume subrecords until it finds one it expects.")
+                  .arg(form)
+                  .arg(subrecord);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:

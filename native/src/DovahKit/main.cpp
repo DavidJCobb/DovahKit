@@ -420,6 +420,10 @@
 //
 //              - Papyrus wrappers
 //
+//                 = PROPERTY WORK BLOCKED BY QUEST SUPPORT: WE NEED TO BE ABLE TO 
+//                   RETURN QUEST ALIASES TO LUA, SINCE SCRIPT PROPERTIES CAN HOLD 
+//                   THEM AS VALUES.
+//
 //                 - Script properties. Implement them as elements in a named 
 //                   collection, and give them "name," "type," and "value" 
 //                   properties, e.g.
@@ -732,6 +736,11 @@
 //
 //        - Access to this widget should require permission, just because scripts 
 //          could use it to draw rude things.
+//
+//  - Loading Papyrus data
+//
+//     - It seems like Papyrus data is coalesced? Maybe? Some elements, such as 
+//       properties, can be flagged as "removed" using a "status" field.
 //
 //  - UI for editing Activators
 //

@@ -65,6 +65,7 @@
     <addaction name="actionDebugExtractBSAFile"/>
     <addaction name="actionDebugLookupBSAFile"/>
     <addaction name="actionDebugListNoneStubs"/>
+    <addaction name="actionDebugCompiledPapyrusScriptTests"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -202,6 +203,11 @@
   <action name="actionRunEditorScript">
    <property name="text">
     <string>Run Editor Script...</string>
+   </property>
+  </action>
+  <action name="actionDebugCompiledPapyrusScriptTests">
+   <property name="text">
+    <string>Compiled Papyrus script tests</string>
    </property>
   </action>
  </widget>

@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <vector>
 
 namespace dovah {
    class form_stub;
@@ -297,6 +298,7 @@ namespace dovah {
    extern std::array<form_type_info, 138> form_types;
    extern std::array<uint32_t,       120> group_sequence_list; // the order in which record groups appear
 
+   #pragma region form_reference_t and friends
    class form_reference_t {
       //
       // Loaded forms should use this class or its subclasses to refer to other forms.
@@ -364,6 +366,9 @@ namespace dovah {
          //
          void set(form_stub& owner, const struct_form_reference_t& set_to);
    };
+
+   extern void clear_from_form_reference_list(std::vector<form_reference_t>&, form_stub& target, form_stub& owner);
+   #pragma endregion
 
    struct form_id_t {
       //

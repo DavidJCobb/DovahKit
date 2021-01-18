@@ -1,8 +1,10 @@
 #include "Quest.h"
 #include "_common_cpp.h"
 #include "../logging.h"
+#include "../notice_code_list.h"
 
 namespace dovah::loaded_forms {
+   #pragma region Quest aliases
    void LocationAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'ALLS' && "LocationAlias::load should only be called just after the ALLS subrecord is opened.");
@@ -46,13 +48,13 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->name);
                break;
             case 'ALFI':
-               subrecord.read(this->forceIntoAliasID);
+               subrecord.read(this->force_into_alias_id);
                break;
             case 'FNAM':
                subrecord.read(this->flags);
                break;
             case 'BNAM':
-               this->hiddenFlags |= 1;
+               this->hidden_flags |= 1;
                break;
             case 'ALFL':
                subrecord.read(this->fill_from_location);
@@ -66,7 +68,7 @@ namespace dovah::loaded_forms {
                this->fill_type = fill_type_t::other_alias_in_other_quest;
                break;
             case 'ONAM':
-               this->hiddenFlags |= 2;
+               this->hidden_flags |= 2;
                break;
          }
       }
@@ -75,6 +77,61 @@ namespace dovah::loaded_forms {
       else if (this->fill_type == fill_type_t::other_alias_in_same_quest)
          this->fill_from_alias = internalAliasID;
    }
+   void LocationAlias::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      auto& ALLS = record.open_next_subrecord('ALLS');
+      ALLS.write(this->id);
+      ALLS.close();
+      auto& ALID = record.open_next_subrecord('ALID');
+      ALID.write(this->name);
+      ALID.close();
+      auto& FNAM = record.open_next_subrecord('FNAM');
+      FNAM.write(this->flags);
+      FNAM.close();
+      if (this->hidden_flags) {
+         if (this->hidden_flags & 1)
+            record.open_next_subrecord('BNAM').close();
+         if (this->hidden_flags & 2)
+            record.open_next_subrecord('ONAM').close();
+      }
+      if (this->force_into_alias_id) {
+         auto& ALFI = record.open_next_subrecord('ALFI');
+         ALFI.write(this->force_into_alias_id);
+         ALFI.close();
+      }
+      if (this->fill_type == fill_type_t::other_alias_in_other_quest) {
+         record.write_formID_subrecord('ALEQ', this->fill_from_quest);
+         auto& ALEA = record.open_next_subrecord('ALEA');
+         ALEA.write(this->fill_from_alias);
+         ALEA.close();
+      } else if (this->fill_type == fill_type_t::other_alias_in_same_quest) {
+         auto& ALFA = record.open_next_subrecord('ALFA');
+         ALFA.write(this->fill_from_alias);
+         ALFA.close();
+         record.write_formID_subrecord('KNAM', this->fill_from_location_keyword, true);
+      } else if (this->fill_type == fill_type_t::from_event) {
+         auto& ALFE = record.open_next_subrecord('ALFE');
+         ALFE.write(this->fill_from_event);
+         ALFE.close();
+         auto& ALFD = record.open_next_subrecord('ALFD');
+         ALFD.write(this->fill_from_event_data);
+         ALFD.close();
+      } else if (this->fill_type == fill_type_t::preset) {
+         record.write_formID_subrecord('ALFL', this->fill_from_location);
+      }
+      //
+      for (auto& cnd : this->conditions)
+         cnd.save(record, intfc);
+      //
+      record.open_next_subrecord('ALED').close(); // Alias end marker.
+   }
+   void LocationAlias::sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept {
+      this->fill_from_location.clear_if(my_owner, target);
+      this->fill_from_location_keyword.clear_if(my_owner, target);
+      this->fill_from_quest.clear_if(my_owner, target);
+      for (auto& cnd : this->conditions)
+         cnd.sever_outbound_references_to(target, my_owner);
+   }
+
    void ReferenceAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'ALST' && "ReferenceAlias::load should only be called just after the ALST subrecord is opened.");
@@ -94,16 +151,16 @@ namespace dovah::loaded_forms {
                subrecord.read(this->flags);
                break;
             case 'ALFI':
-               subrecord.read(this->forceIntoAliasID);
+               subrecord.read(this->force_into_alias_id);
                break;
             case 'BNAM': // shared with BGSRefAlias
-               this->hiddenFlags |= 1;
+               this->hidden_flags |= 1;
                break;
             case 'ONAM': // shared with BGSRefAlias
-               this->hiddenFlags |= 2;
+               this->hidden_flags |= 2;
                break;
             case 'QNAM':
-               this->hiddenFlags |= 4;
+               this->hidden_flags |= 4;
                break;
             case 'CTDA':
                {
@@ -131,51 +188,51 @@ namespace dovah::loaded_forms {
                   this->perks.push_back(formID);
                break;
             case 'SCOR':
-               subrecord.read(this->spectatorOverridePackageListID);
+               subrecord.read(this->package_override_lists.spectator);
                break;
             case 'OCOR':
-               subrecord.read(this->observeCorpseOverridePackageListID);
+               subrecord.read(this->package_override_lists.observe_corpse);
                break;
             case 'GWOR':
-               subrecord.read(this->guardWarnOverridePackageListID);
+               subrecord.read(this->package_override_lists.guard_warn);
                break;
             case 'ECOR':
-               subrecord.read(this->combatOverridePackageListID);
+               subrecord.read(this->package_override_lists.combat);
                break;
             case 'ALDN':
-               subrecord.read(this->displayNameID);
+               subrecord.read(this->display_name);
                break;
             case 'ALCO':
-               this->fillType = fill_type_t::create_object;
-               subrecord.read(this->createObjectBaseID);
+               this->fill_type = fill_type_t::create_object;
+               subrecord.read(this->create_object_of_type);
                break;
             case 'ALCA':
-               if (this->fillType == fill_type_t::create_object)
-                  subrecord.read(this->createObjectAt);
+               if (this->fill_type == fill_type_t::create_object)
+                  subrecord.read(this->create_object_at_alias);
                break;
             case 'ALCL':
-               if (this->fillType == fill_type_t::create_object)
-                  subrecord.read(this->createObjectLevel);
+               if (this->fill_type == fill_type_t::create_object)
+                  subrecord.read(this->create_object_of_level);
                break;
             case 'ALEQ':
-               subrecord.read(this->fillFromQuestID);
-               this->fillType = fill_type_t::other_alias_in_other_quest;
+               subrecord.read(this->fill_from_quest);
+               this->fill_type = fill_type_t::other_alias_in_other_quest;
                break;
             case 'ALEA':
-               if (this->fillType == fill_type_t::other_alias_in_other_quest)
-                  subrecord.read(this->fillFromAliasID);
+               if (this->fill_type == fill_type_t::other_alias_in_other_quest)
+                  subrecord.read(this->fill_from_alias);
                break;
             case 'ALFA':
-               this->fillType = fill_type_t::other_alias_in_same_quest;
-               subrecord.read(this->fillFromAliasID);
+               this->fill_type = fill_type_t::other_alias_in_same_quest;
+               subrecord.read(this->fill_from_alias);
                break;
             case 'ALNA':
-               this->fillType = fill_type_t::find_matching_reference;
-               subrecord.read(this->fillNearAlias);
+               this->fill_type = fill_type_t::find_matching_reference;
+               subrecord.read(this->fill_near_alias);
                break;
             case 'ALNT':
-               if (this->fillType == fill_type_t::find_matching_reference)
-                  subrecord.read(this->fillNearAliasType);
+               if (this->fill_type == fill_type_t::find_matching_reference)
+                  subrecord.read(this->fill_near_alias_type);
                break;
             case 'ALPC':
                if (subrecord.read(formID))
@@ -190,11 +247,11 @@ namespace dovah::loaded_forms {
                   this->spells.push_back(formID);
                break;
             case 'ALUA':
-               this->fillType = fill_type_t::preset_unique_actor;
-               subrecord.read(this->fillFromUniqueActorBaseID);
+               this->fill_type = fill_type_t::preset_unique_actor;
+               subrecord.read(this->fill_from_unique_actor_base);
                break;
             case 'ALFE':
-               this->fillType = fill_type_t::from_event;
+               this->fill_type = fill_type_t::from_event;
                subrecord.read(this->fill_from_event);
                break;
             case 'ALFD':
@@ -210,125 +267,271 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ALFR':
-               this->fillType = fill_type_t::preset_placed_reference;
-               subrecord.read(this->fillFromObjectReferenceID);
+               this->fill_type = fill_type_t::preset_placed_reference;
+               subrecord.read(this->fill_from_reference);
                break;
             case 'VTCK':
-               subrecord.read(this->additionalVoiceTypeID);
+               subrecord.read(this->additional_voicetype);
                break;
             case 'ALRT':
-               subrecord.read(this->fillLocRefTypeID);
+               subrecord.read(this->fill_loc_ref_type);
                break;
          }
       }
    }
-
-   void Quest::LogEntry::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
-      auto& subrecord = record.get_current_subrecord();
-      assert(subrecord.signature() == 'QSDT' && "Quest::LogEntry::load should only be called just after the QSDT subrecord is opened.");
-      subrecord.read(this->flags);
-      if (record.peek_next_subrecord_type() != 'NAM0')
-         return;
-      record.next_subrecord();
-      subrecord.read(this->nextQuestID);
-   }
-   void Quest::LogEntry::loadText(tes_subrecord_reader& subrecord) {
-      assert(subrecord.signature() == 'CNAM' && "Quest::LogEntry::loadText should only be called just after the CNAM subrecord is opened.");
-      subrecord.to_string(this->journalText);
-   }
-
-   void Quest::Stage::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
-      assert(subrecord.signature() == 'INDX' && "Quest::Stage::load should only be called just after the INDX subrecord is opened.");
-      if (subrecord.is_in_bounds(4)) {
-         subrecord.unchecked_read(this->index);
-         subrecord.unchecked_read(this->flags);
-         subrecord.unchecked_read(this->padding);
+   void ReferenceAlias::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      auto& ALST = record.open_next_subrecord('ALST');
+      ALST.write(this->id);
+      ALST.close();
+      auto& ALID = record.open_next_subrecord('ALID');
+      ALID.write(this->name);
+      ALID.close();
+      auto& FNAM = record.open_next_subrecord('FNAM');
+      FNAM.write(this->flags);
+      FNAM.close();
+      if (this->hidden_flags) {
+         if (this->hidden_flags & 1)
+            record.open_next_subrecord('BNAM').close();
+         if (this->hidden_flags & 2)
+            record.open_next_subrecord('ONAM').close();
+         if (this->hidden_flags & 4)
+            record.open_next_subrecord('QNAM').close();
       }
+      if (this->force_into_alias_id) {
+         auto& ALFI = record.open_next_subrecord('ALFI');
+         ALFI.write(this->force_into_alias_id);
+         ALFI.close();
+      }
+      if (this->fill_type == fill_type_t::create_object) {
+         record.write_formID_subrecord('ALCO', this->create_object_of_type);
+         auto& ALCA = record.open_next_subrecord('ALCA');
+         ALCA.write(this->create_object_at_alias);
+         ALCA.close();
+         auto& ALCL = record.open_next_subrecord('ALCL');
+         ALCL.write(this->create_object_of_level);
+         ALCL.close();
+      } else if (this->fill_type == fill_type_t::other_alias_in_other_quest) {
+         record.write_formID_subrecord('ALEQ', this->fill_from_quest);
+         auto& ALEA = record.open_next_subrecord('ALEA');
+         ALEA.write(this->fill_from_alias);
+         ALEA.close();
+      } else if (this->fill_type == fill_type_t::other_alias_in_same_quest) {
+         auto& ALFA = record.open_next_subrecord('ALFA');
+         ALFA.write(this->fill_from_alias);
+         ALFA.close();
+         record.write_formID_subrecord('ALRT', this->fill_loc_ref_type);
+      } else if (this->fill_type == fill_type_t::from_event) {
+         auto& ALFE = record.open_next_subrecord('ALFE');
+         ALFE.write(this->fill_from_event);
+         ALFE.close();
+         auto& ALFD = record.open_next_subrecord('ALFD');
+         ALFD.write(this->fill_from_event_data);
+         ALFD.close();
+      } else if (this->fill_type == fill_type_t::preset_placed_reference) {
+         record.write_formID_subrecord('ALFR', this->fill_from_reference);
+      } else if (this->fill_type == fill_type_t::find_matching_reference) {
+         auto& ALNA = record.open_next_subrecord('ALNA');
+         ALNA.write(this->fill_near_alias);
+         ALNA.close();
+         auto& ALNT = record.open_next_subrecord('ALNT');
+         ALNT.write(this->fill_near_alias_type);
+         ALNT.close();
+      } else if (this->fill_type == fill_type_t::preset_unique_actor) {
+         record.write_formID_subrecord('ALUA', this->fill_from_unique_actor_base);
+      }
+      //
+      for (auto& cnd : this->conditions)
+         cnd.save(record, intfc);
+      this->keywords.save(record, intfc);
+      this->inventory.save(record, intfc);
+      record.write_formID_subrecord('SPOR', this->package_override_lists.spectator, true);
+      record.write_formID_subrecord('OCOR', this->package_override_lists.observe_corpse, true);
+      record.write_formID_subrecord('GWOR', this->package_override_lists.guard_warn, true);
+      record.write_formID_subrecord('ECOR', this->package_override_lists.combat, true);
+      record.write_formID_subrecord('ALDN', this->display_name, true);
+      for (auto& id : this->spells)
+         record.write_formID_subrecord('ALSP', id);
+      for (auto& id : this->factions)
+         record.write_formID_subrecord('ALFC', id);
+      for (auto& id : this->packages)
+         record.write_formID_subrecord('ALPC', id);
+      record.write_formID_subrecord('VTCK', this->additional_voicetype, true);
+      //
+      record.open_next_subrecord('ALED').close(); // Alias end marker.
    }
+   void ReferenceAlias::sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept {
+      this->create_object_of_type.clear_if(my_owner, target);
+      this->fill_from_quest.clear_if(my_owner, target);
+      this->fill_from_reference.clear_if(my_owner, target);
+      this->fill_from_unique_actor_base.clear_if(my_owner, target);
+      for (auto& cnd : this->conditions)
+         cnd.sever_outbound_references_to(target, my_owner);
+      this->keywords.sever_outbound_references_to(target, my_owner);
+      this->inventory.sever_outbound_references_to(target, my_owner);
+      this->package_override_lists.spectator.clear_if(my_owner, target);
+      this->package_override_lists.observe_corpse.clear_if(my_owner, target);
+      this->package_override_lists.guard_warn.clear_if(my_owner, target);
+      this->package_override_lists.combat.clear_if(my_owner, target);
+      clear_from_form_reference_list(this->spells, target, my_owner);
+      clear_from_form_reference_list(this->factions, target, my_owner);
+      clear_from_form_reference_list(this->packages, target, my_owner);
+      this->additional_voicetype.clear_if(my_owner, target);
+   }
+   #pragma endregion
 
-   void Quest::Target::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
-      assert(subrecord.signature() == 'QSTA' && "Quest::Target::load should only be called just after the QSTA subrecord is opened.");
-      subrecord.read(this->aliasID);
-      subrecord.read(this->flags);
-      subrecord.skip_bytes(3);
-   }
-   void Quest::Objective::load(tes_record_reader& record) {
-      auto& subrecord = record.get_current_subrecord();
-      assert(subrecord.signature() == 'QOBJ' && "Quest::Objective::load should only be called just after the QOBJ subrecord is opened.");
-      subrecord.read(this->index);
-      if (subrecord.size() == 4) // the game checks for this and conditionally loads the index into a uint32_t temporary before shearing off the high bytes and keeping a 16-bit value
-         subrecord.skip_bytes(2);
-      #if LOAD_NAIVELY_WHEN_THE_GAME_DOES == 1
+   #pragma region Quest components
+      #pragma region Quest log entries
+      void Quest::LogEntry::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+         auto& subrecord = record.get_current_subrecord();
+         assert(subrecord.signature() == 'QSDT' && "Quest::LogEntry::load should only be called just after the QSDT subrecord is opened.");
+         subrecord.read(this->flags);
+         if (record.peek_next_subrecord_type() != 'NAM0')
+            return;
+         record.next_subrecord();
+         subrecord.read(this->next_quest_id);
+      }
+      void Quest::LogEntry::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load&) {
+         assert(subrecord.signature() == 'CNAM' && "Quest::LogEntry::loadText should only be called just after the CNAM subrecord is opened.");
+         subrecord.to_string(this->journal_text);
+      }
+      bool Quest::LogEntry::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+         auto& QSDT = record.open_next_subrecord('QSDT');
+         QSDT.write(this->flags);
+         QSDT.close();
+         for (auto& cnd : this->conditions)
+            cnd.save(record, intfc);
+         auto& CNAM = record.open_next_subrecord('CNAM');
+         CNAM.write(this->journal_text);
+         CNAM.close();
+         record.write_formID_subrecord('NAM0', this->next_quest_id, true);
+      }
+      void Quest::LogEntry::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+         for (auto& cnd : this->conditions)
+            cnd.sever_outbound_references_to(other, my_owner);
+         this->next_quest_id.clear_if(my_owner, other);
+      }
+      #pragma endregion
+
+      #pragma region Quest stages
+      void Quest::Stage::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+         assert(subrecord.signature() == 'INDX' && "Quest::Stage::load should only be called just after the INDX subrecord is opened.");
+         if (subrecord.is_in_bounds(4)) {
+            subrecord.unchecked_read(this->index);
+            subrecord.unchecked_read(this->flags);
+            subrecord.unchecked_read(this->padding);
+         }
+      }
+      bool Quest::Stage::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+         auto& INDX = record.open_next_subrecord('INDX');
+         INDX.write(this->index);
+         INDX.write(this->flags);
+         INDX.write(this->padding);
+         INDX.close();
+         for (auto& entry : this->entries)
+            entry.save(record, intfc);
+         return true;
+      }
+      void Quest::Stage::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+         for (auto& entry : this->entries)
+            entry.sever_outbound_references(other, my_owner);
+      }
+      #pragma endregion
+
+      #pragma region Quest targets
+      void Quest::Target::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+         assert(subrecord.signature() == 'QSTA' && "Quest::Target::load should only be called just after the QSTA subrecord is opened.");
+         subrecord.read(this->aliasID);
+         subrecord.read(this->flags);
+         subrecord.skip_bytes(3);
+         //
+         // Conditions aren't loaded here; the main QUST loader handles that.
+         //
+      }
+      bool Quest::Target::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+         auto& QSTA = record.open_next_subrecord('QSTA');
+         QSTA.write(this->aliasID);
+         QSTA.write(this->flags);
+         QSTA.skip_bytes(3);
+         QSTA.close();
+         for (auto& cnd : this->conditions)
+            cnd.save(record, intfc);
+         return true;
+      }
+      void Quest::Target::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+         for (auto& cnd : this->conditions)
+            cnd.sever_outbound_references_to(other, my_owner);
+      }
+      #pragma endregion
+
+      #pragma region Quest objectives
+      void Quest::Objective::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+         auto& subrecord = record.get_current_subrecord();
+         assert(subrecord.signature() == 'QOBJ' && "Quest::Objective::load should only be called just after the QOBJ subrecord is opened.");
+         if (subrecord.size() == 4) {
+            uint32_t temp;
+            subrecord.read(temp);
+            this->index = temp;
+         } else {
+            subrecord.read(this->index);
+         }
          //
          // Once Skyrim sees a QOBJ, it just blindly reads subrecords either until it finds an 'NNAM' 
          // subrecord or until it hits the end of the containing record.
          //
-         // See: Classic 0x00551C70 == void TESQuest::Objective::Load(BGSLoadFormBuffer*);
+         // See: Classic 0x00551C70 == void TESQuest::Objective::Load(TESFile*);
          //
-         this->error_isMissingFlags = true;
-         this->error_isMissingText  = true;
          while (record.next_subrecord().exists()) { // TESPluginRecord::next_subrecord alters (subrecord) and returns it
             switch (subrecord.signature()) {
                case 'FNAM':
-                  this->error_isMissingFlags = false;
                   subrecord.read(this->flags);
                   break;
                case 'NNAM':
-                  this->error_isMissingText  = false;
                   subrecord.to_string(this->text);
                   return;
+               default:
+                  {
+                     detailed_notice warning;
+                     warning.code = notice_code::quest_objective_unexpected_subrecord;
+                     warning.set_cause_form(intfc.target_stub);
+                     warning.set_cause_subrecord(subrecord.signature());
+                     //
+                     intfc.log_load_warning(warning);
+                  }
+                  break;
             }
          }
-      #else
-         //
-         // Only consume FNAM and NNAM if they directly follow QOBJ; if we encounter any other 
-         // subrecord types first, then assume there are no matching FNAM and NNAM and abort. This 
-         // is good for catching potential errors in the file, but is not future-compatible (i.e. 
-         // if Bethesda wanted to extend QOBJ in a backward-compatible way, they'd want to do so 
-         // by adding new subrecords that precede FNAM and NNAM).
-         //
-         bool foundFNAM = false;
-         bool foundNNAM = false;
-         uint32_t next;
-         while (next = record.peek_next_subrecord_type()) {
-            if (next == 'FNAM' || next == 'NNAM')
-               record.next_subrecord();
-            else
-               break;
-            if (next == 'FNAM') {
-               foundFNAM = true;
-               subrecord.read(this->flags);
-            } else {
-               foundNNAM = true;
-               subrecord.to_string(this->text);
-            }
-         }
-         this->error_isMissingFlags = !foundFNAM;
-         this->error_isMissingText  = !foundNNAM;
-      #endif
-   }
+      }
+      bool Quest::Objective::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+         auto& QOBJ = record.open_next_subrecord('QOBJ');
+         QOBJ.write(this->index);
+         QOBJ.close();
+         auto& FNAM = record.open_next_subrecord('FNAM');
+         FNAM.write(this->flags);
+         FNAM.close();
+         auto& NNAM = record.open_next_subrecord('NNAM');
+         NNAM.write(this->text);
+         NNAM.close();
+         for (auto& t : this->targets)
+            t.save(record, intfc);
+         return true;
+      }
+      void Quest::Objective::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
+         for (auto& t : this->targets)
+            t.sever_outbound_references(other, my_owner);
+      }
+      #pragma endregion
+   #pragma endregion
 
    Quest::~Quest() {
       for (auto it = this->aliases.begin(); it != this->aliases.end(); ++it)
          delete (*it);
       this->aliases.clear();
    }
-   Quest::Target* Quest::getLastParsedQuestTarget() const noexcept {
-      for (auto it = this->objectives.rbegin(); it != this->objectives.rend(); ++it) {
-         auto jt = it->targets.rbegin();
-         if (jt != it->targets.rend()) {
-            auto&  target = const_cast<Quest::Target&>(*jt);
-            return &target;
-         }
-      }
-      return nullptr;
-   }
    void Quest::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
-      bool     isInEventConditions = false;
-      bool     hasLastLogEntry     = false;
-      uint32_t lastLogEntryIndices[2];
+      bool isInEventConditions = false;
+      bool hasLastLogEntry     = false;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -337,17 +540,17 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->name);
                break;
             case 'VMAD':
-               this->scriptData.load(subrecord, intfc);
+               this->script_data.load(subrecord, intfc);
                break;
             case 'DNAM': // required; TODO: fail if this is not present; fail if it is too short
                if (subrecord.is_in_bounds(12)) {
                   subrecord.unchecked_read(this->flags);
                   subrecord.unchecked_read(this->priority);
-                  subrecord.unchecked_read(this->formVersion);
+                  subrecord.unchecked_read(this->form_version);
                   subrecord.unchecked_read(this->unknown);
                   uint32_t type;
                   subrecord.unchecked_read(type); // stored as a uint32_t, but only the low byte is retained in memory
-                  this->questType = (QuestType)type;
+                  this->quest_type = type;
                }
                break;
             case 'ENAM':
@@ -357,17 +560,17 @@ namespace dovah::loaded_forms {
                {
                   form_reference_t id;
                   if (subrecord.read(id) && id)
-                     this->textDisplayGlobalIDs.push_back(id);
+                     this->text_display_globals.push_back(id);
                }
                break;
             case 'FLTR': // required; TODO: fail if this is not present
-               subrecord.to_string(this->editorCategory);
+               subrecord.to_string(this->editor_category);
                break;
             case 'NEXT':
                isInEventConditions = true;
                break;
             case 'ANAM':
-               subrecord.read(this->nextAliasID);
+               subrecord.read(this->next_alias_id);
                break;
             case 'INDX': // also handles QSDT
                {
@@ -379,23 +582,19 @@ namespace dovah::loaded_forms {
             case 'QSTD':
                if (this->stages.size()) { // the game ignores QSTD that appear when there is no stage
                   hasLastLogEntry = true;
-                  lastLogEntryIndices[0] = this->stages.size() - 1;
-                  auto& stage = this->stages[lastLogEntryIndices[0]];
-                  lastLogEntryIndices[1] = stage.entries.size();
-                  stage.entries.emplace_back();
-                  auto& entry = stage.entries[lastLogEntryIndices[1]];
+                  auto& stage = this->stages.back();
+                  auto& entry = stage.entries.emplace_back();
                   entry.load(record, intfc);
                }
                break;
             case 'CNAM':
                if (!hasLastLogEntry)
                   break;
-               {
-                  auto& entry = this->stages[lastLogEntryIndices[0]].entries[lastLogEntryIndices[1]];
-                  entry.loadText(subrecord);
-               }
+               this->stages.back().entries.back().load(subrecord, intfc);
                break;
             case 'SCHR':
+               if (!hasLastLogEntry)
+                  break;
                //
                // TODO: Add ObScript data to last-loaded entry
                //
@@ -404,7 +603,7 @@ namespace dovah::loaded_forms {
                {
                   this->objectives.emplace_back();
                   auto& objective = *this->objectives.rbegin();
-                  objective.load(subrecord.get_containing_record());
+                  objective.load(subrecord.get_containing_record(), intfc);
                }
                break;
             case 'QSTA':
@@ -424,21 +623,26 @@ namespace dovah::loaded_forms {
                hasLastLogEntry = false; // per TESV.exe TESQuest::LoadForm
                break;
             case 'CTDA':
+               //
+               // This is also how the game loads QUST/CTDA.
+               //
                {
                   components::condition nc;
                   nc.read(subrecord.get_containing_record(), intfc);
                   if (hasLastLogEntry) {
-                     auto& entry = this->stages[lastLogEntryIndices[0]].entries[lastLogEntryIndices[1]];
+                     auto& entry = this->stages.back().entries.back();
                      entry.conditions.push_back(nc);
                      break;
                   }
-                  if (auto target = this->getLastParsedQuestTarget()) {
-                     target->conditions.push_back(nc);
-                     break;
+                  if (!this->objectives.empty()) {
+                     auto& objective = this->objectives.back();
+                     if (!objective.targets.empty()) {
+                        objective.targets.back().conditions.push_back(nc);
+                     }
                   }
-                  auto& list = this->dialogueConditions;
+                  auto& list = this->conditions.dialogue;
                   if (isInEventConditions)
-                     list = this->eventConditions;
+                     list = this->conditions.event;
                   list.push_back(nc);
                }
                break;
@@ -461,7 +665,7 @@ namespace dovah::loaded_forms {
             case 'SLSD':
             case 'QNAM':
                //
-               // TODO: The game passes all of these to TESQuest::LogEntry::Load, but it just ignores them; it 
+               // The game passes all of these to TESQuest::LogEntry::Load, but it just ignores them; it 
                // returns instantly if it encounters any record other than QSDT and NAM0.
                //
                break;
@@ -557,24 +761,63 @@ namespace dovah::loaded_forms {
          }
       }
    }
-
-   const char* _questTypeNames[] = {
-      "None",
-      "Main Quest",
-      "Mages Guild",
-      "Thieves Guild",
-      "Dark Brotherhood",
-      "Companions",
-      "Miscellaneous",
-      "Daedric",
-      "Sidequest",
-      "Civil War",
-      "Vampire (DLC 1)",
-      "Dragonborn (DLC 2)",
-   };
-   /*static*/ const char* Quest::QuestTypeToString(QuestType qt) {
-      if (qt >= std::extent<decltype(_questTypeNames)>::value)
-         return nullptr;
-      return _questTypeNames[qt];
+   bool Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
+      this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
+      //
+      auto& FULL = record.open_next_subrecord('FULL');
+      FULL.write(this->name);
+      FULL.close();
+      //
+      auto& DNAM = record.open_next_subrecord('DNAM');
+      DNAM.write(this->flags);
+      DNAM.write(this->priority);
+      DNAM.write(this->form_version);
+      DNAM.write(this->unknown);
+      DNAM.write(this->quest_type);
+      DNAM.close();
+      //
+      if (this->event) {
+         auto& ENAM = record.open_next_subrecord('ENAM');
+         ENAM.write(this->event);
+         ENAM.close();
+      }
+      for (auto& id : this->text_display_globals) {
+         auto& QTGL = record.open_next_subrecord('QTGL');
+         QTGL.write(id);
+         QTGL.close();
+      }
+      auto& FLTR = record.open_next_subrecord('FLTR');
+      FLTR.write(this->editor_category);
+      FLTR.close();
+      for (auto& cnd : this->conditions.dialogue) {
+         cnd.save(record, intfc);
+      }
+      record.open_next_subrecord('NEXT').close();
+      for (auto& cnd : this->conditions.event) {
+         cnd.save(record, intfc);
+      }
+      for (auto& obj : this->stages)
+         obj.save(record, intfc);
+      for (auto& obj : this->objectives)
+         obj.save(record, intfc);
+      auto& ANAM = record.open_next_subrecord('ANAM');
+      ANAM.write(this->next_alias_id);
+      ANAM.close();
+      for (auto* alias : this->aliases)
+         alias->save(record, intfc);
+   }
+   void Quest::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this->stub);
+      for (auto& cnd : this->conditions.dialogue)
+         cnd.sever_outbound_references_to(other, *this->stub);
+      for (auto& cnd : this->conditions.event)
+         cnd.sever_outbound_references_to(other, *this->stub);
+      for (auto& obj : this->stages)
+         obj.sever_outbound_references(other, *this->stub);
+      for (auto& obj : this->objectives)
+         obj.sever_outbound_references(other, *this->stub);
+      for (auto* obj : this->aliases)
+         obj->sever_outbound_references(other, *this->stub);
+      clear_from_form_reference_list(this->text_display_globals, other, *this->stub);
    }
 }

@@ -30,7 +30,7 @@ namespace dovah {
          unrecognized_subrecord                      = 0x00000015, // FORM full load: a subrecord was unrecognized.
          form_reference_is_of_incorrect_type         = 0x00000016, // FORM full load: a (form_reference_t) ended up referring to a form of the wrong type.
          shout_has_wrong_word_count                  = 0x00000017, // SHOU full load: the shout has too many, or too few, words.
-         package_event_dialogue_unrecognized_subrecord = 0x00000018,
+         package_event_dialogue_unrecognized_subrecord = 0x00000018, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
          game_setting_record_is_nameless             = 0x00000019, // A GMST record had no EDID or an empty EDID.
          game_setting_record_is_misordered           = 0x0000001A, // A GMST record has its EDID record in the wrong place.
          subrecord_has_extra_content                 = 0x0000001B, // A subrecord has unexpected data at its end. (This is not emitted for most subrecords, but is explicitly checked for in special cases like the GMST loader.)
@@ -88,6 +88,7 @@ namespace dovah {
          form_initial_record_is_partial              = 0x0000004F, // A form's initial record is flagged as "partial." The flag will not be honored when loading form data on-demand.
          form_initial_record_is_partial_and_injected = 0x00000050, // A form's initial record is flagged as "partial," and is injected. We will not honor the flag when loading form data on-demand; we'll keep the form, but the game would skip the record entirely.
          cannot_delete_hardcoded_form                = 0x00000051,
+         quest_objective_unexpected_subrecord        = 0x00000052, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
       };
    };
 }

@@ -28,6 +28,7 @@
 #include "main_window/_debug_hooks/extract_bsa_file.h"
 #include "main_window/_debug_hooks/lookup_bsa_file_from_bsa_load_order.h"
 #include "main_window/_debug_hooks/list_none_stubs.h"
+#include "main_window/_debug_hooks/compiled_papyrus_script_tests.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -314,6 +315,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(this->ui.actionDebugListNoneStubs, &QAction::triggered, this, [this]() {
       DovahKitDebug::list_none_stubs(this);
+   });
+   QObject::connect(this->ui.actionDebugCompiledPapyrusScriptTests, &QAction::triggered, this, [this]() {
+      DovahKitDebug::compiled_papyrus_script_tests(this);
    });
    #pragma endregion
 }

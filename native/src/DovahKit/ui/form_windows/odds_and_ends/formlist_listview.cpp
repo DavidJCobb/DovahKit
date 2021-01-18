@@ -272,9 +272,8 @@ bool FormListListviewModel::moveRows(const QModelIndex& from_parent, int first_r
    // But you see, Qt's developers had a much better idea. They decided that all of the above 
    // should be true EXCEPT when moving items downward within the same parent. In *that* case, 
    // the (to_position) argument is actually the index *above* which the *last* of the rows-to-
-   // be-moved should be placed. This is spectacularly unintuitive, but that's fine, since it's 
-   // incredibly rare to move rows downward within the same parent. Never happens. Who would 
-   // ever bother to do that?
+   // be-moved should be placed. This is super unintuitive, but that's fine, since it's super 
+   // rare to move rows downward within the same parent. Never happens.
    //
    // On top of that, as far as I can see, Qt doesn't even have its own implementation of this 
    // function for QTableWidget, so the only viable implementation is the one on QListWidget, 

@@ -236,6 +236,7 @@
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\formlist.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\papyrus\property.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
@@ -304,6 +305,7 @@
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\script_window.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
@@ -491,6 +493,7 @@
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />
+    <ClInclude Include="editor\scripting\wrappers\papyrus\property.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\script.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
@@ -522,6 +525,7 @@
     <QtMoc Include="ui\main_window\script_window.h" />
     <QtMoc Include="ui\form_windows\formlist.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\formlist_listview.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
@@ -589,6 +593,7 @@
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
+    <QtUic Include="ui\form_windows\quest.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
