@@ -35,8 +35,16 @@ namespace dovah::loaded_forms {
          //
          virtual void setup(const file_load_order&) noexcept override;
 
-         inline bool treat_as_power() const noexcept { return this->stub->test_record_flags(form_flag::treat_as_power); }
-         inline void treat_as_power(bool v) noexcept { this->stub->edit_record_flags(form_flag::treat_as_power, v); }
+         inline bool treat_as_power() const noexcept {
+            if (!this->stub)
+               return false;
+            return this->stub->test_record_flags(form_flag::treat_as_power);
+         }
+         inline void treat_as_power(bool v) noexcept {
+            if (!this->stub)
+               return;
+            this->stub->edit_record_flags(form_flag::treat_as_power, v);
+         }
          //
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

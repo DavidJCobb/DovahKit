@@ -25,7 +25,8 @@ namespace dovah::loaded_forms {
       auto& entry = this->entries[signature];
       entry.form.set(*this, stub);
       entry.is_active_file = true;
-      this->stub->set_edited(true);
+      if (this->stub)
+         this->stub->set_edited(true);
       if (!definition)
          return notice_code::default_object_accepted_but_unknown;
       return default_notice_code;

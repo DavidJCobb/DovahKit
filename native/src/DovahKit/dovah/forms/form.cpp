@@ -28,6 +28,7 @@ namespace dovah::loaded_forms {
       this->_clear_impl();
    }
    bool Form::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      assert(this->stub && "Do not call Form::save on a working copy of a loaded form!");
       if (this->stub->is_deleted()) {
          //
          // Specific form types don't appear to save ANY data -- not even editor IDs -- if they 
@@ -53,6 +54,22 @@ namespace dovah::loaded_forms {
    }
    void Form::sever_outbound_references_to(form_stub& other) noexcept {
       this->_sever_outbound_references_impl(other);
+   }
+
+   Form* Form::make_working_copy() const noexcept {
+      auto* instance = create_blank_loaded_form_by_type(this->formType);
+      if (instance) {
+         if (!this->_clone_impl(instance)) {
+            delete instance;
+            instance = nullptr;
+         }
+      }
+      assert(instance->stub == nullptr);
+      return instance;
+   }
+   void Form::merge_working_copy(Form& working) {
+      this->_clear_impl();
+      working._clone_impl(this);
    }
 
    /*static*/ bool Form::subrecord_is_handled_elsewhere(uint32_t signature) {

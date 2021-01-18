@@ -127,7 +127,8 @@ namespace dovah::loaded_forms {
       this->rotation = { 0, 0, 0 };
    }
    bool ObjectReference::_friendly_delete_impl(const file_load_order& load_order) noexcept {
-      this->stub->edit_record_flags(form_flag::disabled, true);
+      if (this->stub)
+         this->stub->edit_record_flags(form_flag::disabled, true);
       //
       // Make the reference an opposite enable state child of the PlayerRef.
       //

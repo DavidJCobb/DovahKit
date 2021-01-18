@@ -58,13 +58,22 @@ namespace dovah::loaded_forms {
                break;
             case 'ALFL':
                subrecord.read(this->fill_from_location);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::location, intfc.target_stub, this->fill_from_location)
+               );
                this->fill_type = fill_type_t::preset;
                break;
             case 'KNAM':
                subrecord.read(this->fill_from_location_keyword);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->fill_from_location_keyword)
+               );
                break;
             case 'ALEQ':
                subrecord.read(this->fill_from_quest);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::quest, intfc.target_stub, this->fill_from_quest)
+               );
                this->fill_type = fill_type_t::other_alias_in_other_quest;
                break;
             case 'ONAM':
@@ -227,16 +236,28 @@ namespace dovah::loaded_forms {
                   subrecord.read(this->fill_near_alias_type);
                break;
             case 'ALPC':
-               if (subrecord.read(formID))
+               if (subrecord.read(formID)) {
                   this->packages.push_back(formID);
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, formID)
+                  );
+               }
                break;
             case 'ALFC':
-               if (subrecord.read(formID))
+               if (subrecord.read(formID)) {
                   this->factions.push_back(formID);
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, intfc.target_stub, formID)
+                  );
+               }
                break;
             case 'ALSP':
-               if (subrecord.read(formID))
+               if (subrecord.read(formID)) {
                   this->spells.push_back(formID);
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, intfc.target_stub, formID)
+                  );
+               }
                break;
             case 'ALUA':
                this->fill_type = fill_type_t::preset_unique_actor;
@@ -267,6 +288,9 @@ namespace dovah::loaded_forms {
                break;
             case 'ALRT':
                subrecord.read(this->fill_loc_ref_type);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::location_ref_type, intfc.target_stub, this->fill_loc_ref_type)
+               );
                break;
          }
       }
@@ -552,8 +576,12 @@ namespace dovah::loaded_forms {
             case 'QTGL':
                {
                   form_reference_t id;
-                  if (subrecord.read(id) && id)
+                  if (subrecord.read(id) && id) {
                      this->text_display_globals.push_back(id);
+                     intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, *this->stub, id)
+                     );
+                  }
                }
                break;
             case 'FLTR': // required; TODO: fail if this is not present

@@ -440,10 +440,10 @@
 //                          - Audit all access to a loaded-form instance's stub, and 
 //                            make the stub optional in all cases.
 //
-//                          - Define some function Form::make_temporary_clone which 
+//                          - Define some function Form::make_working_copy which 
 //                            leverages (_clone_impl) to create the clone.
 //
-//                          - Define some function Form::merge_temporary_clone which 
+//                          - Define some function Form::merge_working_copy which 
 //                            leverages (_clear_impl) and (_clone_impl).
 //
 //                          - Modify DovahKitCore to create the following functions:

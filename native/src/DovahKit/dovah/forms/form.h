@@ -28,9 +28,16 @@ namespace dovah {
                   deleted = 0x00000020, // working with this flag directly is undefined behavior. use the (flagged_as_deleted) flag on (form_stub) instead.
                };
             };
+            
+            //
+            // This pointer will never be null unless the form is under construction or is a 
+            // working copy of another form -- that is, a temporary copy intended for use by 
+            // a frontend to store pending changes until they are committed. Working copies 
+            // should never be loaded or saved, and because record flags are stored on the 
+            // form stub, working copies cannot have record flags.
             //
             form_stub* stub = nullptr;
-            //
+            
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);
 
@@ -73,6 +80,20 @@ namespace dovah {
             virtual void setup(const file_load_order&) noexcept {}
 
             virtual bool would_bethesda_compress() const noexcept { return false; } // provided for CELL
+
+            //
+            // A "working copy" of a form is a temporary copy, which a frontend can use to store 
+            // pending changes until such time as those changes are committed to the original form. 
+            // Working copies do not have an owning form stub, and therefore are not managed by the 
+            // file_load_order; the frontend is responsible for making sure that when a form is 
+            // deleted, any outbound references to it from the working copy are properly severed 
+            // (or the working copy is disposed of immediately if that is not possible).
+            //
+            // Frontends may wish to wrap these functions in their own system, in order to carry 
+            // out that responsibility.
+            //
+            Form* make_working_copy() const noexcept;
+            void merge_working_copy(Form& working);
             
          protected:
             virtual bool _clone_impl(Form* out) const noexcept { return false; }; // TODO: implement on existing forms; then, make pure
