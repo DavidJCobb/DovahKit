@@ -120,6 +120,14 @@ namespace dovah::loaded_forms {
       //
       this->base_form.clear_if(*this->stub, other);
    }
+   void ObjectReference::_clear_impl() noexcept {
+      this->extra_data.clear(*this->stub);
+      this->script_data.clear(*this->stub);
+      this->base_form.set(*this->stub, nullptr);
+      this->is_open = false;
+      //this->position = { 0, 0, 0 }; // don't reset this as that might change the parent cell
+      this->rotation = { 0, 0, 0 };
+   }
    bool ObjectReference::_friendly_delete_impl(const file_load_order& load_order) noexcept {
       this->stub->edit_record_flags(form_flag::disabled, true);
       //

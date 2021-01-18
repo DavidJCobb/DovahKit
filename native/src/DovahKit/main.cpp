@@ -444,6 +444,15 @@
 //                            the use info functions on form_stub will need to be 
 //                            coded to act as no-ops when called on a dummy.
 //
+//                             - Since all form_stubs need at least one file, put the 
+//                               "is temporary clone dummy" flag on the dummy stub's 
+//                               file. We've already added the flag to the list; we 
+//                               need to have (file_load_order) create the dummy file 
+//                               as appropriate, give it a function to create a temp-
+//                               clone of a form, and modify the form stub use info 
+//                               code to no-op if the first file is flagged as a 
+//                               temp-clone dummy.
+//
 //                          - For creating a temporary clone, we can leverage the 
 //                            existing Form::_clone_impl function.
 //
