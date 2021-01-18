@@ -2,6 +2,7 @@
 #include <QHeaderView>
 #include "../../../editor/core.h"
 #include "../../../dovah/form_stub.h"
+#include "../../../helpers/qt/strings.h"
 
 #pragma region ConditionListModel
 ConditionListModel::ConditionListModel(QObject* parent) : QAbstractTableModel(parent) {
@@ -86,27 +87,124 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
    if (!this->target)
       return QVariant();
    auto& condition = (*this->target)[row];
+   auto* function  = condition_function::lookup_by_id(condition.function);
+   auto  flags     = condition.get_flags();
    switch (role) {
       case Qt::DisplayRole:
          switch (column) {
             case ColumnTarget:
-               // TODO: run-on
+               switch (condition.run_on) {
+                  case condition::run_on_t::combat_target:
+                     return tr("Combat Target", "condition list - run on");
+                  case condition::run_on_t::event_data:
+                     return tr("Event Data", "condition list - run on");
+                  case condition::run_on_t::linked_ref:
+                     return tr("Linked Ref", "condition list - run on");
+                  case condition::run_on_t::package_data:
+                     //
+                     // TODO: check index; display which data
+                     //
+                     return tr("Package Data", "condition list - run on");
+                  case condition::run_on_t::quest_alias:
+                     return tr("Alias ID #u", "condition list - run on").arg(condition.run_on_index); // TODO: display alias name if possible
+                  case condition::run_on_t::reference:
+                     if (auto* stub = condition.run_on_reference.get_form_stub()) {
+                        return tr("[%1:%2]%3", "condition list - run on form")
+                           .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+                           .arg(stub->formID, 8, 16, QChar('0'))
+                           .arg(stub->get_editor_id());
+                     }
+                     return tr("No Reference", "condition list - run on");
+                  case condition::run_on_t::subject:
+                     return tr("Subject", "condition list - run on");
+                  case condition::run_on_t::target:
+                     return tr("Target", "condition list - run on");
+               }
                break;
             case ColumnFunction:
-               // TODO: function name
+               if (function) {
+                  return QString(function->name);
+               }
                break;
             case ColumnArgs:
                // TODO: args (see TopicInfo screenshot for example)
                break;
             case ColumnOperator:
-               // TODO: comparison operator
+               switch (condition.get_operator()) {
+                  case condition::operator_t::equal:
+                     return tr("==", "condition list - operator, equal");
+                  case condition::operator_t::greater:
+                     return tr(">",  "condition list - operator, greater");
+                  case condition::operator_t::greater_or_equal:
+                     return tr(">=", "condition list - operator, greater or equal");
+                  case condition::operator_t::less:
+                     return tr("<",  "condition list - operator, less");
+                  case condition::operator_t::less_or_equal:
+                     return tr("<=", "condition list - operator, less or equal");
+                  case condition::operator_t::not_equal:
+                     return tr("!=", "condition list - operator, not equal");
+               }
                break;
             case ColumnOperand:
-               // TODO: float or global
+               if (flags & condition::flag::compare_to_global) {
+                  if (!condition.compare_to_global)
+                     return tr("-NONE-", "condition list - compare to global (missing)");
+                  auto* stub = condition.compare_to_global.get_form_stub();
+                  return tr("[%1:%2]%3", "condition list - compare to global")
+                     .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+                     .arg(stub->formID, 8, 16, QChar('0'))
+                     .arg(stub->get_editor_id());
+               } else {
+                  return condition.compare_to_constant;
+               }
                break;
             case ColumnUsesOr:
-               if (condition.get_flags() & condition::flag::or_linked)
+               if (flags & condition::flag::or_linked)
                   return tr("OR", "condition list - or");
+               break;
+         }
+         break;
+      case Qt::FontRole:
+         switch (column) {
+            case ColumnTarget:
+               //
+               // Show the run-on column in italics if it isn't an alias name, etc.. Italics 
+               // will distinguish built-in strings from names in user content.
+               //
+               switch (condition.run_on) {
+                  case condition::run_on_t::package_data:
+                     {
+                        auto font = QFont();
+                        font.setItalic(true);
+                        return font;
+                     }
+                  case condition::run_on_t::quest_alias:
+                     //
+                     // TODO: if it was possible to show an alias name, then (break) here.
+                     //
+                     [[fallthrough]]
+                  case condition::run_on_t::reference:
+                     if (condition.run_on_reference)
+                        break;
+                     [[fallthrough]]
+                  case condition::run_on_t::event_data:
+                  case condition::run_on_t::linked_ref:
+                  case condition::run_on_t::combat_target:
+                  case condition::run_on_t::subject:
+                  case condition::run_on_t::target:
+                     {
+                        auto font = QFont();
+                        font.setItalic(true);
+                        return font;
+                     }
+               }
+               break;
+            case ColumnOperand:
+               if (!condition.compare_to_global && (flags & condition::flag::compare_to_global)) {
+                  auto font = QFont();
+                  font.setItalic(true);
+                  return font;
+               }
                break;
          }
          break;

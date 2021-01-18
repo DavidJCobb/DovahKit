@@ -17,7 +17,9 @@ class ConditionListModel : public QAbstractTableModel {
    public:
       using form_stub = dovah::form_stub;
       using condition = dovah::loaded_forms::components::condition;
+      using loaded_form_t = dovah::loaded_forms::Form;
       using arg_underlying_type = dovah::loaded_forms::components::condition_info::arg_underlying_type;
+      using condition_function  = dovah::loaded_forms::components::condition_info::function;
       //
       static constexpr int ColumnTarget   = 0;
       static constexpr int ColumnFunction = 1;
@@ -27,8 +29,9 @@ class ConditionListModel : public QAbstractTableModel {
       static constexpr int ColumnUsesOr   = 5;
       //
    protected:
-      form_stub* owner = nullptr;
-      std::vector<condition>* target = nullptr;
+      form_stub*     owner = nullptr; // form which owns the condition list (if a normal form)
+      loaded_form_t* clone = nullptr; // form which owns the condition list (if a temporary/working copy)
+      std::vector<condition>* target = nullptr; // condition list to modify
       //
    protected slots:
       void formModified(const dovah::form_stub*);

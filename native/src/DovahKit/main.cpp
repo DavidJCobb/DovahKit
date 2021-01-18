@@ -437,42 +437,80 @@
 //                         WHICH... WELL, WE'RE TRYING THAT, AND IT'S NOT GOING WELL 
 //                         AT ALL.
 //
-//                          - Loaded-form data has to have an owning form stub, and 
-//                            all set operations for form_reference_t must use that 
-//                            stub to update use info. This means that temporary 
-//                            clones of a form will need a dummy form stub, and that 
-//                            the use info functions on form_stub will need to be 
-//                            coded to act as no-ops when called on a dummy.
+//                          - Audit all access to a loaded-form instance's stub, and 
+//                            make the stub optional in all cases.
 //
-//                             - Since all form_stubs need at least one file, put the 
-//                               "is temporary clone dummy" flag on the dummy stub's 
-//                               file. We've already added the flag to the list; we 
-//                               need to have (file_load_order) create the dummy file 
-//                               as appropriate, give it a function to create a temp-
-//                               clone of a form, and modify the form stub use info 
-//                               code to no-op if the first file is flagged as a 
-//                               temp-clone dummy.
+//                          - Define some function Form::make_temporary_clone which 
+//                            leverages (_clone_impl) to create the clone.
 //
-//                          - For creating a temporary clone, we can leverage the 
-//                            existing Form::_clone_impl function.
+//                          - Define some function Form::merge_temporary_clone which 
+//                            leverages (_clear_impl) and (_clone_impl).
 //
-//                          - We can also use Form::_clone_impl to write the contents 
-//                            of the temporary clone back overtop the original, in 
-//                            order to "commit" the changes that the temporary clone 
-//                            holds. However, we'd need to first clear all data in 
-//                            the original form. We can write a function explicitly 
-//                            for that, or we can modify the _clone_impl functions 
-//                            to (likely redundantly) clear all data on the form 
-//                            that is being cloned over.
+//                          - Modify DovahKitCore to create the following functions:
 //
-//                             - A "clear all data" function feels neater.
+//                             - create_temporary_form_clone
 //
-//                                - Wouldn't doing it in _clone_impl be easier to 
-//                                  maintain, though? We'd be grouping form ops 
-//                                  together into one place.
+//                                - Creates the clone, retains a pointer to it, and 
+//                                  returns it. We retain a pointer so that we can 
+//                                  update the clone in response to form deletions 
+//                                  and losses; since the clone isn't tracked by the 
+//                                  file_load_order, we have to do that ourselves.
+//                                  
+//                                   - Whenever the clone is modified by DovahKitCore 
+//                                     in response to these or similar events, it 
+//                                     should emit a signal to notify anything that 
+//                                     happens to be working with the clone about 
+//                                     that change.
 //
-//                                   = bro we JUST wrote clear functions for all 
-//                                     form types
+//                             - commit_temporary_form_clone
+//
+//                                - Applies the clone to the original form, and then 
+//                                  deletes the clone (un-tracking it as well).
+//
+//                             - cancel_temporary_form_clone
+//
+//                                - Deletes the clone (un-trackign it as well).
+//
+//                             = Documentation on the loaded-form class should mention 
+//                               that temporary clones ARE NOT automatically updated 
+//                               by the (file_load_order) to sever references to lost 
+//                               or deleted forms, that frontends assume that respons-
+//                               ibility themselves, and that frontends may wish to 
+//                               wrap the create/commit/cancel functions under their 
+//                               own systems in order to properly sever references to 
+//                               lost and deleted forms.
+//
+//                                - Moreover, if a frontend CAN'T sever a reference 
+//                                  from a temporary/working clone to a to-be-deleted 
+//                                  form, it will not be able to prevent that deletion 
+//                                  within the backend, which means that working with 
+//                                  the clone past that point will no longer be safe 
+//                                  (as it will have dangling pointers). The frontend 
+//                                  should be programmed to account for this and to 
+//                                  abort the editing session (if it can't force an 
+//                                  immediate discard of the clone).
+//
+//                          - Create a special subclass of FormDialogBaseTemplate 
+//                            which is wired up to use the above automatically. Then, 
+//                            make the Quest-editing dialog subclass it.
+//
+//                       = Condition list UI
+//
+//                          - Code to stringify and display condition arguments.
+//
+//                          - React to DovahKitCore modifying the clone being worked 
+//                            with (if any).
+//
+//                          - React to changes to the form stub being worked with (if 
+//                            any).
+//
+//                          - UI for editing a condition
+//
+//                          - Code for adding and editing conditions
+//
+//                          - Code for reordering conditions
+//
+//                          - Code for deleting conditions
 //
 //                       - Class
 //
