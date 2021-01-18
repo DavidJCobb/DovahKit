@@ -179,14 +179,6 @@ namespace dovah::loaded_forms {
             case 'COED':
                this->inventory.load(subrecord, intfc);
                break;
-            case 'PRKZ':
-               if (subrecord.read(perkListSize))
-                  this->perks.reserve(perkListSize);
-               break;
-            case 'PRKR':
-               if (subrecord.read(formID))
-                  this->perks.push_back(formID);
-               break;
             case 'SCOR':
                subrecord.read(this->package_override_lists.spectator);
                break;
@@ -404,6 +396,7 @@ namespace dovah::loaded_forms {
          CNAM.write(this->journal_text);
          CNAM.close();
          record.write_formID_subrecord('NAM0', this->next_quest_id, true);
+         return true;
       }
       void Quest::LogEntry::sever_outbound_references(form_stub& other, form_stub& my_owner) noexcept {
          for (auto& cnd : this->conditions)
@@ -686,7 +679,6 @@ namespace dovah::loaded_forms {
                break;
             case 'QTGL': // text global (there can be multiple)
             case 'NAM0': // log entry next quest
-            case 'PRKR': // alias perk
             case 'SCOR': // alias spectator override package list ID
             case 'OCOR': // alias override corpse override package list ID
             case 'GWOR': // alias guard warn override package list ID
@@ -738,7 +730,6 @@ namespace dovah::loaded_forms {
             case 'ALFI': // alias force-into-alias ID
             case 'BNAM': // alias hidden flag
             case 'ONAM': // alias hidden flag
-            case 'PRKZ': // alias perk count
             case 'ALFA': // alias fill from internal alias ID
             case 'ALEA': // alias fill from external alias ID
             case 'ALFE': // alias fill from event
@@ -797,14 +788,17 @@ namespace dovah::loaded_forms {
          cnd.save(record, intfc);
       }
       for (auto& obj : this->stages)
-         obj.save(record, intfc);
+         if (!obj.save(record, intfc))
+            return false;
       for (auto& obj : this->objectives)
-         obj.save(record, intfc);
+         if (!obj.save(record, intfc))
+            return false;
       auto& ANAM = record.open_next_subrecord('ANAM');
       ANAM.write(this->next_alias_id);
       ANAM.close();
       for (auto* alias : this->aliases)
          alias->save(record, intfc);
+      return true;
    }
    void Quest::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this->stub);

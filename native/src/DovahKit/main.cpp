@@ -424,6 +424,76 @@
 //                   RETURN QUEST ALIASES TO LUA, SINCE SCRIPT PROPERTIES CAN HOLD 
 //                   THEM AS VALUES.
 //
+//                    - QUEST FORM SEEMS COMPLETE
+//
+//                    - Quest UI
+//
+//                       - Class
+//
+//                       - Basic Data
+//
+//                          - All single fields
+//
+//                          - Text display globals
+//
+//                             - Take the FormList contents listview and make it a 
+//                               generic widget. Make it possible to limit the form 
+//                               types that it accepts when dragging and dropping. 
+//                               Add a context menu item which pops a dialog that 
+//                               can be used to add new forms.
+//
+//                          - Conditions UI
+//
+//                       - Stages
+//
+//                          - Stage-specific and entry-specific content
+//
+//                          - Conditions UI
+//
+//                       - Objectives
+//
+//                          - Objective-specific and target-specific content
+//
+//                          - Conditions UI
+//
+//                       - Aliases
+//
+//                          - Window for editing aliases
+//
+//                       - Dialogue
+//
+//                          - Support for Topics and TopicInfos
+//
+//                             - Changes to form_stub
+//
+//                             - Support for these form types
+//
+//                             - UI for these form types
+//
+//                                - The function for opening a form edit window 
+//                                  needs to treat these form types as a special 
+//                                  case and open the full "hierarchy" of forms, 
+//                                  e.g. QUST/DIAL/INFO, as modeless/modal/modal.
+//
+//                          - Player tab
+//
+//                          - Favor tab
+//
+//                          - Combat tab
+//
+//                          - Detection tab
+//
+//                          - Service tab
+//
+//                          - Misc tab
+//
+//                       - Scenes
+//
+//                       - Scripts
+//
+//                    - Lua wrappers for Quest data (bare minimum: the form itself 
+//                      and any aliases contained therein)
+//
 //                 - Script properties. Implement them as elements in a named 
 //                   collection, and give them "name," "type," and "value" 
 //                   properties, e.g.

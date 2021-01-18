@@ -62,6 +62,7 @@ namespace dovah::loaded_forms {
          virtual void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept = 0;
    };
    class LocationAlias : public Alias {
+      friend class Quest;
       public:
          enum class fill_type_t {
             none,
@@ -83,6 +84,7 @@ namespace dovah::loaded_forms {
          virtual void sever_outbound_references(form_stub& target, form_stub& my_owner) noexcept override;
    };
    class ReferenceAlias : public Alias {
+      friend class Quest;
       public:
          enum class fill_type_t {
             none                       = 0,
@@ -98,7 +100,6 @@ namespace dovah::loaded_forms {
          fill_type_t fill_type = fill_type_t::none;
          components::keyword_list      keywords; // KSIZ, KWDA
          components::container_data    inventory;
-         std::vector<form_reference_t> perks;    // PRKZ, PRKR
          std::vector<form_reference_t> packages; // ALPC
          std::vector<form_reference_t> factions; // ALFC
          std::vector<form_reference_t> spells;   // ALSP
