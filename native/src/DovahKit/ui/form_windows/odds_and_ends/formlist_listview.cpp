@@ -220,6 +220,12 @@ void FormListListviewModel::setAllowGaps(bool g) {
       return !item.stub;
    });
 }
+void FormListListviewModel::setShowIndices(bool s) {
+   if (s == this->show_indices)
+      return;
+   this->show_indices = s;
+   emit headerDataChanged(Qt::Vertical, 0, this->children.size() - 1);
+}
 QVector<dovah::form_stub*> FormListListviewModel::stubs() const noexcept {
    QVector<dovah::form_stub*> s;
    s.reserve(this->children.size());
@@ -290,20 +296,20 @@ QVariant FormListListviewModel::data(const QModelIndex& index, int role) const {
    auto item   = (item_type*)index.internalPointer();
    auto column = index.column();
    switch (column) {
-      case 0: // signature
+      case ColumnType: // signature
          switch (role) {
             case Qt::DisplayRole:
                return item->signature;
          }
          break;
-      case 1: // editor ID or parent cell information
+      case ColumnName: // editor ID or parent cell information
          switch (role) {
             case Qt::DisplayRole:
             case Qt::ToolTipRole:
                return item->editorID;
          }
          break;
-      case 2: // form ID
+      case ColumnFormID: // form ID
          switch (role) {
             case Qt::DisplayRole:
                return QString("%1").arg(item->stub ? item->stub->formID : 0, 8, 16, QChar('0')).toUpper();
@@ -398,14 +404,17 @@ bool FormListListviewModel::moveRows(const QModelIndex& from_parent, int first_r
 }
 //
 QVariant FormListListviewModel::headerData(int section, Qt::Orientation orientation, int role) const {
-   if (orientation != Qt::Orientation::Horizontal)
+   if (orientation != Qt::Orientation::Horizontal) {
+      if (this->show_indices && role == Qt::DisplayRole)
+         return section;
       return QVariant();
+   }
    switch (role) {
       case Qt::DisplayRole:
          switch (section) {
-            case 0: return tr("Type",    "FormList listview");
-            case 1: return tr("Name",    "FormList listview");
-            case 2: return tr("Form ID", "FormList listview");
+            case ColumnType:   return tr("Type",    "FormList listview");
+            case ColumnName:   return tr("Name",    "FormList listview");
+            case ColumnFormID: return tr("Form ID", "FormList listview");
          }
          break;
    }
@@ -485,7 +494,6 @@ FormListListview::FormListListview(QWidget* parent) : QTableView(parent) {
    this->setModel(new model_type(this));
    this->setSelectionBehavior(QAbstractItemView::SelectRows);
    this->setSelectionMode(QAbstractItemView::ExtendedSelection);
-   this->verticalHeader()->setDefaultSectionSize(0);
    //
    this->setAcceptDrops(true);
    this->setDragDropOverwriteMode(false);
@@ -494,11 +502,12 @@ FormListListview::FormListListview(QWidget* parent) : QTableView(parent) {
    auto metrics = QFontMetrics(this->font());
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
-   header->resizeSection(0, metrics.boundingRect("XMMX").width() * 1.5F + 4);
-   header->resizeSection(2, 4);
-   header->setSectionResizeMode(0, QHeaderView::Interactive);
-   header->setSectionResizeMode(1, QHeaderView::Stretch);
-   header->setSectionResizeMode(2, QHeaderView::Interactive);
+   header->resizeSection(model_type::ColumnType,   metrics.boundingRect("XMMX").width() * 1.5F + 4);
+   header->resizeSection(model_type::ColumnFormID, 4);
+   header->setSectionResizeMode(model_type::ColumnType,   QHeaderView::Interactive);
+   header->setSectionResizeMode(model_type::ColumnName,   QHeaderView::Stretch);
+   header->setSectionResizeMode(model_type::ColumnFormID, QHeaderView::Interactive);
+   header->setStretchLastSection(false);
    //
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       if (!index.isValid())

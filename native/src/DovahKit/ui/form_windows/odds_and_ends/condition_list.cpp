@@ -182,11 +182,11 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      //
                      // TODO: if it was possible to show an alias name, then (break) here.
                      //
-                     [[fallthrough]]
+                     [[fallthrough]];
                   case condition::run_on_t::reference:
                      if (condition.run_on_reference)
                         break;
-                     [[fallthrough]]
+                     [[fallthrough]];
                   case condition::run_on_t::event_data:
                   case condition::run_on_t::linked_ref:
                   case condition::run_on_t::combat_target:

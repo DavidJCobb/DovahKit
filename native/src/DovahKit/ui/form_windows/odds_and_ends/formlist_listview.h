@@ -33,11 +33,17 @@ class FormListListviewModel : public QAbstractTableModel {
       using item_type   = FormListListviewModelItem;
       using form_stub   = dovah::form_stub;
       using form_type_t = dovah::form_type_t;
+      //
+      static constexpr int ColumnType   = 0;
+      static constexpr int ColumnName   = 1;
+      static constexpr int ColumnFormID = 2;
+      //
    protected:
       QVector<item_type*>  children;
       QVector<item_type*>  queued_additions;
       QVector<form_type_t> allowed_form_types; // if empty, then no limit
-      bool allow_gaps = true;
+      bool allow_gaps   = true;
+      bool show_indices = true;
       //
       void addStub(dovah::form_stub*, bool queued);
       void removeStub(item_type*);
@@ -65,6 +71,8 @@ class FormListListviewModel : public QAbstractTableModel {
       inline void reserve(int i) { this->children.reserve(i); }
       void setAllowedFormTypes(QVector<form_type_t>);
       void setAllowGaps(bool);
+      void setShowIndices(bool);
+      inline bool showIndices() const noexcept { return this->show_indices; }
       QVector<dovah::form_stub*> stubs() const noexcept;
       
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
@@ -115,6 +123,7 @@ class FormListListview : public QTableView {
       //
    protected:
       const dovah::form_stub* target = nullptr;
+      bool show_index = true;
       //
       virtual void keyPressEvent(QKeyEvent* event) override;
 };
