@@ -737,6 +737,9 @@ namespace dovah::loaded_forms {
    void Quest::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
+      if (!intfc.is_winning_record)
+         return;
+      //
       bool isInEventConditions = false;
       bool hasLastLogEntry     = false;
       while (auto& subrecord = record.next_subrecord()) {

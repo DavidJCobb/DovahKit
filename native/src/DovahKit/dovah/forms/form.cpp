@@ -64,7 +64,7 @@ namespace dovah::loaded_forms {
             instance = nullptr;
          }
       }
-      assert(instance->stub == nullptr);
+      assert(instance && instance->stub == nullptr);
       return instance;
    }
    void Form::merge_working_copy(Form& working) {

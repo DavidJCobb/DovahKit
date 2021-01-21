@@ -508,6 +508,7 @@ FormListListview::FormListListview(QWidget* parent) : QTableView(parent) {
    header->setSectionResizeMode(model_type::ColumnName,   QHeaderView::Stretch);
    header->setSectionResizeMode(model_type::ColumnFormID, QHeaderView::Interactive);
    header->setStretchLastSection(false);
+   this->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
    //
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       if (!index.isValid())

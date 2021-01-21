@@ -8,9 +8,10 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
    {
       auto* widget = this->ui.textDisplayGlobals;
       auto* model  = widget->fullModel();
-      this->ui.textDisplayGlobals->setAcceptDrops(true);
+      widget->setAcceptDrops(true);
       model->setAllowGaps(false);
       model->setAllowedFormTypes({ dovah::form_type::global });
+      model->setShowIndices(false);
    }
    {
       using _e = form_t::quest_type::type;
@@ -18,12 +19,12 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
       this->ui.questType->addItem(tr("Main",                  "Quest Type"), _e::main);
       this->ui.questType->addItem(tr("College of Winterhold", "Quest Type"), _e::mages_guild);
       this->ui.questType->addItem(tr("Thieves Guild",         "Quest Type"), _e::thieves_guild);
-      this->ui.questType->addItem(tr("dark_brotherhood",      "Quest Type"), _e::dark_brotherhood);
+      this->ui.questType->addItem(tr("Dark Brotherhood",      "Quest Type"), _e::dark_brotherhood);
       this->ui.questType->addItem(tr("Companions",            "Quest Type"), _e::companions);
       this->ui.questType->addItem(tr("Miscellaneous",         "Quest Type"), _e::miscellaneous);
       this->ui.questType->addItem(tr("Daedric",               "Quest Type"), _e::daedric);
       this->ui.questType->addItem(tr("Sidequest",             "Quest Type"), _e::sidequest);
-      this->ui.questType->addItem(tr("civil_war",             "Quest Type"), _e::civil_war);
+      this->ui.questType->addItem(tr("Civil War",             "Quest Type"), _e::civil_war);
       this->ui.questType->addItem(tr("DLC: Dawnguard",        "Quest Type"), _e::dlc_dawnguard);
       this->ui.questType->addItem(tr("DLC: Dragonborn",       "Quest Type"), _e::dlc_dragonborn);
    }
