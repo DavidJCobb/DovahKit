@@ -63,7 +63,7 @@ class FormDialogBaseTemplate : public QDialog {
 };
 //
 // Place this next macro inside the class definition for any FormDialogBaseTemplate 
-// or FormDialogWorkingCopyBase subclass, akin to the Q_OBJECT macro.
+// subclass, akin to the Q_OBJECT macro.
 //
 #define DOVAHKIT_FORM_EDIT_DIALOG template<class _dialog_t, typename loaded_form_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog, dovah::form_stub* stub);
 

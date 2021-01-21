@@ -160,6 +160,8 @@ namespace dovah::loaded_forms {
       copy->conditions.resize(size);
       for (size_t i = 0; i < size; ++i)
          copy->conditions[i].clone_from(this->conditions[i], clone_owner);
+      //
+      return copy;
    }
    void LocationAlias::clear(loaded_forms::Form& my_owner) {
       this->id = -1;
@@ -468,6 +470,8 @@ namespace dovah::loaded_forms {
       copy->conditions.resize(size);
       for (size_t i = 0; i < size; ++i)
          copy->conditions[i].clone_from(this->conditions[i], clone_owner);
+      //
+      return copy;
    }
    void ReferenceAlias::clear(loaded_forms::Form& my_owner) {
       this->id = -1;
@@ -548,6 +552,15 @@ namespace dovah::loaded_forms {
                this->conditions[i].clone_from(copy.conditions[i], owner);
          }
       }
+      void Quest::LogEntry::clear(loaded_forms::Form& owner) {
+         this->flags = 0;
+         this->journal_text.reset();
+         this->next_quest_id.set(owner, nullptr);
+         //
+         for (auto& cnd : this->conditions)
+            cnd.clear(owner);
+         this->conditions.clear();
+      }
       #pragma endregion
 
       #pragma region Quest stages
@@ -582,6 +595,15 @@ namespace dovah::loaded_forms {
          this->entries.resize(size);
          for (size_t i = 0; i < size; ++i)
             this->entries[i].clone_from(copy.entries[i], owner);
+      }
+      void Quest::Stage::clear(loaded_forms::Form& owner) {
+         this->index   = 0;
+         this->flags   = 0;
+         this->padding = 0;
+         //
+         for (auto& entry : this->entries)
+            entry.clear(owner);
+         this->entries.clear();
       }
       #pragma endregion
 
@@ -618,6 +640,14 @@ namespace dovah::loaded_forms {
             for (size_t i = 0; i < size; ++i)
                this->conditions[i].clone_from(copy.conditions[i], owner);
          }
+      }
+      void Quest::Target::clear(loaded_forms::Form& owner) {
+         this->aliasID = -1;
+         this->flags   = 0;
+         //
+         for (auto& cnd : this->conditions)
+            cnd.clear(owner);
+         this->conditions.clear();
       }
       #pragma endregion
 
@@ -678,10 +708,23 @@ namespace dovah::loaded_forms {
             t.sever_outbound_references(other, my_owner);
       }
       void Quest::Objective::clone_from(const Objective& copy, loaded_forms::Form& owner) {
+         this->index = copy.index;
+         this->flags = copy.flags;
+         this->text  = copy.text;
+         //
          size_t size = copy.targets.size();
          this->targets.resize(size);
          for (size_t i = 0; i < size; ++i)
             this->targets[i].clone_from(copy.targets[i], owner);
+      }
+      void Quest::Objective::clear(loaded_forms::Form& owner) {
+         this->index = 0;
+         this->flags = 0;
+         this->text.reset();
+         //
+         for (auto& t : this->targets)
+            t.clear(owner);
+         this->targets.clear();
       }
       #pragma endregion
    #pragma endregion
@@ -1046,7 +1089,7 @@ namespace dovah::loaded_forms {
          obj->sever_outbound_references(other, *this);
       remove_form_from_reference_list(this->text_display_globals, other, *this);
    }
-   void Quest::_clear_impl() {
+   void Quest::_clear_impl() noexcept {
       this->script_data.clear(*this);
       for (auto& cnd : this->conditions.dialogue)
          cnd.clear(*this);

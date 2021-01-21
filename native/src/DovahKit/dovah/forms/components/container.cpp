@@ -85,6 +85,7 @@ namespace dovah::loaded_forms::components {
             COED.close();
          }
       }
+      return true;
    }
    /*static*/ void container_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
