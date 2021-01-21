@@ -29,6 +29,7 @@
 
 namespace form_dialog_helpers {
    template<class _dialog_t, typename loaded_form_t> void initialize(_dialog_t& dialog, dovah::form_stub* stub);
+   template<class _dialog_t> void initialize(_dialog_t& dialog);
 }
 
 class FormDialogBaseTemplate : public QDialog {
@@ -60,6 +61,11 @@ class FormDialogBaseTemplate : public QDialog {
       // helper/shortcut function ONLY suitable for instances of formID_extra_data
       void save_extra_form(dovah::form_stub*,     extra_data_list&, extra_data_type, bool remove_if_no_form = true);
 };
+//
+// Place this next macro inside the class definition for any FormDialogBaseTemplate 
+// or FormDialogWorkingCopyBase subclass, akin to the Q_OBJECT macro.
+//
+#define DOVAHKIT_FORM_EDIT_DIALOG template<class _dialog_t, typename loaded_form_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog, dovah::form_stub* stub);
 
 class FormDialogWorkingCopyBase : public QDialog {
    Q_OBJECT
@@ -89,9 +95,8 @@ class FormDialogWorkingCopyBase : public QDialog {
       virtual void _load_impl() = 0; // pull data from a loaded form into the UI
       virtual void _save_impl() = 0; // save data from the UI into a loaded form (only for things that a working copy wouldn't include, like form flags and the editor ID)
 };
-
 //
-// Place this next macro inside the class definition for any FormDialogBaseTemplate 
-// or FormDialogWorkingCopyBase subclass, akin to the Q_OBJECT macro.
+// Place this next macro inside the class definition for any FormDialogWorkingCopyBase 
+// subclass, akin to the Q_OBJECT macro.
 //
-#define DOVAHKIT_FORM_EDIT_DIALOG template<class _dialog_t, typename loaded_form_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog, dovah::form_stub* stub);
+#define DOVAHKIT_FORM_COPY_EDIT_DIALOG template<class _dialog_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog);

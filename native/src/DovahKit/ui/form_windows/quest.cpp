@@ -4,6 +4,7 @@
 #include "../../helpers/qt/basic_bindings.h"
 
 FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
+   form_dialog_helpers::initialize(*this);
    {
       auto* widget = this->ui.textDisplayGlobals;
       auto* model  = widget->fullModel();

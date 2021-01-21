@@ -60,6 +60,8 @@ namespace dovah::loaded_forms {
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) = 0;
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) = 0;
          virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept = 0;
+         virtual Alias* clone(loaded_forms::Form& clone_owner) = 0;
+         virtual void clear(loaded_forms::Form& my_owner) = 0;
    };
    class LocationAlias : public Alias {
       friend class Quest;
@@ -82,6 +84,8 @@ namespace dovah::loaded_forms {
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
+         virtual Alias* clone(loaded_forms::Form& clone_owner) override;
+         virtual void clear(loaded_forms::Form& my_owner) override;
    };
    class ReferenceAlias : public Alias {
       friend class Quest;
@@ -127,6 +131,8 @@ namespace dovah::loaded_forms {
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
+         virtual Alias* clone(loaded_forms::Form& clone_owner) override;
+         virtual void clear(loaded_forms::Form& my_owner) override;
    };
 
    class Quest : public Form {
@@ -189,6 +195,8 @@ namespace dovah::loaded_forms {
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+               void clone_from(const LogEntry&, loaded_forms::Form&);
+               void clear(loaded_forms::Form&);
          };
          class Stage {
             friend class Quest;
@@ -211,6 +219,8 @@ namespace dovah::loaded_forms {
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes INDX subrecord has already been opened
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+               void clone_from(const Stage&, loaded_forms::Form&);
+               void clear(loaded_forms::Form&);
          };
 
          class Target { // QSTA
@@ -232,6 +242,8 @@ namespace dovah::loaded_forms {
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes QSTA subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+               void clone_from(const Target&, loaded_forms::Form&);
+               void clear(loaded_forms::Form&);
          };
          class Objective {
             friend class Quest;
@@ -252,6 +264,8 @@ namespace dovah::loaded_forms {
                void load(tes_record_reader&, load_order_interfaces::form_load&); // assumes QOBJ subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+               void clone_from(const Objective&, loaded_forms::Form&);
+               void clear(loaded_forms::Form&);
          };
 
          localized_string name;
@@ -283,7 +297,9 @@ namespace dovah::loaded_forms {
          virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
 
       protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
+         virtual void _clear_impl() noexcept override;
    };
 }

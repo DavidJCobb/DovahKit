@@ -140,6 +140,44 @@ namespace dovah::loaded_forms {
       for (auto& cnd : this->conditions)
          cnd.sever_outbound_references_to(target, my_owner);
    }
+   Alias* LocationAlias::clone(loaded_forms::Form& clone_owner) {
+      auto* copy = new LocationAlias;
+      //
+      copy->id = this->id;
+      copy->name = this->name;
+      copy->flags = this->flags;
+      copy->hidden_flags = this->hidden_flags;
+      copy->force_into_alias_id = this->force_into_alias_id;
+      copy->fill_from_alias = this->fill_from_alias;
+      copy->fill_from_event = this->fill_from_event;
+      copy->fill_from_event_data = this->fill_from_event_data;
+      copy->fill_from_location.set(clone_owner, this->fill_from_location);
+      copy->fill_from_location_keyword.set(clone_owner, this->fill_from_location_keyword);
+      copy->fill_from_quest.set(clone_owner, this->fill_from_quest);
+      copy->fill_type = this->fill_type;
+      //
+      size_t size = this->conditions.size();
+      copy->conditions.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         copy->conditions[i].clone_from(this->conditions[i], clone_owner);
+   }
+   void LocationAlias::clear(loaded_forms::Form& my_owner) {
+      this->id = -1;
+      this->name.clear();
+      this->flags = 0;
+      this->hidden_flags = 0;
+      this->force_into_alias_id = -1;
+      this->fill_from_alias = -1;
+      this->fill_from_quest.set(my_owner, nullptr);
+      this->fill_from_event = 0;
+      this->fill_from_event_data = 0;
+      this->fill_from_location.set(my_owner, nullptr);
+      this->fill_from_location_keyword.set(my_owner, nullptr);
+      //
+      for (auto& cnd : this->conditions)
+         cnd.clear(my_owner);
+      this->conditions.clear();
+   }
 
    void ReferenceAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
@@ -393,6 +431,78 @@ namespace dovah::loaded_forms {
       remove_form_from_reference_list(this->packages, target, my_owner);
       this->additional_voicetype.clear_if(my_owner, target);
    }
+   Alias* ReferenceAlias::clone(loaded_forms::Form& clone_owner) {
+      auto* copy = new ReferenceAlias;
+      //
+      copy->id = this->id;
+      copy->name = this->name;
+      copy->flags = this->flags;
+      copy->hidden_flags = this->hidden_flags;
+      copy->keywords.clone_from(this->keywords, clone_owner);
+      copy->inventory.clone_from(this->inventory, clone_owner);
+      copy->additional_voicetype.set(clone_owner, this->additional_voicetype);
+      copy->create_object_at_alias = this->create_object_at_alias;
+      copy->create_object_of_level = this->create_object_of_level;
+      copy->create_object_of_type.set(clone_owner, this->create_object_of_type);
+      copy->display_name.set(clone_owner, this->display_name);
+      copy_form_reference_list(clone_owner, copy->packages, this->packages);
+      copy_form_reference_list(clone_owner, copy->factions, this->factions);
+      copy_form_reference_list(clone_owner, copy->spells, this->spells);
+      copy->package_override_lists.combat.set(clone_owner, this->package_override_lists.combat);
+      copy->package_override_lists.guard_warn.set(clone_owner, this->package_override_lists.guard_warn);
+      copy->package_override_lists.observe_corpse.set(clone_owner, this->package_override_lists.observe_corpse);
+      copy->package_override_lists.spectator.set(clone_owner, this->package_override_lists.spectator);
+      copy->force_into_alias_id = this->force_into_alias_id;
+      copy->fill_from_alias = this->fill_from_alias;
+      copy->fill_from_event = this->fill_from_event;
+      copy->fill_from_event_data = this->fill_from_event_data;
+      copy->fill_from_quest.set(clone_owner, this->fill_from_quest);
+      copy->fill_from_reference.set(clone_owner, this->fill_from_reference);
+      copy->fill_from_unique_actor_base.set(clone_owner, this->fill_from_unique_actor_base);
+      copy->fill_loc_ref_type.set(clone_owner, this->fill_loc_ref_type);
+      copy->fill_near_alias = this->fill_near_alias;
+      copy->fill_near_alias_type = this->fill_near_alias_type;
+      copy->fill_type = this->fill_type;
+      //
+      size_t size = this->conditions.size();
+      copy->conditions.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         copy->conditions[i].clone_from(this->conditions[i], clone_owner);
+   }
+   void ReferenceAlias::clear(loaded_forms::Form& my_owner) {
+      this->id = -1;
+      this->name.clear();
+      this->flags = 0;
+      this->hidden_flags = 0;
+      this->keywords.clear(my_owner);
+      this->inventory.clear(my_owner);
+      this->additional_voicetype.set(my_owner, nullptr);
+      this->create_object_at_alias = this->create_object_at_alias;
+      this->create_object_of_level = this->create_object_of_level;
+      this->create_object_of_type.set(my_owner, this->create_object_of_type);
+      this->display_name.set(my_owner, nullptr);
+      clear_form_reference_list(this->packages, my_owner);
+      clear_form_reference_list(this->factions, my_owner);
+      clear_form_reference_list(this->spells,   my_owner);
+      this->package_override_lists.combat.set(my_owner, nullptr);
+      this->package_override_lists.guard_warn.set(my_owner, nullptr);
+      this->package_override_lists.observe_corpse.set(my_owner, nullptr);
+      this->package_override_lists.spectator.set(my_owner, nullptr);
+      this->force_into_alias_id  = -1;
+      this->fill_from_alias      = -1;
+      this->fill_from_event      = 0;
+      this->fill_from_event_data = 0;
+      this->fill_from_quest.set(my_owner, nullptr);
+      this->fill_from_reference.set(my_owner, nullptr);
+      this->fill_from_unique_actor_base.set(my_owner, nullptr);
+      this->fill_loc_ref_type.set(my_owner, nullptr);
+      this->fill_near_alias      = -1;
+      this->fill_near_alias_type = 0;
+      //
+      for (auto& cnd : this->conditions)
+         cnd.clear(my_owner);
+      this->conditions.clear();
+   }
    #pragma endregion
 
    #pragma region Quest components
@@ -427,6 +537,17 @@ namespace dovah::loaded_forms {
             cnd.sever_outbound_references_to(other, my_owner);
          this->next_quest_id.clear_if(my_owner, other);
       }
+      void Quest::LogEntry::clone_from(const LogEntry& copy, loaded_forms::Form& owner) {
+         this->flags         = copy.flags;
+         this->journal_text  = copy.journal_text;
+         this->next_quest_id = copy.next_quest_id;
+         {
+            size_t size = copy.conditions.size();
+            this->conditions.resize(size);
+            for (size_t i = 0; i < size; ++i)
+               this->conditions[i].clone_from(copy.conditions[i], owner);
+         }
+      }
       #pragma endregion
 
       #pragma region Quest stages
@@ -451,6 +572,16 @@ namespace dovah::loaded_forms {
       void Quest::Stage::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& entry : this->entries)
             entry.sever_outbound_references(other, my_owner);
+      }
+      void Quest::Stage::clone_from(const Stage& copy, loaded_forms::Form& owner) {
+         this->index   = copy.index;
+         this->flags   = copy.flags;
+         this->padding = copy.padding;
+         //
+         size_t size = copy.entries.size();
+         this->entries.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            this->entries[i].clone_from(copy.entries[i], owner);
       }
       #pragma endregion
 
@@ -477,6 +608,16 @@ namespace dovah::loaded_forms {
       void Quest::Target::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& cnd : this->conditions)
             cnd.sever_outbound_references_to(other, my_owner);
+      }
+      void Quest::Target::clone_from(const Target& copy, loaded_forms::Form& owner) {
+         this->aliasID = copy.aliasID;
+         this->flags   = copy.flags;
+         {
+            size_t size = copy.conditions.size();
+            this->conditions.resize(size);
+            for (size_t i = 0; i < size; ++i)
+               this->conditions[i].clone_from(copy.conditions[i], owner);
+         }
       }
       #pragma endregion
 
@@ -535,6 +676,12 @@ namespace dovah::loaded_forms {
       void Quest::Objective::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& t : this->targets)
             t.sever_outbound_references(other, my_owner);
+      }
+      void Quest::Objective::clone_from(const Objective& copy, loaded_forms::Form& owner) {
+         size_t size = copy.targets.size();
+         this->targets.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            this->targets[i].clone_from(copy.targets[i], owner);
       }
       #pragma endregion
    #pragma endregion
@@ -780,6 +927,63 @@ namespace dovah::loaded_forms {
          }
       }
    }
+   bool Quest::_clone_impl(Form* out) const noexcept {
+      auto copy = dynamic_cast<Quest*>(out);
+      if (!copy)
+         return false;
+      // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
+      copy->name         = this->name;
+      copy->flags        = this->flags;
+      copy->priority     = this->priority;
+      copy->form_version = this->form_version;
+      copy->unknown      = this->unknown;
+      copy->quest_type   = this->quest_type;
+      //
+      copy->event = this->event;
+      //
+      {
+         size_t size = this->text_display_globals.size();
+         copy->text_display_globals.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->text_display_globals[i].set(*copy, this->text_display_globals[i]);
+      }
+      //
+      copy->editor_category = this->editor_category;
+      //
+      {
+         size_t size = this->conditions.dialogue.size();
+         copy->conditions.dialogue.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->conditions.dialogue[i].clone_from(this->conditions.dialogue[i], *copy);
+      }
+      {
+         size_t size = this->conditions.event.size();
+         copy->conditions.event.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->conditions.event[i].clone_from(this->conditions.event[i], *copy);
+      }
+      {
+         size_t size = this->stages.size();
+         copy->stages.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->stages[i].clone_from(this->stages[i], *copy);
+      }
+      {
+         size_t size = this->objectives.size();
+         copy->objectives.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->objectives[i].clone_from(this->objectives[i], *copy);
+      }
+      copy->next_alias_id = this->next_alias_id;
+      {
+         size_t size = this->aliases.size();
+         copy->aliases.resize(size);
+         for (size_t i = 0; i < size; ++i)
+            copy->aliases[i] = this->aliases[i]->clone(*copy);
+      }
+      //
+      return true;
+   }
    bool Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
       //
@@ -841,5 +1045,24 @@ namespace dovah::loaded_forms {
       for (auto* obj : this->aliases)
          obj->sever_outbound_references(other, *this);
       remove_form_from_reference_list(this->text_display_globals, other, *this);
+   }
+   void Quest::_clear_impl() {
+      this->script_data.clear(*this);
+      for (auto& cnd : this->conditions.dialogue)
+         cnd.clear(*this);
+      this->conditions.dialogue.clear();
+      for (auto& cnd : this->conditions.event)
+         cnd.clear(*this);
+      this->conditions.event.clear();
+      for (auto& obj : this->stages)
+         obj.clear(*this);
+      this->stages.clear();
+      for (auto& obj : this->objectives)
+         obj.clear(*this);
+      this->objectives.clear();
+      for (auto* obj : this->aliases)
+         obj->clear(*this);
+      this->aliases.clear();
+      clear_form_reference_list(this->text_display_globals, *this);
    }
 }

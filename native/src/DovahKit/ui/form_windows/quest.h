@@ -5,7 +5,7 @@
 
 class FormDialogQuest : public FormDialogWorkingCopyBase {
    Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG
+   DOVAHKIT_FORM_COPY_EDIT_DIALOG
    public:
       using form_t = dovah::loaded_forms::Quest;
    public:
