@@ -254,6 +254,7 @@
     <ClCompile Include="helpers\lua\dump.cpp" />
     <ClCompile Include="helpers\lua\setfuncs.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
+    <ClCompile Include="helpers\qt\basic_bindings.cpp" />
     <ClCompile Include="helpers\qt\strings.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
     <ClCompile Include="helpers\rotation.cpp" />
@@ -514,6 +515,7 @@
     <ClInclude Include="helpers\lua\setfuncs.h" />
     <ClInclude Include="helpers\lua\set_top_on_exit.h" />
     <ClInclude Include="helpers\matrix.h" />
+    <ClInclude Include="helpers\qt\basic_bindings.h" />
     <ClInclude Include="helpers\rotation.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />

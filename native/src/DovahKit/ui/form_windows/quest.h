@@ -3,7 +3,7 @@
 #include "../../dovah/forms/Quest.h"
 #include "ui_quest.h"
 
-class FormDialogQuest : public FormDialogBaseTemplate {
+class FormDialogQuest : public FormDialogWorkingCopyBase {
    Q_OBJECT
    DOVAHKIT_FORM_EDIT_DIALOG
    public:
@@ -15,7 +15,6 @@ class FormDialogQuest : public FormDialogBaseTemplate {
       //
    protected:
       Ui::FormDialogQuest ui;
-      dovah::loaded_form_ptr<form_t> form;
       //
       virtual void _load_impl() override;
       virtual void _save_impl() override;

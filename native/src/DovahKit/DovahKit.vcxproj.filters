@@ -651,6 +651,9 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\qt\basic_bindings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1344,6 +1347,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\papyrus\property.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\basic_bindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 #include <QAbstractItemModel>
 #include <QTableView>
 #include <QString>
@@ -120,6 +121,9 @@ class FormListListview : public QTableView {
       inline model_type* fullModel() {
          return (model_type*)this->model();
       }
+      //
+      void import(const std::vector<dovah::form_reference_t>&);
+      void commit(std::vector<dovah::form_reference_t>&, dovah::loaded_forms::Form& owner);
       //
    protected:
       const dovah::form_stub* target = nullptr;

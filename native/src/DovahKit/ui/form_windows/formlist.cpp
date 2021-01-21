@@ -16,35 +16,11 @@ void FormDialogFormList::_load_impl() {
    auto& editor = DovahKitCore::get();
    //
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-   {
-      auto* widget = this->ui.forms;
-      auto& list   = this->form->contents;
-      widget->clear();
-      widget->reserve(list.size());
-      for (auto& ref : list)
-         widget->addStub(ref.get_form_stub());
-   }
+   this->ui.forms->import(this->form->contents);
 }
 void FormDialogFormList::_save_impl() {
    auto& editor = DovahKitCore::get();
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
-   //
-   auto&  list  = this->form->contents;
-   auto   stubs = this->ui.forms->stubs();
-   size_t i     = 0;
-   size_t size  = stubs.size();
-   if (list.size() < size)
-      list.resize(size);
-   for (; i < size; ++i)
-      list[i].set(*this->form, stubs[i]);
-   //
-   // Delete excess elements, if any were removed:
-   //
-   auto s = list.size();
-   if (s != size) {
-      for (; i < s; ++i)
-         list[i].set(*this->form, nullptr);
-      list.resize(size);
-   }
+   this->ui.forms->commit(this->form->contents, *this->form);
 }

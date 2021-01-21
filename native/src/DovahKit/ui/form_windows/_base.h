@@ -60,4 +60,38 @@ class FormDialogBaseTemplate : public QDialog {
       // helper/shortcut function ONLY suitable for instances of formID_extra_data
       void save_extra_form(dovah::form_stub*,     extra_data_list&, extra_data_type, bool remove_if_no_form = true);
 };
+
+class FormDialogWorkingCopyBase : public QDialog {
+   Q_OBJECT
+   private:
+      using form_type_t = dovah::form_type_t;
+      using loaded_t    = dovah::loaded_forms::Form;
+   public:
+      FormDialogWorkingCopyBase(dovah::form_type_t, dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
+      ~FormDialogWorkingCopyBase();
+      //
+      void load();
+      void save();
+      //
+      inline const dovah::form_stub* formStub() const noexcept { return this->stub; }
+      //
+   private slots:
+      //
+   private:
+      const dovah::form_type_t _allowed_form_type;
+   protected:
+      dovah::form_stub* stub = nullptr;
+      dovah::loaded_form_ptr<loaded_t> form;
+      loaded_t* clone = nullptr;
+      //
+      template<typename C> C* get_working_copy() const noexcept { return (C*)this->clone; }
+      //
+      virtual void _load_impl() = 0; // pull data from a loaded form into the UI
+      virtual void _save_impl() = 0; // save data from the UI into a loaded form (only for things that a working copy wouldn't include, like form flags and the editor ID)
+};
+
+//
+// Place this next macro inside the class definition for any FormDialogBaseTemplate 
+// or FormDialogWorkingCopyBase subclass, akin to the Q_OBJECT macro.
+//
 #define DOVAHKIT_FORM_EDIT_DIALOG template<class _dialog_t, typename loaded_form_t> friend void form_dialog_helpers::initialize(_dialog_t& dialog, dovah::form_stub* stub);

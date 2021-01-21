@@ -561,6 +561,31 @@ void FormListListview::removeSelected() {
    model->removeStubs(sm->selectedRows());
 }
 
+void FormListListview::import(const std::vector<dovah::form_reference_t>& list) {
+   this->clear();
+   this->reserve(list.size());
+   for (auto& ref : list)
+      this->addStub(ref.get_form_stub());
+}
+void FormListListview::commit(std::vector<dovah::form_reference_t>& list, dovah::loaded_forms::Form& owner) {
+   auto   stubs = this->stubs();
+   size_t i     = 0;
+   size_t size  = stubs.size();
+   if (list.size() < size)
+      list.resize(size);
+   for (; i < size; ++i)
+      list[i].set(owner, stubs[i]);
+   //
+   // Delete excess elements, if any were removed:
+   //
+   auto s = list.size();
+   if (s != size) {
+      for (; i < s; ++i)
+         list[i].set(owner, nullptr);
+      list.resize(size);
+   }
+}
+
 void FormListListview::keyPressEvent(QKeyEvent* event) {
    if (event->matches(QKeySequence::Delete)) {
       this->removeSelected();

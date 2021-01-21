@@ -1,10 +1,9 @@
 #include "quest.h"
 #include "_base_cpp.h"
 #include "../../dovah/core.h"
+#include "../../helpers/qt/basic_bindings.h"
 
-FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogBaseTemplate(stub, parent) {
-   form_dialog_helpers::initialize<FormDialogQuest, dovah::loaded_forms::Quest>(*this, stub);
-   //
+FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
    {
       auto* widget = this->ui.textDisplayGlobals;
       auto* model  = widget->fullModel();
@@ -13,7 +12,7 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
       model->setAllowedFormTypes({ dovah::form_type::global });
    }
    {
-      using _e = dovah::loaded_forms::Quest::quest_type::type;
+      using _e = form_t::quest_type::type;
       this->ui.questType->addItem(tr("None",                  "Quest Type"), _e::none);
       this->ui.questType->addItem(tr("Main",                  "Quest Type"), _e::main);
       this->ui.questType->addItem(tr("College of Winterhold", "Quest Type"), _e::mages_guild);
@@ -34,32 +33,25 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
    auto& editor = DovahKitCore::get();
 }
 void FormDialogQuest::_load_impl() {
-   auto& editor = DovahKitCore::get();
+   auto& editor  = DovahKitCore::get();
+   auto& working = *this->get_working_copy<form_t>();
    //
    #pragma region Basic Data
       this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-      this->ui.editorCategory->setText(QString::fromStdString(this->form->editor_category));
-      editor.assign_localized_string(this->form->name, this->ui.name->text());
-      this->ui.questType->setCurrentIndex(this->ui.questType->findData(this->form->quest_type));
+      cobb::qt::bind(this->ui.editorCategory, working.editor_category);
+      this->ui.name->setText(editor.convert_localized_string(working.name));
+      cobb::qt::bind(this->ui.questType, working.quest_type);
+      cobb::qt::bind(this->ui.flagAllowRepeatedStages, working.flags, form_t::quest_flag::allow_repeated_stages);
+      cobb::qt::bind(this->ui.flagExcludeFromDialogueExport, working.flags, form_t::quest_flag::exclude_from_dialogue_export);
+      cobb::qt::bind(this->ui.flagRunOnce, working.flags, form_t::quest_flag::run_once);
+      cobb::qt::bind(this->ui.flagStartGameEnabled, working.flags, form_t::quest_flag::start_game_enabled);
+      cobb::qt::bind(this->ui.flagWarnOnAliasFillFailure, working.flags, form_t::quest_flag::warn_on_alias_fill_failure);
       //
       // TODO: Event
       //
-      this->ui.flagAllowRepeatedStages->setChecked(this->form->flags & dovah::loaded_forms::Quest::quest_flag::allow_repeated_stages);
-      this->ui.flagExcludeFromDialogueExport->setChecked(this->form->flags & dovah::loaded_forms::Quest::quest_flag::exclude_from_dialogue_export);
-      this->ui.flagRunOnce->setChecked(this->form->flags & dovah::loaded_forms::Quest::quest_flag::run_once);
-      this->ui.flagStartGameEnabled->setChecked(this->form->flags & dovah::loaded_forms::Quest::quest_flag::start_game_enabled);
-      this->ui.flagWarnOnAliasFillFailure->setChecked(this->form->flags & dovah::loaded_forms::Quest::quest_flag::warn_on_alias_fill_failure);
+      this->ui.textDisplayGlobals->import(working.text_display_globals);
       //
-      {
-         auto* widget = this->ui.textDisplayGlobals;
-         auto& list   = this->form->text_display_globals;
-         widget->clear();
-         widget->reserve(list.size());
-         for (auto& ref : list)
-            widget->addStub(ref.get_form_stub());
-      }
-      //
-      this->ui.priority->setValue(this->form->priority);
+      cobb::qt::bind(this->ui.priority, working.priority);
       //
       // TODO: Dialogue conditions
       //
@@ -79,27 +71,19 @@ void FormDialogQuest::_load_impl() {
    #pragma endregion
 }
 void FormDialogQuest::_save_impl() {
-   auto& editor = DovahKitCore::get();
+   //
+   // FormDialogWorkingCopyBase will handle the task of saving the working copy. 
+   // We just have to save things not included in the working copy, namely form 
+   // flags and the editor ID, as well as anything that doesn't modify the 
+   // working copy in real-time (e.g. if a checkbox doesn't literally modify 
+   // the working copy *as* it's (un)checked).
+   //
+   auto& editor  = DovahKitCore::get();
+   auto& working = *this->get_working_copy<form_t>();
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
-   //
-   /*//
-   auto&  list  = this->form->contents;
-   auto   stubs = this->ui.forms->stubs();
-   size_t i     = 0;
-   size_t size  = stubs.size();
-   if (list.size() < size)
-      list.resize(size);
-   for (; i < size; ++i)
-      list[i].set(*this, stubs[i]);
-   //
-   // Delete excess elements, if any were removed:
-   //
-   auto s = list.size();
-   if (s != size) {
-      for (; i < s; ++i)
-         list[i].set(*this, nullptr);
-      list.resize(size);
-   }
-   //*/
+   editor.assign_localized_string(working.name, this->ui.name->text());
+   this->ui.textDisplayGlobals->commit(working.text_display_globals, working);
+
+   // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }
