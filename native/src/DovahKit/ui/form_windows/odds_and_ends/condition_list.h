@@ -55,7 +55,20 @@ class ConditionListModel : public QAbstractTableModel {
       QVariant data(const QModelIndex& index, int role) const override;
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
       //
+      // don't call this directly; Qt's design for this API is unintuitive; you WILL screw up
+      //
+      // use (moveSelection) instead
+      //
+      virtual bool moveRows(const QModelIndex& from_parent, int first_row_index, int count, const QModelIndex& to_parent, int to_position) override;
+      
+      inline int count() const noexcept {
+         if (!this->target)
+            return 0;
+         return this->target->size();
+      }
+      void moveSelection(const QItemSelection&, int down);
       void refresh();
       void setTarget(form_stub&, std::vector<condition>&);
       void setTarget(loaded_form_t&, std::vector<condition>&);

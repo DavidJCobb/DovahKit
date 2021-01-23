@@ -3,6 +3,7 @@
 #include "../../../editor/core.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../helpers/qt/strings.h"
+#include "../../../helpers/vector.h"
 
 #pragma region ConditionListModel
 ConditionListModel::ConditionListModel(QObject* parent) : QAbstractTableModel(parent) {
@@ -250,6 +251,46 @@ QVariant ConditionListModel::headerData(int section, Qt::Orientation orientation
    }
    return QVariant();
 }
+bool ConditionListModel::moveRows(const QModelIndex& from_parent, int first_row_index, int count, const QModelIndex& to_parent, int to_position) {
+   if (!this->target)
+      return false;
+   auto& list = *this->target;
+   auto  size = list.size();
+   //
+   // Correctness checks:
+   //
+   if (first_row_index < 0 || count <= 0 || to_position < 0) // don't move anything to/from before the start of the table
+      return false;
+   if (to_position > size) // don't move anything past the end of the table
+      return false;
+   auto last_to_move = first_row_index + count - 1;
+   if (last_to_move >= size) // don't move anything past the end of the table
+      return false;
+   //
+   // Let Qt run its own correctness checks and then run its preparations. Among other things, 
+   // this should check to make sure that the target position isn't in the middle of the range of 
+   // rows you're moving.
+   //
+   if (!beginMoveRows(from_parent, first_row_index, last_to_move, to_parent, to_position))
+      return false;
+   //
+   if (to_position >= first_row_index) { // are we moving elements down?
+      //
+      // Qt's API design is such that (to_position) is always the position at which the first 
+      // of the moved rows will end up, unless you're moving rows down within the same parent, 
+      // in which case (to_position) is the position before which the last of the moved rows 
+      // will end up. Here, we normalize it to always be the position at which the first of 
+      // the moved rows will end up.
+      //
+      to_position -= count;
+   }
+   cobb::move_range(list, first_row_index, count, to_position);
+   //
+   // And we're done!
+   //
+   endMoveRows();
+   return true;
+}
 
 void ConditionListModel::clearTarget() {
    this->beginResetModel();
@@ -258,6 +299,34 @@ void ConditionListModel::clearTarget() {
    this->owner = nullptr;
    this->clone = nullptr;
    this->endResetModel();
+}
+void ConditionListModel::moveSelection(const QItemSelection& indices, int down) {
+   if (!down || !indices.size())
+      return;
+   //
+   QModelIndex dummy;
+   auto size = this->count();
+   for (const QItemSelectionRange& range : indices) {
+      int to;
+      int top    = range.top();
+      int bottom = range.bottom();
+      if (down < 0) {
+         if (top < -down)
+            continue;
+         to = top + down;
+      } else if (down > 0) {
+         if (bottom >= size - down)
+            continue;
+         //
+         // Typically, when moving rows, the "destination index" is the index that the 
+         // first of the moved rows will be placed at. However, when moving rows down 
+         // within the same parent, the "destination index" is the index they will be 
+         // placed before.
+         //
+         to = bottom + down;
+      }
+      this->moveRows(dummy, top, bottom - top + 1, dummy, to);
+   }
 }
 void ConditionListModel::refresh() {
    if (!this->target)
@@ -297,7 +366,6 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       {
          auto* vh = list->verticalHeader();
          vh->setVisible(false);
-         //vh->setSectionResizeMode(QHeaderView::ResizeToContents);
          vh->setDefaultSectionSize(vh->minimumSectionSize());
       }
       //
@@ -325,21 +393,26 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
    //
    QObject::connect(this->ui.buttonAdd, &QPushButton::clicked, this, [this]() {
       auto* model = this->model();
+      auto* sm    = this->ui.list->selectionModel();
+      if (!model || !sm)
+         return;
       //
-      // TODO
+      // TODO: insert new condition after last selected condition
       //
    });
    QObject::connect(this->ui.buttonMoveUp, &QPushButton::clicked, this, [this]() {
       auto* model = this->model();
-      //
-      // TODO
-      //
+      auto* sm    = this->ui.list->selectionModel();
+      if (!model || !sm)
+         return;
+      model->moveSelection(sm->selection(), -1);
    });
    QObject::connect(this->ui.buttonMoveDown, &QPushButton::clicked, this, [this]() {
       auto* model = this->model();
-      //
-      // TODO
-      //
+      auto* sm    = this->ui.list->selectionModel();
+      if (!model || !sm)
+         return;
+      model->moveSelection(sm->selection(), 1);
    });
 }
 ConditionList::model_type* ConditionList::model() const noexcept {
