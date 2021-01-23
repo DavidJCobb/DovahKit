@@ -764,7 +764,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ENAM':
-               subrecord.read(this->event);
+               subrecord.read_signature(this->event);
                break;
             case 'QTGL':
                {
@@ -1047,7 +1047,7 @@ namespace dovah::loaded_forms {
       //
       if (this->event) {
          auto& ENAM = record.open_next_subrecord('ENAM');
-         ENAM.write(this->event);
+         ENAM.write_signature(this->event);
          ENAM.close();
       }
       for (auto& id : this->text_display_globals) {

@@ -8,6 +8,7 @@
 #include "components/container.h"
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
+#include "StoryManagerEventNode.h"
 
 namespace dovah::loaded_forms {
    enum class quest_alias_type {
@@ -284,8 +285,8 @@ namespace dovah::loaded_forms {
             std::vector<components::condition> dialogue;
             std::vector<components::condition> event;
          } conditions;
-         uint32_t event = 0;
-         int32_t  next_alias_id = 0;
+         story_event_code_t event         = story_event_code::none;
+         int32_t            next_alias_id = 0;
          std::vector<Stage> stages;
          std::vector<Objective> objectives;
          std::vector<Alias*> aliases;

@@ -28,6 +28,42 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
       this->ui.questType->addItem(tr("DLC: Dawnguard",        "Quest Type"), _e::dlc_dawnguard);
       this->ui.questType->addItem(tr("DLC: Dragonborn",       "Quest Type"), _e::dlc_dragonborn);
    }
+   {
+      using _e = dovah::story_event_code::type;
+      auto* widget = this->ui.eventType;
+      widget->addItem(tr("None", "SM event name"), _e::none);
+      widget->addItem(tr("Crime Gold", "SM event name"), _e::crime_gold);
+      widget->addItem(tr("Actor Dialogue", "SM event name"), _e::actor_dialogue);
+      widget->addItem(tr("Player Activate Actor", "SM event name"), _e::player_activate_actor);
+      widget->addItem(tr("Actor Hello", "SM event name"), _e::actor_hello);
+      widget->addItem(tr("Player Add Item", "SM event name"), _e::player_add_item);
+      widget->addItem(tr("Arrest", "SM event name"), _e::arrest);
+      widget->addItem(tr("Assault", "SM event name"), _e::assault);
+      widget->addItem(tr("Bribe", "SM event name"), _e::bribe);
+      widget->addItem(tr("Cast Magic", "SM event name"), _e::cast_magic);
+      widget->addItem(tr("Change Relationship Rank", "SM event name"), _e::change_relationship_rank);
+      widget->addItem(tr("Change Location", "SM event name"), _e::change_location);
+      widget->addItem(tr("Craft Item", "SM event name"), _e::craft_item);
+      widget->addItem(tr("Player Cured", "SM event name"), _e::player_cured);
+      widget->addItem(tr("Dead Body", "SM event name"), _e::dead_body);
+      widget->addItem(tr("Escaped Jail", "SM event name"), _e::escaped_jail);
+      widget->addItem(tr("Flatter", "SM event name"), _e::flatter);
+      widget->addItem(tr("Player Infected", "SM event name"), _e::player_infected);
+      widget->addItem(tr("Intimidate", "SM event name"), _e::intimidate);
+      widget->addItem(tr("Jail", "SM event name"), _e::jail);
+      widget->addItem(tr("Kill", "SM event name"), _e::kill);
+      widget->addItem(tr("Level Up", "SM event name"), _e::level_up);
+      widget->addItem(tr("Lockpick", "SM event name"), _e::lockpick);
+      widget->addItem(tr("New Voice Power", "SM event name"), _e::new_voice_power);
+      widget->addItem(tr("Pay Fine", "SM event name"), _e::pay_fine);
+      widget->addItem(tr("Player Receives Favor", "SM event name"), _e::player_receives_favor);
+      widget->addItem(tr("Player Remove Item", "SM event name"), _e::player_remove_item);
+      widget->addItem(tr("Quest Start", "SM event name"), _e::quest_start);
+      widget->addItem(tr("Scripted Event", "SM event name"), _e::script);
+      widget->addItem(tr("Skill Increase", "SM event name"), _e::skill_increase);
+      widget->addItem(tr("Served Time in Jail", "SM event name"), _e::served_time_in_jail);
+      widget->addItem(tr("Trespass", "SM event name"), _e::trespass);
+   }
    this->ui.priority->setRange(0, 255);
    //
    this->load();
@@ -48,9 +84,7 @@ void FormDialogQuest::_load_impl() {
       cobb::qt::bind(this->ui.flagRunOnce, working.flags, form_t::quest_flag::run_once);
       cobb::qt::bind(this->ui.flagStartGameEnabled, working.flags, form_t::quest_flag::start_game_enabled);
       cobb::qt::bind(this->ui.flagWarnOnAliasFillFailure, working.flags, form_t::quest_flag::warn_on_alias_fill_failure);
-      //
-      // TODO: Event
-      //
+      cobb::qt::bind(this->ui.eventType, working.event);
       this->ui.textDisplayGlobals->import(working.text_display_globals);
       //
       cobb::qt::bind(this->ui.priority, working.priority);

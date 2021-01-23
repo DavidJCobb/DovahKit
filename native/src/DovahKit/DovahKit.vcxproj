@@ -430,6 +430,7 @@
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\Actor.h" />
+    <ClInclude Include="dovah\forms\StoryManagerEventNode.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
     <ClInclude Include="dovah\forms\WordOfPower.h" />
     <ClInclude Include="dovah\forms\Worldspace.h" />
