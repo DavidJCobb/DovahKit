@@ -484,6 +484,11 @@
 //
 //                             - Changes to form_stub
 //
+//                                - We can also sync quests' object window filter 
+//                                  to the form-stub-cached-data area, which would 
+//                                  allow us to then tailor the Object Window to 
+//                                  let the user take advantage of those.
+//
 //                             - Support for these form types
 //
 //                             - UI for these form types

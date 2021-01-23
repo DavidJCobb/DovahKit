@@ -7,6 +7,7 @@
 #include <QTableView>
 #include "../../../dovah/core.h"
 #include "../../../dovah/forms/components/conditions.h"
+#include "ui_condition_list.h"
 
 namespace dovah {
    class form_stub;
@@ -38,12 +39,12 @@ class ConditionListModel : public QAbstractTableModel {
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
       //
    public slots:
-      void clear();
+      void clearTarget();
       //
    public:
       ConditionListModel(QObject* parent = nullptr);
       ~ConditionListModel() {
-         this->clear();
+         this->clearTarget();
       }
       //
       QModelIndex index(int row, int column, const QModelIndex& parent) const override;
@@ -54,17 +55,22 @@ class ConditionListModel : public QAbstractTableModel {
       QVariant data(const QModelIndex& index, int role) const override;
       //
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+      //
+      void refresh();
+      void setTarget(form_stub&, std::vector<condition>&);
+      void setTarget(loaded_form_t&, std::vector<condition>&);
 };
 
-class ConditionList : public QTableView {
+class ConditionList : public QWidget {
    Q_OBJECT
    public:
       ConditionList(QWidget* parent);
       using model_type = ConditionListModel;
       //
-      inline model_type* fullModel() const noexcept {
-         return (model_type*)this->model();
-      }
+      model_type* model() const noexcept;
       //
    public slots:
+      //
+   protected:
+      Ui::ConditionList ui;
 };

@@ -7,7 +7,7 @@
 #pragma region ConditionListModel
 ConditionListModel::ConditionListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &ConditionListModel::clear);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &ConditionListModel::clearTarget);
    QObject::connect(&editor, &DovahKitCore::formModified,         this, &ConditionListModel::formModified);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &ConditionListModel::formDeletionImminent);
 }
@@ -89,10 +89,12 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
    auto& condition = (*this->target)[row];
    auto* function  = condition_function::lookup_by_id(condition.function);
    auto  flags     = condition.get_flags();
-   switch (role) {
-      case Qt::DisplayRole:
-         switch (column) {
-            case ColumnTarget:
+   switch (column) {
+      case ColumnTarget:
+         switch (role) {
+            case Qt::DisplayRole:
+               [[fallthrough]];
+            case Qt::ToolTipRole:
                switch (condition.run_on) {
                   case condition::run_on_t::combat_target:
                      return tr("Combat Target", "condition list - run on");
@@ -106,7 +108,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      //
                      return tr("Package Data", "condition list - run on");
                   case condition::run_on_t::quest_alias:
-                     return tr("Alias ID #u", "condition list - run on").arg(condition.run_on_index); // TODO: display alias name if possible
+                     return tr("Alias ID #%1", "condition list - run on").arg(condition.run_on_index); // TODO: display alias name if possible
                   case condition::run_on_t::reference:
                      if (auto* stub = condition.run_on_reference.get_form_stub()) {
                         return tr("[%1:%2]%3", "condition list - run on form")
@@ -121,52 +123,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      return tr("Target", "condition list - run on");
                }
                break;
-            case ColumnFunction:
-               if (function) {
-                  return QString(function->name);
-               }
-               break;
-            case ColumnArgs:
-               // TODO: args (see TopicInfo screenshot for example)
-               break;
-            case ColumnOperator:
-               switch (condition.get_operator()) {
-                  case condition::operator_t::equal:
-                     return tr("==", "condition list - operator, equal");
-                  case condition::operator_t::greater:
-                     return tr(">",  "condition list - operator, greater");
-                  case condition::operator_t::greater_or_equal:
-                     return tr(">=", "condition list - operator, greater or equal");
-                  case condition::operator_t::less:
-                     return tr("<",  "condition list - operator, less");
-                  case condition::operator_t::less_or_equal:
-                     return tr("<=", "condition list - operator, less or equal");
-                  case condition::operator_t::not_equal:
-                     return tr("!=", "condition list - operator, not equal");
-               }
-               break;
-            case ColumnOperand:
-               if (flags & condition::flag::compare_to_global) {
-                  if (!condition.compare_to_global)
-                     return tr("-NONE-", "condition list - compare to global (missing)");
-                  auto* stub = condition.compare_to_global.get_form_stub();
-                  return tr("[%1:%2]%3", "condition list - compare to global")
-                     .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
-                     .arg(stub->formID, 8, 16, QChar('0'))
-                     .arg(stub->get_editor_id());
-               } else {
-                  return condition.compare_to_constant;
-               }
-               break;
-            case ColumnUsesOr:
-               if (flags & condition::flag::or_linked)
-                  return tr("OR", "condition list - or");
-               break;
-         }
-         break;
-      case Qt::FontRole:
-         switch (column) {
-            case ColumnTarget:
+            case Qt::FontRole:
                //
                // Show the run-on column in italics if it isn't an alias name, etc.. Italics 
                // will distinguish built-in strings from names in user content.
@@ -199,7 +156,63 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      }
                }
                break;
-            case ColumnOperand:
+         }
+         break;
+      case ColumnFunction:
+         switch (role) {
+            case Qt::DisplayRole:
+               [[fallthrough]];
+            case Qt::ToolTipRole:
+               if (function)
+                  return QString(function->name);
+               break;
+            case Qt::ForegroundRole:
+               if (false) // TODO: Bethesda's Creation Kit hardcodes specific conditions to show up in purple; look for "editorFilter" in CommandTable defs
+                  return QColor::fromRgb(0x800080);
+               break;
+         }
+         break;
+      case ColumnArgs:
+         //
+         // TODO
+         //
+         break;
+      case ColumnOperator:
+         if (role == Qt::DisplayRole) {
+            switch (condition.get_operator()) {
+               case condition::operator_t::equal:
+                  return tr("==", "condition list - operator, equal");
+               case condition::operator_t::greater:
+                  return tr(">",  "condition list - operator, greater");
+               case condition::operator_t::greater_or_equal:
+                  return tr(">=", "condition list - operator, greater or equal");
+               case condition::operator_t::less:
+                  return tr("<",  "condition list - operator, less");
+               case condition::operator_t::less_or_equal:
+                  return tr("<=", "condition list - operator, less or equal");
+               case condition::operator_t::not_equal:
+                  return tr("!=", "condition list - operator, not equal");
+            }
+         }
+         break;
+      case ColumnOperand:
+         switch (role) {
+            case Qt::DisplayRole:
+               [[fallthrough]];
+            case Qt::ToolTipRole:
+               if (flags & condition::flag::compare_to_global) {
+                  if (!condition.compare_to_global)
+                     return tr("NONE", "condition list - compare to global (missing)");
+                  auto* stub = condition.compare_to_global.get_form_stub();
+                  return tr("[%1:%2]%3", "condition list - compare to global")
+                     .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+                     .arg(stub->formID, 8, 16, QChar('0'))
+                     .arg(stub->get_editor_id());
+               } else {
+                  return condition.compare_to_constant;
+               }
+               break;
+            case Qt::FontRole:
                if (!condition.compare_to_global && (flags & condition::flag::compare_to_global)) {
                   auto font = QFont();
                   font.setItalic(true);
@@ -208,9 +221,13 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                break;
          }
          break;
-      case Qt::ForegroundRole:
-         if (false) // TODO: Bethesda's Creation Kit hardcodes specific conditions to show up in purple; look for "editorFilter" in CommandTable defs
-            return QColor::fromRgb(0x800080);
+      case ColumnUsesOr:
+         switch (role) {
+            case Qt::DisplayRole:
+               if (flags & condition::flag::or_linked)
+                  return tr("OR", "condition list - or");
+               break;
+         }
          break;
    }
    return QVariant();
@@ -234,30 +251,98 @@ QVariant ConditionListModel::headerData(int section, Qt::Orientation orientation
    return QVariant();
 }
 
-void ConditionListModel::clear() {
+void ConditionListModel::clearTarget() {
    this->beginResetModel();
    if (this->target)
       this->target->clear();
+   this->owner = nullptr;
+   this->clone = nullptr;
+   this->endResetModel();
+}
+void ConditionListModel::refresh() {
+   if (!this->target)
+      return;
+   QModelIndex dummy;
+   auto last = this->target->size() - 1;
+   emit dataChanged(this->index(0, 0, dummy), this->index(last, this->columnCount(dummy), dummy));
+}
+void ConditionListModel::setTarget(form_stub& owner, std::vector<condition>& list) {
+   if (this->target)
+      this->clearTarget();
+   this->beginResetModel();
+   this->owner  = &owner;
+   this->target = &list;
+   this->endResetModel();
+}
+void ConditionListModel::setTarget(loaded_form_t& clone, std::vector<condition>& list) {
+   if (this->target)
+      this->clearTarget();
+   this->beginResetModel();
+   this->clone  = &clone;
+   this->target = &list;
    this->endResetModel();
 }
 #pragma endregion
 
 #pragma region ConditionList
-ConditionList::ConditionList(QWidget* parent) : QTableView(parent) {
-   this->setModel(new model_type);
-   this->verticalHeader()->setDefaultSectionSize(0);
-   this->sortByColumn(0, Qt::AscendingOrder);
-   this->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
+   ui.setupUi(this);
    //
-   auto header  = this->horizontalHeader();
-   auto metrics = QFontMetrics(this->font());
-   header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
-   header->setMinimumSectionSize(2);
-   header->resizeSection(model_type::ColumnTarget,   metrics.boundingRect("Target").width() * 1.5F + 4);
-   header->resizeSection(model_type::ColumnFunction, metrics.boundingRect("GetVMScriptVariable").width() * 1.5F + 4);
-   header->resizeSection(model_type::ColumnOperator, metrics.boundingRect("==").width() * 1.5F + 4);
-   header->resizeSection(model_type::ColumnUsesOr,   metrics.boundingRect("OR").width() * 1.5F + 4);
-   for(int i = 0; i < this->model()->columnCount(); ++i)
-      header->setSectionResizeMode(i, QHeaderView::Interactive);
-};
+   {
+      auto* list = this->ui.list;
+      //
+      list->setModel(new model_type);
+      list->sortByColumn(0, Qt::AscendingOrder);
+      list->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+      {
+         auto* vh = list->verticalHeader();
+         vh->setVisible(false);
+         //vh->setSectionResizeMode(QHeaderView::ResizeToContents);
+         vh->setDefaultSectionSize(vh->minimumSectionSize());
+      }
+      //
+      auto header  = list->horizontalHeader();
+      auto metrics = QFontMetrics(list->font());
+      header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+      header->setMinimumSectionSize(2);
+      header->setSortIndicatorShown(false);
+      header->resizeSection(model_type::ColumnTarget,   metrics.boundingRect("Target").width() * 1.5F + 4);
+      header->resizeSection(model_type::ColumnFunction, metrics.boundingRect("GetVMScriptVariable").width() * 1.5F + 4);
+      header->resizeSection(model_type::ColumnOperator, metrics.boundingRect("==").width() * 1.5F + 4);
+      header->resizeSection(model_type::ColumnUsesOr,   metrics.boundingRect("OR").width() * 1.5F + 4);
+      for(int i = 0; i < list->model()->columnCount(); ++i)
+         header->setSectionResizeMode(i, QHeaderView::Interactive);
+      header->setSectionResizeMode(model_type::ColumnOperator, QHeaderView::Fixed);
+      header->setSectionResizeMode(model_type::ColumnUsesOr,   QHeaderView::Fixed);
+      header->setStretchLastSection(false);
+   }
+   QObject::connect(this->ui.list, &QTableView::doubleClicked, [this](const QModelIndex& index) {
+      auto* model = this->model();
+      //
+      // TODO
+      //
+   });
+   //
+   QObject::connect(this->ui.buttonAdd, &QPushButton::clicked, this, [this]() {
+      auto* model = this->model();
+      //
+      // TODO
+      //
+   });
+   QObject::connect(this->ui.buttonMoveUp, &QPushButton::clicked, this, [this]() {
+      auto* model = this->model();
+      //
+      // TODO
+      //
+   });
+   QObject::connect(this->ui.buttonMoveDown, &QPushButton::clicked, this, [this]() {
+      auto* model = this->model();
+      //
+      // TODO
+      //
+   });
+}
+ConditionList::model_type* ConditionList::model() const noexcept {
+   return (model_type*) this->ui.list->model();
+}
 #pragma endregion
