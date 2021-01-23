@@ -282,9 +282,10 @@ bool ConditionListModel::moveRows(const QModelIndex& from_parent, int first_row_
       // will end up. Here, we normalize it to always be the position at which the first of 
       // the moved rows will end up.
       //
+      --to_position;
       to_position -= count;
    }
-   cobb::move_range(list, first_row_index, count, to_position);
+   cobb::move_range(list, first_row_index, count, to_position); // TODO: WE AREN'T MOVING DOWN PROPERLY. TEST IS DialogueCrimeGuards
    //
    // And we're done!
    //
@@ -315,15 +316,15 @@ void ConditionListModel::moveSelection(const QItemSelection& indices, int down) 
             continue;
          to = top + down;
       } else if (down > 0) {
-         if (bottom >= size - down)
+         if (bottom + down >= size)
             continue;
          //
          // Typically, when moving rows, the "destination index" is the index that the 
          // first of the moved rows will be placed at. However, when moving rows down 
-         // within the same parent, the "destination index" is the index they will be 
-         // placed before.
+         // within the same parent, the "destination index" is the index that the last 
+         // row will be placed before.
          //
-         to = bottom + down;
+         to = bottom + down + 1;
       }
       this->moveRows(dummy, top, bottom - top + 1, dummy, to);
    }
