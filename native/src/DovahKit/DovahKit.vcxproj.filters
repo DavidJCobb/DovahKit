@@ -660,6 +660,9 @@
     <ClCompile Include="editor\helpers\form_type_name_to_string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\actor_value_index_to_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1368,6 +1371,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\helpers\form_type_name_to_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\actor_value_index_to_name.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

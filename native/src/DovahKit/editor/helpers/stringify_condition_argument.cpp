@@ -1,7 +1,9 @@
 #include "stringify_condition_argument.h"
+#include <array>
 #include <QObject>
 #include "../../dovah/forms/components/conditions/arg_types.h"
 #include "../../dovah/forms/Quest.h"
+#include "actor_value_index_to_name.h"
 #include "form_type_name_to_string.h"
 
 namespace {
@@ -18,6 +20,12 @@ namespace editor_helpers {
       const dovah::loaded_forms::Quest* owning_quest
    ) {
       incomplete_information = false;
+      //
+      if (&type == &_ci::arg_types::ActorValue) {
+         QString out = actor_value_index_to_name(value.dword);
+         if (!out.isEmpty())
+            return out;
+      }
       //
       switch (type.underlying) {
          case _ci::arg_underlying_type::aliasID:

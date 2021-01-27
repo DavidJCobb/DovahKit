@@ -209,6 +209,7 @@
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
     <ClCompile Include="editor\get_default_object_info.cpp" />
     <ClCompile Include="editor\get_game_setting_description.cpp" />
+    <ClCompile Include="editor\helpers\actor_value_index_to_name.cpp" />
     <ClCompile Include="editor\helpers\form_type_name_to_string.cpp" />
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp" />
     <ClCompile Include="editor\helpers\stringify_condition_argument.cpp" />
@@ -468,6 +469,7 @@
     <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h" />
     <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
+    <ClInclude Include="editor\helpers\actor_value_index_to_name.h" />
     <ClInclude Include="editor\helpers\form_type_name_to_string.h" />
     <ClInclude Include="editor\helpers\stringify_condition_argument.h" />
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />

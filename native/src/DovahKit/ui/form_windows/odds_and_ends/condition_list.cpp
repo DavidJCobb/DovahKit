@@ -145,6 +145,13 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      //
                      return tr("Package Data", "condition list - run on");
                   case condition::run_on_t::quest_alias:
+                     if (auto* q = this->_get_owning_quest()) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.run_on_index)) {
+                           QString name = alias->name.c_str();
+                           if (!name.trimmed().isEmpty())
+                              return name;
+                        }
+                     }
                      return tr("Alias ID #%1", "condition list - run on").arg(condition.run_on_index); // TODO: display alias name if possible
                   case condition::run_on_t::reference:
                      if (auto* stub = condition.run_on_reference.get_form_stub()) {
@@ -173,9 +180,13 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         return font;
                      }
                   case condition::run_on_t::quest_alias:
-                     //
-                     // TODO: if it was possible to show an alias name, then (break) here.
-                     //
+                     if (auto* q = this->_get_owning_quest()) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.run_on_index)) {
+                           QString name = alias->name.c_str();
+                           if (!name.trimmed().isEmpty())
+                              break;
+                        }
+                     }
                      [[fallthrough]];
                   case condition::run_on_t::reference:
                      if (condition.run_on_reference)
