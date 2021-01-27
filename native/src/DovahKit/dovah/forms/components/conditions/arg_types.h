@@ -16,8 +16,7 @@ namespace dovah::loaded_forms::components {
          none,
          aliasID, // the ID of an alias on the quest containing the condition (for conditions outside of quests, it is impossible to specify a valid value)
          character, // e.g. Axis
-         event,
-         event_data,
+         event, // dword 0xXXXXYYYY where X is the event member and Y is the event function
          formID,
          float32,
          int_signed,
@@ -121,7 +120,7 @@ namespace dovah::loaded_forms::components {
          extern arg_form_type EncounterZone;
          extern arg_type      EquipType; // this enum was removed from the game and is only used in one condition, which is both deprecated and broken in two different ways. the CK shows an empty drop-down when trying to choose a value.
          extern arg_type      Event;
-         extern arg_type      EventData;
+         extern arg_form_type EventData;
          extern arg_form_type Faction;
          extern arg_type      Float;
          extern arg_form_type FormList;

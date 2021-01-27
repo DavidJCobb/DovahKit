@@ -35,6 +35,30 @@ namespace dovah::loaded_forms::components {
 
       extern std::array<function, 736> function_list;
       extern std::array<function, 5>   extended_function_list; // SKSE additions
+
+      struct event_function {
+         event_function() = delete;
+         enum type : uint16_t {
+            GetIsID,
+            IsInList,
+            GetValue,
+            HasKeyword,
+            GetItemValue,
+         };
+      };
+      struct event_member {
+         event_member() = delete;
+         enum type : uint16_t {
+            none           = 0x0000,
+            created_object = 0x314F,
+            location_old   = 0x314C,
+            location_new   = 0x324C,
+            keyword        = 0x314B,
+            form           = 0x3146,
+            value_1        = 0x3156,
+            value_2        = 0x3256,
+         };
+      };
    }
 
    struct condition {

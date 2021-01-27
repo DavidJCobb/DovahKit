@@ -1111,4 +1111,11 @@ namespace dovah::loaded_forms {
       this->aliases.clear();
       clear_form_reference_list(this->text_display_globals, *this);
    }
+
+   Alias* Quest::lookup_alias_by_id(uint32_t id) const noexcept {
+      for (auto* alias : this->aliases)
+         if (alias && alias->id == id)
+            return alias;
+      return nullptr;
+   }
 }

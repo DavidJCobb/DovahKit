@@ -327,7 +327,7 @@ namespace dovah::loaded_forms::components {
          arg_form_type EncounterZone   = arg_form_type("Encounter Zone", { form_type::encounter_zone });
          arg_type      EquipType       = arg_type("Equip Type (Deprecated/Broken)", arg_underlying_type::int_unsigned);
          arg_type      Event           = arg_type("Event", arg_underlying_type::event);
-         arg_type      EventData       = arg_type("Event Data", arg_underlying_type::event_data);
+         arg_form_type EventData       = arg_form_type("Event Data", {});
          arg_form_type Faction         = arg_form_type("Faction", { form_type::faction });
          arg_type      Float           = arg_type("Float", arg_underlying_type::float32);
          arg_form_type FormList        = arg_form_type("Form List", { form_type::formlist });

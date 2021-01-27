@@ -654,6 +654,12 @@
     <ClCompile Include="helpers\qt\basic_bindings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\stringify_condition_argument.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\helpers\form_type_name_to_string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1356,6 +1362,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\stringify_condition_argument.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\form_type_name_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -11,6 +11,10 @@
 
 namespace dovah {
    class form_stub;
+   namespace loaded_forms {
+      class Package;
+      class Quest;
+   }
 }
 
 class ConditionListModel : public QAbstractTableModel {
@@ -33,6 +37,9 @@ class ConditionListModel : public QAbstractTableModel {
       form_stub*     owner = nullptr; // form which owns the condition list (if a normal form)
       loaded_form_t* clone = nullptr; // form which owns the condition list (if a temporary/working copy)
       std::vector<condition>* target = nullptr; // condition list to modify
+      //
+      dovah::loaded_forms::Package* _get_owning_package() const;
+      dovah::loaded_forms::Quest*   _get_owning_quest() const;
       //
    protected slots:
       void formModified(const dovah::form_stub*);

@@ -1,7 +1,10 @@
 #include "condition_list.h"
 #include <QHeaderView>
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/stringify_condition_argument.h"
 #include "../../../dovah/form_stub.h"
+#include "../../../dovah/forms/Form.h"
+#include "../../../dovah/forms/Quest.h"
 #include "../../../helpers/qt/strings.h"
 #include "../../../helpers/vector.h"
 
@@ -11,6 +14,39 @@ ConditionListModel::ConditionListModel(QObject* parent) : QAbstractTableModel(pa
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &ConditionListModel::clearTarget);
    QObject::connect(&editor, &DovahKitCore::formModified,         this, &ConditionListModel::formModified);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &ConditionListModel::formDeletionImminent);
+}
+
+dovah::loaded_forms::Package* ConditionListModel::_get_owning_package() const {
+   auto* stub = this->owner;
+   if (!stub && this->clone)
+      stub = this->clone->stub;
+   if (stub) {
+      if (stub->formType == dovah::form_type::package)
+         return (dovah::loaded_forms::Package*)stub->form;
+      return nullptr;
+   }
+   if (auto* clone = this->clone) {
+      //return dynamic_cast<dovah::loaded_forms::Package*>(clone);
+      #if !_DEBUG
+         static_assert(false, "Add support for Packages!");
+      #endif
+      return nullptr;
+   }
+   return nullptr;
+}
+dovah::loaded_forms::Quest* ConditionListModel::_get_owning_quest() const {
+   auto* stub = this->owner;
+   if (!stub && this->clone)
+      stub = this->clone->stub;
+   if (stub) {
+      if (stub->formType == dovah::form_type::quest)
+         return (dovah::loaded_forms::Quest*)stub->form;
+      return nullptr;
+   }
+   if (auto* clone = this->clone) {
+      return dynamic_cast<dovah::loaded_forms::Quest*>(clone);
+   }
+   return nullptr;
 }
 
 void ConditionListModel::formModified(const dovah::form_stub* stub) {
@@ -174,9 +210,26 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
          }
          break;
       case ColumnArgs:
-         //
-         // TODO
-         //
+         switch (role) {
+            case Qt::DisplayRole:
+               [[fallthrough]];
+            case Qt::ToolTipRole:
+               if (!function)
+                  break;
+               if (function->argument_types[0] != &dovah::loaded_forms::components::condition_info::arg_types::None) {
+                  auto* q = this->_get_owning_quest();
+                  auto* p = this->_get_owning_package();
+                  //
+                  bool dummy;
+                  auto value_a = editor_helpers::stringify_condition_argument(dummy, *function->argument_types[0], condition.parameters[0], p, q);
+                  if (function->argument_types[1] != &dovah::loaded_forms::components::condition_info::arg_types::None) {
+                     auto value_b = editor_helpers::stringify_condition_argument(dummy, *function->argument_types[0], condition.parameters[0], p, q);
+                     return tr("%1, %2").arg(value_a).arg(value_b);
+                  }
+                  return value_a;
+               }
+               break;
+         }
          break;
       case ColumnOperator:
          if (role == Qt::DisplayRole) {
