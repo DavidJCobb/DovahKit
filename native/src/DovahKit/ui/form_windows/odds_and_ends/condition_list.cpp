@@ -226,8 +226,8 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
          switch (role) {
             case Qt::DisplayRole:
                if (flags & condition::flag::or_linked)
-                  return tr("OR", "condition list - or");
-               break;
+                  return tr("OR", "condition list - condition link - or");
+               return tr("AND", "condition list - condition link - and");
          }
          break;
    }
@@ -282,7 +282,6 @@ bool ConditionListModel::moveRows(const QModelIndex& from_parent, int first_row_
       // will end up. Here, we normalize it to always be the position at which the first of 
       // the moved rows will end up.
       //
-      --to_position;
       to_position -= count;
    }
    cobb::move_range(list, first_row_index, count, to_position); // TODO: WE AREN'T MOVING DOWN PROPERLY. TEST IS DialogueCrimeGuards
@@ -378,7 +377,11 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       header->resizeSection(model_type::ColumnTarget,   metrics.boundingRect("Target").width() * 1.5F + 4);
       header->resizeSection(model_type::ColumnFunction, metrics.boundingRect("GetVMScriptVariable").width() * 1.5F + 4);
       header->resizeSection(model_type::ColumnOperator, metrics.boundingRect("==").width() * 1.5F + 4);
-      header->resizeSection(model_type::ColumnUsesOr,   metrics.boundingRect("OR").width() * 1.5F + 4);
+      {
+         auto size_or  = metrics.boundingRect(tr("OR",  "condition list - condition link - or")).width();
+         auto size_and = metrics.boundingRect(tr("AND", "condition list - condition link - and")).width();
+         header->resizeSection(model_type::ColumnUsesOr, std::max(size_or, size_and) * 1.5F + 4);
+      }
       for(int i = 0; i < list->model()->columnCount(); ++i)
          header->setSectionResizeMode(i, QHeaderView::Interactive);
       header->setSectionResizeMode(model_type::ColumnOperator, QHeaderView::Fixed);
