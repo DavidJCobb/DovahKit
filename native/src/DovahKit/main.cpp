@@ -430,19 +430,19 @@
 //
 //                       = Condition list UI
 //
-//                          - Code to stringify and display condition arguments.
+//                          - When working with a clone, react to the clone being 
+//                            modified from outside (requires assistance from the 
+//                            owning FormDialogWorkingCopyBase).
 //
-//                          - React to DovahKitCore modifying the clone being worked 
-//                            with (if any).
-//
-//                          - React to changes to the form stub being worked with (if 
-//                            any).
+//                          - When working with a stub, react to the form being 
+//                            modified while it's being operated on, if possible. 
+//                            (Actually, I can't think of any use case for working 
+//                            directly with a stub; we should probably remove that 
+//                            entirely.)
 //
 //                          - UI for editing a condition
 //
 //                          - Code for adding and editing conditions
-//
-//                          - Code for reordering conditions
 //
 //                          - Code for deleting conditions
 //
@@ -450,15 +450,9 @@
 //
 //                       - Basic Data
 //
-//                          - All single fields
-//
-//                          - Text display globals
-//
-//                             - Take the FormList contents listview and make it a 
-//                               generic widget. Make it possible to limit the form 
-//                               types that it accepts when dragging and dropping. 
-//                               Add a context menu item which pops a dialog that 
-//                               can be used to add new forms.
+//                          - A friend has requested being able to click a button 
+//                            next to the event dropdown to jump directly to the 
+//                            SM Event form for that event type.
 //
 //                          - Conditions UI
 //
