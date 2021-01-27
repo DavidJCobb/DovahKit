@@ -672,7 +672,7 @@ namespace dovah::loaded_forms::components {
          function(654, "GetBribeSuccess", ""),
          function(655, "GetIntimidateSuccess", ""),
          function(656, "GetArrestedState", ""),
-         function(657, "GetArrestingActor", ""), // TODO: verify
+         function(657, "GetArrestingActor", ""),
          function(658, function::dummy),
          function(659, "EPTemperingItemIsEnchanted", ""),
          function(660, "EPTemperingItemHasKeyword", "", arg_types::Keyword),
@@ -747,9 +747,9 @@ namespace dovah::loaded_forms::components {
          function(729, function::dummy),
          function(730, "IsOnFlyingMount", ""),
          function(731, "CanFlyHere", ""),
-         function(732, "IsFlyingMountPatrolQueud", ""),
+         function(732, "IsFlyingMountPatrolQueued", ""),
          function(733, "IsFlyingMountFastTravelling", ""),
-         function(734, "IsOverencumbered", ""), // TODO: is this SSE?
+         function(734, "IsOverencumbered", ""), // TODO: SSE only
          function(735, "GetActorWarmth", ""), // TODO: SSE only
       }};
       std::array<function, 5>   extended_function_list = {{

@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConditionEditDialog</class>
+ <widget class="QDialog" name="ConditionEditDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>952</width>
+    <height>167</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Condition</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2" columnstretch="2,0,3,0,2,0,0">
+   <item row="1" column="0" colspan="5">
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="5">
+    <layout class="QGridLayout" name="layoutRunOn" columnstretch="1,1,1,4,1,0">
+     <item row="0" column="3">
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="labelRunOn">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Run on:</string>
+       </property>
+       <property name="buddy">
+        <cstring>runOn</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="runOn">
+       <item>
+        <property name="text">
+         <string>Subject</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Target</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Reference</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Combat Target</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Linked Ref</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Alias</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Package Data</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Event Data</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <widget class="QCheckBox" name="flagSwapSubjectAndTarget">
+       <property name="text">
+        <string>Swap Subject and Target</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QStackedWidget" name="runOnStack">
+       <widget class="QWidget" name="runOnPageDropdown">
+        <layout class="QGridLayout" name="gridLayout_5">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QComboBox" name="runOnDropdown"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="runOnPageButton">
+        <layout class="QGridLayout" name="gridLayout_6">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="runOnButton">
+           <property name="text">
+            <string>Select...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="3">
+    <widget class="Line" name="line_3">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <layout class="QGridLayout" name="layoutFunction" columnstretch="1,2">
+     <item row="1" column="0" colspan="2">
+      <widget class="QComboBox" name="function"/>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="labelFilterFunction">
+       <property name="text">
+        <string>Filter list:</string>
+       </property>
+       <property name="buddy">
+        <cstring>filterFunction</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="filterFunction">
+       <property name="placeholderText">
+        <string>(filter function list)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QLabel" name="labelFunction">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Condition function:</string>
+       </property>
+       <property name="buddy">
+        <cstring>function</cstring>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="2">
+    <layout class="QGridLayout" name="layoutParams">
+     <item row="0" column="0">
+      <widget class="QLabel" name="labelParams">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Parameters:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QPushButton" name="param1">
+       <property name="text">
+        <string>Parameter 1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="paramFlags">
+       <item>
+        <property name="text">
+         <string>Default</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Use Aliases</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Use Package Data</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QPushButton" name="param2">
+       <property name="text">
+        <string>Parameter 2</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <widget class="QPushButton" name="param3">
+       <property name="text">
+        <string>Parameter 3</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="1">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4">
+    <layout class="QGridLayout" name="layoutResult">
+     <item row="1" column="1">
+      <widget class="QStackedWidget" name="operandStack">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <widget class="QWidget" name="operandPageConstant">
+        <layout class="QGridLayout" name="gridLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QDoubleSpinBox" name="operandConstant"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="operandPageGlobal">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QComboBox" name="operandGlobal"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QLabel" name="labelResult">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Result</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QComboBox" name="op"/>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagCompareToGlobal">
+       <property name="text">
+        <string>Compare to Global</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="5" rowspan="3">
+    <widget class="Line" name="line_4">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="6" rowspan="3">
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="flagOr">
+       <property name="text">
+        <string>OR</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>runOn</tabstop>
+  <tabstop>runOnButton</tabstop>
+  <tabstop>runOnDropdown</tabstop>
+  <tabstop>flagSwapSubjectAndTarget</tabstop>
+  <tabstop>function</tabstop>
+  <tabstop>filterFunction</tabstop>
+  <tabstop>paramFlags</tabstop>
+  <tabstop>param1</tabstop>
+  <tabstop>param2</tabstop>
+  <tabstop>param3</tabstop>
+  <tabstop>op</tabstop>
+  <tabstop>operandConstant</tabstop>
+  <tabstop>operandGlobal</tabstop>
+  <tabstop>flagCompareToGlobal</tabstop>
+  <tabstop>flagOr</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -175,6 +175,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                switch (condition.run_on) {
                   case condition::run_on_t::package_data:
                      {
+                     // TODO: revisit this when we actually know what package data indices *are*
                         auto font = QFont();
                         font.setItalic(true);
                         return font;

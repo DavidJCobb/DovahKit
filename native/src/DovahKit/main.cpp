@@ -440,9 +440,134 @@
 //                            directly with a stub; we should probably remove that 
 //                            entirely.)
 //
+//                          - OUR CODE FOR STRINGIFYING CONDITION ARGS IS INCORRECT. 
+//                            SOME ARGUMENTS WILL ACTUALLY CHANGE THEIR EFFECTIVE 
+//                            TYPE DEPENDING ON FLAGS ON THE CONDITION ITSELF, AND 
+//                            WE DO NOT ACCOUNT FOR THIS.
+//
+//                             - The "Use Aliases" flag causes all REFR and ACHR 
+//                               arguments to instead take reference alias IDs, 
+//                               which should map to aliases in the owning quest. 
+//                               The user is also allowed to pick "NONE".
+//
+//                             - The "Use Pack Data" flag causes all REFR and ACHR 
+//                               arguments to instead take package data indices, 
+//                               which should map to package data in the owning 
+//                               package. Only package data of types ObjectList and 
+//                               SingleRef are allowed here. The user is also 
+//                               allowed to pick "NONE".
+//
+//                                - For more information, look up the CK wiki docs 
+//                                  for Packages and look at the Public Package 
+//                                  Data list in whatever screenshots are there.
+//
 //                          - UI for editing a condition
 //
+//                             - IN PROGRESS
+//
+//                             - The CK uses mutually-exclusive checkboxes for the 
+//                               "Use Aliases" and "Use Pack Data" flags; we use a 
+//                               single combobox to represent either flag or the 
+//                               absence of both.
+//
+//                             - All parameter types can be handled using a single UI 
+//                               control: a QLineEdit, a QComboBox, or a QSpinBox. 
+//                               However, we'll have to change them out on the fly 
+//                               based on the condition's function, flags, and even 
+//                               the values of other parameters.
+//
+//                                - We also need to consider QPushButton for any REFR 
+//                                  and ACHR parameters, whenever "Use Aliases" or 
+//                                  "Use Package Data" isn't set. When clicked, the 
+//                                  button should open a small window which allows 
+//                                  the user to: select PlayerRef; select a cell and 
+//                                  then a ref from a drop-down; or click a button to 
+//                                  pick a ref from the Render Window.
+//
+//                                   - This dialog will NOT be unique to conditions, 
+//                                     so put it somewhere generic and design it to be 
+//                                     generic.
+//
+//                                - Why does our rough-draft UI make room for three 
+//                                  parameters when conditions can only have two? When 
+//                                  working with the GetEventData condition function, 
+//                                  the CK presents the eventFunction, eventMember, and 
+//                                  eventFormID as if they were the three parameters of
+//                                  the function.
+//
+//                             - When "Run On" is set to "Alias", the "Select" button is 
+//                               replaced with a drop-down listing the names of all 
+//                               reference aliases on the owning quest, if any.
+//
+//                             - When "Run On" is set to "Reference", the "Select" button 
+//                               opens a dialog box that can be used to pick a ref, much 
+//                               like REFR and ACHR args.
+//
+//                                - The CK's "Run On" dialog has a convenience option, 
+//                                  "Player", which is encoded as run-on-reference with 
+//                                  the target ref being the player. In fact, setting the 
+//                                  drop-down to "Reference" and then using the "Select" 
+//                                  button to pick the player will immediately change the 
+//                                  drop-down to "Player." Presumably this is intended to 
+//                                  make selecting the player much faster.
+//
+//                             - When "Run On" is set to "Package Data", the "Select" 
+//                               button is replaced with a drop-down listing the names 
+//                               of all package data on the owning package that are of 
+//                               types ObjectList or SingleRef.
+//
+//                             - When "Run On" is set to "Event Data", the "Select" 
+//                               button is replaced with a drop-down listing different 
+//                               values depending on the owning quest's event. The full
+//                               list of possibilities is:
+//
+//                                  <no event>		          | NONE <and drop-down is greyed out>
+//                                  Actor Dialogue Event     | NONE, Actor 1, Actor 2
+//                                  Actor Hello Event        | NONE, Actor 1, Actor 2
+//                                  Arrest Event             | NONE, ArrestingGuard, Criminal
+//                                  Assault Actor Event      | NONE, Attacker, Victim
+//                                  Bribe                    | NONE, Actor
+//                                  Cast Magic Event         | NONE, CastingActor, SpellTarget
+//                                  Change Location Event    | NONE, Actor
+//                                  Change Relationship Rank | NONE, NPC 1, NPC 2
+//                                  Craft Item               | NONE, Workbench
+//                                  Crime Gold Event         | NONE, Criminal, Victim
+//                                  Dead Body                | NONE, Actor, Dead Actor
+//                                  Escape Jail              | NONE
+//                                  Flatter                  | NONE, Actor
+//                                  Increase Level           | NONE
+//                                  Intimidate               | NONE, Actor
+//                                  Kill Actor Event         | NONE, Killer, Victim
+//                                  Lock Pick                | NONE, Actor, Lock Object
+//                                  New Voice Power          | NONE, Actor
+//                                  Pay Fine Event           | NONE, hCriminal, hGuard
+//                                  Player Activate Actor    | NONE, Actor
+//                                  Player Add Item          | NONE, OriginalContainer, OwnerRef
+//                                  Player Cured             | NONE
+//                                  Player Infected          | NONE, Transmitting Actor
+//                                  Player Receives Favor    | NONE, Actor
+//                                  Player Remove Item       | NONE, ItemRef, OwnerRef
+//                                  Script Event             | NONE, Ref 1, Ref 2
+//                                  Served Time              | NONE
+//                                  Skill Increase           | NONE
+//                                  Trespass Actor Event     | NONE, Trespasser, Victim
+//
+//                             - We have the GetWithinPackageLocation condition listed 
+//                               as accepting package data of any type from its owning 
+//                               package, but it actually specifically wants package 
+//                               data of package-data-type "Location." However, in the 
+//                               CK, checking "Use Pack Data" on the condition will get 
+//                               the function to accept only package data of other 
+//                               types; this feels like a bug.
+//
+//                             - GetHasNote shows an empty drop-down as its argument in 
+//                               the CK.
+//
 //                          - Code for adding and editing conditions
+//
+//                             - Newly-added conditions should default to using the 
+//                               GetIsID function. Bethesda does that in the Creation 
+//                               Kit because that function is so commonly used.
 //
 //                          - Code for deleting conditions
 //

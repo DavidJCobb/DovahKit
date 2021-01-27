@@ -84,9 +84,9 @@ namespace dovah::loaded_forms::components {
          flag() = delete;
          enum type : uint8_t {
             or_linked         = 0x01,
-            use_aliases       = 0x02,
+            use_aliases       = 0x02, // force REFR and ACHR arguments to reference alias IDs
             compare_to_global = 0x04,
-            use_packdata      = 0x08,
+            use_packdata      = 0x08, // force REFR and ACHR arguments to package data indices (ObjectList and SingleRef packdata types only)
             swap_subject_and_target = 0x10,
          };
       };
