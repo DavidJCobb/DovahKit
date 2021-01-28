@@ -36,6 +36,8 @@ namespace editor_helpers {
       //
       switch (under) {
          case _ci::arg_underlying_type::aliasID:
+            if (value.dword == -1)
+               return QObject::tr("NONE", "condition argument (no alias)");
             if (owning_quest) {
                if (auto* alias = owning_quest->lookup_alias_by_id(value.dword)) {
                   return QString::fromUtf8(alias->name.c_str());

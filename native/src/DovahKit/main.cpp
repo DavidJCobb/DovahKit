@@ -441,14 +441,21 @@
 //                            entirely.)
 //
 //                          - Stringifying condition arguments: you can pick NONE 
-//                            for aliases and packages when the respective flags 
-//                            are set. How is NONE encoded?
+//                            for package data when the respective flag is set. 
+//                            How is NONE encoded?
 //
 //                          - Stringifying condition arguments: the branch for 
 //                            using package data is incomplete; it should check 
 //                            the package for a data of that index and if one is 
 //                            present, show the name. We can't finish this because 
 //                            packages aren't implemented yet.
+//
+//                          - WE DON'T PROPERLY RETRIEVE THE CONDITION'S OWNING 
+//                            QUEST FOR THE FOLLOWING CONTAINING-FORM TYPES:
+//
+//                             - INFO (get parent DIAL and check its QNAM)
+//                             - PACK (check QNAM)
+//                             - SCEN (check PNAM)
 //
 //                          - UI for editing a condition
 //
