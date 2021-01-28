@@ -12,22 +12,29 @@ namespace {
    }
 }
 namespace editor_helpers {
-   QString stringify_condition_argument(
+   extern QString stringify_condition_argument(
       bool& incomplete_information,
-      const _ci::arg_type& type,
-      const dovah::loaded_forms::components::condition_arg_value& value,
+      const dovah::loaded_forms::components::condition& cnd,
+      int   arg_index,
       const dovah::loaded_forms::Package* owning_package,
       const dovah::loaded_forms::Quest* owning_quest
    ) {
       incomplete_information = false;
+      if (arg_index < 0 || arg_index > 1) {
+         incomplete_information = true;
+         return QString();
+      }
       //
-      if (&type == &_ci::arg_types::ActorValue) {
+      auto* type  = cnd.get_argument_type(arg_index);
+      auto  under = cnd.get_argument_underlying_type(arg_index);
+      auto& value = cnd.parameters[arg_index];
+      if (type == &_ci::arg_types::ActorValue) {
          QString out = actor_value_index_to_name(value.dword);
          if (!out.isEmpty())
             return out;
       }
       //
-      switch (type.underlying) {
+      switch (under) {
          case _ci::arg_underlying_type::aliasID:
             if (owning_quest) {
                if (auto* alias = owning_quest->lookup_alias_by_id(value.dword)) {
@@ -95,6 +102,11 @@ namespace editor_helpers {
          case _ci::arg_underlying_type::quest_stage:
             return QString("%1").arg((uint32_t)value.dword);
          case _ci::arg_underlying_type::package_data:
+            if (owning_package) {
+               //
+               // TODO
+               //
+            }
             incomplete_information = true;
             return QObject::tr("Package Data #%1", "condition argument (package data index with no identifiable owning quest)").arg(value.dword);
          case _ci::arg_underlying_type::string:
@@ -111,6 +123,8 @@ namespace editor_helpers {
             }
             return QObject::tr("NONE", "condition argument (no form or none-stub)");
       }
+      //
+      incomplete_information = true;
       return QString();
    }
 }

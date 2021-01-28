@@ -440,26 +440,15 @@
 //                            directly with a stub; we should probably remove that 
 //                            entirely.)
 //
-//                          - OUR CODE FOR STRINGIFYING CONDITION ARGS IS INCORRECT. 
-//                            SOME ARGUMENTS WILL ACTUALLY CHANGE THEIR EFFECTIVE 
-//                            TYPE DEPENDING ON FLAGS ON THE CONDITION ITSELF, AND 
-//                            WE DO NOT ACCOUNT FOR THIS.
+//                          - Stringifying condition arguments: you can pick NONE 
+//                            for aliases and packages when the respective flags 
+//                            are set. How is NONE encoded?
 //
-//                             - The "Use Aliases" flag causes all REFR and ACHR 
-//                               arguments to instead take reference alias IDs, 
-//                               which should map to aliases in the owning quest. 
-//                               The user is also allowed to pick "NONE".
-//
-//                             - The "Use Pack Data" flag causes all REFR and ACHR 
-//                               arguments to instead take package data indices, 
-//                               which should map to package data in the owning 
-//                               package. Only package data of types ObjectList and 
-//                               SingleRef are allowed here. The user is also 
-//                               allowed to pick "NONE".
-//
-//                                - For more information, look up the CK wiki docs 
-//                                  for Packages and look at the Public Package 
-//                                  Data list in whatever screenshots are there.
+//                          - Stringifying condition arguments: the branch for 
+//                            using package data is incomplete; it should check 
+//                            the package for a data of that index and if one is 
+//                            present, show the name. We can't finish this because 
+//                            packages aren't implemented yet.
 //
 //                          - UI for editing a condition
 //
@@ -469,6 +458,12 @@
 //                               "Use Aliases" and "Use Pack Data" flags; we use a 
 //                               single combobox to represent either flag or the 
 //                               absence of both.
+//
+//                                - We should show/hide options depending on whether 
+//                                  there is an owning quest or package. (If there is 
+//                                  neither, we should disable the combobox.) Alter-
+//                                  natively, can we grey out individual options in 
+//                                  a combobox?
 //
 //                             - All parameter types can be handled using a single UI 
 //                               control: a QLineEdit, a QComboBox, or a QSpinBox. 
@@ -499,6 +494,10 @@
 //                               replaced with a drop-down listing the names of all 
 //                               reference aliases on the owning quest, if any.
 //
+//                                - We should hide the "Alias" option if there is no 
+//                                  owning quest. Alternatively, can we grey out 
+//                                  individual options in a drop-down?
+//
 //                             - When "Run On" is set to "Reference", the "Select" button 
 //                               opens a dialog box that can be used to pick a ref, much 
 //                               like REFR and ACHR args.
@@ -515,6 +514,10 @@
 //                               button is replaced with a drop-down listing the names 
 //                               of all package data on the owning package that are of 
 //                               types ObjectList or SingleRef.
+//
+//                                - We should hide the "Package Data" option if there is 
+//                                  no owning package. Alternatively, can we grey out 
+//                                  individual options in a drop-down?
 //
 //                             - When "Run On" is set to "Event Data", the "Select" 
 //                               button is replaced with a drop-down listing different 

@@ -606,6 +606,7 @@
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
     <QtUic Include="ui\form_windows\quest.ui" />

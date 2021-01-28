@@ -779,8 +779,13 @@ namespace dovah::loaded_forms::components {
    condition_info::arg_underlying_type condition::get_argument_underlying_type(uint8_t index) const noexcept {
       auto a = this->get_argument_type(index);
       if (a) {
-         if (a->can_be_alias && this->get_flags() & flag::use_aliases)
-            return condition_info::arg_underlying_type::aliasID;
+         if (a->can_be_alias) {
+            auto f = this->get_flags();
+            if (f & flag::use_aliases)
+               return condition_info::arg_underlying_type::aliasID;
+            if (f & flag::use_packdata)
+               return condition_info::arg_underlying_type::package_data;
+         }
          return a->underlying;
       }
       return condition_info::arg_underlying_type::none;

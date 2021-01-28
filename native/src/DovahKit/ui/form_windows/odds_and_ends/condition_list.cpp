@@ -233,9 +233,9 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                   auto* p = this->_get_owning_package();
                   //
                   bool dummy;
-                  auto value_a = editor_helpers::stringify_condition_argument(dummy, *function->argument_types[0], condition.parameters[0], p, q);
+                  auto value_a = editor_helpers::stringify_condition_argument(dummy, condition, 0, p, q);
                   if (function->argument_types[1] != &dovah::loaded_forms::components::condition_info::arg_types::None) {
-                     auto value_b = editor_helpers::stringify_condition_argument(dummy, *function->argument_types[0], condition.parameters[0], p, q);
+                     auto value_b = editor_helpers::stringify_condition_argument(dummy, condition, 1, p, q);
                      return tr("%1, %2").arg(value_a).arg(value_b);
                   }
                   return value_a;
