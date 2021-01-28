@@ -882,27 +882,34 @@ namespace dovah::loaded_forms::components {
       subrecord.unchecked_read(function);
       subrecord.skip_bytes(2);
       {
-         bool uses_aliases = type & flag::use_aliases;
+         bool uses_aliases  = type & flag::use_aliases;
+         bool uses_packdata = type & flag::use_packdata;
+         uint32_t firstValue; // needed for when the second arg is a union
          //
          auto func = condition_info::function::lookup_by_id(function);
-         auto arg0 = func->argument_types[0];
-         auto arg1 = func->argument_types[1];
-         uint32_t firstValue; // needed for when the second arg is a union
-         if (!uses_aliases && arg0 && arg0->underlying == condition_info::arg_underlying_type::formID) {
-            subrecord.unchecked_read(formID);
-            uib.add_outbound_reference(formID);
-         } else
-            subrecord.unchecked_read(firstValue);
-         if (arg1 && arg1->isUnion) { // resolve the union
-            condition_arg_value value;
-            value.dword = firstValue;
-            arg1 = arg1->resolve_union(arg0, &value);
+         for (int i = 0; i < 2; ++i) {
+            auto* type  = func->argument_types[0];
+            if (i == 1 && type->isUnion) { // resolve the union
+               condition_arg_value value;
+               value.dword = firstValue;
+               type = type->resolve_union(type, &value);
+            }
+            //
+            auto under = type->underlying;
+            if (type->can_be_alias) {
+               if (uses_aliases)
+                  under = condition_info::arg_underlying_type::aliasID;
+               if (uses_packdata)
+                  under = condition_info::arg_underlying_type::package_data;
+            }
+            //
+            if (under == condition_info::arg_underlying_type::formID) {
+               subrecord.unchecked_read(formID);
+               uib.add_outbound_reference(formID);
+            } else {
+               subrecord.skip_bytes(4);
+            }
          }
-         if (!uses_aliases && arg1 && arg1->underlying == condition_info::arg_underlying_type::formID) {
-            subrecord.unchecked_read(formID);
-            uib.add_outbound_reference(formID);
-         } else
-            subrecord.skip_bytes(4);
          if (func && func->uses_event_data) {
             if (!subrecord.is_in_bounds(8))
                return;
@@ -970,6 +977,8 @@ namespace dovah::loaded_forms::components {
       }
    }
    void condition::clone_from(const condition& other, loaded_forms::Form& my_owner) noexcept {
+      this->clear(my_owner);
+      //
       this->type = other.type;
       this->compare_to_constant = other.compare_to_constant;
       this->compare_to_global.set(my_owner, other.compare_to_global);
@@ -1017,6 +1026,10 @@ namespace dovah::loaded_forms::components {
       for (int i = 0; i < 2; i++) {
          auto& param = this->parameters[i];
          if (func && this->get_argument_underlying_type(i) == condition_info::arg_underlying_type::formID) {
+            //
+            // NOTE: form parameters MUST be cleared BEFORE setting flags, because the underlying 
+            // type of a condition's parameters can vary depending on its flags.
+            //
             param.form.set(my_owner, nullptr);
          }
       }
@@ -1030,86 +1043,6 @@ namespace dovah::loaded_forms::components {
       this->run_on_index = 0;
       this->eventFunction = 0;
       this->eventMember = 0;
-   }
-
-   void condition::to_string(std::string& out) const {
-      out.clear();
-      //
-      auto function = condition_info::function::lookup_by_id(this->function);
-      if (!function) {
-         cobb::sprintf(out, "<BAD FUNCTION ID %04X>", this->function);
-         return;
-      }
-      switch (this->run_on) {
-         case run_on_t::subject:
-            out += "Subject";
-            break;
-         case run_on_t::target:
-            out += "Target";
-            break;
-         case run_on_t::reference:
-            cobb::sprintf(out, "[REFR:%08X]", this->run_on_reference);
-            break;
-         case run_on_t::combat_target:
-            out += "CombatTarget";
-            break;
-         case run_on_t::event_data:
-            out += "EventData"; // TODO: how does this work?
-            break;
-         case run_on_t::quest_alias:
-            cobb::sprintf(out, "QuestAlias[%d]", this->run_on_index); // can't show more meaningful information without access to the condition's containing form
-            break;
-         case run_on_t::package_data:
-            cobb::sprintf(out, "PackageData[%d]", this->run_on_index); // can't show more meaningful information without access to the condition's containing form
-            break;
-         default:
-            out += "?????";
-      }
-      out += '.';
-      out += function->name;
-      out += '(';
-      for (uint32_t i = 0; i < 3; i++) {
-         auto type = this->get_argument_type(i);
-         if (type && !type->is_none()) {
-            if (i > 0)
-               out += ", ";
-            auto& param = this->parameters[i];
-            std::string temp;
-            type->to_string(param, temp);
-            out += temp;
-         }
-      }
-      out += ") ";
-      switch (this->get_operator()) {
-         case operator_t::equal:
-            out += "==";
-            break;
-         case operator_t::not_equal:
-            out += "!=";
-            break;
-         case operator_t::greater:
-            out += "> ";
-            break;
-         case operator_t::greater_or_equal:
-            out += ">=";
-            break;
-         case operator_t::less:
-            out += "< ";
-            break;
-         case operator_t::less_or_equal:
-            out += "<=";
-            break;
-         default:
-            out += "??";
-      }
-      out += ' ';
-      if (this->get_flags() & flag::compare_to_global) {
-         std::string glob;
-         cobb::sprintf(glob, "[GLOB:%08X]", this->compare_to_global.formID());
-         out += glob;
-      } else {
-         out += std::to_string(this->compare_to_constant);
-      }
    }
    #pragma endregion
 }

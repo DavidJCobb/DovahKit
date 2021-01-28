@@ -1,0 +1,82 @@
+
+Several forms in Bethesda  RPGs can have lists of  "conditions," which are used 
+to determine whether some event occurs.  Conditions are a somewhat complex data 
+structure; a condition consists of a leading CTDA subrecord optionally followed 
+by CIS1 and CIS2 subrecords.
+
+Conditions have the following components:
+
+   flags
+      A set of flags which alter the behavior of the entire condition.
+
+   function
+      The ID of a  built-in condition  function to run:  this is the thing that 
+      the condition is testing. The function will return a double.
+
+   run on
+      The entity to which the condition function should be applied.
+
+   parameters
+      Up to two parameters to be passed to the condition function.
+
+   event parameters
+      For specific condition functions only, three parameters to use.
+
+   comparison
+      A value that the  condition function's result should  be compared to, and 
+      the comparison operator to use (e.g. equal to, greater than).
+
+There are hundreds of condition functions,  and a few dozen argument types, but 
+most of these  argument types are just  different form types and  so are stored 
+the same basic way. DovahKit handles functionally  identical types the same way 
+by giving each argument type an "underlying type:" the Actor and Faction types, 
+for example, share the "formID" underlying type.
+
+What complicates things is the fact that specific types can actually have their 
+underlying types overridden based on the  flags that a condition has. There are 
+two flags, "Use Aliases" and "Use Package Data," which will cause the Actor and 
+ObjectReference  types to use "aliasID" or  "package data" as  their underlying 
+types, when normally they would use "formID."
+
+Currently, DovahKit encodes all condition argument values as unions paired with 
+strings (since strings can't  easily be put in a union),  which matches how the 
+values are stored  in an ES[LPM] file;  it is the frontend's  responsibility to 
+properly handle these values  based on their current  underlying types. To make 
+this easier,  a frontend can call  (condition::get_arg_underlying_type),  which 
+will check an argument's  underlying type  based both on  the argument type and 
+the condition's flags.
+
+
+=== DATA DEPENDENT ON THE OWNING FORM =========================================
+
+Conditions can refer  to quest aliases and to package data,  but when doing so, 
+they don't specify which quest  or which package  the alias or data belongs to. 
+In these cases,  the data in question exists on the condition's  "owning" quest 
+or package. When the condition exists inside of a quest, identifying the owning 
+quest is quite straightforward, and when the condition exists inside a package, 
+identifying the  owning package is quite straightforward,  but what about other 
+cases?
+
+When the condition is part of a Quest or quest alias,  its owning quest is that 
+quest.
+
+When the condition is part of a Package, its owning package is that package. If 
+the package has an owning quest set, then that is the condition's owning quest.
+
+When the condition is part of a TopicInfo, its owning quest is the owning quest 
+of the info's parent Topic.
+
+When the condition is  part of a Scene, its owning quest is  the scene's parent 
+quest. Note that scenes are  not child forms of quests;  a scene identifies its 
+parent quest via a subrecord (PNAM), similar to topics.
+
+If an argument's underlying type is "aliasID," then its value must be the ID of 
+an alias on the condition's owning quest;  furthermore, if the condition is set 
+to run on an alias, then it will also  provide the ID of an alias on the owning 
+quest. The ID -1 corresponds to "none."
+
+If an argument's underlying type is  "package data," then its value must be the 
+sequential index of a package data on the condition's owning package; moreover, 
+if the condition is set to run on a package data, then it will also provide the 
+sequential index of a package data on  the owning package. The ID -1 is assumed 
+to correspond to "none."

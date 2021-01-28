@@ -119,7 +119,5 @@ namespace dovah::loaded_forms::components {
       void clone_from(const condition& original, loaded_forms::Form& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
       void clear(loaded_forms::Form& my_owner);
-      //
-      void to_string(std::string& out) const;
    };
 }
