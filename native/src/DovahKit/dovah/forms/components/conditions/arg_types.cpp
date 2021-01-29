@@ -632,7 +632,7 @@ namespace dovah::loaded_forms::components {
             enum_value_definition(19, "Delivery Type Is"),
             enum_value_definition(20, "Casting Type Is"),
          });
-         arg_form_type Voicetype       = arg_form_type("Voicetype", { form_type::voicetype });
+         arg_form_type Voicetype       = arg_form_type("Voicetype", { form_type::formlist, form_type::voicetype });
          arg_type      WardState       = arg_type("Ward State", arg_underlying_type::int_signed, {
             enum_value_definition(0, "None"),
             enum_value_definition(1, "Absorb"),

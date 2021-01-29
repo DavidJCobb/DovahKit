@@ -1,11 +1,17 @@
 #include "condition_edit.h"
+#include <QShowEvent>
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../helpers/qt/spinbox.h"
+#include "../../generic/FormsOfTypeCombobox.h"
 
 namespace {
    constexpr int RunOnTypeRole           = Qt::ItemDataRole::UserRole;
    constexpr int RunOnFormIDRole         = Qt::ItemDataRole::UserRole + 1;
    constexpr int RunOnPlayerSentinelRole = Qt::ItemDataRole::UserRole + 2;
+   
+   namespace _arg_types {
+      using namespace dovah::loaded_forms::components::condition_info::arg_types;
+   }
 }
 
 ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), form(containing_form), condition(c) {
@@ -18,6 +24,15 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, [this]() {
       this->reject();
    });
+   //
+   this->parameters[0].holder = this->ui.param1Holder;
+   this->parameters[1].holder = this->ui.param2Holder;
+   this->parameters[2].holder = this->ui.param3Holder;
+   for (auto& p : this->parameters) {
+      auto* layout = new QGridLayout;
+      layout->setMargin(0);
+      p.holder->setLayout(layout);
+   }
    //
    {
       auto* widget = this->ui.runOn;
@@ -68,6 +83,24 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
       //
       // TODO: code to change the function
       //
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         int   id   = this->ui.function->currentData().toInt();
+         auto* func = dovah::loaded_forms::components::condition_info::function::lookup_by_id(id);
+         if (!func) {
+            this->_buildParamControls(0, underlying_t::none, nullptr);
+            this->_buildParamControls(1, underlying_t::none, nullptr);
+            this->_buildParamControls(2, underlying_t::none, nullptr);
+         }
+         if (func->uses_event_data) {
+            this->_buildParamControls(0, underlying_t::event, nullptr);
+            this->_buildParamControls(1, underlying_t::event, nullptr);
+            this->_buildParamControls(2, underlying_t::event, nullptr);
+         } else {
+            this->_buildParamControls(0, underlying_t::none, func->argument_types[0]);
+            this->_buildParamControls(1, underlying_t::none, func->argument_types[1]);
+            this->_buildParamControls(2, underlying_t::none, nullptr);
+         }
+      });
       #if !_DEBUG
          static_assert(false, "Finish implementing Function: you need to be able to filter the function list (with the current selection exempt from the filter)!");
          static_assert(false, "Finish implementing Function: we need code for when the function combobox is changed!");
@@ -77,6 +110,11 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
       //
       // TODO: Parameters
       //
+      for (int i = 0; i < this->parameters.size(); ++i) {
+         underlying_t  under = condition.get_argument_underlying_type(i);
+         param_type_t* type  = condition.get_argument_type(i);
+         this->_buildParamControls(i, under, type, true);
+      }
       #if !_DEBUG
          static_assert(false, "Finish implementing Parameters: the use aliases/packdata drop-down!");
          static_assert(false, "Finish implementing Parameters: displaying the values!");
@@ -106,6 +144,182 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
    cobb::qt::bind(this->ui.flagOr, condition.flags, condition_t::flag::or_linked);
 }
 
+void ConditionEditDialog::_buildParamControls(int which, underlying_t under, param_type_t* type, bool use_original) {
+   if (which < 0 || which > this->parameters.size())
+      return;
+   auto& p = this->parameters[which];
+   if (p.last_type == type && p.last_under == under)
+      return;
+   //
+   if (which >= 2)
+      use_original = false;
+   if (type && type->can_be_alias) {
+      auto index = this->ui.paramFlags->currentIndex();
+      if (index == 1)
+         under = underlying_t::aliasID;
+      else if (index == 2)
+         under = underlying_t::package_data;
+   }
+   //
+   if (p.widget) {
+      p.widget->deleteLater();
+      p.widget = nullptr;
+   }
+   switch (under) {
+      case underlying_t::aliasID:
+         {
+            auto* w = new QComboBox;
+            //
+            // TODO: alias names and IDs
+            //
+            p.widget = w;
+            //
+            if (use_original)
+               w->setCurrentIndex(w->findData(this->condition.parameters[which].dword));
+         }
+         break;
+      case underlying_t::character:
+         if (type == &_arg_types::Axis) {
+            auto* w = new QComboBox;
+            w->addItem("X", uint8_t('X'));
+            w->addItem("Y", uint8_t('Y'));
+            w->addItem("Z", uint8_t('Z'));
+            p.widget = w;
+            //
+            if (use_original)
+               w->setCurrentIndex(w->findData(this->condition.parameters[which].dword));
+         } else {
+            auto* w = new QLineEdit;
+            w->setMaxLength(1);
+            p.widget = w;
+            //
+            if (use_original)
+               w->setText(QChar(this->condition.parameters[which].dword & 0xFF));
+         }
+         break;
+      case underlying_t::event:
+         switch (which) {
+            case 0:
+               //
+               // TODO: event function
+               //
+               break;
+            case 1:
+               //
+               // TODO: event member
+               //
+               break;
+            case 2:
+               //
+               // TODO: event form
+               //
+               break;
+         }
+         break;
+      case underlying_t::float32:
+         {
+            auto* w = new QDoubleSpinBox;
+            w->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+            p.widget = w;
+            //
+            if (use_original)
+               w->setValue((int32_t)this->condition.parameters[which].float32);
+         }
+         break;
+      case underlying_t::formID:
+         {
+            auto* w = new FormsOfTypeCombobox;
+            if (type && type->allowedFormTypes.size()) {
+               QVector<uint8_t> al;
+               al.reserve(type->allowedFormTypes.size());
+               for (auto i : type->allowedFormTypes)
+                  al.push_back(i);
+               w->setAllowedFormTypes(al);
+            }
+            w->setAllowNone(true);
+            w->populate();
+            p.widget = w;
+            //
+            if (use_original) {
+               dovah::bare_form_id_t id = 0;
+               auto* stub = this->condition.parameters[which].form.get_form_stub();
+               if (stub)
+                  id = stub->formID;
+               w->setFormByID(id);
+            }
+         }
+         break;
+      case underlying_t::int_signed:
+         if (type && type->isEnum) {
+            auto* w = new QComboBox;
+            for (auto& evd : type->enumValues)
+               w->addItem(evd.string, evd.value);
+            p.widget = w;
+            //
+            if (use_original)
+               w->setCurrentIndex(w->findData(this->condition.parameters[which].dword));
+         } else {
+            auto* w = new QSpinBox;
+            w->setRange(std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
+            p.widget = w;
+            //
+            if (use_original)
+               w->setValue((int32_t)this->condition.parameters[which].dword);
+         }
+         break;
+      case underlying_t::int_unsigned:
+         {
+            auto* w = new QSpinBox;
+            w->setRange(std::numeric_limits<uint32_t>::min(), std::numeric_limits<uint32_t>::max());
+            p.widget = w;
+            //
+            if (use_original)
+               w->setValue(this->condition.parameters[which].dword);
+         }
+         break;
+      case underlying_t::none:
+         break;
+      case underlying_t::package_data:
+         {
+            auto* w = new QComboBox;
+            //
+            // TODO: package data names and indices
+            //
+            p.widget = w;
+            //
+            if (use_original)
+               w->setCurrentIndex(w->findData(this->condition.parameters[which].dword));
+         }
+         break;
+      case underlying_t::quest_stage:
+         {
+            auto* w = new QComboBox;
+            //
+            // TODO: quest stage numbers
+            //
+            p.widget = w;
+            //
+            if (use_original)
+               w->setCurrentIndex(w->findData(this->condition.parameters[which].dword));
+         }
+         break;
+      case underlying_t::string:
+         {
+            auto* w = new QLineEdit;
+            p.widget = w;
+            //
+            if (use_original)
+               w->setText(this->condition.parameters[which].string.c_str());
+         }
+         break;
+   }
+   if (p.widget) {
+      p.holder->layout()->addWidget(p.widget);
+   }
+   p.last_type  = type;
+   p.last_under = under;
+}
+
 void ConditionEditDialog::_save() {
    //
    // TODO
@@ -113,4 +327,26 @@ void ConditionEditDialog::_save() {
    #if !_DEBUG
       static_assert(false, "Finish implementing me!");
    #endif
+}
+
+void ConditionEditDialog::showEvent(QShowEvent* event) {
+   if (event->spontaneous())
+      return;
+   if (this->did_param_holder_layout)
+      return;
+   //
+   // Set the parameter holders' minimum heights, to ensure that things don't change size as 
+   // we switch which controls are in each row.
+   //
+   this->did_param_holder_layout = true;
+   //
+   auto* button   = this->ui.buttonOK;
+   auto* dropdown = this->ui.runOn;
+   auto* spinbox  = this->ui.operandConstant;
+   auto* textbox  = this->ui.filterFunction;
+   //
+   auto height = std::max(std::max(std::max(button->height(), dropdown->height()), spinbox->height()), textbox->height());
+   for (auto& p : this->parameters) {
+      p.holder->setMinimumHeight(height);
+   }
 }

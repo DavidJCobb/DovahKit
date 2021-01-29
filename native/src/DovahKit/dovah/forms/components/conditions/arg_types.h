@@ -87,6 +87,7 @@ namespace dovah::loaded_forms::components {
       class arg_enum_type : public arg_type { // usable for large enum types, when the values are contiguous.
          public:
             arg_enum_type(const char* n, int32_t first, std::initializer_list<const char*> valueNames) : arg_type(n, arg_underlying_type::int_signed) {
+               this->isEnum = true;
                int32_t i = first;
                for (auto it = valueNames.begin(); it != valueNames.end(); ++i, ++it)
                   this->enumValues.push_back(enum_value_definition(i, *it));
