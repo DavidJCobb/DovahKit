@@ -195,10 +195,27 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
       cobb::qt::remove_spinbox_bounds(this->ui.operandConstant);
       cobb::qt::bind(this->ui.operandConstant, condition.comparison.operand.constant);
       //
-      #if !_DEBUG
-         static_assert(false, "Finish implementing Compare To Global: the drop-down!");
-         static_assert(false, "Finish implementing Compare To Global: the checkbox!");
-      #endif
+      this->ui.operandGlobal->setAllowedFormType(dovah::form_type::global);
+      this->ui.operandGlobal->populate();
+      if (auto* stub = condition.comparison.operand.global.get_form_stub()) {
+         if (!stub->is_none_stub())
+            this->ui.operandGlobal->setFormByID(stub->formID);
+      }
+      //
+      bool use_global = (condition.flags & condition_t::flag::compare_to_global);
+      this->ui.flagCompareToGlobal->setCheckState(use_global ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
+      if (use_global) {
+         this->ui.operandStack->setCurrentWidget(this->ui.operandPageGlobal);
+      } else {
+         this->ui.operandStack->setCurrentWidget(this->ui.operandPageConstant);
+      }
+      QObject::connect(this->ui.flagCompareToGlobal, &QCheckBox::stateChanged, this, [this](int state) {
+         if (state == Qt::CheckState::Checked) {
+            this->ui.operandStack->setCurrentWidget(this->ui.operandPageGlobal);
+         } else {
+            this->ui.operandStack->setCurrentWidget(this->ui.operandPageConstant);
+         }
+      });
    }
    cobb::qt::bind(this->ui.flagOr, condition.flags, condition_t::flag::or_linked);
 }

@@ -369,7 +369,7 @@
           <number>0</number>
          </property>
          <item row="0" column="0">
-          <widget class="QComboBox" name="operandGlobal"/>
+          <widget class="FormsOfTypeCombobox" name="operandGlobal"/>
          </item>
         </layout>
        </widget>
@@ -388,6 +388,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FormsOfTypeCombobox</class>
+   <extends>QComboBox</extends>
+   <header>../../generic/FormsOfTypeCombobox.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>runOn</tabstop>
   <tabstop>runOnButton</tabstop>
