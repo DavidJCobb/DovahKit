@@ -20,7 +20,7 @@ namespace dovah::loaded_forms::components {
             const char* description = "";
             const bool  valid = true;
             const bool  uses_event_data = false;
-            arg_type* const argument_types[2] = { &arg_types::None, &arg_types::None }; // aRrAy Of ReFeReNcE iS nOt AlLoWeD
+            std::array<arg_type* const, 2> argument_types = { &arg_types::None, &arg_types::None }; // aRrAy Of ReFeReNcE iS nOt AlLoWeD
             //
             function() {}; // needed for std::array, apparently
             function(uint16_t id, const char* name, const char* d) : id(id), name(name), description(d) {};

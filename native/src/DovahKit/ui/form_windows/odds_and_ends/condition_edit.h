@@ -21,10 +21,20 @@ class ConditionEditDialog : public QDialog {
       condition_t&   condition;
       //
       struct _parameter {
-         QWidget*      holder     = nullptr;
-         QWidget*      widget     = nullptr;
-         underlying_t  last_under = underlying_t::none;
-         param_type_t* last_type  = nullptr;
+         enum class special_case_t {
+            none,
+            reference_pick_button,
+         };
+         //
+         QWidget*       holder       = nullptr;
+         QWidget*       widget       = nullptr;
+         underlying_t   last_under   = underlying_t::none;
+         param_type_t*  last_type    = nullptr;
+         special_case_t last_special = special_case_t::none;
+         //
+         struct {
+            const dovah::form_stub* reference = nullptr;
+         } value;
       };
       std::array<_parameter, 3> parameters;
       bool did_param_holder_layout = false;
