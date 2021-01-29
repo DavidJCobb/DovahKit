@@ -8,6 +8,7 @@
 #include "../../../dovah/forms/factories/hardcoded.h"
 #include "../../../helpers/qt/strings.h"
 #include "../../../helpers/vector.h"
+#include "condition_edit.h"
 
 #pragma region ConditionListModel
 ConditionListModel::ConditionListModel(QObject* parent) : QAbstractTableModel(parent) {
@@ -419,6 +420,16 @@ void ConditionListModel::setTarget(loaded_form_t& clone, std::vector<condition>&
    this->target = &list;
    this->endResetModel();
 }
+
+ConditionListModel::condition* ConditionListModel::getCondition(const QModelIndex& index) {
+   if (!this->target)
+      return nullptr;
+   auto r = index.row();
+   if (r >= 0 && r <= this->target->size()) {
+      return &(*this->target)[r];
+   }
+   return nullptr;
+}
 #pragma endregion
 
 #pragma region ConditionList
@@ -458,9 +469,18 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
    }
    QObject::connect(this->ui.list, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto* model = this->model();
-      //
-      // TODO
-      //
+      auto* sm    = this->ui.list->selectionModel();
+      if (!model || !sm)
+         return;
+      auto  rows = sm->selectedRows();
+      if (rows.size() != 1)
+         return;
+      auto* form = model->targetForm();
+      auto* cnd  = model->getCondition(rows[0]);
+      if (!form || !cnd)
+         return;
+      auto* modal = new ConditionEditDialog(*form, *cnd, this);
+      modal->open();
    });
    //
    QObject::connect(this->ui.buttonAdd, &QPushButton::clicked, this, [this]() {

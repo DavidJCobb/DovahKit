@@ -201,7 +201,7 @@
         </widget>
        </item>
        <item row="4" column="0" colspan="5">
-        <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
+        <layout class="QHBoxLayout" name="horizontalLayout" stretch="5,6">
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>

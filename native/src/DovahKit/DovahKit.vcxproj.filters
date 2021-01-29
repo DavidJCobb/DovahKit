@@ -663,6 +663,9 @@
     <ClCompile Include="editor\helpers\actor_value_index_to_name.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1588,6 +1591,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_list.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

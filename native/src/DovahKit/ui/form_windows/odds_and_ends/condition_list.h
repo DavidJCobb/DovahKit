@@ -79,6 +79,9 @@ class ConditionListModel : public QAbstractTableModel {
       void refresh();
       void setTarget(form_stub&, std::vector<condition>&);
       void setTarget(loaded_form_t&, std::vector<condition>&);
+
+      loaded_form_t* targetForm() const noexcept { return this->clone; }
+      condition* getCondition(const QModelIndex&);
 };
 
 class ConditionList : public QWidget {

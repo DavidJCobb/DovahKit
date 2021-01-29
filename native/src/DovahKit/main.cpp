@@ -440,10 +440,6 @@
 //                            directly with a stub; we should probably remove that 
 //                            entirely.)
 //
-//                          - Stringifying condition arguments: you can pick NONE 
-//                            for package data when the respective flag is set. 
-//                            How is NONE encoded?
-//
 //                          - Stringifying condition arguments: the branch for 
 //                            using package data is incomplete; it should check 
 //                            the package for a data of that index and if one is 
