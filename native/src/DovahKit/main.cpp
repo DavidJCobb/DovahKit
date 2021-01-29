@@ -440,21 +440,6 @@
 //                            directly with a stub; we should probably remove that 
 //                            entirely.)
 //
-//                          - CONDITION BACKEND: CONDITIONS ARE REPRESENTED IN-MEMORY 
-//                            AS CLOSELY AS POSSIBLE TO THE WAY THEY'RE REPRESENTED 
-//                            IN THE FILE FORMAT. THIS MAKES SERIALIZATION MARGINALLY 
-//                            EASIER BUT MAKES WORKING WITH IN-MEMORY CONDITIONS LESS 
-//                            STRAIGHTFORWARD. WE SHOULD INVERT THIS: STORE CONDITIONS 
-//                            "FAITHFULLY" IN MEMORY AND HANDLE MESSY STUFF WHEN LOADING 
-//                            AND SAVING.
-//
-//                             - Separate (type) into (flags) and (operator).
-//
-//                             - Change (condition_arg_value) to no longer be a union, 
-//                               and give it an "underlying_type" enum.
-//
-//                             - Use std::array for (condition::parameters).
-//
 //                          - Stringifying condition arguments: you can pick NONE 
 //                            for package data when the respective flag is set. 
 //                            How is NONE encoded?

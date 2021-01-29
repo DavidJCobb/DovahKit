@@ -5,6 +5,7 @@
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/forms/Form.h"
 #include "../../../dovah/forms/Quest.h"
+#include "../../../dovah/forms/factories/hardcoded.h"
 #include "../../../helpers/qt/strings.h"
 #include "../../../helpers/vector.h"
 
@@ -125,14 +126,14 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
       return QVariant();
    auto& condition = (*this->target)[row];
    auto* function  = condition_function::lookup_by_id(condition.function);
-   auto  flags     = condition.get_flags();
+   auto  flags     = condition.flags;
    switch (column) {
       case ColumnTarget:
          switch (role) {
             case Qt::DisplayRole:
                [[fallthrough]];
             case Qt::ToolTipRole:
-               switch (condition.run_on) {
+               switch (condition.run_on.type) {
                   case condition::run_on_t::combat_target:
                      return tr("Combat Target", "condition list - run on");
                   case condition::run_on_t::event_data:
@@ -146,15 +147,17 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      return tr("Package Data", "condition list - run on");
                   case condition::run_on_t::quest_alias:
                      if (auto* q = this->_get_owning_quest()) {
-                        if (auto* alias = q->lookup_alias_by_id(condition.run_on_index)) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               return name;
                         }
                      }
-                     return tr("Alias ID #%1", "condition list - run on").arg(condition.run_on_index); // TODO: display alias name if possible
+                     return tr("Alias ID #%1", "condition list - run on").arg(condition.run_on.index); // TODO: display alias name if possible
                   case condition::run_on_t::reference:
-                     if (auto* stub = condition.run_on_reference.get_form_stub()) {
+                     if (auto* stub = condition.run_on.reference.get_form_stub()) {
+                        if (stub->formID == dovah::hardcoded_form_ids::PlayerRef)
+                           return tr("Player", "condition list - run on form - player");
                         return tr("[%1:%2]%3", "condition list - run on form")
                            .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
                            .arg(stub->formID, 8, 16, QChar('0'))
@@ -172,7 +175,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                // Show the run-on column in italics if it isn't an alias name, etc.. Italics 
                // will distinguish built-in strings from names in user content.
                //
-               switch (condition.run_on) {
+               switch (condition.run_on.type) {
                   case condition::run_on_t::package_data:
                      {
                      // TODO: revisit this when we actually know what package data indices *are*
@@ -182,7 +185,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      }
                   case condition::run_on_t::quest_alias:
                      if (auto* q = this->_get_owning_quest()) {
-                        if (auto* alias = q->lookup_alias_by_id(condition.run_on_index)) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               break;
@@ -190,7 +193,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      }
                      [[fallthrough]];
                   case condition::run_on_t::reference:
-                     if (condition.run_on_reference)
+                     if (condition.run_on.reference)
                         break;
                      [[fallthrough]];
                   case condition::run_on_t::event_data:
@@ -245,7 +248,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
          break;
       case ColumnOperator:
          if (role == Qt::DisplayRole) {
-            switch (condition.get_operator()) {
+            switch (condition.comparison.op) {
                case condition::operator_t::equal:
                   return tr("==", "condition list - operator, equal");
                case condition::operator_t::greater:
@@ -267,19 +270,19 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                [[fallthrough]];
             case Qt::ToolTipRole:
                if (flags & condition::flag::compare_to_global) {
-                  if (!condition.compare_to_global)
+                  if (!condition.comparison.operand.global)
                      return tr("NONE", "condition list - compare to global (missing)");
-                  auto* stub = condition.compare_to_global.get_form_stub();
+                  auto* stub = condition.comparison.operand.global.get_form_stub();
                   return tr("[%1:%2]%3", "condition list - compare to global")
                      .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
                      .arg(stub->formID, 8, 16, QChar('0'))
                      .arg(stub->get_editor_id());
                } else {
-                  return condition.compare_to_constant;
+                  return condition.comparison.operand.constant;
                }
                break;
             case Qt::FontRole:
-               if (!condition.compare_to_global && (flags & condition::flag::compare_to_global)) {
+               if (!condition.comparison.operand.global && (flags & condition::flag::compare_to_global)) {
                   auto font = QFont();
                   font.setItalic(true);
                   return font;

@@ -38,6 +38,12 @@ two flags, "Use Aliases" and "Use Package Data," which will cause the Actor and
 ObjectReference  types to use "aliasID" or  "package data" as  their underlying 
 types, when normally they would use "formID."
 
+As an additional challenge,  some  arguments' meanings  can be dependent on the 
+values of other arguments. This is most  readily apparent with the GetVATSValue 
+condition function, where the first  and second arguments are always enums, but 
+the meaning of the second argument's value depends on what value is held in the 
+first argument.
+
 Currently, DovahKit encodes all condition argument values as unions paired with 
 strings (since strings can't  easily be put in a union),  which matches how the 
 values are stored  in an ES[LPM] file;  it is the frontend's  responsibility to 
@@ -78,5 +84,23 @@ quest. The ID -1 corresponds to "none."
 If an argument's underlying type is  "package data," then its value must be the 
 sequential index of a package data on the condition's owning package; moreover, 
 if the condition is set to run on a package data, then it will also provide the 
-sequential index of a package data on  the owning package. The ID -1 is assumed 
-to correspond to "none."
+sequential index  of a package data on  the owning package.  The index value -1 
+corresponds to "none."
+
+
+=== A NOTE ON ARGUMENT VALUES =================================================
+
+As mentioned above, condition argument  values are stored as unions paired with 
+strings (only because  std::string doesn't like being put in  a union). Because 
+of this, frontends must be careful to  check an argument's rightful type before 
+attempting to edit its values.
+
+Putting the  form-stub pointer in the  union was a deliberate  choice, to avoid 
+complications with use info.  If the form-stub pointer  were kept alongside the 
+union, like the string value, then it would be possible for a condition to have 
+a "phantom"  outbound  reference to a  form: that is,  a parameter  whose value 
+shouldn't be a form could nonetheless have an outbound reference to a form, and 
+this could cause some particularly nasty complications if the condition were to 
+be saved to the file and then unloaded.
+
+

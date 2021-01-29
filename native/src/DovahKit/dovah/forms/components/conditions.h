@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include "../_common.h"
 #include "conditions/arg_value.h"
 #include "conditions/arg_types.h"
@@ -62,7 +63,7 @@ namespace dovah::loaded_forms::components {
    }
 
    struct condition {
-      enum class run_on_t {
+      enum class run_on_t : uint32_t {
          subject       = 0,
          target        = 1,
          reference     = 2, // i.e. condition::run_on_reference
@@ -91,28 +92,38 @@ namespace dovah::loaded_forms::components {
          };
       };
 
-      uint8_t   type; // flags | (operator << 5)
-      float     compare_to_constant;
-      form_reference_t compare_to_global;
-      uint16_t  function;
-      condition_arg_value parameters[2];
-      run_on_t  run_on;
-      form_reference_t run_on_reference;
-      int32_t   run_on_index; // xEdit calls this "Parameter 3." If (run_on == run_on_t::package_data), then this is the Package Data index (within the PACK containing this condition) to run on, and -1 means "NONE."
-      //
-      uint16_t  eventFunction;
-      uint16_t  eventMember;
-      form_reference_t eventFormID;
+      uint8_t flags = 0; // if a flag has a setter, frontend code should only use the setter
+      struct {
+         run_on_t type = run_on_t::subject;
+         int32_t  index = -1;
+         form_reference_t reference;
+      } run_on;
+      uint16_t  function; // frontend code should use the setter
+      std::array<condition_arg_value, 2> parameters;
+      struct {
+         uint16_t function;
+         uint16_t member;
+         form_reference_t form;
+      } event_parameters;
+      struct {
+         operator_t op = operator_t::equal;
+         struct {
+            float            constant;
+            form_reference_t global;
+         } operand;
+      } comparison;
 
       condition_info::arg_type*           get_argument_type(uint8_t index) const noexcept;
       condition_info::arg_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;
+      
       //
-      inline operator_t get_operator() const noexcept { return (operator_t)((this->type >> 5) & 7); }
-      inline uint8_t    get_flags()    const noexcept { return this->type & 0x1F; }
-      inline void set_flags(uint8_t f) noexcept { this->type = (f & 0x1F) | (this->type & ~0x1F); }
-      inline void set_operator(operator_t op) noexcept { this->type = (this->type & 0x1F) | (((uint8_t)op & 7) << 5); }
-      inline void set_flags_and_operator(uint8_t f, operator_t op) noexcept { this->type = (f & 0x1F) | ((uint8_t)op & 7) << 5; }
+      // These functions not only set the relevant field or flag, but also fix up any existing 
+      // parameter values.
       //
+      void set_function(loaded_forms::Form& my_owner, uint16_t id);
+      void set_uses_aliases(loaded_forms::Form& my_owner, bool);
+      void set_uses_package_data(loaded_forms::Form& my_owner, bool);
+      
       bool read(tes_record_reader&, load_order_interfaces::form_load&); // assumes we've already opened a CTDA subrecord
       static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
       void save(tes_record_writer&, load_order_interfaces::form_save&); // call with no subrecord open

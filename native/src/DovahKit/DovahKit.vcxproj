@@ -647,6 +647,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dovah\_docs\basics.txt" />
+    <Text Include="dovah\_docs\conditions.txt" />
     <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
     <Text Include="dovah\_docs\form stubs.txt" />
     <Text Include="dovah\_docs\game settings.txt" />

@@ -104,6 +104,8 @@ namespace editor_helpers {
          case _ci::arg_underlying_type::quest_stage:
             return QString("%1").arg((uint32_t)value.dword);
          case _ci::arg_underlying_type::package_data:
+            if (value.dword == -1)
+               return QObject::tr("NONE", "condition argument (no package data)");
             if (owning_package) {
                //
                // TODO

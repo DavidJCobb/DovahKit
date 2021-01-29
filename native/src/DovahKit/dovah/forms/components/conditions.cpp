@@ -780,10 +780,9 @@ namespace dovah::loaded_forms::components {
       auto a = this->get_argument_type(index);
       if (a) {
          if (a->can_be_alias) {
-            auto f = this->get_flags();
-            if (f & flag::use_aliases)
+            if (this->flags & flag::use_aliases)
                return condition_info::arg_underlying_type::aliasID;
-            if (f & flag::use_packdata)
+            if (this->flags & flag::use_packdata)
                return condition_info::arg_underlying_type::package_data;
          }
          return a->underlying;
@@ -791,20 +790,90 @@ namespace dovah::loaded_forms::components {
       return condition_info::arg_underlying_type::none;
    }
 
+   void condition::set_function(loaded_forms::Form& my_owner, uint16_t id) {
+      using _aut = condition_info::arg_underlying_type;
+      //
+      if (id == this->function)
+         return;
+      //
+      auto prior = condition_info::function::lookup_by_id(this->function);
+      auto after = condition_info::function::lookup_by_id(id);
+      assert(prior && "Cannot properly audit or clear this condition's parameters: the existing function value is unrecognized.");
+      assert(after && "Invalid function ID.");
+      for (int i = 0; i < this->parameters.size(); ++i) {
+         auto* to_type  = after->argument_types[i];
+         auto  to_under = to_type ? to_type->underlying : _aut::none;
+         //
+         auto& param = this->parameters[i];
+         auto  under = this->get_argument_underlying_type(i);
+         if (under == _aut::formID) {
+            if (to_under != _aut::formID)
+               param.form.set(my_owner, nullptr);
+         } else {
+            param.dword = 0;
+         }
+         if (!(under == to_under && under == _aut::string))
+            param.string.clear();
+      }
+      //
+      this->function = id;
+   }
+   void condition::set_uses_aliases(loaded_forms::Form& my_owner, bool f) {
+      bool prior = this->flags & flag::use_aliases;
+      if (prior == f)
+         return;
+      if (!prior) {
+         //
+         // The flag wasn't already set, so find any form-type parameters that would have their underlying 
+         // types changed by the flag, and clear their values.
+         //
+         for (int i = 0; i < this->parameters.size(); ++i) {
+            auto* type  = this->get_argument_type(i);
+            auto  under = this->get_argument_underlying_type(i);
+            if (type->can_be_alias && under == condition_info::arg_underlying_type::formID)
+               this->parameters[i].form.set(my_owner, nullptr);
+         }
+      }
+      cobb::edit_bit(this->flags, flag::use_aliases, f);
+   }
+   void condition::set_uses_package_data(loaded_forms::Form& my_owner, bool f) {
+      bool prior = this->flags & flag::use_packdata;
+      if (prior == f)
+         return;
+      if (!prior) {
+         //
+         // The flag wasn't already set, so find any form-type parameters that would have their underlying 
+         // types changed by the flag, and clear their values.
+         //
+         for (int i = 0; i < this->parameters.size(); ++i) {
+            auto* type  = this->get_argument_type(i);
+            auto  under = this->get_argument_underlying_type(i);
+            if (type->can_be_alias && under == condition_info::arg_underlying_type::formID)
+               this->parameters[i].form.set(my_owner, nullptr);
+         }
+      }
+      cobb::edit_bit(this->flags, flag::use_packdata, f);
+   }
+
    bool condition::read(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'CTDA' && "Condition::read should only be called just after the CTDA subrecord is opened.");
       if (!subrecord.is_in_bounds(0x14))
          return false;
-      subrecord.unchecked_read(this->type);
+      {
+         uint8_t type; // flags | (operator << 5)
+         subrecord.unchecked_read(type);
+         this->comparison.op = (operator_t)((type >> 5) & 7);
+         this->flags = type & 0x1F;
+      }
       subrecord.skip_bytes(3);
-      if (this->get_flags() & flag::compare_to_global) {
-         subrecord.unchecked_read(this->compare_to_global);
+      if (this->flags & flag::compare_to_global) {
+         subrecord.unchecked_read(this->comparison.operand.global);
          intfc.log_load_warning(
-            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, this->compare_to_global)
+            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, this->comparison.operand.global)
          );
       } else {
-         subrecord.unchecked_read(this->compare_to_constant);
+         subrecord.unchecked_read(this->comparison.operand.constant);
       }
       subrecord.unchecked_read(this->function);
       subrecord.skip_bytes(2);
@@ -835,17 +904,17 @@ namespace dovah::loaded_forms::components {
          if (func && func->uses_event_data) {
             if (!subrecord.is_in_bounds(8))
                return false;
-            subrecord.unchecked_read(this->eventFunction);
-            subrecord.unchecked_read(this->eventMember);
-            subrecord.unchecked_read(this->eventFormID);
+            subrecord.unchecked_read(this->event_parameters.function);
+            subrecord.unchecked_read(this->event_parameters.member);
+            subrecord.unchecked_read(this->event_parameters.form);
          } else {
             if (!subrecord.is_in_bounds(12))
                return false;
-            subrecord.unchecked_read(this->run_on);
-            subrecord.unchecked_read(this->run_on_reference);
-            subrecord.unchecked_read(this->run_on_index);
+            subrecord.unchecked_read(this->run_on.type);
+            subrecord.unchecked_read(this->run_on.reference);
+            subrecord.unchecked_read(this->run_on.index);
             intfc.log_load_warning(
-               detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->run_on_reference)
+               detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->run_on.reference)
             );
          }
       }
@@ -937,12 +1006,15 @@ namespace dovah::loaded_forms::components {
    }
    void condition::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& subrecord = record.open_next_subrecord('CTDA');
-      subrecord.write(this->type);
+      {
+         uint8_t type = this->flags | (uint8_t(this->comparison.op) << 5); // flags | (operator << 5)
+         subrecord.write(type);
+      }
       subrecord.skip_bytes(3);
-      if (this->get_flags() & flag::compare_to_global)
-         subrecord.write(this->compare_to_global);
+      if (this->flags & flag::compare_to_global)
+         subrecord.write(this->comparison.operand.global);
       else
-         subrecord.write(this->compare_to_constant);
+         subrecord.write(this->comparison.operand.constant);
       subrecord.write(this->function);
       subrecord.skip_bytes(2);
       {
@@ -954,13 +1026,13 @@ namespace dovah::loaded_forms::components {
                subrecord.write(this->parameters[i].dword);
          }
          if (func && func->uses_event_data) {
-            subrecord.write(this->eventFunction);
-            subrecord.write(this->eventMember);
-            subrecord.write(this->eventFormID);
+            subrecord.write(this->event_parameters.function);
+            subrecord.write(this->event_parameters.member);
+            subrecord.write(this->event_parameters.form);
          } else {
-            subrecord.write(this->run_on);
-            subrecord.write(this->run_on_reference);
-            subrecord.write(this->run_on_index);
+            subrecord.write(this->run_on.type);
+            subrecord.write(this->run_on.reference);
+            subrecord.write(this->run_on.index);
          }
       }
       subrecord.close();
@@ -979,9 +1051,10 @@ namespace dovah::loaded_forms::components {
    void condition::clone_from(const condition& other, loaded_forms::Form& my_owner) noexcept {
       this->clear(my_owner);
       //
-      this->type = other.type;
-      this->compare_to_constant = other.compare_to_constant;
-      this->compare_to_global.set(my_owner, other.compare_to_global);
+      this->flags = other.flags;
+      this->comparison.op = other.comparison.op;
+      this->comparison.operand.constant = other.comparison.operand.constant;
+      this->comparison.operand.global.set(my_owner, other.comparison.operand.global);
       this->function = other.function;
       //
       auto func = condition_info::function::lookup_by_id(this->function);
@@ -995,18 +1068,18 @@ namespace dovah::loaded_forms::components {
          param.string = from.string;
       }
       //
-      this->run_on       = other.run_on;
-      this->run_on_reference.set(my_owner, other.run_on_reference);
-      this->run_on_index = other.run_on_index;
+      this->run_on.type  = other.run_on.type;
+      this->run_on.index = other.run_on.index;
+      this->run_on.reference.set(my_owner, other.run_on.reference);
       //
-      this->eventFunction = other.eventFunction;
-      this->eventMember   = other.eventMember;
+      this->event_parameters.function = other.event_parameters.function;
+      this->event_parameters.member   = other.event_parameters.member;
       if (func && func->uses_event_data) {
-         this->eventFormID.set(my_owner, other.eventFormID);
+         this->event_parameters.form.set(my_owner, other.event_parameters.form);
       }
    }
    void condition::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      this->compare_to_global.clear_if(my_owner, target);
+      this->comparison.operand.global.clear_if(my_owner, target);
       //
       auto func = condition_info::function::lookup_by_id(this->function);
       for (int i = 0; i < 2; i++) {
@@ -1016,12 +1089,10 @@ namespace dovah::loaded_forms::components {
          }
       }
       //
-      this->run_on_reference.clear_if(my_owner, target);
-      this->eventFormID.clear_if(my_owner, target);
+      this->run_on.reference.clear_if(my_owner, target);
+      this->event_parameters.form.clear_if(my_owner, target);
    }
    void condition::clear(loaded_forms::Form& my_owner) {
-      this->compare_to_global.set(my_owner, nullptr);
-      //
       auto func = condition_info::function::lookup_by_id(this->function);
       for (int i = 0; i < 2; i++) {
          auto& param = this->parameters[i];
@@ -1034,15 +1105,17 @@ namespace dovah::loaded_forms::components {
          }
       }
       //
-      this->run_on_reference.set(my_owner, nullptr);
-      this->eventFormID.set(my_owner, nullptr);
+      this->run_on.reference.set(my_owner, nullptr);
+      this->event_parameters.form.set(my_owner, nullptr);
       //
       this->function = 0;
-      this->type = 0;
-      this->compare_to_constant = 0.0F;
-      this->run_on_index = 0;
-      this->eventFunction = 0;
-      this->eventMember = 0;
+      this->flags = 0;
+      this->comparison.op = operator_t::equal;
+      this->comparison.operand.constant = 0.0F;
+      this->comparison.operand.global.set(my_owner, nullptr);
+      this->run_on.index = 0;
+      this->event_parameters.function = 0;
+      this->event_parameters.member   = 0;
    }
    #pragma endregion
 }

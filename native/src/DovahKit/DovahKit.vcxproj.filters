@@ -1614,5 +1614,6 @@
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
     <Text Include="editor\scripting\_docs\native classes.txt" />
     <Text Include="editor\scripting\_docs\case studies.txt" />
+    <Text Include="dovah\_docs\conditions.txt" />
   </ItemGroup>
 </Project>
