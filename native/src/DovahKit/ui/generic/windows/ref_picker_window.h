@@ -29,4 +29,5 @@ class RefPickerWindow : public QDialog {
       dovah::form_stub* _reference = nullptr;
       //
       void _populateRefList();
+      void _stringifyRef(const dovah::form_stub&, QString&);
 };
