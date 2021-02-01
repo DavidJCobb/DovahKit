@@ -31,10 +31,6 @@ class ConditionEditDialog : public QDialog {
          underlying_t   last_under   = underlying_t::none;
          param_type_t*  last_type    = nullptr;
          special_case_t last_special = special_case_t::none;
-         //
-         struct {
-            const dovah::form_stub* reference = nullptr;
-         } value;
       };
       std::array<_parameter, 3> parameters;
       bool did_param_holder_layout = false;

@@ -666,6 +666,12 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\generic\windows\ref_picker_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\generic\RefPickerButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1453,6 +1459,9 @@
     <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\generic\windows\ref_picker_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -1594,6 +1603,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\RefPickerButton.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\windows\ref_picker_window.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

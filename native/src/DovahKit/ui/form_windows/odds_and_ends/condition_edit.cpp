@@ -4,6 +4,7 @@
 #include "../../../helpers/qt/spinbox.h"
 #include "../../../helpers/qt/strings.h"
 #include "../../generic/FormsOfTypeCombobox.h"
+#include "../../generic/RefPickerButton.h"
 
 namespace {
    constexpr int RunOnTypeRole           = Qt::ItemDataRole::UserRole;
@@ -254,27 +255,12 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
       if (references) {
          sc = _parameter::special_case_t::reference_pick_button;
          //
-         auto* w = new QPushButton;
+         auto* w = new RefPickerButton;
          auto& p = this->parameters[which];
          p.widget = w;
-         if (use_original) {
-            p.value.reference = this->condition.parameters[which].form.get_form_stub();
-            if (p.value.reference && p.value.reference->is_none_stub())
-               p.value.reference = nullptr;
-         } else {
-            p.value.reference = nullptr;
-         }
-         if (auto* stub = p.value.reference) {
-            QString editorID = stub->get_editor_id();
-            if (editorID.isEmpty()) {
-               editorID = tr("[%1:%2]")
-                  .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
-                  .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')));
-            }
-            w->setText(editorID);
-         } else {
-            w->setText(tr("NONE", "condition argument - no reference"));
-         }
+         //
+         if (use_original)
+            w->setValue(this->condition.parameters[which].form.get_form_stub());
       }
    }
    //

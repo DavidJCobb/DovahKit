@@ -289,7 +289,9 @@
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
+    <ClCompile Include="ui\generic\RefPickerButton.cpp" />
     <ClCompile Include="ui\generic\TESFilePicker.cpp" />
+    <ClCompile Include="ui\generic\windows\ref_picker_window.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
     <ClCompile Include="ui\main_window\cell_view.cpp" />
     <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
@@ -541,6 +543,8 @@
     <QtMoc Include="ui\form_windows\quest.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_list.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h" />
+    <QtMoc Include="ui\generic\RefPickerButton.h" />
+    <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
@@ -617,6 +621,7 @@
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\generic\TESFilePicker.ui" />
+    <QtUic Include="ui\generic\windows\ref_picker_window.ui" />
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\cell_view.ui" />
     <QtUic Include="ui\main_window\default_object_window.ui" />
