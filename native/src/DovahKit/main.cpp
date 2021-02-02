@@ -474,19 +474,11 @@
 //                               based on the condition's function, flags, and even 
 //                               the values of other parameters.
 //
-//                                - We also need to consider QPushButton for any REFR 
-//                                  and ACHR parameters, whenever "Use Aliases" or 
-//                                  "Use Package Data" isn't set. When clicked, the 
-//                                  button should open a small window which allows 
-//                                  the user to: select PlayerRef; select a cell and 
-//                                  then a ref from a drop-down; or click a button to 
-//                                  pick a ref from the Render Window.
+//                                - RefPickerButton: when a REFR is used as a parameter 
+//                                  to a condition, does the CK make the REFR persistent? 
+//                                  Does this depend on where the condition is?
 //
-//                                   - This dialog will NOT be unique to conditions, 
-//                                     so put it somewhere generic and design it to be 
-//                                     generic.
-//
-//                                - Why does our rough-draft UI make room for three 
+//                                = Why does our rough-draft UI make room for three 
 //                                  parameters when conditions can only have two? When 
 //                                  working with the GetEventData condition function, 
 //                                  the CK presents the eventFunction, eventMember, and 
@@ -859,6 +851,30 @@
 //                      ends.
 //                    - Main thread acquires form lock when looking up forms, etc., 
 //                      waiting on the script thread if that already has the lock.
+//          
+//           - UI widget ideas:
+//
+//              - Table views with arbitrary columns
+//
+//              - A "canvas" widget that allows scripts to draw arbitrary raster data. 
+//                A good use case for this would be a script that generates a render of 
+//                a worldspace's heightmap. Bonus points if the widget can optionally be 
+//                set to let the user save its contents as an image.
+//
+//                 - There are three "levels" of drawing API we can offer:
+//
+//                    - Simple pixel- and shape-drawing instructions
+//
+//                    - Layers, like in GIMP
+//
+//                    - Shapes and objects, like in PowerPoint (these can be built on top 
+//                      of a layer implementation)
+//
+//                   A friend has strongly encouraged implementing layers at a minimum, 
+//                   and frankly, I can see more than a few benefits -- for example, 
+//                   being able to generate not only a heightmap for a worldspace, but 
+//                   also being able to color in cells that are altered (or that have 
+//                   objects added) by specific mods, where each mod gets its own layer.
 //
 //     = When writing script documentation for functions that return class instances, it 
 //       must be specified whether they return tables or userdata (e.g. "vector3 table" 
@@ -960,6 +976,18 @@
 //     - It seems like Papyrus data is coalesced? Maybe? Some elements, such as 
 //       properties, can be flagged as "removed" using a "status" field.
 //
+//  - RefPickerWindow
+//
+//     - Current code is likely to break if the existing reference is not inside 
+//       of an interior cell. We need to handle that case for when we work on the 
+//       render window, so we may as well get to it sooner than later.
+//
+//     - Custom sorting for the comboboxes: always put NONE at the top; sort 
+//       references with no editor ID at the bottom
+//
+//     - Re-sort the comboboxes when we detect the creation of a form and add the 
+//       form to the comboboxes
+//
 //  - UI for editing Activators
 //
 //     - UI for editing Papyrus data
@@ -1038,6 +1066,8 @@
 //             the user clicks on a valid target, returning focus to the API's caller 
 //             along with results. We'll need this for "Pick Reference from Render 
 //             Window" buttons akin to those in the CK.
+//
+//              - Edit RefPickerWindow to use this API.
 //
 //     - Camera controls
 //

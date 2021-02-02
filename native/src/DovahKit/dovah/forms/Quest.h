@@ -11,11 +11,6 @@
 #include "StoryManagerEventNode.h"
 
 namespace dovah::loaded_forms {
-   enum class quest_alias_type {
-      reference,
-      location,
-   };
-
    using alias_id_t = uint32_t;
 
    class Quest;
@@ -48,6 +43,13 @@ namespace dovah::loaded_forms {
          };
          using flags_t = std::underlying_type_t<flag::type>;
          //
+         enum class alias_type {
+            undifferentiated,
+            reference,
+            location,
+         };
+         //
+         const alias_type type = alias_type::undifferentiated;
          uint32_t    id = 0;
          std::string name;
          flags_t     flags = 0;
@@ -56,6 +58,8 @@ namespace dovah::loaded_forms {
          uint32_t    fill_from_event      = 0xFFFFFFFF; // same sentinel value used by the game
          uint32_t    fill_from_event_data = 0xFFFFFFFF; // same sentinel value used by the game
          std::vector<components::condition> conditions; // for "Find Matching Reference" or "Find Matching Location"
+         //
+         Alias(alias_type at) : type(at) {}
          //
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) = 0;
@@ -80,6 +84,8 @@ namespace dovah::loaded_forms {
          form_reference_t fill_from_location_keyword;
          alias_id_t       fill_from_alias = 0xFFFFFFFF; // ALEQ:ALEA or ALFA // same sentinel value used by the game
          form_reference_t fill_from_quest; // ALEQ
+         //
+         LocationAlias() : Alias(alias_type::location) {}
          //
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
@@ -127,6 +133,8 @@ namespace dovah::loaded_forms {
          alias_id_t       fill_from_alias = 0xFFFFFFFF; // same sentinel value used by the game
          form_reference_t fill_from_quest;
          form_reference_t fill_from_unique_actor_base; // ALUA; should be the form ID of an NPC_ with the Unique flag set
+         //
+         ReferenceAlias() : Alias(alias_type::reference) {}
          //
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;

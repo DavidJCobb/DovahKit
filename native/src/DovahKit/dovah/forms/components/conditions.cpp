@@ -2,6 +2,8 @@
 #include "../../../helpers/strings.h"
 #include "../_common_cpp.h"
 
+#include "../Quest.h"
+
 namespace dovah::loaded_forms::components {
    namespace condition_info {
       /*static*/ const function* function::lookup_by_id(uint16_t id) noexcept {
@@ -762,6 +764,22 @@ namespace dovah::loaded_forms::components {
       #pragma endregion
    }
    
+   condition_context::condition_context(Form& owner) : owner(owner) {
+      if (auto* casted = dynamic_cast<Quest*>(&owner)) {
+         this->quest = casted;
+         return;
+      }
+      //
+      // TODO: cast to Package; set (quest) and (package) if so
+      //
+      // TODO: cast to Scene; set (quest) if so
+      //
+      // TODO: cast to Topic; set (quest) if so
+      //
+      // TODO: cast to TopicInfo; get parent Topic and set (quest) if so
+      //
+   }
+
    #pragma region condition
    condition_info::arg_type* condition::get_argument_type(uint8_t index) const noexcept {
       if (index >= 2)

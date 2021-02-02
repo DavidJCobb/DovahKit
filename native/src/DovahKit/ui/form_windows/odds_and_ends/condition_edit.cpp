@@ -3,8 +3,11 @@
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../helpers/qt/spinbox.h"
 #include "../../../helpers/qt/strings.h"
+#include "../../../editor/core.h"
 #include "../../generic/FormsOfTypeCombobox.h"
 #include "../../generic/RefPickerButton.h"
+#include "../../../dovah/forms/factories/hardcoded.h"
+#include "../../../dovah/forms/Quest.h"
 
 namespace {
    constexpr int RunOnTypeRole           = Qt::ItemDataRole::UserRole;
@@ -16,7 +19,7 @@ namespace {
    }
 }
 
-ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), form(containing_form), condition(c) {
+ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c) {
    ui.setupUi(this);
    //
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
@@ -90,17 +93,17 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
       widget->addItem(tr("Reference",     "condition run on"), (int)condition_t::run_on_t::reference);
       widget->addItem(tr("Combat Target", "condition run on"), (int)condition_t::run_on_t::combat_target);
       widget->addItem(tr("Linked Ref",    "condition run on"), (int)condition_t::run_on_t::linked_ref);
-      widget->addItem(tr("Alias",         "condition run on"), (int)condition_t::run_on_t::package_data);
-      widget->addItem(tr("Package Data",  "condition run on"), (int)condition_t::run_on_t::subject);
+      widget->addItem(tr("Alias",         "condition run on"), (int)condition_t::run_on_t::quest_alias);
+      widget->addItem(tr("Package Data",  "condition run on"), (int)condition_t::run_on_t::package_data);
       widget->addItem(tr("Event Data",    "condition run on"), (int)condition_t::run_on_t::event_data);
       //
       widget->addItem(tr("Player", "condition run on"), (int)condition_t::run_on_t::reference);
-      widget->setItemData(widget->count() - 1, uint32_t(0x00000014), RunOnFormIDRole);
+      widget->setItemData(widget->count() - 1, uint32_t(dovah::hardcoded_form_ids::PlayerRef), RunOnFormIDRole);
       widget->setItemData(widget->count() - 1, true, RunOnPlayerSentinelRole);
       //
       if (condition.run_on.type == condition_t::run_on_t::reference) {
          auto* stub = condition.run_on.reference.get_form_stub();
-         if (stub && stub->formID == 0x00000014) {
+         if (stub && stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
             widget->setCurrentIndex(widget->findData(true, RunOnPlayerSentinelRole));
          } else {
             widget->setCurrentIndex(widget->findData((int)condition.run_on.type, RunOnTypeRole));
@@ -108,13 +111,20 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
       } else {
          widget->setCurrentIndex(widget->findData((int)condition.run_on.type));
       }
+      this->_updateRunOn(true);
       //
-      // TODO: the button or combobox
-      //
-      #if !_DEBUG
-         static_assert(false, "Finish implementing Run On: you need to be able to set (and display) the specific reference, alias, etc.!");
-         static_assert(false, "Finish implementing Run On: we need code for when the run-on-type combobox is changed!");
-      #endif
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         this->_updateRunOn();
+      });
+      QObject::connect(this->ui.runOnButton, &RefPickerButton::valueChanged, this, [this](dovah::form_stub* stub) {
+         if (!stub)
+            return;
+         if (stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
+            auto* widget = this->ui.runOn;
+            const auto blocker = QSignalBlocker(widget);
+            widget->setCurrentIndex(widget->findData(true, RunOnPlayerSentinelRole));
+         }
+      });
    }
    cobb::qt::bind(this->ui.flagSwapSubjectAndTarget, condition.flags, condition_t::flag::swap_subject_and_target);
    {
@@ -420,6 +430,112 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
    p.last_type    = type;
    p.last_under   = under;
    p.last_special = sc;
+}
+
+void ConditionEditDialog::_updateRunOn(bool use_original) {
+   struct {
+      int combobox;
+      dovah::form_stub* reference = nullptr;
+   } _prior;
+   _prior.combobox  = this->ui.runOnDropdown->currentData().toInt();
+   _prior.reference = this->ui.runOnButton->value();
+   //
+   this->ui.runOnDropdown->clear();
+   //
+   auto ro = (condition_t::run_on_t) this->ui.runOn->currentData().toInt();
+   auto is_player = this->ui.runOn->currentData(RunOnPlayerSentinelRole).toBool();
+   dovah::bare_form_id_t refID = this->ui.runOn->currentData(RunOnFormIDRole).toInt();
+   switch (ro) {
+      case condition_t::run_on_t::subject:
+      case condition_t::run_on_t::target:
+      case condition_t::run_on_t::linked_ref:
+      case condition_t::run_on_t::combat_target:
+         {
+            this->ui.runOnDropdown->setEnabled(false);
+            this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+         }
+         return;
+      case condition_t::run_on_t::reference:
+         {
+            dovah::form_stub* stub = nullptr;
+            if (use_original) {
+               stub = this->condition.run_on.reference.get_form_stub();
+            } else if (refID) {
+               stub = DovahKitCore::get().get_form(refID);
+            }
+            this->ui.runOnButton->setValue(stub);
+            this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageButton);
+            //
+            if (stub && stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
+               if (!is_player) {
+                  const auto blocker = QSignalBlocker(this->ui.runOn);
+                  this->ui.runOn->setCurrentIndex(this->ui.runOn->findData(true, RunOnPlayerSentinelRole));
+               }
+               this->ui.runOnDropdown->setEnabled(false);
+               this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+            }
+         }
+         return;
+      case condition_t::run_on_t::quest_alias:
+         this->ui.runOnDropdown->setEnabled(true);
+         this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+         this->ui.runOnDropdown->addItem(tr("NONE"), -1);
+         if (this->context.quest) {
+            for (auto* alias : this->context.quest->aliases) {
+               if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
+                  continue;
+               this->ui.runOnDropdown->addItem(alias->name.c_str(), alias->id);
+            }
+         } else {
+            this->ui.runOnDropdown->setEnabled(false);
+         }
+         if (use_original) {
+            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->condition.run_on.index));
+         }
+         return;
+      case condition_t::run_on_t::package_data:
+         this->ui.runOnDropdown->setEnabled(true);
+         this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+         this->ui.runOnDropdown->addItem(tr("NONE"), -1);
+         if (this->context.package) {
+            //
+            // TODO: package data
+            //
+         } else {
+            this->ui.runOnDropdown->setEnabled(false);
+         }
+         if (use_original) {
+            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->condition.run_on.index));
+         }
+         return;
+      case condition_t::run_on_t::event_data:
+         this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+         this->ui.runOnDropdown->addItem(tr("NONE"), -1);
+         if (this->context.quest) {
+            //
+            // TODO: event data
+            //
+         } else {
+            this->ui.runOnDropdown->setEnabled(false);
+         }
+         if (use_original) {
+            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->condition.run_on.index));
+         }
+         return;
+   }
+   if (ro == this->last_run_on) {
+      switch (ro) {
+         case condition_t::run_on_t::reference:
+            this->ui.runOnButton->setValue(_prior.reference);
+            break;
+         case condition_t::run_on_t::quest_alias:
+         case condition_t::run_on_t::package_data:
+         case condition_t::run_on_t::event_data:
+            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(_prior.combobox));
+            break;
+      }
+   }
+   this->last_run_on = ro;
 }
 
 void ConditionEditDialog::_save() {

@@ -4,6 +4,11 @@
 #include "conditions/arg_value.h"
 #include "conditions/arg_types.h"
 
+namespace dovah::loaded_forms {
+   class Package;
+   class Quest;
+}
+
 namespace dovah::loaded_forms::components {
    namespace condition_info {
       class function {
@@ -61,6 +66,17 @@ namespace dovah::loaded_forms::components {
          };
       };
    }
+
+   struct condition_context {
+      //
+      // Helper struct for working with conditions.
+      //
+      Form&    owner;
+      Package* package = nullptr;
+      Quest*   quest   = nullptr;
+      //
+      condition_context(Form&);
+   };
 
    struct condition {
       enum class run_on_t : uint32_t {

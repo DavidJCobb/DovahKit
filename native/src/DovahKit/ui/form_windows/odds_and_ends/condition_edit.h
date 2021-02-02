@@ -6,6 +6,7 @@ class ConditionEditDialog : public QDialog {
    Q_OBJECT
    protected:
       using condition_t   = dovah::loaded_forms::components::condition;
+      using cnd_context_t = dovah::loaded_forms::components::condition_context;
       using loaded_form_t = dovah::loaded_forms::Form;
       using underlying_t  = dovah::loaded_forms::components::condition_info::arg_underlying_type;
       using param_type_t  = dovah::loaded_forms::components::condition_info::arg_type;
@@ -17,8 +18,8 @@ class ConditionEditDialog : public QDialog {
       //
    protected:
       Ui::ConditionEditDialog ui;
-      loaded_form_t& form;
-      condition_t&   condition;
+      condition_t&  condition;
+      cnd_context_t context;
       //
       struct _parameter {
          enum class special_case_t {
@@ -34,8 +35,10 @@ class ConditionEditDialog : public QDialog {
       };
       std::array<_parameter, 3> parameters;
       bool did_param_holder_layout = false;
+      condition_t::run_on_t last_run_on = condition_t::run_on_t::subject;
       
       void _buildParamControls(int which, underlying_t, param_type_t*, bool use_original = false);
+      void _updateRunOn(bool use_original = false);
       void _save();
 
       virtual void showEvent(QShowEvent* event) override;

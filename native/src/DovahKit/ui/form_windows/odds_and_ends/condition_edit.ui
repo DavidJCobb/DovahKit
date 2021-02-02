@@ -139,7 +139,7 @@
           <number>0</number>
          </property>
          <item row="0" column="0">
-          <widget class="QPushButton" name="runOnButton">
+          <widget class="RefPickerButton" name="runOnButton">
            <property name="text">
             <string>Select...</string>
            </property>
@@ -393,6 +393,11 @@
    <class>FormsOfTypeCombobox</class>
    <extends>QComboBox</extends>
    <header>../../generic/FormsOfTypeCombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RefPickerButton</class>
+   <extends>QPushButton</extends>
+   <header>../../generic/RefPickerButton.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
