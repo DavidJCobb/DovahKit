@@ -7,6 +7,7 @@
 #include "../../generic/FormsOfTypeCombobox.h"
 #include "../../generic/RefPickerButton.h"
 #include "../../../dovah/forms/factories/hardcoded.h"
+#include "../../../dovah/data/story_manager.h"
 #include "../../../dovah/forms/Quest.h"
 
 namespace {
@@ -512,9 +513,12 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
          if (this->context.quest) {
-            //
-            // TODO: event data
-            //
+            auto  code = this->context.quest->event;
+            auto* def  = dovah::story_event_definition::lookup(code);
+            if (def)
+               for (auto& data : def->members)
+                  this->ui.runOnDropdown->addItem(data.name, data.signature.i);
+            this->ui.runOnDropdown->setEnabled(def != nullptr);
          } else {
             this->ui.runOnDropdown->setEnabled(false);
          }

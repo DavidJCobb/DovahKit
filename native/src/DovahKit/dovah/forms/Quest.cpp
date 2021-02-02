@@ -31,9 +31,9 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ALFD':
-               subrecord.read(this->fill_from_event_data);
-               if (this->fill_from_event == -1)
-                  this->fill_from_event_data = -1;
+               subrecord.read_signature(this->fill_from_event_data.i);
+               if (this->fill_from_event == story_event_code::undefined)
+                  this->fill_from_event_data = story_event_member_code_w();
                else {
                   //
                   // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291.
@@ -41,7 +41,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ALFE':
-               subrecord.read(this->fill_from_event);
+               subrecord.read_signature(this->fill_from_event);
                this->fill_type = fill_type_t::from_event;
                break;
             case 'ALID':
@@ -119,10 +119,10 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('KNAM', this->fill_from_location_keyword, true);
       } else if (this->fill_type == fill_type_t::from_event) {
          auto& ALFE = record.open_next_subrecord('ALFE');
-         ALFE.write(this->fill_from_event);
+         ALFE.write_signature(this->fill_from_event);
          ALFE.close();
          auto& ALFD = record.open_next_subrecord('ALFD');
-         ALFD.write(this->fill_from_event_data);
+         ALFD.write_signature(this->fill_from_event_data.i);
          ALFD.close();
       } else if (this->fill_type == fill_type_t::preset) {
          record.write_formID_subrecord('ALFL', this->fill_from_location);
@@ -171,8 +171,8 @@ namespace dovah::loaded_forms {
       this->force_into_alias_id = -1;
       this->fill_from_alias = -1;
       this->fill_from_quest.set(my_owner, nullptr);
-      this->fill_from_event = 0;
-      this->fill_from_event_data = 0;
+      this->fill_from_event      = story_event_code::undefined;
+      this->fill_from_event_data = story_event_member_code_w();
       this->fill_from_location.set(my_owner, nullptr);
       this->fill_from_location_keyword.set(my_owner, nullptr);
       //
@@ -305,12 +305,12 @@ namespace dovah::loaded_forms {
                break;
             case 'ALFE':
                this->fill_type = fill_type_t::from_event;
-               subrecord.read(this->fill_from_event);
+               subrecord.read_signature(this->fill_from_event);
                break;
             case 'ALFD':
-               subrecord.read(this->fill_from_event_data);
-               if (this->fill_from_event == -1)
-                  this->fill_from_event_data = -1;
+               subrecord.read_signature(this->fill_from_event_data.i);
+               if (this->fill_from_event == story_event_code::undefined)
+                  this->fill_from_event_data = story_event_member_code_w();
                else {
                   //
                   // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291. 
@@ -378,10 +378,10 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('ALRT', this->fill_loc_ref_type);
       } else if (this->fill_type == fill_type_t::from_event) {
          auto& ALFE = record.open_next_subrecord('ALFE');
-         ALFE.write(this->fill_from_event);
+         ALFE.write_signature(this->fill_from_event);
          ALFE.close();
          auto& ALFD = record.open_next_subrecord('ALFD');
-         ALFD.write(this->fill_from_event_data);
+         ALFD.write_signature(this->fill_from_event_data.i);
          ALFD.close();
       } else if (this->fill_type == fill_type_t::preset_placed_reference) {
          record.write_formID_subrecord('ALFR', this->fill_from_reference);
@@ -494,8 +494,8 @@ namespace dovah::loaded_forms {
       this->package_override_lists.spectator.set(my_owner, nullptr);
       this->force_into_alias_id  = -1;
       this->fill_from_alias      = -1;
-      this->fill_from_event      = 0;
-      this->fill_from_event_data = 0;
+      this->fill_from_event      = story_event_code::undefined;
+      this->fill_from_event_data = story_event_member_code_w();
       this->fill_from_quest.set(my_owner, nullptr);
       this->fill_from_reference.set(my_owner, nullptr);
       this->fill_from_unique_actor_base.set(my_owner, nullptr);

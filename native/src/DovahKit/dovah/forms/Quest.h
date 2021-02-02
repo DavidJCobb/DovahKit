@@ -8,7 +8,7 @@
 #include "components/container.h"
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
-#include "StoryManagerEventNode.h"
+#include "../data/story_manager.h"
 
 namespace dovah::loaded_forms {
    using alias_id_t = uint32_t;
@@ -55,8 +55,8 @@ namespace dovah::loaded_forms {
          flags_t     flags = 0;
          uint32_t    hidden_flags = 0; // BNAM sets flag 0x01, ONAM sets flag 0x02
          alias_id_t  force_into_alias_id  = 0xFFFFFFFF; // same sentinel value used by the game
-         uint32_t    fill_from_event      = 0xFFFFFFFF; // same sentinel value used by the game
-         uint32_t    fill_from_event_data = 0xFFFFFFFF; // same sentinel value used by the game
+         story_event_code_t        fill_from_event      = story_event_code::undefined; // same sentinel value used by the game
+         story_event_member_code_w fill_from_event_data; // e.g. 4C 32 00 00 -> 'L2'
          std::vector<components::condition> conditions; // for "Find Matching Reference" or "Find Matching Location"
          //
          Alias(alias_type at) : type(at) {}

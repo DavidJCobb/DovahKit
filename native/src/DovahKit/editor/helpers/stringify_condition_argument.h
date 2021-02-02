@@ -1,6 +1,6 @@
 #pragma once
 #include <QString>
-#include "../../dovah/forms/components/conditions/arg_types.h"
+#include "../../dovah/forms/components/conditions.h"
 
 namespace dovah::loaded_forms {
    namespace components {

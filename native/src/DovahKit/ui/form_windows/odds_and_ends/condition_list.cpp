@@ -6,6 +6,7 @@
 #include "../../../dovah/forms/Form.h"
 #include "../../../dovah/forms/Quest.h"
 #include "../../../dovah/forms/factories/hardcoded.h"
+#include "../../../dovah/data/story_manager.h"
 #include "../../../helpers/qt/strings.h"
 #include "../../../helpers/vector.h"
 #include "condition_edit.h"

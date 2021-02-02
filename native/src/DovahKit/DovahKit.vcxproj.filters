@@ -672,6 +672,9 @@
     <ClCompile Include="ui\generic\RefPickerButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\data\story_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1370,9 +1373,6 @@
     <ClInclude Include="helpers\qt\basic_bindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\forms\StoryManagerEventNode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers\vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1383,6 +1383,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\helpers\actor_value_index_to_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\story_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

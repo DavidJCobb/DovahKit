@@ -474,6 +474,9 @@
 //                               based on the condition's function, flags, and even 
 //                               the values of other parameters.
 //
+//                                - WE NEED TO HANDLE GetEventData AS A SPECIAL CASE AND 
+//                                  DISPLAY THE CONDITION EVENT FIELDS AS "PARAMETERS."
+//
 //                                - RefPickerButton: when a REFR is used as a parameter 
 //                                  to a condition, does the CK make the REFR persistent? 
 //                                  Does this depend on where the condition is?
@@ -485,26 +488,6 @@
 //                                  eventFormID as if they were the three parameters of
 //                                  the function.
 //
-//                             - When "Run On" is set to "Alias", the "Select" button is 
-//                               replaced with a drop-down listing the names of all 
-//                               reference aliases on the owning quest, if any.
-//
-//                                - We should hide the "Alias" option if there is no 
-//                                  owning quest. Alternatively, can we grey out 
-//                                  individual options in a drop-down?
-//
-//                             - When "Run On" is set to "Reference", the "Select" button 
-//                               opens a dialog box that can be used to pick a ref, much 
-//                               like REFR and ACHR args.
-//
-//                                - The CK's "Run On" dialog has a convenience option, 
-//                                  "Player", which is encoded as run-on-reference with 
-//                                  the target ref being the player. In fact, setting the 
-//                                  drop-down to "Reference" and then using the "Select" 
-//                                  button to pick the player will immediately change the 
-//                                  drop-down to "Player." Presumably this is intended to 
-//                                  make selecting the player much faster.
-//
 //                             - When "Run On" is set to "Package Data", the "Select" 
 //                               button is replaced with a drop-down listing the names 
 //                               of all package data on the owning package that are of 
@@ -513,42 +496,6 @@
 //                                - We should hide the "Package Data" option if there is 
 //                                  no owning package. Alternatively, can we grey out 
 //                                  individual options in a drop-down?
-//
-//                             - When "Run On" is set to "Event Data", the "Select" 
-//                               button is replaced with a drop-down listing different 
-//                               values depending on the owning quest's event. The full
-//                               list of possibilities is:
-//
-//                                  <no event>		          | NONE <and drop-down is greyed out>
-//                                  Actor Dialogue Event     | NONE, Actor 1, Actor 2
-//                                  Actor Hello Event        | NONE, Actor 1, Actor 2
-//                                  Arrest Event             | NONE, ArrestingGuard, Criminal
-//                                  Assault Actor Event      | NONE, Attacker, Victim
-//                                  Bribe                    | NONE, Actor
-//                                  Cast Magic Event         | NONE, CastingActor, SpellTarget
-//                                  Change Location Event    | NONE, Actor
-//                                  Change Relationship Rank | NONE, NPC 1, NPC 2
-//                                  Craft Item               | NONE, Workbench
-//                                  Crime Gold Event         | NONE, Criminal, Victim
-//                                  Dead Body                | NONE, Actor, Dead Actor
-//                                  Escape Jail              | NONE
-//                                  Flatter                  | NONE, Actor
-//                                  Increase Level           | NONE
-//                                  Intimidate               | NONE, Actor
-//                                  Kill Actor Event         | NONE, Killer, Victim
-//                                  Lock Pick                | NONE, Actor, Lock Object
-//                                  New Voice Power          | NONE, Actor
-//                                  Pay Fine Event           | NONE, hCriminal, hGuard
-//                                  Player Activate Actor    | NONE, Actor
-//                                  Player Add Item          | NONE, OriginalContainer, OwnerRef
-//                                  Player Cured             | NONE
-//                                  Player Infected          | NONE, Transmitting Actor
-//                                  Player Receives Favor    | NONE, Actor
-//                                  Player Remove Item       | NONE, ItemRef, OwnerRef
-//                                  Script Event             | NONE, Ref 1, Ref 2
-//                                  Served Time              | NONE
-//                                  Skill Increase           | NONE
-//                                  Trespass Actor Event     | NONE, Trespasser, Victim
 //
 //                             - We have the GetWithinPackageLocation condition listed 
 //                               as accepting package data of any type from its owning 

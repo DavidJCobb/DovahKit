@@ -103,6 +103,7 @@
     <ClCompile Include="dovah\data\actor_values.cpp" />
     <ClCompile Include="dovah\data\default_objects.cpp" />
     <ClCompile Include="dovah\data\game_settings.cpp" />
+    <ClCompile Include="dovah\data\story_manager.cpp" />
     <ClCompile Include="dovah\detailed_notice.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_load_order.cpp" />
@@ -431,12 +432,12 @@
     <ClInclude Include="dovah\forms\components\keyword_list.h" />
     <ClInclude Include="dovah\forms\components\package_location.h" />
     <ClInclude Include="dovah\forms\components\package_event_dialogue.h" />
+    <ClInclude Include="dovah\data\story_manager.h" />
     <ClInclude Include="dovah\forms\DefaultObjectManager.h" />
     <ClInclude Include="dovah\forms\Faction.h" />
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\Actor.h" />
-    <ClInclude Include="dovah\forms\StoryManagerEventNode.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
     <ClInclude Include="dovah\forms\WordOfPower.h" />
     <ClInclude Include="dovah\forms\Worldspace.h" />
