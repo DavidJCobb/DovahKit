@@ -31,9 +31,9 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ALFD':
-               subrecord.read_signature(this->fill_from_event_data.i);
+               subrecord.read_signature(this->fill_from_event_data);
                if (this->fill_from_event == story_event_code::undefined)
-                  this->fill_from_event_data = story_event_member_code_w();
+                  this->fill_from_event_data = -1;
                else {
                   //
                   // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291.
@@ -122,7 +122,7 @@ namespace dovah::loaded_forms {
          ALFE.write_signature(this->fill_from_event);
          ALFE.close();
          auto& ALFD = record.open_next_subrecord('ALFD');
-         ALFD.write_signature(this->fill_from_event_data.i);
+         ALFD.write_signature(this->fill_from_event_data);
          ALFD.close();
       } else if (this->fill_type == fill_type_t::preset) {
          record.write_formID_subrecord('ALFL', this->fill_from_location);
@@ -172,7 +172,7 @@ namespace dovah::loaded_forms {
       this->fill_from_alias = -1;
       this->fill_from_quest.set(my_owner, nullptr);
       this->fill_from_event      = story_event_code::undefined;
-      this->fill_from_event_data = story_event_member_code_w();
+      this->fill_from_event_data = -1;
       this->fill_from_location.set(my_owner, nullptr);
       this->fill_from_location_keyword.set(my_owner, nullptr);
       //
@@ -308,9 +308,9 @@ namespace dovah::loaded_forms {
                subrecord.read_signature(this->fill_from_event);
                break;
             case 'ALFD':
-               subrecord.read_signature(this->fill_from_event_data.i);
+               subrecord.read_signature(this->fill_from_event_data);
                if (this->fill_from_event == story_event_code::undefined)
-                  this->fill_from_event_data = story_event_member_code_w();
+                  this->fill_from_event_data = -1;
                else {
                   //
                   // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291. 
@@ -381,7 +381,7 @@ namespace dovah::loaded_forms {
          ALFE.write_signature(this->fill_from_event);
          ALFE.close();
          auto& ALFD = record.open_next_subrecord('ALFD');
-         ALFD.write_signature(this->fill_from_event_data.i);
+         ALFD.write_signature(this->fill_from_event_data);
          ALFD.close();
       } else if (this->fill_type == fill_type_t::preset_placed_reference) {
          record.write_formID_subrecord('ALFR', this->fill_from_reference);
@@ -495,7 +495,7 @@ namespace dovah::loaded_forms {
       this->force_into_alias_id  = -1;
       this->fill_from_alias      = -1;
       this->fill_from_event      = story_event_code::undefined;
-      this->fill_from_event_data = story_event_member_code_w();
+      this->fill_from_event_data = -1;
       this->fill_from_quest.set(my_owner, nullptr);
       this->fill_from_reference.set(my_owner, nullptr);
       this->fill_from_unique_actor_base.set(my_owner, nullptr);

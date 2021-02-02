@@ -517,7 +517,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
             auto* def  = dovah::story_event_definition::lookup(code);
             if (def)
                for (auto& data : def->members)
-                  this->ui.runOnDropdown->addItem(data.name, data.signature.i);
+                  this->ui.runOnDropdown->addItem(data.name, dovah::story_event_definition::widen_member_code(data.signature));
             this->ui.runOnDropdown->setEnabled(def != nullptr);
          } else {
             this->ui.runOnDropdown->setEnabled(false);

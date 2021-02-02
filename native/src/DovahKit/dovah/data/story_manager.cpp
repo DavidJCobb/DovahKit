@@ -1,13 +1,13 @@
 #include "story_manager.h"
 
 namespace dovah {
-   std::array<story_event_definition, 31> story_event_definition::list = {
+   const std::array<story_event_definition, 31> story_event_definition::list = {
       story_event_definition{
          story_event_code::actor_dialogue,
          {{
             story_event_definition::member{ 'L1', "Location", "Location" },
-            story_event_definition::member{ 'R1', "Actor 1",  "Actor 2" },
-            story_event_definition::member{ 'R2', "Actor 1",  "Actor 2" },
+            story_event_definition::member{ 'R1', "Actor 1",  "Actor 1" },
+            story_event_definition::member{ 'R2', "Actor 2",  "Actor 2" },
          }}
       },
       //
@@ -15,8 +15,8 @@ namespace dovah {
          story_event_code::actor_hello,
          {{
             story_event_definition::member{ 'L1', "Location", "Location" },
-            story_event_definition::member{ 'R1', "Actor 1",  "Actor 2" },
-            story_event_definition::member{ 'R2', "Actor 1",  "Actor 2" },
+            story_event_definition::member{ 'R1', "Actor 1",  "Actor 1" },
+            story_event_definition::member{ 'R2', "Actor 2",  "Actor 2" },
          }}
       },
       //
@@ -281,7 +281,18 @@ namespace dovah {
       //
    };
 
-   /*static*/ story_event_definition* story_event_definition::lookup(story_event_code_t code) {
+   const story_event_definition::member* story_event_definition::member_by_signature(uint16_t s) const {
+      for (auto& entry : this->members)
+         if (entry.signature == s)
+            return &entry;
+      return nullptr;
+   }
+   const story_event_definition::member* story_event_definition::member_by_wide_signature(uint32_t s) const {
+      s = s >> 0x10; // 52 31 00 00 -> 52 31 -> 'R1'
+      return this->member_by_signature(s);
+   }
+
+   /*static*/ const story_event_definition* story_event_definition::lookup(story_event_code_t code) {
       for (auto& entry : list)
          if (entry.signature == code)
             return &entry;

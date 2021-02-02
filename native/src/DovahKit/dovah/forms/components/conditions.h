@@ -3,6 +3,7 @@
 #include "../_common.h"
 #include "conditions/arg_value.h"
 #include "conditions/arg_types.h"
+#include "../../data/story_manager.h"
 
 namespace dovah::loaded_forms {
    class Package;
@@ -111,12 +112,12 @@ namespace dovah::loaded_forms::components {
 
       uint8_t flags = 0; // if a flag has a setter, frontend code should only use the setter
       struct {
-         run_on_t type = run_on_t::subject;
-         int32_t  index = -1;
+         run_on_t type  = run_on_t::subject;
+         uint32_t index = -1; // or event data code
          form_reference_t reference;
       } run_on;
       uint16_t  function; // frontend code should use the setter
-      std::array<condition_arg_value, 2> parameters;
+      std::array<condition_arg_value, 2> parameters = {};
       struct {
          uint16_t function;
          uint16_t member;

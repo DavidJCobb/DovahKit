@@ -101,6 +101,15 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                   case condition::run_on_t::combat_target:
                      return tr("Combat Target", "condition list - run on");
                   case condition::run_on_t::event_data:
+                     if (auto* q = this->context.quest) {
+                        auto  code = this->context.quest->event;
+                        auto* def  = dovah::story_event_definition::lookup(code);
+                        if (def) {
+                           auto* member = def->member_by_wide_signature(condition.run_on.index);
+                           if (member)
+                              return tr("Event Data: %1", "condition list - run on").arg(member->name);
+                        }
+                     }
                      return tr("Event Data", "condition list - run on");
                   case condition::run_on_t::linked_ref:
                      return tr("Linked Ref", "condition list - run on");

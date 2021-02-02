@@ -909,10 +909,12 @@ namespace dovah::loaded_forms::components {
                      intfc.log_load_warning(
                         detailed_notice::warn_if_wrong_type(subrecord.signature(), arg_type->allowedFormTypes[0], intfc.target_stub, value_form)
                      );
-                  } else if (!arg_type->allows_form_type(value_form.get_form_stub()->formType)) {
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), {}, intfc.target_stub, value_form)
-                     );
+                  } else if (auto* stub = value_form.get_form_stub()) {
+                     if (!arg_type->allows_form_type(stub->formType)) {
+                        intfc.log_load_warning(
+                           detailed_notice::warn_if_wrong_type(subrecord.signature(), {}, intfc.target_stub, value_form)
+                        );
+                     }
                   }
                } else {
                   subrecord.unchecked_read(this->parameters[i].dword);
@@ -930,7 +932,11 @@ namespace dovah::loaded_forms::components {
                return false;
             subrecord.unchecked_read(this->run_on.type);
             subrecord.unchecked_read(this->run_on.reference);
-            subrecord.unchecked_read(this->run_on.index);
+            if (this->run_on.type == run_on_t::event_data) {
+               subrecord.read_signature(this->run_on.index);
+            } else {
+               subrecord.unchecked_read(this->run_on.index);
+            }
             intfc.log_load_warning(
                detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->run_on.reference)
             );
@@ -1050,7 +1056,11 @@ namespace dovah::loaded_forms::components {
          } else {
             subrecord.write(this->run_on.type);
             subrecord.write(this->run_on.reference);
-            subrecord.write(this->run_on.index);
+            if (this->run_on.type == run_on_t::event_data) {
+               subrecord.write_signature(this->run_on.index);
+            } else {
+               subrecord.write(this->run_on.index);
+            }
          }
       }
       subrecord.close();
@@ -1131,7 +1141,7 @@ namespace dovah::loaded_forms::components {
       this->comparison.op = operator_t::equal;
       this->comparison.operand.constant = 0.0F;
       this->comparison.operand.global.set(my_owner, nullptr);
-      this->run_on.index = 0;
+      this->run_on.index = -1;
       this->event_parameters.function = 0;
       this->event_parameters.member   = 0;
    }

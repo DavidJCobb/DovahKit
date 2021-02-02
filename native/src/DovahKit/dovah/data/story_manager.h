@@ -52,39 +52,22 @@ namespace dovah {
    };
    using story_event_code_t = std::underlying_type_t<story_event_code::type>;
 
-   union story_event_member_code {
-      char     c[2];
-      uint16_t i;
-
-      story_event_member_code() {}
-      story_event_member_code(uint16_t x) : i(cobb::to_big_endian(x)) {}
-      story_event_member_code(char a, char b) : c{a, b} {}
-   };
-   union story_event_member_code_w {
-      char     c[4];
-      uint32_t i = 0xFFFFFFFF; // same sentinel used by the game
-
-      story_event_member_code_w() {}
-      story_event_member_code_w(uint16_t x) : i(cobb::to_big_endian(x)) {}
-      story_event_member_code_w(uint32_t x) : i(cobb::to_big_endian(x)) {}
-      story_event_member_code_w(char a, char b) : c{ a, b } {}
-
-      inline bool operator==(const story_event_member_code& other) const noexcept {
-         return this->c[0] == other.c[0] && this->c[1] == other.c[1];
-      }
-   };
-
    struct story_event_definition {
       struct member {
-         story_event_member_code signature;
-         const char* name;
+         uint16_t signature;
          const char* bethesda_name;
+         const char* name;
       };
 
       story_event_code_t signature;
       std::vector<member> members;
 
-      static std::array<story_event_definition, 31> list;
-      static story_event_definition* lookup(story_event_code_t);
+      const member* member_by_signature(uint16_t) const;
+      const member* member_by_wide_signature(uint32_t) const;
+
+      static const std::array<story_event_definition, 31> list;
+      static const story_event_definition* lookup(story_event_code_t);
+
+      inline static uint32_t widen_member_code(uint16_t s) noexcept { return s << 0x10; }
    };
 }
