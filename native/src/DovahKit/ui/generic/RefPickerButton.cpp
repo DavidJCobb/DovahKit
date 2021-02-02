@@ -7,6 +7,7 @@
 RefPickerButton::RefPickerButton(QWidget* parent) : QPushButton(parent) {
    QObject::connect(this, &QPushButton::clicked, this, [this]() {
       auto* window = new RefPickerWindow(this);
+      window->setReference(this->_stub);
       QObject::connect(window, &QDialog::accepted, this, [this, window]() {
          this->setValue(window->reference());
       });

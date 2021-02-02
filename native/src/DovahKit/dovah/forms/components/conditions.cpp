@@ -953,7 +953,7 @@ namespace dovah::loaded_forms::components {
       {
          bool uses_aliases  = type & flag::use_aliases;
          bool uses_packdata = type & flag::use_packdata;
-         uint32_t firstValue; // needed for when the second arg is a union
+         uint32_t firstValue = 0; // needed for when the second arg is a union
          //
          auto func = condition_info::function::lookup_by_id(function);
          for (int i = 0; i < 2; ++i) {

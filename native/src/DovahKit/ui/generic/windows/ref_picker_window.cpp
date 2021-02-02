@@ -9,6 +9,9 @@
 RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
+   this->ui.cell->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+   this->ui.ref->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+   //
    auto& editor = DovahKitCore::get();
    //
    {
@@ -22,6 +25,7 @@ RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
          widget->addItem(cell->get_editor_id(), QVariant::fromValue<void*>(cell));
          return false;
       });
+      this->_populateRefList();
    }
    //
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
@@ -138,8 +142,13 @@ void RefPickerWindow::setReference(dovah::form_stub* stub) {
    dovah::bare_form_id_t parentID = (this->_cell) ? this->_cell->formID : 0;
    if (stub->groupInfo.parentFormID != parentID) {
       auto& editor = DovahKitCore::get();
-      auto* parent = editor.get_form(parentID);
+      auto* parent = editor.get_form(stub->groupInfo.parentFormID);
       this->_cell = parent;
+      //
+      auto* widget = this->ui.cell;
+      const auto blocker = QSignalBlocker(widget);
+      widget->setCurrentIndex(widget->findData(QVariant::fromValue<void*>(parent)));
+      //
       this->_populateRefList();
    }
    this->_reference = stub;

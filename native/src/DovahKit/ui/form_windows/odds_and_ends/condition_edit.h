@@ -34,7 +34,7 @@ class ConditionEditDialog : public QDialog {
       };
       std::array<_parameter, 3> parameters;
       bool did_param_holder_layout = false;
-      //
+      
       void _buildParamControls(int which, underlying_t, param_type_t*, bool use_original = false);
       void _save();
 
