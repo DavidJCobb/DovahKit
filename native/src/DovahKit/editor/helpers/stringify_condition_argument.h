@@ -19,7 +19,6 @@ namespace editor_helpers {
       bool& incomplete_information,
       const dovah::loaded_forms::components::condition& cnd,
       int   arg_index,
-      const dovah::loaded_forms::Package* owning_package = nullptr,
-      const dovah::loaded_forms::Quest* owning_quest = nullptr
+      const dovah::loaded_forms::components::condition_context&
    );
 }

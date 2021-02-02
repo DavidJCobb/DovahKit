@@ -71,10 +71,11 @@ namespace dovah::loaded_forms::components {
       //
       // Helper struct for working with conditions.
       //
-      Form&    owner;
+      Form*    owner   = nullptr;
       Package* package = nullptr;
       Quest*   quest   = nullptr;
       //
+      condition_context() {}
       condition_context(Form&);
    };
 

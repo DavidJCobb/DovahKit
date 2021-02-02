@@ -18,39 +18,6 @@ ConditionListModel::ConditionListModel(QObject* parent) : QAbstractTableModel(pa
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &ConditionListModel::formDeletionImminent);
 }
 
-dovah::loaded_forms::Package* ConditionListModel::_get_owning_package() const {
-   auto* stub = this->owner;
-   if (!stub && this->clone)
-      stub = this->clone->stub;
-   if (stub) {
-      if (stub->formType == dovah::form_type::package)
-         return (dovah::loaded_forms::Package*)stub->form;
-      return nullptr;
-   }
-   if (auto* clone = this->clone) {
-      //return dynamic_cast<dovah::loaded_forms::Package*>(clone);
-      #if !_DEBUG
-         static_assert(false, "Add support for Packages!");
-      #endif
-      return nullptr;
-   }
-   return nullptr;
-}
-dovah::loaded_forms::Quest* ConditionListModel::_get_owning_quest() const {
-   auto* stub = this->owner;
-   if (!stub && this->clone)
-      stub = this->clone->stub;
-   if (stub) {
-      if (stub->formType == dovah::form_type::quest)
-         return (dovah::loaded_forms::Quest*)stub->form;
-      return nullptr;
-   }
-   if (auto* clone = this->clone) {
-      return dynamic_cast<dovah::loaded_forms::Quest*>(clone);
-   }
-   return nullptr;
-}
-
 void ConditionListModel::formModified(const dovah::form_stub* stub) {
    if (!this->target)
       return;
@@ -63,12 +30,7 @@ void ConditionListModel::formModified(const dovah::form_stub* stub) {
       bool update = false;
       for (int j = 0; j < 2; ++j) {
          auto ud = condition.get_argument_underlying_type(j);
-         if (ud == arg_underlying_type::aliasID) {
-            if (stub == this->owner) {
-               update = true;
-               break;
-            }
-         } else if (ud == arg_underlying_type::formID) {
+         if (ud == arg_underlying_type::formID) {
             if (condition.parameters[j].form == stub) {
                update = true;
                break;
@@ -147,7 +109,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      //
                      return tr("Package Data", "condition list - run on");
                   case condition::run_on_t::quest_alias:
-                     if (auto* q = this->_get_owning_quest()) {
+                     if (auto* q = this->context.quest) {
                         if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
@@ -185,7 +147,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         return font;
                      }
                   case condition::run_on_t::quest_alias:
-                     if (auto* q = this->_get_owning_quest()) {
+                     if (auto* q = this->context.quest) {
                         if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
@@ -233,13 +195,10 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                if (!function)
                   break;
                if (function->argument_types[0] != &dovah::loaded_forms::components::condition_info::arg_types::None) {
-                  auto* q = this->_get_owning_quest();
-                  auto* p = this->_get_owning_package();
-                  //
                   bool dummy;
-                  auto value_a = editor_helpers::stringify_condition_argument(dummy, condition, 0, p, q);
+                  auto value_a = editor_helpers::stringify_condition_argument(dummy, condition, 0, this->context);
                   if (function->argument_types[1] != &dovah::loaded_forms::components::condition_info::arg_types::None) {
-                     auto value_b = editor_helpers::stringify_condition_argument(dummy, condition, 1, p, q);
+                     auto value_b = editor_helpers::stringify_condition_argument(dummy, condition, 1, this->context);
                      return tr("%1, %2").arg(value_a).arg(value_b);
                   }
                   return value_a;
@@ -365,8 +324,8 @@ void ConditionListModel::clearTarget() {
    this->beginResetModel();
    if (this->target)
       this->target->clear();
-   this->owner = nullptr;
    this->clone = nullptr;
+   this->context = cnd_context_t();
    this->endResetModel();
 }
 void ConditionListModel::moveSelection(const QItemSelection& indices, int down) {
@@ -404,20 +363,13 @@ void ConditionListModel::refresh() {
    auto last = this->target->size() - 1;
    emit dataChanged(this->index(0, 0, dummy), this->index(last, this->columnCount(dummy), dummy));
 }
-void ConditionListModel::setTarget(form_stub& owner, std::vector<condition>& list) {
-   if (this->target)
-      this->clearTarget();
-   this->beginResetModel();
-   this->owner  = &owner;
-   this->target = &list;
-   this->endResetModel();
-}
 void ConditionListModel::setTarget(loaded_form_t& clone, std::vector<condition>& list) {
    if (this->target)
       this->clearTarget();
    this->beginResetModel();
    this->clone  = &clone;
    this->target = &list;
+   this->context = cnd_context_t(clone);
    this->endResetModel();
 }
 

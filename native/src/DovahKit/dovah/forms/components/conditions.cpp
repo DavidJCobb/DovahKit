@@ -764,7 +764,7 @@ namespace dovah::loaded_forms::components {
       #pragma endregion
    }
    
-   condition_context::condition_context(Form& owner) : owner(owner) {
+   condition_context::condition_context(Form& owner) : owner(&owner) {
       if (auto* casted = dynamic_cast<Quest*>(&owner)) {
          this->quest = casted;
          return;

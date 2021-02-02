@@ -16,8 +16,7 @@ namespace editor_helpers {
       bool& incomplete_information,
       const dovah::loaded_forms::components::condition& cnd,
       int   arg_index,
-      const dovah::loaded_forms::Package* owning_package,
-      const dovah::loaded_forms::Quest* owning_quest
+      const dovah::loaded_forms::components::condition_context& context
    ) {
       incomplete_information = false;
       if (arg_index < 0 || arg_index > 1) {
@@ -38,8 +37,8 @@ namespace editor_helpers {
          case _ci::arg_underlying_type::aliasID:
             if (value.dword == -1)
                return QObject::tr("NONE", "condition argument (no alias)");
-            if (owning_quest) {
-               if (auto* alias = owning_quest->lookup_alias_by_id(value.dword)) {
+            if (context.quest) {
+               if (auto* alias = context.quest->lookup_alias_by_id(value.dword)) {
                   return QString::fromUtf8(alias->name.c_str());
                }
             }
@@ -106,7 +105,7 @@ namespace editor_helpers {
          case _ci::arg_underlying_type::package_data:
             if (value.dword == -1)
                return QObject::tr("NONE", "condition argument (no package data)");
-            if (owning_package) {
+            if (context.package) {
                //
                // TODO
                //
