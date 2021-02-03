@@ -477,6 +477,52 @@
 //                                - WE NEED TO HANDLE GetEventData AS A SPECIAL CASE AND 
 //                                  DISPLAY THE CONDITION EVENT FIELDS AS "PARAMETERS."
 //
+//                                - WE NEED TO HANDLE INTERDEPENDENT PARAMETERS: IF ONE 
+//                                  PARAMETER'S VALUE INFLUENCES THE POSSIBLE VALUES OF 
+//                                  THE NEXT PARAMETER, THEN CHANGING THE FORMER MUST 
+//                                  UPDATE THE WIDGETS FOR THE LATTER.
+//
+//                                   - I've added a set of "_rebuildTYPEParam" functions 
+//                                     that can be used to preserve a control's value 
+//                                     when rebuilding it, BUT I think I need to rethink 
+//                                     parameter value widgets entirely.
+//
+//                                     Frankly, for stuff like this, I think I'm gonna 
+//                                     just have to hardcode in something to check if 
+//                                     the second argument type is a union and if so, 
+//                                     have it force-update when the first argument 
+//                                     changes.
+//
+//                                     That in turn requires making it so that yeah, we 
+//                                     can have a function to update a single parameter 
+//                                     widget, but we need an "outer" function for when 
+//                                     we update all parameters.
+//
+//                                - SUPPOSE [QUST:12345678]MyCoolQuest CONTAINS, SOMEWHERE, 
+//                                  A SELF-REFERENTIAL GetStageDone CONDITION -- SO, IT HAS 
+//                                  A CONDITION WHICH CHECKS WHETHER ONE OF ITS OWN STAGES 
+//                                  IS DONE. CURRENTLY, WITH THE WORKING COPY SYSTEM, IF 
+//                                  YOU WERE TO GO TO THIS QUEST, EDIT THE STAGES, AND THEN 
+//                                  IMMEDIATELY TRY TO EDIT THE CONDITION, THE LIST OF STAGES 
+//                                  YOU'D SEE WOULD BE OUTDATED: THE CONDITION EDITING UI 
+//                                  CAN NECESSARILY ONLY PULL FROM THE DATA ON THE FORM STUB; 
+//                                  CHANGES IN A WORKING COPY CAN'T BE USED BECAUSE THERE'S 
+//                                  NO WAY TO LOCATE THE WORKING COPY "FROM OUTSIDE."
+//
+//                                   - One thing we could do is limit it so that you can only 
+//                                     have one working copy per form, and store a pointer to 
+//                                     it on the form's stub. This makes it so that if you're 
+//                                     working with a form in any context, you can access the 
+//                                     working copy at any time.
+//
+//                                - IF A CONDITION'S OWNING QUEST IS EDITED, WE NEED TO 
+//                                  UPDATE ANY ALIAS-ARGUMENT DROPDOWNS WITHOUT LOSING 
+//                                  THEIR PRIOR SELECTED VALUES.
+//
+//                                - IF A CONDITION'S OWNING PACKAGE IS EDITED, WE NEED TO 
+//                                  UPDATE ANY PACKAGE-DATA-ARGUMENT DROPDOWNS WITHOUT 
+//                                  LOSING THEIR PRIOR SELECTED VALUES.
+//
 //                                - RefPickerButton: when a REFR is used as a parameter 
 //                                  to a condition, does the CK make the REFR persistent? 
 //                                  Does this depend on where the condition is?

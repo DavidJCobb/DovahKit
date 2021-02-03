@@ -232,11 +232,121 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
    cobb::qt::bind(this->ui.flagOr, condition.flags, condition_t::flag::or_linked);
 }
 
-void ConditionEditDialog::_buildParamControls(int which, underlying_t under, param_type_t* type, bool use_original) {
+void ConditionEditDialog::_rebuildAliasIDParam(int which, param_type_t* type, bool use_original) {
+   constexpr auto under = underlying_t::aliasID;
+   auto& p = this->parameters[which];
+   //
+   int prior = -1;
+   if (use_original) {
+      if (this->condition.get_argument_underlying_type(which) == under) {
+         prior = this->condition.parameters[which].dword;
+         if (prior == 0xFFFFFFFF)
+            prior = -1;
+      }
+   } else if (p.last_type == type && p.last_under == under) {
+      auto data = ((QComboBox*)p.widget)->currentData();
+      if (data.isValid())
+         prior = data.toInt();
+   }
+   //
+   auto* w = new QComboBox;
+   if (this->context.quest) {
+      w->addItem(tr("NONE"), -1);
+      for (auto* alias : this->context.quest->aliases) {
+         if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
+            continue;
+         w->addItem(alias->name.c_str(), alias->id);
+      }
+   }
+   p.widget = w;
+   //
+   w->setCurrentIndex(w->findData(prior));
+}
+void ConditionEditDialog::_rebuildCharacterParam(int which, param_type_t* type, bool use_original) {
+   constexpr auto under = underlying_t::character;
+   auto& p = this->parameters[which];
+   //
+   char c = '\0';
+   if (use_original) {
+      c = this->condition.parameters[which].dword & 0xFF;
+   } else {
+      if (auto* combobox = dynamic_cast<QComboBox*>(p.widget)) {
+         c = combobox->currentData().toInt();
+      } else if (auto* textedit = dynamic_cast<QLineEdit*>(p.widget)) {
+         auto t = textedit->text();
+         if (!t.isEmpty())
+            c = t[0].toLatin1();
+      }
+   }
+   //
+   if (type == &_arg_types::Axis) {
+      auto* w = new QComboBox;
+      w->addItem("X", uint8_t('X'));
+      w->addItem("Y", uint8_t('Y'));
+      w->addItem("Z", uint8_t('Z'));
+      p.widget = w;
+      //
+      if (c != '\0')
+         w->setCurrentIndex(w->findData(uint8_t(c)));
+   } else {
+      auto* w = new QLineEdit;
+      w->setMaxLength(1);
+      p.widget = w;
+      //
+      if (c != '\0')
+         w->setText(QChar(c));
+   }
+}
+void ConditionEditDialog::_rebuildFloatParam(int which, param_type_t* type, bool use_original) {
+   constexpr auto under = underlying_t::aliasID;
+   auto& p = this->parameters[which];
+   //
+   float prior = 0.0F;
+   if (use_original) {
+      prior = this->condition.parameters[which].float32;
+   } else if (p.last_type == type && p.last_under == under) {
+      prior = ((QDoubleSpinBox*)p.widget)->value();
+   }
+   //
+   auto* w = new QDoubleSpinBox;
+   w->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+   p.widget = w;
+   //
+   if (use_original)
+      w->setValue((int32_t)this->condition.parameters[which].float32);
+}
+void ConditionEditDialog::_rebuildFormIDParam(int which, param_type_t* type, bool use_original) {
+   constexpr auto under = underlying_t::formID;
+   auto& p = this->parameters[which];
+   //
+   dovah::form_stub* prior = nullptr;
+   if (use_original) {
+      assert(this->condition.get_argument_underlying_type(which) == under);
+      prior = this->condition.parameters[which].form.get_form_stub();
+   } else if (p.last_type == type && p.last_under == under) {
+      prior = ((FormsOfTypeCombobox*)p.widget)->formStub();
+   }
+   //
+   auto* w = new FormsOfTypeCombobox;
+   if (type && type->allowedFormTypes.size()) {
+      QVector<uint8_t> al;
+      al.reserve(type->allowedFormTypes.size());
+      for (auto i : type->allowedFormTypes)
+         al.push_back(i);
+      w->setAllowedFormTypes(al);
+   }
+   w->setAllowNone(true);
+   w->populate();
+   p.widget = w;
+   //
+   w->setFormByID(prior ? prior->formID : 0);
+}
+
+void ConditionEditDialog::_buildParamControls(int which, underlying_t under, param_type_t* type, bool use_original, bool force_update) {
    if (which < 0 || which > this->parameters.size())
       return;
    auto& p = this->parameters[which];
-   if (p.last_type == type && p.last_under == under)
+   if (!force_update && p.last_type == type && p.last_under == under)
       return;
    //
    if (which >= 2)
@@ -280,9 +390,14 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
          case underlying_t::aliasID:
             {
                auto* w = new QComboBox;
-               //
-               // TODO: alias names and IDs
-               //
+               if (this->context.quest) {
+                  w->addItem(tr("NONE"), -1);
+                  for (auto* alias : this->context.quest->aliases) {
+                     if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
+                        continue;
+                     w->addItem(alias->name.c_str(), alias->id);
+                  }
+               }
                p.widget = w;
                //
                if (use_original)
@@ -393,9 +508,12 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
          case underlying_t::package_data:
             {
                auto* w = new QComboBox;
-               //
-               // TODO: package data names and indices
-               //
+               if (this->context.package) {
+                  w->addItem(tr("NONE"), -1);
+                  //
+                  // TODO: package data names and indices
+                  //
+               }
                p.widget = w;
                //
                if (use_original)
@@ -404,14 +522,36 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
             break;
          case underlying_t::quest_stage:
             {
-               auto* w = new QComboBox;
-               //
-               // TODO: quest stage numbers
-               //
-               p.widget = w;
-               //
-               if (use_original)
-                  w->setCurrentIndex(w->findData(this->condition.parameters[which].dword));
+               if (which > 0 && this->parameters[which - 1].last_under == underlying_t::formID) {
+                  auto* w = new QComboBox;
+                  //
+                  auto* prev  = dynamic_cast<FormsOfTypeCombobox*>(this->parameters[which - 1].widget);
+                  assert(prev);
+                  auto* quest = prev->formStub();
+                  if (quest) {
+                     //
+                     // TODO: If we're editing a QUST and it has self-referential GetStageDone conditions, 
+                     // we will show only the last-saved stages, not any stages in unsaved changes.
+                     //
+                     auto q = quest->load().ptr_cast<dovah::loaded_forms::Quest>();
+                     if (q)
+                        for (auto& s : q->stages)
+                           w->addItem(QString::number(s.index), s.index);
+                  }
+                  //
+                  p.widget = w;
+                  //
+                  if (use_original)
+                     w->setCurrentIndex(w->findData(this->condition.parameters[which].dword));
+               }
+               {
+                  auto* w = new QSpinBox;
+                  w->setRange(0, 65535);
+                  p.widget = w;
+                  //
+                  if (use_original)
+                     w->setValue(this->condition.parameters[which].dword);
+               }
             }
             break;
          case underlying_t::string:

@@ -36,8 +36,13 @@ class ConditionEditDialog : public QDialog {
       std::array<_parameter, 3> parameters;
       bool did_param_holder_layout = false;
       condition_t::run_on_t last_run_on = condition_t::run_on_t::subject;
+
+      void _rebuildAliasIDParam(int which, param_type_t*, bool use_original = false);
+      void _rebuildCharacterParam(int which, param_type_t*, bool use_original = false);
+      void _rebuildFloatParam(int which, param_type_t*, bool use_original = false);
+      void _rebuildFormIDParam(int which, param_type_t*, bool use_original = false);
       
-      void _buildParamControls(int which, underlying_t, param_type_t*, bool use_original = false);
+      void _buildParamControls(int which, underlying_t, param_type_t*, bool use_original = false, bool force_update = false);
       void _updateRunOn(bool use_original = false);
       void _save();
 
