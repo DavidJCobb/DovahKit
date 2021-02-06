@@ -3,6 +3,7 @@
 #include "../../helpers/strings.h"
 #include "../../helpers/unordered_map.h"
 #include "../form_stub.h"
+#include "../form_stub_addenda.h"
 #include "../form_stub_helpers.h"
 #include "tes_file_reading/file_loader.h"
 #include "tes_file_reading/file_header.h"
@@ -1716,12 +1717,12 @@ namespace dovah {
       }
       if (request.clone_of && request.form_type == form_type::cell) {
          if (request.child_of) {
-            if (request.clone_of->groupInfo.parentFormID == 0) {
+            if (request.clone_of->parentID == 0) {
                request.error = notice_code::interior_cell_clone_cannot_have_parent;
                return nullptr;
             }
          } else {
-            if (request.clone_of->groupInfo.parentFormID != 0) {
+            if (request.clone_of->parentID != 0) {
                request.error = notice_code::exterior_cell_clone_must_have_parent;
                return nullptr;
             }
@@ -1750,8 +1751,14 @@ namespace dovah {
       stub->editorID = request.editorID;
       stub->set_edited(true);
       //
-      stub->groupInfo.gridX = request.cell_grid_coordinates.x;
-      stub->groupInfo.gridY = request.cell_grid_coordinates.y;
+      if (request.cell_grid_coordinates.present) {
+         if (!stub->addenda)
+            stub->addenda = new form_stub_addenda;
+         auto& a = *stub->addenda;
+         a.flags |= form_stub_addenda::flag::has_grid_coordinates;
+         a.grid_coords.x = request.cell_grid_coordinates.x;
+         a.grid_coords.y = request.cell_grid_coordinates.y;
+      }
       //
       {
          auto guard = std::lock_guard(this->forms.lock);
@@ -1763,7 +1770,7 @@ namespace dovah {
       //
       if (request.child_of) {
          bare_form_id_t parentID = request.child_of->formID;
-         stub->groupInfo.parentFormID = parentID;
+         stub->parentID = parentID;
          stub->replace_outbound_reference(bare_form_id_t(0), parentID, use_info_entry::flag::i_am_child_of); // NOT form_stub::add_outbound_reference; see documentation for that function for why
       }
       //
@@ -2744,8 +2751,9 @@ namespace dovah {
       this->main_request->editorID = this->editorID;
       this->main_request->cell_grid_coordinates.x = this->cell_grid_coordinates.x;
       this->main_request->cell_grid_coordinates.y = this->cell_grid_coordinates.y;
+      this->main_request->cell_grid_coordinates.present = this->cell_grid_coordinates.present;
       if (!this->parent) {
-         auto parentID = this->main_request->clone_of->groupInfo.parentFormID;
+         auto parentID = this->main_request->clone_of->parentID;
          if (parentID)
             this->main_request->set_parent_form(parentID);
       }

@@ -1,5 +1,6 @@
 #include "form_stub_helpers.h"
 #include "form_stub.h"
+#include "form_stub_addenda.h"
 #include "files/common.h"
 
 namespace dovah::form_stub_helpers {
@@ -42,22 +43,12 @@ namespace dovah::form_stub_helpers {
       return nullptr;
    }
    form_stub* get_worldspace_persistent_cell(const form_stub* world) {
-      for (auto& pair : world->inbound) {
-         auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::i_am_parent_of) {
-            auto* child = entry.other;
-            if (!child)
-               continue;
-            if (child->groupInfo.type != (int)tes_file_group_type::world_children)
-               continue;
-            if (child->formType != form_type::cell)
-               continue;
-            return child;
-         }
-      }
-      return nullptr;
+      if (!world->addenda)
+         return nullptr;
+      return world->addenda->persistent_cell;
    }
    form_stub* get_worldspace_cell_by_grid(const form_stub* world, int32_t x, int32_t y) {
+      const form_stub* persistent_cell = get_worldspace_persistent_cell(world);
       for (auto& pair : world->inbound) {
          auto& entry = pair.second;
          if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
@@ -65,10 +56,13 @@ namespace dovah::form_stub_helpers {
          auto* cell = entry.other;
          if (!cell || cell->formType != form_type::cell)
             continue;
-         assert(cell->groupInfo.parentFormID == world->formID && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
-         if (cell->groupInfo.type == (int)tes_file_group_type::world_children) // if it's directly in this group, then it's the persistent cell
+         assert(cell->parentID == world->formID && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
+         if (cell == persistent_cell)
             continue;
-         if (cell->groupInfo.gridX == x && cell->groupInfo.gridY == y)
+         if (!cell->addenda)
+            continue;
+         auto& g = cell->addenda->grid_coords;
+         if (g.x == x && g.y == y)
             return cell;
       }
       return nullptr;

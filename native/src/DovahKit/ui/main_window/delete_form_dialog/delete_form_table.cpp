@@ -31,7 +31,14 @@ void DeleteFormDialogListModelItem::updateFromStub() {
             if (world) {
                auto    id   = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
                QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
-               QString grid = QString("(%1, %2)").arg(parent->groupInfo.gridX).arg(parent->groupInfo.gridY);
+               int32_t x;
+               int32_t y;
+               QString grid;
+               if (parent->get_grid_coordinates(x, y)) {
+                  grid = QString("(%1, %2)").arg(x).arg(y);
+               } else {
+                  grid = QString("(?, ?)");
+               }
                this->parentCell = QString("%2%3 in %1").arg(s).arg(this->parentCell).arg(grid);
             }
          }

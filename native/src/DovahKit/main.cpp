@@ -981,6 +981,10 @@
 //     - Re-sort the comboboxes when we detect the creation of a form and add the 
 //       form to the comboboxes
 //
+//  - Container::_clone_impl
+//
+//  - Location::_clone_impl and other missing functions
+//
 //  - UI for editing Activators
 //
 //     - UI for editing Papyrus data

@@ -1,6 +1,7 @@
 #include "Cell.h"
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
+#include "../form_stub_addenda.h"
 
 namespace dovah::loaded_forms {
    void Cell::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -41,8 +42,8 @@ namespace dovah::loaded_forms {
                   intfc.log_load_warning(warning);
                   break;
                }
-               subrecord.skip_bytes(sizeof(group_stub::gridX)); // form stubs store this information
-               subrecord.skip_bytes(sizeof(group_stub::gridY)); // form stubs store this information
+               subrecord.skip_bytes(sizeof(int32_t)); // XCLC grid X; form stubs store this information
+               subrecord.skip_bytes(sizeof(int32_t)); // XCLC grid Y; form stubs store this information
                subrecord.read(this->land_flags);
                break;
             case 'XCLL':
@@ -144,7 +145,7 @@ namespace dovah::loaded_forms {
    }
    void Cell::setup(const file_load_order& load_order) noexcept {
       if (!this->is_working_copy)
-         cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub.groupInfo.parentFormID == 0);
+         cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub.parentID == 0);
    }
    bool Cell::would_bethesda_compress() const noexcept {
       if (this->exterior.occlusion_data.present)
@@ -194,8 +195,11 @@ namespace dovah::loaded_forms {
       if (is_exterior) {
          auto& XCLC = record.open_next_subrecord('XCLC');
          auto& stub = this->stub;
-         XCLC.write(stub.groupInfo.gridX);
-         XCLC.write(stub.groupInfo.gridY);
+         int32_t x = 0;
+         int32_t y = 0;
+         stub.get_grid_coordinates(x, y);
+         XCLC.write(x);
+         XCLC.write(y);
          XCLC.write(this->land_flags);
          XCLC.close();
       } else {

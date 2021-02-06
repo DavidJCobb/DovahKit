@@ -295,16 +295,37 @@ namespace dovah::tes_file_writing {
    }
 
    void file_writer::_write_child_forms_for_cell(form_stub* stub) {
-      if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_persistent_children)) {
+      bool has_persistent_children;
+      bool has_temporary_children;
+      {
+         //
+         // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
+         // be saved to (i.e. whether the cell has any persistent or temporary children to save). We'll get to 
+         // that when we implement world editing.
+         //
+         auto& e = this->error;
+         e.code = notice_code::unknown_error;
+         this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
+         return;
+      }
+      if (has_persistent_children) {
          bool group_opened = false;
          //
          form_stub_helpers::for_each_child_form(stub, [this, &group_opened](form_stub* child) {
-            if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_persistent_children)
-               return false;
+            {
+               //
+               // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
+               // be saved to. We'll get to that when we implement world editing.
+               //
+               auto& e = this->error;
+               e.code = notice_code::unknown_error;
+               this->error.set_cause_form(*child).set_file_offset(this->get_stream_position());
+               return true;
+            }
             if (!child->needs_save())
                return false;
             if (!group_opened) {
-               this->open_group(tes_file_group_type::cell_persistent_children, child->groupInfo.parentFormID, tes_file_group_header::uninitialized_unknown);
+               this->open_group(tes_file_group_type::cell_persistent_children, child->parentID, tes_file_group_header::uninitialized_unknown);
                group_opened = true;
             }
             this->_write_form(child);
@@ -314,16 +335,24 @@ namespace dovah::tes_file_writing {
          if (group_opened)
             this->close_current_group();
       }
-      if (stub->has_child_forms_of_group((int)tes_file_group_type::cell_temporary_children)) {
+      if (has_temporary_children) {
          bool group_opened = false;
          //
          form_stub_helpers::for_each_child_form(stub, [this, &group_opened](form_stub* child) {
-            if ((tes_file_group_type)child->groupInfo.type != tes_file_group_type::cell_temporary_children)
-               return false;
+            {
+               //
+               // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
+               // be saved to. We'll get to that when we implement world editing.
+               //
+               auto& e = this->error;
+               e.code = notice_code::unknown_error;
+               this->error.set_cause_form(*child).set_file_offset(this->get_stream_position());
+               return true;
+            }
             if (!child->needs_save())
                return false;
             if (!group_opened) {
-               this->open_group(tes_file_group_type::cell_temporary_children, child->groupInfo.parentFormID, tes_file_group_header::uninitialized_unknown);
+               this->open_group(tes_file_group_type::cell_temporary_children, child->parentID, tes_file_group_header::uninitialized_unknown);
                group_opened = true;
             }
             this->_write_form(child);

@@ -6,6 +6,7 @@
 #include "forms/factories/hardcoded.h"
 #include "forms/factories/use_info.h"
 #include "forms/Form.h"
+#include "form_stub_addenda.h"
 #include "form_stub_heap.h"
 #include "logging.h"
 
@@ -50,6 +51,10 @@ namespace dovah {
       if (this->has_multiple_source_files()) {
          if (this->files.entries)
             delete[] this->files.entries;
+      }
+      if (this->addenda) {
+         delete this->addenda;
+         this->addenda = nullptr;
       }
    }
    void form_stub::_unload_form() {
@@ -468,7 +473,7 @@ namespace dovah {
       reader.file_data = nullptr;
       reader.file_size = 0;
       reader.loader    = nullptr;
-      this->_add_one_way_outbound_reference(this->groupInfo.parentFormID, use_info_entry::flag::i_am_child_of);
+      this->_add_one_way_outbound_reference(this->parentID, use_info_entry::flag::i_am_child_of);
    }
    void form_stub::send_inbound_refs() noexcept {
       //
@@ -553,22 +558,23 @@ namespace dovah {
       return &this->files.entries[i];
    }
 
+   bool form_stub::get_grid_coordinates(int32_t& x, int32_t& y) const noexcept {
+      x = 0;
+      y = 0;
+      if (!this->addenda)
+         return false;
+      if (!(this->addenda->flags & form_stub_addenda::flag::has_grid_coordinates))
+         return false;
+      auto& gc = this->addenda->grid_coords;
+      x = gc.x;
+      y = gc.y;
+      return true;
+   }
+
    bool form_stub::has_child_forms() const noexcept {
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
          if (entry.flags & use_info_entry::flag::i_am_parent_of)
-            return true;
-      }
-      return false;
-   }
-   bool form_stub::has_child_forms_of_group(uint8_t gt) const noexcept {
-      for (auto& pair : this->inbound) {
-         auto& entry = pair.second;
-         if (!entry.other)
-            continue;
-         if (!(entry.flags & use_info_entry::flag::i_am_parent_of))
-            continue;
-         if (entry.other->groupInfo.type == gt)
             return true;
       }
       return false;
@@ -580,7 +586,7 @@ namespace dovah {
             continue;
          if (!(entry.flags & use_info_entry::flag::i_am_child_of))
             continue;
-         if (entry.other->formID == this->groupInfo.parentFormID)
+         if (entry.other->formID == this->parentID)
             return entry.other;
       }
       return nullptr;
@@ -629,7 +635,7 @@ namespace dovah {
    bool form_stub::is_exterior_cell() const noexcept {
       if (this->formType != form_type::cell)
          return false;
-      return this->groupInfo.parentFormID != 0;
+      return this->parentID != 0;
    }
    namespace {
       union _cell_grid_dword {
@@ -644,9 +650,12 @@ namespace dovah {
       if (this->formType != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
+         if (!this->addenda)
+            return 0;
+         auto& gc = this->addenda->grid_coords;
          _cell_grid_dword value;
-         value.x = this->groupInfo.gridX / 8 / 4;
-         value.y = this->groupInfo.gridY / 8 / 4;
+         value.x = gc.x / 8 / 4;
+         value.y = gc.y / 8 / 4;
          return value.merged;
       }
       return (this->formID % 10);
@@ -655,9 +664,12 @@ namespace dovah {
       if (this->formType != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
+         if (!this->addenda)
+            return 0;
+         auto& gc = this->addenda->grid_coords;
          _cell_grid_dword value;
-         value.x = this->groupInfo.gridX / 8;
-         value.y = this->groupInfo.gridY / 8;
+         value.x = gc.x / 8;
+         value.y = gc.y / 8;
          return value.merged;
       }
       return (this->formID % 100) / 10;

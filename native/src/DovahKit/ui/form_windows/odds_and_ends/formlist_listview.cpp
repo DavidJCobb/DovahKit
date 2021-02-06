@@ -50,10 +50,16 @@ void FormListListviewModelItem::updateFromStub() {
                   .arg(QString("%1").arg(cell->formID, 8, 16, QChar('0')).toUpper())
                   .arg(name);
             } else {
-               this->editorID = QString("[REFR:%1] in cell (%2, %3) in [WRLD:%4]%5")
-                  .arg(cell->groupInfo.gridX)
-                  .arg(cell->groupInfo.gridY)
-                  .arg(cell->formID);
+               this->editorID = QString("[REFR:%1] in cell (%2, %3) in [WRLD:%4]%5");
+               //
+               int32_t x;
+               int32_t y;
+               if (cell->get_grid_coordinates(x, y)) {
+                  this->editorID = this->editorID.arg(x).arg(y);
+               } else {
+                  this->editorID = this->editorID.arg("?").arg("?");
+               }
+               this->editorID = this->editorID.arg(cell->formID);
             }
             this->editorID = this->editorID
                .arg(QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper())

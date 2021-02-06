@@ -391,6 +391,7 @@ namespace dovah {
          struct {
             int32_t x = 0;
             int32_t y = 0;
+            bool    present = false;
          } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
          //
          inline bool is_valid() const noexcept { return this->formID != 0 && this->error == default_notice_code; } // returns (true) if the request has a reserved ID and has not yet completed/failed
@@ -422,6 +423,7 @@ namespace dovah {
          struct {
             int32_t x = 0;
             int32_t y = 0;
+            bool    present = false;
          } cell_grid_coordinates; // grid coordinates to use when duplicating an exterior cell
          //
          void set_target(form_stub* original);

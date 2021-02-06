@@ -307,10 +307,9 @@ namespace dovah::tes_file_reading {
                auto& record = this->get_current_record();
                form_type_t formType = form_type_info::signature_to_form_type(record.signature());
                auto* stub = this->make_stub_for_record();
-               stub->groupInfo.type = (int)group.header.type;
                switch (group.header.type) {
                   case group::type::world_children:
-                     stub->groupInfo.parentFormID = last_worldspace_id;
+                     stub->parentID = last_worldspace_id;
                      last_world_cell_id = stub->formID;
                      break;
                }

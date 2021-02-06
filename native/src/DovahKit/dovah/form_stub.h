@@ -26,6 +26,7 @@ namespace dovah {
    }
 
    class form_stub;
+   class form_stub_addenda;
 
    template<typename loaded_form_t> class loaded_form_ptr {
       //
@@ -97,14 +98,6 @@ namespace dovah {
          template<typename other_loaded_form_t> loaded_form_ptr<other_loaded_form_t> ptr_cast() {
             return loaded_form_ptr<other_loaded_form_t>(this->wrapped);
          }
-   };
-
-   struct group_stub {
-      bare_form_id_t parentFormID = 0; // 0 for interior cells
-      int8_t  type  = -1; // init to tes_file_group_type::none
-      // we have 3 padding bytes here
-      int32_t gridX = 0; // exterior cells only; taken from CELL/XCLC. size of these fields is significant; CELL load/save code uses these fields directly.
-      int32_t gridY = 0; // exterior cells only; taken from CELL/XCLC.
    };
 
    #pragma region Use Info
@@ -213,19 +206,10 @@ namespace dovah {
                //
                is_hardcoded = 0x02,
                //
-               // (missing_coordinates) // only for exterior CELLs
-               // Indicates that an exterior CELL was missing its XCLC subrecord. These default to grid coordinates 
-               // (0, 0), but if another cell exists at those coordinates, then the file will crash the Creation Kit 
-               // while loading. Official tools shouldn't ever save an exterior cell without XCLC, and xEdit won't 
-               // allow you to remove it (but also won't bother to add it if it's missing), so you'd have to hex-edit 
-               // a file to even get this to happen.
-               //
-               missing_coordinates = 0x04,
-               //
                // (has_multiple_source_files)
                // Indicates that the (file)/(files) union is (files).
                //
-               has_multiple_source_files = 0x08,
+               has_multiple_source_files = 0x04,
             };
          };
          using flags_t      = std::underlying_type_t<flag::type>;
@@ -270,10 +254,11 @@ namespace dovah {
          file_data* _get_source_file_info(int16_t file_index = -1) const noexcept; // defined this way so code internal to form_stub can actually modify the info in question
          //
       public:
-         group_stub    groupInfo;
-         uint32_t      formID   = 0; // form ID (file-local)
-         uint8_t       formType = 0;
-         flags_t       flags    = 0; // when there are getters/setters for these, use those instead of editing the mask directly
+         form_stub_addenda* addenda = nullptr;
+         bare_form_id_t parentID = 0;
+         bare_form_id_t formID   = 0; // form ID (file-local)
+         uint8_t        formType = 0;
+         flags_t        flags    = 0; // when there are getters/setters for these, use those instead of editing the mask directly
          // there will be 2 bytes of padding here
          std::string   editorID;
          loaded_forms::Form* form = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
@@ -316,9 +301,10 @@ namespace dovah {
          bool test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept;
          bool test_record_flags_for_file(uint32_t mask, owner_file_t&) const noexcept;
 
+         bool get_grid_coordinates(int32_t& x, int32_t& y) const noexcept;
+
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;
-         bool has_child_forms_of_group(uint8_t) const noexcept;
          bool is_any_descendant_form_edited() const noexcept;
          bool does_descendant_form_need_save() const noexcept;
          bool needs_save() const noexcept;

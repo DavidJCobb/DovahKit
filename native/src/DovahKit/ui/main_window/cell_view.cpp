@@ -34,8 +34,17 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          if (text.isEmpty())
             text = tr("<i>Unnamed Cell</i>", "cell view");
          //
-         if (cell->groupInfo.parentFormID)
-            text = tr("%1 (%2, %3)").arg(text).arg(cell->groupInfo.gridX).arg(cell->groupInfo.gridY);
+         if (cell->parentID) {
+            text = tr("%1 (%2, %3)").arg(text);
+            //
+            int32_t x;
+            int32_t y;
+            if (cell->get_grid_coordinates(x, y)) {
+               text = text.arg(x).arg(y);
+            } else {
+               text = text.arg("?").arg("?");
+            }
+         }
       } else {
          text = tr("No Cell Selected", "cell view");
       }

@@ -46,16 +46,21 @@ void RefPickerButton::_updateText() {
          //
          QString cell_text;
          auto& editor = DovahKitCore::get();
-         auto* cell   = editor.get_form(stub->groupInfo.parentFormID);
+         auto* cell   = editor.get_form(stub->parentID);
          if (cell) {
             cell_text = cell->get_editor_id();
-            if (cell_text.isEmpty() && cell->groupInfo.parentFormID) {
-               auto* world = editor.get_form(cell->groupInfo.parentFormID);
+            if (cell_text.isEmpty() && cell->parentID) {
+               auto* world = editor.get_form(cell->parentID);
                if (world) {
-                  cell_text = tr("(%1, %2) in %3")
-                     .arg(cell->groupInfo.gridX)
-                     .arg(cell->groupInfo.gridY)
-                     .arg(world->get_editor_id());
+                  int32_t x;
+                  int32_t y;
+                  cell_text = tr("(%1, %2) in %3");
+                  if (cell->get_grid_coordinates(x, y)) {
+                     cell_text = cell_text.arg(x).arg(y);
+                  } else {
+                     cell_text = cell_text.arg("?").arg("?");
+                  }
+                  cell_text = cell_text.arg(world->get_editor_id());
                }
             }
          } else {

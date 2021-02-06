@@ -16,6 +16,7 @@ namespace editor_script::tasks::s2m {
          struct {
             int32_t x = 0;
             int32_t y = 0;
+            bool    present = false;
          } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
          //
          bool        error      = false;

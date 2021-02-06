@@ -2,6 +2,7 @@
 #include "../../notice_code_list.h"
 #include "../file_load_order.h"
 #include "file_loader.h"
+#include "../../form_stub_addenda.h"
 
 namespace dovah::tes_file_reading {
    file_or_file_part_loader::file_or_file_part_loader(file_loader& f) : load_interface(f.get_load_interface(*this)) {
@@ -118,17 +119,24 @@ namespace dovah::tes_file_reading {
                break;
             case 'XCLC':
                state |= _state::found_cell_coords;
-               subrecord.read(stub.groupInfo.gridX);
-               subrecord.read(stub.groupInfo.gridY);
+               {
+                  int32_t x;
+                  int32_t y;
+                  if (!stub.addenda)
+                     stub.addenda = new form_stub_addenda;
+                  auto& g = stub.addenda->grid_coords;
+                  subrecord.read(x);
+                  subrecord.read(y);
+                  g.x = x;
+                  g.y = y;
+                  g.flags |= form_stub_addenda::flag::has_grid_coordinates;
+               }
                break;
             default:
                continue;
          }
          if (state == found_all)
             return;
-      }
-      if (is_ext && !(state & _state::found_cell_coords)) {
-         stub.flags |= form_stub::flag::missing_coordinates;
       }
    }
 

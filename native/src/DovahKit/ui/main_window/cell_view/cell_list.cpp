@@ -19,8 +19,7 @@ void CellListModelItem::update() {
    auto stub = this->stub;
    this->editorID = QString::fromUtf8(stub->get_editor_id());
    this->formID   = stub->formID;
-   this->gridX    = stub->groupInfo.gridX;
-   this->gridY    = stub->groupInfo.gridY;
+   stub->get_grid_coordinates(this->gridX, this->gridY);
    //
    this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
    this->is_injected = stub->is_injected();
@@ -41,10 +40,10 @@ void CellListModel::formCreated(const dovah::form_stub* stub) {
    if (stub->formType != dovah::form_type::cell)
       return;
    if (this->worldspace) {
-      if (stub->groupInfo.parentFormID != this->worldspace->formID)
+      if (stub->parentID != this->worldspace->formID)
          return;
    } else {
-      if (stub->groupInfo.parentFormID)
+      if (stub->parentID)
          return;
    }
    this->insertItem(stub, false);
@@ -241,14 +240,14 @@ void CellListModel::rebuild(const dovah::form_stub* worldspace) {
    this->worldspace = worldspace;
    if (worldspace) {
       editor.for_each_form_of_type(dovah::form_type::cell, [worldspace, this](dovah::form_stub* stub) {
-         if (stub->groupInfo.parentFormID != worldspace->formID)
+         if (stub->parentID != worldspace->formID)
             return false;
          this->insertItem(stub, true);
          return false;
       });
    } else {
       editor.for_each_form_of_type(dovah::form_type::cell, [this](dovah::form_stub* stub) {
-         if (stub->groupInfo.parentFormID)
+         if (stub->parentID)
             return false;
          this->insertItem(stub, true);
          return false;

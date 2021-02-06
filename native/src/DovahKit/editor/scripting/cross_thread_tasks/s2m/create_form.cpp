@@ -49,6 +49,7 @@ namespace editor_script::tasks::s2m {
       request.editorID = this->editorID;
       request.cell_grid_coordinates.x = this->cell_grid_coordinates.x;
       request.cell_grid_coordinates.y = this->cell_grid_coordinates.y;
+      request.cell_grid_coordinates.present = this->cell_grid_coordinates.present;
       this->result = request.commit();
       //
       code = request.get_error_code();

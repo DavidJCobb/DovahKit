@@ -41,7 +41,7 @@ CellRefListModel::CellRefListModel(QObject* parent) : QAbstractTableModel(parent
 void CellRefListModel::formCreated(const dovah::form_stub* stub) {
    if (!this->last_used_cell)
       return;
-   if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
+   if (stub->parentID != this->last_used_cell->formID)
       return;
    if (!dovah::form_type_info::form_type_is_reference(stub->formType))
       return;
@@ -50,7 +50,7 @@ void CellRefListModel::formCreated(const dovah::form_stub* stub) {
 void CellRefListModel::formModified(const dovah::form_stub* stub) {
    if (!this->last_used_cell)
       return;
-   if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
+   if (stub->parentID != this->last_used_cell->formID)
       return;
    if (!dovah::form_type_info::form_type_is_reference(stub->formType))
       return;
@@ -71,7 +71,7 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
 void CellRefListModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {
    if (!this->last_used_cell)
       return;
-   if (stub->groupInfo.parentFormID != this->last_used_cell->formID)
+   if (stub->parentID != this->last_used_cell->formID)
       return;
    if (!dovah::form_type_info::form_type_is_reference(stub->formType))
       return;
