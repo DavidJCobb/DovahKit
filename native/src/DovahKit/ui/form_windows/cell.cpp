@@ -163,7 +163,7 @@ void FormDialogCell::_update_ownership_widgets() {
    {
       dovah::form_stub* prior_stub = nullptr;
       if (this->working_ownership.loaded_faction)
-         prior_stub = this->working_ownership.loaded_faction->stub;
+         prior_stub = &this->working_ownership.loaded_faction->stub;
       //
       if (prior_stub != faction_stub) {
          this->working_ownership.loaded_faction = faction_stub->load().ptr_cast<dovah::loaded_forms::Faction>();
@@ -213,7 +213,7 @@ void FormDialogCell::_load_impl() {
    this->ui.tabs->setTabEnabled(3, !is_exterior);
    //
    #pragma region General
-      this->ui.editorID->setText(QString::fromStdString(this->form->stub->get_editor_id()));
+      this->ui.editorID->setText(QString::fromStdString(this->form->stub.get_editor_id()));
       _load_extra_formID<extra::location, extra_data_type::location>(this->ui.location, extra);
       this->ui.flagCantTravel->setChecked(this->form->cell_flags & cell_flag::cant_travel_from_here);
       this->ui.flagHandChanged->setChecked(this->form->cell_flags & cell_flag::hand_changed);

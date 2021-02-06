@@ -15,7 +15,7 @@ namespace dovah::loaded_forms {
       //
       public:
          static constexpr form_type_t form_type = form_type::actor_base;
-         ActorBase() : Form(form_type) {};
+         ActorBase(const constructor_params& c) : Form(form_type, c) {};
 
          localized_string name;
 

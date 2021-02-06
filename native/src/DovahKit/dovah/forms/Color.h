@@ -19,7 +19,7 @@ namespace dovah::loaded_forms {
          //
       public:
          static constexpr form_type_t form_type = form_type::color;
-         Color() : Form(form_type) {};
+         Color(const constructor_params& c) : Form(form_type, c) {};
 
          localized_string name;
          color_t          color;

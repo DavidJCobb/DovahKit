@@ -123,7 +123,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                );
                break;
          }

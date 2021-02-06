@@ -19,7 +19,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                );
                break;
          }
@@ -43,9 +43,10 @@ namespace dovah::loaded_forms {
       }
    }
    bool FormList::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<FormList*>(out);
-      if (!copy)
+      if (out->formType != form_type)
          return false;
+      auto copy = (FormList*)out;
+      //
       size_t size = this->contents.size();
       copy->contents.resize(size);
       for (size_t i = 0; i < size; ++i)

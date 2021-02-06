@@ -102,24 +102,23 @@ namespace dovah {
             // class a bit differently, since hardcoded forms don't come from a "real" file.
             //
             this->form = instantiate_hardcoded_form(*this);
-            if (this->form)
-               this->form->stub = this;
          } else {
             if (arr[0].offset == 0)
                return loaded_form_ptr<loaded_forms::Form>(this); // file has no actual data (unsaved new active file, etc.). skip it
             //
             // This file is a real file. Load from it.
             //
+            loaded_forms::Form::constructor_params fcp;
+            fcp.stub = this;
+            //
             intfc.current_file      = file;
             intfc.is_winning_record = (1 == size);
             intfc.is_partial_record = false;
             if (file->load_record_at(arr[0].offset)) {
                auto& record = file->get_current_record();
-               this->form = create_blank_loaded_form_by_type(this->formType);
-               if (this->form) {
-                  this->form->stub = this;
+               this->form = create_blank_loaded_form_by_type(this->formType, fcp);
+               if (this->form)
                   (loader)(this->form, record, intfc);
-               }
             }
          }
       }

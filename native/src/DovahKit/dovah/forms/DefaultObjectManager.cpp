@@ -25,8 +25,8 @@ namespace dovah::loaded_forms {
       auto& entry = this->entries[signature];
       entry.form.set(*this, stub);
       entry.is_active_file = true;
-      if (this->stub)
-         this->stub->set_edited(true);
+      if (!this->is_working_copy)
+         this->stub.set_edited(true);
       if (!definition)
          return notice_code::default_object_accepted_but_unknown;
       return default_notice_code;
@@ -51,7 +51,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                );
                break;
          }
@@ -72,9 +72,9 @@ namespace dovah::loaded_forms {
       }
    }
    bool DefaultObjectManager::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<DefaultObjectManager*>(out);
-      if (!copy)
+      if (out->formType != form_type)
          return false;
+      auto copy = (DefaultObjectManager*)out;
       //
       if (!copy->entries.empty()) {
          for (auto& pair : copy->entries) {

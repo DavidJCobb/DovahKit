@@ -1730,22 +1730,25 @@ namespace dovah {
       //
       loaded_forms::Form* loaded = nullptr;
       uint32_t record_flags = 0;
+      //
+      auto* stub = new form_stub;
+      stub->formType = request.form_type;
       if (!request.clone_of) {
-         loaded = create_blank_loaded_form_by_type(request.form_type);
+         loaded_forms::Form::constructor_params fcp;
+         fcp.stub = stub;
+         //
+         loaded = create_blank_loaded_form_by_type(request.form_type, fcp);
          if (!loaded) {
             request.error = notice_code::unimplemented_form_type;
+            delete stub;
             return nullptr;
          }
       }
-      auto* stub = new form_stub;
-      stub->formType = request.form_type;
       stub->form     = loaded;
       stub->_add_file(*this->active_file, 0);
       stub->formID   = formID;
       stub->editorID = request.editorID;
       stub->set_edited(true);
-      if (loaded)
-         loaded->stub = stub;
       //
       stub->groupInfo.gridX = request.cell_grid_coordinates.x;
       stub->groupInfo.gridY = request.cell_grid_coordinates.y;

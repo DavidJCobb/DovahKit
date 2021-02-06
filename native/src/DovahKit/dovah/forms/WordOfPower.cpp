@@ -19,7 +19,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                );
                break;
          }
@@ -29,9 +29,10 @@ namespace dovah::loaded_forms {
       return; // this form type does not have any subrecords that contain form IDs
    }
    bool WordOfPower::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<WordOfPower*>(out);
-      if (!copy)
+      if (out->formType != form_type)
          return false;
+      auto copy = (WordOfPower*)out;
+      //
       copy->dragon_name = this->dragon_name;
       copy->human_name  = this->human_name;
       return true;

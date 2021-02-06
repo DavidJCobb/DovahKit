@@ -10,7 +10,7 @@ FormDialogWordOfPower::FormDialogWordOfPower(dovah::form_stub* stub, QWidget* pa
 void FormDialogWordOfPower::_load_impl() {
    auto& editor = DovahKitCore::get();
    //
-   this->ui.editorID->setText(QString::fromStdString(this->form->stub->get_editor_id()));
+   this->ui.editorID->setText(QString::fromStdString(this->form->stub.get_editor_id()));
    this->ui.dragonName->setText(editor.convert_localized_string(this->form->dragon_name));
    this->ui.humanName->setText(editor.convert_localized_string(this->form->human_name));
 }

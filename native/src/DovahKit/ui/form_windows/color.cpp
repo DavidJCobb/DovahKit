@@ -12,7 +12,7 @@ FormDialogColor::FormDialogColor(dovah::form_stub* stub, QWidget* parent) : Form
 void FormDialogColor::_load_impl() {
    auto& editor = DovahKitCore::get();
    //
-   this->ui.editorID->setText(QString::fromStdString(this->form->stub->get_editor_id()));
+   this->ui.editorID->setText(QString::fromStdString(this->form->stub.get_editor_id()));
    this->ui.name->setText(editor.convert_localized_string(this->form->name));
    //
    QColor color{ this->form->color.r, this->form->color.g, this->form->color.b, this->form->color.unused };

@@ -19,7 +19,7 @@ namespace dovah::loaded_forms {
          //
       public:
          static constexpr form_type_t form_type = form_type::voicetype;
-         Voicetype() : Form(form_type) {};
+         Voicetype(const constructor_params& c) : Form(form_type, c) {};
 
          voicetype_flags_t voicetype_flags = 0;
 

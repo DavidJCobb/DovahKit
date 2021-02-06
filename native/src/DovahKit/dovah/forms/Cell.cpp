@@ -25,7 +25,7 @@ namespace dovah::loaded_forms {
                if (!loaded_cell_flags) {
                   detailed_notice warning;
                   warning.code = notice_code::cell_flags_not_yet_found;
-                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_form(this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
                   //
                   intfc.log_load_warning(warning);
@@ -35,7 +35,7 @@ namespace dovah::loaded_forms {
                } else if (this->cell_flags & cell_flag::interior) {
                   detailed_notice warning;
                   warning.code = notice_code::exterior_cell_data_in_interior_cell;
-                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_form(this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
                   //
                   intfc.log_load_warning(warning);
@@ -49,7 +49,7 @@ namespace dovah::loaded_forms {
                if (!loaded_cell_flags) {
                   detailed_notice warning;
                   warning.code = notice_code::cell_flags_not_yet_found;
-                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_form(this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
                   //
                   intfc.log_load_warning(warning);
@@ -58,7 +58,7 @@ namespace dovah::loaded_forms {
                if (!(this->cell_flags & cell_flag::interior)) {
                   detailed_notice warning;
                   warning.code = notice_code::interior_cell_data_in_exterior_cell;
-                  warning.set_cause_form(*this->stub);
+                  warning.set_cause_form(this->stub);
                   warning.set_cause_subrecord(subrecord.signature());
                   //
                   intfc.log_load_warning(warning);
@@ -69,7 +69,7 @@ namespace dovah::loaded_forms {
             case 'LTMP':
                subrecord.read(this->interior.lighting_template_ID);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, *this->stub, this->interior.lighting_template_ID)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, this->stub, this->interior.lighting_template_ID)
                );
                break;
             case 'TVDT':
@@ -109,7 +109,7 @@ namespace dovah::loaded_forms {
                   // Subrecord is not extra-data.
                   //
                   intfc.log_load_warning(
-                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                   );
                }
                break;
@@ -143,8 +143,8 @@ namespace dovah::loaded_forms {
       }
    }
    void Cell::setup(const file_load_order& load_order) noexcept {
-      if (this->stub)
-         cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub->groupInfo.parentFormID == 0);
+      if (!this->is_working_copy)
+         cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub.groupInfo.parentFormID == 0);
    }
    bool Cell::would_bethesda_compress() const noexcept {
       if (this->exterior.occlusion_data.present)
@@ -160,9 +160,10 @@ namespace dovah::loaded_forms {
       return false;
    }
    bool Cell::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<Cell*>(out);
-      if (!copy)
+      if (out->formType != form_type)
          return false;
+      auto copy = (Cell*)out;
+      //
       copy->name = this->name;
       copy->cell_flags = this->cell_flags;
       copy->land_flags = this->land_flags;
@@ -182,7 +183,7 @@ namespace dovah::loaded_forms {
       if (record.flags() & tes_file_record_header::flag::partial) // TESObjectCELL::LoadPartial is a no-op
          return true;
       //
-      bool is_exterior = this->stub->is_exterior_cell();
+      bool is_exterior = this->stub.is_exterior_cell();
       //
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
@@ -192,9 +193,9 @@ namespace dovah::loaded_forms {
       DATA.close();
       if (is_exterior) {
          auto& XCLC = record.open_next_subrecord('XCLC');
-         auto* stub = this->stub;
-         XCLC.write(stub->groupInfo.gridX);
-         XCLC.write(stub->groupInfo.gridY);
+         auto& stub = this->stub;
+         XCLC.write(stub.groupInfo.gridX);
+         XCLC.write(stub.groupInfo.gridY);
          XCLC.write(this->land_flags);
          XCLC.close();
       } else {

@@ -14,7 +14,7 @@ namespace dovah::loaded_forms {
    class Activator : public Form {
       public:
          static constexpr form_type_t form_type = form_type::activator;
-         Activator() : Form(form_type) {};
+         Activator(const constructor_params& c) : Form(form_type, c) {};
 
          struct activator_flag {
             activator_flag() = delete;

@@ -150,7 +150,7 @@ namespace dovah::loaded_forms {
          class Objective;
       public:
          static constexpr form_type_t form_type = form_type::quest;
-         Quest() : Form(form_type) {};
+         Quest(const constructor_params& c) : Form(form_type, c) {};
          ~Quest();
          
          struct quest_flag {

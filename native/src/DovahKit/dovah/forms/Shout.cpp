@@ -30,13 +30,13 @@ namespace dovah::loaded_forms {
             case 'MDOB':
                subrecord.read(this->menu_display_object);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::statik, *this->stub, this->menu_display_object)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::statik, this->stub, this->menu_display_object)
                );
                break;
             case 'ETYP':
                subrecord.read(this->equip_type);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::equip_slot, *this->stub, this->equip_type)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::equip_slot, this->stub, this->equip_type)
                );
                break;
             case 'DESC':
@@ -50,11 +50,11 @@ namespace dovah::loaded_forms {
                   subrecord.read(entry.recoveryTime);
                   //
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::word_of_power, *this->stub, entry.word_of_power)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::word_of_power, this->stub, entry.word_of_power)
                         .set_subrecord_index(current_word)
                   );
                   intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, *this->stub, entry.spell)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, this->stub, entry.spell)
                         .set_subrecord_index(current_word)
                   );
                }
@@ -62,7 +62,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                );
                break;
          }
@@ -76,7 +76,7 @@ namespace dovah::loaded_forms {
          //
          detailed_notice warning;
          warning.code = notice_code::shout_has_wrong_word_count;
-         warning.set_cause_form(*this->stub);
+         warning.set_cause_form(this->stub);
          warning.extra_integers[0] = current_word;
          //
          intfc.log_load_warning(warning);
@@ -140,9 +140,10 @@ namespace dovah::loaded_forms {
    void Shout::setup(const file_load_order& load_order) noexcept {
    }
    bool Shout::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<Shout*>(out);
-      if (!copy)
+      if (out->formType != form_type)
          return false;
+      auto copy = (Shout*)out;
+      //
       // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
       copy->name        = this->name;
       copy->description = this->description;

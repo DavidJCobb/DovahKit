@@ -432,9 +432,9 @@ namespace dovah {
    void form_reference_t::set(loaded_forms::Form& owner, form_stub* set_to) {
       if (this->stub == set_to)
          return;
-      if (owner.stub) {
+      if (!owner.is_working_copy) {
          bare_form_id_t old = this->stub ? this->stub->formID : 0;
-         owner.stub->replace_outbound_reference(old, set_to, this->use_info_flags);
+         owner.stub.replace_outbound_reference(old, set_to, this->use_info_flags);
       }
       this->stub = set_to;
    }

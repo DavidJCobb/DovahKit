@@ -18,10 +18,13 @@ namespace dovah {
    extern loaded_forms::Form* instantiate_hardcoded_form(form_stub& stub) {
       assert(stub.form == nullptr && "Why are we trying to create a loaded-form instance for a stub (for a hardcoded form) that already has one?");
       //
+      loaded_forms::Form::constructor_params fcp;
+      fcp.stub = &stub;
+      //
       // First, let's handle singleton forms.
       //
       if (stub.formType == form_type::default_object_manager)
-         return new loaded_forms::DefaultObjectManager;
+         return new loaded_forms::DefaultObjectManager(fcp);
       //
       // Next, we'll check the form ID. First, we'll look into the actor values.
       //
@@ -52,23 +55,23 @@ namespace dovah {
       switch (stub.formID) {
          case 0x14:
             {
-               auto* form = new loaded_forms::Actor;
+               auto* form = new loaded_forms::Actor(fcp);
                form->base_form.unmanaged_set(lo.get_form(form_type::actor_base, 0x007));
                return form;
             }
             break;
          case 0x2D:
-            return new loaded_forms::Voicetype;
+            return new loaded_forms::Voicetype(fcp);
          case 0x2E:
-            return new loaded_forms::Voicetype;
+            return new loaded_forms::Voicetype(fcp);
          case 0x3C:
-            return new loaded_forms::Worldspace;
+            return new loaded_forms::Worldspace(fcp);
          case 0x163:
-            return new loaded_forms::FormList;
+            return new loaded_forms::FormList(fcp);
          case 0x165:
-            return new loaded_forms::FormList;
+            return new loaded_forms::FormList(fcp);
          case 0x1F3:
-            return new loaded_forms::FormList;
+            return new loaded_forms::FormList(fcp);
       }
       return nullptr;
    }

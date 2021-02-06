@@ -12,7 +12,7 @@ namespace dovah::loaded_forms {
    class Container : public Form {
       public:
          static constexpr form_type_t form_type = form_type::container;
-         Container() : Form(form_type) {};
+         Container(const constructor_params& c) : Form(form_type, c) {};
 
          struct container_flag {
             container_flag() = delete;

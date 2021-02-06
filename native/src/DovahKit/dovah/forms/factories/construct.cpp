@@ -17,7 +17,7 @@
 namespace {
    using namespace dovah;
    using _loader_t    = form_loader_function_t;
-   using _construct_t = loaded_forms::Form*(*)();
+   using _construct_t = loaded_forms::Form*(*)(const loaded_forms::Form::constructor_params&);
 }
 namespace {
    using namespace dovah;
@@ -25,8 +25,8 @@ namespace {
    template<typename T> void _load(loaded_forms::Form* instance, tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       ((T*)instance)->load(record, intfc);
    }
-   template<typename T> loaded_forms::Form* _construct() {
-      return new T;
+   template<typename T> loaded_forms::Form* _construct(const loaded_forms::Form::constructor_params& c) {
+      return new T(c);
    }
 
    struct _handlers {
@@ -72,11 +72,11 @@ namespace dovah {
       }
       return nullptr;
    }
-   loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t ft) noexcept {
+   loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t ft, const loaded_forms::Form::constructor_params& c) noexcept {
       for (uint32_t i = 0; i < std::extent<decltype(_builders)>::value; i++) {
          auto& b = _builders[i];
          if (b.form_type == ft)
-            return (b.handlers.constructor)();
+            return (b.handlers.constructor)(c);
       }
       return nullptr;
    }

@@ -1,10 +1,8 @@
 #pragma once
 #include "../../core.h"
+#include "forms/Form.h"
 
 namespace dovah {
-   namespace loaded_forms {
-      class Form;
-   }
    namespace tes_file_reading {
       class record;
    }
@@ -14,5 +12,5 @@ namespace dovah {
    using form_loader_function_t = void(*)(loaded_forms::Form*, tes_file_reading::record&, load_order_interfaces::form_load&); // construct and load
 
    extern form_loader_function_t get_form_loader_function(form_type_t) noexcept;
-   extern loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t) noexcept;
+   extern loaded_forms::Form* create_blank_loaded_form_by_type(form_type_t, const loaded_forms::Form::constructor_params&) noexcept;
 }

@@ -20,23 +20,22 @@ namespace dovah {
       class Form {
          public:
             const form_type_t formType;
-            Form(form_type_t ft) : formType(ft) {};
-            //
+            const bool is_working_copy;
+            form_stub& stub;
+            
             struct form_flag {
                form_flag() = delete;
                enum : uint32_t {
                   deleted = 0x00000020, // working with this flag directly is undefined behavior. use the (flagged_as_deleted) flag on (form_stub) instead.
                };
             };
-            
+
+            struct constructor_params {
+               bool       is_working_copy = false;
+               form_stub* stub            = nullptr; // MUST not be nullptr, but made a pointer to allow flexibility in when to set it
+            };
             //
-            // This pointer will never be null unless the form is under construction or is a 
-            // working copy of another form -- that is, a temporary copy intended for use by 
-            // a frontend to store pending changes until they are committed. Working copies 
-            // should never be loaded or saved, and because record flags are stored on the 
-            // form stub, working copies cannot have record flags.
-            //
-            form_stub* stub = nullptr;
+            Form(form_type_t ft, const constructor_params&);
             
             const char* get_editor_id() const noexcept;
             void load(tes_file_reading::record& record, load_order_interfaces::form_load&);

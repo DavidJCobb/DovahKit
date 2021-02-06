@@ -772,7 +772,7 @@ namespace dovah::loaded_forms {
                   if (subrecord.read(id) && id) {
                      this->text_display_globals.push_back(id);
                      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, *this->stub, id)
+                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, this->stub, id)
                      );
                   }
                }
@@ -885,7 +885,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                );
                break;
          }
@@ -974,9 +974,10 @@ namespace dovah::loaded_forms {
       }
    }
    bool Quest::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<Quest*>(out);
-      if (!copy)
+      if (out->formType != form_type)
          return false;
+      auto copy = (Quest*)out;
+      //
       // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
       copy->name         = this->name;
       copy->flags        = this->flags;

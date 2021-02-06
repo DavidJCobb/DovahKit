@@ -13,7 +13,7 @@ namespace dovah::loaded_forms {
    class Faction : public Form {
       public:
          static constexpr form_type_t form_type = form_type::faction;
-         Faction() : Form(form_type) {};
+         Faction(const constructor_params& c) : Form(form_type, c) {};
 
          struct faction_flag {
             faction_flag() = delete;

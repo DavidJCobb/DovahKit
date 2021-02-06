@@ -39,7 +39,7 @@ namespace dovah::loaded_forms {
                   // Subrecord is not extra-data.
                   //
                   intfc.log_load_warning(
-                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), *this->stub)
+                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                   );
                }
                break;
@@ -78,9 +78,10 @@ namespace dovah::loaded_forms {
       }
    }
    bool ObjectReference::_clone_impl(Form* out) const noexcept {
-      auto copy = dynamic_cast<ObjectReference*>(out);
-      if (!copy)
+      if (out->formType != form_type)
          return false;
+      auto copy = (ObjectReference*)out;
+      //
       copy->extra_data.clone_from(this->extra_data, *copy);
       copy->script_data.clone_from(this->script_data, *copy);
       copy->base_form.set(*copy, this->base_form);
@@ -127,8 +128,8 @@ namespace dovah::loaded_forms {
       this->rotation = { 0, 0, 0 };
    }
    bool ObjectReference::_friendly_delete_impl(const file_load_order& load_order) noexcept {
-      if (this->stub)
-         this->stub->edit_record_flags(form_flag::disabled, true);
+      if (!this->is_working_copy)
+         this->stub.edit_record_flags(form_flag::disabled, true);
       //
       // Make the reference an opposite enable state child of the PlayerRef.
       //

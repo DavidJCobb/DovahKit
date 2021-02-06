@@ -8,6 +8,6 @@ namespace dovah::loaded_forms {
       //
       public:
          static constexpr form_type_t form_type = form_type::actor;
-         Actor() : ObjectReference(form_type) {};
+         Actor(const constructor_params& c) : ObjectReference(form_type, c) {};
    };
 }

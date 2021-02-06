@@ -12,7 +12,7 @@ namespace dovah::loaded_forms {
    class Location : public Form {
       public:
          static constexpr form_type_t form_type = form_type::location;
-         Location() : Form(form_type) {};
+         Location(const constructor_params& c) : Form(form_type, c) {};
 
          struct subrecord_flag {
             subrecord_flag() = delete;

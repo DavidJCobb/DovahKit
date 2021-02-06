@@ -10,7 +10,7 @@ namespace dovah::loaded_forms {
    class Shout : public Form {
       public:
          static constexpr form_type_t form_type = form_type::shout;
-         Shout() : Form(form_type) {};
+         Shout(const constructor_params& c) : Form(form_type, c) {};
 
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
@@ -36,14 +36,12 @@ namespace dovah::loaded_forms {
          virtual void setup(const file_load_order&) noexcept override;
 
          inline bool treat_as_power() const noexcept {
-            if (!this->stub)
-               return false;
-            return this->stub->test_record_flags(form_flag::treat_as_power);
+            return this->stub.test_record_flags(form_flag::treat_as_power);
          }
          inline void treat_as_power(bool v) noexcept {
-            if (!this->stub)
+            if (this->is_working_copy)
                return;
-            this->stub->edit_record_flags(form_flag::treat_as_power, v);
+            this->stub.edit_record_flags(form_flag::treat_as_power, v);
          }
          //
       protected:
