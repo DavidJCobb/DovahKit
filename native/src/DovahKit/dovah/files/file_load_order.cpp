@@ -472,12 +472,6 @@ namespace dovah {
       if (formID == 0) {
          return form_id_status::null_is_not_allowed;
       }
-      if (auto* file = stub->get_file_at_index(-1)) {
-         auto prefix = this->file_prefix_for(*file);
-         if (prefix.strip_prefix(formID) < 0x800) {
-            stub->flags |= form_stub::flag::is_hardcoded; // This FormStub overrides a hardcoded form.
-         }
-      }
       //
       if (form_stub* target = this->forms.forms[formID]) { // is this an override?
          form_type_t type_a = target->formType;
@@ -538,7 +532,6 @@ namespace dovah {
                   parent->_remove_child_topic_info(*target, false);
             }
          }
-         target->flags    = stub->flags;
          target->parentID = stub->parentID;
          assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
          target->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);

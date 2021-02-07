@@ -140,7 +140,7 @@ namespace dovah::tes_file_reading {
       bool  is_ext = stub.is_exterior_cell();
       //
       #pragma region INFO pre-handling
-      size_t     insert_info_before = 0;
+      size_t     insert_info_at = 0;
       form_stub* parent_topic = nullptr;
       if (stub.formType == form_type::topic_info && stub.parentID) {
          auto& lo = this->get_file_loader().get_load_interface(*this).owner;
@@ -165,9 +165,9 @@ namespace dovah::tes_file_reading {
                   subrecord.read(formID);
                   //
                   if (auto* stub = formID.get_form_stub()) {
-                     insert_info_before = parent_topic->index_of_child_info(*stub);
+                     insert_info_at = parent_topic->index_of_child_info(*stub) + 1;
                   } else {
-                     insert_info_before = std::string::npos;
+                     insert_info_at = std::string::npos;
                   }
                }
                break;
@@ -192,7 +192,7 @@ namespace dovah::tes_file_reading {
       //
       #pragma region INFO post-handling
       if (parent_topic && !stub.test_record_flags(tes_file_record_header::flag::deleted))
-         parent_topic->_insert_child_topic_info(stub, insert_info_before);
+         parent_topic->_insert_child_topic_info(stub, insert_info_at);
       #pragma endregion
    }
 

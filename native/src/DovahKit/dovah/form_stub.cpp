@@ -585,6 +585,18 @@ namespace dovah {
          list.push_back(&info);
          return;
       }
+      auto it = std::find(list.begin(), list.end(), &info);
+      if (it != list.end()) {
+         //
+         // This info is already in this topic's info list. Remove it now, so that 
+         // the later insertion ends up just moving it.
+         //
+         size_t i = std::distance(list.begin(), it);
+         if (i < at)
+            --at; // Removing this info will shift the insertion position up.
+         //
+         list.erase(it);
+      }
       list.insert(list.cbegin() + at, &info);
    }
    void form_stub::_remove_child_topic_info(form_stub& info, bool loading) {
