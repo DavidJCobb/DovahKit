@@ -521,18 +521,17 @@ namespace dovah {
          // Delete the new stub, and overwrite the pointer (in this function and in our caller(s)) with 
          // the existing stub.
          //
+         auto* new_parent = stub->get_parent_form();
          if (stub->formType == form_type::topic_info) {
             //
             // If the stub is a topic info and it's being re-parented by an override, then we need to 
             // update the form stub addenda for its old parent.
             //
-            if (target->parentID && target->parentID != stub->parentID) {
-               auto* parent = this->get_form_of_probable_type(form_type::topic, target->parentID);
-               if (parent)
-                  parent->_remove_child_topic_info(*target, false);
-            }
+            auto* old_parent = target->get_parent_form();
+            if (old_parent && old_parent != new_parent)
+               old_parent->_remove_child_topic_info(*target, false);
          }
-         target->parentID = stub->parentID;
+         target->set_parent_form(new_parent);
          assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
          target->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);
          delete stub;
@@ -925,24 +924,6 @@ namespace dovah {
             auto& entry = pair.second;
             auto  form  = entry.other->load();
             entry.other->set_edited(true);
-            //
-            if (entry.flags & use_info_entry::flag::i_am_parent_of) {
-               //
-               // Don't forget to update these, too!
-               //
-               entry.other->parentID = new_id;
-            }
-         }
-      } else {
-         //
-         // ...Even if we're just renumbering the form due to a conversion to or from a light plug-in, 
-         // however, we also need to update form stubs' parent form IDs.
-         //
-         for (auto& pair : stub.inbound) {
-            auto& entry = pair.second;
-            if (entry.flags & use_info_entry::flag::i_am_parent_of) {
-               entry.other->parentID = new_id;
-            }
          }
       }
       bare_form_id_t old_id = stub.formID;
@@ -1758,12 +1739,12 @@ namespace dovah {
       }
       if (request.clone_of && request.form_type == form_type::cell) {
          if (request.child_of) {
-            if (request.clone_of->parentID == 0) {
+            if (!request.clone_of->is_exterior_cell()) {
                request.error = notice_code::interior_cell_clone_cannot_have_parent;
                return nullptr;
             }
          } else {
-            if (request.clone_of->parentID != 0) {
+            if (request.clone_of->is_exterior_cell()) {
                request.error = notice_code::exterior_cell_clone_must_have_parent;
                return nullptr;
             }
@@ -1809,11 +1790,8 @@ namespace dovah {
          this->active_file_forms_by_type[stub->formType].forms[formID] = stub;
       }
       //
-      if (request.child_of) {
-         bare_form_id_t parentID = request.child_of->formID;
-         stub->parentID = parentID;
-         stub->replace_outbound_reference(bare_form_id_t(0), parentID, use_info_entry::flag::i_am_child_of); // NOT form_stub::add_outbound_reference; see documentation for that function for why
-      }
+      if (request.child_of)
+         stub->set_parent_form(request.child_of);
       //
       if (request.clone_of) {
          auto flags = request.clone_of->get_record_flags();
@@ -2794,9 +2772,8 @@ namespace dovah {
       this->main_request->cell_grid_coordinates.y = this->cell_grid_coordinates.y;
       this->main_request->cell_grid_coordinates.present = this->cell_grid_coordinates.present;
       if (!this->parent) {
-         auto parentID = this->main_request->clone_of->parentID;
-         if (parentID)
-            this->main_request->set_parent_form(parentID);
+         if (auto* parent = this->main_request->clone_of->get_parent_form())
+            this->main_request->set_parent_form(parent);
       }
       auto* result = this->main_request->commit();
       if (!result)

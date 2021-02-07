@@ -198,6 +198,7 @@
     <ClCompile Include="dovah\forms\WordOfPower.cpp" />
     <ClCompile Include="dovah\forms\Worldspace.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
+    <ClCompile Include="dovah\form_stub_addenda.cpp" />
     <ClCompile Include="dovah\form_stub_helpers.cpp" />
     <ClCompile Include="dovah\localization\common.cpp" />
     <ClCompile Include="dovah\localization\localized_string_store.cpp" />
@@ -316,6 +317,7 @@
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\script_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
@@ -460,6 +462,7 @@
     <ClInclude Include="dovah\forms\Voicetype.h" />
     <ClInclude Include="dovah\forms\_common.h" />
     <ClInclude Include="dovah\form_stub.h" />
+    <ClInclude Include="dovah\form_stub_addenda.h" />
     <ClInclude Include="dovah\form_stub_heap.h" />
     <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\localization\common.h" />
@@ -547,6 +550,7 @@
     <QtMoc Include="ui\generic\RefPickerButton.h" />
     <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
@@ -665,6 +669,7 @@
     <Text Include="dovah\_docs\reading files.txt" />
     <Text Include="dovah\_docs\singleton forms.txt" />
     <Text Include="dovah\_docs\threading.txt" />
+    <Text Include="dovah\_docs\topic infos%27 placement in topics%27 info lists.txt" />
     <Text Include="editor\scripting\_docs\abstract.txt" />
     <Text Include="editor\scripting\_docs\case studies.txt" />
     <Text Include="editor\scripting\_docs\native classes.txt" />

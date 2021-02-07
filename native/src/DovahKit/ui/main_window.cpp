@@ -29,6 +29,7 @@
 #include "main_window/_debug_hooks/lookup_bsa_file_from_bsa_load_order.h"
 #include "main_window/_debug_hooks/list_none_stubs.h"
 #include "main_window/_debug_hooks/compiled_papyrus_script_tests.h"
+#include "main_window/_debug_hooks/debug_target_form.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -318,6 +319,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(this->ui.actionDebugCompiledPapyrusScriptTests, &QAction::triggered, this, [this]() {
       DovahKitDebug::compiled_papyrus_script_tests(this);
+   });
+   QObject::connect(this->ui.actionDebugBreakOnForm, &QAction::triggered, this, [this]() {
+      DovahKitDebug::debug_target_form(this);
    });
    #pragma endregion
 }

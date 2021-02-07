@@ -34,7 +34,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          if (text.isEmpty())
             text = tr("<i>Unnamed Cell</i>", "cell view");
          //
-         if (cell->parentID) {
+         if (cell->is_exterior_cell()) {
             text = tr("%1 (%2, %3)").arg(text);
             //
             int32_t x;

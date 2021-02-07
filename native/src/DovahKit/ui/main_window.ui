@@ -66,6 +66,7 @@
     <addaction name="actionDebugLookupBSAFile"/>
     <addaction name="actionDebugListNoneStubs"/>
     <addaction name="actionDebugCompiledPapyrusScriptTests"/>
+    <addaction name="actionDebugBreakOnForm"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -208,6 +209,11 @@
   <action name="actionDebugCompiledPapyrusScriptTests">
    <property name="text">
     <string>Compiled Papyrus script tests</string>
+   </property>
+  </action>
+  <action name="actionDebugBreakOnForm">
+   <property name="text">
+    <string>Debugbreak on form</string>
    </property>
   </action>
  </widget>

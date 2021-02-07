@@ -145,7 +145,7 @@ namespace dovah::loaded_forms {
    }
    void Cell::setup(const file_load_order& load_order) noexcept {
       if (!this->is_working_copy)
-         cobb::edit_bit(this->cell_flags, cell_flag::interior, this->stub.parentID == 0);
+         cobb::edit_bit(this->cell_flags, cell_flag::interior, !this->stub.is_exterior_cell());
    }
    bool Cell::would_bethesda_compress() const noexcept {
       if (this->exterior.occlusion_data.present)

@@ -20,7 +20,7 @@ RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
       widget->addItem(tr("NONE"), QVariant::fromValue<void*>(nullptr));
       widget->setCurrentIndex(0);
       editor.for_each_form_of_type(dovah::form_type::cell, [widget](dovah::form_stub* cell) {
-         if (cell->parentID)
+         if (cell->is_exterior_cell())
             return false;
          widget->addItem(cell->get_editor_id(), QVariant::fromValue<void*>(cell));
          return false;
@@ -42,7 +42,7 @@ RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
          return;
       }
       if (dovah::form_type_info::form_type_is_reference(stub->formType)) {
-         if (this->_cell && stub->parentID == this->_cell->formID) {
+         if (this->_cell && this->_cell->is_parent_form_of(*stub)) {
             QString text;
             this->_stringifyRef(*stub, text);
             this->ui.ref->addItem(text, QVariant::fromValue<void*>(stub));
@@ -72,7 +72,7 @@ RefPickerWindow::RefPickerWindow(QWidget* parent) : QDialog(parent) {
       if (dovah::form_type_info::form_type_is_reference(stub->formType)) {
          if (!this->_cell)
             return;
-         if (stub->parentID == this->_cell->formID) {
+         if (this->_cell->is_parent_form_of(*stub)) {
             auto* widget = this->ui.ref;
             const auto blocker = QSignalBlocker(widget);
             //
@@ -139,10 +139,10 @@ void RefPickerWindow::setReference(dovah::form_stub* stub) {
       emit this->referenceChanged(nullptr);
       return;
    }
-   dovah::bare_form_id_t parentID = (this->_cell) ? this->_cell->formID : 0;
-   if (stub->parentID != parentID) {
+   auto* parent = stub->get_parent_form();
+   if (parent != this->_cell) {
       auto& editor = DovahKitCore::get();
-      auto* parent = editor.get_form(stub->parentID);
+      auto* parent = stub->get_parent_form();
       this->_cell = parent;
       //
       auto* widget = this->ui.cell;

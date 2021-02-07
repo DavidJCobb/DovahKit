@@ -39,11 +39,12 @@ CellListModel::CellListModel(QObject* parent) : QAbstractTableModel(parent) {
 void CellListModel::formCreated(const dovah::form_stub* stub) {
    if (stub->formType != dovah::form_type::cell)
       return;
+   auto* parent = stub->get_parent_form();
    if (this->worldspace) {
-      if (stub->parentID != this->worldspace->formID)
+      if (parent != this->worldspace)
          return;
    } else {
-      if (stub->parentID)
+      if (parent)
          return;
    }
    this->insertItem(stub, false);
@@ -240,14 +241,14 @@ void CellListModel::rebuild(const dovah::form_stub* worldspace) {
    this->worldspace = worldspace;
    if (worldspace) {
       editor.for_each_form_of_type(dovah::form_type::cell, [worldspace, this](dovah::form_stub* stub) {
-         if (stub->parentID != worldspace->formID)
+         if (stub->get_parent_form() != worldspace)
             return false;
          this->insertItem(stub, true);
          return false;
       });
    } else {
       editor.for_each_form_of_type(dovah::form_type::cell, [this](dovah::form_stub* stub) {
-         if (stub->parentID)
+         if (stub->get_parent_form())
             return false;
          this->insertItem(stub, true);
          return false;

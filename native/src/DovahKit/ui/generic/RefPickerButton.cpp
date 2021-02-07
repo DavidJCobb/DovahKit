@@ -46,12 +46,12 @@ void RefPickerButton::_updateText() {
          //
          QString cell_text;
          auto& editor = DovahKitCore::get();
-         auto* cell   = editor.get_form(stub->parentID);
-         if (cell) {
+         auto* cell   = stub->get_parent_form();
+         if (cell && cell->formType == dovah::form_type::cell) {
             cell_text = cell->get_editor_id();
-            if (cell_text.isEmpty() && cell->parentID) {
-               auto* world = editor.get_form(cell->parentID);
-               if (world) {
+            if (cell_text.isEmpty()) {
+               auto* world = cell->get_parent_form();
+               if (world && world->formType == dovah::form_type::worldspace) {
                   int32_t x;
                   int32_t y;
                   cell_text = tr("(%1, %2) in %3");

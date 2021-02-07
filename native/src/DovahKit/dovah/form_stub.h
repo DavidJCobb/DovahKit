@@ -250,6 +250,7 @@ namespace dovah {
          //
          void _add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void _add_one_way_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         void _set_parent_form_one_way(form_stub* parent); // use during load
          //
          file_data* _get_source_file_info(int16_t file_index = -1) const noexcept; // defined this way so code internal to form_stub can actually modify the info in question
          //
@@ -258,7 +259,6 @@ namespace dovah {
          //
       public:
          form_stub_addenda* addenda = nullptr;
-         bare_form_id_t parentID = 0;
          bare_form_id_t formID   = 0; // form ID (file-local)
          uint8_t        formType = 0;
          flags_t        flags    = 0; // when there are getters/setters for these, use those instead of editing the mask directly
@@ -315,8 +315,9 @@ namespace dovah {
          #pragma endregion
 
          #pragma region Parenthood functions
-         form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
+         form_stub* get_parent_form() const noexcept; // searches Use Info
          bool has_child_forms() const noexcept;
+         bool is_parent_form_of(form_stub&) const noexcept;
          void orphan(); // if (this) is a topic info, removes it from any owning topic's addendum info list
          void set_parent_form(form_stub* p) noexcept; // calls (orphan) and then changes the parent. if (this) is a topic info and (p) is a topic, adds (this) to (p)'s addendum info list
          #pragma endregion

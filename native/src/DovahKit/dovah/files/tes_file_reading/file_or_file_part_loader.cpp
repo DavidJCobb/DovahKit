@@ -53,6 +53,28 @@ namespace dovah::tes_file_reading {
       stub->formType = form_type_info::signature_to_form_type(record.signature());
       return stub;
    }
+   bool file_or_file_part_loader::set_stub_parent(form_stub* stub, bare_form_id_t parentID) {
+      if (!parentID) {
+         stub->_set_parent_form_one_way(nullptr);
+         return true;
+      }
+      auto& lo     = this->get_file_loader().get_load_interface(*this).owner;
+      auto* parent = lo.get_form(parentID);
+      if (!parent) {
+         detailed_notice error;
+         error.code = notice_code::parent_form_is_missing;
+         error.set_file_offset(this->get_position());
+         error.cause_form.fixedID = 0;
+         error.cause_form.localID = stub->formID;
+         error.cause_form.type    = stub->formType;
+         error.set_flag(detailed_notice::flag::has_cause_form);
+         this->log_load_error(error);
+         //
+         return false;
+      }
+      stub->_set_parent_form_one_way(parent);
+      return true;
+   }
    bool file_or_file_part_loader::commit_stub(form_stub*& stub) {
       auto& file = this->get_file_loader();
       if (file.is_aborted())
@@ -142,9 +164,8 @@ namespace dovah::tes_file_reading {
       #pragma region INFO pre-handling
       size_t     insert_info_at = 0;
       form_stub* parent_topic = nullptr;
-      if (stub.formType == form_type::topic_info && stub.parentID) {
-         auto& lo = this->get_file_loader().get_load_interface(*this).owner;
-         parent_topic = lo.get_form_of_probable_type(form_type::topic, stub.parentID);
+      if (stub.formType == form_type::topic_info) {
+         parent_topic = stub.get_parent_form();
          if (parent_topic && parent_topic->formType != form_type::topic)
             parent_topic = nullptr;
       }

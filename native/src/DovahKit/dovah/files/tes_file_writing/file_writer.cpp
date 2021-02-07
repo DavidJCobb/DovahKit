@@ -311,7 +311,7 @@ namespace dovah::tes_file_writing {
       if (has_persistent_children) {
          bool group_opened = false;
          //
-         form_stub_helpers::for_each_child_form(stub, [this, &group_opened](form_stub* child) {
+         form_stub_helpers::for_each_child_form(stub, [this, stub, &group_opened](form_stub* child) {
             {
                //
                // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
@@ -325,7 +325,7 @@ namespace dovah::tes_file_writing {
             if (!child->needs_save())
                return false;
             if (!group_opened) {
-               this->open_group(tes_file_group_type::cell_persistent_children, child->parentID, tes_file_group_header::uninitialized_unknown);
+               this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
                group_opened = true;
             }
             this->_write_form(child);
@@ -338,7 +338,7 @@ namespace dovah::tes_file_writing {
       if (has_temporary_children) {
          bool group_opened = false;
          //
-         form_stub_helpers::for_each_child_form(stub, [this, &group_opened](form_stub* child) {
+         form_stub_helpers::for_each_child_form(stub, [this, stub, &group_opened](form_stub* child) {
             {
                //
                // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
@@ -352,7 +352,7 @@ namespace dovah::tes_file_writing {
             if (!child->needs_save())
                return false;
             if (!group_opened) {
-               this->open_group(tes_file_group_type::cell_temporary_children, child->parentID, tes_file_group_header::uninitialized_unknown);
+               this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
                group_opened = true;
             }
             this->_write_form(child);

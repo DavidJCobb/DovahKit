@@ -29,6 +29,8 @@ namespace dovah::tes_file_reading {
          
          form_stub* make_stub_for_record();
 
+         bool set_stub_parent(form_stub*, bare_form_id_t parentID);
+
          // Send the stub to the (file_load_order). If the stub is invalid, it will be deleted. If the stub is an 
          // override, then it will be deleted and the passed-in pointer will be made to refer to the overridden 
          // stub. Never returns (true) if the stub is deleted.

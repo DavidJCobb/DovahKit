@@ -89,6 +89,7 @@ namespace dovah {
          form_initial_record_is_partial_and_injected = 0x00000050, // A form's initial record is flagged as "partial," and is injected. We will not honor the flag when loading form data on-demand; we'll keep the form, but the game would skip the record entirely.
          cannot_delete_hardcoded_form                = 0x00000051,
          quest_objective_unexpected_subrecord        = 0x00000052, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
+         parent_form_is_missing                      = 0x00000053, // Failed to load a file, because a form's parent form ID doesn't correspond to a valid form.
       };
    };
 }

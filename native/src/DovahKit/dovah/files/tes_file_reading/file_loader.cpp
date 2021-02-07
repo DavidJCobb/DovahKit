@@ -309,7 +309,8 @@ namespace dovah::tes_file_reading {
                auto* stub = this->make_stub_for_record();
                switch (group.header.type) {
                   case group::type::world_children:
-                     stub->parentID = last_worldspace_id;
+                     if (!this->set_stub_parent(stub, last_worldspace_id))
+                        continue;
                      last_world_cell_id = stub->formID;
                      break;
                }

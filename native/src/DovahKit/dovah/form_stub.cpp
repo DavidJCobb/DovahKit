@@ -480,7 +480,6 @@ namespace dovah {
       reader.file_data = nullptr;
       reader.file_size = 0;
       reader.loader    = nullptr;
-      this->_add_one_way_outbound_reference(this->parentID, use_info_entry::flag::i_am_child_of);
    }
    void form_stub::send_inbound_refs() noexcept {
       //
@@ -551,6 +550,34 @@ namespace dovah {
          entry.flags |= flags;
       }
    }
+   void form_stub::_set_parent_form_one_way(form_stub* parent) {
+      //
+      // When setting a parent form during the load process (i.e. before the use info build step), 
+      // you should use this function instead of (set_parent_form). This is because at the end of 
+      // the use info build step, all outbound references are made bidirectional. If you use the 
+      // (set_parent_form) function, you'll create bidirectional references, which will be made 
+      // bidirectional "again" i.e. the parent form will believe it has two inbound references 
+      // when in reality it only has one.
+      //
+      auto& list = this->outbound;
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         auto& pair  = *it;
+         auto& entry = pair.second;
+         if (entry.flags & use_info_entry::flag::i_am_child_of) {
+            if (entry.other == parent)
+               return;
+            entry.flags &= ~use_info_entry::flag::i_am_child_of;
+            if (--entry.refcount == 0)
+               list.erase(it);
+            break;
+         }
+      }
+      //
+      // Set the new parent form.
+      //
+      this->_add_one_way_outbound_reference(parent, use_info_entry::flag::i_am_child_of);
+   }
+   #pragma endregion
 
    form_stub::file_data* form_stub::_get_source_file_info(int16_t i) const noexcept {
       if (!this->has_multiple_source_files()) {
@@ -566,7 +593,7 @@ namespace dovah {
    }
 
    void form_stub::_insert_child_topic_info(form_stub& info, size_t at) {
-      assert(info.parentID == this->formID);
+      assert(info.get_parent_form() == this);
       //
       if (!this->addenda)
          this->addenda = new form_stub_addenda;
@@ -646,7 +673,7 @@ namespace dovah {
          return;
       if (info.formType != form_type::topic_info)
          return;
-      if (info.parentID != this->formID) {
+      if (info.get_parent_form() != this) {
          info.set_parent_form(this);
          if (at == std::string::npos)
             return;
@@ -661,15 +688,15 @@ namespace dovah {
          at = size - 1;
       auto it = std::find(list.begin(), list.end(), &info);
       assert(it != list.end());
-      std::move(it, it + 1, list.begin() + at);
-      
+      if (it != list.begin() + at)
+         std::move(it, it + 1, list.begin() + at);
    }
    void form_stub::remove_child_topic_info(form_stub& info) {
       if (this->formType != form_type::topic)
          return;
       if (info.formType != form_type::topic_info)
          return;
-      if (info.parentID != this->formID)
+      if (info.get_parent_form() != this)
          return;
       info.orphan();
    }
@@ -694,28 +721,36 @@ namespace dovah {
             continue;
          if (!(entry.flags & use_info_entry::flag::i_am_child_of))
             continue;
-         if (entry.other->formID == this->parentID)
-            return entry.other;
+         return entry.other;
       }
       return nullptr;
    }
-   void form_stub::orphan() {
-      if (!this->parentID)
-         return;
-      auto& lo = this->_get_load_order();
-      auto* parent = lo.get_form(this->parentID);
-      if (parent) {
-         this->revoke_outbound_reference(parent, use_info_entry::flag::i_am_child_of);
-         if (this->formType == form_type::topic_info && parent->formType == form_type::topic)
-            parent->_remove_child_topic_info(*this, false);
+   bool form_stub::is_parent_form_of(form_stub& child) const noexcept {
+      auto& map = this->inbound;
+      for (auto it = map.begin(); it != map.end(); ++it) {
+         auto& pair = *it;
+         if (pair.first != child.formID)
+            continue;
+         if (pair.second.flags & use_info_entry::flag::i_am_parent_of)
+            return true;
       }
-      this->parentID = 0;
+      return false;
+   }
+   void form_stub::orphan() {
+      auto* parent = this->get_parent_form();
+      if (!parent)
+         return;
+      this->revoke_outbound_reference(parent, use_info_entry::flag::i_am_child_of);
+      if (this->formType == form_type::topic_info && parent->formType == form_type::topic)
+         parent->_remove_child_topic_info(*this, false);
    }
    void form_stub::set_parent_form(form_stub* target) noexcept {
+      auto* parent = this->get_parent_form();
+      if (target == parent)
+         return;
       this->orphan();
       if (!target)
          return;
-      this->parentID = target->formID;
       this->replace_outbound_reference(0, target, use_info_entry::flag::i_am_child_of);
       if (target->formType == form_type::topic && this->formType == form_type::topic_info)
          target->_insert_child_topic_info(*this);
@@ -760,12 +795,11 @@ namespace dovah {
          return true;
       return this->does_descendant_form_need_save();
    }
-   #pragma endregion
 
    bool form_stub::is_exterior_cell() const noexcept {
       if (this->formType != form_type::cell)
          return false;
-      return this->parentID != 0;
+      return this->get_parent_form() != nullptr;
    }
    namespace {
       union _cell_grid_dword {

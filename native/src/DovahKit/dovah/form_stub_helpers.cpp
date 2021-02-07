@@ -56,7 +56,7 @@ namespace dovah::form_stub_helpers {
          auto* cell = entry.other;
          if (!cell || cell->formType != form_type::cell)
             continue;
-         assert(cell->parentID == world->formID && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
+         assert(cell->get_parent_form() == world && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
          if (cell == persistent_cell)
             continue;
          if (!cell->addenda)
