@@ -29,6 +29,10 @@ namespace dovah::tes_file_reading::threads {
          void add_group(uint32_t groupSignature, uint32_t groupPos);
    };
    class dialogue : public file_threaded_part_loader_base {
+      //
+      // Class for reading the contents of the top-level DIAL GRUP; this class is 
+      // responsible for loading DIAL and INFO records.
+      //
       public:
          static constexpr int recommended_thread_count = 1;
          static constexpr int heavy_duty_thread_count  = 0;
@@ -51,6 +55,9 @@ namespace dovah::tes_file_reading::threads {
          void add_group(uint32_t groupSignature, uint32_t groupPos);
    };
    class interior_cell : public file_threaded_part_loader_base {
+      //
+      // Class for reading CELLs in the sub-block GRUPs for interior CELLs.
+      //
       public:
          static constexpr int recommended_thread_count = 4;
          static constexpr int heavy_duty_thread_count  = 0;
@@ -73,6 +80,10 @@ namespace dovah::tes_file_reading::threads {
          void add_group(uint32_t groupSignature, uint32_t groupPos);
    };
    class worldspace_sub_block : public file_threaded_part_loader_base {
+      //
+      // Class for reading CELLs in the sub-block GRUPs for exterior CELLs nested 
+      // under a WRLD.
+      //
       public:
          static constexpr int recommended_thread_count = 6;
          static constexpr int heavy_duty_thread_count  = 0;

@@ -519,7 +519,6 @@ namespace dovah {
             //
             stub->formType = target->formType;
          }
-         stub->_adopt_source_file_list(target);
          delete target; // delete the overridden form stub
          target = nullptr; // needed to prevent the singleton-form special case below from crashing, if what we're deleting is the canonical stub
       } else {

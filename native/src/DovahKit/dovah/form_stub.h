@@ -253,6 +253,9 @@ namespace dovah {
          //
          file_data* _get_source_file_info(int16_t file_index = -1) const noexcept; // defined this way so code internal to form_stub can actually modify the info in question
          //
+         void _insert_child_topic_info(form_stub& info, size_t at = std::string::npos);
+         void _remove_child_topic_info(form_stub& info, bool loading);
+         //
       public:
          form_stub_addenda* addenda = nullptr;
          bare_form_id_t parentID = 0;
@@ -260,10 +263,10 @@ namespace dovah {
          uint8_t        formType = 0;
          flags_t        flags    = 0; // when there are getters/setters for these, use those instead of editing the mask directly
          // there will be 2 bytes of padding here
-         std::string   editorID;
+         std::string    editorID;
          loaded_forms::Form* form = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
-         use_info_list outbound; // other forms that this one refers to. flags describe (this), the form that is referring.
-         use_info_list inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
+         use_info_list  outbound; // other forms that this one refers to. flags describe (this), the form that is referring.
+         use_info_list  inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
          //
          loaded_form_ptr<loaded_forms::Form> load() { return this->_load(); }
          loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
@@ -302,6 +305,8 @@ namespace dovah {
          bool test_record_flags_for_file(uint32_t mask, owner_file_t&) const noexcept;
 
          bool get_grid_coordinates(int32_t& x, int32_t& y) const noexcept;
+         size_t child_info_count() const noexcept;
+         size_t index_of_child_info(form_stub& info) const noexcept; // search a topic's list of infos; returns std::string::npos if no match
 
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;

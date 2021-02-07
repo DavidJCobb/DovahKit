@@ -1,0 +1,154 @@
+
+In Skyrim, dialogue is structured like so:  a "topic" is something that players 
+can say to an NPC, and "infos" are  responses that NPCs can give to the player. 
+Every info is nested  under a topic, which means that each  topic has a list of 
+infos. How is this handled when loading data?
+
+This document shall describe the steps taken to place an INFO within the proper 
+topic's info list, but first, we must define terms.
+
+   CURRENT INFO
+      The info we're currently  loading; a TESTopicInfo  instance whose data is 
+      being pulled from an INFO record.
+
+   CURRENT TOPIC
+      The TESTopic that was loaded from a DIAL record -- specifically, the DIAL 
+      record whose child INFO GRUP contained the current info's record.
+
+Readers must be aware that all infos have  a pointer to their parent topic, and 
+a cached value indicating their index within the parent topic's info list.
+
+Now, we can begin.
+
+
+=== STEPS FOR PLACING AN INFO WITHIN A TOPIC'S INFO LIST ======================
+
+1) Upon finding a non-partial-flagged  INFO override, clear the INFO's data and 
+   remove it from its parent topic's info list.
+
+2) Read all of  the INFO record data.  If the INFO is flagged  as deleted, stop 
+   here.
+
+3) What we do next depends on the value  of the PNAM subrecord, which holds the 
+   form ID of the "previous info."
+
+
+=== IF THE PNAM SUBRECORD IS MISSING OR ZERO ==================================
+
+Place the current info at the start of  the current topic's info list, and stop 
+here.
+
+
+=== IF THE PNAM SUBRECORD IS 0xFFFFFFFF =======================================
+
+If the current info is  inside of any  topic list,  then set the current info's 
+parent topic  pointer to the current topic; however, do not  move it within any 
+topic lists. Stop here.
+
+If the current info is also a partial-flagged  override and was originally part 
+of a different topic, then this will  result in it believing that it belongs to 
+a topic other than the one it really belongs to. A later-loading non-partial 
+override will attempt to remove it from the new topic, thus failing to remove 
+it from its original topic and potentially allowing it to appear in multiple 
+topics at once.
+
+
+=== IF THE PNAM SUBRECORD IS ANY OTHER VALUE ==================================
+
+If the current info belongs to any topic's info list, grab its cached index and 
+if that index does not exceed the bounds of the current topic's info list, then 
+clear the entry  at that index. Note that  we do not check  whether the current 
+info is actually inside  of the current  topic's info  list, as opposed to some 
+other topic's info list.
+
+Search the current topic for any info  whose form ID is the same as that stored 
+in the PNAM subrecord.  If a match is found,  insert the  current info into the 
+current topic's  info list, placing it  after the matching info  already in the 
+list. If  no match is  found, then place the current  info at the start  of the 
+list instead.
+
+
+=== AND ONCE WE'RE DONE... ====================================================
+
+The game always updates  the cached indices stored on all  infos in the current 
+topic's info  list, even if the PNAM  subrecord was 0xFFFFFFFF  and the current 
+info was already in an  info list (which would result in  no changes being made 
+to any topic's info list).
+
+
+=== NOTES =====================================================================
+
+Flagging an INFO  override as "partial"  will allow you to  exempt the override 
+from the Rule of One, and will allow you to edit its contents without affecting 
+what DIAL it belongs to.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+There is a potential exploit that would allow you to place the same INFO within 
+multiple topics' info lists, with unknown consequences:
+
+   1) Define the info inside of Topic01.
+
+   2) In the next file,  supply a partial-flagged override of  that info inside 
+      of the child GRUP for some Topic02.  The info's parent topic pointer will 
+      be set to Topic02, and if the override's PNAM is not 0xFFFFFFFF, the info 
+      will also be added to Topic02's topic list.
+
+      Note that  if the PNAM value is  neither zero nor 0xFFFFFFFF,  and if the 
+      info's current position in Topic01 is not higher than the number of infos 
+      that have already  been loaded for Topic02 so far,  then a different info 
+      will be removed from Topic02 and orphaned when this override is loaded.
+
+   3) In the next file, supply a non-partial override of that info which places 
+      it into Topic03.  When the override is found and before its  contents are 
+      read, the game will  remove the info from Topic02 and  end up setting the 
+      info's parent topic pointer to Topic03.  Moreover, if the override's PNAM 
+      is not 0xFFFFFFFF, then the topic will be added to Topic03's info list.
+
+      If the PNAM value  for this override is neither zero  nor 0xFFFFFFFF, and 
+      if the info's  cached index is not  higher than the number of  infos that 
+      have been already been  loaded for Topic03 so far,  then a different info 
+      will be removed from Topic03 and orphaned when this override is loaded.
+
+The info should now be inside of Topic01  and Topic03. This exploit is possible 
+because partial-flagged INFO records don't result in an INFO being removed from 
+its parent topic; and  because the code to position an  INFO within the current 
+topic's info list doesn't  check whether the INFO  is already inside of another 
+topic's info list (checking, at most, whether the INFO is inside of any topic's 
+info list, specifically by checking whether its cached index is not -1).
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+SharedInfos don't seem to have any special effect on this whole system. An INFO 
+can seemingly use any  other INFO as the one it shares  data from, but it seems 
+the Creation Kit imposes this limit: the INFO can only share response data with 
+any INFO that exists in a DIAL that belongs to the same quest and uses the IDAT 
+subtype. The INFO form loader imposes no constraints.
+
+
+=== COORDINATING THIS MESS IN DOVAHKIT ========================================
+
+So this is essentially  a pile of bespoke behaviors that is  very particular to 
+how TESV.exe loads forms, and we don't load forms the same way. How do we mimic 
+this mess in DovahKit?
+
+ - Form stubs are allowed  to have "form stub addenda" structs,  which can hold 
+   any "mission-critical" data that is particular to some form types. This data 
+   includes an "ordered children" list,  which is used by topics to track their 
+   infos.
+
+ - 
+
+ - The destructor for form stubs will check if the stub is for a topic info and 
+   if it has a parent form ID.  If so, it'll look up  its parent topic, if any, 
+   and remove itself from the parent topic's addendum list of ordered children. 
+   
+   We create a new form  stub for every record that we load.  If that record is 
+   an override (i.e. if there is already a form stub for that form ID), we copy 
+   the original form stub's file list to  the new stub and then replace the old 
+   stub with the new one,  deleting the old one. The form  stub destructor will 
+   ensure that when we load a topic info override, the info is removed from its 
+   prior parent.
+
+    = PROBLEM: THIS MEANS THAT LOADING A PARTIAL OVERRIDE THAT SETS ITS POSITION TO 
+      0xFFFFFFFF WILL CAUSE US TO WRONGLY LOSE THE POSITION

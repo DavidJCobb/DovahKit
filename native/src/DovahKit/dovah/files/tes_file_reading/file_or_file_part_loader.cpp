@@ -93,29 +93,96 @@ namespace dovah::tes_file_reading {
       return true;
    }
    void file_or_file_part_loader::extract_high_value_subrecords_for_stub(form_stub& stub) {
-      if (form_type_info::lookup(stub.formType).flags & form_type_info::flag::no_editor_id)
-         return;
+      //
+      // This function locates "high-value"  subrecords in a record,  and uses them to acquire and 
+      // store any form data that should be held on the form stub or its addenda struct. This data 
+      // includes:
+      //
+      // 
+      // ===== EDITOR ID =========================================================================
+      //
+      // A string (ideally unique) which identifies the form stub in development contexts, such as 
+      // in the Creation Kit or when using certain console commands. We store this directly on the 
+      // form stub.
+      //
+      //
+      // ===== CELL GRID COORDINATES =============================================================
+      //
+      // Grid coordinates (not unit coordinates) which  indicate where in a worldspace an exterior 
+      // cell should be placed. We store this in the form stub addenda.
+      //
+      //
+      // ===== TOPIC INFO PLACEMENT ==============================================================
+      //
+      // Topic Infos should be placed in a special list within their parent Topics. This list must 
+      // be built during load, because it is influenced by the order in which infos load. Refer to 
+      // the internal  documentation <topic infos' placements in topics' info lists.txt>  for more 
+      // information.
+      //
       //
       struct _state {
          _state() = delete;
          enum {
             found_editor_id   = 0x01,
             found_cell_coords = 0x02,
+            found_pnam        = 0x04,
          };
       };
-      constexpr int found_all = _state::found_editor_id | _state::found_cell_coords;
+      constexpr int found_all = _state::found_editor_id | _state::found_cell_coords | _state::found_pnam;
       //
       int   state  = 0;
       auto& record = this->get_current_record();
       bool  is_ext = stub.is_exterior_cell();
       if (!is_ext)
          state |= _state::found_cell_coords;
+      if (form_type_info::lookup(stub.formType).flags & form_type_info::flag::no_editor_id)
+         state |= _state::found_editor_id;
+      //
+      #pragma region INFO pre-handling
+      size_t     insert_info_before = 0;
+      form_stub* parent_topic = nullptr;
+      if (stub.formType == form_type::topic_info && stub.parentID) {
+         auto& lo = this->get_file_loader().get_load_interface(*this).owner;
+         parent_topic = lo.get_form_of_probable_type(form_type::topic, stub.parentID);
+         if (parent_topic) {
+            if (parent_topic->formType == form_type::topic) {
+               parent_topic->_remove_child_topic_info(stub, true);
+            } else {
+               parent_topic = nullptr;
+            }
+         }
+         if (!parent_topic || stub.test_record_flags(tes_file_record_header::flag::deleted))
+            state |= _state::found_pnam;
+      } else {
+         state |= _state::found_pnam;
+      }
+      #pragma endregion
+      //
+      if (state == found_all)
+         return;
       //
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID':
                state |= _state::found_editor_id;
                subrecord.to_string(stub.editorID);
+               break;
+            case 'PNAM':
+               if (!(state & _state::found_pnam)) {
+                  assert(stub.formType == form_type::topic_info);
+                  assert(parent_topic);
+                  //
+                  form_reference_t formID;
+                  subrecord.read(formID);
+                  //
+                  if (auto* stub = formID.get_form_stub()) {
+                     insert_info_before = parent_topic->index_of_child_info(*stub);
+                  } else {
+                     insert_info_before = std::string::npos;
+                  }
+                  //
+                  state |= _state::found_pnam;
+               }
                break;
             case 'XCLC':
                state |= _state::found_cell_coords;
@@ -129,15 +196,20 @@ namespace dovah::tes_file_reading {
                   subrecord.read(y);
                   g.x = x;
                   g.y = y;
-                  g.flags |= form_stub_addenda::flag::has_grid_coordinates;
+                  stub.addenda->flags |= form_stub_addenda::flag::has_grid_coordinates;
                }
                break;
             default:
                continue;
          }
          if (state == found_all)
-            return;
+            break;
       }
+      //
+      #pragma region INFO post-handling
+      if (parent_topic)
+         parent_topic->_insert_child_topic_info(stub, insert_info_before);
+      #pragma endregion
    }
 
    file_load_order& file_or_file_part_loader::get_load_order() const noexcept {

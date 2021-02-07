@@ -48,6 +48,15 @@ namespace dovah {
          delete form;
          this->form = nullptr;
       }
+      if (this->formType == form_type::topic_info && this->parentID) {
+         if (this->source_file_count() >= 1) {
+            auto& lo     = this->_get_load_order();
+            auto* parent = lo.get_form(this->parentID);
+            if (parent && parent->formType == form_type::topic) {
+               parent->_remove_child_topic_info(*this, false);
+            }
+         }
+      }
       if (this->has_multiple_source_files()) {
          if (this->files.entries)
             delete[] this->files.entries;
@@ -558,6 +567,37 @@ namespace dovah {
       return &this->files.entries[i];
    }
 
+   void form_stub::_insert_child_topic_info(form_stub& info, size_t at) {
+      if (at == 0xFFFFFFFF) {
+         if (info.parentID != this->formID)
+            //
+            // If the info is already in a topic's info list, and if its PNAM is 
+            // 0xFFFFFFFF, then it is not moved.
+            //
+            return;
+         //
+         // Guarantee that it'll go to the end of the list.
+         //
+         at = std::numeric_limits<size_t>::max();
+      }
+      if (!this->addenda)
+         this->addenda = new form_stub_addenda;
+      auto& list = this->addenda->ordered_children;
+      if (at >= list.size()) {
+         list.push_back(&info);
+         return;
+      }
+      list.insert(list.cbegin() + at, &info);
+   }
+   void form_stub::_remove_child_topic_info(form_stub& info, bool loading) {
+      if (loading && info.test_record_flags(tes_file_record_header::flag::partial))
+         return;
+      if (!this->addenda)
+         return;
+      auto& list = this->addenda->ordered_children;
+      list.erase(std::remove_if(list.begin(), list.end(), &info), list.end());
+   }
+
    bool form_stub::get_grid_coordinates(int32_t& x, int32_t& y) const noexcept {
       x = 0;
       y = 0;
@@ -569,6 +609,25 @@ namespace dovah {
       x = gc.x;
       y = gc.y;
       return true;
+   }
+   size_t form_stub::child_info_count() const noexcept {
+      if (this->formType != form_type::topic)
+         return 0;
+      if (!this->addenda)
+         return 0;
+      return this->addenda->ordered_children.size();
+   }
+   size_t form_stub::index_of_child_info(form_stub& info) const noexcept {
+      if (this->formType != form_type::topic || info.formType != form_type::topic_info)
+         return std::string::npos;
+      if (!this->addenda)
+         return std::string::npos;
+      auto&  list = this->addenda->ordered_children;
+      size_t size = list.size();
+      for (size_t i = 0; i < size; ++i)
+         if (list[i] == &info)
+            return i;
+      return std::string::npos;
    }
 
    bool form_stub::has_child_forms() const noexcept {
