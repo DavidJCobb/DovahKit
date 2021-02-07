@@ -571,7 +571,7 @@ namespace dovah {
          stub->formID = formID;
          //
          auto& type = this->forms_by_type[stub->formType];
-         std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+         // DO NOT lock the all-forms map; we already locked it at the start of the function!!
          std::lock_guard<std::mutex> guard_for_form_type(type.lock);
          this->forms.forms[formID] = stub;
          type.forms[formID] = stub;
@@ -2937,7 +2937,7 @@ namespace dovah {
          }
       }
    }
-   void form_deletion_request::_prep_for_delete(form_stub& stub) {
+   void form_deletion_request::_prep_for_delete(form_stub& stub, bool flag) {
       stub.sever_all_outbound_references();
       //
       std::vector<form_stub*> pending;
@@ -2947,6 +2947,8 @@ namespace dovah {
          auto* other = entry.other;
          auto  form = other->load();
          pending.push_back(other); // gather forms to process later. we don't want to sever refs now, as that will change use info and potentially invalidate iterators during the loop
+         if (!flag)
+            other->sever_addenda_references_to(stub);
          other->set_edited(true);
       }
       for (auto* user : pending) {
@@ -2983,7 +2985,7 @@ namespace dovah {
       }
       bare_form_id_t lowestID = 0xFFFFFFFF;
       for (auto* stub : this->forms_needing_delete) {
-         this->_prep_for_delete(*stub);
+         this->_prep_for_delete(*stub, false);
          //
          auto formID = stub->formID;
          if (formID < lowestID)
@@ -3001,7 +3003,7 @@ namespace dovah {
             file->header.nextFormID = lowestID;
       }
       for (auto* stub : this->forms_needing_flag) {
-         this->_prep_for_delete(*stub);
+         this->_prep_for_delete(*stub, true);
          //
          stub->load()->friendly_delete_override(this->owner);
          stub->set_edited(true);

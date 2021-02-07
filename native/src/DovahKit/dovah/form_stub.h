@@ -310,6 +310,8 @@ namespace dovah {
          size_t index_of_child_info(form_stub& info) const noexcept; // search a topic's list of infos; returns std::string::npos if no match
          void insert_child_topic_info(form_stub& info, size_t at = std::string::npos); // also forces (info)'s parent to (this) if that isn't already the case
          void remove_child_topic_info(form_stub& info); // also orphans (info)
+         //
+         void sever_addenda_references_to(form_stub& other);
          #pragma endregion
 
          #pragma region Parenthood functions

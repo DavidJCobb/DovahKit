@@ -471,7 +471,7 @@ namespace dovah {
          //
          bool _form_should_be_flagged(form_stub&);
          void _gather_others(form_stub* start = nullptr);
-         void _prep_for_delete(form_stub&); // use for deletion and for flagging as deleted
+         void _prep_for_delete(form_stub&, bool flag); // use for deletion and for flagging as deleted
          //
       public:
          bool force_delete_overrides = false; // if (true), then we will straight-up delete ALL forms. if (false), then forms outside the active file are overridden and FLAGGED AS deleted.

@@ -38,6 +38,11 @@ namespace dovah {
       this->file = file_data();
    }
    form_stub::~form_stub() {
+      //
+      // NOTE: It is not safe to try and sever connections between forms here, because 
+      // the destructor for (file_load_order) deletes stubs directly without removing 
+      // them from the form maps (because that could be slow...). 
+      //
       if (this->get_refcount()) {
          #if _DEBUG
             __debugbreak(); // Something is still using this form_stub's loaded data. Why are you destroying it?
@@ -47,15 +52,6 @@ namespace dovah {
       if (auto form = this->form) { // needed for edited forms, hardcoded forms, and other forms that aren't normally allowed to unload
          delete form;
          this->form = nullptr;
-      }
-      if (this->formType == form_type::topic_info && this->parentID) {
-         if (this->source_file_count() >= 1) {
-            auto& lo     = this->_get_load_order();
-            auto* parent = lo.get_form(this->parentID);
-            if (parent && parent->formType == form_type::topic) {
-               parent->_remove_child_topic_info(*this, false);
-            }
-         }
       }
       if (this->has_multiple_source_files()) {
          if (this->files.entries)
@@ -662,6 +658,11 @@ namespace dovah {
       if (info.parentID != this->formID)
          return;
       info.orphan();
+   }
+   //
+   void form_stub::sever_addenda_references_to(form_stub& other) {
+      if (this->addenda)
+         this->addenda->sever_references_to(other);
    }
 
    bool form_stub::has_child_forms() const noexcept {

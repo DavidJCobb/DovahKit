@@ -57,7 +57,7 @@ namespace dovah::loaded_forms {
          virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
          //
       protected:
-         ObjectReference(form_type_t ft) : Form(ft) {}; // for subclasses
+         ObjectReference(form_type_t ft, const constructor_params& c) : Form(ft, c) {}; // for subclasses
          //
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;

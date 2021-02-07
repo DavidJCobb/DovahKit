@@ -24,5 +24,7 @@ namespace dovah {
       } grid_coords; // WRLD/CELL/XCLC
       std::vector<form_stub*> ordered_children; // DIAL/INFO
       form_stub* persistent_cell = nullptr; // WRLD persistent cell
+
+      void sever_references_to(form_stub&);
    };
 }
