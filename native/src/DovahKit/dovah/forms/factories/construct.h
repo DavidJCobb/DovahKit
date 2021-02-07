@@ -1,6 +1,6 @@
 #pragma once
 #include "../../core.h"
-#include "forms/Form.h"
+#include "../Form.h"
 
 namespace dovah {
    namespace tes_file_reading {

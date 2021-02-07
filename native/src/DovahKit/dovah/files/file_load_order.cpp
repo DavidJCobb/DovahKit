@@ -932,6 +932,24 @@ namespace dovah {
             auto& entry = pair.second;
             auto  form  = entry.other->load();
             entry.other->set_edited(true);
+            //
+            if (entry.flags & use_info_entry::flag::i_am_parent_of) {
+               //
+               // Don't forget to update these, too!
+               //
+               entry.other->parentID = new_id;
+            }
+         }
+      } else {
+         //
+         // ...Even if we're just renumbering the form due to a conversion to or from a light plug-in, 
+         // however, we also need to update form stubs' parent form IDs.
+         //
+         for (auto& pair : stub.inbound) {
+            auto& entry = pair.second;
+            if (entry.flags & use_info_entry::flag::i_am_parent_of) {
+               entry.other->parentID = new_id;
+            }
          }
       }
       bare_form_id_t old_id = stub.formID;

@@ -597,7 +597,7 @@ namespace dovah {
       if (!this->addenda)
          return;
       auto& list = this->addenda->ordered_children;
-      list.erase(std::remove_if(list.begin(), list.end(), &info), list.end());
+      list.erase(std::remove(list.begin(), list.end(), &info), list.end());
    }
 
    bool form_stub::get_grid_coordinates(int32_t& x, int32_t& y) const noexcept {
