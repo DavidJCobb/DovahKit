@@ -981,7 +981,7 @@ namespace dovah::loaded_forms::components {
          //
          auto func = condition_info::function::lookup_by_id(function);
          for (int i = 0; i < 2; ++i) {
-            auto* type  = func->argument_types[0];
+            auto* type  = func->argument_types[i];
             if (i == 1 && type->isUnion) { // resolve the union
                condition_arg_value value;
                value.dword = firstValue;
