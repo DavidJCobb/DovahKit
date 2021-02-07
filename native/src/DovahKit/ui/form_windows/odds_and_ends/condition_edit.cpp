@@ -1,5 +1,6 @@
 #include "condition_edit.h"
 #include <QShowEvent>
+#include <QStandardItemModel>
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../helpers/qt/spinbox.h"
 #include "../../../helpers/qt/strings.h"
@@ -18,6 +19,16 @@ namespace {
    namespace _arg_types {
       using namespace dovah::loaded_forms::components::condition_info::arg_types;
    }
+}
+
+bool ConditionEditDialog::_FunctionListProxy::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const {
+   auto* sm   = (QStandardItemModel*)this->sourceModel();
+   auto* item = sm->item(source_row, 0);
+   if (item) {
+      if (item->data(ExcludeRole).toBool())
+         return true;
+   }
+   return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
 }
 
 ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c) {
@@ -131,18 +142,72 @@ ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, conditi
    {
       auto* widget = this->ui.function;
       widget->clear(); // clear anything that might've been done in Qt Designer
-      for (auto& func : dovah::loaded_forms::components::condition_info::function_list)
-         if (func.valid)
-            widget->addItem(func.name, func.id);
-      for (auto& func : dovah::loaded_forms::components::condition_info::extended_function_list)
-         if (func.valid)
-            widget->addItem(func.name, func.id);
-      if (auto* model = widget->model())
-         model->sort(0);
+      //
+      auto* proxy = new _FunctionListProxy(widget);
+      auto* model = new QStandardItemModel(widget);
+      proxy->setSourceModel(model);
+      proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
+      proxy->setSortCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
+      widget->setModel(proxy);
+      {
+         proxy->setDynamicSortFilter(false);
+         for (auto& func : dovah::loaded_forms::components::condition_info::function_list) {
+            if (!func.valid)
+               continue;
+            auto* item = new QStandardItem(func.name);
+            item->setData(func.id, Qt::ItemDataRole::UserRole);
+            model->appendRow(item);
+         }
+         for (auto& func : dovah::loaded_forms::components::condition_info::extended_function_list) {
+            if (!func.valid)
+               continue;
+            auto* item = new QStandardItem(func.name);
+            item->setData(func.id, Qt::ItemDataRole::UserRole);
+            model->appendRow(item);
+         }
+         proxy->setDynamicSortFilter(true);
+      }
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, proxy](int index) {
+         //
+         // Ensure that the currently-selected item always has the ExcludeRole, so that it's never filtered out. 
+         // We don't want the filter to ever actually *change* the currently selected function, which means that 
+         // we need to ensure that the currently selected function is never filtered out.
+         //
+         auto* widget = this->ui.function;
+         if (widget->currentData(_FunctionListProxy::ExcludeRole).toBool())
+            return;
+         proxy->setDynamicSortFilter(false); // we need to call setItemData twice; we don't want the first call to reshuffle everything before we're done
+         auto  prev   = widget->findData(true, _FunctionListProxy::ExcludeRole);
+         if (prev >= 0)
+            widget->setItemData(prev, false, _FunctionListProxy::ExcludeRole);
+         if (index >= 0)
+            widget->setItemData(index, true, _FunctionListProxy::ExcludeRole);
+         proxy->setDynamicSortFilter(true);
+         proxy->invalidate();
+         proxy->sort(Qt::SortOrder::AscendingOrder); // yes, we have to call this manually here
+      });
       //
       widget->setCurrentIndex(widget->findData(condition.function));
       //
-      // TODO: code to filter the function list
+      {
+         //
+         // Code to filter the function list. For efficiency, we throttle updates.
+         //
+         QObject::connect(&this->function_filter_update_throttle, &QTimer::timeout, [this, proxy]() {
+            proxy->setFilterFixedString(this->ui.filterFunction->text());
+         });
+         QObject::connect(this->ui.filterFunction, &QLineEdit::textEdited, this, [this](const QString& text) {
+            auto& timer = this->function_filter_update_throttle;
+            if (timer.isActive())
+               return;
+            timer.start(200);
+         });
+         QObject::connect(this->ui.filterFunction, &QLineEdit::editingFinished, this, [this, proxy]() {
+            auto& timer = this->function_filter_update_throttle;
+            timer.stop();
+            proxy->setFilterFixedString(this->ui.filterFunction->text());
+         });
+      }
       //
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
          int   id   = this->ui.function->currentData().toInt();

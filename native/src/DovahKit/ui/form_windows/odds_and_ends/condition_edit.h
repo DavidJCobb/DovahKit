@@ -1,4 +1,6 @@
 #pragma once
+#include <QSortFilterProxyModel>
+#include <QTimer>
 #include "ui_condition_edit.h"
 #include "../../../dovah/forms/components/conditions.h"
 
@@ -11,6 +13,15 @@ class ConditionEditDialog : public QDialog {
       using underlying_t  = dovah::loaded_forms::components::condition_info::arg_underlying_type;
       using param_type_t  = dovah::loaded_forms::components::condition_info::arg_type;
       using param_value_t = dovah::loaded_forms::components::condition_arg_value;
+      //
+      class _FunctionListProxy : public QSortFilterProxyModel {
+         public:
+            static constexpr int ExcludeRole = Qt::ItemDataRole::UserRole + 1;
+            _FunctionListProxy(QObject* o) : QSortFilterProxyModel(o) {}
+         protected:
+            virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
+      };
+      //
    public:
       ConditionEditDialog(loaded_form_t& containing_form, condition_t& condition, QWidget* parent = Q_NULLPTR);
       //
@@ -20,6 +31,8 @@ class ConditionEditDialog : public QDialog {
       Ui::ConditionEditDialog ui;
       condition_t&  condition;
       cnd_context_t context;
+      //
+      QTimer function_filter_update_throttle;
       //
       struct _parameter {
          enum class special_case_t {
