@@ -706,6 +706,7 @@ namespace dovah {
          this->addenda->sever_references_to(other);
    }
 
+   #pragma region Form stub parenthood functions
    bool form_stub::has_child_forms() const noexcept {
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
@@ -755,6 +756,7 @@ namespace dovah {
       if (target->formType == form_type::topic && this->formType == form_type::topic_info)
          target->_insert_child_topic_info(*this);
    }
+   #pragma endregion
 
    bool form_stub::is_any_descendant_form_edited() const noexcept {
       if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {

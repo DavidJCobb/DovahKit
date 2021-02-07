@@ -316,10 +316,27 @@ namespace dovah {
 
          #pragma region Parenthood functions
          form_stub* get_parent_form() const noexcept; // searches Use Info
+
          bool has_child_forms() const noexcept;
+
          bool is_parent_form_of(form_stub&) const noexcept;
-         void orphan(); // if (this) is a topic info, removes it from any owning topic's addendum info list
-         void set_parent_form(form_stub* p) noexcept; // calls (orphan) and then changes the parent. if (this) is a topic info and (p) is a topic, adds (this) to (p)'s addendum info list
+
+         //
+         // Orphan the form from its parent form. If the form is a topic info, it will also be removed from 
+         // the parent form's addendum info list.
+         //
+         // Note that cells can only tell whether they're exteriors or interiors based on the presence or 
+         // absence of a parent form, so, uh,... don't run this on cells.
+         //
+         void orphan();
+
+         //
+         // Calls (orphan) and then changes the parent form. If this form is a topic info and the new parent 
+         // is a topic, then this form will be added to the new parent's addendum info list.
+         //
+         // If this form is a cell, then the same caveats apply as with (orphan).
+         //
+         void set_parent_form(form_stub* p) noexcept;
          #pragma endregion
 
          bool is_any_descendant_form_edited() const noexcept;
