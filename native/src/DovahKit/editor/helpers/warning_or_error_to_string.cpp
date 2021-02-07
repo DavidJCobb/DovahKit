@@ -698,6 +698,61 @@ namespace editor_helpers {
                   .arg(subrecord);
             }
             break;
+         case notice_code::parent_form_is_missing:
+            {
+               text = QObject::tr("Form %1 in file %2 claims to belong to a non-existent parent form.", "notice_code::parent_form_is_missing");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               QString file = QObject::tr("<unknown file>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
+                  file = QString::fromStdString(notice.cause_file);
+               }
+               //
+               text = text.arg(form).arg(file);
+            }
+            break;
+         case notice_code::partial_info_override_has_different_parent:
+            {
+               text = QObject::tr("TopicInfo %1, originally defined in file %3, has an override in file %2 that is flagged as partial "
+                                  "and that moves the TopicInfo from Topic %4 to Topic %5. Skyrim does not properly handle partial-flagged "
+                                  "TopicInfo overrides that re-parent the TopicInfo; depending on the precise circumstances under which "
+                                  "this override is loaded, Skyrim may inadvertently associate the TopicInfo with multiple Topics, may "
+                                  "desynchronize the TopicInfo such that it thinks it's inside of a different Topic than the one it's "
+                                  "actually in, or may discard an unrelated TopicInfo from the Topic that this TopicInfo has been moved to. "
+                                  "Though the effect that these issues have on game stability is not known as of this writing, this problem "
+                                  "should be considered unsafe. DovahKit will interpret this data by re-parenting the TopicInfo as normal, "
+                                  "but this is just the way the data is interpreted (in lieu of DovahKit actually trying to mimic the game's "
+                                  "utter confusion) and is not an attempt at repairing the data. If circumstances allow, you should remove "
+                                  "the \"partial\" flag from this override using xEdit or a similar tool.",
+                  "notice_code::partial_info_override_has_different_parent"
+               );
+               //
+               QString form          = QObject::tr("<unknown form>", "log window");
+               QString file_initial  = QObject::tr("<unknown file>", "log window");
+               QString file_sent_to  = file_initial;
+               QString topic_initial = QObject::tr("<unknown topic>", "log window");
+               QString topic_sent_to = topic_initial;
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
+                  file_sent_to = QString::fromStdString(notice.cause_file);
+               }
+               if (!notice.relevant_files.empty()) {
+                  file_initial = QString::fromStdString(notice.relevant_files[0]);
+               }
+               if (!notice.relevant_forms.empty()) {
+                  topic_initial = _read_error_form_id_to_string(notice.relevant_forms[0]);
+                  if (notice.relevant_forms.size() > 1)
+                     topic_sent_to = _read_error_form_id_to_string(notice.relevant_forms[1]);
+               }
+               //
+               text = text.arg(form).arg(file_sent_to).arg(file_initial).arg(topic_initial).arg(topic_sent_to);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:

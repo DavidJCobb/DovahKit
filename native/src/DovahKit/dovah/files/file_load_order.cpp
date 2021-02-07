@@ -528,8 +528,36 @@ namespace dovah {
             // update the form stub addenda for its old parent.
             //
             auto* old_parent = target->get_parent_form();
-            if (old_parent && old_parent != new_parent)
+            if (old_parent && old_parent != new_parent) {
                old_parent->_remove_child_topic_info(*target, false);
+               //
+               if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
+                  //
+                  // A partial INFO override that re-parents the info? Oh, the game won't handle this 
+                  // sanely at all. Refer to <topic infos' placement in topics' info lists.txt> in our 
+                  // internal documentation for details on the chaos.
+                  //
+                  detailed_notice warning;
+                  warning.code    = notice_code::partial_info_override_has_different_parent;
+                  warning.context = detailed_notice::notice_context::file_load;
+                  warning.cause_form.localID = stub->formID;
+                  warning.cause_form.fixedID = formID;
+                  warning.cause_form.type    = stub->formType;
+                  warning.set_flag(detailed_notice::flag::has_cause_form);
+                  assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
+                  warning.set_cause_file(stub->file.pointer->get_filename());
+                  warning.set_file_offset(stub->file.offset);
+                  if (auto* data = target->get_source_file_info(0)) {
+                     if (auto* pointer = data->pointer) {
+                        warning.add_relevant_file(pointer->get_filename());
+                     }
+                  }
+                  warning.add_relevant_form(*old_parent);
+                  if (new_parent)
+                     warning.add_relevant_form(*new_parent);
+                  this->_log_load_warning(warning);
+               }
+            }
          }
          target->set_parent_form(new_parent);
          assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file

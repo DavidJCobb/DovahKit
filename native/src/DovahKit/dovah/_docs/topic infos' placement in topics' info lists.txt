@@ -119,6 +119,33 @@ info list, specifically by checking whether its cached index is not -1).
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+Along a similar  vein to the  above exploit, and  briefly touched  upon in that 
+exploit's explanation,  it must be noted that if a partial  override of an INFO 
+moves the INFO to a different DIAL, a few issues can result, including:
+
+   a) The INFO may believe that it  belongs to the new DIAL, when in reality it 
+      is still in the info list for the old DIAL. This occurs if the override's 
+      PNAM value is 0xFFFFFFFF.
+
+   b) The INFO is properly moved to the new DIAL's info list,  but an unrelated 
+      INFO is also discarded from the  new DIAL's info list. This occurs if the 
+      override's PNAM  value is neither zero/missing or 0xFFFFFFFF,  and if the 
+      info's position in its  previous topic is lower than  the number of infos 
+      currently loaded for the topic to which the info is being moved.
+
+   c) Once an INFO has been re-parented by any partial override, it's no longer 
+      safe to override the INFO again,  as any subsequent overrides may trigger 
+      the exploit described above.
+
+As of this writing,  the long-term consequences of these  issues (both in terms 
+of game stability and in terms of the  Creation Kit's functioning) are unknown. 
+However, this is clearly undefined behavior  stemming from a case that the game 
+engine was not designed  to support. Arguably, the game  engine wasn't designed 
+even just to  re-parent infos at all, with the ability to do so  in non-partial 
+overrides simply being a  consequence of how overrides  in general are handled.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 SharedInfos don't seem to have any special effect on this whole system. An INFO 
 can seemingly use any  other INFO as the one it shares  data from, but it seems 
 the Creation Kit imposes this limit: the INFO can only share response data with 
@@ -148,4 +175,7 @@ this mess in DovahKit?
  - The destructor for form stubs will check if the stub is for a topic info and 
    if it has a parent form ID.  If so, it'll look up  its parent topic, if any, 
    and remove itself from the parent topic's addendum list of ordered children. 
+
+ - We do not attempt to imitate the various bugs that are introduced by partial 
+   overrides that re-parent INFO forms.
 
