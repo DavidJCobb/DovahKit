@@ -566,26 +566,28 @@ namespace dovah {
    }
 
    void form_stub::_insert_child_topic_info(form_stub& info, size_t at) {
-      if (at == 0xFFFFFFFF) {
-         if (info.parentID != this->formID)
-            //
-            // If the info is already in a topic's info list, and if its PNAM is 
-            // 0xFFFFFFFF, then it is not moved.
-            //
-            return;
-         //
-         // Guarantee that it'll go to the end of the list.
-         //
-         at = std::numeric_limits<size_t>::max();
-      }
+      assert(info.parentID == this->formID);
+      //
       if (!this->addenda)
          this->addenda = new form_stub_addenda;
       auto& list = this->addenda->ordered_children;
+      auto  it   = std::find(list.begin(), list.end(), &info);
+      //
+      if (at == 0xFFFFFFFF) {
+         //
+         // Sentinel value 0xFFFFFFFF will avoid moving an info at all if it's already 
+         // in any topic's info list, or place it at the end of the parent topic's info 
+         // list otherwise.
+         //
+         if (it != list.end()) // already in our list
+            return;
+         at = std::numeric_limits<size_t>::max();
+      }
       if (at >= list.size()) {
          list.push_back(&info);
          return;
       }
-      auto it = std::find(list.begin(), list.end(), &info);
+      //
       if (it != list.end()) {
          //
          // This info is already in this topic's info list. Remove it now, so that 
