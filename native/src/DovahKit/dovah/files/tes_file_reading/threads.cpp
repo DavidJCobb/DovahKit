@@ -67,8 +67,7 @@ namespace dovah::tes_file_reading::threads {
                   } else
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
                }
-               if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
-                  delete stub;
+               if (!this->commit_stub(stub)) {
                   continue;
                }
                this->extract_high_value_subrecords_for_stub(*stub);
@@ -86,7 +85,7 @@ namespace dovah::tes_file_reading::threads {
                      warning.set_cause_signature(group_signature);
                      warning.set_cause_form_type(group_type);
                      //
-                     this->get_load_order().log_load_warning(warning);
+                     this->get_file_loader().get_load_interface(*this).log_load_warning(warning);
                   }
                }
                //
@@ -156,8 +155,7 @@ namespace dovah::tes_file_reading::threads {
                   } else
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
                }
-               if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
-                  delete stub;
+               if (!this->commit_stub(stub)) {
                   continue;
                }
                this->extract_high_value_subrecords_for_stub(*stub);
@@ -243,8 +241,7 @@ namespace dovah::tes_file_reading::threads {
                   } else
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
-               if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
-                  delete stub;
+               if (!this->commit_stub(stub)) {
                   continue;
                }
                this->extract_high_value_subrecords_for_stub(*stub);
@@ -313,8 +310,7 @@ namespace dovah::tes_file_reading::threads {
                   } else
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
-               if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
-                  delete stub;
+               if (!this->commit_stub(stub)) {
                   continue;
                }
                this->extract_high_value_subrecords_for_stub(*stub);
@@ -381,8 +377,7 @@ namespace dovah::tes_file_reading::threads {
                   } else
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
-               if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
-                  delete stub;
+               if (!this->commit_stub(stub)) {
                   continue;
                }
                this->extract_high_value_subrecords_for_stub(*stub);

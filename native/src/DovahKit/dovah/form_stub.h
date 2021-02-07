@@ -245,7 +245,7 @@ namespace dovah {
          void _set_source_file_offset(owner_file_t&, uint32_t offset);
          void _modify_source_file_record_flags(owner_file_t&, uint32_t mask, bool clear_or_set);
          void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept;
-         void _adopt_source_file_list(const form_stub* other);
+         void _adopt_source_file_list(const form_stub* other); // prepends
          void _set_source_file_list(const std::vector<file_data>&);
          //
          void _add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
@@ -253,8 +253,8 @@ namespace dovah {
          //
          file_data* _get_source_file_info(int16_t file_index = -1) const noexcept; // defined this way so code internal to form_stub can actually modify the info in question
          //
-         void _insert_child_topic_info(form_stub& info, size_t at = std::string::npos);
-         void _remove_child_topic_info(form_stub& info, bool loading);
+         void _insert_child_topic_info(form_stub& info, size_t at = std::string::npos); // inserts (info) into the addendum info list, without form type checks or managing parenthood
+         void _remove_child_topic_info(form_stub& info, bool loading); // removes (info) from the addendum info list, without form type checks or managing parenthood
          //
       public:
          form_stub_addenda* addenda = nullptr;
@@ -304,12 +304,21 @@ namespace dovah {
          bool test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept;
          bool test_record_flags_for_file(uint32_t mask, owner_file_t&) const noexcept;
 
+         #pragma region Addenda helper functions
          bool get_grid_coordinates(int32_t& x, int32_t& y) const noexcept;
          size_t child_info_count() const noexcept;
          size_t index_of_child_info(form_stub& info) const noexcept; // search a topic's list of infos; returns std::string::npos if no match
+         void insert_child_topic_info(form_stub& info, size_t at = std::string::npos); // also forces (info)'s parent to (this) if that isn't already the case
+         void remove_child_topic_info(form_stub& info); // also orphans (info)
+         #pragma endregion
 
+         #pragma region Parenthood functions
          form_stub* get_parent_form() const noexcept; // searches Use Info for a form with the same ID as the parent form
          bool has_child_forms() const noexcept;
+         void orphan(); // if (this) is a topic info, removes it from any owning topic's addendum info list
+         void set_parent_form(form_stub* p) noexcept; // calls (orphan) and then changes the parent. if (this) is a topic info and (p) is a topic, adds (this) to (p)'s addendum info list
+         #pragma endregion
+
          bool is_any_descendant_form_edited() const noexcept;
          bool does_descendant_form_need_save() const noexcept;
          bool needs_save() const noexcept;

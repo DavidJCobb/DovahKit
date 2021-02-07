@@ -99,6 +99,11 @@ namespace dovah {
                return false;
             return true;
          }
+         inline bare_form_id_t strip_prefix(bare_form_id_t id) const noexcept {
+            if (this->is_light())
+               return id & 0x00000FFF;
+            return id & 0x00FFFFFF;
+         }
          //
          inline operator uint16_t() const noexcept { return this->value_and_flags; }
    };

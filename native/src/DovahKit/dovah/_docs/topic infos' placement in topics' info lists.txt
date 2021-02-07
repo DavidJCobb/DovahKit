@@ -128,7 +128,7 @@ subtype. The INFO form loader imposes no constraints.
 
 === COORDINATING THIS MESS IN DOVAHKIT ========================================
 
-So this is essentially  a pile of bespoke behaviors that is  very particular to 
+So this is essentially a pile of bespoke  behaviors that are very particular to 
 how TESV.exe loads forms, and we don't load forms the same way. How do we mimic 
 this mess in DovahKit?
 
@@ -137,18 +137,15 @@ this mess in DovahKit?
    includes an "ordered children" list,  which is used by topics to track their 
    infos.
 
- - 
+ - Function (file_load_order::accept_form_stub)  handles the case  of an info's 
+   override changing its parent, by removing the overridden stub from the prior 
+   parent topic's info list (in the topic stub's addenda)
+
+ - Function  (file_or_file_part_loader::extract_high_value_subrecords_for_stub) 
+   handles inserting  an info into its  parent topic's info  list (in the topic 
+   stub's addenda), reading the PNAM subrecord if present.
 
  - The destructor for form stubs will check if the stub is for a topic info and 
    if it has a parent form ID.  If so, it'll look up  its parent topic, if any, 
    and remove itself from the parent topic's addendum list of ordered children. 
-   
-   We create a new form  stub for every record that we load.  If that record is 
-   an override (i.e. if there is already a form stub for that form ID), we copy 
-   the original form stub's file list to  the new stub and then replace the old 
-   stub with the new one,  deleting the old one. The form  stub destructor will 
-   ensure that when we load a topic info override, the info is removed from its 
-   prior parent.
 
-    = PROBLEM: THIS MEANS THAT LOADING A PARTIAL OVERRIDE THAT SETS ITS POSITION TO 
-      0xFFFFFFFF WILL CAUSE US TO WRONGLY LOSE THE POSITION

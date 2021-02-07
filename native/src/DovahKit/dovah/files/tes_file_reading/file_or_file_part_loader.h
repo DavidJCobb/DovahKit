@@ -26,11 +26,16 @@ namespace dovah::tes_file_reading {
       protected:
          void log_load_warning(detailed_notice&);
          void log_load_error(detailed_notice&);
-         //
+         
          form_stub* make_stub_for_record();
-         bool commit_stub(form_stub&);
+
+         // Send the stub to the (file_load_order). If the stub is invalid, it will be deleted. If the stub is an 
+         // override, then it will be deleted and the passed-in pointer will be made to refer to the overridden 
+         // stub. Never returns (true) if the stub is deleted.
+         bool commit_stub(form_stub*&);
+
          void extract_high_value_subrecords_for_stub(form_stub&);
-         //
+         
       public:
          file_load_order& get_load_order() const noexcept;
          //

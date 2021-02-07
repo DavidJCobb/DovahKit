@@ -53,11 +53,11 @@ namespace dovah::tes_file_reading {
       stub->formType = form_type_info::signature_to_form_type(record.signature());
       return stub;
    }
-   bool file_or_file_part_loader::commit_stub(form_stub& stub) {
+   bool file_or_file_part_loader::commit_stub(form_stub*& stub) {
       auto& file = this->get_file_loader();
       if (file.is_aborted())
          return false;
-      auto result = this->load_interface.owner.accept_form_stub(&stub);
+      auto result = this->load_interface.owner.accept_form_stub(stub);
       switch (result) {
          case file_load_order::form_id_status::missing_master: // <-- this one in particular can only happen if we failed to load a master, which implies that a file was edited between us checking the header and us loading it
          case file_load_order::form_id_status::out_of_bounds:
@@ -70,10 +70,13 @@ namespace dovah::tes_file_reading {
                error.set_cause_file(file.get_filename());
                error.set_file_offset(this->get_position());
                error.cause_form.fixedID = 0;
-               error.cause_form.localID = stub.formID;
-               error.cause_form.type    = stub.formType;
+               error.cause_form.localID = stub->formID;
+               error.cause_form.type    = stub->formType;
                error.set_flag(detailed_notice::flag::has_cause_form);
                this->log_load_error(error);
+               //
+               delete stub;
+               stub = nullptr;
             }
             return false;
          case file_load_order::form_id_status::null_is_not_allowed:
@@ -83,14 +86,27 @@ namespace dovah::tes_file_reading {
                error.set_cause_file(file.get_filename());
                error.set_file_offset(this->get_position());
                error.cause_form.fixedID = 0;
-               error.cause_form.localID = stub.formID;
-               error.cause_form.type    = stub.formType;
+               error.cause_form.localID = stub->formID;
+               error.cause_form.type    = stub->formType;
                error.set_flag(detailed_notice::flag::has_cause_form);
                this->log_load_error(error);
+               //
+               delete stub;
+               stub = nullptr;
+            }
+            return false;
+         case file_load_order::form_id_status::form_type_mismatch:
+            //
+            // The file load order already logged this one on its own.
+            //
+            this->get_file_loader().abort();
+            {
+               delete stub;
+               stub = nullptr;
             }
             return false;
       }
-      return true;
+      return stub != nullptr;
    }
    void file_or_file_part_loader::extract_high_value_subrecords_for_stub(form_stub& stub) {
       //
@@ -120,23 +136,8 @@ namespace dovah::tes_file_reading {
       // information.
       //
       //
-      struct _state {
-         _state() = delete;
-         enum {
-            found_editor_id   = 0x01,
-            found_cell_coords = 0x02,
-            found_pnam        = 0x04,
-         };
-      };
-      constexpr int found_all = _state::found_editor_id | _state::found_cell_coords | _state::found_pnam;
-      //
-      int   state  = 0;
       auto& record = this->get_current_record();
       bool  is_ext = stub.is_exterior_cell();
-      if (!is_ext)
-         state |= _state::found_cell_coords;
-      if (form_type_info::lookup(stub.formType).flags & form_type_info::flag::no_editor_id)
-         state |= _state::found_editor_id;
       //
       #pragma region INFO pre-handling
       size_t     insert_info_before = 0;
@@ -144,33 +145,21 @@ namespace dovah::tes_file_reading {
       if (stub.formType == form_type::topic_info && stub.parentID) {
          auto& lo = this->get_file_loader().get_load_interface(*this).owner;
          parent_topic = lo.get_form_of_probable_type(form_type::topic, stub.parentID);
-         if (parent_topic) {
-            if (parent_topic->formType == form_type::topic) {
-               parent_topic->_remove_child_topic_info(stub, true);
-            } else {
-               parent_topic = nullptr;
-            }
-         }
-         if (!parent_topic || stub.test_record_flags(tes_file_record_header::flag::deleted))
-            state |= _state::found_pnam;
-      } else {
-         state |= _state::found_pnam;
+         if (parent_topic && parent_topic->formType != form_type::topic)
+            parent_topic = nullptr;
       }
       #pragma endregion
-      //
-      if (state == found_all)
-         return;
       //
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID':
-               state |= _state::found_editor_id;
-               subrecord.to_string(stub.editorID);
+               if (!(form_type_info::lookup(stub.formType).flags & form_type_info::flag::no_editor_id)) {
+                  subrecord.to_string(stub.editorID);
+               }
                break;
             case 'PNAM':
-               if (!(state & _state::found_pnam)) {
+               if (parent_topic) {
                   assert(stub.formType == form_type::topic_info);
-                  assert(parent_topic);
                   //
                   form_reference_t formID;
                   subrecord.read(formID);
@@ -180,13 +169,10 @@ namespace dovah::tes_file_reading {
                   } else {
                      insert_info_before = std::string::npos;
                   }
-                  //
-                  state |= _state::found_pnam;
                }
                break;
             case 'XCLC':
-               state |= _state::found_cell_coords;
-               {
+               if (is_ext) {
                   int32_t x;
                   int32_t y;
                   if (!stub.addenda)
@@ -202,12 +188,10 @@ namespace dovah::tes_file_reading {
             default:
                continue;
          }
-         if (state == found_all)
-            break;
       }
       //
       #pragma region INFO post-handling
-      if (parent_topic)
+      if (parent_topic && !stub.test_record_flags(tes_file_record_header::flag::deleted))
          parent_topic->_insert_child_topic_info(stub, insert_info_before);
       #pragma endregion
    }

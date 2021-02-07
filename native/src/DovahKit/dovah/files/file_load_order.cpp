@@ -459,7 +459,7 @@ namespace dovah {
       return this->save_load_state.type == save_load_type::is_loading;
    };
 
-   file_load_order::form_id_status file_load_order::accept_form_stub(form_stub* stub) noexcept {
+   file_load_order::form_id_status file_load_order::accept_form_stub(form_stub*& stub) noexcept {
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
       //
       uint32_t formID;
@@ -469,15 +469,17 @@ namespace dovah {
          case form_id_status::missing_master:
             return result;
       }
-      if (formID == 0)
+      if (formID == 0) {
          return form_id_status::null_is_not_allowed;
-      if ((formID & plugin_form_id_mask) == 0)
-         stub->flags |= form_stub::flag::is_hardcoded; // This FormStub overrides a hardcoded form.
+      }
+      if (auto* file = stub->get_file_at_index(-1)) {
+         auto prefix = this->file_prefix_for(*file);
+         if (prefix.strip_prefix(formID) < 0x800) {
+            stub->flags |= form_stub::flag::is_hardcoded; // This FormStub overrides a hardcoded form.
+         }
+      }
       //
-      // update the map of forms by type:
-      //
-      form_stub*& target = this->forms.forms[formID];
-      if (target) { // is this an override?
+      if (form_stub* target = this->forms.forms[formID]) { // is this an override?
          form_type_t type_a = target->formType;
          form_type_t type_b = stub->formType;
          if (type_a != type_b) {
@@ -512,15 +514,36 @@ namespace dovah {
             relevant.fixedID = formID;
             relevant.type    = type_b;
             //
-            this->log_load_warning(warning);
-            //
-            if (!is_armo_arma)
+            if (!is_armo_arma) {
+               warning.type    = detailed_notice::notice_type::error;
+               warning.context = detailed_notice::notice_context::file_load;
+               this->save_load_state.current_load_results->error = warning;
+               //
                return form_id_status::form_type_mismatch;
-            //
-            stub->formType = target->formType;
+            }
+            this->_log_load_warning(warning);
          }
-         delete target; // delete the overridden form stub
-         target = nullptr; // needed to prevent the singleton-form special case below from crashing, if what we're deleting is the canonical stub
+         //
+         // Delete the new stub, and overwrite the pointer (in this function and in our caller(s)) with 
+         // the existing stub.
+         //
+         if (stub->formType == form_type::topic_info) {
+            //
+            // If the stub is a topic info and it's being re-parented by an override, then we need to 
+            // update the form stub addenda for its old parent.
+            //
+            if (target->parentID && target->parentID != stub->parentID) {
+               auto* parent = this->get_form_of_probable_type(form_type::topic, target->parentID);
+               if (parent)
+                  parent->_remove_child_topic_info(*target, false);
+            }
+         }
+         target->flags    = stub->flags;
+         target->parentID = stub->parentID;
+         assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
+         target->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);
+         delete stub;
+         stub = target;
       } else {
          //
          // This is not an override.
@@ -539,15 +562,42 @@ namespace dovah {
                   warning.cause_file = file->get_filename();
                   warning.set_flag(detailed_notice::flag::has_cause_file);
                }
-               this->log_load_warning(warning);
+               this->_log_load_warning(warning);
             }
          }
+         //
+         // Insert the stub into the form maps:
+         //
+         stub->formID = formID;
+         //
+         auto& type = this->forms_by_type[stub->formType];
+         std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
+         std::lock_guard<std::mutex> guard_for_form_type(type.lock);
+         this->forms.forms[formID] = stub;
+         type.forms[formID] = stub;
       }
-      auto& type = this->forms_by_type[stub->formType];
-      std::lock_guard<std::mutex> guard_for_form_type(type.lock);
       //
-      if (type.forms[formID])
-         type.forms[formID] = nullptr; // needed to prevent the singleton-form special case below from crashing, if what we deleted just above was the canonical stub
+      // Quick note: This function is guaranteed never to delete the input stub if an error occurs. In one 
+      // of the branches above, we may have deleted the input stub and switched it out for the existing stub 
+      // which it overrides, so from this point forward we can't delete the stub.
+      //
+      // Place the stub inside of the active file form maps, if appropriate.
+      //
+      if (this->active_file) {
+         bool store = stub->file_list_includes(this->active_file);
+         if (!store) {
+            auto active_prefix = this->active_file_prefix();
+            if (active_prefix.contains_form_id(formID))
+               store = true;
+         }
+         if (store) {
+            this->active_file_forms.forms[formID] = stub;
+            auto& at = this->active_file_forms_by_type[stub->formType];
+            at.forms[formID] = stub;
+         }
+      }
+      //
+      // Special-case behaviors.
       //
       if (form_type_info::lookup(stub->formType).flags & form_type_info::flag::is_singleton) {
          //
@@ -562,72 +612,53 @@ namespace dovah {
          // the new form stub. (Why only the last inserted DOBJ stub? Because it, in turn, will have the 
          // information from its own predecessor, and so on.)
          //
-         std::vector<form_stub::file_data> stub_files;
          auto* prior = this->get_canonical_instance_of_singleton_form(stub->formType);
-         if (prior) {
-            uint16_t count = prior->source_file_count();
+         if (prior && prior != stub) {
+            std::vector<form_stub::file_data> stub_files;
+            if (prior) {
+               uint16_t count = prior->source_file_count();
+               for (uint16_t i = 0; i < count; ++i) {
+                  auto* data = prior->get_source_file_info(i);
+                  if (!data || !data->pointer)
+                     continue;
+                  stub_files.push_back(*data);
+               }
+               //
+               // Also, let's log a load warning if this singleton form is redundantly defined within the 
+               // current file.
+               //
+               auto* pf = prior->get_source_file_info();
+               auto* sf = stub->get_source_file_info();
+               if (pf && sf && pf->pointer == sf->pointer) {
+                  detailed_notice warning;
+                  warning.code               = notice_code::singleton_form_is_redundantly_defined;
+                  warning.cause_form.localID = stub->formID;
+                  warning.cause_form.fixedID = formID;
+                  warning.cause_form.type    = stub->formType;
+                  warning.set_flag(detailed_notice::flag::has_cause_form);
+                  warning.cause_file = sf->pointer->get_filename();
+                  warning.set_flag(detailed_notice::flag::has_cause_file);
+                  //
+                  auto& relevant = warning.relevant_forms.emplace_back();
+                  relevant.localID = 0;
+                  relevant.fixedID = prior->formID;
+                  relevant.type    = prior->formType;
+                  //
+                  this->_log_load_warning(warning);
+               }
+            }
+            //
+            // And of course, the new stub already knows its file information, so let's grab that, too.
+            //
+            uint16_t count = stub->source_file_count();
             for (uint16_t i = 0; i < count; ++i) {
-               auto* data = prior->get_source_file_info(i);
+               auto* data = stub->get_source_file_info(i);
                if (!data || !data->pointer)
                   continue;
                stub_files.push_back(*data);
             }
             //
-            // Also, let's log a load warning if this singleton form is redundantly defined within the 
-            // current file.
-            //
-            auto* pf = prior->get_source_file_info();
-            auto* sf = stub->get_source_file_info();
-            if (pf && sf && pf->pointer == sf->pointer) {
-               detailed_notice warning;
-               warning.code               = notice_code::singleton_form_is_redundantly_defined;
-               warning.cause_form.localID = stub->formID;
-               warning.cause_form.fixedID = formID;
-               warning.cause_form.type    = stub->formType;
-               warning.set_flag(detailed_notice::flag::has_cause_form);
-               warning.cause_file = sf->pointer->get_filename();
-               warning.set_flag(detailed_notice::flag::has_cause_file);
-               //
-               auto& relevant = warning.relevant_forms.emplace_back();
-               relevant.localID = 0;
-               relevant.fixedID = prior->formID;
-               relevant.type    = prior->formType;
-               //
-               this->log_load_warning(warning);
-            }
-         }
-         //
-         // And of course, the new stub already knows its file information, so let's grab that, too.
-         //
-         uint16_t count = stub->source_file_count();
-         for (uint16_t i = 0; i < count; ++i) {
-            auto* data = stub->get_source_file_info(i);
-            if (!data || !data->pointer)
-               continue;
-            stub_files.push_back(*data);
-         }
-         //
-         stub->_set_source_file_list(stub_files);
-      }
-      //
-      // Insert the stub into the form maps:
-      //
-      target = stub;
-      type.forms[formID] = stub;
-      //
-      stub->formID = formID;
-      //
-      if (this->active_file) {
-         bool store = stub->file_list_includes(this->active_file);
-         if (!store) {
-            auto active_prefix = this->active_file_prefix();
-            if (active_prefix.contains_form_id(formID))
-               store = true;
-         }
-         if (store) {
-            this->active_file_forms.forms[formID] = stub;
-            auto& at = this->active_file_forms_by_type[stub->formType];
-            at.forms[formID] = stub;
+            stub->_set_source_file_list(stub_files);
          }
       }
       //
@@ -649,7 +680,7 @@ namespace dovah {
          warning.set_flag(detailed_notice::flag::has_cause_form);
          warning.cause_file = file->get_filename();
          warning.set_flag(detailed_notice::flag::has_cause_file);
-         this->log_load_warning(warning);
+         this->_log_load_warning(warning);
          return;
       }
       //
@@ -662,7 +693,7 @@ namespace dovah {
          warning.set_flag(detailed_notice::flag::has_cause_form);
          warning.cause_file = file->get_filename();
          warning.set_flag(detailed_notice::flag::has_cause_file);
-         this->log_load_warning(warning);
+         this->_log_load_warning(warning);
       }
       //
       if (formID) {
@@ -693,7 +724,7 @@ namespace dovah {
                relevant.fixedID = formID;
                relevant.type    = form_type::setting;
                //
-               this->log_load_warning(warning);
+               this->_log_load_warning(warning);
                return;
             }
          }
@@ -745,7 +776,7 @@ namespace dovah {
             relevant.fixedID = priorID;
             relevant.type    = form_type::setting;
             //
-            this->log_load_warning(warning);
+            this->_log_load_warning(warning);
             //
             // What we need to do next depends on what file this came from. If it was the active file, then we 
             // need to delete the old form stub (if no other settings are using it). Why? Well, we don't want 
@@ -794,17 +825,17 @@ namespace dovah {
          warning.cause_file = file->get_filename();
          warning.set_flag(detailed_notice::flag::has_cause_file);
          warning.set_cause_editor_id(entry.name);
-         this->log_load_warning(warning);
+         this->_log_load_warning(warning);
       }
    }
 
-   void file_load_order::log_load_warning(const detailed_notice& w) {
+   void file_load_order::_log_load_warning(const detailed_notice& w) {
       if (!w.is_defined())
          return;
       if (this->on_read_warning)
          (this->on_read_warning)(w);
    }
-   void file_load_order::log_save_warning(const detailed_notice& w) {
+   void file_load_order::_log_save_warning(const detailed_notice& w) {
       if (!w.is_defined())
          return;
       if (this->on_save_warning)
@@ -3052,7 +3083,7 @@ namespace dovah {
          auto* results = this->owner.save_load_state.current_load_results;
          if (results)
             results->add_warning(warning);
-         this->owner.log_load_warning(warning);
+         this->owner._log_load_warning(warning);
       }
       void file_load::log_load_error(detailed_notice& error) {
          error.type    = detailed_notice::notice_type::error;
@@ -3073,13 +3104,13 @@ namespace dovah {
             warning.set_flag(detailed_notice::flag::has_cause_file);
          }
          //
-         this->owner.log_load_warning(warning);
+         this->owner._log_load_warning(warning);
       }
 
       void form_save::log_save_warning(detailed_notice& warning) {
          warning.type    = detailed_notice::notice_type::warning;
          warning.context = detailed_notice::notice_context::form_save;
-         this->owner.log_save_warning(warning);
+         this->owner._log_save_warning(warning);
       }
    }
    #pragma endregion

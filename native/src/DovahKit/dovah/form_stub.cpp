@@ -403,6 +403,7 @@ namespace dovah {
       }
    }
 
+   #pragma region form stub record flags
    uint32_t form_stub::get_record_flags() const noexcept {
       auto* info = this->get_source_file_info();
       if (!info)
@@ -448,6 +449,7 @@ namespace dovah {
    bool form_stub::test_record_flags_for_file(uint32_t mask, owner_file_t& f) const noexcept {
       return this->test_record_flags_for_file(mask, this->index_of_file(&f));
    }
+   #pragma endregion
 
    #pragma region form_stub use info functions
    void form_stub::build_outbound_refs(tes_file_reading::basic_reader& reader) noexcept {
@@ -629,6 +631,38 @@ namespace dovah {
             return i;
       return std::string::npos;
    }
+   void form_stub::insert_child_topic_info(form_stub& info, size_t at) {
+      if (this->formType != form_type::topic)
+         return;
+      if (info.formType != form_type::topic_info)
+         return;
+      if (info.parentID != this->formID) {
+         info.set_parent_form(this);
+         if (at == std::string::npos)
+            return;
+      }
+      //
+      // Reposition (info) within the list:
+      //
+      assert(this->addenda);
+      auto& list = this->addenda->ordered_children;
+      auto  size = list.size();
+      if (at >= size)
+         at = size - 1;
+      auto it = std::find(list.begin(), list.end(), &info);
+      assert(it != list.end());
+      std::move(it, it + 1, list.begin() + at);
+      
+   }
+   void form_stub::remove_child_topic_info(form_stub& info) {
+      if (this->formType != form_type::topic)
+         return;
+      if (info.formType != form_type::topic_info)
+         return;
+      if (info.parentID != this->formID)
+         return;
+      info.orphan();
+   }
 
    bool form_stub::has_child_forms() const noexcept {
       for (auto& pair : this->inbound) {
@@ -650,6 +684,28 @@ namespace dovah {
       }
       return nullptr;
    }
+   void form_stub::orphan() {
+      if (!this->parentID)
+         return;
+      auto& lo = this->_get_load_order();
+      auto* parent = lo.get_form(this->parentID);
+      if (parent) {
+         this->revoke_outbound_reference(parent, use_info_entry::flag::i_am_child_of);
+         if (this->formType == form_type::topic_info && parent->formType == form_type::topic)
+            parent->_remove_child_topic_info(*this, false);
+      }
+      this->parentID = 0;
+   }
+   void form_stub::set_parent_form(form_stub* target) noexcept {
+      this->orphan();
+      if (!target)
+         return;
+      this->parentID = target->formID;
+      this->replace_outbound_reference(0, target, use_info_entry::flag::i_am_child_of);
+      if (target->formType == form_type::topic && this->formType == form_type::topic_info)
+         target->_insert_child_topic_info(*this);
+   }
+
    bool form_stub::is_any_descendant_form_edited() const noexcept {
       if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
          return false;
@@ -796,9 +852,6 @@ namespace dovah {
       // This function can also be used to programmatically create a connection from this form to 
       // the other form. Code outside of the (file_load_order) load process should call this function 
       // rather than calling (add_outbound_reference); refer to its documentation for details.
-      //
-      using outbound_type = use_info_entry::outbound_type;
-      using use_flag      = use_info_entry::flag;
       //
       if (old != 0) {
          form_stub* old_stub = nullptr;

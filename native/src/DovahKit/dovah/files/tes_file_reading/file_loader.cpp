@@ -313,8 +313,7 @@ namespace dovah::tes_file_reading {
                      last_world_cell_id = stub->formID;
                      break;
                }
-               if (!this->commit_stub(*stub)) { // also normalizes (stub->formID)
-                  delete stub;
+               if (!this->commit_stub(stub)) {
                   continue;
                }
                this->extract_high_value_subrecords_for_stub(*stub);

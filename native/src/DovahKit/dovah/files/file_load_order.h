@@ -43,6 +43,7 @@ namespace dovah {
    namespace load_order_interfaces {
       class file_load;
       class form_load;
+      class form_save;
    }
 
    class loaded_game_setting {
@@ -66,6 +67,7 @@ namespace dovah {
       friend class form_deletion_request;
       friend class load_order_interfaces::file_load;
       friend class load_order_interfaces::form_load;
+      friend class load_order_interfaces::form_save;
       public:
          static constexpr uint8_t invalid_load_prefix = 0xFF;
          static constexpr uint8_t light_load_prefix   = 0xFE;
@@ -157,6 +159,9 @@ namespace dovah {
          void _build_none_stubs();
          void _build_use_info();
 
+         void _log_load_warning(const detailed_notice&);
+         void _log_save_warning(const detailed_notice&);
+
          bool _abandon_form_id_reservation(bare_form_id_t);
 
          notice_code_t _destroy_none_stub(form_stub&);
@@ -212,17 +217,22 @@ namespace dovah {
          form_id_status local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const;
          form_id_status local_formID_to_global_formID(form_stub* stub, uint32_t& out) const;
          bare_form_id_t remap_formID_for_save(bare_form_id_t) const noexcept;
-         void log_load_warning(const detailed_notice&);
-         void log_save_warning(const detailed_notice&);
 
-         // (acceptFormStub)
-         // Used by TESPluginFile to store a newly-loaded form stub. If the newly-loaded stub originates 
-         // from an override record, then the overridden record's stub is deleted and replaced -- we 
-         // only retain the last-loaded record for any given form ID, like the game and the CK.
+         // 
+         // Used by file_or_file_part_loader to store a newly-loaded form stub. If the newly-loaded stub 
+         // originates from an override record, then the overridden stub will import data from the new 
+         // stub, and then the new stub will be deleted with the passed-in pointer set to the overridden 
+         // stub. We only retain the last-loaded record for any given form ID, like the game and the CK.
+         //
+         // This will not delete the stub if an error occurs.
+         //
+         // The incoming stub should have exactly one file in its source file list: the file it was read 
+         // from. We assert this if the stub is an override.
          //
          // Notably NOT used for the initial load of hardcoded forms; see _accept_hardcoded_form.
          //
-         form_id_status accept_form_stub(form_stub*) noexcept;
+         form_id_status accept_form_stub(form_stub*&) noexcept;
+
          void accept_game_setting(const loaded_file* file, const loaded_game_setting&, bare_form_id_t formID) noexcept;
          #pragma endregion
 
