@@ -119,9 +119,20 @@ namespace dovah::tes_file_reading {
             return false;
          case file_load_order::form_id_status::form_type_mismatch:
             //
-            // The file load order already logged this one on its own.
+            // The file load order already logged this one on its own, but it 
+            // can't abort the load process, so we'll do that.
             //
             this->get_file_loader().abort();
+            {
+               delete stub;
+               stub = nullptr;
+            }
+            return false;
+         case file_load_order::form_id_status::injected_partial:
+            //
+            // The file load order already logged this one on its own and did not 
+            // accept the stub, but it only needs to be a warning, not an error.
+            //
             {
                delete stub;
                stub = nullptr;

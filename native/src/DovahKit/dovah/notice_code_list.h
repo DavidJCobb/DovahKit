@@ -86,7 +86,7 @@ namespace dovah {
          unexpected_nested_group_in_simple_top_group = 0x0000004D, // Malformed file: a "simple" top-level GRUP contained a nested GRUP.
          extended_subrecord_with_no_length           = 0x0000004E, // Malformed file: an 'XXXX' subrecord contained no usable length value.
          form_initial_record_is_partial              = 0x0000004F, // A form's initial record is flagged as "partial." The flag will not be honored when loading form data on-demand.
-         form_initial_record_is_partial_and_injected = 0x00000050, // A form's initial record is flagged as "partial," and is injected. We will not honor the flag when loading form data on-demand; we'll keep the form, but the game would skip the record entirely.
+         form_initial_record_is_partial_and_injected = 0x00000050, // A form's initial record is flagged as "partial," and is injected. The game would skip this record entirely, so we're skipping it as well; the form has not been loaded.
          cannot_delete_hardcoded_form                = 0x00000051,
          quest_objective_unexpected_subrecord        = 0x00000052, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
          parent_form_is_missing                      = 0x00000053, // Failed to load a file, because a form's parent form ID doesn't correspond to a valid form.

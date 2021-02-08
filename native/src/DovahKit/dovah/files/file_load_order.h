@@ -80,6 +80,7 @@ namespace dovah {
             missing_master,
             null_is_not_allowed,
             form_type_mismatch,
+            injected_partial,
          };
          //
          using form_create_callback_t     = void(*)(form_stub*);

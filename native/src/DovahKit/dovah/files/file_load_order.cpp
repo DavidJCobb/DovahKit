@@ -570,9 +570,11 @@ namespace dovah {
          //
          if (stub->source_file_count() == 1) {
             if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
+               bool injected = stub->is_injected();
+               //
                detailed_notice warning;
                warning.code = notice_code::form_initial_record_is_partial;
-               if (stub->is_injected())
+               if (injected)
                   warning.code = notice_code::form_initial_record_is_partial_and_injected;
                warning.cause_form.localID = stub->formID;
                warning.cause_form.fixedID = formID;
@@ -583,6 +585,17 @@ namespace dovah {
                   warning.set_flag(detailed_notice::flag::has_cause_file);
                }
                this->_log_load_warning(warning);
+               //
+               if (injected) {
+                  //
+                  // Skyrim will skip a partial record if it is injected and not an override. We'll 
+                  // do the same. It's tempting to retain the form or to create a none-stub, but 
+                  // either approach would incorrectly prevent subsequent files from injecting over 
+                  // the same form ID.
+                  //
+                  stub->formID = formID;
+                  return form_id_status::injected_partial;
+               }
             }
          }
          //
