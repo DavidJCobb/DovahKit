@@ -93,6 +93,14 @@ For parent forms, a reverse-engineer must also check one more location in code:
 
    virtual bool TESForm::LoadPartial(TESFile*);          // virtual method 0x07
 
+Some forms may load some of their data normally, but load more at run-time. For 
+example, INFO only loads response data  on-demand during play, and so the TRDT, 
+LNAM, NAM1,  and SNAM subrecords are  not retrieved by  (TESForm::LoadForm) but 
+rather by  (TESTopicInfo::LoadResponseDataAtRunTime)  at 0x0057D7D0.  Functions 
+like these must obtain  a pointer to the  last file that  supplied a record for 
+the form in  question; in Skyrim Classic, they do so by calling  the subroutine 
+at 0x004515B0, which I call (TESForm::GetSourceFile).
+
 The internal form class, TESForm, uses  multiple inheritance in order to supply 
 properties like  a full name (TESFullName)  or a description  (TESDescription). 
 SKSE class definitions list these parent  classes as members in order to ensure 

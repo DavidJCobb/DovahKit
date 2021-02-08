@@ -153,7 +153,8 @@ namespace dovah {
       friend class form_stub;
       protected:
          form_stub& _stub;
-         bool       _is_final_file = false;
+         bool _is_final_file     = false;
+         bool _last_record_flags = 0;
          //
          form_stub_use_info_builder(form_stub& s) : _stub(s) {}
          //
@@ -165,6 +166,9 @@ namespace dovah {
          //
          inline const form_stub* stub() const noexcept { return &this->_stub; }
          inline bool is_final_file() const noexcept { return this->_is_final_file; }
+         inline uint32_t last_record_flags() const noexcept { return this->_last_record_flags; }
+         //
+         void clear_all_prior_use_info() const noexcept; // needed for TopicInfos due to their bizarre partial-record behavior
          //
          // Generic state information, provided for form types that need it:
          form_id_t extra_form_ids[10];

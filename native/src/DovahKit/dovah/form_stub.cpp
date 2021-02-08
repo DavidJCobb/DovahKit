@@ -32,6 +32,25 @@ namespace dovah {
    void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
       this->_stub._add_one_way_outbound_reference(toFormID, flags);
    }
+   //
+   void form_stub_use_info_builder::clear_all_prior_use_info() const noexcept {
+      use_info_entry parent_entry;
+      //
+      auto& stub = this->_stub;
+      for (auto& pair : stub.outbound) {
+         auto& entry = pair.second;
+         if (entry.flags & use_info_entry::flag::i_am_child_of)
+            parent_entry = entry;
+      }
+      stub.outbound.clear();
+      if (auto* parent = parent_entry.other) {
+         //
+         // Do not clear parent/child relationships.
+         //
+         parent_entry.refcount = 1;
+         stub.outbound[parent->formID] = parent_entry;
+      }
+   }
    #pragma endregion
 
    form_stub::form_stub() {
@@ -135,6 +154,7 @@ namespace dovah {
       if (!this->form)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
       //
+      uint32_t last_record_flags = arr[0].flags;
       for (uint16_t i = 1; i < size; ++i) {
          auto  offset = arr[i].offset;
          if (offset == 0)
@@ -144,10 +164,12 @@ namespace dovah {
          intfc.is_winning_record = (i + 1 == size);
          intfc.current_file      = file;
          intfc.is_partial_record = can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
+         intfc.last_record_flags = last_record_flags;
          if (file->load_record_at(offset)) {
             auto& record = file->get_current_record();
             (loader)(this->form, record, intfc);
          }
+         last_record_flags = arr[i].flags;
       }
       //
       return loaded_form_ptr<loaded_forms::Form>(this);

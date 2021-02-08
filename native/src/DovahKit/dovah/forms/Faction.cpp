@@ -390,6 +390,7 @@ namespace dovah::loaded_forms {
       this->package_location_vendor.clear(*this);
       for (auto& cnd : this->vendor_conditions)
          cnd.clear(*this);
+      this->vendor_conditions.clear();
       //
       this->has_object_bounds = false;
       this->object_bounds.clear();
