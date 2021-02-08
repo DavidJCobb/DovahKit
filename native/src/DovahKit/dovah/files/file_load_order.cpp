@@ -596,6 +596,10 @@ namespace dovah {
                   stub->formID = formID;
                   return form_id_status::injected_partial;
                }
+               //
+               // Strip the flag for a non-injected non-override, as the game would.
+               //
+               stub->file.flags &= ~tes_file_record_header::flag::partial;
             }
          }
          //

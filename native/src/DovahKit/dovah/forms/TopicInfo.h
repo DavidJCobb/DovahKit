@@ -19,6 +19,32 @@ namespace dovah::loaded_forms {
       // fields since that's functionally the same as overriding them, but lists -- including 
       // the "link to" list and the condition list -- will have their contents duplicated.
       //
+      // Unfortunately, that means that we'll need to split all lists into "winning" and 
+      // "merged" sub-lists.
+      //
+      // This doesn't apply to responses because again, those are pulled only from the winning 
+      // record.
+      //
+      // Some additional considerations:
+      //
+      //  - Modifying the "merged" lists should be considered undefined behavior. Functions 
+      //    like reference-severing and clearing should still process them, but if those 
+      //    functions are ever invoked in a way that actually touches them then that's UB 
+      //    as well. (We should never sever references to a form outside of the active file 
+      //    because we cannot delete those.)
+      //
+      //     - Remember: we can't even modify these, let alone delete them, because all we 
+      //       can do if we've overridden a partial INFO is add to it. Any merged items need 
+      //       to be greyed out in the UI, or otherwise have it communicated that they can't 
+      //       be edited, deleted, reordered, or otherwise altered in any way.
+      //
+      //       This case isn't going to come up often (and perhaps shouldn't come up ever), 
+      //       so don't even bother trying to make it "intuitive." We have enough to deal 
+      //       with already.
+      //
+      //  - When cloning a TopicInfo, the clone's "winning" list should contain the contents 
+      //    of the source's "merged" and "winning" lists, in that order.
+      //
       public:
          static constexpr form_type_t form_type = form_type::topic_info;
          TopicInfo(const constructor_params& c) : Form(form_type, c) {};
