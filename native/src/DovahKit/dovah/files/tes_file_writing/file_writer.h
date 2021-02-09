@@ -50,7 +50,7 @@ namespace dovah {
             record& _open_next_record(uint32_t signature, bare_form_id_t);
             bool _should_compress_current_record(form_stub* stub = nullptr) const noexcept;
             void _write_header();
-            bool _write_form(form_stub*);
+            bool _write_form(form_stub*, form_stub* previous_child = nullptr);
             void _write_record(form_stub* stub = nullptr); // pass the stub when writing forms, for error reporting purposes
             void _write_child_forms_for_cell(form_stub*);
             void _write_child_forms_for_topic(form_stub*);

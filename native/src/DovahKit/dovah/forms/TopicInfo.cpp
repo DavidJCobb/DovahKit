@@ -2,6 +2,58 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
+   void TopicInfo::response::clear(TopicInfo& owner) {
+      this->emotion = decltype(this->emotion)();
+      this->unused = 0;
+      this->sound.set(owner, nullptr);
+      this->flags = 0;
+      this->text.reset();
+      this->script_notes.reset();
+      this->edits.reset();
+      this->idles.speaker.set(owner, nullptr);
+      this->idles.listener.set(owner, nullptr);
+   }
+   void TopicInfo::response::clone_from(const response& other, loaded_forms::Form& my_owner) {
+      this->emotion = other.emotion;
+      this->unused  = other.unused;
+      this->response_number = other.response_number;
+      this->sound.set(my_owner, other.sound);
+      this->flags = other.flags;
+      this->text = other.text;
+      this->script_notes = other.script_notes;
+      this->edits = other.edits;
+      this->idles.speaker.set(my_owner, other.idles.speaker);
+      this->idles.listener.set(my_owner, other.idles.listener);
+   }
+   void TopicInfo::response::save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc, uint8_t response_number) {
+      auto& TRDT = record.open_next_subrecord('TRDT');
+      TRDT.write(this->emotion.type);
+      TRDT.write(this->emotion.value);
+      TRDT.write(this->unused);
+      TRDT.write(response_number);
+      TRDT.skip_bytes(3);
+      TRDT.write(this->sound);
+      TRDT.write(this->flags);
+      TRDT.skip_bytes(3);
+      TRDT.close();
+      auto& NAM1 = record.open_next_subrecord('NAM1');
+      NAM1.write(this->text);
+      NAM1.close();
+      auto& NAM2 = record.open_next_subrecord('NAM2');
+      NAM2.write(this->script_notes);
+      NAM2.close();
+      auto& NAM3 = record.open_next_subrecord('NAM3');
+      NAM3.write(this->edits);
+      NAM3.close();
+      record.write_formID_subrecord('SNAM', this->idles.speaker, true);
+      record.write_formID_subrecord('LNAM', this->idles.listener, true);
+   }
+   void TopicInfo::response::sever_outbound_references_to(TopicInfo& owner, form_stub& target) {
+      this->sound.clear_if(owner, target);
+      this->idles.speaker.clear_if(owner, target);
+      this->idles.listener.clear_if(owner, target);
+   }
+
    void TopicInfo::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
@@ -72,7 +124,8 @@ namespace dovah::loaded_forms {
                break;
             case 'TLCT':
                if (subrecord.read(formID)) {
-                  this->link_to.push_back(formID);
+                  auto& list = partial ? this->link_to.locked : this->link_to.normal;
+                  list.push_back(formID);
                   intfc.log_load_warning(
                      detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::topic, this->stub, formID)
                   );
@@ -125,12 +178,14 @@ namespace dovah::loaded_forms {
                   subrecord.read(r.emotion.value);
                   subrecord.read(r.unused);
                   subrecord.read(r.response_number);
+                  subrecord.skip_bytes(3);
                   if (subrecord.read(r.sound)) {
                      intfc.log_load_warning(
                         detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::sound_descriptor, this->stub, r.sound)
                      );
                   }
                   subrecord.read(r.flags);
+                  subrecord.skip_bytes(3);
                }
                break;
             case 'NAM1':
@@ -169,7 +224,10 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'CTDA':
-               this->conditions.emplace_back().read(subrecord.get_containing_record(), intfc);
+               {
+                  auto& list = partial ? this->conditions.locked : this->conditions.normal;
+                  list.emplace_back().read(subrecord.get_containing_record(), intfc);
+               }
                break;
             case 'OBND':
                this->object_bounds.load(subrecord, intfc);
@@ -243,5 +301,156 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+   }
+   /*virtual*/ bool TopicInfo::_clone_impl(Form* out) const noexcept {
+      if (out->formType != form_type)
+         return false;
+      auto copy = (TopicInfo*)out;
+      //
+      copy->info_flags = this->info_flags;
+      copy->load_flags = this->load_flags;
+      copy->favor_level = this->favor_level;
+      copy->days_until_reset = this->days_until_reset;
+      copy->speaker.set(*copy, this->speaker);
+      copy->topic.set(*copy, this->topic);
+      copy->walk_away_topic.set(*copy, this->walk_away_topic);
+      copy->use_shared_info.set(*copy, this->use_shared_info);
+      copy->audio_override_output.set(*copy, this->audio_override_output);
+      //
+      copy->link_to.normal.reserve(this->link_to.locked.size() + this->link_to.normal.size());
+      for (auto& id : this->link_to.locked)
+         copy->link_to.normal.emplace_back().set(*copy, id);
+      for (auto& id : this->link_to.normal)
+         copy->link_to.normal.emplace_back().set(*copy, id);
+      //
+      copy->conditions.normal.reserve(this->conditions.locked.size() + this->conditions.normal.size());
+      for (auto& cnd : this->conditions.locked)
+         copy->conditions.normal.emplace_back().clone_from(cnd, *copy);
+      for (auto& cnd : this->conditions.normal)
+         copy->conditions.normal.emplace_back().clone_from(cnd, *copy);
+      //
+      copy->responses.reserve(this->responses.size());
+      for (auto& r : this->responses)
+         copy->responses.emplace_back().clone_from(r, *copy);
+      //
+      copy->override_topic_text = this->override_topic_text;
+      copy->object_bounds = this->object_bounds;
+      copy->script_data.clone_from(this->script_data, *copy);
+      //
+      return true;
+   }
+   /*virtual*/ bool TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
+      this->script_data.save(record, intfc);
+      if (this->info_flags || this->days_until_reset) {
+         auto& ENAM = record.open_next_subrecord('ENAM');
+         ENAM.write(this->info_flags);
+         uint16_t time = 0;
+         if (this->days_until_reset >= 1.0F) {
+            time = 0xFFFF;
+         } else if (this->days_until_reset > 0.0F) {
+            time = this->days_until_reset * 0xFFFF;
+         }
+         ENAM.write(time);
+         ENAM.close();
+      }
+      if (const auto* prev = intfc.get_previous_child()) {
+         record.write_formID_subrecord('PNAM', prev, true);
+      }
+      auto& CNAM = record.open_next_subrecord('CNAM');
+      CNAM.write(this->favor_level);
+      CNAM.close();
+      for (auto& id : this->link_to.normal)
+         record.write_formID_subrecord('TCLT', id, true);
+      record.write_formID_subrecord('DNAM', this->use_shared_info, true);
+      //
+      if (auto size = this->responses.size()) {
+         //
+         // TODO: Does the game break if there are more than 256 responses, given that the 
+         // responses' cached indices only go up to 255?
+         //
+         for (size_t i = 0; i < size; ++i) {
+            this->responses[i].save(record, intfc, i);
+         }
+      }
+      //
+      for (auto& cnd : this->conditions.normal)
+         cnd.save(record, intfc);
+      if (!this->override_topic_text.empty()) {
+         auto& RNAM = record.open_next_subrecord('RNAM');
+         RNAM.write(this->override_topic_text);
+         RNAM.close();
+      }
+      record.write_formID_subrecord('ANAM', this->speaker, true);
+      record.write_formID_subrecord('TWAT', this->walk_away_topic, true);
+      record.write_formID_subrecord('ONAM', this->audio_override_output, true);
+   }
+   /*virtual*/ void TopicInfo::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->speaker.clear_if(*this, other);
+      this->topic.clear_if(*this, other);
+      this->walk_away_topic.clear_if(*this, other);
+      this->use_shared_info.clear_if(*this, other);
+      this->audio_override_output.clear_if(*this, other);
+      //
+      remove_form_from_reference_list(this->link_to.locked, other, *this);
+      remove_form_from_reference_list(this->link_to.normal, other, *this);
+      //
+      for (auto& cnd : this->conditions.locked)
+         cnd.sever_outbound_references_to(other, *this);
+      for (auto& cnd : this->conditions.normal)
+         cnd.sever_outbound_references_to(other, *this);
+      //
+      for (auto& r : this->responses)
+         r.sever_outbound_references_to(*this, other);
+      //
+      this->script_data.sever_outbound_references_to(other, *this);
+   }
+   /*virtual*/ void TopicInfo::_clear_impl() noexcept {
+      this->info_flags = 0;
+      this->load_flags = 0;
+      this->favor_level = favor_level_t::none;
+      this->days_until_reset = 0.0F;
+      this->speaker.set(*this, nullptr);
+      this->topic.set(*this, nullptr);
+      this->walk_away_topic.set(*this, nullptr);
+      this->use_shared_info.set(*this, nullptr);
+      this->audio_override_output.set(*this, nullptr);
+      //
+      #if _DEBUG
+         if (!this->link_to.locked.empty())
+            //
+            // It shouldn't be possible to perform any operation which would lead to 
+            // the "locked" list being modified.
+            //
+            __debugbreak();
+      #endif
+      for (auto& id : this->link_to.locked)
+         id.set(*this, nullptr);
+      for (auto& id : this->link_to.normal)
+         id.set(*this, nullptr);
+      this->link_to.locked.clear();
+      this->link_to.normal.clear();
+      //
+      #if _DEBUG
+         if (!this->conditions.locked.empty())
+            //
+            // It shouldn't be possible to perform any operation which would lead to 
+            // the "locked" list being modified.
+            //
+            __debugbreak();
+      #endif
+      for (auto& cnd : this->conditions.locked)
+         cnd.clear(*this);
+      for (auto& cnd : this->conditions.normal)
+         cnd.clear(*this);
+      this->conditions.locked.clear();
+      this->conditions.normal.clear();
+      //
+      for (auto& r : this->responses)
+         r.clear(*this);
+      this->responses.clear();
+      //
+      this->override_topic_text.reset();
+      this->object_bounds.clear();
+      this->script_data.clear(*this);
    }
 }

@@ -97,16 +97,17 @@ namespace dovah::loaded_forms {
                };
             };
             using flags_t = std::underlying_type_t<flag::type>;
-            //
+            
             struct {
                int32_t type  =  0;
                int32_t value = 50;
             } emotion;
             uint32_t unused;
-            uint32_t response_number;
+            uint8_t  response_number;
             // 3 padding bytes here
             form_reference_t sound;
             flags_t flags = 0;
+            // 3 padding bytes here
             localized_string text;
             localized_string script_notes;
             localized_string edits;
@@ -114,19 +115,30 @@ namespace dovah::loaded_forms {
                form_reference_t speaker;
                form_reference_t listener;
             } idles;
+
+            void clear(TopicInfo& owner);
+            void clone_from(const response& other, loaded_forms::Form& my_owner);
+            void save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc, uint8_t response_number);
+            void sever_outbound_references_to(TopicInfo& owner, form_stub& target);
          };
 
          info_flags_t  info_flags  = 0;
          load_flags_t  load_flags  = 0;
          favor_level_t favor_level = favor_level_t::none; // CNAM
-         float         days_until_reset = 0.0F;
+         float         days_until_reset = 0.0F; // NOTE: maximum is 1.0F; CK presents it as hours
          form_reference_t speaker; // ANAM
          form_reference_t topic; // TPIC // unknown
          form_reference_t walk_away_topic; // TWAT (yes, really)
          form_reference_t use_shared_info; // DNAM // a SharedInfo to borrow response data from
          form_reference_t audio_override_output; // ONAM
-         std::vector<form_reference_t> link_to; // TCLT[] // should be DIAL; xEdit claims it can be INFO too?
-         std::vector<components::condition> conditions; // CTDA
+         struct {
+            std::vector<form_reference_t> locked;
+            std::vector<form_reference_t> normal;
+         } link_to; // TCLT[] // should be DIAL; xEdit claims it can be INFO too?
+         struct {
+            std::vector<components::condition> locked;
+            std::vector<components::condition> normal;
+         } conditions; // CTDA
          std::vector<response> responses;
          localized_string override_topic_text; // RNAM (Prompt)
          components::object_bounds object_bounds; // OBND. recognized, but probably discarded at run-time.
@@ -134,7 +146,13 @@ namespace dovah::loaded_forms {
 
          // PNAM is not stored here; we handle it during the initial stub build
 
-         void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         //
+      protected:
+         virtual bool _clone_impl(Form* out) const noexcept override;
+         virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
+         virtual void _clear_impl() noexcept override;
    };
 }

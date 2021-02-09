@@ -612,11 +612,14 @@ namespace dovah {
 
       class form_save {
          friend class tes_file_writing::file_writer;
+         protected:
+            form_stub* previous_child = nullptr;
          public:
             file_load_order& owner;
 
             // TIP: This function only logs a warning if it has a warning code.
             void log_save_warning(detailed_notice&);
+            inline const form_stub* get_previous_child() const noexcept { return this->previous_child; }
             
          protected:
             form_save(file_load_order& o) : owner(o) {}

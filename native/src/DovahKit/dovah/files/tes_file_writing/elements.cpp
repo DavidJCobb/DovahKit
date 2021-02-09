@@ -84,6 +84,26 @@ namespace dovah::tes_file_writing {
       subrecord.write(ref);
       subrecord.close();
    }
+   void record::write_formID_subrecord(uint32_t signature, const form_stub* target, bool only_if_non_empty) {
+      if (only_if_non_empty) {
+         if (!target)
+            return;
+         if (!this->owner._can_serialize_form(target))
+            return;
+      }
+      auto& subrecord = this->open_next_subrecord(signature);
+      if (target) {
+         bare_form_id_t fixedID = target->formID;
+         if (this->owner._can_serialize_form(target))
+            subrecord._fixup_form_id(fixedID);
+         else
+            fixedID = 0;
+         subrecord.write(fixedID);
+      } else {
+         subrecord.write(bare_form_id_t(0));
+      }
+      subrecord.close();
+   }
    void record::write_string_subrecord(uint32_t signature, const char* s) {
       auto& subrecord = this->open_next_subrecord(signature);
       subrecord.write(s, strlen(s) + 1);

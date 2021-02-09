@@ -3,6 +3,7 @@
 #include "../tes_file_reading/file_loader.h"
 #include "../../core.h"
 #include "../../form_stub.h"
+#include "../../form_stub_addenda.h"
 #include "../../form_stub_helpers.h"
 #include "../../forms/Form.h"
 #include "../../notice_code_list.h"
@@ -163,7 +164,7 @@ namespace dovah::tes_file_writing {
       record._close();
       --this->fixup_data.record_and_group_count.value; // this should not include the file-header record
    }
-   bool file_writer::_write_form(form_stub* stub) {
+   bool file_writer::_write_form(form_stub* stub, form_stub* previous_child) {
       auto loaded = stub->_load(true);
       if (loaded) {
          assert(stub->formType < form_types.size() && "Stub form type is out of bounds.");
@@ -175,6 +176,7 @@ namespace dovah::tes_file_writing {
             record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
          //
          auto intfc = load_order_interfaces::form_save(this->owner);
+         intfc.previous_child = previous_child;
          //
          if (loaded->save(record, intfc)) {
             auto& write_info = this->fixup_data.form_stubs[stub->formID];
@@ -364,16 +366,23 @@ namespace dovah::tes_file_writing {
       }
    }
    void file_writer::_write_child_forms_for_topic(form_stub* stub) {
+      if (!stub->addenda)
+         return;
+      auto& list = stub->addenda->ordered_children;
+      if (list.empty())
+         return;
+      //
       auto& group = this->open_group(tes_file_group_type::topic_children, stub->formID, tes_file_group_header::uninitialized_unknown);
       //
-      form_stub_helpers::for_each_child_form(stub, [this](form_stub* child) {
+      int index = -1;
+      for (auto* child : list) {
+         ++index;
          if (child->formType != form_type::topic_info)
-            return false;
+            continue;
          if (!child->needs_save())
-            return false;
+            continue;
          this->_write_form(child);
-         return false;
-      });
+      }
       //
       this->close_current_group();
    }
