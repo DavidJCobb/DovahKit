@@ -10,41 +10,6 @@
 
 namespace dovah::loaded_forms {
    class TopicInfo : public Form {
-      //
-      // TODO: TopicInfo coalesces data from the last (series of) partial record(s) just before 
-      // the winning record. This means that if an info is overridden in the active file and 
-      // the records just before that override are partial-flagged, we'll need to be extra 
-      // careful how we save it: if we save the loaded data verbatim (as we usually would), 
-      // then all non-response data will be duplicated at run-time. This is fine for single 
-      // fields since that's functionally the same as overriding them, but lists -- including 
-      // the "link to" list and the condition list -- will have their contents duplicated.
-      //
-      // Unfortunately, that means that we'll need to split all lists into "winning" and 
-      // "merged" sub-lists.
-      //
-      // This doesn't apply to responses because again, those are pulled only from the winning 
-      // record.
-      //
-      // Some additional considerations:
-      //
-      //  - Modifying the "merged" lists should be considered undefined behavior. Functions 
-      //    like reference-severing and clearing should still process them, but if those 
-      //    functions are ever invoked in a way that actually touches them then that's UB 
-      //    as well. (We should never sever references to a form outside of the active file 
-      //    because we cannot delete those.)
-      //
-      //     - Remember: we can't even modify these, let alone delete them, because all we 
-      //       can do if we've overridden a partial INFO is add to it. Any merged items need 
-      //       to be greyed out in the UI, or otherwise have it communicated that they can't 
-      //       be edited, deleted, reordered, or otherwise altered in any way.
-      //
-      //       This case isn't going to come up often (and perhaps shouldn't come up ever), 
-      //       so don't even bother trying to make it "intuitive." We have enough to deal 
-      //       with already.
-      //
-      //  - When cloning a TopicInfo, the clone's "winning" list should contain the contents 
-      //    of the source's "merged" and "winning" lists, in that order.
-      //
       public:
          static constexpr form_type_t form_type = form_type::topic_info;
          TopicInfo(const constructor_params& c) : Form(form_type, c) {};
@@ -90,6 +55,21 @@ namespace dovah::loaded_forms {
          #pragma endregion
 
          struct response {
+            struct emotion_type {
+               emotion_type() = delete;
+               enum type : uint32_t {
+                  neutral  = 0,
+                  anger    = 1,
+                  disgust  = 2,
+                  fear     = 3,
+                  sad      = 4,
+                  happy    = 5,
+                  surprise = 6,
+                  puzzled  = 7,
+               };
+            };
+            using emotion_type_t = std::underlying_type_t<emotion_type::type>;
+
             struct flag {
                flag() = delete;
                enum type : uint8_t {
@@ -99,7 +79,7 @@ namespace dovah::loaded_forms {
             using flags_t = std::underlying_type_t<flag::type>;
             
             struct {
-               int32_t type  =  0;
+               emotion_type_t type = emotion_type::neutral;
                int32_t value = 50;
             } emotion;
             uint32_t unused;
@@ -132,10 +112,53 @@ namespace dovah::loaded_forms {
          form_reference_t use_shared_info; // DNAM // a SharedInfo to borrow response data from
          form_reference_t audio_override_output; // ONAM
          struct {
+            //
+            // A TopicInfo's data consists of everything from the winning record, plus anything 
+            // other than response data that has been provided by any partial override(s) that 
+            // loaded immediately before the winning record. The winning record will overwrite 
+            // single fields set by the previous partial-flagged overrides, but will add to any 
+            // (non-response) lists provided by the partial-flagged overrides. Consider:
+            //
+            //    FILE | PARTIAL?
+            //    A    | Can't be
+            //    B    | Yes
+            //    C    | No
+            //    D    | Yes
+            //    E    | Yes
+            //    F    | Doesn't matter
+            //
+            // The final loaded record will consist of data from files D, E, and F, and will 
+            // include all link-to topics and conditions supplied by each of those files.
+            //
+            // Because the winning record can only append to the link-to and condition lists 
+            // in this situation, the list items supplied by the prior partial records cannot 
+            // be edited, reordered, deleted, or otherwise altered. Thus, they go into the 
+            // "locked" sub-list, while everything else goes into the "normal" sub-list. When 
+            // reading the form contents, the "locked" list items come first and the "normal" 
+            // list items come later.
+            //
+            // Modifying the "locked" lists is undefined behavior, as is taking any operation 
+            // that leads to their being modified. The "clear" and "sever outbound references" 
+            // functions will affect these lists (in the latter case, to avoid dangling refs), 
+            // but these functions should never end up actually doing anything to these lists 
+            // unless something else has gone wrong (i.e. you shouldn't be able to delete 
+            // forms from a master of the active file, which is what would be necessary in 
+            // order for a reference from locked data to be severed).
+            //
+            // The "clone" function has special-case behavior for committing a working copy: 
+            // if the clone-to form and the clone-from form have the same stub, and if the 
+            // clone-from form is a working copy, then we copy data from each list to its 
+            // counterpart. Otherwise, however, all data is copied to the clone-to form's 
+            // "normal" list, which is what would be appropriate for duplicating a form and 
+            // making an entirely new form.
+            //
             std::vector<form_reference_t> locked;
             std::vector<form_reference_t> normal;
          } link_to; // TCLT[] // should be DIAL; xEdit claims it can be INFO too?
          struct {
+            //
+            // See note on (link_to).
+            //
             std::vector<components::condition> locked;
             std::vector<components::condition> normal;
          } conditions; // CTDA

@@ -307,6 +307,8 @@ namespace dovah::loaded_forms {
          return false;
       auto copy = (TopicInfo*)out;
       //
+      bool committing_to_self = (&out->stub == &this->stub) && this->is_working_copy;
+      //
       copy->info_flags = this->info_flags;
       copy->load_flags = this->load_flags;
       copy->favor_level = this->favor_level;
@@ -317,17 +319,35 @@ namespace dovah::loaded_forms {
       copy->use_shared_info.set(*copy, this->use_shared_info);
       copy->audio_override_output.set(*copy, this->audio_override_output);
       //
-      copy->link_to.normal.reserve(this->link_to.locked.size() + this->link_to.normal.size());
-      for (auto& id : this->link_to.locked)
-         copy->link_to.normal.emplace_back().set(*copy, id);
-      for (auto& id : this->link_to.normal)
-         copy->link_to.normal.emplace_back().set(*copy, id);
+      if (committing_to_self) {
+         copy->link_to.locked.reserve(this->link_to.locked.size());
+         for (auto& id : this->link_to.locked)
+            copy->link_to.locked.emplace_back().set(*copy, id);
+         copy->link_to.normal.reserve(this->link_to.normal.size());
+         for (auto& id : this->link_to.normal)
+            copy->link_to.normal.emplace_back().set(*copy, id);
+      } else {
+         copy->link_to.normal.reserve(this->link_to.locked.size() + this->link_to.normal.size());
+         for (auto& id : this->link_to.locked)
+            copy->link_to.normal.emplace_back().set(*copy, id);
+         for (auto& id : this->link_to.normal)
+            copy->link_to.normal.emplace_back().set(*copy, id);
+      }
       //
-      copy->conditions.normal.reserve(this->conditions.locked.size() + this->conditions.normal.size());
-      for (auto& cnd : this->conditions.locked)
-         copy->conditions.normal.emplace_back().clone_from(cnd, *copy);
-      for (auto& cnd : this->conditions.normal)
-         copy->conditions.normal.emplace_back().clone_from(cnd, *copy);
+      if (committing_to_self) {
+         copy->conditions.locked.reserve(this->conditions.locked.size());
+         for (auto& cnd : this->conditions.locked)
+            copy->conditions.locked.emplace_back().clone_from(cnd, *copy);
+         copy->conditions.normal.reserve(this->conditions.normal.size());
+         for (auto& cnd : this->conditions.normal)
+            copy->conditions.normal.emplace_back().clone_from(cnd, *copy);
+      } else {
+         copy->conditions.normal.reserve(this->conditions.locked.size() + this->conditions.normal.size());
+         for (auto& cnd : this->conditions.locked)
+            copy->conditions.normal.emplace_back().clone_from(cnd, *copy);
+         for (auto& cnd : this->conditions.normal)
+            copy->conditions.normal.emplace_back().clone_from(cnd, *copy);
+      }
       //
       copy->responses.reserve(this->responses.size());
       for (auto& r : this->responses)

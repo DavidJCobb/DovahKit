@@ -1007,7 +1007,9 @@
 //        - That said, it should be possible to drag a form from one FormList window 
 //          to another to copy it to the latter FormList.
 //
-//  - Finish code for: DIAL, INFO, LCTN, MGEF, NPC_, QUST
+//  - Finish code for: DIAL, LCTN, MGEF, NPC_, QUST
+//
+//  - Test re-saving INFOs
 //
 //  - World viewing
 //
@@ -1201,6 +1203,8 @@
 //       xEdit's "copy as new record into" function, though they acknowledge that this 
 //       is suboptimal in that it doesn't allow you to merge in updates to the source 
 //       files after the fact; it's a one-time thing only.
+//
+//     - We'll need to be careful not to mishandle data from partial-flagged TopicInfos.
 //
 //  - Localized string editing support
 //
