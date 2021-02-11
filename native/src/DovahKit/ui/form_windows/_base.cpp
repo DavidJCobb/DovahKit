@@ -63,65 +63,77 @@ FormDialogWorkingCopyBase::FormDialogWorkingCopyBase(dovah::form_type_t ft, dova
    //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
-      this->form = nullptr;
-      this->stub = nullptr;
-      if (this->clone) {
-         delete this->clone;
-         this->clone = nullptr;
-      }
-      this->reject();
-   });
-   QObject::connect(&editor, &DovahKitCore::dataSaveImminent, this, [this]() {
-      this->form = nullptr;
+      this->form  = nullptr;
+      this->stub  = nullptr;
+      this->clone = nullptr;
+      QDialog::reject();
    });
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool just_being_flagged) {
       if (stub == this->stub) {
-         this->form = nullptr;
-         this->stub = nullptr;
-         if (this->clone) {
-            delete this->clone;
-            this->clone = nullptr;
-         }
-         this->reject();
+         this->form  = nullptr;
+         this->stub  = nullptr;
+         this->clone = nullptr;
+         QDialog::reject();
          return;
       }
       if (this->clone) {
-         this->clone->sever_outbound_references_to(*stub);
+         this->clone->sever_outbound_references_to(*stub); // TODO: have the file load order do this
       }
+   });
+   //
+   QObject::connect(&editor, &DovahKitCore::dataSaveImminent, this, [this]() {
+      this->form = nullptr;
    });
    auto _reload = [this]() { this->form = this->stub->load(); };
    QObject::connect(&editor, &DovahKitCore::dataSaveComplete, this, _reload);
    QObject::connect(&editor, &DovahKitCore::dataSaveFailed,   this, _reload);
 }
 FormDialogWorkingCopyBase::~FormDialogWorkingCopyBase() {
-   this->stub = nullptr;
-   this->form = nullptr;
-   if (!this->clone)
-      return;
-   delete this->clone;
+   this->form  = nullptr;
+   this->clone = nullptr;
+   if (this->stub) {
+      this->stub->delete_working_copy();
+      this->stub = nullptr;
+   }
 }
+
+void FormDialogWorkingCopyBase::accept() {
+   this->save();
+   QDialog::accept();
+}
+void FormDialogWorkingCopyBase::reject() {
+   auto& editor = DovahKitCore::get();
+   //
+   emit editor.formWorkingCopyDeleteImminent(this->stub);
+   this->clone = nullptr;
+   this->stub->delete_working_copy();
+   emit editor.formWorkingCopyDeleteComplete(this->stub);
+   this->form = nullptr;
+   this->stub = nullptr;
+   //
+   QDialog::reject();
+}
+
 void FormDialogWorkingCopyBase::load() {
    if (!this->stub)
       return;
    this->form  = this->stub->load();
-   this->clone = this->form->make_working_copy();
+   this->clone = this->stub->create_working_copy();
    assert(this->clone);
    this->_load_impl();
 }
 void FormDialogWorkingCopyBase::save() {
    if (!this->stub)
       return;
-   if (!this->form) {
-      this->form = this->stub->load();
-      assert(this->form);
-   }
-   assert(this->clone);
+   this->clone = nullptr;
    //
    auto& editor = DovahKitCore::get();
+   emit editor.formWorkingCopyCommitImminent(this->stub);
    emit editor.formModificationImminent(this->stub);
    this->stub->set_edited(true);
-   this->form->merge_working_copy(*this->clone);
+   this->stub->commit_working_copy();
    this->_save_impl();
+   emit editor.formWorkingCopyCommitComplete(this->stub);
    emit editor.formModified(this->stub);
 }
 #pragma endregion

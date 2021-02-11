@@ -68,17 +68,21 @@ namespace dovah {
          #endif
          this->form = nullptr;
       }
-      if (auto form = this->form) { // needed for edited forms, hardcoded forms, and other forms that aren't normally allowed to unload
-         delete form;
+      if (auto* form = this->form) { // needed for edited forms, hardcoded forms, and other forms that aren't normally allowed to unload
          this->form = nullptr;
+         delete form;
+      }
+      if (auto* copy = this->working_copy) {
+         this->working_copy = nullptr;
+         delete copy;
       }
       if (this->has_multiple_source_files()) {
          if (this->files.entries)
             delete[] this->files.entries;
       }
-      if (this->addenda) {
-         delete this->addenda;
+      if (auto* a = this->addenda) {
          this->addenda = nullptr;
+         delete a;
       }
    }
    void form_stub::_unload_form() {
@@ -659,6 +663,7 @@ namespace dovah {
       list.erase(std::remove(list.begin(), list.end(), &info), list.end());
    }
 
+   #pragma region Addenda helper functions
    bool form_stub::get_grid_coordinates(int32_t& x, int32_t& y) const noexcept {
       x = 0;
       y = 0;
@@ -727,6 +732,7 @@ namespace dovah {
       if (this->addenda)
          this->addenda->sever_references_to(other);
    }
+   #pragma endregion
 
    #pragma region Form stub parenthood functions
    bool form_stub::has_child_forms() const noexcept {
@@ -863,6 +869,7 @@ namespace dovah {
       return (this->formID % 100) / 10;
    }
 
+   #pragma region Functions for modifying use info
    void form_stub::revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags) {
       //
       // Bidirectionally sever a connection from this form to another: this form's outbound 
@@ -956,6 +963,46 @@ namespace dovah {
       }
       this->outbound.clear();
    }
+   #pragma endregion
+
+   #pragma region Functions for working copies
+   loaded_forms::Form* form_stub::create_working_copy() {
+      if (this->working_copy)
+         return nullptr;
+      //
+      loaded_forms::Form::constructor_params fcp;
+      fcp.stub = this;
+      fcp.is_working_copy = true;
+      //
+      auto* instance = create_blank_loaded_form_by_type(this->formType, fcp);
+      if (instance) {
+         auto source = this->load();
+         if (!source || !source->_clone_impl(instance)) {
+            delete instance;
+            instance = nullptr;
+         }
+      }
+      return instance;
+   }
+   void form_stub::commit_working_copy() {
+      auto* working = this->working_copy;
+      assert(working);
+      //
+      auto loaded = this->load();
+      loaded->_clear_impl();
+      working->_clone_impl(loaded);
+      //
+      this->working_copy = nullptr;
+      delete working;
+   }
+   void form_stub::delete_working_copy() {
+      if (!this->working_copy)
+         return;
+      auto* working = this->working_copy;
+      this->working_copy = nullptr;
+      delete working;
+   }
+   #pragma endregion
 
    /*static*/ void* form_stub::operator new(std::size_t sz) {
       if (sz != sizeof(form_stub))

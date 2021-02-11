@@ -60,27 +60,11 @@ namespace dovah::loaded_forms {
       this->stub.edit_record_flags(form_flag::deleted, true);
    }
    void Form::sever_outbound_references_to(form_stub& other) noexcept {
-      this->_sever_outbound_references_impl(other);
-   }
-
-   Form* Form::make_working_copy() const noexcept {
-      constructor_params fcp;
-      fcp.stub            = &this->stub;
-      fcp.is_working_copy = true;
-      //
-      auto* instance = create_blank_loaded_form_by_type(this->formType, fcp);
-      if (instance) {
-         if (!this->_clone_impl(instance)) {
-            delete instance;
-            instance = nullptr;
-         }
+      if (!this->is_working_copy) {
+         if (auto* working = this->stub.working_copy)
+            working->sever_outbound_references_to(other);
       }
-      assert(instance);
-      return instance;
-   }
-   void Form::merge_working_copy(Form& working) {
-      this->_clear_impl();
-      working._clone_impl(this);
+      this->_sever_outbound_references_impl(other);
    }
 
    /*static*/ bool Form::subrecord_is_handled_elsewhere(uint32_t signature) {

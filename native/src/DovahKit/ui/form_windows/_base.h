@@ -81,6 +81,10 @@ class FormDialogWorkingCopyBase : public QDialog {
       //
       inline const dovah::form_stub* formStub() const noexcept { return this->stub; }
       //
+   public slots:
+      virtual void accept() override;
+      virtual void reject() override;
+      //
    private slots:
       //
    private:

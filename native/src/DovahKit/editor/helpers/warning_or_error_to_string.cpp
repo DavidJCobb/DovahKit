@@ -668,7 +668,7 @@ namespace editor_helpers {
             break;
          case notice_code::form_initial_record_is_partial_and_injected:
             {
-               text = QObject::tr("Form %1 in file %2 is flagged as a partial record but is the first loaded record for this form; it's also an injected record. We will load the form, but we will not honor the \"partial\" flag; the game would skip the record entirely, since there is no already-loaded record for this form that isn't both partial and injected.", "notice_code::form_initial_record_is_partial_and_injected");
+               text = QObject::tr("Form %1 in file %2 is flagged as a partial record but is the first loaded record with this form ID; it's also an injected record. The game would skip this record because there is no already-loaded record for this form that isn't both partial and injected. We're skipping it as well: this form was not loaded.", "notice_code::form_initial_record_is_partial_and_injected");
                //
                QString form = QObject::tr("<unknown form>", "log window");
                QString file = QObject::tr("<unknown file>", "log window");

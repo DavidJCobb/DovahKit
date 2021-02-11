@@ -268,7 +268,8 @@ namespace dovah {
          flags_t        flags    = 0; // when there are getters/setters for these, use those instead of editing the mask directly
          // there will be 2 bytes of padding here
          std::string    editorID;
-         loaded_forms::Form* form = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
+         loaded_forms::Form* form         = nullptr; // don't access directly; use FormStub::load() to get a refcounted pointer
+         loaded_forms::Form* working_copy = nullptr;
          use_info_list  outbound; // other forms that this one refers to. flags describe (this), the form that is referring.
          use_info_list  inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
          //
@@ -350,13 +351,38 @@ namespace dovah {
          bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
          uint32_t get_cell_block() const noexcept;
          uint32_t get_cell_sub_block() const noexcept;
-         //
+         
+         #pragma region Functions for modifying use info
          void revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags = 0);
          void revoke_all_outbound_references_to(form_stub* target);
          void replace_outbound_reference(bare_form_id_t old, form_stub* changeTo, use_info_entry::flags_t flags = 0);
          void replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags = 0);
 
          void sever_all_outbound_references(); // works bidirectionally; use when deleting a form
+         #pragma endregion
+
+         #pragma region Functions for working copies
+         //
+         // "Working copies" are a helper functionality provided to make certain tasks 
+         // easier for frontends. A working copy of a form is a duplicate of its loaded 
+         // data, intended for use in temporary editing operations. A working copy can 
+         // be "committed," overwriting the original form's data, or deleted.
+         //
+         // Essentially, if you want to have a dialog box for editing a form, with an 
+         // "OK" button and a "Cancel" button, a working copy gives you a place to 
+         // store changes that have been made within that dialog box, to be committed 
+         // when the user clicks "OK" or deleted when the user clicks "Cancel."
+         //
+         // A form stub can only have one working copy. DovahKit makes absolutely no 
+         // attempt to manage ownership or lifetimes for working copies OTHER THAN 
+         // deleting the working copy in the form_stub destructor; the frontend is 
+         // responsible for deciding when to create, commit, and delete working copies.
+         //
+         loaded_forms::Form* get_working_copy() const noexcept { return this->working_copy; };
+         loaded_forms::Form* create_working_copy(); // returns nullptr if one already exists
+         void commit_working_copy(); // commit the working copy, and then delete it
+         void delete_working_copy(); // delete the working copy without committing it
+         #pragma endregion
          
          static void* operator new(std::size_t sz);
          static void operator delete(void* ptr, std::size_t sz);

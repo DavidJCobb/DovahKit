@@ -435,10 +435,7 @@
 //                            owning FormDialogWorkingCopyBase).
 //
 //                          - When working with a stub, react to the form being 
-//                            modified while it's being operated on, if possible. 
-//                            (Actually, I can't think of any use case for working 
-//                            directly with a stub; we should probably remove that 
-//                            entirely.)
+//                            modified while it's being operated on, if possible.
 //
 //                          - Stringifying condition arguments: the branch for 
 //                            using package data is incomplete; it should check 

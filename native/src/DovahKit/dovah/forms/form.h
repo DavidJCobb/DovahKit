@@ -18,6 +18,7 @@ namespace dovah {
 
    namespace loaded_forms {
       class Form {
+         friend class form_stub;
          public:
             const form_type_t formType;
             const bool is_working_copy;
@@ -68,7 +69,7 @@ namespace dovah {
 
             void friendly_delete_override(const file_load_order&) noexcept;
             void flag_as_deleted() noexcept;
-            void sever_outbound_references_to(form_stub& other) noexcept;
+            void sever_outbound_references_to(form_stub& other) noexcept; // if (this) is not a working copy and (this->stub) has a working copy, calls the same function on the working copy as well
 
             //
             // === void Form::setup() ============================================================
@@ -79,20 +80,6 @@ namespace dovah {
             virtual void setup(const file_load_order&) noexcept {}
 
             virtual bool would_bethesda_compress() const noexcept { return false; } // provided for CELL
-
-            //
-            // A "working copy" of a form is a temporary copy, which a frontend can use to store 
-            // pending changes until such time as those changes are committed to the original form. 
-            // Working copies do not have an owning form stub, and therefore are not managed by the 
-            // file_load_order; the frontend is responsible for making sure that when a form is 
-            // deleted, any outbound references to it from the working copy are properly severed 
-            // (or the working copy is disposed of immediately if that is not possible).
-            //
-            // Frontends may wish to wrap these functions in their own system, in order to carry 
-            // out that responsibility.
-            //
-            Form* make_working_copy() const noexcept;
-            void merge_working_copy(Form& working);
             
          protected:
             virtual bool _clone_impl(Form* out) const noexcept { return false; }; // TODO: implement on existing forms; then, make pure

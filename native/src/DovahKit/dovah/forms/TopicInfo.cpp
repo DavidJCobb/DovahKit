@@ -403,6 +403,8 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('ANAM', this->speaker, true);
       record.write_formID_subrecord('TWAT', this->walk_away_topic, true);
       record.write_formID_subrecord('ONAM', this->audio_override_output, true);
+      //
+      return true;
    }
    /*virtual*/ void TopicInfo::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->speaker.clear_if(*this, other);

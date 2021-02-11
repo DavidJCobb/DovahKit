@@ -46,12 +46,7 @@ namespace form_dialog_helpers {
       static_assert(std::is_base_of_v<FormDialogWorkingCopyBase, _dialog_t>, "This helper is meant for FormDialogWorkingCopyBase only.");
       dialog.ui.setupUi(&dialog);
       //
-      QObject::connect(dialog.ui.buttonCancel, &QPushButton::clicked, [&dialog]() {
-         dialog.reject();
-      });
-      QObject::connect(dialog.ui.buttonOK, &QPushButton::clicked, [&dialog]() {
-         dialog.save();
-         dialog.accept();
-      });
+      QObject::connect(dialog.ui.buttonCancel, &QPushButton::clicked, &dialog, &_dialog_t::reject);
+      QObject::connect(dialog.ui.buttonOK,     &QPushButton::clicked, &dialog, &_dialog_t::accept);
    }
 }
