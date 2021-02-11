@@ -982,6 +982,7 @@ namespace dovah {
             instance = nullptr;
          }
       }
+      this->working_copy = instance;
       return instance;
    }
    void form_stub::commit_working_copy() {

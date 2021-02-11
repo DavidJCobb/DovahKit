@@ -92,7 +92,7 @@ class FormDialogWorkingCopyBase : public QDialog {
    protected:
       dovah::form_stub* stub = nullptr;
       dovah::loaded_form_ptr<loaded_t> form;
-      loaded_t* clone = nullptr;
+      loaded_t* clone = nullptr; // not safe to access from _save_impl; write to the loaded form directly
       //
       template<typename C> C* get_working_copy() const noexcept { return (C*)this->clone; }
       //

@@ -113,7 +113,7 @@ void FormDialogQuest::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
-   auto& working = *this->get_working_copy<form_t>();
+   auto& working = *this->form.ptr_cast<form_t>();
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
    editor.assign_localized_string(working.name, this->ui.name->text());
