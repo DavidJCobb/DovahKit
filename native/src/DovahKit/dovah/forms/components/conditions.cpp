@@ -2,6 +2,7 @@
 #include "../../../helpers/strings.h"
 #include "../_common_cpp.h"
 
+#include "../Package.h"
 #include "../Quest.h"
 
 namespace dovah::loaded_forms::components {
@@ -764,7 +765,7 @@ namespace dovah::loaded_forms::components {
       #pragma endregion
    }
    
-   condition_context::condition_context(form_stub& owner, bool use_working_copy_if_any) : owner(&owner) {
+   condition_context::condition_context(form_stub& owner, bool prefer_working_copy) : owner(&owner), prefer_working_copy(prefer_working_copy) {
       if (owner.formType == form_type::quest) {
          this->quest = &owner;
       } else if (owner.formType == form_type::package) {
@@ -790,6 +791,26 @@ namespace dovah::loaded_forms::components {
          this->loaded.package = this->package->load().ptr_cast<loaded_forms::Package>();
       if (this->quest)
          this->loaded.quest   = this->quest->load().ptr_cast<loaded_forms::Quest>();
+   }
+   loaded_forms::Package* condition_context::get_owning_package() const noexcept {
+      if (!this->package)
+         return nullptr;
+      if (this->prefer_working_copy) {
+         auto* wc = this->package->working_copy;
+         if (wc)
+            return (loaded_forms::Package*)wc;
+      }
+      return this->loaded.package.unwrap();
+   }
+   loaded_forms::Quest* condition_context::get_owning_quest() const noexcept {
+      if (!this->quest)
+         return nullptr;
+      if (this->prefer_working_copy) {
+         auto* wc = this->quest->working_copy;
+         if (wc)
+            return (loaded_forms::Quest*)wc;
+      }
+      return this->loaded.quest.unwrap();
    }
 
    #pragma region condition

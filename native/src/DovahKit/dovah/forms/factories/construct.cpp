@@ -8,6 +8,7 @@
 #include "../FormList.h"
 #include "../Location.h"
 #include "../ObjectReference.h"
+#include "../Package.h"
 #include "../Quest.h"
 #include "../Shout.h"
 #include "../Voicetype.h"

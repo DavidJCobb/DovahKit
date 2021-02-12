@@ -315,9 +315,9 @@ void ConditionEditDialog::_rebuildAliasIDParam(int which, param_type_t* type, bo
    }
    //
    auto* w = new QComboBox;
-   if (this->context.loaded.quest) {
+   if (auto* q = this->context.get_owning_quest()) {
       w->addItem(tr("NONE"), -1);
-      for (auto* alias : this->context.loaded.quest->aliases) {
+      for (auto* alias : q->aliases) {
          if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
             continue;
          w->addItem(alias->name.c_str(), alias->id);
@@ -455,9 +455,9 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
          case underlying_t::aliasID:
             {
                auto* w = new QComboBox;
-               if (this->context.loaded.quest) {
+               if (auto* q = this->context.get_owning_quest()) {
                   w->addItem(tr("NONE"), -1);
-                  for (auto* alias : this->context.loaded.quest->aliases) {
+                  for (auto* alias : q->aliases) {
                      if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
                         continue;
                      w->addItem(alias->name.c_str(), alias->id);
@@ -686,8 +686,8 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
-         if (this->context.loaded.quest) {
-            for (auto* alias : this->context.loaded.quest->aliases) {
+         if (auto* q = this->context.get_owning_quest()) {
+            for (auto* alias : q->aliases) {
                if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
                   continue;
                this->ui.runOnDropdown->addItem(alias->name.c_str(), alias->id);
@@ -703,7 +703,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
-         if (this->context.package) {
+         if (auto* p = this->context.get_owning_package()) {
             //
             // TODO: package data
             //
@@ -717,8 +717,8 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
       case condition_t::run_on_t::event_data:
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
-         if (this->context.loaded.quest) {
-            auto  code = this->context.loaded.quest->event;
+         if (auto* q = this->context.get_owning_quest()) {
+            auto  code = q->event;
             auto* def  = dovah::story_event_definition::lookup(code);
             if (def)
                for (auto& data : def->members)

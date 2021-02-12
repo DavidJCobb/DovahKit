@@ -101,8 +101,8 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                   case condition::run_on_t::combat_target:
                      return tr("Combat Target", "condition list - run on");
                   case condition::run_on_t::event_data:
-                     if (this->context.loaded.quest) {
-                        auto  code = this->context.loaded.quest->event;
+                     if (auto* q = this->context.get_owning_quest()) {
+                        auto  code = q->event;
                         auto* def  = dovah::story_event_definition::lookup(code);
                         if (def) {
                            auto* member = def->member_by_wide_signature(condition.run_on.index);
@@ -119,8 +119,8 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      //
                      return tr("Package Data", "condition list - run on");
                   case condition::run_on_t::quest_alias:
-                     if (this->context.loaded.quest) {
-                        if (auto* alias = this->context.loaded.quest->lookup_alias_by_id(condition.run_on.index)) {
+                     if (auto* q = this->context.get_owning_quest()) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               return name;
@@ -157,8 +157,8 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         return font;
                      }
                   case condition::run_on_t::quest_alias:
-                     if (this->context.loaded.quest) {
-                        if (auto* alias = this->context.loaded.quest->lookup_alias_by_id(condition.run_on.index)) {
+                     if (auto* q = this->context.get_owning_quest()) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               break;

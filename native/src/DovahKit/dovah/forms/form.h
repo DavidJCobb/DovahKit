@@ -20,6 +20,8 @@ namespace dovah {
       class Form {
          friend class form_stub;
          public:
+            static constexpr form_type_t form_type = form_type::none;
+            //
             const form_type_t formType;
             const bool is_working_copy;
             form_stub& stub;

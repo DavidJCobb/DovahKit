@@ -79,9 +79,13 @@ namespace dovah::loaded_forms::components {
          loaded_form_ptr<loaded_forms::Package> package;
          loaded_form_ptr<loaded_forms::Quest>   quest;
       } loaded;
+      bool prefer_working_copy = true;
       //
       condition_context() {}
-      condition_context(form_stub&, bool use_working_copy_if_any = true);
+      condition_context(form_stub&, bool prefer_working_copy = true);
+      //
+      loaded_forms::Package* get_owning_package() const noexcept; // gets the working copy or, if there isn't one, the form
+      loaded_forms::Quest*   get_owning_quest() const noexcept; // gets the working copy or, if there isn't one, the form
    };
 
    struct condition {

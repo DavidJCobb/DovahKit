@@ -76,7 +76,15 @@ namespace dovah {
          operator loaded_form_t*() const noexcept { return (loaded_form_t*)this->wrapped->form; };
          loaded_form_t* operator->() const noexcept { return (loaded_form_t*)this->wrapped->form; };
 
-         inline loaded_form_t* unwrap() const noexcept { return this->wrapped ? this->wrapped->form : nullptr; }
+         loaded_form_t* unwrap() const noexcept { // REQUIRES that the header for (loaded_form_t) be included
+            if (!this->wrapped)
+               return nullptr;
+            if constexpr (loaded_form_t::form_type != form_type::none) {
+               if (this->wrapped->formType != loaded_form_t::form_type)
+                  return nullptr;
+            }
+            return (loaded_form_t*)this->wrapped->form;
+         }
 
          loaded_form_ptr<loaded_form_t>& operator=(form_stub* stub) noexcept {
             this->_dec();
