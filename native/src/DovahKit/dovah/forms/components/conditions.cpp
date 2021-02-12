@@ -764,20 +764,32 @@ namespace dovah::loaded_forms::components {
       #pragma endregion
    }
    
-   condition_context::condition_context(Form& owner) : owner(&owner) {
-      if (auto* casted = dynamic_cast<Quest*>(&owner)) {
-         this->quest = casted;
-         return;
+   condition_context::condition_context(form_stub& owner, bool use_working_copy_if_any) : owner(&owner) {
+      if (owner.formType == form_type::quest) {
+         this->quest = &owner;
+      } else if (owner.formType == form_type::package) {
+         this->package = &owner;
+         //
+         // TODO: get owning quest
+         //
+      } else if (owner.formType == form_type::scene) {
+         //
+         // TODO: get owning quest
+         //
+      } else if (owner.formType == form_type::topic) {
+         //
+         // TODO: get owning quest
+         //
+      } else if (owner.formType == form_type::topic_info) {
+         //
+         // TODO: get owning quest
+         //
       }
       //
-      // TODO: cast to Package; set (quest) and (package) if so
-      //
-      // TODO: cast to Scene; set (quest) if so
-      //
-      // TODO: cast to Topic; set (quest) if so
-      //
-      // TODO: cast to TopicInfo; get parent Topic and set (quest) if so
-      //
+      if (this->package)
+         this->loaded.package = this->package->load().ptr_cast<loaded_forms::Package>();
+      if (this->quest)
+         this->loaded.quest   = this->quest->load().ptr_cast<loaded_forms::Quest>();
    }
 
    #pragma region condition

@@ -7,6 +7,7 @@
 class ConditionEditDialog : public QDialog {
    Q_OBJECT
    protected:
+      using form_stub     = dovah::form_stub;
       using condition_t   = dovah::loaded_forms::components::condition;
       using cnd_context_t = dovah::loaded_forms::components::condition_context;
       using loaded_form_t = dovah::loaded_forms::Form;
@@ -23,7 +24,7 @@ class ConditionEditDialog : public QDialog {
       };
       //
    public:
-      ConditionEditDialog(loaded_form_t& containing_form, condition_t& condition, QWidget* parent = Q_NULLPTR);
+      ConditionEditDialog(form_stub& containing_form, condition_t& condition, QWidget* parent = Q_NULLPTR);
       //
    private slots:
       //

@@ -31,7 +31,7 @@ bool ConditionEditDialog::_FunctionListProxy::filterAcceptsRow(int source_row, c
    return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
 }
 
-ConditionEditDialog::ConditionEditDialog(loaded_form_t& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c) {
+ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c) {
    ui.setupUi(this);
    //
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
@@ -315,9 +315,9 @@ void ConditionEditDialog::_rebuildAliasIDParam(int which, param_type_t* type, bo
    }
    //
    auto* w = new QComboBox;
-   if (this->context.quest) {
+   if (this->context.loaded.quest) {
       w->addItem(tr("NONE"), -1);
-      for (auto* alias : this->context.quest->aliases) {
+      for (auto* alias : this->context.loaded.quest->aliases) {
          if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
             continue;
          w->addItem(alias->name.c_str(), alias->id);
@@ -455,9 +455,9 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
          case underlying_t::aliasID:
             {
                auto* w = new QComboBox;
-               if (this->context.quest) {
+               if (this->context.loaded.quest) {
                   w->addItem(tr("NONE"), -1);
-                  for (auto* alias : this->context.quest->aliases) {
+                  for (auto* alias : this->context.loaded.quest->aliases) {
                      if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
                         continue;
                      w->addItem(alias->name.c_str(), alias->id);
@@ -686,8 +686,8 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
-         if (this->context.quest) {
-            for (auto* alias : this->context.quest->aliases) {
+         if (this->context.loaded.quest) {
+            for (auto* alias : this->context.loaded.quest->aliases) {
                if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
                   continue;
                this->ui.runOnDropdown->addItem(alias->name.c_str(), alias->id);
@@ -717,8 +717,8 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
       case condition_t::run_on_t::event_data:
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
-         if (this->context.quest) {
-            auto  code = this->context.quest->event;
+         if (this->context.loaded.quest) {
+            auto  code = this->context.loaded.quest->event;
             auto* def  = dovah::story_event_definition::lookup(code);
             if (def)
                for (auto& data : def->members)

@@ -76,9 +76,6 @@ FormDialogWorkingCopyBase::FormDialogWorkingCopyBase(dovah::form_type_t ft, dova
          QDialog::reject();
          return;
       }
-      if (this->clone) {
-         this->clone->sever_outbound_references_to(*stub); // TODO: have the file load order do this
-      }
    });
    //
    QObject::connect(&editor, &DovahKitCore::dataSaveImminent, this, [this]() {

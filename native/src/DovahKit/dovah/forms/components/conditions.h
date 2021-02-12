@@ -72,12 +72,16 @@ namespace dovah::loaded_forms::components {
       //
       // Helper struct for working with conditions.
       //
-      Form*    owner   = nullptr;
-      Package* package = nullptr;
-      Quest*   quest   = nullptr;
+      form_stub* owner   = nullptr; // the form that contains the conditions
+      form_stub* package = nullptr; // (owner) if it's a PACK, or its owning PACK
+      form_stub* quest   = nullptr; // (owner) if it's a QUST, or its owning QUST
+      struct {
+         loaded_form_ptr<loaded_forms::Package> package;
+         loaded_form_ptr<loaded_forms::Quest>   quest;
+      } loaded;
       //
       condition_context() {}
-      condition_context(Form&);
+      condition_context(form_stub&, bool use_working_copy_if_any = true);
    };
 
    struct condition {

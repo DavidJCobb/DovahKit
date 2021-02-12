@@ -23,7 +23,6 @@ class ConditionListModel : public QAbstractTableModel {
       using form_stub = dovah::form_stub;
       using condition = dovah::loaded_forms::components::condition;
       using cnd_context_t = dovah::loaded_forms::components::condition_context;
-      using loaded_form_t = dovah::loaded_forms::Form;
       using arg_underlying_type = dovah::loaded_forms::components::condition_info::arg_underlying_type;
       using condition_function  = dovah::loaded_forms::components::condition_info::function;
       //
@@ -35,9 +34,8 @@ class ConditionListModel : public QAbstractTableModel {
       static constexpr int ColumnUsesOr   = 5;
       //
    protected:
-      loaded_form_t* clone = nullptr; // form which owns the condition list (should be a working copy)
-      std::vector<condition>* target = nullptr; // condition list to modify
       cnd_context_t context;
+      std::vector<condition>* target = nullptr; // condition list to modify
       //
    protected slots:
       void formModified(const dovah::form_stub*);
@@ -75,9 +73,9 @@ class ConditionListModel : public QAbstractTableModel {
       }
       void moveSelection(const QItemSelection&, int down);
       void refresh();
-      void setTarget(loaded_form_t&, std::vector<condition>&);
+      void setTarget(form_stub&, std::vector<condition>&);
 
-      loaded_form_t* targetForm() const noexcept { return this->clone; }
+      form_stub* targetStub() const noexcept { return this->context.owner; }
       condition* getCondition(const QModelIndex&);
 };
 

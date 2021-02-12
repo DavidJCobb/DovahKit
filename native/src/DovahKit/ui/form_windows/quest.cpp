@@ -88,7 +88,7 @@ void FormDialogQuest::_load_impl() {
       this->ui.textDisplayGlobals->import(working.text_display_globals);
       //
       cobb::qt::bind(this->ui.priority, working.priority);
-      this->ui.dialogueConditions->model()->setTarget(working, working.conditions.dialogue);
+      this->ui.dialogueConditions->model()->setTarget(*this->stub, working.conditions.dialogue);
    #pragma endregion
    #pragma region Stages
 

@@ -101,8 +101,8 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                   case condition::run_on_t::combat_target:
                      return tr("Combat Target", "condition list - run on");
                   case condition::run_on_t::event_data:
-                     if (auto* q = this->context.quest) {
-                        auto  code = this->context.quest->event;
+                     if (this->context.loaded.quest) {
+                        auto  code = this->context.loaded.quest->event;
                         auto* def  = dovah::story_event_definition::lookup(code);
                         if (def) {
                            auto* member = def->member_by_wide_signature(condition.run_on.index);
@@ -119,8 +119,8 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      //
                      return tr("Package Data", "condition list - run on");
                   case condition::run_on_t::quest_alias:
-                     if (auto* q = this->context.quest) {
-                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
+                     if (this->context.loaded.quest) {
+                        if (auto* alias = this->context.loaded.quest->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               return name;
@@ -157,8 +157,8 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         return font;
                      }
                   case condition::run_on_t::quest_alias:
-                     if (auto* q = this->context.quest) {
-                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
+                     if (this->context.loaded.quest) {
+                        if (auto* alias = this->context.loaded.quest->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               break;
@@ -332,9 +332,7 @@ bool ConditionListModel::moveRows(const QModelIndex& from_parent, int first_row_
 
 void ConditionListModel::clearTarget() {
    this->beginResetModel();
-   if (this->target)
-      this->target->clear();
-   this->clone = nullptr;
+   this->target  = nullptr;
    this->context = cnd_context_t();
    this->endResetModel();
 }
@@ -373,13 +371,12 @@ void ConditionListModel::refresh() {
    auto last = this->target->size() - 1;
    emit dataChanged(this->index(0, 0, dummy), this->index(last, this->columnCount(dummy), dummy));
 }
-void ConditionListModel::setTarget(loaded_form_t& clone, std::vector<condition>& list) {
+void ConditionListModel::setTarget(form_stub& owner, std::vector<condition>& list) {
    if (this->target)
       this->clearTarget();
    this->beginResetModel();
-   this->clone  = &clone;
-   this->target = &list;
-   this->context = cnd_context_t(clone);
+   this->target  = &list;
+   this->context = cnd_context_t(owner);
    this->endResetModel();
 }
 
@@ -437,11 +434,11 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       auto  rows = sm->selectedRows();
       if (rows.size() != 1)
          return;
-      auto* form = model->targetForm();
+      auto* stub = model->targetStub();
       auto* cnd  = model->getCondition(rows[0]);
-      if (!form || !cnd)
+      if (!stub || !cnd)
          return;
-      auto* modal = new ConditionEditDialog(*form, *cnd, this);
+      auto* modal = new ConditionEditDialog(*stub, *cnd, this);
       modal->open();
    });
    //
