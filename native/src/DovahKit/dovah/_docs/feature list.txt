@@ -1,0 +1,12 @@
+
+This document is being written during  development and will be updated whenever 
+I remember to update  it, so it may  not be fully accurate.  DovahKit has these 
+features to separate it from the Creation Kit:
+
+ - DovahKit loads files and content significantly faster than the Creation Kit.
+
+ - DovahKit supports Lua scripts which can be used to automate certain tasks or 
+   even add new tools to the editor.
+
+ - DovahKit loads  BSAs associated with  all loaded files,  whereas the CK only 
+   loads a predefined list of official BSAs specified in an INI file.

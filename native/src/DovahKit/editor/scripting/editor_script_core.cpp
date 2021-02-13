@@ -7,6 +7,7 @@
 #include "class_killer.h"
 
 #include "../core.h" // for dovah.get_form_by_id
+#include "../../dovah/forms/Form.h" // needed for any loaded_form_ptr
 #include "api/form_type_values.h"
 #include "wrapper_util.h"
 #include "wrappers/form.h"

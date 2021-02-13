@@ -440,6 +440,7 @@
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\Actor.h" />
+    <ClInclude Include="dovah\forms\Package.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
     <ClInclude Include="dovah\forms\WordOfPower.h" />
     <ClInclude Include="dovah\forms\Worldspace.h" />
@@ -661,6 +662,7 @@
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
     <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
+    <Text Include="dovah\_docs\feature list.txt" />
     <Text Include="dovah\_docs\form stubs.txt" />
     <Text Include="dovah\_docs\game settings.txt" />
     <Text Include="dovah\_docs\how the game loads forms.txt" />

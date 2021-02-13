@@ -787,18 +787,26 @@ namespace dovah::loaded_forms::components {
          //
       }
       //
-      if (this->package)
-         this->loaded.package = this->package->load().ptr_cast<loaded_forms::Package>();
-      if (this->quest)
-         this->loaded.quest   = this->quest->load().ptr_cast<loaded_forms::Quest>();
+      if (auto* s = this->package) {
+         if (s->formType != form_type::package)
+            this->package = nullptr;
+         else
+            this->loaded.package = s->load().ptr_cast<loaded_forms::Package>();
+      }
+      if (auto* s = this->quest) {
+         if (s->formType != form_type::quest)
+            this->quest = nullptr;
+         else
+            this->loaded.quest = s->load().ptr_cast<loaded_forms::Quest>();
+      }
    }
    loaded_forms::Package* condition_context::get_owning_package() const noexcept {
       if (!this->package)
          return nullptr;
       if (this->prefer_working_copy) {
-         auto* wc = this->package->working_copy;
+         auto* wc = this->package->get_working_copy<loaded_forms::Package>();
          if (wc)
-            return (loaded_forms::Package*)wc;
+            return wc;
       }
       return this->loaded.package.unwrap();
    }
@@ -806,9 +814,9 @@ namespace dovah::loaded_forms::components {
       if (!this->quest)
          return nullptr;
       if (this->prefer_working_copy) {
-         auto* wc = this->quest->working_copy;
+         auto* wc = this->package->get_working_copy<loaded_forms::Quest>();
          if (wc)
-            return (loaded_forms::Quest*)wc;
+            return wc;
       }
       return this->loaded.quest.unwrap();
    }

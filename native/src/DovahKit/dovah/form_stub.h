@@ -37,32 +37,46 @@ namespace dovah {
       // and wish to load and use the form data:
       //
       //    auto form  = myFormStub.load();
-      //    auto quest = form.ptr_cast<LoadedForms::Quest>();
+      //    auto quest = form.ptr_cast<loaded_forms::Quest>();
       //    //
-      //    // ...and then you can use (quest) if it were a LoadedForms::Quest*. Even 
-      //    // without casting, you can use (form) as if it were a LoadedForms::Form*.
+      //    // ...and then you can use (quest) if it were a loaded_forms::Quest*. Even 
+      //    // without casting, you can use (form) as if it were a loaded_forms::Form*.
+      //
+      // When these smart pointers are templated on a class other than the base Form 
+      // class, they will type-check any incoming stubs and refuse to store any that 
+      // have a mismatched type; loaded_form_ptr<loaded_forms::Quest>, for example, 
+      // will not store a stub whose formType is not form_type::quest.
       //
       protected:
          form_stub* wrapped = nullptr;
          inline void _inc() {
-            if (auto fs = this->wrapped) {
+            if (auto* fs = this->wrapped) {
                assert(!fs->refcount_is_maxed_out() && "form_stub refcount is already at maximum!");
                ++fs->refcount;
             }
          }
          inline void _dec() {
-            if (auto fs = this->wrapped) {
+            if (auto* fs = this->wrapped) {
                assert(fs->get_refcount() != 0 && "form_stub refcount is already zero!");
                --fs->refcount;
                if (fs->refcount == 0)
                   fs->_unload_form();
             }
          }
+         inline static form_stub* _type_check(form_stub* s) noexcept {
+            if constexpr (std::is_same_v<loaded_form_t, loaded_forms::Form>)
+               return s;
+            if (s && s->formType == loaded_form_t::form_type)
+               return s;
+            return nullptr;
+         }
       public:
          using wrapped_type = loaded_form_t;
          //
          loaded_form_ptr() {}
-         loaded_form_ptr(form_stub* stub) : wrapped(stub) { this->_inc(); };
+         loaded_form_ptr(form_stub* stub) : wrapped(_type_check(stub)) {
+            this->_inc();
+         };
          template<typename other_form_t> loaded_form_ptr(loaded_form_ptr<other_form_t>&& other) {
             this->wrapped = other.wrapped;
             other.wrapped = nullptr;
@@ -76,19 +90,15 @@ namespace dovah {
          operator loaded_form_t*() const noexcept { return (loaded_form_t*)this->wrapped->form; };
          loaded_form_t* operator->() const noexcept { return (loaded_form_t*)this->wrapped->form; };
 
-         loaded_form_t* unwrap() const noexcept { // REQUIRES that the header for (loaded_form_t) be included
+         inline loaded_form_t* unwrap() const noexcept {
             if (!this->wrapped)
                return nullptr;
-            if constexpr (loaded_form_t::form_type != form_type::none) {
-               if (this->wrapped->formType != loaded_form_t::form_type)
-                  return nullptr;
-            }
             return (loaded_form_t*)this->wrapped->form;
          }
 
          loaded_form_ptr<loaded_form_t>& operator=(form_stub* stub) noexcept {
             this->_dec();
-            this->wrapped = stub;
+            this->wrapped = _type_check(stub);
             this->_inc();
             return *this;
          }
@@ -388,10 +398,35 @@ namespace dovah {
          // deleting the working copy in the form_stub destructor; the frontend is 
          // responsible for deciding when to create, commit, and delete working copies.
          //
-         loaded_forms::Form* get_working_copy() const noexcept { return this->working_copy; };
+         template<class C = loaded_forms::Form> C* get_working_copy() const noexcept {
+            if constexpr (!std::is_same_v<C, loaded_forms::Form>) {
+               if (auto* wc = this->working_copy) {
+                  if (wc->formType != C::form_type)
+                     return nullptr;
+               }
+            }
+            return (C*) this->working_copy;
+         };
          loaded_forms::Form* create_working_copy(); // returns nullptr if one already exists
          void commit_working_copy(); // commit the working copy, and then delete it
          void delete_working_copy(); // delete the working copy without committing it
+         
+         //
+         // Helper function. In some functions, you will want to work with a form stub's 
+         // working copy if there is one, or the normal loaded-form data otherwise. In 
+         // these cases, you need to have a loaded_form_ptr on hand because if you do end 
+         // up using the normal loaded-form data, the smart pointer is needed to keep that 
+         // data alive until you're done with it.
+         //
+         template<class C = loaded_forms::Form> C* get_working_or_stable_copy(loaded_form_ptr<C>& p) noexcept {
+            C* wc = this->get_working_copy<C>();
+            if (wc) {
+               p = nullptr;
+               return wc;
+            }
+            p = this->load().ptr_cast<C>();
+            return p.unwrap();
+         }
          #pragma endregion
          
          static void* operator new(std::size_t sz);

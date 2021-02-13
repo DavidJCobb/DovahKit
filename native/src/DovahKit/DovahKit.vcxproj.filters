@@ -1400,6 +1400,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\Package.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1652,5 +1655,6 @@
     <Text Include="editor\scripting\_docs\case studies.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
     <Text Include="dovah\_docs\topic infos%27 placement in topics%27 info lists.txt" />
+    <Text Include="dovah\_docs\feature list.txt" />
   </ItemGroup>
 </Project>

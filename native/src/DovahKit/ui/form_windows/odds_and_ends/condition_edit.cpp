@@ -593,12 +593,12 @@ void ConditionEditDialog::_buildParamControls(int which, underlying_t under, par
                   auto* prev  = dynamic_cast<FormsOfTypeCombobox*>(this->parameters[which - 1].widget);
                   assert(prev);
                   auto* quest = prev->formStub();
-                  if (quest) {
+                  if (quest && quest->formType == dovah::form_type::quest) {
+                     using loaded_form_t = dovah::loaded_forms::Quest;
                      //
-                     // TODO: If we're editing a QUST and it has self-referential GetStageDone conditions, 
-                     // we will show only the last-saved stages, not any stages in unsaved changes.
+                     dovah::loaded_form_ptr<loaded_form_t> keep_alive;
+                     loaded_form_t* q = quest->get_working_or_stable_copy(keep_alive);
                      //
-                     auto q = quest->load().ptr_cast<dovah::loaded_forms::Quest>();
                      if (q)
                         for (auto& s : q->stages)
                            w->addItem(QString::number(s.index), s.index);
