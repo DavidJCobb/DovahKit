@@ -1,5 +1,6 @@
 #include "get_game_setting_description.h"
 #include <array>
+#include <string>
 #include <QObject>
 
 //
@@ -10,7 +11,7 @@ namespace {
    const char* disambig = "GMST description";
 
    struct _association {
-      const char* name;
+      std::string name;
       QString     description;
       //
       _association() {}
@@ -277,8 +278,11 @@ extern QString get_game_setting_description(const char* name) {
    auto length = strlen(name);
    if (length < 2)
       return QString();
-   for (auto& entry : _associations)
-      if (_strnicmp(name, entry.name, length) == 0)
+   for (auto& entry : _associations) {
+      if (entry.name.size() != length)
+         continue;
+      if (_strnicmp(name, entry.name.c_str(), length) == 0)
          return entry.description;
+   }
    return QString();
 }
