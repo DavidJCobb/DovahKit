@@ -9,6 +9,7 @@ class ConditionEditDialog : public QDialog {
    protected:
       using form_stub     = dovah::form_stub;
       using condition_t   = dovah::loaded_forms::components::condition;
+      using working_condition = dovah::loaded_forms::components::working_condition;
       using cnd_context_t = dovah::loaded_forms::components::condition_context;
       using loaded_form_t = dovah::loaded_forms::Form;
       using underlying_t  = dovah::condition_parameter_underlying_type;
@@ -30,8 +31,9 @@ class ConditionEditDialog : public QDialog {
       //
    protected:
       Ui::ConditionEditDialog ui;
-      condition_t&  condition;
-      cnd_context_t context;
+      condition_t&      condition;
+      cnd_context_t     context;
+      working_condition working;
       //
       QTimer function_filter_update_throttle;
       //

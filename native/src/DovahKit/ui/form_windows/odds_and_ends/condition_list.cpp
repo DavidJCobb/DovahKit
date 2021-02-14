@@ -86,7 +86,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
             case Qt::DisplayRole:
                [[fallthrough]];
             case Qt::ToolTipRole:
-               switch (condition.run_on.type) {
+               switch (condition.get_run_on_data().type) {
                   case condition::run_on_type::combat_target:
                      return tr("Combat Target", "condition list - run on");
                   case condition::run_on_type::event_data:
@@ -94,7 +94,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         auto  code = q->event;
                         auto* def  = dovah::story_event_definition::lookup(code);
                         if (def) {
-                           auto* member = def->member_by_wide_signature(condition.run_on.index);
+                           auto* member = def->member_by_wide_signature(condition.get_run_on_data().index);
                            if (member)
                               return tr("Event Data: %1", "condition list - run on").arg(member->name);
                         }
@@ -109,15 +109,15 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      return tr("Package Data", "condition list - run on");
                   case condition::run_on_type::quest_alias:
                      if (auto* q = this->context.get_owning_quest()) {
-                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.get_run_on_data().index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               return name;
                         }
                      }
-                     return tr("Alias ID #%1", "condition list - run on").arg(condition.run_on.index); // TODO: display alias name if possible
+                     return tr("Alias ID #%1", "condition list - run on").arg(condition.get_run_on_data().index); // TODO: display alias name if possible
                   case condition::run_on_type::reference:
-                     if (auto* stub = condition.run_on.reference.get_form_stub()) {
+                     if (auto* stub = condition.get_run_on_data().reference.get_form_stub()) {
                         if (stub->formID == dovah::hardcoded_form_ids::PlayerRef)
                            return tr("Player", "condition list - run on form - player");
                         return tr("[%1:%2]%3", "condition list - run on form")
@@ -137,7 +137,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                // Show the run-on column in italics if it isn't an alias name, etc.. Italics 
                // will distinguish built-in strings from names in user content.
                //
-               switch (condition.run_on.type) {
+               switch (condition.get_run_on_data().type) {
                   case condition::run_on_type::package_data:
                      {
                      // TODO: revisit this when we actually know what package data indices *are*
@@ -147,7 +147,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      }
                   case condition::run_on_type::quest_alias:
                      if (auto* q = this->context.get_owning_quest()) {
-                        if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
+                        if (auto* alias = q->lookup_alias_by_id(condition.get_run_on_data().index)) {
                            QString name = alias->name.c_str();
                            if (!name.trimmed().isEmpty())
                               break;
@@ -155,7 +155,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                      }
                      [[fallthrough]];
                   case condition::run_on_type::reference:
-                     if (condition.run_on.reference)
+                     if (condition.get_run_on_data().reference)
                         break;
                      [[fallthrough]];
                   case condition::run_on_type::event_data:

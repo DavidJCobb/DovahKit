@@ -55,10 +55,10 @@ namespace dovah::loaded_forms {
          std::string name;
          flags_t     flags = 0;
          uint32_t    hidden_flags = 0; // BNAM sets flag 0x01, ONAM sets flag 0x02
-         alias_id_t  force_into_alias_id  = 0xFFFFFFFF; // same sentinel value used by the game
+         alias_id_t         force_into_alias_id  = 0xFFFFFFFF; // same sentinel value used by the game
          story_event_code_t fill_from_event      = story_event_code::undefined; // same sentinel value used by the game
          uint32_t           fill_from_event_data; // e.g. 4C 32 00 00 -> 'L2'
-         std::vector<components::condition> conditions; // for "Find Matching Reference" or "Find Matching Location"
+         components::condition_list conditions; // for "Find Matching Reference" or "Find Matching Location"
          //
          Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
          //
@@ -196,7 +196,7 @@ namespace dovah::loaded_forms {
                using flags_t = std::underlying_type_t<flag::type>;
                //
                flags_t flags;
-               std::vector<components::condition> conditions;
+               components::condition_list conditions;
                localized_string journal_text = localized_string(localized_string_type::description);
                form_reference_t next_quest_id;
                //
@@ -246,7 +246,7 @@ namespace dovah::loaded_forms {
                //
                uint32_t aliasID = -1;
                flags_t  flags   =  0; // stored in the file as a uint32_t, but loaded by the game as a uint8_t; the game doesn't BSWAP if the endianness is wrong, so it must be a single byte with three padding bytes
-               std::vector<components::condition> conditions;
+               components::condition_list conditions;
                //
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes QSTA subrecord has already been opened
@@ -291,8 +291,8 @@ namespace dovah::loaded_forms {
          //
          std::string editor_category; // FLTR // "abc/def/ghi" to nest within the CK Object Window tree
          struct {
-            std::vector<components::condition> dialogue;
-            std::vector<components::condition> event;
+            components::condition_list dialogue;
+            components::condition_list event;
          } conditions;
          story_event_code_t event         = story_event_code::none;
          int32_t            next_alias_id = 0;

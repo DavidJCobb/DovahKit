@@ -226,7 +226,7 @@ namespace dovah::loaded_forms {
             case 'CTDA':
                {
                   auto& list = partial ? this->conditions.locked : this->conditions.normal;
-                  components::condition::append_to_condition_list(this->stub, list, subrecord.get_containing_record(), intfc);
+                  list.read_next(subrecord.get_containing_record(), intfc);
                }
                break;
             case 'OBND':
@@ -335,11 +335,11 @@ namespace dovah::loaded_forms {
       }
       //
       if (committing_to_self) {
-         components::condition::clone_condition_list(copy->stub, copy->conditions.locked, this->conditions.locked, false);
-         components::condition::clone_condition_list(copy->stub, copy->conditions.normal, this->conditions.normal, false);
+         copy->conditions.locked.append_all_of(*copy, this->conditions.locked);
+         copy->conditions.normal.append_all_of(*copy, this->conditions.normal);
       } else {
-         components::condition::clone_condition_list(copy->stub, copy->conditions.normal, this->conditions.locked, false);
-         components::condition::clone_condition_list(copy->stub, copy->conditions.normal, this->conditions.normal, true);
+         copy->conditions.normal.append_all_of(*copy, this->conditions.locked);
+         copy->conditions.normal.append_all_of(*copy, this->conditions.normal);
       }
       //
       copy->responses.reserve(this->responses.size());
@@ -410,9 +410,9 @@ namespace dovah::loaded_forms {
       remove_form_from_reference_list(this->link_to.normal, other, *this);
       //
       for (auto& cnd : this->conditions.locked)
-         cnd.sever_outbound_references_to(other);
+         cnd.sever_outbound_references_to(other, *this);
       for (auto& cnd : this->conditions.normal)
-         cnd.sever_outbound_references_to(other);
+         cnd.sever_outbound_references_to(other, *this);
       //
       for (auto& r : this->responses)
          r.sever_outbound_references_to(*this, other);
@@ -453,12 +453,8 @@ namespace dovah::loaded_forms {
             //
             __debugbreak();
       #endif
-      for (auto& cnd : this->conditions.locked)
-         cnd.clear();
-      for (auto& cnd : this->conditions.normal)
-         cnd.clear();
-      this->conditions.locked.clear();
-      this->conditions.normal.clear();
+      this->conditions.locked.clear(*this);
+      this->conditions.normal.clear(*this);
       //
       for (auto& r : this->responses)
          r.clear(*this);

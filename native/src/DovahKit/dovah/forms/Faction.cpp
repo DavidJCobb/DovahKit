@@ -154,7 +154,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'CTDA':
-               components::condition::append_to_condition_list(this->stub, this->vendor_conditions, subrecord.get_containing_record(), intfc);
+               this->vendor_conditions.read_next(subrecord.get_containing_record(), intfc);
                break;
             case 'OBND':
                this->has_object_bounds = true;
@@ -233,7 +233,7 @@ namespace dovah::loaded_forms {
       copy->vendor_chest.set(*copy, this->vendor_chest);
       copy->vendor_data = this->vendor_data;
       copy->package_location_vendor.clone_from(this->package_location_vendor, *copy);
-      components::condition::clone_condition_list(copy->stub, copy->vendor_conditions, this->vendor_conditions);
+      copy->vendor_conditions.append_all_of(*copy, this->vendor_conditions);
       copy->has_object_bounds = this->has_object_bounds;
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
@@ -349,7 +349,7 @@ namespace dovah::loaded_forms {
       }
       //
       for (auto& cnd : this->vendor_conditions)
-         cnd.sever_outbound_references_to(other);
+         cnd.sever_outbound_references_to(other, *this);
       //
       this->prison_marker.clear_if(*this, other);
       this->follower_wait_marker.clear_if(*this, other);
@@ -378,9 +378,7 @@ namespace dovah::loaded_forms {
       this->vendor_list.set(*this, nullptr);
       this->vendor_chest.set(*this, nullptr);
       this->package_location_vendor.clear(*this);
-      for (auto& cnd : this->vendor_conditions)
-         cnd.clear();
-      this->vendor_conditions.clear();
+      this->vendor_conditions.clear(*this);
       //
       this->has_object_bounds = false;
       this->object_bounds.clear();

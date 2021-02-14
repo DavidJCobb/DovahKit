@@ -159,8 +159,8 @@ namespace dovah::loaded_forms {
             //
             // See note on (link_to).
             //
-            std::vector<components::condition> locked;
-            std::vector<components::condition> normal;
+            components::condition_list locked;
+            components::condition_list normal;
          } conditions; // CTDA
          std::vector<response> responses;
          localized_string override_topic_text; // RNAM (Prompt)

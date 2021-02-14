@@ -31,7 +31,7 @@ bool ConditionEditDialog::_FunctionListProxy::filterAcceptsRow(int source_row, c
    return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
 }
 
-ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c) {
+ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c), working(c.make_working_copy()) {
    ui.setupUi(this);
    //
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
@@ -57,9 +57,9 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
       widget->addItem(tr("Use Aliases", "condition param override flags"), (int)underlying_t::aliasID);
       widget->addItem(tr("Use Package Data", "condition param override flags"), (int)underlying_t::package_data);
       //
-      if (condition.get_flags() & condition_t::flag::use_aliases)
+      if (working.flags & condition_t::flag::use_aliases)
          widget->setCurrentIndex(1);
-      if (condition.get_flags() & condition_t::flag::use_package_data)
+      if (working.flags & condition_t::flag::use_package_data)
          widget->setCurrentIndex(2);
       //
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
@@ -113,15 +113,15 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
       widget->setItemData(widget->count() - 1, uint32_t(dovah::hardcoded_form_ids::PlayerRef), RunOnFormIDRole);
       widget->setItemData(widget->count() - 1, true, RunOnPlayerSentinelRole);
       //
-      if (condition.run_on.type == condition_t::run_on_type::reference) {
-         auto* stub = condition.run_on.reference.get_form_stub();
+      if (this->working.run_on.type == condition_t::run_on_type::reference) {
+         auto* stub = this->working.run_on.reference;
          if (stub && stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
             widget->setCurrentIndex(widget->findData(true, RunOnPlayerSentinelRole));
          } else {
-            widget->setCurrentIndex(widget->findData((int)condition.run_on.type, RunOnTypeRole));
+            widget->setCurrentIndex(widget->findData((int)this->working.run_on.type, RunOnTypeRole));
          }
       } else {
-         widget->setCurrentIndex(widget->findData((int)condition.run_on.type));
+         widget->setCurrentIndex(widget->findData((int)this->working.run_on.type));
       }
       this->_updateRunOn(true);
       //
@@ -138,13 +138,7 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
          }
       });
    }
-   {
-      auto* widget = this->ui.flagSwapSubjectAndTarget;
-      widget->setChecked(condition.get_flags() & condition_t::flag::swap_subject_and_target);
-      QObject::connect(widget, &QCheckBox::stateChanged, this, [this](int state) {
-         this->condition.modify_flags(condition_t::flag::swap_subject_and_target, state == Qt::CheckState::Checked);
-      });
-   }
+   cobb::qt::bind(this->ui.flagSwapSubjectAndTarget, this->working.flags, condition_t::flag::swap_subject_and_target);
    {
       auto* widget = this->ui.function;
       widget->clear(); // clear anything that might've been done in Qt Designer
@@ -272,15 +266,11 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
       widget->addItem(tr(">=", "condition operator"), (int)condition_t::operator_type::greater_or_equal);
       widget->addItem(tr("<",  "condition operator"), (int)condition_t::operator_type::less);
       widget->addItem(tr("<=", "condition operator"), (int)condition_t::operator_type::less_or_equal);
-      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
-         this->condition.set_comparison_operator((condition_t::operator_type)this->ui.op->currentData().toInt());
-      });
+      cobb::qt::bind(widget, this->working.comparison.op);
    }
    {  // Result: Operand
       cobb::qt::remove_spinbox_bounds(this->ui.operandConstant);
-      QObject::connect(this->ui.operandConstant, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this]() {
-         this->condition.set_comparison_operand(this->ui.operandConstant->value());
-      });
+      cobb::qt::bind(this->ui.operandConstant, this->working.comparison.operand.constant);
       //
       this->ui.operandGlobal->setAllowedFormType(dovah::form_type::global);
       this->ui.operandGlobal->populate();
@@ -304,13 +294,7 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
          }
       });
    }
-   {
-      auto* widget = this->ui.flagOr;
-      widget->setChecked(condition.get_flags() & condition_t::flag::or_linked);
-      QObject::connect(widget, &QCheckBox::stateChanged, this, [this](int state) {
-         this->condition.modify_flags(condition_t::flag::or_linked, state == Qt::CheckState::Checked);
-      });
-   }
+   cobb::qt::bind(this->ui.flagOr, this->working.flags, condition_t::flag::or_linked);
 }
 
 void ConditionEditDialog::_buildParamControls(int which, underlying_t under, param_type_t* type, bool use_original, bool force_update) {
@@ -572,7 +556,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          {
             dovah::form_stub* stub = nullptr;
             if (use_original) {
-               stub = this->condition.run_on.reference.get_form_stub();
+               stub = this->working.run_on.reference;
             } else if (refID) {
                stub = DovahKitCore::get().get_form(refID);
             }
@@ -603,7 +587,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
             this->ui.runOnDropdown->setEnabled(false);
          }
          if (use_original) {
-            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->condition.run_on.index));
+            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          }
          return;
       case condition_t::run_on_type::package_data:
@@ -618,7 +602,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
             this->ui.runOnDropdown->setEnabled(false);
          }
          if (use_original) {
-            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->condition.run_on.index));
+            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          }
          return;
       case condition_t::run_on_type::event_data:
@@ -635,7 +619,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
             this->ui.runOnDropdown->setEnabled(false);
          }
          if (use_original) {
-            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->condition.run_on.index));
+            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          }
          return;
    }

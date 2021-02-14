@@ -23,7 +23,7 @@ namespace dovah::loaded_forms {
                subrecord.read(externalAliasID);
                break;
             case 'CTDA':
-               this->conditions.emplace_back(this->owner.stub).read(subrecord.get_containing_record(), intfc);
+               this->conditions.read_next(subrecord.get_containing_record(), intfc);
                break;
             case 'ALFD':
                subrecord.read_signature(this->fill_from_event_data);
@@ -133,7 +133,7 @@ namespace dovah::loaded_forms {
       this->fill_from_location_keyword.clear_if(my_owner, target);
       this->fill_from_quest.clear_if(my_owner, target);
       for (auto& cnd : this->conditions)
-         cnd.sever_outbound_references_to(target);
+         cnd.sever_outbound_references_to(target, my_owner);
    }
    Alias* LocationAlias::clone(loaded_forms::Form& clone_owner) {
       auto* copy = new LocationAlias(this->owner);
@@ -151,10 +151,7 @@ namespace dovah::loaded_forms {
       copy->fill_from_quest.set(clone_owner, this->fill_from_quest);
       copy->fill_type = this->fill_type;
       //
-      size_t size = this->conditions.size();
-      copy->conditions.resize(size);
-      for (size_t i = 0; i < size; ++i)
-         copy->conditions[i].clone_from(this->conditions[i]);
+      copy->conditions.append_all_of(clone_owner, this->conditions);
       //
       return copy;
    }
@@ -170,10 +167,7 @@ namespace dovah::loaded_forms {
       this->fill_from_event_data = -1;
       this->fill_from_location.set(my_owner, nullptr);
       this->fill_from_location_keyword.set(my_owner, nullptr);
-      //
-      for (auto& cnd : this->conditions)
-         cnd.clear();
-      this->conditions.clear();
+      this->conditions.clear(my_owner);
    }
 
    void ReferenceAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -207,7 +201,7 @@ namespace dovah::loaded_forms {
                this->hidden_flags |= 4;
                break;
             case 'CTDA':
-               this->conditions.emplace_back(this->owner.stub).read(subrecord.get_containing_record(), intfc);
+               this->conditions.read_next(subrecord.get_containing_record(), intfc);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -411,7 +405,7 @@ namespace dovah::loaded_forms {
       this->fill_from_reference.clear_if(my_owner, target);
       this->fill_from_unique_actor_base.clear_if(my_owner, target);
       for (auto& cnd : this->conditions)
-         cnd.sever_outbound_references_to(target);
+         cnd.sever_outbound_references_to(target, my_owner);
       this->keywords.sever_outbound_references_to(target, my_owner);
       this->inventory.sever_outbound_references_to(target, my_owner);
       this->package_override_lists.spectator.clear_if(my_owner, target);
@@ -456,10 +450,7 @@ namespace dovah::loaded_forms {
       copy->fill_near_alias_type = this->fill_near_alias_type;
       copy->fill_type = this->fill_type;
       //
-      size_t size = this->conditions.size();
-      copy->conditions.resize(size);
-      for (size_t i = 0; i < size; ++i)
-         copy->conditions[i].clone_from(this->conditions[i]);
+      copy->conditions.append_all_of(clone_owner, this->conditions);
       //
       return copy;
    }
@@ -492,10 +483,7 @@ namespace dovah::loaded_forms {
       this->fill_loc_ref_type.set(my_owner, nullptr);
       this->fill_near_alias      = -1;
       this->fill_near_alias_type = 0;
-      //
-      for (auto& cnd : this->conditions)
-         cnd.clear();
-      this->conditions.clear();
+      this->conditions.clear(my_owner);
    }
    #pragma endregion
 
@@ -528,23 +516,20 @@ namespace dovah::loaded_forms {
       }
       void Quest::LogEntry::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& cnd : this->conditions)
-            cnd.sever_outbound_references_to(other);
+            cnd.sever_outbound_references_to(other, my_owner);
          this->next_quest_id.clear_if(my_owner, other);
       }
       void Quest::LogEntry::clone_from(const LogEntry& copy, loaded_forms::Form& owner) {
          this->flags         = copy.flags;
          this->journal_text  = copy.journal_text;
          this->next_quest_id = copy.next_quest_id;
-         components::condition::clone_condition_list(owner.stub, this->conditions, copy.conditions);
+         this->conditions.append_all_of(owner, copy.conditions);
       }
       void Quest::LogEntry::clear(loaded_forms::Form& owner) {
          this->flags = 0;
          this->journal_text.reset();
          this->next_quest_id.set(owner, nullptr);
-         //
-         for (auto& cnd : this->conditions)
-            cnd.clear();
-         this->conditions.clear();
+         this->conditions.clear(owner);
       }
       #pragma endregion
 
@@ -614,20 +599,17 @@ namespace dovah::loaded_forms {
       }
       void Quest::Target::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& cnd : this->conditions)
-            cnd.sever_outbound_references_to(other);
+            cnd.sever_outbound_references_to(other, my_owner);
       }
       void Quest::Target::clone_from(const Target& copy, loaded_forms::Form& owner) {
          this->aliasID = copy.aliasID;
          this->flags   = copy.flags;
-         components::condition::clone_condition_list(owner.stub, this->conditions, copy.conditions);
+         this->conditions.append_all_of(owner, copy.conditions);
       }
       void Quest::Target::clear(loaded_forms::Form& owner) {
          this->aliasID = -1;
          this->flags   = 0;
-         //
-         for (auto& cnd : this->conditions)
-            cnd.clear();
-         this->conditions.clear();
+         this->conditions.clear(owner);
       }
       #pragma endregion
 
@@ -824,18 +806,18 @@ namespace dovah::loaded_forms {
                   auto& record = subrecord.get_containing_record();
                   if (hasLastLogEntry) {
                      auto& entry = this->stages.back().entries.back();
-                     components::condition::append_to_condition_list(this->stub, entry.conditions, subrecord.get_containing_record(), intfc);
+                     entry.conditions.read_next(subrecord.get_containing_record(), intfc);
                      break;
                   }
                   if (!this->objectives.empty()) {
                      auto& objective = this->objectives.back();
                      if (!objective.targets.empty()) {
-                        components::condition::append_to_condition_list(this->stub, objective.targets.back().conditions, subrecord.get_containing_record(), intfc);
+                        objective.targets.back().conditions.read_next(subrecord.get_containing_record(), intfc);
                         break;
                      }
                   }
                   auto& list = isInEventConditions ? this->conditions.event : this->conditions.dialogue;
-                  components::condition::append_to_condition_list(this->stub, list, subrecord.get_containing_record(), intfc);
+                  list.read_next(subrecord.get_containing_record(), intfc);
                }
                break;
             case 'ALLS':
@@ -975,8 +957,8 @@ namespace dovah::loaded_forms {
       //
       copy->editor_category = this->editor_category;
       //
-      components::condition::clone_condition_list(copy->stub, copy->conditions.dialogue, this->conditions.dialogue);
-      components::condition::clone_condition_list(copy->stub, copy->conditions.event,    this->conditions.event);
+      copy->conditions.dialogue.append_all_of(*copy, this->conditions.dialogue);
+      copy->conditions.event.append_all_of(*copy, this->conditions.event);
       {
          size_t size = this->stages.size();
          copy->stages.resize(size);
@@ -1050,9 +1032,9 @@ namespace dovah::loaded_forms {
    void Quest::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);
       for (auto& cnd : this->conditions.dialogue)
-         cnd.sever_outbound_references_to(other);
+         cnd.sever_outbound_references_to(other, *this);
       for (auto& cnd : this->conditions.event)
-         cnd.sever_outbound_references_to(other);
+         cnd.sever_outbound_references_to(other, *this);
       for (auto& obj : this->stages)
          obj.sever_outbound_references(other, *this);
       for (auto& obj : this->objectives)
@@ -1063,12 +1045,8 @@ namespace dovah::loaded_forms {
    }
    void Quest::_clear_impl() noexcept {
       this->script_data.clear(*this);
-      for (auto& cnd : this->conditions.dialogue)
-         cnd.clear();
-      this->conditions.dialogue.clear();
-      for (auto& cnd : this->conditions.event)
-         cnd.clear();
-      this->conditions.event.clear();
+      this->conditions.dialogue.clear(*this);
+      this->conditions.event.clear(*this);
       for (auto& obj : this->stages)
          obj.clear(*this);
       this->stages.clear();
