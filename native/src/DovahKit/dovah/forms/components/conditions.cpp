@@ -16,7 +16,7 @@ namespace dovah::loaded_forms::components {
          auto a = func->argument_types[index];
          if (a->is_union()) {
             assert(index != 0 && "No behavior defined for a condition function whose first argument type is a union!");
-            return a->resolve_union(func->argument_types[index - 1], this->parameters[index - 1]);
+            return a->resolve_union(func->argument_types[index - 1], this->get_parameter(index - 1));
          }
          return a;
       }
@@ -39,6 +39,8 @@ namespace dovah::loaded_forms::components {
             return condition_function::lookup_by_id(this->function);
          }
          const condition_parameter condition::get_parameter(uint8_t i) const {
+            if (i >= this->parameters.size())
+               return condition_parameter();
             auto& source = this->parameters[i];
             condition_parameter readonly;
             readonly.dword      = source.dword;
@@ -194,7 +196,7 @@ namespace dovah::loaded_forms::components {
                      for (int i = 0; i < 2; ++i) {
                         auto* type  = func->argument_types[i];
                         if (i == 1 && type->is_union()) { // resolve the union
-                           condition_parameter_in_situ value;
+                           condition_parameter value;
                            value.dword = firstValue;
                            type = type->resolve_union(type, value);
                         }
@@ -299,10 +301,21 @@ namespace dovah::loaded_forms::components {
             if (this->flags & flag::compare_to_global)
                this->comparison.operand.global.set(my_owner, source.comparison.operand.global.get_form_stub());
             //
-            this->set_function(source.get_function());
-            for (int i = 0; i < this->parameters.size(); ++i)
-               this->set_parameter(i, source.get_parameter(i));
-            this->set_event_parameters(source.get_event_parameters());
+            this->function = source.function;
+            auto* func = condition_function::lookup_by_id(this->function);
+            if (func && func->uses_event_data) {
+               this->event_parameters.function = source.event_parameters.function;
+               this->event_parameters.member   = source.event_parameters.member;
+               this->event_parameters.form.set(my_owner, source.event_parameters.form);
+            } else {
+               for (int i = 0; i < this->parameters.size(); ++i) {
+                  auto& dst = this->parameters[i];
+                  auto& src = source.parameters[i];
+                  dst.dword  = src.dword;
+                  dst.string = src.string;
+                  dst.form.set(my_owner, src.form);
+               }
+            }
             //
             this->run_on.type  = source.run_on.type;
             this->run_on.index = source.run_on.index;
@@ -335,7 +348,7 @@ namespace dovah::loaded_forms::components {
             this->event_parameters.function = 0;
             this->event_parameters.member   = 0;
             //
-            this->set_function_id(0);
+            this->function = 0;
          }
       #pragma endregion
 

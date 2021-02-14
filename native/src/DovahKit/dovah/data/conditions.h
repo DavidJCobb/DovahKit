@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 #include "../core.h"
@@ -7,7 +8,7 @@
 #include "../files/tes_file_writing/elements.h"
 
 namespace dovah::loaded_forms::components {
-   class condition_parameter_in_situ;
+   class condition_parameter;
    class condition;
 }
 
@@ -39,8 +40,8 @@ namespace dovah {
          };
          //
       protected:
-         using condition_parameter_in_situ = loaded_forms::components::condition_parameter_in_situ;
-         using union_decider_function_t = condition_parameter_type*(*)(const condition_parameter_in_situ& decider_value);
+         using condition_parameter      = loaded_forms::components::condition_parameter;
+         using union_decider_function_t = condition_parameter_type*(*)(const condition_parameter& decider_value);
          //
       public:
          std::string  name;
@@ -60,7 +61,7 @@ namespace dovah {
          bool allows_form_type(form_type_t ft) const noexcept;
 
          // If the type is flagged as a union, use the next function to get its value; if it returns (nullptr), then the argument "doesn't exist."
-         condition_parameter_type* resolve_union(condition_parameter_type* previous_type, const condition_parameter_in_situ& previous_value) const noexcept;
+         condition_parameter_type* resolve_union(condition_parameter_type* previous_type, const condition_parameter& previous_value) const noexcept;
 
          inline bool is_none() const noexcept { return this->underlying == underlying_t::none; }
          inline bool is_union() const noexcept { return this->union_decider.type != nullptr; }
@@ -186,8 +187,16 @@ namespace dovah {
 
          static const condition_function* lookup_by_id(uint16_t) noexcept;
    };
+
+   //
+   // This is a list of all ObScript functions in Skyrim. Note that that isn't just 
+   // conditions; there are dummy entries for actions as well. When iterating over 
+   // the list, check the (valid) field on each entry, or just use the convenience 
+   // function provided.
+   //
    extern std::array<const condition_function, 736> condition_function_list;
    extern std::array<const condition_function, 5>   extended_condition_function_list; // SKSE additions
+   extern bool for_each_condition_function(std::function<bool(const condition_function&)>, bool include_skse = true); // checks (condition_function::valid) for you. return true to stop looping early. function returns whatever the functor did
 
    struct condition_event_function {
       condition_event_function() = delete;

@@ -14,7 +14,7 @@ namespace dovah {
       }
       return false;
    }
-   condition_parameter_type* condition_parameter_type::resolve_union(condition_parameter_type* previous_type, const condition_parameter_in_situ& previous_value) const noexcept {
+   condition_parameter_type* condition_parameter_type::resolve_union(condition_parameter_type* previous_type, const condition_parameter& previous_value) const noexcept {
       if (!this->is_union())
          return nullptr;
       if (previous_type != this->union_decider.type)
@@ -651,7 +651,7 @@ namespace dovah {
             {3, "Scroll"},
          });
          //
-         condition_parameter_type* _decider(const loaded_forms::components::condition_parameter_in_situ& decider_value) {
+         condition_parameter_type* _decider(const loaded_forms::components::condition_parameter& decider_value) {
             switch (decider_value.dword) {
                case 0:
                   return &Weapon;
@@ -708,7 +708,7 @@ namespace dovah {
    }
 
    #pragma region Function definitions
-   std::array<const condition_function, 736> function_list = {{
+   std::array<const condition_function, 736> condition_function_list = {{
       condition_function(0, "GetWantBlocking",   ""),
       condition_function(1, "GetDistance",       "Returns the distance between this reference and another reference.", condition_parameter_types::ObjectReference),
       condition_function(2, condition_function::dummy), // actually AddItem
@@ -1446,7 +1446,7 @@ namespace dovah {
       condition_function(734, "IsOverencumbered", ""), // TODO: SSE only
       condition_function(735, "GetActorWarmth", ""), // TODO: SSE only
    }};
-   std::array<const condition_function, 5>   extended_function_list = {{
+   std::array<const condition_function, 5>   extended_condition_function_list = {{
       condition_function(1024, "GetSKSEVersion", ""),
       condition_function(1025, "GetSKSEVersionMinor", ""),
       condition_function(1026, "GetSKSEVersionBeta", ""),
@@ -1454,4 +1454,21 @@ namespace dovah {
       condition_function(1028, "ClearInvalidRegistrations", ""),
    }};
    #pragma endregion
+   extern bool for_each_condition_function(std::function<bool(const condition_function&)> functor, bool include_skse) {
+      for (const auto& cf : condition_function_list) {
+         if (!cf.valid)
+            continue;
+         if ((functor)(cf))
+            return true;
+      }
+      if (include_skse) {
+         for (const auto& cf : extended_condition_function_list) {
+            if (!cf.valid)
+               continue;
+            if ((functor)(cf))
+               return true;
+         }
+      }
+      return false;
+   }
 }

@@ -117,9 +117,7 @@ namespace dovah::loaded_forms::components {
          inline const run_on_data& get_run_on_data() const noexcept { return this->run_on; }
          //
          inline flags_t get_flags() const noexcept { return this->flags; }
-         inline bool test_flags(flags_t f) const noexcept {
-            return (this->flags & f);
-         }
+         inline bool test_flags(flags_t f) const noexcept { return (this->flags & f); }
          #pragma endregion
 
          bool refers_to_form(const form_stub*) const noexcept;

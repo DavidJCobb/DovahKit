@@ -8,6 +8,7 @@
 #include "../../generic/FormsOfTypeCombobox.h"
 #include "../../generic/RefPickerButton.h"
 #include "../../../dovah/forms/factories/hardcoded.h"
+#include "../../../dovah/data/conditions.h"
 #include "../../../dovah/data/story_manager.h"
 #include "../../../dovah/forms/Quest.h"
 
@@ -151,20 +152,12 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
       widget->setModel(proxy);
       {
          proxy->setDynamicSortFilter(false);
-         for (auto& func : dovah::condition_function_list) {
-            if (!func.valid)
-               continue;
+         dovah::for_each_condition_function([model](const dovah::condition_function& func) {
             auto* item = new QStandardItem(func.name);
             item->setData(func.id, Qt::ItemDataRole::UserRole);
             model->appendRow(item);
-         }
-         for (auto& func : dovah::extended_condition_function_list) {
-            if (!func.valid)
-               continue;
-            auto* item = new QStandardItem(func.name);
-            item->setData(func.id, Qt::ItemDataRole::UserRole);
-            model->appendRow(item);
-         }
+            return false;
+         });
          proxy->setDynamicSortFilter(true);
       }
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, proxy](int index) {
@@ -298,7 +291,7 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
 }
 
 void ConditionEditDialog::_buildParamControls(int which, underlying_t under, param_type_t* type, bool use_original, bool force_update) {
-   if (which < 0 || which > this->parameters.size())
+   if (which < 0 || which > this->working.parameters.size())
       return;
    auto& p     = this->parameters[which];
    auto  value = this->condition.get_parameter(which);
