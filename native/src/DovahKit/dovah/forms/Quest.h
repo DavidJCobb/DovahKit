@@ -49,6 +49,7 @@ namespace dovah::loaded_forms {
             location,
          };
          //
+         Quest& owner;
          const alias_type type = alias_type::undifferentiated;
          uint32_t    id = 0;
          std::string name;
@@ -59,7 +60,7 @@ namespace dovah::loaded_forms {
          uint32_t           fill_from_event_data; // e.g. 4C 32 00 00 -> 'L2'
          std::vector<components::condition> conditions; // for "Find Matching Reference" or "Find Matching Location"
          //
-         Alias(alias_type at) : type(at) {}
+         Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
          //
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) = 0;
@@ -85,7 +86,7 @@ namespace dovah::loaded_forms {
          alias_id_t       fill_from_alias = 0xFFFFFFFF; // ALEQ:ALEA or ALFA // same sentinel value used by the game
          form_reference_t fill_from_quest; // ALEQ
          //
-         LocationAlias() : Alias(alias_type::location) {}
+         LocationAlias(Quest& o) : Alias(o, alias_type::location) {}
          //
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
@@ -134,7 +135,7 @@ namespace dovah::loaded_forms {
          form_reference_t fill_from_quest;
          form_reference_t fill_from_unique_actor_base; // ALUA; should be the form ID of an NPC_ with the Unique flag set
          //
-         ReferenceAlias() : Alias(alias_type::reference) {}
+         ReferenceAlias(Quest& o) : Alias(o, alias_type::reference) {}
          //
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
@@ -204,7 +205,7 @@ namespace dovah::loaded_forms {
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
-               void clone_from(const LogEntry&, loaded_forms::Form&);
+               void clone_from(const LogEntry&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
          class Stage {
@@ -228,7 +229,7 @@ namespace dovah::loaded_forms {
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes INDX subrecord has already been opened
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
-               void clone_from(const Stage&, loaded_forms::Form&);
+               void clone_from(const Stage&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
 
@@ -251,7 +252,7 @@ namespace dovah::loaded_forms {
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes QSTA subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
-               void clone_from(const Target&, loaded_forms::Form&);
+               void clone_from(const Target&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
          class Objective {
@@ -273,7 +274,7 @@ namespace dovah::loaded_forms {
                void load(tes_record_reader&, load_order_interfaces::form_load&); // assumes QOBJ subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
-               void clone_from(const Objective&, loaded_forms::Form&);
+               void clone_from(const Objective&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
 

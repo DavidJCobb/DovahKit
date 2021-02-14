@@ -89,7 +89,6 @@ namespace dovah::loaded_forms::components {
          };
          //
       protected:
-         loaded_forms::Form* _get_form_for_assign() const noexcept;
          void _set_form_reference(form_reference_t&, form_stub*);
          void _clear_form_reference_if(form_reference_t&, form_stub&);
          //
@@ -99,12 +98,16 @@ namespace dovah::loaded_forms::components {
          condition_event_parameters event_parameters; // used instead of (parameters) for GetEventData
          comparison_t comparison;
          //
+         condition(form_stub& o, bool iwc) : owner(o), is_working_copy(iwc) {};
+         //
       public:
-         condition() : is_working_copy(true) {}
-         condition(form_stub* o) : owner(o) {};
+         condition() = delete;
+         condition(form_stub& o) : owner(o) {};
+         condition(const condition& other); // needed for std::vector
+         condition(condition&& other); // needed for std::vector
          //
          const bool is_working_copy = false;
-         form_stub* const owner = nullptr;
+         form_stub& owner;
          //
          struct {
             run_on_type type  = run_on_type::subject;
@@ -114,7 +117,9 @@ namespace dovah::loaded_forms::components {
          //
          condition_parameter_type*           get_argument_type(uint8_t index) const noexcept;
          condition_parameter_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;
-         //
+         
+         condition make_working_copy() const noexcept;
+
          #pragma region Accessors
          inline uint16_t get_function_id() const noexcept { return this->function; }
          void set_function_id(uint16_t) noexcept;
@@ -152,6 +157,9 @@ namespace dovah::loaded_forms::components {
          void sever_outbound_references_to(form_stub& target) noexcept;
          void clear();
          #pragma endregion
+
+         static void append_to_condition_list(form_stub& dst_owner, std::vector<condition>& dst, tes_record_reader&, load_order_interfaces::form_load&);
+         static void clone_condition_list(form_stub& dst_owner, std::vector<condition>& dst, const std::vector<condition>& src, bool append = false);
    };
 
    struct condition_context {

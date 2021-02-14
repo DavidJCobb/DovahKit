@@ -126,9 +126,6 @@
     <ClCompile Include="dovah\forms\components\conditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\forms\components\conditions\arg_types.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\forms\factories\hardcoded.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -681,6 +678,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\data\conditions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -801,12 +801,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\components\conditions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\conditions\arg_types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\conditions\arg_value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitwise.h">
@@ -1401,6 +1395,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\Package.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

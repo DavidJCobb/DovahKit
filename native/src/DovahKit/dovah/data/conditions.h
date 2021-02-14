@@ -32,6 +32,10 @@ namespace dovah {
          struct enum_entry {
             int32_t     value = 0;
             const char* name  = "";
+            //
+            enum_entry(int i, const char* n) : value(int32_t(i)), name(n) {}
+            enum_entry(uint32_t i, const char* n) : value(i), name(n) {}
+            static_assert(uint32_t(-1) == 0xFFFFFFFF, "The misc stat enum uses unsigned integers, so unsigned-to-signed needs to be bit-identical.");
          };
          //
       protected:
@@ -62,7 +66,7 @@ namespace dovah {
          inline bool is_union() const noexcept { return this->union_decider.type != nullptr; }
 
          #pragma region Quick constructors
-         static condition_parameter_type& make_enum_type(const char* n, int32_t first, std::initializer_list<const char*> value_names) {
+         static condition_parameter_type make_enum_type(const char* n, int32_t first, std::initializer_list<const char*> value_names) {
             condition_parameter_type t(n, underlying_t::int_signed);
             t.is_enum = true;
             int32_t i = first;
@@ -70,7 +74,7 @@ namespace dovah {
                t.enum_values.emplace_back(i, n);
             return t;
          }
-         static condition_parameter_type& make_enum_type(const char* n, std::initializer_list<enum_entry> values) {
+         static condition_parameter_type make_enum_type(const char* n, std::initializer_list<enum_entry> values) {
             condition_parameter_type t(n, underlying_t::int_signed);
             t.is_enum = true;
             t.enum_values.reserve(values.size());
@@ -78,7 +82,7 @@ namespace dovah {
                t.enum_values.push_back(v);
             return t;
          }
-         static condition_parameter_type& make_form_type(const char* n, std::initializer_list<form_type_t> ft, bool allow_overrides = false) {
+         static condition_parameter_type make_form_type(const char* n, std::initializer_list<form_type_t> ft, bool allow_overrides = false) {
             condition_parameter_type t(n, underlying_t::formID);
             t.allow_overrides = allow_overrides;
             t.allowed_form_types.reserve(ft.size());
@@ -86,7 +90,7 @@ namespace dovah {
                t.allowed_form_types.push_back(v);
             return t;
          }
-         static condition_parameter_type& make_union_type(const char* n, condition_parameter_type& dt, union_decider_function_t df) {
+         static condition_parameter_type make_union_type(const char* n, condition_parameter_type& dt, union_decider_function_t df) {
             condition_parameter_type t(n, underlying_t::int_signed);
             t.union_decider.type = &dt;
             t.union_decider.func = df;

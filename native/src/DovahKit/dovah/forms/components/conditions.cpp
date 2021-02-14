@@ -7,21 +7,12 @@
 
 namespace dovah::loaded_forms::components {
    #pragma region condition
-      loaded_forms::Form* condition::_get_form_for_assign() const noexcept {
-         loaded_forms::Form* form = this->owner->working_copy;
-         if (!this->is_working_copy) {
-            form = this->owner->form;
-            assert(form && "How are we working with a condition inside of a containing form whose data isn't loaded?");
-         }
-         return form;
-      }
       void condition::_set_form_reference(form_reference_t& ref, form_stub* stub) {
          if (this->is_working_copy) {
             ref.unmanaged_set(stub);
             return;
          }
-         assert(this->owner);
-         auto* form = this->owner->form;
+         auto* form = this->owner.form;
          assert(form);
          ref.set(*form, stub);
       }
@@ -29,6 +20,55 @@ namespace dovah::loaded_forms::components {
          if (ref != &target)
             return;
          this->_set_form_reference(ref, nullptr);
+      }
+
+      condition::condition(const condition& other) : owner(other.owner), is_working_copy(other.is_working_copy) {
+         this->flags    = other.flags;
+         this->function = other.function;
+         //
+         this->run_on.type  = other.run_on.type;
+         this->run_on.index = other.run_on.index;
+         this->run_on.reference.unmanaged_set(other.run_on.reference.get_form_stub());
+         //
+         for (size_t i = 0; i < this->parameters.size(); ++i) {
+            auto& dst = this->parameters[i];
+            auto& src = other.parameters[i];
+            dst.underlying = src.underlying;
+            dst.dword      = src.dword;
+            dst.string     = src.string;
+            dst.form.unmanaged_set(src.form.get_form_stub());
+         }
+         this->event_parameters.function = other.event_parameters.function;
+         this->event_parameters.member   = other.event_parameters.member;
+         this->event_parameters.form.unmanaged_set(other.event_parameters.form.get_form_stub());
+         //
+         this->comparison.op = other.comparison.op;
+         this->comparison.operand.constant = other.comparison.operand.constant;
+         this->comparison.operand.global.unmanaged_set(other.comparison.operand.global.get_form_stub());
+      }
+      condition::condition(condition&& other) : owner(other.owner), is_working_copy(other.is_working_copy) {
+         this->flags    = other.flags;
+         this->function = other.function;
+         //
+         this->run_on.type  = other.run_on.type;
+         this->run_on.index = other.run_on.index;
+         this->run_on.reference.unmanaged_set(other.run_on.reference.get_form_stub());
+         //
+         for (size_t i = 0; i < this->parameters.size(); ++i) {
+            auto& dst = this->parameters[i];
+            auto& src = other.parameters[i];
+            dst.underlying = src.underlying;
+            dst.dword      = src.dword;
+            std::swap(dst.string, src.string);
+            dst.form.unmanaged_set(src.form.get_form_stub());
+         }
+         this->event_parameters.function = other.event_parameters.function;
+         this->event_parameters.member   = other.event_parameters.member;
+         this->event_parameters.form.unmanaged_set(other.event_parameters.form.get_form_stub());
+         //
+         this->comparison.op = other.comparison.op;
+         this->comparison.operand.constant = other.comparison.operand.constant;
+         this->comparison.operand.global.unmanaged_set(other.comparison.operand.global.get_form_stub());
       }
 
       condition_parameter_type* condition::get_argument_type(uint8_t index) const noexcept {
@@ -57,7 +97,13 @@ namespace dovah::loaded_forms::components {
          }
          return condition_parameter_underlying_type::none;
       }
-      //
+
+      condition condition::make_working_copy() const noexcept {
+         condition wc(this->owner, true);
+         wc.clone_from(*this);
+         return wc;
+      }
+      
       #pragma region Accessors
          void condition::set_function_id(uint16_t id) noexcept {
             if (id == this->function)
@@ -125,9 +171,6 @@ namespace dovah::loaded_forms::components {
             auto* f = condition_function::lookup_by_id(this->function);
             if (!f || !f->uses_event_data)
                return;
-            //
-            auto* form = this->_get_form_for_assign();
-            //
             this->event_parameters.function = value.function;
             this->event_parameters.member   = value.member;
             this->_set_form_reference(this->event_parameters.form, value.form.get_form_stub());
@@ -502,6 +545,22 @@ namespace dovah::loaded_forms::components {
             this->set_function(0);
          }
       #pragma endregion
+
+      /*static*/ void append_to_condition_list(form_stub& dst_owner, std::vector<condition>& dst, tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+         dst.emplace_back(dst_owner).read(record, intfc);
+      }
+      /*static*/ void condition::clone_condition_list(form_stub& dst_owner, std::vector<condition>& dst, const std::vector<condition>& src, bool append) {
+         if (append) {
+            dst.reserve(dst.size() + src.size());
+         } else {
+            for (auto& cnd : dst)
+               cnd.clear();
+            dst.clear();
+            dst.reserve(src.size());
+         }
+         for (auto& cnd : src)
+            dst.emplace_back(dst_owner).clone_from(cnd);
+      }
    #pragma endregion
 
    #pragma region condition_context
