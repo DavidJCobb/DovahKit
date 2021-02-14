@@ -1,8 +1,7 @@
 #pragma once
 #include <array>
 #include "../_common.h"
-#include "conditions/arg_value.h"
-#include "conditions/arg_types.h"
+#include "../../data/conditions.h"
 #include "../../data/story_manager.h"
 
 namespace dovah::loaded_forms {
@@ -11,62 +10,136 @@ namespace dovah::loaded_forms {
 }
 
 namespace dovah::loaded_forms::components {
-   namespace condition_info {
-      class function {
-         protected:
-            enum class _sentinel_is_event {}; // dummy class, for constructor args
-            enum class _sentinel_is_dummy {};
-            //
-         public:
-            static constexpr _sentinel_is_event function_uses_event_data = _sentinel_is_event();
-            static constexpr _sentinel_is_dummy dummy = _sentinel_is_dummy();
-            //
-            uint16_t    id = 0xFFFF;
-            const char* name = "";
-            const char* description = "";
-            const bool  valid = true;
-            const bool  uses_event_data = false;
-            std::array<arg_type* const, 2> argument_types = { &arg_types::None, &arg_types::None }; // aRrAy Of ReFeReNcE iS nOt AlLoWeD
-            //
-            function() {}; // needed for std::array, apparently
-            function(uint16_t id, const char* name, const char* d) : id(id), name(name), description(d) {};
-            function(uint16_t id, const char* name, const char* d, arg_type& a) : id(id), name(name), description(d), argument_types{ &a, &arg_types::None } {};
-            function(uint16_t id, const char* name, const char* d, arg_type& a, arg_type& b) : id(id), name(name), description(d), argument_types{ &a, &b } {};
-            //
-            function(uint16_t id, const char* name, const char* d, _sentinel_is_event) : id(id), name(name), description(d), uses_event_data(true) {};
-            //
-            function(uint16_t id, _sentinel_is_dummy) : valid(false), id(id), name("Invalid Condition Function"), description("This condition ID is not valid.") {}
-
-            static const function* lookup_by_id(uint16_t) noexcept;
+   //
+   // Simple struct intended for outside code to work with.
+   //
+   struct condition_parameter {
+      union {
+         uint32_t dword = 0;
+         float    float32;
+         int32_t  integer;
       };
+      form_stub*  form = nullptr;
+      std::string string;
+      //
+      condition_parameter_underlying_type underlying = condition_parameter_underlying_type::none;
+   };
 
-      extern std::array<function, 736> function_list;
-      extern std::array<function, 5>   extended_function_list; // SKSE additions
+   //
+   // A condition parameter as stored inside of a condition; meant for internal use only. It has 
+   // to be defined outside of the (condition) struct so that it can be forward-declared and used 
+   // in some of the condition function definition code.
+   //
+   struct condition_parameter_in_situ {
+      union {
+         uint32_t dword = 0;
+         float    float32;
+         int32_t  integer;
+      };
+      form_reference_t form;
+      std::string      string;
+      //
+      condition_parameter_underlying_type underlying = condition_parameter_underlying_type::none;
+   };
 
-      struct event_function {
-         event_function() = delete;
-         enum type : uint16_t {
-            GetIsID,
-            IsInList,
-            GetValue,
-            HasKeyword,
-            GetItemValue,
+   struct condition_event_parameters {
+      uint16_t function;
+      uint16_t member;
+      form_reference_t form;
+   };
+
+   class condition {
+      public:
+         enum class run_on_type : uint32_t {
+            subject       = 0,
+            target        = 1,
+            reference     = 2, // i.e. condition::run_on_reference
+            combat_target = 3,
+            linked_ref    = 4,
+            quest_alias   = 5,
+            package_data  = 6, // where does (condition) store *which* packdata we're running on?
+            event_data    = 7,
          };
-      };
-      struct event_member {
-         event_member() = delete;
-         enum type : uint16_t {
-            none           = 0x0000,
-            created_object = 0x314F,
-            location_old   = 0x314C,
-            location_new   = 0x324C,
-            keyword        = 0x314B,
-            form           = 0x3146,
-            value_1        = 0x3156,
-            value_2        = 0x3256,
+         enum class operator_type {
+            equal            = 0,
+            not_equal        = 1,
+            greater          = 2,
+            greater_or_equal = 3,
+            less             = 4,
+            less_or_equal    = 5,
          };
-      };
-   }
+         struct flag {
+            flag() = delete;
+            enum type : uint8_t {
+               or_linked         = 0x01,
+               use_aliases       = 0x02, // force REFR and ACHR arguments to reference alias IDs
+               compare_to_global = 0x04,
+               use_package_data  = 0x08, // force REFR and ACHR arguments to package data indices (ObjectList and SingleRef packdata types only)
+               swap_subject_and_target = 0x10,
+            };
+         };
+         using flags_t = std::underlying_type_t<flag::type>;
+         //
+         //
+      protected:
+         loaded_forms::Form* _get_form_for_assign() const noexcept;
+         void _set_form_reference(form_reference_t&, form_stub*);
+         void _clear_form_reference_if(form_reference_t&, form_stub&);
+         //
+         flags_t  flags    = 0;
+         uint16_t function = 0;
+         std::array<condition_parameter_in_situ, 2> parameters;
+         condition_event_parameters event_parameters; // used instead of (parameters) for GetEventData
+         //
+      public:
+         condition() : is_working_copy(true) {}
+         condition(form_stub* o) : owner(o) {};
+         //
+         const bool is_working_copy = false;
+         form_stub* const owner = nullptr;
+         //
+         struct {
+            run_on_type type  = run_on_type::subject;
+            uint32_t    index = -1;
+            form_reference_t reference;
+         } run_on;
+         struct {
+            operator_type op = operator_type::equal;
+            struct {
+               float            constant;
+               form_reference_t global;
+            } operand;
+         } comparison;
+         //
+         condition_parameter_type*           get_argument_type(uint8_t index) const noexcept;
+         condition_parameter_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;
+         //
+         #pragma region Accessors
+         inline uint16_t get_function() const noexcept { return this->function; }
+         void set_function(uint16_t) noexcept;
+         //
+         const condition_parameter get_parameter(uint8_t i) const;
+         void set_parameter(uint8_t i, const condition_parameter&);
+         //
+         const condition_event_parameters& get_event_parameters() const;
+         void set_event_parameters(const condition_event_parameters&);
+         //
+         inline bool test_flags(flags_t f) const noexcept {
+            return (this->flags & f);
+         }
+         void set_uses_aliases(bool);
+         void set_uses_package_data(bool);
+         #pragma endregion
+      
+         #pragma region Form boilerplate
+         bool read(tes_record_reader&, load_order_interfaces::form_load&); // assumes we've already opened a CTDA subrecord
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         void save(tes_record_writer&, load_order_interfaces::form_save&); // call with no subrecord open
+         void clone_from(const condition& source) noexcept;
+         void sever_outbound_references_to(form_stub& target) noexcept;
+         void clear();
+         #pragma endregion
+   };
 
    struct condition_context {
       //
@@ -86,75 +159,5 @@ namespace dovah::loaded_forms::components {
       //
       loaded_forms::Package* get_owning_package() const noexcept; // gets the working copy or, if there isn't one, the form
       loaded_forms::Quest*   get_owning_quest() const noexcept; // gets the working copy or, if there isn't one, the form
-   };
-
-   struct condition {
-      enum class run_on_t : uint32_t {
-         subject       = 0,
-         target        = 1,
-         reference     = 2, // i.e. condition::run_on_reference
-         combat_target = 3,
-         linked_ref    = 4,
-         quest_alias   = 5,
-         package_data  = 6, // where does (condition) store *which* packdata we're running on?
-         event_data    = 7,
-      };
-      enum class operator_t {
-         equal            = 0,
-         not_equal        = 1,
-         greater          = 2,
-         greater_or_equal = 3,
-         less             = 4,
-         less_or_equal    = 5,
-      };
-      struct flag {
-         flag() = delete;
-         enum type : uint8_t {
-            or_linked         = 0x01,
-            use_aliases       = 0x02, // force REFR and ACHR arguments to reference alias IDs
-            compare_to_global = 0x04,
-            use_packdata      = 0x08, // force REFR and ACHR arguments to package data indices (ObjectList and SingleRef packdata types only)
-            swap_subject_and_target = 0x10,
-         };
-      };
-
-      uint8_t flags = 0; // if a flag has a setter, frontend code should only use the setter
-      struct {
-         run_on_t type  = run_on_t::subject;
-         uint32_t index = -1; // or event data code
-         form_reference_t reference;
-      } run_on;
-      uint16_t  function; // frontend code should use the setter
-      std::array<condition_arg_value, 2> parameters = {};
-      struct {
-         uint16_t function;
-         uint16_t member;
-         form_reference_t form;
-      } event_parameters;
-      struct {
-         operator_t op = operator_t::equal;
-         struct {
-            float            constant;
-            form_reference_t global;
-         } operand;
-      } comparison;
-
-      condition_info::arg_type*           get_argument_type(uint8_t index) const noexcept;
-      condition_info::arg_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;
-      
-      //
-      // These functions not only set the relevant field or flag, but also fix up any existing 
-      // parameter values.
-      //
-      void set_function(loaded_forms::Form& my_owner, uint16_t id);
-      void set_uses_aliases(loaded_forms::Form& my_owner, bool);
-      void set_uses_package_data(loaded_forms::Form& my_owner, bool);
-      
-      bool read(tes_record_reader&, load_order_interfaces::form_load&); // assumes we've already opened a CTDA subrecord
-      static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-      void save(tes_record_writer&, load_order_interfaces::form_save&); // call with no subrecord open
-      void clone_from(const condition& original, loaded_forms::Form& owner_of_clone) noexcept;
-      void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
-      void clear(loaded_forms::Form& my_owner);
    };
 }
