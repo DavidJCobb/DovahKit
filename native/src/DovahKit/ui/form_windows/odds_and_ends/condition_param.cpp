@@ -4,9 +4,8 @@
 #include "../../../dovah/forms/Quest.h"
 
 namespace {
-   constexpr int RunOnTypeRole = Qt::ItemDataRole::UserRole;
-   constexpr int RunOnFormIDRole = Qt::ItemDataRole::UserRole + 1;
-   constexpr int RunOnPlayerSentinelRole = Qt::ItemDataRole::UserRole + 2;
+   using _char_value_t = uint8_t;
+   constexpr int _max_decimals_for_float = FLT_MAX_10_EXP + FLT_DIG; // per Qt documentation for QDoubleSpinBox
 
    namespace _arg_types {
       using namespace dovah::loaded_forms::components::condition_info::arg_types;
@@ -108,8 +107,17 @@ QVariant ConditionParameterEditor::currentData() const noexcept {
       }
       return sb->value();
    }
-   if (csw == this->subwidgets.textbox)
+   if (csw == this->subwidgets.textbox) {
+      auto* widget  = this->subwidgets.textbox;
+      bool  is_char = widget->maxLength() == 1;
+      auto  text    = widget->text();
+      if (is_char) {
+         if (text.isEmpty())
+            return _char_value_t(0);
+         return _char_value_t(text[0].toLatin1());
+      }
       return this->subwidgets.textbox->text();
+   }
    if (csw == this->subwidgets.form)
       return QVariant::fromValue<void*>(this->subwidgets.form->formStub());
    if (csw == this->subwidgets.ref)
@@ -300,9 +308,9 @@ void ConditionParameterEditor::_updateWidgetState(bool pull_from_original) {
             auto* w = this->subwidgets.combobox;
             const auto blocker = QSignalBlocker(w);
             w->clear();
-            w->addItem("X", uint8_t('X'));
-            w->addItem("Y", uint8_t('Y'));
-            w->addItem("Z", uint8_t('Z'));
+            w->addItem("X", _char_value_t('X'));
+            w->addItem("Y", _char_value_t('Y'));
+            w->addItem("Z", _char_value_t('Z'));
             this->stack->setCurrentWidget(w);
             //
             if (pull_from_original)
@@ -327,7 +335,7 @@ void ConditionParameterEditor::_updateWidgetState(bool pull_from_original) {
             w->setValue(0.0F);
             //
             if (under == underlying_t::float32) {
-               w->setDecimals(FLT_MAX_10_EXP + FLT_DIG);
+               w->setDecimals(_max_decimals_for_float);
                w->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
                //
                if (pull_from_original)
@@ -456,6 +464,7 @@ void ConditionParameterEditor::_updateWidgetState(bool pull_from_original) {
             auto* w = this->subwidgets.textbox;
             const auto blocker = QSignalBlocker(w);
             w->clear();
+            w->setMaxLength(32767); // Qt default
             //
             if (pull_from_original)
                w->setText(value->string.c_str());

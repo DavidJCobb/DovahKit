@@ -10,6 +10,16 @@
 
 class ConditionParameterEditor : public QWidget {
    Q_OBJECT
+   //
+   // TODO:
+   //
+   //  - event parameter support (currently VERY partial; state members exist and save() supports it; nothing else does)
+   //
+   //  - changing the current displayed type should emit valueChanged after we update our controls
+   //
+   //  - if we have a union type and the previous condition arg is altered, when changing what the union resolves to 
+   //    we should emit valueChanged after we update our controls
+   //
    protected:
       using form_stub     = dovah::form_stub;
       using condition_t   = dovah::loaded_forms::components::condition;
