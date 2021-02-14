@@ -80,6 +80,13 @@ namespace dovah::loaded_forms::components {
          };
          using flags_t = std::underlying_type_t<flag::type>;
          //
+         struct comparison_t {
+            operator_type op = operator_type::equal;
+            struct {
+               float            constant;
+               form_reference_t global;
+            } operand;
+         };
          //
       protected:
          loaded_forms::Form* _get_form_for_assign() const noexcept;
@@ -90,6 +97,7 @@ namespace dovah::loaded_forms::components {
          uint16_t function = 0;
          std::array<condition_parameter_in_situ, 2> parameters;
          condition_event_parameters event_parameters; // used instead of (parameters) for GetEventData
+         comparison_t comparison;
          //
       public:
          condition() : is_working_copy(true) {}
@@ -103,20 +111,15 @@ namespace dovah::loaded_forms::components {
             uint32_t    index = -1;
             form_reference_t reference;
          } run_on;
-         struct {
-            operator_type op = operator_type::equal;
-            struct {
-               float            constant;
-               form_reference_t global;
-            } operand;
-         } comparison;
          //
          condition_parameter_type*           get_argument_type(uint8_t index) const noexcept;
          condition_parameter_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;
          //
          #pragma region Accessors
-         inline uint16_t get_function() const noexcept { return this->function; }
-         void set_function(uint16_t) noexcept;
+         inline uint16_t get_function_id() const noexcept { return this->function; }
+         void set_function_id(uint16_t) noexcept;
+         const condition_function* get_function() const noexcept;
+         void set_function(const condition_function*) noexcept;
          //
          const condition_parameter get_parameter(uint8_t i) const;
          void set_parameter(uint8_t i, const condition_parameter&);
@@ -124,12 +127,22 @@ namespace dovah::loaded_forms::components {
          const condition_event_parameters& get_event_parameters() const;
          void set_event_parameters(const condition_event_parameters&);
          //
+         const comparison_t& get_comparison() const noexcept { return this->comparison; }
+         void set_comparison(const comparison_t&) noexcept; // also modifies the "compare to global" flag based on whether the passed-in comparison has a global
+         void set_comparison_operator(operator_type ot) noexcept { this->comparison.op = ot; }
+         void set_comparison_operand(float);
+         void set_comparison_operand(form_stub*);
+         //
+         inline flags_t get_flags() const noexcept { return this->flags; }
          inline bool test_flags(flags_t f) const noexcept {
             return (this->flags & f);
          }
+         void modify_flags(flags_t f, bool clear_or_set) noexcept;
          void set_uses_aliases(bool);
          void set_uses_package_data(bool);
          #pragma endregion
+
+         bool refers_to_form(const form_stub*) const noexcept;
       
          #pragma region Form boilerplate
          bool read(tes_record_reader&, load_order_interfaces::form_load&); // assumes we've already opened a CTDA subrecord

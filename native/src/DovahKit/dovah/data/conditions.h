@@ -35,17 +35,10 @@ namespace dovah {
          };
          //
       protected:
-         using condition_parameter      = loaded_forms::components::condition_parameter_in_situ;
-         using union_decider_function_t = condition_parameter_type*(*)(const condition_parameter& decider_value);
+         using condition_parameter_in_situ = loaded_forms::components::condition_parameter_in_situ;
+         using union_decider_function_t = condition_parameter_type*(*)(const condition_parameter_in_situ& decider_value);
          //
       public:
-         virtual void to_string(const condition_parameter& value, std::string& out) const noexcept;
-         virtual bool load_value(condition_parameter& out, tes_subrecord_reader& subrecord) const noexcept;
-         //
-         /// If the type is flagged as a union, use the next function to get its value; if it returns (nullptr), then the argument "doesn't exist."
-         condition_parameter_type* resolve_union(condition_parameter_type* previous_type, const condition_parameter& previous_value) const noexcept;
-         //
-         condition_parameter_type* parent = nullptr;
          std::string  name;
          underlying_t underlying = underlying_t::none;
          bool is_enum  = false;
@@ -56,21 +49,15 @@ namespace dovah {
          } union_decider;
          std::vector<enum_entry>  enum_values;
          std::vector<form_type_t> allowed_form_types;
-         //
+         
          condition_parameter_type(const char* n, underlying_t u) : name(n), underlying(u) {}
          condition_parameter_type(const char* n, underlying_t u, std::initializer_list<enum_entry> ev) : name(n), underlying(u), is_enum(true), enum_values(ev) {}
-         //
-         bool allows_form_type(form_type_t ft) const noexcept {
-            if (this->underlying == underlying_t::formID) {
-               auto& list = this->allowed_form_types;
-               if (!list.size())
-                  return true;
-               for (auto it = list.begin(); it != list.end(); ++it)
-                  if (*it == ft)
-                     return true;
-            }
-            return false;
-         }
+         
+         bool allows_form_type(form_type_t ft) const noexcept;
+
+         // If the type is flagged as a union, use the next function to get its value; if it returns (nullptr), then the argument "doesn't exist."
+         condition_parameter_type* resolve_union(condition_parameter_type* previous_type, const condition_parameter_in_situ& previous_value) const noexcept;
+
          inline bool is_none() const noexcept { return this->underlying == underlying_t::none; }
          inline bool is_union() const noexcept { return this->union_decider.type != nullptr; }
 

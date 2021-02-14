@@ -6,6 +6,7 @@
 #include <QString>
 #include <QTableView>
 #include "../../../dovah/core.h"
+#include "../../../dovah/data/conditions.h"
 #include "../../../dovah/forms/components/conditions.h"
 #include "ui_condition_list.h"
 
@@ -23,8 +24,8 @@ class ConditionListModel : public QAbstractTableModel {
       using form_stub = dovah::form_stub;
       using condition = dovah::loaded_forms::components::condition;
       using cnd_context_t = dovah::loaded_forms::components::condition_context;
-      using arg_underlying_type = dovah::loaded_forms::components::condition_info::arg_underlying_type;
-      using condition_function  = dovah::loaded_forms::components::condition_info::function;
+      using arg_underlying_type = dovah::condition_parameter_underlying_type;
+      using condition_function  = dovah::condition_function;
       //
       static constexpr int ColumnTarget   = 0;
       static constexpr int ColumnFunction = 1;

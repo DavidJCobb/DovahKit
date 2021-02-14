@@ -1,51 +1,20 @@
 #include "conditions.h"
 #include "../../helpers/strings.h"
+#include "../forms/components/conditions.h"
 
 namespace dovah {
-   bool condition_parameter_type::load_value(condition_parameter& out, tes_subrecord_reader& subrecord) const noexcept {
-      switch (this->underlying) {
-         case condition_parameter_underlying_type::formID:
-            return subrecord.read(out.form);
-         default:
-            return subrecord.read(out.dword);
+   bool condition_parameter_type::allows_form_type(form_type_t ft) const noexcept {
+      if (this->underlying == underlying_t::formID) {
+         auto& list = this->allowed_form_types;
+         if (!list.size())
+            return true;
+         for (auto it = list.begin(); it != list.end(); ++it)
+            if (*it == ft)
+               return true;
       }
+      return false;
    }
-   void condition_parameter_type::to_string(const condition_parameter& value, std::string& out) const noexcept {
-      assert(!this->is_union() && "This should never be called directly on a type that has been flagged as a union; use resolveType to get the effective type instead.");
-      if (this->is_enum) {
-         for (auto& ev : this->enum_values) {
-            if (value.dword == ev.value) {
-               out = ev.name;
-               return;
-            }
-         }
-         cobb::sprintf(out, "Invalid %d", value.dword);
-         return;
-      }
-      switch (this->underlying) {
-         case condition_parameter_underlying_type::formID:
-            cobb::sprintf(out, "[FORM:%08X]", value.form.formID());
-            return;
-         case condition_parameter_underlying_type::float32:
-            cobb::sprintf(out, "%f", value.float32);
-            return;
-         case condition_parameter_underlying_type::character:
-            out = (unsigned char)value.dword;
-            return;
-         case condition_parameter_underlying_type::int_signed:
-            cobb::sprintf(out, "%d", value.dword);
-            return;
-         case condition_parameter_underlying_type::int_unsigned:
-         case condition_parameter_underlying_type::quest_stage:
-            cobb::sprintf(out, "%u", value.dword);
-            return;
-         case condition_parameter_underlying_type::string:
-            out = value.string;
-            return;
-      }
-      cobb::sprintf(out, "DWORD 0x%08X", value.dword); // should only happen if there's something we haven't finished yet
-   }
-   condition_parameter_type* condition_parameter_type::resolve_union(condition_parameter_type* previous_type, const condition_parameter& previous_value) const noexcept {
+   condition_parameter_type* condition_parameter_type::resolve_union(condition_parameter_type* previous_type, const condition_parameter_in_situ& previous_value) const noexcept {
       if (!this->is_union())
          return nullptr;
       if (previous_type != this->union_decider.type)
@@ -682,7 +651,7 @@ namespace dovah {
             {3, "Scroll"},
          });
          //
-         condition_parameter_type* _decider(const loaded_forms::components::condition_parameter& decider_value) {
+         condition_parameter_type* _decider(const loaded_forms::components::condition_parameter_in_situ& decider_value) {
             switch (decider_value.dword) {
                case 0:
                   return &Weapon;

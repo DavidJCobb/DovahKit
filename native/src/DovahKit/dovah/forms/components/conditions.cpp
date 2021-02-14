@@ -59,32 +59,23 @@ namespace dovah::loaded_forms::components {
       }
       //
       #pragma region Accessors
-         void condition::set_function(uint16_t id) noexcept {
+         void condition::set_function_id(uint16_t id) noexcept {
             if (id == this->function)
                return;
             //
-            auto* form  = this->_get_form_for_assign();
-            auto* prior = condition_function::lookup_by_id(this->function);
-            auto* after = condition_function::lookup_by_id(id);
-            assert(prior && "Cannot properly audit or clear this condition's parameters: the existing function value is unrecognized.");
-            assert(after && "Invalid function ID.");
-            for (int i = 0; i < this->parameters.size(); ++i) {
-               auto* to_type  = after->argument_types[i];
-               auto  to_under = to_type ? to_type->underlying : condition_parameter_underlying_type::none;
-               //
-               auto& param = this->parameters[i];
-               auto  under = this->get_argument_underlying_type(i);
-               if (under == condition_parameter_underlying_type::formID) {
-                  if (to_under != condition_parameter_underlying_type::formID)
-                     this->_set_form_reference(param.form, nullptr);
-               } else {
-                  param.dword = 0;
-               }
-               if (!(under == to_under && under == condition_parameter_underlying_type::string))
-                  param.string.clear();
+            for (auto& p : this->parameters) {
+               this->_set_form_reference(p.form, nullptr);
+               p.string.clear();
+               p.dword = 0;
             }
-            //
+            this->_set_form_reference(this->event_parameters.form, nullptr);
             this->function = id;
+         }
+         const condition_function* condition::get_function() const noexcept {
+            return condition_function::lookup_by_id(this->function);
+         }
+         void condition::set_function(const condition_function* f) noexcept {
+            this->set_function_id(f->id);
          }
          //
          const condition_parameter condition::get_parameter(uint8_t i) const {
@@ -141,7 +132,33 @@ namespace dovah::loaded_forms::components {
             this->event_parameters.member   = value.member;
             this->_set_form_reference(this->event_parameters.form, value.form.get_form_stub());
          }
-         //
+
+         void condition::set_comparison(const comparison_t& cmp) noexcept {
+            this->comparison.op = cmp.op;
+            if (cmp.operand.global) {
+               this->set_comparison_operand(cmp.operand.global);
+            } else {
+               this->set_comparison_operand(cmp.operand.constant);
+            }
+         }
+         void condition::set_comparison_operand(float operand) {
+            this->flags &= ~flag::compare_to_global;
+            this->_set_form_reference(this->comparison.operand.global, nullptr);
+            this->comparison.operand.constant = operand;
+         }
+         void condition::set_comparison_operand(form_stub* operand) {
+            this->flags |= flag::compare_to_global;
+            this->_set_form_reference(this->comparison.operand.global, operand);
+         }
+
+         void condition::modify_flags(flags_t f, bool clear_or_set) noexcept {
+            if (f & flag::use_aliases)
+               this->set_uses_aliases(clear_or_set);
+            if (f & flag::use_package_data)
+               this->set_uses_package_data(clear_or_set);
+            f &= ~(flag::use_aliases | flag::use_package_data);
+            cobb::edit_bit(this->flags, f, clear_or_set);
+         }
          void condition::set_uses_aliases(bool f) {
             bool prior = this->flags & flag::use_aliases;
             if (prior == f)
@@ -179,6 +196,19 @@ namespace dovah::loaded_forms::components {
             cobb::edit_bit(this->flags, flag::use_package_data, f);
          }
       #pragma endregion
+
+      bool condition::refers_to_form(const form_stub* target) const noexcept {
+         if (this->run_on.reference == target)
+            return true;
+         if (this->event_parameters.form == target)
+            return true;
+         if (this->comparison.operand.global == target)
+            return true;
+         for (auto& p : this->parameters)
+            if (p.form == target)
+               return true;
+         return false;
+      }
       
       #pragma region Form boilerplate
          bool condition::read(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -414,7 +444,10 @@ namespace dovah::loaded_forms::components {
             this->flags = source.flags;
             this->comparison.op = source.comparison.op;
             this->comparison.operand.constant = source.comparison.operand.constant;
-            this->_set_form_reference(this->comparison.operand.global, source.comparison.operand.global.get_form_stub());
+            if (this->flags & flag::compare_to_global)
+               this->_set_form_reference(this->comparison.operand.global, source.comparison.operand.global.get_form_stub());
+            else
+               this->_set_form_reference(this->comparison.operand.global, nullptr);
             //
             this->set_function(source.get_function());
             for (int i = 0; i < this->parameters.size(); ++i)
@@ -423,7 +456,22 @@ namespace dovah::loaded_forms::components {
             //
             this->run_on.type  = source.run_on.type;
             this->run_on.index = source.run_on.index;
-            this->_set_form_reference(this->run_on.reference, source.run_on.reference.get_form_stub());
+            //
+            form_stub* run_on_ptr = nullptr;
+            switch (this->run_on.type) {
+               case run_on_type::subject:
+               case run_on_type::target:
+               case run_on_type::combat_target:
+               case run_on_type::linked_ref:
+               case run_on_type::quest_alias:
+               case run_on_type::package_data:
+               case run_on_type::event_data:
+                  break;
+               case run_on_type::reference:
+                  run_on_ptr = source.run_on.reference.get_form_stub();
+                  break;
+            }
+            this->_set_form_reference(this->run_on.reference, run_on_ptr);
          }
          void condition::sever_outbound_references_to(form_stub& target) noexcept {
             this->_clear_form_reference_if(this->comparison.operand.global, target);

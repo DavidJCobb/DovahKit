@@ -6,6 +6,7 @@
 #include <QWidget>
 #include "../../generic/FormsOfTypeCombobox.h"
 #include "../../generic/RefPickerButton.h"
+#include "../../../dovah/data/conditions.h"
 #include "../../../dovah/forms/components/conditions.h"
 
 class ConditionParameterEditor : public QWidget {
@@ -25,9 +26,9 @@ class ConditionParameterEditor : public QWidget {
       using condition_t   = dovah::loaded_forms::components::condition;
       using cnd_context_t = dovah::loaded_forms::components::condition_context;
       //
-      using underlying_t  = dovah::loaded_forms::components::condition_info::arg_underlying_type;
-      using param_type_t  = dovah::loaded_forms::components::condition_info::arg_type;
-      using param_value_t = dovah::loaded_forms::components::condition_arg_value;
+      using underlying_t  = dovah::condition_parameter_underlying_type;
+      using param_type_t  = dovah::condition_parameter_type;
+      using param_value_t = dovah::loaded_forms::components::condition_parameter;
       //
    public:
       ConditionParameterEditor(form_stub& containing_form, condition_t& condition, int index, QWidget* parent = Q_NULLPTR);

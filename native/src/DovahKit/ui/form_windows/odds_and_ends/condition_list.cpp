@@ -27,19 +27,7 @@ void ConditionListModel::formModified(const dovah::form_stub* stub) {
    auto size   = this->target->size();
    for (size_t i = 0; i < size; ++i) {
       auto& condition = (*this->target)[i];
-      //
-      bool update = false;
-      for (int j = 0; j < 2; ++j) {
-         auto ud = condition.get_argument_underlying_type(j);
-         if (ud == arg_underlying_type::formID) {
-            if (condition.parameters[j].form == stub) {
-               update = true;
-               break;
-            }
-         }
-      }
-      //
-      if (update) {
+      if (condition.refers_to_form(stub)) {
          auto start = this->index(i, 0, parent);
          auto end   = this->index(i, column, parent);
          emit dataChanged(start, end);
@@ -88,9 +76,10 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
    auto column  = index.column();
    if (!this->target)
       return QVariant();
-   auto& condition = (*this->target)[row];
-   auto* function  = condition_function::lookup_by_id(condition.function);
-   auto  flags     = condition.flags;
+   auto& condition  = (*this->target)[row];
+   auto* function   = condition.get_function();
+   auto  flags      = condition.get_flags();
+   auto& comparison = condition.get_comparison();
    switch (column) {
       case ColumnTarget:
          switch (role) {
@@ -98,9 +87,9 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                [[fallthrough]];
             case Qt::ToolTipRole:
                switch (condition.run_on.type) {
-                  case condition::run_on_t::combat_target:
+                  case condition::run_on_type::combat_target:
                      return tr("Combat Target", "condition list - run on");
-                  case condition::run_on_t::event_data:
+                  case condition::run_on_type::event_data:
                      if (auto* q = this->context.get_owning_quest()) {
                         auto  code = q->event;
                         auto* def  = dovah::story_event_definition::lookup(code);
@@ -111,14 +100,14 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         }
                      }
                      return tr("Event Data", "condition list - run on");
-                  case condition::run_on_t::linked_ref:
+                  case condition::run_on_type::linked_ref:
                      return tr("Linked Ref", "condition list - run on");
-                  case condition::run_on_t::package_data:
+                  case condition::run_on_type::package_data:
                      //
                      // TODO: check index; display which data
                      //
                      return tr("Package Data", "condition list - run on");
-                  case condition::run_on_t::quest_alias:
+                  case condition::run_on_type::quest_alias:
                      if (auto* q = this->context.get_owning_quest()) {
                         if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
@@ -127,7 +116,7 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         }
                      }
                      return tr("Alias ID #%1", "condition list - run on").arg(condition.run_on.index); // TODO: display alias name if possible
-                  case condition::run_on_t::reference:
+                  case condition::run_on_type::reference:
                      if (auto* stub = condition.run_on.reference.get_form_stub()) {
                         if (stub->formID == dovah::hardcoded_form_ids::PlayerRef)
                            return tr("Player", "condition list - run on form - player");
@@ -137,9 +126,9 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                            .arg(stub->get_editor_id());
                      }
                      return tr("No Reference", "condition list - run on");
-                  case condition::run_on_t::subject:
+                  case condition::run_on_type::subject:
                      return tr("Subject", "condition list - run on");
-                  case condition::run_on_t::target:
+                  case condition::run_on_type::target:
                      return tr("Target", "condition list - run on");
                }
                break;
@@ -149,14 +138,14 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                // will distinguish built-in strings from names in user content.
                //
                switch (condition.run_on.type) {
-                  case condition::run_on_t::package_data:
+                  case condition::run_on_type::package_data:
                      {
                      // TODO: revisit this when we actually know what package data indices *are*
                         auto font = QFont();
                         font.setItalic(true);
                         return font;
                      }
-                  case condition::run_on_t::quest_alias:
+                  case condition::run_on_type::quest_alias:
                      if (auto* q = this->context.get_owning_quest()) {
                         if (auto* alias = q->lookup_alias_by_id(condition.run_on.index)) {
                            QString name = alias->name.c_str();
@@ -165,15 +154,15 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                         }
                      }
                      [[fallthrough]];
-                  case condition::run_on_t::reference:
+                  case condition::run_on_type::reference:
                      if (condition.run_on.reference)
                         break;
                      [[fallthrough]];
-                  case condition::run_on_t::event_data:
-                  case condition::run_on_t::linked_ref:
-                  case condition::run_on_t::combat_target:
-                  case condition::run_on_t::subject:
-                  case condition::run_on_t::target:
+                  case condition::run_on_type::event_data:
+                  case condition::run_on_type::linked_ref:
+                  case condition::run_on_type::combat_target:
+                  case condition::run_on_type::subject:
+                  case condition::run_on_type::target:
                      {
                         auto font = QFont();
                         font.setItalic(true);
@@ -204,10 +193,10 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
             case Qt::ToolTipRole:
                if (!function)
                   break;
-               if (function->argument_types[0] != &dovah::loaded_forms::components::condition_info::arg_types::None) {
+               if (function->argument_types[0] != &dovah::condition_parameter_types::None) {
                   bool dummy;
                   auto value_a = editor_helpers::stringify_condition_argument(dummy, condition, 0, this->context);
-                  if (function->argument_types[1] != &dovah::loaded_forms::components::condition_info::arg_types::None) {
+                  if (function->argument_types[1] != &dovah::condition_parameter_types::None) {
                      auto value_b = editor_helpers::stringify_condition_argument(dummy, condition, 1, this->context);
                      return tr("%1, %2").arg(value_a).arg(value_b);
                   }
@@ -218,18 +207,18 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
          break;
       case ColumnOperator:
          if (role == Qt::DisplayRole) {
-            switch (condition.comparison.op) {
-               case condition::operator_t::equal:
+            switch (comparison.op) {
+               case condition::operator_type::equal:
                   return tr("==", "condition list - operator, equal");
-               case condition::operator_t::greater:
+               case condition::operator_type::greater:
                   return tr(">",  "condition list - operator, greater");
-               case condition::operator_t::greater_or_equal:
+               case condition::operator_type::greater_or_equal:
                   return tr(">=", "condition list - operator, greater or equal");
-               case condition::operator_t::less:
+               case condition::operator_type::less:
                   return tr("<",  "condition list - operator, less");
-               case condition::operator_t::less_or_equal:
+               case condition::operator_type::less_or_equal:
                   return tr("<=", "condition list - operator, less or equal");
-               case condition::operator_t::not_equal:
+               case condition::operator_type::not_equal:
                   return tr("!=", "condition list - operator, not equal");
             }
          }
@@ -240,19 +229,19 @@ QVariant ConditionListModel::data(const QModelIndex& index, int role) const {
                [[fallthrough]];
             case Qt::ToolTipRole:
                if (flags & condition::flag::compare_to_global) {
-                  if (!condition.comparison.operand.global)
+                  if (!comparison.operand.global)
                      return tr("NONE", "condition list - compare to global (missing)");
-                  auto* stub = condition.comparison.operand.global.get_form_stub();
+                  auto* stub = comparison.operand.global.get_form_stub();
                   return tr("[%1:%2]%3", "condition list - compare to global")
                      .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
                      .arg(stub->formID, 8, 16, QChar('0'))
                      .arg(stub->get_editor_id());
                } else {
-                  return condition.comparison.operand.constant;
+                  return comparison.operand.constant;
                }
                break;
             case Qt::FontRole:
-               if (!condition.comparison.operand.global && (flags & condition::flag::compare_to_global)) {
+               if (!comparison.operand.global && (flags & condition::flag::compare_to_global)) {
                   auto font = QFont();
                   font.setItalic(true);
                   return font;

@@ -8,7 +8,7 @@ namespace {
    constexpr int _max_decimals_for_float = FLT_MAX_10_EXP + FLT_DIG; // per Qt documentation for QDoubleSpinBox
 
    namespace _arg_types {
-      using namespace dovah::loaded_forms::components::condition_info::arg_types;
+      using namespace dovah::condition_parameter_types;
    }
 }
 
@@ -48,7 +48,7 @@ void ConditionParameterEditor::overrideUnderlyingType(underlying_t uo) {
       return;
    this->parameter.u_override = uo;
    if (auto* t = this->parameter.type) {
-      if (!t->can_be_alias)
+      if (!t->allow_overrides)
          return;
       this->_updateWidgetState();
    }
@@ -73,9 +73,9 @@ void ConditionParameterEditor::setPrevious(ConditionParameterEditor& p) {
       auto* pt = this->parameter.previous->argType();
       auto  pv = this->parameter.previous->valueRaw();
       auto* t  = this->parameter.type;
-      if (!t || !t->isUnion)
+      if (!t || !t->is_union())
          return;
-      auto* resolved_type = t->resolve_union(pt, &pv);
+      auto* resolved_type = t->resolve_union(pt, pv);
       this->parameter.resolved = resolved_type;
       if (resolved_type) {
          this->parameter.underlying = resolved_type->underlying;
