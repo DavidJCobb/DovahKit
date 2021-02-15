@@ -106,7 +106,7 @@ void BasicFormTypeTreeModel::clear() {
 
 #pragma region BasicFormTypeTree
 BasicFormTypeTree::BasicFormTypeTree(QWidget* parent) : QLinedTreeView(parent) {
-   this->setModel(new model_type);
+   this->setModel(new model_type(this));
    //
    constexpr char* disambig = "object window";
    auto model = static_cast<model_type*>(this->model());

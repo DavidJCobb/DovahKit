@@ -387,7 +387,7 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
    {
       auto* list = this->ui.list;
       //
-      list->setModel(new model_type);
+      list->setModel(new model_type(this->ui.list));
       list->sortByColumn(0, Qt::AscendingOrder);
       list->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
       {

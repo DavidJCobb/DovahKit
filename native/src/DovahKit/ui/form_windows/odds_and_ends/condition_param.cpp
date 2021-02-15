@@ -461,6 +461,9 @@ void ConditionParameterEditor::_rebuildForEvents() {
             QVector<dovah::form_type_t> allowed;
             switch (this->working.event_parameters.function) {
                case dovah::condition_event_function::GetIsID:
+                  //
+                  // TODO: The allowed form types change depending on the member selected.
+                  //
                   allowed = {
                      dovah::form_type::acoustic_space, // Confirmed in CK. Strange, since these aren't placeable.
                      dovah::form_type::activator,

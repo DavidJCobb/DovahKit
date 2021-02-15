@@ -208,7 +208,7 @@ void LoadOrderFileListModel::toggleSelected(item_type* data) noexcept {
 
 #pragma region LoadOrderFileList
 LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
-   this->setModel(new model_type);
+   this->setModel(new model_type(this));
    this->verticalHeader()->setDefaultSectionSize(0);
    this->sortByColumn(0, Qt::AscendingOrder);
    //
