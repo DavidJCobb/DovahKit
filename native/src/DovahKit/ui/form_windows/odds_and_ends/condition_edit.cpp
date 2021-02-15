@@ -43,6 +43,7 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
       this->reject();
    });
    //
+   #pragma region Create parameter widgets
    this->parameters[0].holder = this->ui.param1Holder;
    this->parameters[1].holder = this->ui.param2Holder;
    this->parameters[2].holder = this->ui.param3Holder;
@@ -55,6 +56,8 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
       p.widget = new ConditionParameterEditor(containing_form, this->working, i, p.holder);
       layout->addWidget(p.widget);
    }
+   #pragma endregion
+   #pragma region Handle parameter flags
    {
       auto* widget = this->ui.paramFlags;
       widget->clear();
@@ -75,7 +78,8 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
             p.widget->rebuild();
       });
    }
-   //
+   #pragma endregion
+   #pragma region Handle run-on
    {
       auto* widget = this->ui.runOn;
       widget->clear(); // clear anything that might've been done in Qt Designer
@@ -117,11 +121,14 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
          }
       });
    }
+   #pragma endregion
    cobb::qt::bind(this->ui.flagSwapSubjectAndTarget, this->working.flags, condition_t::flag::swap_subject_and_target);
+   #pragma region Handle function
    {
       auto* widget = this->ui.function;
       widget->clear(); // clear anything that might've been done in Qt Designer
       //
+      #pragma region Handle sorting and filtering
       auto* proxy = new _FunctionListProxy(widget);
       auto* model = new QStandardItemModel(widget);
       proxy->setSourceModel(model);
@@ -158,8 +165,6 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
          proxy->sort(Qt::SortOrder::AscendingOrder); // yes, we have to call this manually here
       });
       //
-      widget->setCurrentIndex(widget->findData(condition.get_function_id()));
-      //
       {
          //
          // Code to filter the function list. For efficiency, we throttle updates.
@@ -179,7 +184,9 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
             proxy->setFilterFixedString(this->ui.filterFunction->text());
          });
       }
+      #pragma endregion
       //
+      widget->setCurrentIndex(widget->findData(condition.get_function_id()));
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
          auto id = this->ui.function->currentData().toInt();
          if (!dovah::condition_function::lookup_by_id(id))
@@ -190,8 +197,40 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
             p.widget->rebuild();
       });
    }
-   for (auto& p : this->parameters)
-      p.widget->rebuild();
+   #pragma endregion
+   #pragma region Handle parameters
+   {
+      for (auto& p : this->parameters)
+         p.widget->rebuild();
+      //
+      // Handle interdependent parameters:
+      //
+      QObject::connect(this->parameters[0].widget, &ConditionParameterEditor::valueChanged, this, [this]() {
+         auto* func = dovah::condition_function::lookup_by_id(this->working.function);
+         if (!func)
+            return;
+         if (func->uses_event_data) {
+            this->parameters[1].widget->clear();
+            this->parameters[2].widget->clear();
+            return;
+         }
+         if (auto* type = func->argument_types[1]) {
+            if (type->is_union()) {
+               this->working.fix_parameter_types();
+               this->parameters[1].widget->clear();
+               return;
+            }
+         }
+      });
+      QObject::connect(this->parameters[1].widget, &ConditionParameterEditor::valueChanged, this, [this]() {
+         auto* func = dovah::condition_function::lookup_by_id(this->working.function);
+         if (!func || !func->uses_event_data)
+            return;
+         this->parameters[2].widget->clear();
+      });
+   }
+   #pragma endregion
+   #pragma region Handle operator
    {  // Result: Operator
       auto* widget = this->ui.op;
       widget->clear(); // clear anything that might've been done in Qt Designer
@@ -203,6 +242,8 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
       widget->addItem(tr("<=", "condition operator"), (int)condition_t::operator_type::less_or_equal);
       cobb::qt::bind(widget, this->working.comparison.op);
    }
+   #pragma endregion
+   #pragma region Handle operand
    {  // Result: Operand
       cobb::qt::remove_spinbox_bounds(this->ui.operandConstant);
       cobb::qt::bind(this->ui.operandConstant, this->working.comparison.operand.constant);
@@ -229,6 +270,7 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
          }
       });
    }
+   #pragma endregion
    cobb::qt::bind(this->ui.flagOr, this->working.flags, condition_t::flag::or_linked);
 }
 

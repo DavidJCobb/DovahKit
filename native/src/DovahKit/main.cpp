@@ -454,46 +454,11 @@
 //
 //                             - IN PROGRESS
 //
-//                             - The CK uses mutually-exclusive checkboxes for the 
-//                               "Use Aliases" and "Use Pack Data" flags; we use a 
-//                               single combobox to represent either flag or the 
-//                               absence of both.
-//
-//                                - We should show/hide options depending on whether 
-//                                  there is an owning quest or package. (If there is 
-//                                  neither, we should disable the combobox.) Alter-
-//                                  natively, can we grey out individual options in 
-//                                  a combobox?
-//
 //                             - All parameter types can be handled using a single UI 
 //                               control: a QLineEdit, a QComboBox, or a QSpinBox. 
 //                               However, we'll have to change them out on the fly 
 //                               based on the condition's function, flags, and even 
 //                               the values of other parameters.
-//
-//                                - WE NEED TO HANDLE GetEventData AS A SPECIAL CASE AND 
-//                                  DISPLAY THE CONDITION EVENT FIELDS AS "PARAMETERS."
-//
-//                                - WE NEED TO HANDLE INTERDEPENDENT PARAMETERS: IF ONE 
-//                                  PARAMETER'S VALUE INFLUENCES THE POSSIBLE VALUES OF 
-//                                  THE NEXT PARAMETER, THEN CHANGING THE FORMER MUST 
-//                                  UPDATE THE WIDGETS FOR THE LATTER.
-//
-//                                   - I've added a set of "_rebuildTYPEParam" functions 
-//                                     that can be used to preserve a control's value 
-//                                     when rebuilding it, BUT I think I need to rethink 
-//                                     parameter value widgets entirely.
-//
-//                                     Frankly, for stuff like this, I think I'm gonna 
-//                                     just have to hardcode in something to check if 
-//                                     the second argument type is a union and if so, 
-//                                     have it force-update when the first argument 
-//                                     changes.
-//
-//                                     That in turn requires making it so that yeah, we 
-//                                     can have a function to update a single parameter 
-//                                     widget, but we need an "outer" function for when 
-//                                     we update all parameters.
 //
 //                                - SUPPOSE [QUST:12345678]MyCoolQuest CONTAINS, SOMEWHERE, 
 //                                  A SELF-REFERENTIAL GetStageDone CONDITION -- SO, IT HAS 

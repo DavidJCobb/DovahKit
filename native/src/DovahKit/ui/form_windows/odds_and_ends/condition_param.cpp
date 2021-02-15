@@ -191,6 +191,25 @@ QWidget* ConditionParameterEditor::currentSubwidget() const noexcept {
 }
 
 void ConditionParameterEditor::clear() {
+   auto* func = this->_get_condition_function();
+   if (func && func->uses_event_data) {
+      switch (this->parameter_index) {
+         case 0:
+            this->working.event_parameters.function = 0;
+            break;
+         case 1:
+            this->working.event_parameters.member = 0;
+            break;
+         case 2:
+            this->working.event_parameters.form = nullptr;
+            break;
+      }
+      this->rebuild();
+      return;
+   }
+   if (this->parameter_index >= 2)
+      return;
+   //
    auto& param = this->_get_parameter();
    param.form  = nullptr;
    param.string.clear();
@@ -218,6 +237,8 @@ void ConditionParameterEditor::rebuild() {
    //
    auto& param = this->_get_parameter();
    auto* type  = this->_get_parameter_type();
+   if (!type)
+      type = &_arg_types::None;
    if (type->is_enum) {
       this->_setCurrentWidget(this->subwidgets.combobox);
       //
@@ -446,10 +467,29 @@ void ConditionParameterEditor::_rebuildForEvents() {
          {
             auto* w = this->subwidgets.combobox;
             w->clear();
+            //
+            bool member_must_be_form = false;
+            bool member_cant_be_refr = false;
+            switch (this->working.event_parameters.function) {
+               case dovah::condition_event_function::GetIsID:
+                  member_cant_be_refr = true;
+                  [[fallthrough]];
+               case dovah::condition_event_function::GetItemValue:
+               case dovah::condition_event_function::HasKeyword:
+               case dovah::condition_event_function::IsInList:
+                  member_must_be_form = true;
+                  break;
+            }
+            //
             if (auto* q = this->context.get_owning_quest()) {
                if (auto* e = dovah::story_event_definition::lookup(q->event)) {
-                  for (auto& m : e->members)
+                  for (auto& m : e->members) {
+                     if (member_cant_be_refr && m.can_only_be_reference())
+                        continue;
+                     if (member_must_be_form && !m.is_form())
+                        continue;
                      w->addItem(m.name, m.signature);
+                  }
                }
             }
             //
@@ -461,47 +501,69 @@ void ConditionParameterEditor::_rebuildForEvents() {
             QVector<dovah::form_type_t> allowed;
             switch (this->working.event_parameters.function) {
                case dovah::condition_event_function::GetIsID:
-                  //
-                  // TODO: The allowed form types change depending on the member selected.
-                  //
-                  allowed = {
-                     dovah::form_type::acoustic_space, // Confirmed in CK. Strange, since these aren't placeable.
-                     dovah::form_type::activator,
-                     dovah::form_type::actor_base,
-                     dovah::form_type::container,
-                     dovah::form_type::door,
-                     dovah::form_type::flora,
-                     dovah::form_type::furniture,
-                     dovah::form_type::grass,
-                     dovah::form_type::hazard,
-                     dovah::form_type::idle_marker,
-                     dovah::form_type::light,
-                     dovah::form_type::movable_static,
-                     dovah::form_type::projectile,
-                     dovah::form_type::sound,
-                     dovah::form_type::statik,
-                     dovah::form_type::talking_activator,
-                     dovah::form_type::tree,
-                     // Items:
-                     dovah::form_type::ammo,
-                     dovah::form_type::armor,
-                     dovah::form_type::armor_addon,
-                     dovah::form_type::book,
-                     dovah::form_type::key,
-                     dovah::form_type::leveled_item,
-                     dovah::form_type::misc_item,
-                     dovah::form_type::potion,
-                     dovah::form_type::scroll,
-                     dovah::form_type::soul_gem,
-                     dovah::form_type::weapon,
-                     // Magic:
-                     dovah::form_type::enchantment,
-                     dovah::form_type::leveled_spell,
-                     dovah::form_type::shout,
-                     dovah::form_type::spell,
-                     // Other:
-                     dovah::form_type::formlist,
-                  };
+                  {
+                     bool known       = false;
+                     bool use_default = false;
+                     if (auto* q = this->context.get_owning_quest()) {
+                        if (auto* e = dovah::story_event_definition::lookup(q->event)) {
+                           if (auto* m = e->member_by_signature(this->working.event_parameters.member)) {
+                              known = true;
+                              //
+                              auto& list = m->allowed_form_types;
+                              if (!list.empty()) {
+                                 if (list.size() == 1 && list[0] == dovah::form_type::none) {
+                                    use_default = true;
+                                 } else {
+                                    for (auto ft : list) {
+                                       if (!dovah::form_type_info::form_type_is_reference(ft))
+                                          allowed.push_back(ft);
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     }
+                     if (use_default) {
+                        allowed = {
+                           dovah::form_type::acoustic_space, // Confirmed in CK. Strange, since these aren't placeable.
+                           dovah::form_type::activator,
+                           dovah::form_type::actor_base,
+                           dovah::form_type::container,
+                           dovah::form_type::door,
+                           dovah::form_type::flora,
+                           dovah::form_type::furniture,
+                           dovah::form_type::grass,
+                           dovah::form_type::hazard,
+                           dovah::form_type::idle_marker,
+                           dovah::form_type::light,
+                           dovah::form_type::movable_static,
+                           dovah::form_type::projectile,
+                           dovah::form_type::sound_descriptor,
+                           dovah::form_type::statik,
+                           dovah::form_type::talking_activator,
+                           dovah::form_type::tree,
+                           // Items:
+                           dovah::form_type::ammo,
+                           dovah::form_type::armor,
+                           dovah::form_type::armor_addon,
+                           dovah::form_type::book,
+                           dovah::form_type::key,
+                           dovah::form_type::leveled_item,
+                           dovah::form_type::misc_item,
+                           dovah::form_type::potion,
+                           dovah::form_type::scroll,
+                           dovah::form_type::soul_gem,
+                           dovah::form_type::weapon,
+                           // Magic:
+                           dovah::form_type::enchantment,
+                           dovah::form_type::leveled_spell,
+                           dovah::form_type::shout,
+                           dovah::form_type::spell,
+                           // Other:
+                           dovah::form_type::formlist,
+                        };
+                     }
+                  }
                   break;
                case dovah::condition_event_function::HasKeyword:
                   allowed.push_back(dovah::form_type::keyword);

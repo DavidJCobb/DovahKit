@@ -662,29 +662,29 @@ namespace dovah {
                case 3:
                   return &TargetList;
                case 4: // Target Distance; has no second argument
-                  return nullptr;
+                  return &None;
                case 5:
                   return &TargetPart;
                case 6:
                   return &VATSAction;
                case 7: // Is Success; has no second argument
                case 8: // Is Critical; has no second argument
-                  return nullptr;
+                  return &None;
                case 9:
                   return &CriticalEffect;
                case 10:
                   return &CriticalEffectList;
                case 11: // Is Fatal; has no second argument
-                  return nullptr;
+                  return &None;
                case 12: // Explode Part; has no second argument
                case 13: // Dismember Part; has no second argument
                case 14: // Cripple Part; has no second argument
-                  return nullptr;
+                  return &None;
                case 15:
                   return &WeaponAnimType;
                case 16: // Is Stranger; has no second argument
                case 17: // Is Paralyzing Palm; has no second argument
-                  return nullptr;
+                  return &None;
                case 18:
                   return &ProjectileType;
                case 19:
@@ -692,7 +692,7 @@ namespace dovah {
                case 20:
                   return &CastingType;
             }
-            return nullptr;
+            return &None;
          }
       }
       condition_parameter_type VATSValue = condition_parameter_type::make_union_type("VATSValue", VATSValueFunction, _VATSValueTypes::_decider);
