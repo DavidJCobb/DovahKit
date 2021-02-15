@@ -1471,4 +1471,13 @@ namespace dovah {
       }
       return false;
    }
+   extern bool condition_event_function_uses_form(uint16_t id) noexcept {
+      switch (id) {
+         case condition_event_function::GetIsID:
+         case condition_event_function::IsInList:
+         case condition_event_function::HasKeyword:
+            return true;
+      }
+      return false;
+   }
 }

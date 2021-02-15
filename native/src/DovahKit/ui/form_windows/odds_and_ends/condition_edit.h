@@ -8,14 +8,9 @@
 class ConditionEditDialog : public QDialog {
    Q_OBJECT
    protected:
-      using form_stub     = dovah::form_stub;
       using condition_t   = dovah::loaded_forms::components::condition;
       using working_condition = dovah::loaded_forms::components::working_condition;
       using cnd_context_t = dovah::loaded_forms::components::condition_context;
-      using loaded_form_t = dovah::loaded_forms::Form;
-      using underlying_t  = dovah::condition_parameter_underlying_type;
-      using param_type_t  = dovah::condition_parameter_type;
-      using param_value_t = dovah::loaded_forms::components::condition_parameter;
       //
       class _FunctionListProxy : public QSortFilterProxyModel {
          public:
@@ -26,7 +21,7 @@ class ConditionEditDialog : public QDialog {
       };
       //
    public:
-      ConditionEditDialog(form_stub& containing_form, condition_t& condition, QWidget* parent = Q_NULLPTR);
+      ConditionEditDialog(dovah::form_stub& containing_form, condition_t& condition, QWidget* parent = Q_NULLPTR);
       //
    private slots:
       //
@@ -46,7 +41,6 @@ class ConditionEditDialog : public QDialog {
       bool did_param_holder_layout = false;
       condition_t::run_on_type last_run_on = condition_t::run_on_type::subject;
 
-      void _buildParamControls(int which, underlying_t, param_type_t*, bool use_original = false, bool force_update = false);
       void _updateRunOn(bool use_original = false);
       void _save();
 

@@ -104,7 +104,8 @@ namespace dovah::loaded_forms::components {
                      // Read standard parameters.
                      //
                      for (int i = 0; i < this->parameters.size(); i++) {
-                        if (this->get_argument_underlying_type(i) == condition_parameter_underlying_type::formID) {
+                        auto underlying = this->get_argument_underlying_type(i);
+                        if (underlying == condition_parameter_underlying_type::formID) {
                            auto* arg_type   = func->argument_types[i];
                            auto& allowed    = arg_type->allowed_form_types;
                            auto& value_form = this->parameters[i].form;
@@ -124,6 +125,7 @@ namespace dovah::loaded_forms::components {
                         } else {
                            subrecord.unchecked_read(this->parameters[i].dword);
                         }
+                        this->parameters[i].underlying = underlying;
                      }
                   }
                } else {
@@ -311,6 +313,7 @@ namespace dovah::loaded_forms::components {
                for (int i = 0; i < this->parameters.size(); ++i) {
                   auto& dst = this->parameters[i];
                   auto& src = source.parameters[i];
+                  dst.underlying = src.underlying;
                   dst.dword  = src.dword;
                   dst.string = src.string;
                   dst.form.set(my_owner, src.form);
@@ -384,7 +387,7 @@ namespace dovah::loaded_forms::components {
          //
          auto* func = condition_function::lookup_by_id(this->function);
          if (func && func->uses_event_data) {
-            this->event_parameters.form.set(my_owner, source.event_parameters.form);
+            this->event_parameters.form.set(my_owner, condition_event_function_uses_form(source.event_parameters.function) ? source.event_parameters.form : nullptr);
             this->event_parameters.function = source.event_parameters.function;
             this->event_parameters.member   = source.event_parameters.member;
          } else {
@@ -489,6 +492,28 @@ namespace dovah::loaded_forms::components {
          }
       }
    }
+   void working_condition::reset_parameters() {
+      this->event_parameters.function = 0;
+      this->event_parameters.member   = 0;
+      this->event_parameters.form     = nullptr;
+      for (size_t i = 0; i < this->parameters.size(); ++i) {
+         auto& p = this->parameters[i];
+         auto  u = this->get_argument_underlying_type(i);
+         //
+         p.form = nullptr;
+         p.string.clear();
+         p.underlying = u;
+         switch (u) {
+            case condition_parameter_underlying_type::aliasID:
+            case condition_parameter_underlying_type::package_data:
+               p.dword = -1;
+               break;
+            default:
+               p.dword = 0;
+               break;
+         }
+      }
+   }
    #pragma endregion
 
    #pragma region condition_list
@@ -558,7 +583,7 @@ namespace dovah::loaded_forms::components {
       if (!this->quest)
          return nullptr;
       if (this->prefer_working_copy) {
-         auto* wc = this->package->get_working_copy<loaded_forms::Quest>();
+         auto* wc = this->quest->get_working_copy<loaded_forms::Quest>();
          if (wc)
             return wc;
       }

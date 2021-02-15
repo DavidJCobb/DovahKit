@@ -48,14 +48,16 @@ class ConditionParameterEditor : public QWidget {
          FormsOfTypeCombobox* form     = nullptr;
          RefPickerButton*     ref      = nullptr;
       } subwidgets;
-      //
+
+      std::array<QSignalBlocker, 6> _getSubwidgetsBlocker();
+      
       bool _is_event_parameter() const noexcept;
       dovah::loaded_forms::components::condition_parameter& _get_parameter() const noexcept;
       const dovah::condition_parameter_type* _get_parameter_type() const noexcept;
       const dovah::condition_function* _get_condition_function() const noexcept;
       dovah::loaded_forms::components::condition_parameter& _get_previous_parameter() const noexcept;
-      //
+
+      void _setCurrentWidget(QWidget*);
+      
       void _rebuildForEvents();
-      //
-      std::array<QSignalBlocker, 6> _getSubwidgetsBlocker();
 };

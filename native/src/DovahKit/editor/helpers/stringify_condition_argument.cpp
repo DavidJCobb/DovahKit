@@ -25,6 +25,48 @@ namespace editor_helpers {
          return QString();
       }
       //
+      auto* func = cnd.get_function();
+      if (func && func->uses_event_data) {
+         const auto& params = cnd.get_event_parameters();
+         switch (arg_index) {
+            case 0:
+               switch (params.function) {
+                  case dovah::condition_event_function::GetIsID:
+                     return "GetIsID";
+                  case dovah::condition_event_function::GetItemValue:
+                     return "GetItemValue";
+                  case dovah::condition_event_function::GetValue:
+                     return "GetValue";
+                  case dovah::condition_event_function::HasKeyword:
+                     return "HasKeyword";
+                  case dovah::condition_event_function::IsInList:
+                     return "IsInList";
+               }
+               return QObject::tr("<event function:%1>").arg(params.function);
+            case 1:
+               if (auto* q = context.get_owning_quest()) {
+                  if (auto* e = dovah::story_event_definition::lookup(q->event))
+                     if (auto* m = e->member_by_signature(params.member))
+                        return m->name;
+               }
+               return QObject::tr("<event member:%1>").arg(params.member, 4, 16, QChar('0'));
+            case 2:
+               if (!dovah::condition_event_function_uses_form(params.function))
+                  return "";
+               if (auto* stub = params.form.get_form_stub()) {
+                  if (!stub->is_none_stub()) {
+                     auto tn = form_type_name_to_string(stub->formType);
+                     auto id = stub->get_editor_id();
+                     if (!tn.isEmpty())
+                        return QObject::tr("%1: '%2'", "condition argument (form)").arg(tn).arg(id);
+                     return QObject::tr("Form: '%1'", "condition argument (form of strange type)").arg(id);
+                  }
+               }
+               return QObject::tr("NONE", "condition argument (no form or none-stub)");
+         }
+         return "";
+      }
+      //
       auto* type  = cnd.get_argument_type(arg_index);
       auto  under = cnd.get_argument_underlying_type(arg_index);
       auto& value = cnd.get_parameter(arg_index);
@@ -47,55 +89,6 @@ namespace editor_helpers {
             return QObject::tr("Alias ID #%1", "condition argument (alias ID with no identifiable owning quest)").arg(value.dword);
          case dovah::condition_parameter_underlying_type::character:
             return QString("%1").arg(QChar(value.dword & 0xFF));
-         case dovah::condition_parameter_underlying_type::event:
-            {
-               QString function;
-               QString member;
-               switch (value.dword & 0xFFFF) {
-                  case dovah::condition_event_function::GetIsID:
-                     function = "GetIsID";
-                     break;
-                  case dovah::condition_event_function::GetItemValue:
-                     function = "GetItemValue";
-                     break;
-                  case dovah::condition_event_function::GetValue:
-                     function = "GetValue";
-                     break;
-                  case dovah::condition_event_function::HasKeyword:
-                     function = "HasKeyword";
-                     break;
-                  case dovah::condition_event_function::IsInList:
-                     function = "IsInList";
-                     break;
-                  default:
-                     function = "???";
-                     break;
-               }
-               switch ((value.dword >> 0x10) & 0xFFFF) {
-                  case dovah::condition_event_member::created_object:
-                     member = "Created Object";
-                     break;
-                  case dovah::condition_event_member::form:
-                     member = "Form";
-                     break;
-                  case dovah::condition_event_member::keyword:
-                     member = "Keyword";
-                     break;
-                  case dovah::condition_event_member::location_new:
-                     member = "Location (New)";
-                     break;
-                  case dovah::condition_event_member::location_old:
-                     member = "Location (Old)";
-                     break;
-                  case dovah::condition_event_member::value_1:
-                  case dovah::condition_event_member::value_2:
-                     member = "Int16";
-                     break;
-               }
-               if (member.isEmpty())
-                  return function;
-               return QObject::tr("%1: %2").arg(function).arg(member);
-            }
          case dovah::condition_parameter_underlying_type::float32:
             return QString("%1").arg(value.float32);
          case dovah::condition_parameter_underlying_type::int_signed:

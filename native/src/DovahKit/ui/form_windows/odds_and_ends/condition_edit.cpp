@@ -32,7 +32,7 @@ bool ConditionEditDialog::_FunctionListProxy::filterAcceptsRow(int source_row, c
    return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
 }
 
-ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c), working(c.make_working_copy()) {
+ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c), working(c.make_working_copy()) {
    ui.setupUi(this);
    //
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
@@ -52,15 +52,15 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
       layout->setMargin(0);
       p.holder->setLayout(layout);
       //
-      p.widget = new ConditionParameterEditor(containing_form, this->working, 0, p.holder);
+      p.widget = new ConditionParameterEditor(containing_form, this->working, i, p.holder);
       layout->addWidget(p.widget);
    }
    {
       auto* widget = this->ui.paramFlags;
       widget->clear();
-      widget->addItem(tr("Default", "condition param override flags"), (int)underlying_t::none);
-      widget->addItem(tr("Use Aliases", "condition param override flags"), (int)underlying_t::aliasID);
-      widget->addItem(tr("Use Package Data", "condition param override flags"), (int)underlying_t::package_data);
+      widget->addItem(tr("Default", "condition param override flags"), (int)0);
+      widget->addItem(tr("Use Aliases", "condition param override flags"), (int)condition_t::flag::use_aliases);
+      widget->addItem(tr("Use Package Data", "condition param override flags"), (int)condition_t::flag::use_package_data);
       //
       if (working.flags & condition_t::flag::use_aliases)
          widget->setCurrentIndex(1);
@@ -68,6 +68,8 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
          widget->setCurrentIndex(2);
       //
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         this->working.flags &= ~(condition_t::flag::use_aliases | condition_t::flag::use_package_data);
+         this->working.flags |= this->ui.paramFlags->currentData().toInt();
          this->working.fix_parameter_types();
          for (auto& p : this->parameters)
             p.widget->rebuild();
@@ -179,7 +181,11 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
       }
       //
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
-         this->working.fix_parameter_types();
+         auto id = this->ui.function->currentData().toInt();
+         if (!dovah::condition_function::lookup_by_id(id))
+            return;
+         this->working.function = id;
+         this->working.reset_parameters();
          for (auto& p : this->parameters)
             p.widget->rebuild();
       });
@@ -361,7 +367,7 @@ void ConditionEditDialog::showEvent(QShowEvent* event) {
    auto* textbox  = this->ui.filterFunction;
    //
    auto height = std::max(std::max(std::max(button->height(), dropdown->height()), spinbox->height()), textbox->height());
-   for (auto& p : this->parameters) {
-      p.holder->setMinimumHeight(height);
-   }
+   this->ui.layoutBottom->setRowMinimumHeight(1, height);
+   this->ui.layoutBottom->setRowMinimumHeight(2, height);
+   this->ui.layoutBottom->setRowMinimumHeight(3, height);
 }

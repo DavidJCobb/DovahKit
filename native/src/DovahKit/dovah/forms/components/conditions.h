@@ -171,6 +171,7 @@ namespace dovah::loaded_forms::components {
          bool refers_to_form(const form_stub*) const noexcept;
 
          void fix_parameter_types(); // ensures that the parameters have the right underlying types (clearing their values if not); generally you'd call this after changing the function
+         void reset_parameters();
    };
 
    class condition_list : public std::vector<condition> {

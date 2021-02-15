@@ -208,4 +208,5 @@ namespace dovah {
          GetItemValue,
       };
    };
+   extern bool condition_event_function_uses_form(uint16_t) noexcept;
 }

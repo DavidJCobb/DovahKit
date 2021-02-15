@@ -13,8 +13,19 @@
 // but is not currently used. It arose from a misunderstanding on my part regarding 
 // cell music types: the Creation Kit gives you a "DEFAULT" option and a "NONE" 
 // option. What I didn't realize is that "NONE" is actually a music type. Bethesda 
-// literally created a music type form and named it "NONE."
+// literally created a music type form and named it "NONE." See, I had thought that 
+// selecting "DEFAULT" would not encode any music type and selecting "NONE" would 
+// encode form ID 0 as the music type... but of course, given the Rule of One, both 
+// of those would have the same effect anyway.
 //
+
+namespace {
+   bool _should_exclude_form(const dovah::form_stub* stub) {
+      if (stub->formType == dovah::form_type::cell)
+         return stub->is_exterior_cell();
+      return false;
+   }
+}
 
 FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
    this->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon); // needed for performance with large data sets
@@ -39,6 +50,8 @@ FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
       if (!this->count()) // only auto-update for new forms after we've been populated at our owner's discretion
          return;
       if (!this->allowsFormType(stub->formType))
+         return;
+      if (_should_exclude_form(stub))
          return;
       auto* proxy = (_FormsOfTypeComboboxProxy*)this->model();
       if (!proxy)
@@ -104,6 +117,8 @@ void FormsOfTypeCombobox::populate() {
    auto* model = new QStandardItemModel(this); // we need to do this indirectly instead of using QComboBox::addItem in order to get case-insensitive sorting
    {
       auto insert_lambda = [model](dovah::form_stub* stub) {
+         if (_should_exclude_form(stub))
+            return false;
          auto* item = new QStandardItem(QString::fromStdString(stub->get_editor_id()));
          item->setData(stub->formID, FormIDRole);
          item->setData(QVariant::fromValue((void*)stub), FormStubRole);

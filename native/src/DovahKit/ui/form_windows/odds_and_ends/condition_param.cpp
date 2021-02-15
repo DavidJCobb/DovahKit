@@ -1,4 +1,5 @@
 #include "condition_param.h"
+#include <QGridLayout>
 #include <QVariant>
 #include "../../../dovah/data/story_manager.h"
 #include "../../../dovah/forms/Quest.h"
@@ -42,6 +43,10 @@ dovah::loaded_forms::components::condition_parameter& ConditionParameterEditor::
    return this->working.parameters[this->parameter_index - 1];
 }
 
+void ConditionParameterEditor::_setCurrentWidget(QWidget* widget) {
+   this->stack->setCurrentWidget(widget->parentWidget());
+}
+
 ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_form, dovah::loaded_forms::components::working_condition& condition, int index, QWidget* parent)
    :
    QWidget(parent),
@@ -49,13 +54,27 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
    context(containing_form),
    parameter_index(index)
 {
+   {
+      auto* layout = new QGridLayout;
+      layout->setMargin(0);
+      this->setLayout(layout);
+   }
    this->stack = new QStackedWidget(this);
-   this->stack->addWidget(this->subwidgets.blank    = new QWidget);
-   this->stack->addWidget(this->subwidgets.combobox = new QComboBox);
-   this->stack->addWidget(this->subwidgets.textbox  = new QLineEdit);
-   this->stack->addWidget(this->subwidgets.spinbox  = new QDoubleSpinBox);
-   this->stack->addWidget(this->subwidgets.form     = new FormsOfTypeCombobox);
-   this->stack->addWidget(this->subwidgets.ref      = new RefPickerButton);
+   this->layout()->addWidget(this->stack);
+   auto lambda = [this](QWidget* widget) {
+      auto* wrapper = new QWidget;
+      auto* layout  = new QGridLayout;
+      layout->setMargin(0);
+      layout->addWidget(widget);
+      wrapper->setLayout(layout);
+      this->stack->addWidget(wrapper);
+   };
+   lambda(this->subwidgets.blank    = new QWidget);
+   lambda(this->subwidgets.combobox = new QComboBox);
+   lambda(this->subwidgets.textbox  = new QLineEdit);
+   lambda(this->subwidgets.spinbox  = new QDoubleSpinBox);
+   lambda(this->subwidgets.form     = new FormsOfTypeCombobox);
+   lambda(this->subwidgets.ref      = new RefPickerButton);
    //
    this->subwidgets.spinbox->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
    this->subwidgets.form->setAllowNone(true);
@@ -193,18 +212,41 @@ void ConditionParameterEditor::rebuild() {
       return;
    }
    if (this->parameter_index >= this->working.parameters.size()) {
-      this->stack->setCurrentWidget(this->subwidgets.blank);
+      this->_setCurrentWidget(this->subwidgets.blank);
       return;
    }
    //
    auto& param = this->_get_parameter();
    auto* type  = this->_get_parameter_type();
+   if (type->is_enum) {
+      this->_setCurrentWidget(this->subwidgets.combobox);
+      //
+      auto* w = this->subwidgets.combobox;
+      const auto blocker = QSignalBlocker(w);
+      w->clear();
+      //
+      int i;
+      if (type->underlying == dovah::condition_parameter_underlying_type::int_unsigned) {
+         for (const auto& e : type->enum_values)
+            w->addItem(e.name, (uint32_t)e.value);
+         i = w->findData(param.dword);
+      } else {
+         for (const auto& e : type->enum_values)
+            w->addItem(e.name, e.value);
+         i = w->findData(param.integer);
+      }
+      if (i < 0)
+         i = 0;
+      w->setCurrentIndex(i);
+      //
+      return;
+   }
    switch (param.underlying) {
       case dovah::condition_parameter_underlying_type::none:
-         this->stack->setCurrentWidget(this->subwidgets.blank);
+         this->_setCurrentWidget(this->subwidgets.blank);
          break;
       case dovah::condition_parameter_underlying_type::aliasID:
-         this->stack->setCurrentWidget(this->subwidgets.combobox);
+         this->_setCurrentWidget(this->subwidgets.combobox);
          {
             auto* w = this->subwidgets.combobox;
             const auto blocker = QSignalBlocker(w);
@@ -233,15 +275,18 @@ void ConditionParameterEditor::rebuild() {
             w->addItem("X", _char_value_t('X'));
             w->addItem("Y", _char_value_t('Y'));
             w->addItem("Z", _char_value_t('Z'));
-            this->stack->setCurrentWidget(w);
+            this->_setCurrentWidget(w);
             //
-            w->setCurrentIndex(w->findData((uint8_t)param.dword));
+            auto i = w->findData((uint8_t)param.dword);
+            if (i < 0)
+               i = 0;
+            w->setCurrentIndex(i);
          } else {
             auto* w = this->subwidgets.textbox;
             const auto blocker = QSignalBlocker(w);
             w->clear();
             w->setMaxLength(1);
-            this->stack->setCurrentWidget(w);
+            this->_setCurrentWidget(w);
             //
             w->setText(QChar(param.dword & 0xFF));
          }
@@ -268,12 +313,12 @@ void ConditionParameterEditor::rebuild() {
                   w->setValue(param.dword);
                }
             }
-            this->stack->setCurrentWidget(w);
+            this->_setCurrentWidget(w);
          }
          break;
       case dovah::condition_parameter_underlying_type::formID:
          if (!type) {
-            this->stack->setCurrentWidget(this->subwidgets.blank);
+            this->_setCurrentWidget(this->subwidgets.blank);
             break;
          } else {
             bool references = false;
@@ -286,14 +331,14 @@ void ConditionParameterEditor::rebuild() {
             if (references) {
                auto* w = this->subwidgets.ref;
                const auto blocker = QSignalBlocker(w);
-               this->stack->setCurrentWidget(w);
+               this->_setCurrentWidget(w);
                //
                w->setValue(param.form);
                break;
             } else {
                auto* w = this->subwidgets.form;
                const auto blocker = QSignalBlocker(w);
-               this->stack->setCurrentWidget(w);
+               this->_setCurrentWidget(w);
                //
                QVector<uint8_t> al;
                if (auto s = type->allowed_form_types.size()) {
@@ -313,7 +358,7 @@ void ConditionParameterEditor::rebuild() {
          }
          break;
       case dovah::condition_parameter_underlying_type::package_data:
-         this->stack->setCurrentWidget(this->subwidgets.combobox);
+         this->_setCurrentWidget(this->subwidgets.combobox);
          {
             auto* w = this->subwidgets.combobox;
             const auto blocker = QSignalBlocker(w);
@@ -349,7 +394,7 @@ void ConditionParameterEditor::rebuild() {
                   for (auto& s : q->stages)
                      w->addItem(QString::number(s.index), s.index);
                   //
-                  this->stack->setCurrentWidget(w);
+                  this->_setCurrentWidget(w);
                   w->setCurrentIndex(w->findData(param.dword));
                   break;
                }
@@ -361,7 +406,7 @@ void ConditionParameterEditor::rebuild() {
             w->setDecimals(0);
             w->setRange(0, 65535);
             w->setValue(param.dword);
-            this->stack->setCurrentWidget(w);
+            this->_setCurrentWidget(w);
          }
          break;
       case dovah::condition_parameter_underlying_type::string:
@@ -371,7 +416,7 @@ void ConditionParameterEditor::rebuild() {
             w->clear();
             w->setMaxLength(32767); // Qt default
             w->setText(param.string.c_str());
-            this->stack->setCurrentWidget(w);
+            this->_setCurrentWidget(w);
          }
          break;
    }
@@ -383,7 +428,7 @@ void ConditionParameterEditor::_rebuildForEvents() {
    //
    switch (this->parameter_index) {
       case 0: // event function
-         this->stack->setCurrentWidget(this->subwidgets.combobox);
+         this->_setCurrentWidget(this->subwidgets.combobox);
          {
             auto* w = this->subwidgets.combobox;
             w->clear();
@@ -397,7 +442,7 @@ void ConditionParameterEditor::_rebuildForEvents() {
          }
          break;
       case 1: // event member
-         this->stack->setCurrentWidget(this->subwidgets.combobox);
+         this->_setCurrentWidget(this->subwidgets.combobox);
          {
             auto* w = this->subwidgets.combobox;
             w->clear();
@@ -463,10 +508,10 @@ void ConditionParameterEditor::_rebuildForEvents() {
                   break;
             }
             if (allowed.isEmpty()) {
-               this->stack->setCurrentWidget(this->subwidgets.blank);
+               this->_setCurrentWidget(this->subwidgets.blank);
                break;
             } else {
-               this->stack->setCurrentWidget(this->subwidgets.form);
+               this->_setCurrentWidget(this->subwidgets.form);
                auto* w = this->subwidgets.form;
                w->setAllowedFormTypes(allowed);
                w->populate();
