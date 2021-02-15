@@ -12,11 +12,31 @@ namespace {
    }
 }
 
+std::array<QSignalBlocker, 6> ConditionParameterEditor::_getSubwidgetsBlocker() {
+   return {
+      QSignalBlocker(this->subwidgets.blank),
+      QSignalBlocker(this->subwidgets.combobox),
+      QSignalBlocker(this->subwidgets.form),
+      QSignalBlocker(this->subwidgets.ref),
+      QSignalBlocker(this->subwidgets.spinbox),
+      QSignalBlocker(this->subwidgets.textbox),
+   };
+}
+
+bool ConditionParameterEditor::_is_event_parameter() const noexcept {
+   auto* func = dovah::condition_function::lookup_by_id(this->working.function);
+   if (func && func->uses_event_data)
+      return true;
+   return false;
+}
 dovah::loaded_forms::components::condition_parameter& ConditionParameterEditor::_get_parameter() const noexcept {
    return this->working.parameters[this->parameter_index];
 }
 const dovah::condition_parameter_type* ConditionParameterEditor::_get_parameter_type() const noexcept {
    return this->working.get_argument_type(this->parameter_index);
+}
+const dovah::condition_function* ConditionParameterEditor::_get_condition_function() const noexcept {
+   return dovah::condition_function::lookup_by_id(this->working.function);
 }
 dovah::loaded_forms::components::condition_parameter& ConditionParameterEditor::_get_previous_parameter() const noexcept {
    return this->working.parameters[this->parameter_index - 1];
@@ -41,6 +61,24 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
    this->subwidgets.form->setAllowNone(true);
    //
    QObject::connect(this->subwidgets.combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+      auto* widget = this->subwidgets.combobox;
+      //
+      if (this->_is_event_parameter()) {
+         auto& ep = this->working.event_parameters;
+         switch (this->parameter_index) {
+            case 0:
+               ep.function = this->subwidgets.combobox->currentData().toInt();
+               break;
+            case 1:
+               ep.member = this->subwidgets.combobox->currentData().toInt();
+               break;
+         }
+         emit this->valueChanged();
+         return;
+      }
+      if (this->parameter_index >= 2)
+         return;
+      //
       auto& param = this->_get_parameter();
       switch (param.underlying) {
          case dovah::condition_parameter_underlying_type::aliasID:
@@ -48,13 +86,13 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
          case dovah::condition_parameter_underlying_type::int_signed:
          case dovah::condition_parameter_underlying_type::package_data:
          case dovah::condition_parameter_underlying_type::quest_stage:
-            param.integer = this->subwidgets.combobox->currentData().toInt();
+            param.integer = widget->currentData().toInt();
             break;
          case dovah::condition_parameter_underlying_type::int_unsigned:
-            param.dword = this->subwidgets.combobox->currentData().value<uint32_t>();
+            param.dword = widget->currentData().value<uint32_t>();
             break;
          case dovah::condition_parameter_underlying_type::float32:
-            param.float32 = this->subwidgets.combobox->currentData().toFloat();
+            param.float32 = widget->currentData().toFloat();
             break;
          default:
             return;
@@ -62,10 +100,22 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
       emit this->valueChanged();
    });
    QObject::connect(this->subwidgets.textbox, &QLineEdit::textChanged, this, [this]() {
+      if (this->_is_event_parameter()) {
+         return;
+      }
+      if (this->parameter_index >= 2)
+         return;
+      //
       this->_get_parameter().string = this->subwidgets.textbox->text().toStdString();
       emit this->valueChanged();
    });
    QObject::connect(this->subwidgets.spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this]() {
+      if (this->_is_event_parameter()) {
+         return;
+      }
+      if (this->parameter_index >= 2)
+         return;
+      //
       auto& param = this->_get_parameter();
       switch (param.underlying) {
          case dovah::condition_parameter_underlying_type::float32:
@@ -84,11 +134,35 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
       emit this->valueChanged();
    });
    QObject::connect(this->subwidgets.form, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
-      this->_get_parameter().form = this->subwidgets.form->formStub();
+      auto* stub = this->subwidgets.form->formStub();
+      //
+      if (this->_is_event_parameter()) {
+         if (this->parameter_index == 2) {
+            this->working.event_parameters.form = stub;
+            emit this->valueChanged();
+         }
+         return;
+      }
+      if (this->parameter_index >= 2)
+         return;
+      //
+      this->_get_parameter().form = stub;
       emit this->valueChanged();
    });
    QObject::connect(this->subwidgets.ref, &RefPickerButton::valueChanged, this, [this]() {
-      this->_get_parameter().form = this->subwidgets.ref->value();
+      auto* stub = this->subwidgets.ref->value();
+      //
+      if (this->_is_event_parameter()) {
+         if (this->parameter_index == 2) {
+            this->working.event_parameters.form = stub;
+            emit this->valueChanged();
+         }
+         return;
+      }
+      if (this->parameter_index >= 2)
+         return;
+      //
+      this->_get_parameter().form = stub;
       emit this->valueChanged();
    });
 }
@@ -112,6 +186,17 @@ void ConditionParameterEditor::clear() {
    this->rebuild();
 }
 void ConditionParameterEditor::rebuild() {
+   auto  blocker = this->_getSubwidgetsBlocker();
+   auto* func    = this->_get_condition_function();
+   if (func && func->uses_event_data) {
+      this->_rebuildForEvents();
+      return;
+   }
+   if (this->parameter_index >= this->working.parameters.size()) {
+      this->stack->setCurrentWidget(this->subwidgets.blank);
+      return;
+   }
+   //
    auto& param = this->_get_parameter();
    auto* type  = this->_get_parameter_type();
    switch (param.underlying) {
@@ -287,6 +372,110 @@ void ConditionParameterEditor::rebuild() {
             w->setMaxLength(32767); // Qt default
             w->setText(param.string.c_str());
             this->stack->setCurrentWidget(w);
+         }
+         break;
+   }
+}
+void ConditionParameterEditor::_rebuildForEvents() {
+   constexpr int i_event_function = 0;
+   constexpr int i_event_member   = 1;
+   constexpr int i_event_form     = 2;
+   //
+   switch (this->parameter_index) {
+      case 0: // event function
+         this->stack->setCurrentWidget(this->subwidgets.combobox);
+         {
+            auto* w = this->subwidgets.combobox;
+            w->clear();
+            w->addItem("GetIsID",      dovah::condition_event_function::GetIsID);
+            w->addItem("GetItemValue", dovah::condition_event_function::GetItemValue);
+            w->addItem("GetValue",     dovah::condition_event_function::GetValue);
+            w->addItem("HasKeyword",   dovah::condition_event_function::HasKeyword);
+            w->addItem("IsInList",     dovah::condition_event_function::IsInList);
+            //
+            w->setCurrentIndex(w->findData(this->working.event_parameters.function));
+         }
+         break;
+      case 1: // event member
+         this->stack->setCurrentWidget(this->subwidgets.combobox);
+         {
+            auto* w = this->subwidgets.combobox;
+            w->clear();
+            if (auto* q = this->context.get_owning_quest()) {
+               if (auto* e = dovah::story_event_definition::lookup(q->event)) {
+                  for (auto& m : e->members)
+                     w->addItem(m.name, m.signature);
+               }
+            }
+            //
+            w->setCurrentIndex(w->findData(this->working.event_parameters.member));
+         }
+         break;
+      case 2: // event form
+         {
+            QVector<dovah::form_type_t> allowed;
+            switch (this->working.event_parameters.function) {
+               case dovah::condition_event_function::GetIsID:
+                  allowed = {
+                     dovah::form_type::acoustic_space, // Confirmed in CK. Strange, since these aren't placeable.
+                     dovah::form_type::activator,
+                     dovah::form_type::actor_base,
+                     dovah::form_type::container,
+                     dovah::form_type::door,
+                     dovah::form_type::flora,
+                     dovah::form_type::furniture,
+                     dovah::form_type::grass,
+                     dovah::form_type::hazard,
+                     dovah::form_type::idle_marker,
+                     dovah::form_type::light,
+                     dovah::form_type::movable_static,
+                     dovah::form_type::projectile,
+                     dovah::form_type::sound,
+                     dovah::form_type::statik,
+                     dovah::form_type::talking_activator,
+                     dovah::form_type::tree,
+                     // Items:
+                     dovah::form_type::ammo,
+                     dovah::form_type::armor,
+                     dovah::form_type::armor_addon,
+                     dovah::form_type::book,
+                     dovah::form_type::key,
+                     dovah::form_type::leveled_item,
+                     dovah::form_type::misc_item,
+                     dovah::form_type::potion,
+                     dovah::form_type::scroll,
+                     dovah::form_type::soul_gem,
+                     dovah::form_type::weapon,
+                     // Magic:
+                     dovah::form_type::enchantment,
+                     dovah::form_type::leveled_spell,
+                     dovah::form_type::shout,
+                     dovah::form_type::spell,
+                     // Other:
+                     dovah::form_type::formlist,
+                  };
+                  break;
+               case dovah::condition_event_function::HasKeyword:
+                  allowed.push_back(dovah::form_type::keyword);
+                  break;
+               case dovah::condition_event_function::IsInList:
+                  allowed.push_back(dovah::form_type::formlist);
+                  break;
+            }
+            if (allowed.isEmpty()) {
+               this->stack->setCurrentWidget(this->subwidgets.blank);
+               break;
+            } else {
+               this->stack->setCurrentWidget(this->subwidgets.form);
+               auto* w = this->subwidgets.form;
+               w->setAllowedFormTypes(allowed);
+               w->populate();
+               //
+               dovah::bare_form_id_t id = 0;
+               if (auto* stub = this->working.event_parameters.form)
+                  id = stub->formID;
+               w->setFormByID(id);
+            }
          }
          break;
    }

@@ -54,7 +54,7 @@ namespace dovah {
 
    struct story_event_definition {
       struct member {
-         uint16_t signature;
+         uint16_t    signature;
          const char* bethesda_name;
          const char* name;
       };

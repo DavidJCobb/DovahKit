@@ -3,6 +3,7 @@
 #include <QTimer>
 #include "ui_condition_edit.h"
 #include "../../../dovah/forms/components/conditions.h"
+#include "condition_param.h"
 
 class ConditionEditDialog : public QDialog {
    Q_OBJECT
@@ -38,16 +39,8 @@ class ConditionEditDialog : public QDialog {
       QTimer function_filter_update_throttle;
       //
       struct _parameter {
-         enum class special_case_t {
-            none,
-            reference_pick_button,
-         };
-         //
-         QWidget*       holder       = nullptr;
-         QWidget*       widget       = nullptr;
-         underlying_t   last_under   = underlying_t::none;
-         param_type_t*  last_type    = nullptr;
-         special_case_t last_special = special_case_t::none;
+         QWidget* holder = nullptr;
+         ConditionParameterEditor* widget = nullptr;
       };
       std::array<_parameter, 3> parameters;
       bool did_param_holder_layout = false;
