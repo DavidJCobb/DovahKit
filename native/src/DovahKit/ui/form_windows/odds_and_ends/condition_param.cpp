@@ -468,12 +468,10 @@ void ConditionParameterEditor::_rebuildForEvents() {
             auto* w = this->subwidgets.combobox;
             w->clear();
             //
-            bool member_must_be_form = false;
-            bool member_cant_be_refr = false;
+            bool member_must_be_form = false; // NOTE: this is not a limitation that the CK enforces
+            bool member_cant_be_refr = true;  // NOTE: the CK always enforces this limitation, for all functions
             switch (this->working.event_parameters.function) {
                case dovah::condition_event_function::GetIsID:
-                  member_cant_be_refr = true;
-                  [[fallthrough]];
                case dovah::condition_event_function::GetItemValue:
                case dovah::condition_event_function::HasKeyword:
                case dovah::condition_event_function::IsInList:
