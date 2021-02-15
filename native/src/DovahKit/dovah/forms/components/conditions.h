@@ -169,6 +169,8 @@ namespace dovah::loaded_forms::components {
          condition_parameter_underlying_type get_argument_underlying_type(uint8_t index) const noexcept;
 
          bool refers_to_form(const form_stub*) const noexcept;
+
+         void fix_parameter_types(); // ensures that the parameters have the right underlying types (clearing their values if not); generally you'd call this after changing the function
    };
 
    class condition_list : public std::vector<condition> {

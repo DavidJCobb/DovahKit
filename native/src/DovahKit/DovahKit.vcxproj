@@ -273,6 +273,7 @@
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\condition_param.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\formlist_listview.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
@@ -549,6 +550,7 @@
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h" />
     <QtMoc Include="ui\generic\RefPickerButton.h" />
     <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />

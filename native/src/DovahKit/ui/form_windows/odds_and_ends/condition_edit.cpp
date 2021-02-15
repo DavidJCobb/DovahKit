@@ -64,6 +64,7 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
          widget->setCurrentIndex(2);
       //
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         this->working.fix_parameter_types();
          int   id   = this->ui.function->currentData().toInt();
          auto* func = dovah::condition_function::lookup_by_id(id);
          if (func) {
@@ -203,6 +204,7 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
       }
       //
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         this->working.fix_parameter_types();
          int   id   = this->ui.function->currentData().toInt();
          auto* func = dovah::condition_function::lookup_by_id(id);
          if (!func) {
@@ -235,10 +237,6 @@ ConditionEditDialog::ConditionEditDialog(form_stub& containing_form, condition_t
             this->_buildParamControls(2, underlying_t::none, nullptr);
          }
       });
-      #if !_DEBUG
-         static_assert(false, "Finish implementing Function: you need to be able to filter the function list (with the current selection exempt from the filter)!");
-         static_assert(false, "Finish implementing Function: we need code for when the function combobox is changed!");
-      #endif
    }
    {
       for (int i = 0; i < this->parameters.size(); ++i) {

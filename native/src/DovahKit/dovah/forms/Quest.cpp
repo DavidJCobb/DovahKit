@@ -1065,4 +1065,12 @@ namespace dovah::loaded_forms {
             return alias;
       return nullptr;
    }
+   void Quest::for_each_alias_of_type(Alias::alias_type t, std::function<bool(Alias*)> functor) {
+      for (auto* alias : this->aliases) {
+         if (alias->type != t)
+            continue;
+         if ((functor)(alias))
+            break;
+      }
+   }
 }

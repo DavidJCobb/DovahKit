@@ -458,6 +458,37 @@ namespace dovah::loaded_forms::components {
             return true;
       return false;
    }
+
+   void working_condition::fix_parameter_types() {
+      auto* func = condition_function::lookup_by_id(this->function);
+      if (func && func->uses_event_data) {
+         for (auto& p : this->parameters) {
+            p.dword = 0;
+            p.form  = nullptr;
+            p.string.clear();
+            p.underlying = condition_parameter_underlying_type::none;
+         }
+         return;
+      }
+      for (size_t i = 0; i < this->parameters.size(); ++i) {
+         auto& p = this->parameters[i];
+         auto  u = this->get_argument_underlying_type(i);
+         if (p.underlying != u) {
+            p.form = nullptr;
+            p.string.clear();
+            p.underlying = u;
+            switch (u) {
+               case condition_parameter_underlying_type::aliasID:
+               case condition_parameter_underlying_type::package_data:
+                  p.dword = -1;
+                  break;
+               default:
+                  p.dword = 0;
+                  break;
+            }
+         }
+      }
+   }
    #pragma endregion
 
    #pragma region condition_list

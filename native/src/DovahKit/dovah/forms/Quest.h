@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 #include "Form.h"
@@ -307,6 +308,7 @@ namespace dovah::loaded_forms {
          virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
 
          Alias* lookup_alias_by_id(uint32_t id) const noexcept;
+         void for_each_alias_of_type(Alias::alias_type, std::function<bool(Alias*)>);
 
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
