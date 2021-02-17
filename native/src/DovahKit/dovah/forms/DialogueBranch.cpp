@@ -69,6 +69,21 @@ namespace dovah::loaded_forms {
                      // DovahKit doesn't attempt to mimic this load error, because frankly, that would be insane. 
                      // However, we're obligated to warn about it.
                      //
+                     // As for when this error would occur, and when it would break things? Well, most of the time, it 
+                     // shouldn't actually do any damage. If you're editing dialogue in a master, you only need to 
+                     // override the DLBR if you change a branch's owning quest (which I don't think the CK lets you 
+                     // do, and which you have no reason to do), if you change its type or flags (again, useless), or 
+                     // if you change its starting topic. If you're creating a new dialogue branch whose owning quest 
+                     // belongs to Skyrim or Update, then you'll avoid the issue because the quest's form ID will 
+                     // survive a redundant conversion (unless Skyrim and Update aren't the first two files in your 
+                     // mod's master list, but why the hell would you ever do that?). If your dialogue branch's owning 
+                     // quest belongs to the same file that supplies the branch (i.e. dialogue in your own mod), then 
+                     // you'll be fine as well: the quest form ID will get mangled by the redundant conversion, but 
+                     // the game will fall back to placing it within your own file.
+                     //
+                     // Where you're at risk is if you override a dialogue branch in another mod or in a DLC file, or 
+                     // if you create a dialogue branch whose owning quest is in another mod or in a DLC file.
+                     //
                      detailed_notice warning;
                      warning.code    = notice_code::dialogue_branch_mishandled_owning_quest_id;
                      warning.type    = detailed_notice::notice_type::warning;

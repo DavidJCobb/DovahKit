@@ -21,16 +21,15 @@ class ConditionEditDialog : public QDialog {
       };
       //
    public:
-      ConditionEditDialog(dovah::form_stub& containing_form, condition_t& condition, QWidget* parent = Q_NULLPTR);
+      ConditionEditDialog(dovah::form_stub& containing_form, working_condition& condition, QWidget* parent = Q_NULLPTR);
       //
    private slots:
       void forceUpdateParameters();
       //
    protected:
       Ui::ConditionEditDialog ui;
-      condition_t&      condition;
-      cnd_context_t     context;
-      working_condition working;
+      cnd_context_t      context;
+      working_condition& working;
       //
       QTimer function_filter_update_throttle;
       //
@@ -43,7 +42,6 @@ class ConditionEditDialog : public QDialog {
       condition_t::run_on_type last_run_on = condition_t::run_on_type::subject;
 
       void _updateRunOn();
-      void _save();
 
       virtual void showEvent(QShowEvent* event) override;
 };

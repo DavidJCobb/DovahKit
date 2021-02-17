@@ -32,11 +32,10 @@ bool ConditionEditDialog::_FunctionListProxy::filterAcceptsRow(int source_row, c
    return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
 }
 
-ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, condition_t& c, QWidget* parent) : QDialog(parent), context(containing_form), condition(c), working(c.make_working_copy()) {
+ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, working_condition& wc, QWidget* parent) : QDialog(parent), context(containing_form), working(wc) {
    ui.setupUi(this);
    //
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
-      this->_save();
       this->accept();
    });
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, [this]() {
@@ -184,7 +183,7 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
       }
       #pragma endregion
       //
-      widget->setCurrentIndex(widget->findData(condition.get_function_id()));
+      widget->setCurrentIndex(widget->findData(this->working.function));
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
          auto id = this->ui.function->currentData().toInt();
          if (!dovah::condition_function::lookup_by_id(id))
@@ -248,12 +247,12 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
       //
       this->ui.operandGlobal->setAllowedFormType(dovah::form_type::global);
       this->ui.operandGlobal->populate();
-      if (auto* stub = condition.get_comparison().operand.global.get_form_stub()) {
+      if (auto* stub = this->working.comparison.operand.global) {
          if (!stub->is_none_stub())
             this->ui.operandGlobal->setFormByID(stub->formID);
       }
       //
-      bool use_global = (condition.get_flags() & condition_t::flag::compare_to_global);
+      bool use_global = (this->working.flags & working_condition::flag::compare_to_global);
       this->ui.flagCompareToGlobal->setCheckState(use_global ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
       if (use_global) {
          this->ui.operandStack->setCurrentWidget(this->ui.operandPageGlobal);
@@ -413,12 +412,6 @@ void ConditionEditDialog::_updateRunOn() {
          this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          return;
    }
-}
-
-void ConditionEditDialog::_save() {
-   dovah::loaded_form_ptr<dovah::loaded_forms::Form> smart;
-   auto* lf = this->context.owner->get_working_or_stable_copy(smart);
-   this->condition.commit(*lf, this->working);
 }
 
 void ConditionEditDialog::showEvent(QShowEvent* event) {

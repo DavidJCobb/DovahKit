@@ -13,6 +13,7 @@
 namespace dovah {
    class form_stub;
    namespace loaded_forms {
+      class Form;
       class Package;
       class Quest;
    }
@@ -37,6 +38,7 @@ class ConditionListModel : public QAbstractTableModel {
    protected:
       cnd_context_t context;
       std::vector<condition>* target = nullptr; // condition list to modify
+      bool in_working_copy = true;
       //
    protected slots:
       void formModified(const dovah::form_stub*);
@@ -72,11 +74,13 @@ class ConditionListModel : public QAbstractTableModel {
             return 0;
          return this->target->size();
       }
+      void insertCondition(const dovah::loaded_forms::components::working_condition&, size_t at);
       void moveSelection(const QItemSelection&, int down);
       void refresh();
-      void setTarget(form_stub&, std::vector<condition>&);
+      void setTarget(form_stub&, std::vector<condition>&, bool in_working_copy = true);
 
       form_stub* targetStub() const noexcept { return this->context.owner; }
+      dovah::loaded_forms::Form* targetLoadedForm() const noexcept;
       condition* getCondition(const QModelIndex&);
 };
 

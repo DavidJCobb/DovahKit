@@ -11,6 +11,19 @@
 #include "../../../helpers/vector.h"
 #include "condition_edit.h"
 
+namespace {
+   static const uint16_t _GetIsID_function_index = ([]() {
+      auto& list = dovah::condition_function_list;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& func = list[size];
+         if (_stricmp(func.name, "GetIsID") == 0)
+            return uint16_t(i);
+      }
+      return uint16_t(0);
+   })();
+}
+
 #pragma region ConditionListModel
 ConditionListModel::ConditionListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
@@ -325,6 +338,19 @@ void ConditionListModel::clearTarget() {
    this->context = cnd_context_t();
    this->endResetModel();
 }
+void ConditionListModel::insertCondition(const dovah::loaded_forms::components::working_condition& wc, size_t at) {
+   if (!this->target)
+      return;
+   auto& list = *this->target;
+   at = std::min(at, list.size());
+   this->beginInsertRows(QModelIndex(), at, at);
+   //
+   list.emplace(list.begin() + at);
+   auto& cnd = list[at];
+   cnd.commit(*this->targetLoadedForm(), wc);
+   //
+   this->endInsertRows();
+}
 void ConditionListModel::moveSelection(const QItemSelection& indices, int down) {
    if (!down || !indices.size())
       return;
@@ -360,15 +386,23 @@ void ConditionListModel::refresh() {
    auto last = this->target->size() - 1;
    emit dataChanged(this->index(0, 0, dummy), this->index(last, this->columnCount(dummy), dummy));
 }
-void ConditionListModel::setTarget(form_stub& owner, std::vector<condition>& list) {
+void ConditionListModel::setTarget(form_stub& owner, std::vector<condition>& list, bool in_working_copy) {
    if (this->target)
       this->clearTarget();
    this->beginResetModel();
    this->target  = &list;
-   this->context = cnd_context_t(owner);
+   this->context = cnd_context_t(owner, in_working_copy);
+   this->in_working_copy = in_working_copy;
    this->endResetModel();
 }
 
+dovah::loaded_forms::Form* ConditionListModel::targetLoadedForm() const noexcept {
+   if (!this->context.owner)
+      return nullptr;
+   if (this->in_working_copy)
+      return this->context.owner->working_copy;
+   return this->context.owner->form;
+}
 ConditionListModel::condition* ConditionListModel::getCondition(const QModelIndex& index) {
    if (!this->target)
       return nullptr;
@@ -428,11 +462,33 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       auto* cnd  = model->getCondition(index);
       if (!stub || !cnd)
          return;
-      auto* modal = new ConditionEditDialog(*stub, *cnd, this);
-      QObject::connect(modal, &QDialog::accepted, this, [model, qmi]() {
-         emit model->dataChanged(qmi, qmi);
-      });
-      modal->open();
+      {
+         //
+         // We need to heap-allocate the working condition in order to ensure that it persists 
+         // past the end of this function call, remaining available to the "accepted" event 
+         // lambda.
+         //
+         auto* work = new dovah::loaded_forms::components::working_condition();
+         *work = cnd->make_working_copy();
+         //
+         auto* modal = new ConditionEditDialog(*stub, *work, this);
+         QObject::connect(modal, &QDialog::accepted, this, [this, model, qmi, cnd, work]() {
+            auto* form = model->targetLoadedForm();
+            if (!form)
+               return;
+            cnd->commit(*form, *work);
+            emit model->dataChanged(qmi, qmi);
+         });
+         QObject::connect(modal, &QDialog::finished, this, [work](int code) {
+            //
+            // This doesn't seem to be formally specified in the documentation but as of my 
+            // last look at QDialog's source code, (accepted) or (rejected) are fired before 
+            // (finished), so this should be safe.
+            //
+            delete work;
+         });
+         modal->open();
+      }
    });
    //
    QObject::connect(this->ui.buttonAdd, &QPushButton::clicked, this, [this]() {
@@ -440,9 +496,41 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       auto* sm    = this->ui.list->selectionModel();
       if (!model || !sm)
          return;
-      //
-      // TODO: insert new condition after last selected condition
-      //
+      auto* stub = model->targetStub();
+      if (!stub)
+         return;
+      size_t insert_at = std::numeric_limits<size_t>::max();
+      auto   rows      = sm->selectedRows();
+      if (!rows.isEmpty())
+         insert_at = rows.back().row() + 1;
+      {
+         using _wc_t = dovah::loaded_forms::components::working_condition;
+         //
+         // We need to heap-allocate the working condition in order to ensure that it persists 
+         // past the end of this function call, remaining available to the "accepted" event 
+         // lambda.
+         //
+         auto* work = new _wc_t();
+         work->function      = _GetIsID_function_index;
+         work->run_on.type   = _wc_t::run_on_type::subject;
+         work->comparison.op = _wc_t::operator_type::equal;
+         work->comparison.operand.constant = 1.0F;
+         work->reset_parameters();
+         //
+         auto* modal = new ConditionEditDialog(*stub, *work, this);
+         QObject::connect(modal, &QDialog::accepted, this, [model, work, insert_at]() {
+            model->insertCondition(*work, insert_at);
+         });
+         QObject::connect(modal, &QDialog::finished, this, [work](int code) {
+            //
+            // This doesn't seem to be formally specified in the documentation but as of my 
+            // last look at QDialog's source code, (accepted) or (rejected) are fired before 
+            // (finished), so this should be safe.
+            //
+            delete work;
+         });
+         modal->open();
+      }
    });
    QObject::connect(this->ui.buttonMoveUp, &QPushButton::clicked, this, [this]() {
       auto* model = this->model();
