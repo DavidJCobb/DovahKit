@@ -113,13 +113,10 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
          this->_updateRunOn();
       });
       QObject::connect(this->ui.runOnButton, &RefPickerButton::valueChanged, this, [this](dovah::form_stub* stub) {
-         if (!stub)
+         this->working.run_on.reference = stub;
+         if (this->working.run_on.type != condition_t::run_on_type::reference)
             return;
-         if (stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
-            auto* widget = this->ui.runOn;
-            const auto blocker = QSignalBlocker(widget);
-            widget->setCurrentIndex(widget->findData(true, RunOnPlayerSentinelRole));
-         }
+         this->_updateRunOn();
       });
    }
    #pragma endregion
@@ -333,6 +330,9 @@ void ConditionEditDialog::forceUpdateParameters() {
 }
 
 void ConditionEditDialog::_updateRunOn() {
+   const auto blocker0 = QSignalBlocker(this->ui.runOnDropdown);
+   const auto blocker1 = QSignalBlocker(this->ui.runOnButton);
+   //
    bool is_player = this->ui.runOn->currentData(RunOnPlayerSentinelRole).toBool();
    switch (this->working.run_on.type) {
       case condition_t::run_on_type::subject:
@@ -340,7 +340,9 @@ void ConditionEditDialog::_updateRunOn() {
       case condition_t::run_on_type::linked_ref:
       case condition_t::run_on_type::combat_target:
          {
+            this->ui.runOnButton->setValue(nullptr);
             this->ui.runOnDropdown->setEnabled(false);
+            this->ui.runOnDropdown->clear();
             this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          }
          return;
@@ -356,13 +358,16 @@ void ConditionEditDialog::_updateRunOn() {
                   this->ui.runOn->setCurrentIndex(this->ui.runOn->findData(true, RunOnPlayerSentinelRole));
                }
                this->ui.runOnDropdown->setEnabled(false);
+               this->ui.runOnDropdown->clear();
                this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
             }
          }
          return;
       case condition_t::run_on_type::quest_alias:
-         this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+         this->ui.runOnButton->setValue(nullptr);
+         this->ui.runOnDropdown->setEnabled(true);
+         this->ui.runOnDropdown->clear();
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
          if (auto* q = this->context.get_owning_quest()) {
             auto* widget = this->ui.runOnDropdown;
@@ -376,8 +381,10 @@ void ConditionEditDialog::_updateRunOn() {
          this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          return;
       case condition_t::run_on_type::package_data:
-         this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+         this->ui.runOnButton->setValue(nullptr);
+         this->ui.runOnDropdown->setEnabled(true);
+         this->ui.runOnDropdown->clear();
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
          if (auto* p = this->context.get_owning_package()) {
             //
@@ -390,6 +397,8 @@ void ConditionEditDialog::_updateRunOn() {
          return;
       case condition_t::run_on_type::event_data:
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
+         this->ui.runOnButton->setValue(nullptr);
+         this->ui.runOnDropdown->clear();
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
          if (auto* q = this->context.get_owning_quest()) {
             auto  code = q->event;
