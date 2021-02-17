@@ -86,6 +86,9 @@ class DovahKitCore : public QObject {
       void formWorkingCopyCommitComplete(dovah::form_stub*);
       void formWorkingCopyDeleteImminent(dovah::form_stub*); // not emitted if the form itself is deleted, data is abandoned, etc.
       void formWorkingCopyDeleteComplete(dovah::form_stub*);
+      void questWorkingCopyStagesAltered(dovah::form_stub*);
+      void questWorkingCopyAliasesAltered(dovah::form_stub*);
+      void packageWorkingCopyPackageDataAltered(dovah::form_stub*);
       //
       void formDeletionImminent(dovah::form_stub*, bool will_be_flagged);
       void formDeletionComplete(dovah::bare_form_id_t, bool will_be_flagged);

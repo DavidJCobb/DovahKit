@@ -423,11 +423,15 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       auto  rows = sm->selectedRows();
       if (rows.size() != 1)
          return;
+      auto  qmi  = rows[0];
       auto* stub = model->targetStub();
-      auto* cnd  = model->getCondition(rows[0]);
+      auto* cnd  = model->getCondition(index);
       if (!stub || !cnd)
          return;
       auto* modal = new ConditionEditDialog(*stub, *cnd, this);
+      QObject::connect(modal, &QDialog::accepted, this, [model, qmi]() {
+         emit model->dataChanged(qmi, qmi);
+      });
       modal->open();
    });
    //

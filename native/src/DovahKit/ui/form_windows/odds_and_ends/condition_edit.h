@@ -24,6 +24,7 @@ class ConditionEditDialog : public QDialog {
       ConditionEditDialog(dovah::form_stub& containing_form, condition_t& condition, QWidget* parent = Q_NULLPTR);
       //
    private slots:
+      void forceUpdateParameters();
       //
    protected:
       Ui::ConditionEditDialog ui;
@@ -41,7 +42,7 @@ class ConditionEditDialog : public QDialog {
       bool did_param_holder_layout = false;
       condition_t::run_on_type last_run_on = condition_t::run_on_type::subject;
 
-      void _updateRunOn(bool use_original = false);
+      void _updateRunOn();
       void _save();
 
       virtual void showEvent(QShowEvent* event) override;

@@ -96,19 +96,20 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
       widget->setItemData(widget->count() - 1, uint32_t(dovah::hardcoded_form_ids::PlayerRef), RunOnFormIDRole);
       widget->setItemData(widget->count() - 1, true, RunOnPlayerSentinelRole);
       //
-      if (this->working.run_on.type == condition_t::run_on_type::reference) {
-         auto* stub = this->working.run_on.reference;
-         if (stub && stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
-            widget->setCurrentIndex(widget->findData(true, RunOnPlayerSentinelRole));
-         } else {
-            widget->setCurrentIndex(widget->findData((int)this->working.run_on.type, RunOnTypeRole));
-         }
-      } else {
-         widget->setCurrentIndex(widget->findData((int)this->working.run_on.type));
-      }
-      this->_updateRunOn(true);
+      this->_updateRunOn();
       //
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         auto* widget = this->ui.runOn;
+         //
+         this->working.run_on.type      = (condition_t::run_on_type)this->ui.runOn->currentData().toInt();
+         this->working.run_on.index     = -1;
+         this->working.run_on.reference = nullptr;
+         auto data = this->ui.runOn->currentData(RunOnFormIDRole);
+         if (data.isValid()) {
+            auto id = data.value<uint32_t>();
+            this->working.run_on.reference = DovahKitCore::get().get_form(id);
+         }
+         //
          this->_updateRunOn();
       });
       QObject::connect(this->ui.runOnButton, &RefPickerButton::valueChanged, this, [this](dovah::form_stub* stub) {
@@ -272,22 +273,68 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, cond
    }
    #pragma endregion
    cobb::qt::bind(this->ui.flagOr, this->working.flags, condition_t::flag::or_linked);
+   //
+   #pragma region Frontend signals
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+      this->reject();
+   });
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* target) {
+      if (target == this->context.owner) {
+         this->reject();
+         return;
+      }
+      if (!this->working.sever_outbound_references_to(target))
+         return;
+      this->forceUpdateParameters();
+   });
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* target) {
+      if (!this->working.refers_to_form(target))
+         return;
+      this->forceUpdateParameters();
+   });
+   QObject::connect(&editor, &DovahKitCore::formWorkingCopyDeleteComplete, this, [this](dovah::form_stub* target) {
+      if (!this->working.refers_to_form(target))
+         return;
+      this->forceUpdateParameters();
+   });
+   QObject::connect(&editor, &DovahKitCore::questWorkingCopyStagesAltered, this, [this](dovah::form_stub* target) {
+      if (this->working.parameters[1].underlying != dovah::condition_parameter_underlying_type::quest_stage)
+         return;
+      if (this->working.parameters[0].form != target)
+         return;
+      this->parameters[1].widget->rebuild();
+   });
+   QObject::connect(&editor, &DovahKitCore::questWorkingCopyAliasesAltered, this, [this](dovah::form_stub* target) {
+      if (target != this->context.quest)
+         return;
+      for (int i = 0; i < this->working.parameters.size(); ++i) {
+         if (this->working.parameters[i].underlying == dovah::condition_parameter_underlying_type::aliasID)
+            this->parameters[i].widget->rebuild();
+      }
+      this->_updateRunOn();
+   });
+   QObject::connect(&editor, &DovahKitCore::packageWorkingCopyPackageDataAltered, this, [this](dovah::form_stub* target) {
+      if (target != this->context.package)
+         return;
+      for (int i = 0; i < this->working.parameters.size(); ++i) {
+         if (this->working.parameters[i].underlying == dovah::condition_parameter_underlying_type::package_data)
+            this->parameters[i].widget->rebuild();
+      }
+      this->_updateRunOn();
+   });
+   #pragma endregion
 }
 
-void ConditionEditDialog::_updateRunOn(bool use_original) {
-   struct {
-      int combobox;
-      dovah::form_stub* reference = nullptr;
-   } _prior;
-   _prior.combobox  = this->ui.runOnDropdown->currentData().toInt();
-   _prior.reference = this->ui.runOnButton->value();
-   //
-   this->ui.runOnDropdown->clear();
-   //
-   auto ro = (condition_t::run_on_type) this->ui.runOn->currentData().toInt();
-   auto is_player = this->ui.runOn->currentData(RunOnPlayerSentinelRole).toBool();
-   dovah::bare_form_id_t refID = this->ui.runOn->currentData(RunOnFormIDRole).toInt();
-   switch (ro) {
+void ConditionEditDialog::forceUpdateParameters() {
+   this->parameters[0].widget->rebuild();
+   this->parameters[1].widget->rebuild();
+   this->parameters[2].widget->rebuild();
+}
+
+void ConditionEditDialog::_updateRunOn() {
+   bool is_player = this->ui.runOn->currentData(RunOnPlayerSentinelRole).toBool();
+   switch (this->working.run_on.type) {
       case condition_t::run_on_type::subject:
       case condition_t::run_on_type::target:
       case condition_t::run_on_type::linked_ref:
@@ -299,12 +346,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          return;
       case condition_t::run_on_type::reference:
          {
-            dovah::form_stub* stub = nullptr;
-            if (use_original) {
-               stub = this->working.run_on.reference;
-            } else if (refID) {
-               stub = DovahKitCore::get().get_form(refID);
-            }
+            dovah::form_stub* stub = this->working.run_on.reference;
             this->ui.runOnButton->setValue(stub);
             this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageButton);
             //
@@ -323,17 +365,15 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
          if (auto* q = this->context.get_owning_quest()) {
-            for (auto* alias : q->aliases) {
-               if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
-                  continue;
-               this->ui.runOnDropdown->addItem(alias->name.c_str(), alias->id);
-            }
+            auto* widget = this->ui.runOnDropdown;
+            q->for_each_alias_of_type(dovah::loaded_forms::Alias::alias_type::reference, [widget](dovah::loaded_forms::Alias* alias) {
+               widget->addItem(alias->name.c_str(), alias->id);
+               return false;
+            });
          } else {
             this->ui.runOnDropdown->setEnabled(false);
          }
-         if (use_original) {
-            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
-         }
+         this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          return;
       case condition_t::run_on_type::package_data:
          this->ui.runOnDropdown->setEnabled(true);
@@ -346,9 +386,7 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          } else {
             this->ui.runOnDropdown->setEnabled(false);
          }
-         if (use_original) {
-            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
-         }
+         this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          return;
       case condition_t::run_on_type::event_data:
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
@@ -363,33 +401,15 @@ void ConditionEditDialog::_updateRunOn(bool use_original) {
          } else {
             this->ui.runOnDropdown->setEnabled(false);
          }
-         if (use_original) {
-            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
-         }
+         this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(this->working.run_on.index));
          return;
    }
-   if (ro == this->last_run_on) {
-      switch (ro) {
-         case condition_t::run_on_type::reference:
-            this->ui.runOnButton->setValue(_prior.reference);
-            break;
-         case condition_t::run_on_type::quest_alias:
-         case condition_t::run_on_type::package_data:
-         case condition_t::run_on_type::event_data:
-            this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(_prior.combobox));
-            break;
-      }
-   }
-   this->last_run_on = ro;
 }
 
 void ConditionEditDialog::_save() {
-   //
-   // TODO
-   //
-   #if !_DEBUG
-      static_assert(false, "Finish implementing me!");
-   #endif
+   dovah::loaded_form_ptr<dovah::loaded_forms::Form> smart;
+   auto* lf = this->context.owner->get_working_or_stable_copy(smart);
+   this->condition.commit(*lf, this->working);
 }
 
 void ConditionEditDialog::showEvent(QShowEvent* event) {

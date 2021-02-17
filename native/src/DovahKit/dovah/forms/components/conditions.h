@@ -170,8 +170,15 @@ namespace dovah::loaded_forms::components {
 
          bool refers_to_form(const form_stub*) const noexcept;
 
-         void fix_parameter_types(); // ensures that the parameters have the right underlying types (clearing their values if not); generally you'd call this after changing the function
+         void fix_parameter_types(); // ensures that the parameters have the right underlying types (clearing their values if not); generally you'd call this after changing the function, or to handle union-type parameters
          void reset_parameters();
+
+         //
+         // Returns true if there were any references that needed severing. Frontends need to 
+         // call this when forms are lost or deleted, to ensure that any working conditions 
+         // aren't left with dangling pointers.
+         //
+         bool sever_outbound_references_to(const form_stub*) noexcept;
    };
 
    class condition_list : public std::vector<condition> {

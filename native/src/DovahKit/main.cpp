@@ -460,30 +460,11 @@
 //                               based on the condition's function, flags, and even 
 //                               the values of other parameters.
 //
-//                                - SUPPOSE [QUST:12345678]MyCoolQuest CONTAINS, SOMEWHERE, 
-//                                  A SELF-REFERENTIAL GetStageDone CONDITION -- SO, IT HAS 
-//                                  A CONDITION WHICH CHECKS WHETHER ONE OF ITS OWN STAGES 
-//                                  IS DONE. CURRENTLY, WITH THE WORKING COPY SYSTEM, IF 
-//                                  YOU WERE TO GO TO THIS QUEST, EDIT THE STAGES, AND THEN 
-//                                  IMMEDIATELY TRY TO EDIT THE CONDITION, THE LIST OF STAGES 
-//                                  YOU'D SEE WOULD BE OUTDATED: THE CONDITION EDITING UI 
-//                                  CAN NECESSARILY ONLY PULL FROM THE DATA ON THE FORM STUB; 
-//                                  CHANGES IN A WORKING COPY CAN'T BE USED BECAUSE THERE'S 
-//                                  NO WAY TO LOCATE THE WORKING COPY "FROM OUTSIDE."
-//
-//                                   - One thing we could do is limit it so that you can only 
-//                                     have one working copy per form, and store a pointer to 
-//                                     it on the form's stub. This makes it so that if you're 
-//                                     working with a form in any context, you can access the 
-//                                     working copy at any time.
-//
-//                                - IF A CONDITION'S OWNING QUEST IS EDITED, WE NEED TO 
-//                                  UPDATE ANY ALIAS-ARGUMENT DROPDOWNS WITHOUT LOSING 
-//                                  THEIR PRIOR SELECTED VALUES.
-//
-//                                - IF A CONDITION'S OWNING PACKAGE IS EDITED, WE NEED TO 
-//                                  UPDATE ANY PACKAGE-DATA-ARGUMENT DROPDOWNS WITHOUT 
-//                                  LOSING THEIR PRIOR SELECTED VALUES.
+//                                - Shouldn't GetStageDone conditions only care about 
+//                                  the selected quest's working copy if that quest is 
+//                                  the condition's containing form? Otherwise, editing 
+//                                  stages in one dialog can unexpectedly change conditions 
+//                                  in other dialogs.
 //
 //                                - RefPickerButton: when a REFR is used as a parameter 
 //                                  to a condition, does the CK make the REFR persistent? 

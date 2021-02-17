@@ -514,6 +514,31 @@ namespace dovah::loaded_forms::components {
          }
       }
    }
+
+   bool working_condition::sever_outbound_references_to(const form_stub* target) noexcept {
+      bool changed = false;
+      //
+      if (this->event_parameters.form == target) {
+         this->event_parameters.form = nullptr;
+         changed = true;
+      }
+      for (auto& p : this->parameters) {
+         if (p.form == target) {
+            p.form = nullptr;
+            changed = true;
+         }
+      }
+      if (this->comparison.operand.global == target) {
+         this->comparison.operand.global = nullptr;
+         changed = true;
+      }
+      if (this->run_on.reference == target) {
+         this->run_on.reference = nullptr;
+         changed = true;
+      }
+      //
+      return changed;
+   }
    #pragma endregion
 
    #pragma region condition_list
