@@ -453,8 +453,11 @@ namespace dovah {
    base_form_reference_t::base_form_reference_t() : form_reference_t(use_info_entry::flag::object_reference) {};
    base_form_reference_t::base_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::object_reference, s) {};
    //
-   dialogue_form_reference_t::dialogue_form_reference_t() : form_reference_t(use_info_entry::flag::dialogue) {};
-   dialogue_form_reference_t::dialogue_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue, s) {};
+   dialogue_branch_reference_t::dialogue_branch_reference_t() : form_reference_t(use_info_entry::flag::dialogue_branch) {};
+   dialogue_branch_reference_t::dialogue_branch_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue_branch, s) {};
+   //
+   dialogue_quest_reference_t::dialogue_quest_reference_t() : form_reference_t(use_info_entry::flag::dialogue_quest) {};
+   dialogue_quest_reference_t::dialogue_quest_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue_quest, s) {};
    //
    void struct_form_reference_t::set(loaded_forms::Form& owner, const struct_form_reference_t& set_to) {
       form_reference_t::set(owner, set_to.stub);

@@ -11,6 +11,8 @@
 #include "../Package.h"
 #include "../Quest.h"
 #include "../Shout.h"
+#include "../Topic.h"
+#include "../TopicInfo.h"
 #include "../Voicetype.h"
 #include "../WordOfPower.h"
 #include "../Worldspace.h"
@@ -54,6 +56,8 @@ namespace {
       { form_type::reference,              _handlers::make<loaded_forms::ObjectReference>() },
       { form_type::actor,                  _handlers::make<loaded_forms::Actor>() },
       { form_type::worldspace,             _handlers::make<loaded_forms::Worldspace>() },
+      { form_type::topic,                  _handlers::make<loaded_forms::Topic>() },
+      { form_type::topic_info,             _handlers::make<loaded_forms::TopicInfo>() },
       { form_type::quest,                  _handlers::make<loaded_forms::Quest>() },
       { form_type::formlist,               _handlers::make<loaded_forms::FormList>() },
       { form_type::voicetype,              _handlers::make<loaded_forms::Voicetype>() },

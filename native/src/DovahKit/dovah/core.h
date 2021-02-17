@@ -353,10 +353,15 @@ namespace dovah {
          base_form_reference_t();
          base_form_reference_t(form_stub* s);
    };
-   class dialogue_form_reference_t : public form_reference_t {
+   class dialogue_branch_reference_t : public form_reference_t {
       public:
-         dialogue_form_reference_t();
-         dialogue_form_reference_t(form_stub* s);
+         dialogue_branch_reference_t();
+         dialogue_branch_reference_t(form_stub* s);
+   };
+   class dialogue_quest_reference_t : public form_reference_t {
+      public:
+         dialogue_quest_reference_t();
+         dialogue_quest_reference_t(form_stub* s);
    };
    class struct_form_reference_t : public form_reference_t {
       //

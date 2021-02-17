@@ -193,6 +193,7 @@
     <ClCompile Include="dovah\forms\Quest.cpp" />
     <ClCompile Include="dovah\forms\Shout.cpp" />
     <ClCompile Include="dovah\forms\structs\color_dword.cpp" />
+    <ClCompile Include="dovah\forms\Topic.cpp" />
     <ClCompile Include="dovah\forms\TopicInfo.cpp" />
     <ClCompile Include="dovah\forms\Voicetype.cpp" />
     <ClCompile Include="dovah\forms\WordOfPower.cpp" />
@@ -442,6 +443,7 @@
     <ClInclude Include="dovah\forms\Actor.h" />
     <ClInclude Include="dovah\forms\Package.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
+    <ClInclude Include="dovah\forms\Topic.h" />
     <ClInclude Include="dovah\forms\WordOfPower.h" />
     <ClInclude Include="dovah\forms\Worldspace.h" />
     <ClInclude Include="dovah\forms\_common_cpp.h" />

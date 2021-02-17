@@ -154,7 +154,8 @@ namespace dovah {
             i_am_child_of    = 0x01, // (this) is the child of (other)
             i_am_parent_of   = 0x02, // (other) is the child of (this)
             object_reference = 0x04, // one of the forms is the other's base form; check form types to know which is which
-            dialogue         = 0x08, // DIAL/QNAM: topic owning quest
+            dialogue_branch  = 0x08, // DIAL/BNAM
+            dialogue_quest   = 0x10, // DIAL/QNAM
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;

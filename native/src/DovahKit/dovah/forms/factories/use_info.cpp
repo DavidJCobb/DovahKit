@@ -13,6 +13,7 @@
 #include "../ObjectReference.h"
 #include "../Quest.h"
 #include "../Shout.h"
+#include "../Topic.h"
 #include "../TopicInfo.h"
 #include "../Voicetype.h"
 #include "../WordOfPower.h"
@@ -37,6 +38,7 @@ namespace {
       { form_type::reference,              dovah::loaded_forms::ObjectReference::generate_use_info },
       { form_type::actor,                  dovah::loaded_forms::Actor::generate_use_info },
       { form_type::worldspace,             dovah::loaded_forms::Worldspace::generate_use_info },
+      { form_type::topic,                  dovah::loaded_forms::Topic::generate_use_info },
       { form_type::topic_info,             dovah::loaded_forms::TopicInfo::generate_use_info },
       { form_type::quest,                  dovah::loaded_forms::Quest::generate_use_info },
       { form_type::formlist,               dovah::loaded_forms::FormList::generate_use_info },
