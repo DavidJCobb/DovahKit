@@ -132,7 +132,7 @@ namespace dovah::loaded_forms::components {
          #pragma endregion
 
          working_condition make_working_copy() const noexcept;
-         void commit(loaded_forms::Form& my_owner, working_condition& source);
+         void commit(loaded_forms::Form& my_owner, const working_condition& source);
    };
 
    class working_condition {

@@ -74,9 +74,11 @@ class ConditionListModel : public QAbstractTableModel {
             return 0;
          return this->target->size();
       }
-      void insertCondition(const dovah::loaded_forms::components::working_condition&, size_t at);
+      void duplicateSelection(const QItemSelection&);
+      QModelIndex insertCondition(const dovah::loaded_forms::components::working_condition&, size_t at);
       void moveSelection(const QItemSelection&, int down);
       void refresh();
+      void removeSelection(const QItemSelection&);
       void setTarget(form_stub&, std::vector<condition>&, bool in_working_copy = true);
 
       form_stub* targetStub() const noexcept { return this->context.owner; }
@@ -93,7 +95,15 @@ class ConditionList : public QWidget {
       model_type* model() const noexcept;
       //
    public slots:
+      void openCreateConditionModal();
+      void openEditConditionModal();
       //
    protected:
       Ui::ConditionList ui;
+      struct {
+         QAction* create    = nullptr;
+         QAction* edit      = nullptr;
+         QAction* duplicate = nullptr;
+         QAction* destroy   = nullptr;
+      } context_menu_actions;
 };

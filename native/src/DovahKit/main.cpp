@@ -454,11 +454,7 @@
 //
 //                             - IN PROGRESS
 //
-//                             - All parameter types can be handled using a single UI 
-//                               control: a QLineEdit, a QComboBox, or a QSpinBox. 
-//                               However, we'll have to change them out on the fly 
-//                               based on the condition's function, flags, and even 
-//                               the values of other parameters.
+//                             - Parameters
 //
 //                                - Shouldn't GetStageDone conditions only care about 
 //                                  the selected quest's working copy if that quest is 
@@ -470,21 +466,9 @@
 //                                  to a condition, does the CK make the REFR persistent? 
 //                                  Does this depend on where the condition is?
 //
-//                                = Why does our rough-draft UI make room for three 
-//                                  parameters when conditions can only have two? When 
-//                                  working with the GetEventData condition function, 
-//                                  the CK presents the eventFunction, eventMember, and 
-//                                  eventFormID as if they were the three parameters of
-//                                  the function.
-//
-//                             - When "Run On" is set to "Package Data", the "Select" 
-//                               button is replaced with a drop-down listing the names 
-//                               of all package data on the owning package that are of 
-//                               types ObjectList or SingleRef.
-//
-//                                - We should hide the "Package Data" option if there is 
-//                                  no owning package. Alternatively, can we grey out 
-//                                  individual options in a drop-down?
+//                             - Run On: We should hide the "Package Data" option if there 
+//                               is no owning package. Alternatively, can we grey out 
+//                               individual options in a drop-down?
 //
 //                             - We have the GetWithinPackageLocation condition listed 
 //                               as accepting package data of any type from its owning 
@@ -497,13 +481,11 @@
 //                             - GetHasNote shows an empty drop-down as its argument in 
 //                               the CK.
 //
-//                          - Code for adding and editing conditions
-//
-//                             - Newly-added conditions should default to using the 
-//                               GetIsID function. Bethesda does that in the Creation 
-//                               Kit because that function is so commonly used.
-//
-//                          - Code for deleting conditions
+//                                - If we find the ParamInfo, we can find the type value 
+//                                  for that argument, but that'll just be an enum. We 
+//                                  could then RE the part of the command parser that 
+//                                  validates argument types, if we can find it, to see 
+//                                  what that enum value means.
 //
 //                       - Class
 //

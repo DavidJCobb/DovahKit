@@ -380,7 +380,7 @@ namespace dovah::loaded_forms::components {
          //
          return out;
       }
-      void condition::commit(loaded_forms::Form& my_owner, working_condition& source) {
+      void condition::commit(loaded_forms::Form& my_owner, const working_condition& source) {
          this->clear(my_owner);
          this->function = source.function;
          this->flags    = source.flags;

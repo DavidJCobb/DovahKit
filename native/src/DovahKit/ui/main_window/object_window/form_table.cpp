@@ -134,14 +134,11 @@ void FormTableModel::formRenumbered(const dovah::form_stub* stub, dovah::bare_fo
 }
 
 QModelIndex FormTableModel::index(dovah::form_stub* stub) const {
-   int i    = 0;
    int size = this->children.size();
-   for (; i < size; ++i)
+   for (int i = 0; i < size; ++i)
       if (this->children[i]->stub == stub)
-         break;
-   if (i >= size)
-      return QModelIndex();
-   return this->index(i, 0, QModelIndex());
+         return this->index(i, 0, QModelIndex());
+   return QModelIndex();
 }
 QModelIndex FormTableModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
