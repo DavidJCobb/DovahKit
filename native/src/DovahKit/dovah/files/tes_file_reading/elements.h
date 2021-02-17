@@ -157,21 +157,21 @@ namespace dovah {
          public:
             subrecord& operator=(const subrecord& other) = delete; // no copy
             subrecord(subrecord& other) = delete; // no copy
-            //
+            
             record& get_containing_record() const;
             inline bool is_skyrim_special() const noexcept { return this->get_containing_record().is_skyrim_special(); }
             inline void reset() {
                this->header.signature = 0;
             }
-            //
+            
             inline uint32_t offset() const noexcept { return this->pos; }
             inline uint32_t end_pos() const noexcept { return this->end; }
             inline uint32_t signature() const noexcept { return this->header.signature; }
             inline uint32_t size() const noexcept { return this->header.size; }
-            //
+            
             inline operator bool() const { return this->header.signature != 0; }
             inline bool exists() const noexcept { return this->header.signature != 0; }
-            //
+            
             inline bool is_at_end() const {
                return this->get_containing_record().stream_pos() == this->end;
             }
@@ -181,14 +181,14 @@ namespace dovah {
             inline bool is_in_bounds(uint32_t size) const {
                return this->get_containing_record().stream_pos() + size <= this->end;
             }
-            //
+            
             inline uint32_t containing_record_signature() const { return this->get_containing_record().signature(); }
-            //
+            
             bool to_string(std::string& field);
             bool to_string(localized_string& field); // TODO: implement string table support
-            //
+            
             inline bool skip_bytes(uint32_t count) const { return this->get_containing_record().skip(count); }
-            //
+            
             #pragma region read
             inline bool read(void* buffer, uint32_t size) const {
                if (!this->is_in_bounds(size))
@@ -205,7 +205,7 @@ namespace dovah {
             template<> inline bool read(struct_form_reference_t& field) const noexcept { return this->_read_form_reference(field); }
             template<> inline bool read(form_id_t& field) const { return this->_read_form_id(field); }
             #pragma endregion
-            //
+            
             #pragma region unchecked_read
             //
             // The functions below allow you to manually manage bounds-checking: if you need to read multiple 
@@ -230,12 +230,12 @@ namespace dovah {
             template<> inline void unchecked_read(struct_form_reference_t& field) const noexcept { this->_unchecked_read_form_reference(field); }
             template<> inline void unchecked_read(form_id_t& field) const { this->_unchecked_read_form_id(field); }
             #pragma endregion
-            //
+            
             bool read_signature(uint32_t& out) const noexcept;
-            //
+            
             bool read_wstring(std::string& field); // uint16_t length; char str[length]; // length does not include a null-terminator
             bool read_wstring(std::wstring& field);
-            //
+            
             template<int length_bytes> inline bool read_length_prefixed_string(std::string& field) const noexcept {
                //
                // Read a string prefixed with a length, with no null terminator.
@@ -265,6 +265,8 @@ namespace dovah {
             }
             //
             form_stub* lookup_form_by_id(bare_form_id_t) const noexcept;
+            //
+            bool form_id_can_survive_redundant_fixup(bare_form_id_t) const noexcept;
       };
       #pragma endregion
    }

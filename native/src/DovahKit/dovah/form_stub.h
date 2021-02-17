@@ -153,9 +153,23 @@ namespace dovah {
          enum type : uint8_t {
             i_am_child_of    = 0x01, // (this) is the child of (other)
             i_am_parent_of   = 0x02, // (other) is the child of (this)
+            //
+            // The next flags are useful for unique and high-importance relationships between 
+            // specific forms. These must be relationships that can only exist once; for example, 
+            // a REFR can only have one base form. If the relevant (form_reference_t) is altered, 
+            // the flag will be removed.
+            //
+            // If two relationships can be outbound from the same form but are mutually exclusive, 
+            // that alone is not enough to distinguish them, because a form with malformed data 
+            // could be loaded. For example, DIAL/BNAM and DIAL/QNAM are mutually exclusive by 
+            // virtue of involving different form types, but a file with ill-formed data could 
+            // contain a DIAL that points both subrecords at the same form, and so using the same 
+            // flag for both subrecords could in that situation cause use info mismanagement should 
+            // either subrecord be altered after load.
+            //
             object_reference = 0x04, // one of the forms is the other's base form; check form types to know which is which
             dialogue_branch  = 0x08, // DIAL/BNAM
-            dialogue_quest   = 0x10, // DIAL/QNAM
+            dialogue_quest   = 0x10, // DIAL/QNAM and DLBR/QNAM
          };
       };
       using flags_t = std::underlying_type_t<flag::type>;

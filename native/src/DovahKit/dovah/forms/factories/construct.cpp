@@ -4,6 +4,7 @@
 #include "../Cell.h"
 #include "../Color.h"
 #include "../DefaultObjectManager.h"
+#include "../DialogueBranch.h"
 #include "../Faction.h"
 #include "../FormList.h"
 #include "../Location.h"
@@ -63,6 +64,7 @@ namespace {
       { form_type::voicetype,              _handlers::make<loaded_forms::Voicetype>() },
       { form_type::location,               _handlers::make<loaded_forms::Location>() },
       { form_type::default_object_manager, _handlers::make<loaded_forms::DefaultObjectManager>() },
+      { form_type::dialogue_branch,        _handlers::make<loaded_forms::DialogueBranch>() },
       { form_type::shout,                  _handlers::make<loaded_forms::Shout>() },
       { form_type::word_of_power,          _handlers::make<loaded_forms::WordOfPower>() },
       { form_type::color,                  _handlers::make<loaded_forms::Color>() },

@@ -249,6 +249,11 @@ namespace dovah {
             return nullptr;
          return file->get_load_order().get_form(id, false);
       }
+      bool subrecord::form_id_can_survive_redundant_fixup(bare_form_id_t id) const noexcept {
+         bare_form_id_t copy = id;
+         this->_fix_up_form_id(copy);
+         return copy == id;
+      }
       #pragma endregion
    }
 }

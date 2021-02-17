@@ -23,7 +23,7 @@ namespace dovah::form_stub_helpers {
          return;
       for (auto& pair : quest->inbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::dialogue) {
+         if (entry.flags & use_info_entry::flag::dialogue_quest) {
             auto* child = entry.other;
             if (!child || child->formType != form_type::topic)
                continue;

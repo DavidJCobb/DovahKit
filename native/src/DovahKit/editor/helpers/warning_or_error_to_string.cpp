@@ -753,6 +753,28 @@ namespace editor_helpers {
                text = text.arg(form).arg(file_sent_to).arg(file_initial).arg(topic_initial).arg(topic_sent_to);
             }
             break;
+         case notice_code::dialogue_branch_mishandled_owning_quest_id:
+            {
+               text = QObject::tr("DialogueBranch %1 uses Quest %2 as its owning quest. The game will not load this properly, because it  "
+                                  "accidentally performs the local-to-global form ID conversion twice, and this form ID can't survive "
+                                  "that conversion. DovahKit will not attempt to replicate this error -- we'll load the form ID properly -- "
+                                  "but you should be aware that this value won't work. If a quest's local and global form IDs aren't the "
+                                  "same, then it can't be safely used as a dialogue branch's owning quest.",
+                  "notice_code::dialogue_branch_mishandled_owning_quest_id"
+               );
+               //
+               QString dlbr = QObject::tr("<unknown form>", "log window");
+               QString qust = dlbr;
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  dlbr = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (!notice.relevant_forms.empty()) {
+                  qust = _read_error_form_id_to_string(notice.relevant_forms[0]);
+               }
+               //
+               text = text.arg(dlbr).arg(qust);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:

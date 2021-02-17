@@ -6,7 +6,9 @@ namespace dovah::loaded_forms {
    void Topic::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
-      // DIAL records coalesce all data except for their full-name data.
+      // DIAL records coalesce all data except for their full-name data; the functions 
+      // to clear form-specific data are no-ops, but the function to clear all form 
+      // component data still runs and empties out the TESFullName.
       //
       form_reference_t formID;
       while (auto& subrecord = record.next_subrecord()) {
@@ -56,6 +58,12 @@ namespace dovah::loaded_forms {
                this->object_bounds.load(subrecord, intfc);
                break;
             case 'VMAD':
+               if (!intfc.is_winning_record)
+                  //
+                  // TODO: How the hell do we handle coalescing for Papyrus data?! Whatever 
+                  // we do, make sure to upload the use info builder, too.
+                  //
+                  break;
                this->script_data.load(subrecord, intfc);
                break;
             default:
@@ -67,19 +75,31 @@ namespace dovah::loaded_forms {
       }
    }
    /*static*/ void Topic::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      //
+      // Because DIAL coalesces data across all records, we need to be careful in how we 
+      // manage its use info.
+      //
+      constexpr int stored_qnam = 0;
+      constexpr int stored_bnam = 1;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               if (uib.is_final_file())
+                  //
+                  // TODO: How the hell do we handle coalescing for Papyrus data?! Whatever 
+                  // we do, make sure to upload the loader, too.
+                  //
+                  components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'BNAM':
                if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_branch);
+                  uib.extra_form_ids[stored_bnam] = formID;
                break;
             case 'QNAM':
                if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_quest);
+                  uib.extra_form_ids[stored_qnam] = formID;
                break;
             case 'TFIC':
             case 'FULL':
@@ -89,6 +109,12 @@ namespace dovah::loaded_forms {
             case 'OBND':
                break;
          }
+      }
+      if (uib.is_final_file()) {
+         if (auto formID = uib.extra_form_ids[stored_bnam])
+            uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_branch);
+         if (auto formID = uib.extra_form_ids[stored_qnam])
+            uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_quest);
       }
    }
    /*virtual*/ bool Topic::_clone_impl(Form* out) const noexcept {
@@ -136,6 +162,8 @@ namespace dovah::loaded_forms {
       TIFC.write(count);
       TIFC.close();
       //
+      this->script_data.save(record, intfc);
+      //
       return true;
    }
    /*virtual*/ void Topic::_sever_outbound_references_impl(form_stub& other) noexcept {
@@ -145,6 +173,8 @@ namespace dovah::loaded_forms {
       this->script_data.sever_outbound_references_to(other, *this);
    }
    /*virtual*/ void Topic::_clear_impl() noexcept {
+      this->owning_forms.branch.set(*this, nullptr);
+      this->owning_forms.quest.set(*this, nullptr);
       this->data.flags        = 0;
       this->data.dialogue_tab = category::topic;
       this->data.subtype      = subtype_index::custom;

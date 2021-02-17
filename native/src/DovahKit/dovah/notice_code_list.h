@@ -91,6 +91,7 @@ namespace dovah {
          quest_objective_unexpected_subrecord        = 0x00000052, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
          parent_form_is_missing                      = 0x00000053, // Failed to load a file, because a form's parent form ID doesn't correspond to a valid form.
          partial_info_override_has_different_parent  = 0x00000054, // A partial-flagged INFO override has a different parent from the original. This can lead to all sorts of data mishandling in-game.
+         dialogue_branch_mishandled_owning_quest_id  = 0x00000055, // A bug in the game's loader will cause it to mishandle this DLBR/QNAM subrecord.
       };
    };
 }

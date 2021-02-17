@@ -6,6 +6,7 @@
 #include "../Color.h"
 #include "../Container.h"
 #include "../DefaultObjectManager.h"
+#include "../DialogueBranch.h"
 #include "../Faction.h"
 #include "../FormList.h"
 #include "../Location.h"
@@ -45,6 +46,7 @@ namespace {
       { form_type::voicetype,              dovah::loaded_forms::Voicetype::generate_use_info },
       { form_type::location,               dovah::loaded_forms::Location::generate_use_info },
       { form_type::default_object_manager, dovah::loaded_forms::DefaultObjectManager::generate_use_info },
+      { form_type::dialogue_branch,        dovah::loaded_forms::DialogueBranch::generate_use_info },
       { form_type::shout,                  dovah::loaded_forms::Shout::generate_use_info },
       { form_type::word_of_power,          dovah::loaded_forms::WordOfPower::generate_use_info },
       { form_type::color,                  dovah::loaded_forms::Color::generate_use_info },
