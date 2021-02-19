@@ -5,6 +5,10 @@
 
 FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
    form_dialog_helpers::initialize(*this);
+   //
+   this->ui.tabWidget->setCurrentIndex(0);
+   this->ui.dialogueTabbox->setCurrentIndex(0);
+   //
    {
       auto* widget = this->ui.textDisplayGlobals;
       auto* model  = widget->fullModel();

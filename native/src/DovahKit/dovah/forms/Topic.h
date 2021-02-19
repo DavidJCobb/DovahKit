@@ -148,26 +148,6 @@ namespace dovah::loaded_forms {
 
          struct subtype_signature {
             subtype_signature() = delete;
-            //
-            // Combat lines are named in reference to the following states:
-            //
-            //  - Normal:  The actor is at rest.
-            //  - Alerted: The actor suspects that an enemy is nearby, and is searching for them.
-            //  - Combat:  The actor has engaged an enemy in combat.
-            //  - Lost:    The actor is searching for an enemy they were just in combat with.
-            //
-            // Possible state progressions are:
-            //
-            //  - Normal -> Alerted -> Combat | An enemy tried to sneak, but was found.
-            //  - Normal -> Alerted -> Normal | An enemy tried to sneak, was sensed, but stayed hidden.
-            //  - Normal -> Combat            | An enemy was detected immediately.
-            //  - Combat -> Lost -> Combat    | Combat paused when an enemy tried and failed to hide.
-            //  - Combat -> Lost -> Normal    | Combat ended when an enemy successfully hid.
-            //  - Combat -> Normal            | Combat ended when an enemy was killed.
-            //
-            // Combat states besides "normal" have both state-change lines and "idle" lines, the latter 
-            // of which play periodically.
-            //
             enum type : uint32_t {
                #pragma region Combat
                accept_yield                     = 'ACYI', // the speaker has accepted an enemy's surrender
@@ -184,6 +164,14 @@ namespace dovah::loaded_forms {
                taunt                            = 'TAUT', // the speaker is taunting an enemy during combat (e.g. "Skyrim belongs to the Nords!")
                #pragma endregion
                #pragma region Crime
+               //
+               // Most crimes have at least two lines of dialogue: one for if a criminal is caught in the 
+               // act and held accountable for their crime; and another for if a criminal is caught in the 
+               // act but the crime is forgiven (typically because the witness is a friend or faction ally). 
+               // Werewolf transformations do not have a crime-forgiven line, and some crimes have additional 
+               // dialogue for if the player is acting suspicious and the speaker suspects that a crime is 
+               // about to occur.
+               //
                assault                          = 'ASSA', // the speaker just witnessed an assault and considers it a crime against their faction
                assault_no_crime                 = 'ASNC', // the speaker is acknowledging an assault, but forgiving the crime ("I guess you had your reasons.")
                locked_object                    = 'LOOB', // said to the player when they aim at a locked object, as if gearing up to lockpick it
@@ -200,6 +188,26 @@ namespace dovah::loaded_forms {
                werewolf_transform_crime         = 'WTCR', // the speaker just witnessed someone transforming into a werewolf and considers that a crime against their faction
                #pragma endregion
                #pragma region Detection
+               //
+               // Detection lines are named in reference to the following states:
+               //
+               //  - Normal:  The actor is at rest.
+               //  - Alerted: The actor suspects that an enemy is nearby, and is searching for them.
+               //  - Combat:  The actor has engaged an enemy in combat.
+               //  - Lost:    The actor is searching for an enemy they were just in combat with.
+               //
+               // Possible state progressions are:
+               //
+               //  - Normal -> Alerted -> Combat | An enemy tried to sneak, but was found.
+               //  - Normal -> Alerted -> Normal | An enemy tried to sneak, was sensed, but stayed hidden.
+               //  - Normal -> Combat            | An enemy was detected immediately.
+               //  - Combat -> Lost -> Combat    | Combat paused when an enemy tried and failed to hide.
+               //  - Combat -> Lost -> Normal    | Combat ended when an enemy successfully hid.
+               //  - Combat -> Normal            | Combat ended when an enemy was killed.
+               //
+               // Detection states besides "normal" have both state-change lines and "idle" lines, the latter 
+               // of which play periodically.
+               //
                alert_idle                       = 'ALIL', // plays periodically while the speaker is alerted
                alert_to_combat                  = 'ALTC', // plays when an alerted speaker discovers their target and enters combat with them
                alert_to_normal                  = 'ALTN', // plays when an alerted speaker abandons their search for their target
@@ -220,6 +228,13 @@ namespace dovah::loaded_forms {
                flying_mount_cancel_land         = 'FMXL', // the speaker is the player's flying mount, and is acknowledging that a previous order to land has been canceled
                #pragma endregion
                #pragma region Follower
+               //
+               // In game, the player can give orders to their follower by entering a "favor state," aiming at 
+               // a target, and pressing the Interact keybind; this orders the follower to perform a context-
+               // sensitive action on the target, such as looting a container, stealing an item, or attacking 
+               // an NPC. Followers can accept orders, refuse them for being impossible, or refuse them on 
+               // moral grounds.
+               //
                agree                            = 'AGRE', // the speaker is the player's follower and is accepting an order
                exit_favor_state                 = 'FEXT', // the speaker is the player's follower, and the player has exited the "giving orders" state
                moral_refusal                    = 'MREF', // the speaker is the player's follower and is refusing an order on moral grounds
@@ -233,6 +248,10 @@ namespace dovah::loaded_forms {
                exit_bow_zoom_breath             = 'EXBZ', // the speaker has exited  ironsights (i.e. they're releasing a held breath)
                leave_water_breath               = 'LWBS', // the speaker was diving and has just come up for air
                out_of_breath                    = 'OUTB', // the speaker is out of breath (i.e. they are the player, were sprinting, and ran out of stamina)
+               voice_power_end_long             = 'VPEL', // the last two words of a three-word shout
+               voice_power_end_short            = 'VPES', // the last word of a two-word shout
+               voice_power_start_long           = 'VSPL', // the first word of a multi-word shout
+               voice_power_start_short          = 'VPSS', // a one-word shout
                #pragma endregion
                #pragma region Reactions to other actors
                actor_collide_with_actor         = 'ACAC', // an actor has shoved past the speaker (check Speaker.IsSmallBump == 0 to see if the actor was sprinting)
@@ -275,10 +294,6 @@ namespace dovah::loaded_forms {
                sharedinfo                       = 'IDAT', // infos in this topic can be used as SharedInfos
                show_relationships               = 'SHRE',
                time_to_go                       = 'TITG', // the speaker is ordering the player to leave, lest they become a trespasser? (in Oblivion, this meant the speaker wants to switch packages but can't because their package is flagged "Continue if PC Near")
-               voice_power_end_long             = 'VPEL', // the last two words of a three-word shout
-               voice_power_end_short            = 'VPES', // the last word of a two-word shout
-               voice_power_start_long           = 'VSPL', // the first word of a multi-word shout
-               voice_power_start_short          = 'VPSS', // a one-word shout
                yield                            = 'YIEL', // 
                //
                #pragma region Unused

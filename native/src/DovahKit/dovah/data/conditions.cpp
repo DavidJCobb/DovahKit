@@ -1317,7 +1317,7 @@ namespace dovah {
       condition_function(605, "LocAliasIsLocation", "", condition_parameter_types::Alias, condition_parameter_types::Location),
       condition_function(606, "GetKeywordDataForLocation", "", condition_parameter_types::Location, condition_parameter_types::Keyword),
       condition_function(607, condition_function::dummy),
-      condition_function(608, "GetKeywordDataForAloas", "", condition_parameter_types::Alias, condition_parameter_types::Keyword),
+      condition_function(608, "GetKeywordDataForAlias", "", condition_parameter_types::Alias, condition_parameter_types::Keyword),
       condition_function(609, condition_function::dummy),
       condition_function(610, "LocAliasHasKeyword", "", condition_parameter_types::Alias, condition_parameter_types::Keyword),
       condition_function(611, "IsNullPackageData", "", condition_parameter_types::PackageData),
