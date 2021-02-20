@@ -64,8 +64,9 @@ namespace cobb {
 
          static rotation_matrix construct_from_extrinsic_zyx(double x, double y, double z, bool righthanded);
 
-         std::array<double, 3> operator*(const std::array<double, 3>& vec) const noexcept { // loop-free multiply by column (equivalent to applying (this) to (vec) as a reference frame)
-            std::array<double, 3> vResult;
+         template<typename U> std::array<U, 3> operator*(const std::array<U, 3>& vec) const noexcept { // loop-free multiply by column (equivalent to applying (this) to (vec) as a reference frame)
+            static_assert(std::is_arithmetic_v<U>, "cobb::rotation_matrix::operator*(const std::array<U, 3>&) must be used on an array of numbers.");
+            std::array<U, 3> vResult;
             vResult[0] = (this->data[0][0] * vec[0]) + (this->data[0][1] * vec[1]) + (this->data[0][2] * vec[2]);
             vResult[1] = (this->data[1][0] * vec[0]) + (this->data[1][1] * vec[1]) + (this->data[1][2] * vec[2]);
             vResult[2] = (this->data[2][0] * vec[0]) + (this->data[2][1] * vec[1]) + (this->data[2][2] * vec[2]);
@@ -82,6 +83,17 @@ namespace cobb {
             result.transpose_in_place();
             return result;
          }
+
+         std::array<double, 3> column(int which) const noexcept {
+            std::array<double, 3> out;
+            out[0] = this->data[0][which];
+            out[1] = this->data[1][which];
+            out[2] = this->data[2][which];
+            return out;
+         }
+         inline std::array<double, 3> local_x_axis() const noexcept { return this->column(0); }
+         inline std::array<double, 3> local_y_axis() const noexcept { return this->column(1); }
+         inline std::array<double, 3> local_z_axis() const noexcept { return this->column(2); }
    };
 
    class axis_angle {
