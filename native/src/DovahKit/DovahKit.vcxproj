@@ -211,6 +211,7 @@
     <ClCompile Include="editor\core.cpp" />
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
+    <ClCompile Include="editor\get_condition_description.cpp" />
     <ClCompile Include="editor\get_default_object_info.cpp" />
     <ClCompile Include="editor\get_game_setting_description.cpp" />
     <ClCompile Include="editor\helpers\actor_value_index_to_name.cpp" />
@@ -479,6 +480,7 @@
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
     <ClInclude Include="dovah\utils\get_user_language_name.h" />
     <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h" />
+    <ClInclude Include="editor\get_condition_description.h" />
     <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
     <ClInclude Include="editor\helpers\actor_value_index_to_name.h" />
@@ -528,11 +530,14 @@
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />
     <ClInclude Include="editor\scripting\wrapper_util.h" />
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
+    <ClInclude Include="helpers\convex_hull.h" />
     <ClInclude Include="helpers\eight_cc.h" />
+    <ClInclude Include="helpers\geometry.h" />
     <ClInclude Include="helpers\lua\metamethod_names.h" />
     <ClInclude Include="helpers\lua\dump.h" />
     <ClInclude Include="helpers\lua\setfuncs.h" />
     <ClInclude Include="helpers\lua\set_top_on_exit.h" />
+    <ClInclude Include="helpers\math.h" />
     <ClInclude Include="helpers\matrix.h" />
     <ClInclude Include="helpers\qt\basic_bindings.h" />
     <ClInclude Include="helpers\rotation.h" />

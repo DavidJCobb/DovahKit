@@ -47,18 +47,18 @@ namespace cobb {
             static_assert(std::is_arithmetic_v<U>, "cobb::vector3 can only be converted to an array of a numeric type.");
             return { this->x, this->y, this->z };
          }
-         std::array<T, axis_count> to_array() const noexcept {
+         [[nodiscard]] std::array<T, axis_count> to_array() const noexcept {
             return { this->x, this->y, this->z };
          }
          
-         vector3 cross(const vector3& other) const noexcept {
+         [[nodiscard]] vector3 cross(const vector3& other) const noexcept {
             vector3 result;
             result.x = (float)y * (float)other.z - (float)z * (float)other.y;
             result.y = (float)z * (float)other.x - (float)x * (float)other.z;
             result.z = (float)x * (float)other.y - (float)y * (float)other.x;
             return result;
          }
-         T dot(const vector3& other) const noexcept {
+         [[nodiscard]] T dot(const vector3& other) const noexcept {
             /*//
             T sum = 0.0F;
             for (int i = 0; i < axis_count; ++i)
@@ -67,19 +67,20 @@ namespace cobb {
             //*/
             return (this->x * other.x) + (this->y * other.y) + (this->z * other.z);
          }
-         T length_sq() const noexcept {
+         [[nodiscard]] T length_sq() const noexcept {
             float a = x * x;
             float b = y * y;
             float c = z * z;
             return a + b + c;
          }
-         inline T length() const noexcept {
+         [[nodiscard]] inline T length() const noexcept {
             return sqrt(this->length_sq());
          }
-         void normalize() noexcept {
+         vector3& normalize() noexcept {
             *this /= this->length();
+            return *this;
          }
-         T square() const noexcept { // equivalent operation to taking the dot product of the vector with itself
+         [[nodiscard]] T square() const noexcept { // equivalent operation to taking the dot product of the vector with itself
             return this->length_sq();
          }
          
@@ -169,6 +170,27 @@ namespace cobb {
             result *= -1;
             return result;
          }
+
+         #pragma region Comparisons
+         bool operator==(const vector3& other) const noexcept {
+            if (this->x != other.x)
+               return false;
+            if (this->y != other.y)
+               return false;
+            if (this->z != other.z)
+               return false;
+            return true;
+         }
+         bool operator!=(const vector3& other) const noexcept {
+            if (this->x == other.x)
+               return false;
+            if (this->y == other.y)
+               return false;
+            if (this->z == other.z)
+               return false;
+            return true;
+         }
+         #pragma endregion
    };
 
 };

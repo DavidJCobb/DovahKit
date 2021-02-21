@@ -33,13 +33,13 @@ namespace cobb {
          vector_type max;
          rotation_matrix rotation;
          //
-         vector_type center() const noexcept {
+         [[nodiscard]] vector_type center() const noexcept {
             return this->halfwidths() + this->min;
          }
-         vector_type halfwidths() const noexcept {
+         [[nodiscard]] vector_type halfwidths() const noexcept {
             return (this->max - this->min) / 2;
          }
-         number_type length_along_axis(const vector_type& axis) const noexcept {
+         [[nodiscard]] number_type length_along_axis(const vector_type& axis) const noexcept {
             vector_type halfwidths = (this->max - this->min) / 2;
             number_type axis_sq    = axis.square();
             number_type length     = number_type(0);
@@ -50,12 +50,12 @@ namespace cobb {
             //
             return length * 2;
          }
-         number_type volume() const noexcept {
+         [[nodiscard]] number_type volume() const noexcept {
             vector_type diff = this->max - this->min;
             return std::abs(diff.x * diff.y * diff.z);
          }
 
-         bool separating_axis_test(const vector_type& my_position, const vector_type& point_to_test) const noexcept {
+         [[nodiscard]] bool separating_axis_test(const vector_type& my_position, const vector_type& point_to_test) const noexcept {
             auto local = this->rotation.transpose();
             auto ptt_l = local * point_to_test.to_array();
             auto mp_l  = local * my_position.to_array();
@@ -71,7 +71,7 @@ namespace cobb {
          }
 
          // Based on <https://www.jkh.me/files/tutorials/Separating%20Axis%20Theorem%20for%20Oriented%20Bounding%20Boxes.pdf>
-         bool separating_axis_test(const oriented_bounding_box& other) const noexcept {
+         [[nodiscard]] bool separating_axis_test(const oriented_bounding_box& other) const noexcept {
             //
             // The very end of the section "Separating Axis Theorem and Boxes in 3D Space" (beginning at 
             // the text "Consider a box A and an axis L") explains the approach for testing whether two 
@@ -170,13 +170,13 @@ namespace cobb {
          sphere(number_type x, number_type y, number_type z, number_type r) : position(x, y, z), radius(r) {}
          sphere(const vector_type& p, number_type r) : position(p), radius(r) {}
          //
-         inline bool contains(const vector_type& point) const noexcept {
+         [[nodiscard]] inline bool contains(const vector_type& point) const noexcept {
             return this->distance_to(point) <= number_type(0.0);
          }
-         number_type distance_to(const vector_type& point) const noexcept { // distance from the sphere's surface to the point; values equal to or below zero indicate that the point is inside the sphere
+         [[nodiscard]] number_type distance_to(const vector_type& point) const noexcept { // distance from the sphere's surface to the point; values equal to or below zero indicate that the point is inside the sphere
             return (this->position - point).length() - this->radius;
          }
-         bool overlaps(const sphere& other) const noexcept {
+         [[nodiscard]] bool overlaps(const sphere& other) const noexcept {
             number_type distance = (this->position - other.position).length();
             return (distance < (this->radius + other.radius));
          }
@@ -188,7 +188,7 @@ namespace cobb {
          // (intersects_line_segment) instead.
          //
          template<int precision = 4> // number of decimal places to use for the epsilon, e.g. 4 -> 0.0001
-         int intersects_line(const vector_type& line_start, const vector_type& line_direction) const noexcept {
+         [[nodiscard]] int intersects_line(const vector_type& line_start, const vector_type& line_direction) const noexcept {
             static_assert(precision > 0, "The precision (number of decimal places to use for the epsilon) cannot be negative.");
             constexpr number_type epsilon = cobb::pow(number_type(10), -precision);
             //
@@ -213,7 +213,7 @@ namespace cobb {
          // point and a direction vector.
          //
          template<int precision = 4> // number of decimal places to use for the epsilon, e.g. 4 -> 0.0001
-         int intersects_line_segment(const vector_type& line_start, const vector_type& line_end) const noexcept {
+         [[nodiscard]] int intersects_line_segment(const vector_type& line_start, const vector_type& line_end) const noexcept {
             static_assert(precision > 0, "The precision (number of decimal places to use for the epsilon) cannot be negative.");
             constexpr number_type epsilon = cobb::pow(number_type(10), -precision);
 
