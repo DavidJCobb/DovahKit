@@ -2,12 +2,30 @@
 #include "_base_cpp.h"
 #include "../../dovah/core.h"
 #include "../../helpers/qt/basic_bindings.h"
+#include "odds_and_ends//quest_tab_stages.h"
 
 FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
    form_dialog_helpers::initialize(*this);
    //
    this->ui.tabWidget->setCurrentIndex(0);
    this->ui.dialogueTabbox->setCurrentIndex(0);
+   //
+   #pragma region Create tabs
+   {
+      auto* tabbox  = this->ui.tabWidget;
+      auto  _insert = [tabbox](int i, QWidget* body) {
+         auto* page   = tabbox->widget(i);
+         auto* layout = new QGridLayout;
+         assert(page);
+         layout->setMargin(0);
+         layout->addWidget(body);
+         page->setLayout(layout);
+      };
+      //
+      this->tabs.stages = new QuestTabStages(*stub, *this->clone);
+      _insert(1, this->tabs.stages);
+   }
+   #pragma endregion
    //
    {
       auto* widget = this->ui.textDisplayGlobals;

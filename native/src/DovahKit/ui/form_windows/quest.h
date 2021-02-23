@@ -3,6 +3,8 @@
 #include "../../dovah/forms/Quest.h"
 #include "ui_quest.h"
 
+class QuestTabStages;
+
 class FormDialogQuest : public FormDialogWorkingCopyBase {
    Q_OBJECT
    DOVAHKIT_FORM_COPY_EDIT_DIALOG
@@ -15,6 +17,9 @@ class FormDialogQuest : public FormDialogWorkingCopyBase {
       //
    protected:
       Ui::FormDialogQuest ui;
+      struct {
+         QuestTabStages* stages;
+      } tabs;
       //
       virtual void _load_impl() override;
       virtual void _save_impl() override;

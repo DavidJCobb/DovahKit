@@ -278,6 +278,7 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_param.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\formlist_listview.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
@@ -530,7 +531,6 @@
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />
     <ClInclude Include="editor\scripting\wrapper_util.h" />
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
-    <ClInclude Include="helpers\convex_hull.h" />
     <ClInclude Include="helpers\eight_cc.h" />
     <ClInclude Include="helpers\geometry.h" />
     <ClInclude Include="helpers\lua\metamethod_names.h" />
@@ -560,6 +560,7 @@
     <QtMoc Include="ui\generic\RefPickerButton.h" />
     <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
@@ -630,6 +631,7 @@
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
     <QtUic Include="ui\form_windows\quest.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />

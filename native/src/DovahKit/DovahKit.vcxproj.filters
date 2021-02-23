@@ -693,6 +693,9 @@
     <ClCompile Include="editor\get_condition_description.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1427,9 +1430,6 @@
     <ClInclude Include="helpers\math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\convex_hull.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1505,6 +1505,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\generic\windows\ref_picker_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -1657,6 +1660,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
