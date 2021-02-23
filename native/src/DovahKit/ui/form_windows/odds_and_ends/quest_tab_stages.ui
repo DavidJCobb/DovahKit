@@ -152,7 +152,7 @@
   <customwidget>
    <class>ConditionList</class>
    <extends>QWidget</extends>
-   <header>odds_and_ends/condition_list.h</header>
+   <header>condition_list.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -17,12 +17,11 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
          auto* page   = tabbox->widget(i);
          auto* layout = new QGridLayout;
          assert(page);
-         layout->setMargin(0);
          layout->addWidget(body);
          page->setLayout(layout);
       };
       //
-      this->tabs.stages = new QuestTabStages(*stub, *this->clone);
+      this->tabs.stages = new QuestTabStages(*stub, *(form_t*)this->clone);
       _insert(1, this->tabs.stages);
    }
    #pragma endregion

@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <limits>
 #include <vector>
 #include "rotation.h"
@@ -67,7 +68,7 @@
 //
 
 namespace cobb {
-   template<typename T> class gauss_map {
+   template<typename N> class gauss_map {
       public:
          using number_type = N;
          using vector_type = vector3<number_type>;
@@ -84,35 +85,8 @@ namespace cobb {
             }
          };
          //
-      protected:
-         static bool _arcs_intersect(const arc& u, const arc& v) noexcept {
-            auto& A = u.start;
-            auto& B = u.end;
-            auto  C = v.start;
-            auto  D = v.end;
-            //
-            vector_type BxA = B.cross(A);
-            vector_type DxC = D.cross(C);
-            number_type CBA = C.dot(BxA);
-            number_type DBA = D.dot(BxA);
-            number_type ADC = A.dot(DxC);
-            number_type BDC = B.dot(DxC);
-            return (CBA * DBA < 0) && (ADC * BDC < 0) && (CBA * BDC > 0);
-         }
-         //
       public:
          std::vector<arc> arcs;
-
-         std::vector<vector_type> find_intersections(const gauss_map& other) const noexcept {
-            std::vector<vector_type> intersections;
-            for (auto& a : this->arcs) {
-               for (auto& b : other.arcs) {
-                  if (!_arcs_intersect(a, -b))
-                     continue;
-
-               }
-            }
-         }
    };
 
    template<typename N> class convex_hull {
@@ -120,45 +94,75 @@ namespace cobb {
          using number_type  = N;
          using vector_type  = vector3<number_type>;
          using face_index   = size_t;
+         using edge_index   = size_t;
          using vertex_index = size_t;
-         using face_type    = std::array<vertex_index, 3>;
          //
+         static constexpr size_t no_edge = std::numeric_limits<size_t>::max();
          static constexpr size_t no_face = std::numeric_limits<size_t>::max();
          //
-         struct edge_type {
-            vertex_index indices[2];
+         struct half_edge_type {
             //
-            vertex_index& operator[](int i) noexcept { return this->indices[i]; }
-            const vertex_index& operator[](int i) const noexcept { return this->indices[i]; }
-            bool operator==(const edge_type& o) const noexcept {
-               if (this->indices[0] == o[0])
-                  if (this->indices[1] == o[1])
-                     return true;
-               if (this->indices[0] == o[0])
-                  if (this->indices[1] == o[1])
-                     return true;
-               return false;
-            }
-         };
-         struct face_data { // TODO: USE ME
-            std::array<vertex_index, 3> vertices;
-            std::array<face_index, 3>   adjacent = { no_face, no_face, no_face };
+            // What's a half-edge? Well, consider two faces that share an edge. That's one edge, yes? 
+            // This is half of that.
             //
-            vector_type get_edge(const convex_hull& owner, int index) const noexcept {
-               auto& s = owner.vertices[this->vertices[index % 3]];
-               auto& e = owner.vertices[this->vertices[(index + 1) % 3]];
+            // ...Okay, that explanation sucks. How about this: if an edge is shared between two faces, 
+            // then there will be two separate half-edges representing that one edge, each of which will 
+            // be associated with one of the faces.
+            //
+            vertex_index start;
+            vertex_index end;
+            face_index   face;
+            edge_index   twin = no_edge;
+            //
+            vector_type get_vector(const convex_hull& owner) const noexcept {
+               auto& s = owner.vertices[this->start];
+               auto& e = owner.vertices[this->end];
                return e - s;
             }
-            vector_type get_normal(const convex_hull& owner) const noexcept {
-               auto& A = owner.vertices[this->vertices[0]];
-               auto& B = owner.vertices[this->vertices[1]];
-               auto& C = owner.vertices[this->vertices[2]];
-               //
-               auto n = (A - B).cross(C - A).normalize();
-               if (n.dot(A - owner.get_centroid()) < 0)
-                  n = -n;
-               return n;
+            vector_type get_main_face_normal(const convex_hull& owner) const noexcept {
+               return owner.faces[this->face].get_normal(owner);
             }
+            vector_type get_twin_face_normal(const convex_hull& owner) const noexcept {
+               return owner.half_edges[this->twin].get_main_face_normal(owner);
+            }
+         };
+         class face_type {
+            protected:
+               inline vector_type _get_vertex(const convex_hull& owner, size_t i) const noexcept {
+                  return owner.vertices[this->vertices[i % 3]];
+               }
+            public:
+               face_type() {}
+               face_type(vertex_index u, vertex_index v, vertex_index w, edge_index a, edge_index b, edge_index c) : vertices({ u, v, w }), half_edges({ a, b, c }) {}
+               //
+               std::array<vertex_index, 3> vertices;
+               std::array<edge_index, 3>   half_edges;
+               //
+               vector_type get_edge(const convex_hull& owner, int index) const noexcept {
+                  auto  ei = this->half_edges[index];
+                  auto& he = owner.half_edges[ei];
+                  auto& s  = owner.vertices[he.start];
+                  auto& e  = owner.vertices[he.end];
+                  return e - s;
+               }
+               vector_type get_normal(const convex_hull& owner) const noexcept {
+                  auto& A = this->_get_vertex(owner, 0);
+                  auto& B = this->_get_vertex(owner, 1);
+                  auto& C = this->_get_vertex(owner, 2);
+                  //
+                  auto n = (A - B).cross(C - A).normalize();
+                  if (n.dot(A - owner.get_centroid()) < 0)
+                     n = -n;
+                  return n;
+               }
+               //
+               bool shares_edge_with(const convex_hull& owner, const face_type& other) const noexcept {
+                  for (auto i : this->half_edges)
+                     for (auto j : other.half_edges)
+                        if (owner.half_edges[i].twin == j)
+                           return true;
+                  return false;
+               }
          };
          //
       protected:
@@ -173,12 +177,12 @@ namespace cobb {
       public:
          vector_type     position;
          rotation_matrix rotation;
-         std::vector<vector_type> vertices;
-         std::vector<face_type>   faces; // each face is an array of vertex indices
+         std::vector<vector_type>    vertices;
+         std::vector<half_edge_type> half_edges;
+         std::vector<face_type>      faces; // each face is an array of vertex indices
          //
          struct {
             vector_type centroid; // a.k.a. centerpoint
-            std::vector<edge_type> edges;
          } cached;
          
          convex_hull() {}
@@ -237,96 +241,59 @@ namespace cobb {
                         }
                         prev = sign;
                      }
-                     if (good)
-                        this->faces.emplace_back(i, j, k);
+                     if (good) {
+                        auto fc = this->faces.size();
+                        auto ec = this->half_edges.size();
+                        this->half_edges.emplace_back(i, j, fc, no_edge);
+                        this->half_edges.emplace_back(j, k, fc, no_edge);
+                        this->half_edges.emplace_back(k, i, fc, no_edge);
+                        this->faces.emplace_back(i, j, k, ec, ec + 1, ec + 2);
+                     }
                   }
                }
             }
+            this->connect_twin_edges();
             this->update_cached_data();
          }
 
+         void connect_twin_edges() noexcept {
+            auto& list = this->half_edges;
+            auto  size = list.size();
+            for (edge_index i = 0; i < size; ++i) {
+               for (edge_index j = i + 1; j < size; ++j) {
+                  auto& a = list[i];
+                  auto& b = list[j];
+                  if (a.start != b.start || a.end != b.end)
+                     if (a.start != b.end || a.end != b.start)
+                        continue;
+                  a.twin = j;
+                  b.twin = i;
+               }
+            }
+         }
          void update_cached_data() noexcept {
             this->cached.centroid = this->_compute_centroid();
-            {
-               auto& edges = this->cached.edges;
-               edges.clear();
-               for (auto& f : this->faces) {
-                  edges.emplace_back(f[0], f[1]);
-                  edges.emplace_back(f[1], f[2]);
-                  edges.emplace_back(f[2], f[0]);
-               }
-               edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
-            }
          }
 
          vector_type get_centroid() const noexcept {
             return this->cached.centroid;
          }
 
-         vector_type get_edge(const edge_type& edge) const noexcept {
-            return this->vertices[edge[1]] - this->vertices[edge[0]];
+         vector_type get_edge(edge_index i) const noexcept {
+            return this->half_edges[i].get_vector(*this);
          }
          vector_type get_edge(vertex_index a, vertex_index b) const noexcept {
             return this->vertices[b] - this->vertices[a];
          }
-         #pragma region faces
-         [[nodiscard]] bool faces_share_edge(size_t face_a, size_t face_b) const noexcept {
-            auto& fa = this->faces[face_a];
-            auto& fb = this->faces[face_b];
-            for (int i = 0; i < 3; ++i) {
-               /*
-               // list[fa[0]] == A | list[fb[0]] == U
-               // list[fa[1]] == B | list[fb[1]] == V
-               // list[fa[2]] == C | list[fb[2]] == W
-               //   AB or BC or CA | UV or VW or WU
-               //
-               //  if any of these = any of these
-               //
-               // -----------------------------------
-               //
-               // for (auto p, q : [{a,b}, {b,c}, {c,a}]) {
-               //    for (auto r, s : [{u,v}, {v,w}, [w,u}]) {
-               //       if (r == p && s == q)
-               //          return true;
-               //       if (r == q && s == p)
-               //          return true;
-               //    }
-               // }
-               // return false;
-               */
-               auto& p = fa[i];
-               auto& q = fa[(i + 1) % 3];
-               for (int j = 0; j < 3; ++j) {
-                  auto& r = fb[j];
-                  auto& s = fb[(j + 1) % 3];
-                  if (r == p && s == q)
-                     return true;
-                  if (r == q && s == p)
-                     return true;
-               }
-            }
-            return false;
-         }
-         [[nodiscard]] vector_type face_normal(size_t face_index) const noexcept {
-            auto& face = this->faces[face_index];
-            auto& A    = this->vertices[face[0]];
-            auto& B    = this->vertices[face[1]];
-            auto& C    = this->vertices[face[2]];
-            //
-            auto n = (A - B).cross(C - A).normalize();
-            if (n.dot(A - this->cached.centroid) < 0)
-               n = -n;
-            return n;
-         }
-         #pragma endregion
 
+         /*//
          bool simple_separating_axis_test(const convex_hull& other) const noexcept { // "simple" does not mean "efficient"
-            auto  ec_a = this->cached.edges.size();
-            auto  ec_b = other.cached.edges.size();
+            auto ec_a = this->half_edges.size();
+            auto ec_b = other.half_edges.size();
             for (size_t i = 0; i < ec_a; ++i) {
                for (size_t j = 0; j < ec_b; ++j) {
-                  auto ea   = this->get_edge(this->cached.edges[i]);
-                  auto eb   = this->get_edge(other.cached.edges[j]);
+                  auto ea   = this->get_edge(i);
+                  auto eb   = other.get_edge(j);
                   auto axis = ea.cross(eb);
                   //
                   auto interval_a = this->project(axis); // TODO
@@ -335,7 +302,91 @@ namespace cobb {
                }
             }
          }
+         //*/
 
+      protected:
+         struct edge_query {
+            edge_index  a = no_edge;
+            edge_index  b = no_edge;
+            number_type distance = std::numeric_limits<number_type>::quiet_NaN();
+         };
+         static bool _arcs_intersect(const vector_type& A, const vector_type& B, const vector_type& C, const vector_type& D) noexcept { // test whether arcs AB and CD intersect
+            vector_type BxA = B.cross(A);
+            vector_type DxC = D.cross(C);
+            number_type CBA = C.dot(BxA);
+            number_type DBA = D.dot(BxA);
+            number_type ADC = A.dot(DxC);
+            number_type BDC = B.dot(DxC);
+            return (CBA * DBA < 0) && (ADC * BDC < 0) && (CBA * BDC > 0);
+         }
+         static bool _build_minkowski_face(const convex_hull& ha, const half_edge_type& ea, const convex_hull& hb, const half_edge_type& eb) noexcept {
+            vector_type a = ea.get_main_face_normal(ha);
+            vector_type b = ea.get_twin_face_normal(ha);
+            vector_type c = eb.get_main_face_normal(hb);
+            vector_type d = eb.get_twin_face_normal(hb);
+            return _arcs_intersect(a, b, -c, -d); // negate one of the pairs of normals to account for the Minkowski difference
+         }
+         edge_query _edge_sat(const convex_hull& other) const noexcept {
+            //
+            // TODO: This doesn't take transforms (hull positions/rotations) into account at any step in the process!
+            //
+            edge_query result;
+            //
+            edge_index  eca      = this->half_edges.size();
+            edge_index  ecb      = other.half_edges.size();
+            vector_type center_a = this->get_centroid();
+            for (edge_index ia = 0; ia < eca; ++ia) {
+               auto& ea = this->half_edges[ia];
+               if (ea.twin < ia)
+                  continue;
+               for (edge_index ib = 0; ib < ecb; ++ib) {
+                  auto& eb = other.half_edges[ib];
+                  if (eb.twin < ib)
+                     continue;
+                  if (!_build_minkowski_face(*this, ea, other, eb))
+                     continue;
+                  number_type separation;
+                  {
+                     vector_type pa     = this->vertices[ea.start]; // edge origins
+                     vector_type pb     = other.vertices[eb.start];
+                     vector_type da     = this->vertices[ea.end] - pa; // edge directions
+                     vector_type db     = other.vertices[eb.end] - pb;
+                     vector_type normal = da.cross(db);
+                     if (normal.length_sq() < 0.005F * std::sqrt(da.length_sq() * db.length_sq()))
+                        //
+                        // The edges are parallel or nearly parallel.
+                        //
+                        continue;
+                     normal.normalize();
+                     if (normal.dot(pa - center_a))
+                        normal = -normal;
+                     separation = normal.dot(pb - pa);
+                  }
+                  if (separation < result.distance) // when the distance is NaN, this should always be false
+                     continue;
+                  result.a = ia;
+                  result.b = ib;
+                  result.distance = separation;
+               }
+            }
+            return result;
+         }
+
+      public:
+         bool overlaps(const convex_hull& other) const noexcept {
+            auto face_query = this->_query_face_directions(*this, other);
+            if (face_query > 0)
+               return false;
+            face_query = this->_query_face_directions(other, *this);
+            if (face_query > 0)
+               return false;
+            auto edge_query = this->_edge_sat(other);
+            if (edge_query.distance > 0)
+               return false;
+            return true;
+         }
+
+         // not actually needed for S.A.T.
          [[nodiscard]] gauss_map<number_type> to_gauss_map() const noexcept {
             constexpr number_type nan  = std::numeric_limits<number_type>::quiet_NaN();
             constexpr vector_type none = { nan, nan, nan };
@@ -345,41 +396,16 @@ namespace cobb {
             size_t fc = this->faces.size();
             for (size_t fa = 0; fa < fc; ++fa) {
                for (size_t fb = fa + 1; fb < fc; ++fb) {
-                  if (!this->faces_share_edge(fa, fb))
+                  auto& a = this->faces[fa];
+                  auto& b = this->faces[fb];
+                  if (!a.shares_edge_with(*this, b))
                      continue;
                   auto& arc = gauss.arcs.emplace_back();
-                  arc.start = this->face_normal(fa);
-                  arc.end   = this->face_normal(fb);
+                  arc.start = a.get_normal(*this);
+                  arc.end   = b.get_normal(*this);
                }
             }
             return gauss;
          }
-
-         [[nodiscard]] convex_hull to_minkowski_sum(const convex_hull& other) const noexcept {
-
-         }
-
-      protected:
-         bool _is_minkowski_face(const vector_type& A, const vector_type& B, const vector_type& C, const vector_type& D) {
-            //
-            // Tests for an intersection between arcs AB and CD on a unit sphere.
-            //
-            // All convex polyhedra can have their topologies simplified to a sphere, you see. The surface 
-            // normals from that polyhedra are unit vectors, so they point from the center of the sphere 
-            // to its surface. If any two faces share an edge, draw an arc to connect their normals' end-
-            // points. Congratulations: you've now created a gauss map. But what the heck is that for?
-            //
-            // Well, if you want to test for the intersection between two convex polyhedra, you can take 
-            // gauss maps of both of them and overlay them. Any points where the arcs overlap are the 
-            // unit vectors for potential separating axes.
-            //
-            vector_type BxA = B.cross(A);
-            vector_type DxC = D.cross(C);
-            number_type CBA = C.dot(BxA);
-            number_type DBA = D.dot(BxA);
-            number_type ADC = A.dot(DxC);
-            number_type BDC = B.dot(DxC);
-            return (CBA * DBA < 0) && (ADC * BDC < 0) && (CBA * BDC > 0);
-         };
    };
 }

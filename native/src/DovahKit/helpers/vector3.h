@@ -27,11 +27,11 @@ namespace cobb {
          
          union {
             struct {
-               T x = T(0);
-               T y = T(0);
-               T z = T(0);
+               T x;
+               T y;
+               T z;
             };
-            T components[axis_count];
+            T components[axis_count] = { T(0), T(0), T(0) };
          };
 
          constexpr vector3() {}

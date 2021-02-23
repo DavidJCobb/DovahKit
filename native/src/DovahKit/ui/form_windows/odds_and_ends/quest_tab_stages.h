@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <QDialog>
-#include "ui_shout_word.h"
+#include <QWidget>
+#include "ui_quest_tab_stages.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/forms/Quest.h"
 
@@ -25,6 +25,7 @@ class QuestTabStages : public QWidget {
       loaded_t::LogEntry* _get_log_entry() const noexcept;
       loaded_t::LogEntry* _get_log_entry(int stage, int entry) const noexcept;
 
+      int _selected_stage_index() const noexcept;
       int _selected_log_entry_index() const noexcept;
       
       void _modify_stage_flag(loaded_t::Stage::flags_t, bool) const noexcept;

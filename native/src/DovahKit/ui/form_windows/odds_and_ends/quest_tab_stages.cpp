@@ -55,12 +55,11 @@ void QuestTabStages::deactivate() {
 }
 
 QuestTabStages::loaded_t::Stage* QuestTabStages::_get_stage() const noexcept {
-   auto index = this->ui.index->currentData();
-   if (!index.isValid())
-      return nullptr;
-   return this->_get_stage(index.toInt());
+   return this->_get_stage(this->_selected_stage_index());
 }
 QuestTabStages::loaded_t::Stage* QuestTabStages::_get_stage(int id) const noexcept {
+   if (id < 0)
+      return nullptr;
    for (auto& s : this->form.stages)
       if (s.index == id)
          return &s;
@@ -86,12 +85,22 @@ QuestTabStages::loaded_t::LogEntry* QuestTabStages::_get_log_entry(int stage, in
    return &list[entry];
 }
 
+int QuestTabStages::_selected_stage_index() const noexcept {
+   auto* widget = this->ui.index;
+   auto* sm     = widget->selectionModel();
+   if (!sm)
+      return -1;
+   auto rows = sm->selectedRows();
+   if (rows.isEmpty())
+      return -1;
+   return rows[0].row();
+}
 int QuestTabStages::_selected_log_entry_index() const noexcept {
    auto* widget = this->ui.logEntries;
    auto* sm     = widget->selectionModel();
    if (!sm)
       return -1;
-   auto rows = sm->rows();
+   auto rows = sm->selectedRows();
    if (rows.isEmpty())
       return -1;
    return rows[0].row();
