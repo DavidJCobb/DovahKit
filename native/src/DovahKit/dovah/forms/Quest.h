@@ -60,6 +60,7 @@ namespace dovah::loaded_forms {
          story_event_code_t fill_from_event      = story_event_code::undefined; // same sentinel value used by the game
          uint32_t           fill_from_event_data; // e.g. 4C 32 00 00 -> 'L2'
          components::condition_list conditions; // for "Find Matching Reference" or "Find Matching Location"
+         components::papyrus::quest_alias_script_data* script_data = nullptr;
          //
          Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
          //
@@ -196,10 +197,11 @@ namespace dovah::loaded_forms {
                };
                using flags_t = std::underlying_type_t<flag::type>;
                //
-               flags_t flags;
-               components::condition_list conditions;
+               flags_t flags = 0;
                localized_string journal_text = localized_string(localized_string_type::description);
                form_reference_t next_quest_id;
+               components::condition_list conditions;
+               components::papyrus::quest_log_entry_fragment fragment;
                //
             protected:
                void load(tes_record_reader&,    load_order_interfaces::form_load&); // assumes QSTD subrecord has already been opened
@@ -310,9 +312,17 @@ namespace dovah::loaded_forms {
          Alias* lookup_alias_by_id(uint32_t id) const noexcept;
          void for_each_alias_of_type(Alias::alias_type, std::function<bool(Alias*)>);
 
+         // Returns a vector of pointers to log entry Papyrus data. These pointers will become invalid if 
+         // anything invalidates the quest's stage vector or any stage's log entry vector.
+         std::vector<const components::papyrus::quest_log_entry_fragment*> get_owned_log_entry_fragments() const noexcept;
+
+         // Returns a vector of pointers to alias Papyrus data. A pointer will become invalid if the alias 
+         // or its Papyrus data are destroyed.
+         std::vector<const components::papyrus::quest_alias_script_data*> get_owned_alias_papyrus_data() const noexcept;
+
+         Stage* lookup_stage_by_id(uint16_t id) noexcept;
          Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists
          void   remove_stage(int id) noexcept;
-         void   remove_stage_log_entry(int stage_id, int entry_index); // use this to ensure that Papyrus data is properly severed and adjusted
 
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

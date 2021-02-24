@@ -99,7 +99,7 @@ class ConditionList : public QWidget {
       void openEditConditionModal();
       //
    signals:
-      void conditionEdited();
+      void conditionEdited(); // emitted when the user attempts an operation that would edit the list, e.g. adding or rearranging items, sometimes regardless of whether that operation is successful
       //
    protected:
       Ui::ConditionList ui;

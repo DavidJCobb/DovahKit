@@ -751,8 +751,8 @@ namespace dovah::loaded_forms {
             case 'INDX': // also handles QSDT
                {
                   this->stages.emplace_back();
-                  auto& stage = *this->stages.rbegin();
-                  stage.load(subrecord, intfc);
+auto& stage = *this->stages.rbegin();
+stage.load(subrecord, intfc);
                }
                break;
             case 'QSDT':
@@ -793,7 +793,7 @@ namespace dovah::loaded_forms {
                {
                   auto& objective = *this->objectives.rbegin();
                   objective.targets.emplace_back();
-                  auto& target    = *objective.targets.rbegin();
+                  auto& target = *objective.targets.rbegin();
                   target.load(subrecord, intfc);
                }
                hasLastLogEntry = false; // per TESV.exe TESQuest::LoadForm
@@ -848,6 +848,56 @@ namespace dovah::loaded_forms {
                   detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
                );
                break;
+         }
+      }
+      //
+      // Lastly, the VMAD subrecord can provide script data that applies to just part of 
+      // this form rather than the whole form. To make managing this data easier, let's 
+      // pull it out of the general Papyrus data and physically place it inside of the 
+      // parts of this form that it actually belongs to.
+      //
+      if (auto* extra = this->script_data.fragment_data) {
+         assert(dynamic_cast<components::papyrus::quest_fragment_data*>(extra) != nullptr && "If this assertion fails, then the Papyrus extra data isn't of the right type for QUST.");
+         auto& base = *(components::papyrus::quest_fragment_data*)extra;
+         //
+         // Claim ownership over log entry fragments, where possible:
+         //
+         {
+            auto& list = base.unowned_data.fragments;
+            auto  size = list.size();
+            for (size_t i = 0; i < size; ++i) {
+               auto& fragment = list[i];
+               auto* stage    = this->lookup_stage_by_id(fragment.ownership.stage_id);
+               if (!stage)
+                  continue;
+               if (fragment.ownership.entry_index >= stage->entries.size())
+                  continue;
+               auto& entry = stage->entries[fragment.ownership.entry_index];
+               assert(entry.fragment.defined == false && "TODO: what does the game do if a log entry is incorrectly given multiple fragments?"); // TODO
+               entry.fragment = fragment;
+               list.erase(list.begin() + i);
+               --i;
+               --size;
+            }
+         }
+         //
+         // Claim ownership over alias Papyrus data, where possible:
+         //
+         {
+            auto& list = base.unowned_data.aliases;
+            auto  size = list.size();
+            for (size_t i = 0; i < size; ++i) {
+               auto& papyrus = *list[i];
+               if (papyrus.alias.form != &this->stub)
+                  continue;
+               auto* alias = this->lookup_alias_by_id(papyrus.alias.aliasID);
+               if (!alias)
+                  continue;
+               assert(alias->script_data == nullptr && "TODO: what does the game do if an alias is incorrectly given multiple sets of script data?"); // TODO
+               alias->script_data = &papyrus;
+               list[i] = nullptr;
+            }
+            list.erase(std::remove(list.begin(), list.end(), nullptr),  list.end());
          }
       }
    }
@@ -982,7 +1032,12 @@ namespace dovah::loaded_forms {
       return true;
    }
    bool Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
-      this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
+      {
+         auto params = components::papyrus::script_data_save_parameters();
+         params.aliases             = this->get_owned_alias_papyrus_data();
+         params.log_entry_fragments = this->get_owned_log_entry_fragments();
+         this->script_data.save(record, intfc, params); // VMAD (won't write anything if no scripts are attached)
+      }
       //
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
@@ -1074,6 +1129,14 @@ namespace dovah::loaded_forms {
       }
    }
 
+   Quest::Stage* Quest::lookup_stage_by_id(uint16_t id) noexcept {
+      auto& list = this->stages;
+      if (!list.empty())
+         for (auto& stage : list)
+            if (stage.index == id)
+               return const_cast<Stage*>(&stage);
+      return nullptr;
+   }
    Quest::Stage* Quest::insert_stage(int id) noexcept {
       auto& list = this->stages;
       if (!list.empty())
@@ -1095,72 +1158,6 @@ namespace dovah::loaded_forms {
             break;
       if (it == end)
          return;
-      //
-      // Update Papyrus fragments:
-      //
-      auto& papyrus = this->script_data;
-      if (auto* cast = dynamic_cast<fragment_data_t*>(papyrus.fragment_data)) {
-         auto& list = cast->fragments;
-         list.erase(
-            std::remove_if(
-               list.begin(),
-               list.end(),
-               [id](const fragment_data_t::fragment_t fragment) {
-                  return fragment.index == id;
-               }
-            ),
-            list.end()
-         );
-      }
-      //
-      // Remove the stage:
-      //
       list.erase(it);
-   }
-   void Quest::remove_stage_log_entry(int stage_id, int entry_index) {
-      using fragment_data_t = components::papyrus::quest_fragment_data;
-      //
-      bool found = false;
-      for (auto& stage : this->stages) {
-         if (stage.index != stage_id)
-            continue;
-         auto& list = stage.entries;
-         auto  size = list.size();
-         if (entry_index < 0)
-            entry_index += size;
-         else if (entry_index >= size)
-            return;
-         stage.entries.erase(list.begin() + entry_index);
-         found = true;
-         break;
-      }
-      if (!found)
-         return;
-      //
-      // Update Papyrus fragments:
-      //
-      auto& papyrus = this->script_data;
-      if (auto* cast = dynamic_cast<fragment_data_t*>(papyrus.fragment_data)) {
-         auto& list = cast->fragments;
-         list.erase(
-            std::remove_if(
-               list.begin(),
-               list.end(),
-               [stage_id, entry_index](const fragment_data_t::fragment_t fragment) {
-                  return fragment.index == stage_id && fragment.logEntry == entry_index;
-               }
-            ),
-            list.end()
-         );
-         //
-         // Any log entries after this one will be shifted up. Fix them.
-         //
-         for (auto& remaining : list) {
-            if (remaining.index != stage_id)
-               continue;
-            if (remaining.logEntry >= entry_index)
-               --remaining.logEntry;
-         }
-      }
    }
 }

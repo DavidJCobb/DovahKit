@@ -510,6 +510,7 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       if (!model || !sm)
          return;
       model->moveSelection(sm->selection(), -1);
+      emit this->conditionEdited();
    });
    QObject::connect(this->ui.buttonMoveDown, &QPushButton::clicked, this, [this]() {
       auto* model = this->model();
@@ -517,6 +518,7 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       if (!model || !sm)
          return;
       model->moveSelection(sm->selection(), 1);
+      emit this->conditionEdited();
    });
    //
    #pragma region Context menu
@@ -534,6 +536,7 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
          return;
       model->duplicateSelection(sm->selection());
       sm->select(QItemSelection(), QItemSelectionModel::ClearAndSelect); // clear the selection
+      emit this->conditionEdited();
    });
    QObject::connect(this->context_menu_actions.destroy, &QAction::triggered, this, [this]() {
       auto* model = this->model();
@@ -541,6 +544,7 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       if (!model || !sm)
          return;
       model->removeSelection(sm->selection());
+      emit this->conditionEdited();
    });
    //
    this->ui.list->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -605,6 +609,7 @@ void ConditionList::openCreateConditionModal() {
          QModelIndex    br = model->index(qmi.row(), model->columnCount(dummy) - 1, dummy); // (qmi) is just the left "edge" of the selection, and we want to select the whole row
          QItemSelection range(qmi, br);
          sm->select(range, QItemSelectionModel::ClearAndSelect);
+         emit this->conditionEdited();
       });
       QObject::connect(modal, &QDialog::finished, this, [work](int code) {
          //

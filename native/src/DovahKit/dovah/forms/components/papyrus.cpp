@@ -51,7 +51,7 @@ namespace dovah::loaded_forms::components::papyrus {
          this->fragment_data->load(*this, subrecord);
       return subrecord.is_in_bounds();
    }
-   bool script_data::save(tes_subrecord_writer& subrecord, save_interface_t& intfc) {
+   bool script_data::save(tes_subrecord_writer& subrecord, save_interface_t& intfc, const script_data_save_parameters& params) {
       subrecord.write(this->version);
       subrecord.write(this->object_format);
       if (this->scripts.size() > std::numeric_limits<uint16_t>::max())
@@ -62,14 +62,14 @@ namespace dovah::loaded_forms::components::papyrus {
             return false;
       }
       if (this->fragment_data)
-         this->fragment_data->save(*this, subrecord);
+         this->fragment_data->save(*this, subrecord, params);
       return true;
    }
-   bool script_data::save(tes_record_writer& record, save_interface_t& intfc) {
+   bool script_data::save(tes_record_writer& record, save_interface_t& intfc, const script_data_save_parameters& params) {
       if (this->scripts.empty() && !this->fragment_data)
          return true;
       auto& VMAD = record.open_next_subrecord('VMAD');
-      auto result = this->save(VMAD, intfc);
+      auto result = this->save(VMAD, intfc, params);
       VMAD.close();
       return result;
    }
@@ -126,7 +126,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   bool script_data::script::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   bool script_data::script::save(script_data& owner, tes_subrecord_writer& subrecord) const noexcept {
       subrecord.write_length_prefixed_string<2>(this->name);
       uint16_t count = this->properties.size();
       if (this->properties.size() > std::numeric_limits<decltype(count)>::max()) {
@@ -187,7 +187,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   bool script_data::property_object_value::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   bool script_data::property_object_value::save(script_data& owner, tes_subrecord_writer& subrecord) const noexcept {
       if (owner.object_format == 2) {
          subrecord.write(this->always_zero);
          subrecord.write(this->aliasID);
@@ -239,7 +239,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   bool script_data::property::value_t::save(property_type type, script_data& owner, tes_subrecord_writer& subrecord) {
+   bool script_data::property::value_t::save(property_type type, script_data& owner, tes_subrecord_writer& subrecord) const noexcept {
       switch (type) {
          case property_type::object:
          case property_type::array_of_object:
@@ -321,7 +321,7 @@ namespace dovah::loaded_forms::components::papyrus {
       //
       return true;
    }
-   bool script_data::property::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   bool script_data::property::save(script_data& owner, tes_subrecord_writer& subrecord) const noexcept {
       subrecord.write_length_prefixed_string<2>(this->name);
       subrecord.write(this->type);
       subrecord.write(this->status);
@@ -401,7 +401,7 @@ namespace dovah::loaded_forms::components::papyrus {
                subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void topic_info_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   void topic_info_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
       subrecord.write(this->unknown);
       subrecord.write(this->flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
@@ -453,7 +453,7 @@ namespace dovah::loaded_forms::components::papyrus {
                subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void package_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   void package_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
       subrecord.write(this->unknown);
       subrecord.write(this->flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
@@ -507,7 +507,7 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   void perk_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   void perk_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
       subrecord.write(this->unknown);
       subrecord.write_length_prefixed_string<2>(this->filename);
       assert(this->fragments.size() <= std::numeric_limits<uint16_t>::max() && "Too many fragments in perk_fragment_data.");
@@ -543,9 +543,10 @@ namespace dovah::loaded_forms::components::papyrus {
          return false;
       if (!subrecord.read_length_prefixed_string<2>(this->function))
          return false;
+      this->defined = true;
       return true;
    }
-   void quest_log_entry_fragment::save(tes_subrecord_writer& subrecord) noexcept {
+   void quest_log_entry_fragment::save(tes_subrecord_writer& subrecord) const noexcept {
       subrecord.write(this->ownership.stage_id);
       subrecord.write(uint16_t(0x0000)); // UESP says this is always 0x0000
       subrecord.write(this->ownership.entry_index);
@@ -554,11 +555,13 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.write_length_prefixed_string<2>(this->function);
    }
    void quest_log_entry_fragment::clone_from(const quest_log_entry_fragment& source) noexcept {
+      this->defined   = source.defined;
       this->ownership = source.ownership;
       this->filename  = source.filename;
       this->function  = source.function;
    }
    void quest_log_entry_fragment::clear() noexcept {
+      this->defined = false;
       this->filename.clear();
       this->function.clear();
       this->ownership.stage_id    = 0;
@@ -577,7 +580,7 @@ namespace dovah::loaded_forms::components::papyrus {
          script.load(owner, subrecord);
       }
    }
-   void quest_alias_script_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   void quest_alias_script_data::save(script_data& owner, tes_subrecord_writer& subrecord) const {
       this->alias.save(owner, subrecord);
       subrecord.write(this->version);
       subrecord.write(this->objFormat);
@@ -620,105 +623,79 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.unchecked_read(fragCount);
       subrecord.read_length_prefixed_string<2>(this->filename);
       for (uint16_t i = 0; i < fragCount; i++) {
-         this->fragments.emplace_back();
-         auto& frag = *this->fragments.rbegin();
-         if (!subrecord.is_in_bounds(5))
-            break;
-         subrecord.unchecked_read(frag.index);
-         subrecord.unchecked_read(frag.unknown02);
-         subrecord.unchecked_read(frag.logEntry);
-         subrecord.unchecked_read(frag.unknown08);
-         if (!subrecord.read_length_prefixed_string<2>(frag.filename))
-            break;
-         if (!subrecord.read_length_prefixed_string<2>(frag.function))
+         auto& frag = this->unowned_data.fragments.emplace_back();
+         if (!frag.load(subrecord))
             break;
       }
       uint16_t aliasCount;
       subrecord.unchecked_read(aliasCount);
       for (uint16_t i = 0; i < aliasCount; i++) {
-         this->aliasScriptData.emplace_back();
-         auto& alias = *this->aliasScriptData.rbegin();
-         alias.alias.load(owner, subrecord);
-         subrecord.unchecked_read(alias.version);
-         subrecord.unchecked_read(alias.objFormat);
-         uint16_t scriptCount;
-         subrecord.unchecked_read(scriptCount);
-         for (uint16_t j = 0; j < scriptCount; j++) {
-            alias.scripts.emplace_back();
-            auto& script = *alias.scripts.rbegin();
-            script.load(owner, subrecord);
-         }
+         auto* alias = new quest_alias_script_data;
+         this->unowned_data.aliases.push_back(alias);
+         alias->load(owner, subrecord);
       }
    }
-   void quest_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   void quest_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters& params) {
       subrecord.write(this->unknown);
-      assert(this->fragments.size() <= std::numeric_limits<uint16_t>::max() && "Too many fragments in quest_fragment_data.");
-      subrecord.write(uint16_t(this->fragments.size()));
-      subrecord.write_length_prefixed_string<2>(this->filename);
-      for (auto& frag : this->fragments) {
-         subrecord.write(frag.index);
-         subrecord.write(frag.unknown02);
-         subrecord.write(frag.logEntry);
-         subrecord.write(frag.unknown08);
-         subrecord.write_length_prefixed_string<2>(frag.filename);
-         subrecord.write_length_prefixed_string<2>(frag.function);
+      {
+         auto& unowned = this->unowned_data.fragments;
+         auto& owned   = params.log_entry_fragments;
+         //
+         size_t count = unowned.size() + owned.size();
+         assert(count <= std::numeric_limits<uint16_t>::max() && "Too many fragments in quest_fragment_data.");
+         subrecord.write(uint16_t(count));
+         subrecord.write_length_prefixed_string<2>(this->filename);
+         for (auto& frag : unowned)
+            frag.save(subrecord);
+         for (auto* frag : owned)
+            frag->save(subrecord);
       }
-      assert(this->aliasScriptData.size() <= std::numeric_limits<uint16_t>::max() && "Too many aliases in quest_fragment_data.");
-      subrecord.write(uint16_t(this->aliasScriptData.size()));
-      for (auto& alias : this->aliasScriptData) {
-         alias.alias.save(owner, subrecord);
-         subrecord.write(alias.version);
-         subrecord.write(alias.objFormat);
-         assert(alias.scripts.size() <= std::numeric_limits<uint16_t>::max() && "Too many scripts on an alias in quest_fragment_data.");
-         subrecord.write(uint16_t(alias.scripts.size()));
-         for (auto& script : alias.scripts) {
-            script.save(owner, subrecord);
-         }
+      {
+         auto& unowned = this->unowned_data.aliases;
+         auto& owned   = params.aliases;
+         //
+         size_t count = unowned.size() + owned.size();
+         assert(count <= std::numeric_limits<uint16_t>::max() && "Too many aliases in quest_fragment_data.");
+         subrecord.write(uint16_t(count));
+         for (auto* alias : unowned)
+            alias->save(owner, subrecord);
+         for (auto* alias : owned)
+            alias->save(owner, subrecord);
       }
    }
-   basic_fragment_data* quest_fragment_data::clone(loaded_forms::Form& stub) const noexcept {
+   basic_fragment_data* quest_fragment_data::clone(loaded_forms::Form& owner_of_clone) const noexcept {
       auto* copy = new quest_fragment_data;
       copy->unknown  = this->unknown;
       copy->filename = this->filename;
       //
-      size_t size = this->fragments.size();
-      copy->fragments.resize(size);
-      for (size_t i = 0; i < size; ++i) {
-         copy->fragments[i] = this->fragments[i];
-      }
+      size_t size = this->unowned_data.fragments.size();
+      copy->unowned_data.fragments.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         copy->unowned_data.fragments[i].clone_from(this->unowned_data.fragments[i]);
       //
-      size = this->aliasScriptData.size();
-      copy->aliasScriptData.resize(size);
-      for (size_t i = 0; i < size; ++i) {
-         auto& entry = copy->aliasScriptData[i];
-         auto& from  = this->aliasScriptData[i];
-         entry.alias.clone_from(from.alias, stub);
-         entry.version   = from.version;
-         entry.objFormat = from.objFormat;
-         //
-         size_t script_count = from.scripts.size();
-         entry.scripts.resize(script_count);
-         for (size_t j = 0; j < script_count; ++j) {
-            entry.scripts[j].clone_from(from.scripts[j], stub);
-         }
-      }
+      size = this->unowned_data.aliases.size();
+      copy->unowned_data.aliases.resize(size);
+      for (size_t i = 0; i < size; ++i)
+         copy->unowned_data.aliases[i] = this->unowned_data.aliases[i]->clone(owner_of_clone);
       //
       return copy;
    }
    void quest_fragment_data::clear(loaded_forms::Form& owner) {
-      for (auto& alias : this->aliasScriptData) {
-         alias.alias.clear(owner);
-         for (auto& script : alias.scripts) {
+      this->unowned_data.fragments.clear();
+      //
+      for (auto* alias : this->unowned_data.aliases) {
+         alias->alias.clear(owner);
+         for (auto& script : alias->scripts) {
             script.clear_properties(owner);
          }
-         alias.scripts.clear();
+         alias->scripts.clear();
+         delete alias;
       }
-      this->aliasScriptData.clear();
+      this->unowned_data.aliases.clear();
    }
    void quest_fragment_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      for (auto& alias : this->aliasScriptData)
-         for (auto& script : alias.scripts)
-            script.sever_outbound_references_to(target, my_owner);
+      for (auto* alias : this->unowned_data.aliases)
+         alias->sever_outbound_references_to(target, my_owner);
    }
 
    void scene_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
@@ -754,7 +731,7 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   void scene_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+   void scene_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
       subrecord.write(this->unknown);
       subrecord.write(this->flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
