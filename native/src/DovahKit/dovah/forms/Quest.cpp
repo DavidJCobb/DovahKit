@@ -134,6 +134,11 @@ namespace dovah::loaded_forms {
       this->fill_from_quest.clear_if(my_owner, target);
       for (auto& cnd : this->conditions)
          cnd.sever_outbound_references_to(target, my_owner);
+      static_assert(false, "LocationAlias::sever_outbound_references: Sever references from the Papyrus data. (Actually, it might be better to have "
+         "some non-virtual Alias::sever_outbound_references which handles the Papyrus data and anything else \"top-level,\" and then define a virtual "
+         "Alias::_sever_outbound_references_impl that the subtypes override, similar to what we do for forms. Consider this for the other operations "
+         "that need to deal with the Papyrus data as well (clone, clear, etc.)."
+      );
    }
    Alias* LocationAlias::clone(loaded_forms::Form& clone_owner) {
       auto* copy = new LocationAlias(this->owner);
@@ -152,6 +157,7 @@ namespace dovah::loaded_forms {
       copy->fill_type = this->fill_type;
       //
       copy->conditions.append_all_of(clone_owner, this->conditions);
+      static_assert(false, "LocationAlias::clone: Clone the Papyrus data.");
       //
       return copy;
    }
@@ -168,6 +174,7 @@ namespace dovah::loaded_forms {
       this->fill_from_location.set(my_owner, nullptr);
       this->fill_from_location_keyword.set(my_owner, nullptr);
       this->conditions.clear(my_owner);
+      static_assert(false, "LocationAlias::clear: Clear the Papyrus data.");
    }
 
    void ReferenceAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -416,6 +423,7 @@ namespace dovah::loaded_forms {
       remove_form_from_reference_list(this->factions, target, my_owner);
       remove_form_from_reference_list(this->packages, target, my_owner);
       this->additional_voicetype.clear_if(my_owner, target);
+      static_assert(false, "ReferenceAlias::sever_outbound_references: Sever references from the Papyrus data.");
    }
    Alias* ReferenceAlias::clone(loaded_forms::Form& clone_owner) {
       auto* copy = new ReferenceAlias(this->owner);
@@ -451,6 +459,7 @@ namespace dovah::loaded_forms {
       copy->fill_type = this->fill_type;
       //
       copy->conditions.append_all_of(clone_owner, this->conditions);
+      static_assert(false, "ReferenceAlias::clone: Clone the Papyrus data.");
       //
       return copy;
    }
@@ -484,53 +493,80 @@ namespace dovah::loaded_forms {
       this->fill_near_alias      = -1;
       this->fill_near_alias_type = 0;
       this->conditions.clear(my_owner);
+      static_assert(false, "ReferenceAlias::clear: Clear the Papyrus data.");
    }
    #pragma endregion
 
    #pragma region Quest components
       #pragma region Quest log entries
-      void Quest::LogEntry::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
-         auto& subrecord = record.get_current_subrecord();
-         assert(subrecord.signature() == 'QSDT' && "Quest::LogEntry::load should only be called just after the QSDT subrecord is opened.");
-         subrecord.read(this->flags);
-         if (record.peek_next_subrecord_type() != 'NAM0')
-            return;
-         record.next_subrecord();
-         subrecord.read(this->next_quest_id);
-      }
-      void Quest::LogEntry::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load&) {
-         assert(subrecord.signature() == 'CNAM' && "Quest::LogEntry::loadText should only be called just after the CNAM subrecord is opened.");
-         subrecord.to_string(this->journal_text);
-      }
-      bool Quest::LogEntry::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-         auto& QSDT = record.open_next_subrecord('QSDT');
-         QSDT.write(this->flags);
-         QSDT.close();
-         for (auto& cnd : this->conditions)
-            cnd.save(record, intfc);
-         auto& CNAM = record.open_next_subrecord('CNAM');
-         CNAM.write(this->journal_text);
-         CNAM.close();
-         record.write_formID_subrecord('NAM0', this->next_quest_id, true);
-         return true;
-      }
-      void Quest::LogEntry::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
-         for (auto& cnd : this->conditions)
-            cnd.sever_outbound_references_to(other, my_owner);
-         this->next_quest_id.clear_if(my_owner, other);
-      }
-      void Quest::LogEntry::clone_from(const LogEntry& copy, loaded_forms::Form& owner) {
-         this->flags         = copy.flags;
-         this->journal_text  = copy.journal_text;
-         this->next_quest_id = copy.next_quest_id;
-         this->conditions.append_all_of(owner, copy.conditions);
-      }
-      void Quest::LogEntry::clear(loaded_forms::Form& owner) {
-         this->flags = 0;
-         this->journal_text.reset();
-         this->next_quest_id.set(owner, nullptr);
-         this->conditions.clear(owner);
-      }
+         #pragma region Quest fragments
+         void Quest::LogEntry::script_fragment::load(tes_subrecord_reader& subrecord) {
+            assert(subrecord.signature() == 'VMAD');
+            subrecord.unchecked_read(this->stage_id);
+            subrecord.unchecked_read(this->unknown02);
+            subrecord.unchecked_read(this->entry_index);
+            subrecord.unchecked_read(this->unknown08);
+            if (!subrecord.read_length_prefixed_string<2>(this->filename))
+               return;
+            if (!subrecord.read_length_prefixed_string<2>(this->function))
+               return;
+         }
+         bool Quest::LogEntry::script_fragment::save(tes_subrecord_writer& subrecord, uint16_t stage_id, uint32_t entry_index) {
+            assert(subrecord.signature() == 'VMAD');
+            subrecord.write(stage_id);
+            subrecord.write(this->unknown02);
+            subrecord.write(entry_index);
+            subrecord.write(this->unknown08);
+            subrecord.write_length_prefixed_string<2>(this->filename);
+            subrecord.write_length_prefixed_string<2>(this->function);
+            return true;
+         }
+         #pragma endregion
+
+         void Quest::LogEntry::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+            auto& subrecord = record.get_current_subrecord();
+            assert(subrecord.signature() == 'QSDT' && "Quest::LogEntry::load should only be called just after the QSDT subrecord is opened.");
+            subrecord.read(this->flags);
+            if (record.peek_next_subrecord_type() != 'NAM0')
+               return;
+            record.next_subrecord();
+            subrecord.read(this->next_quest_id);
+         }
+         void Quest::LogEntry::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load&) {
+            assert(subrecord.signature() == 'CNAM' && "Quest::LogEntry::loadText should only be called just after the CNAM subrecord is opened.");
+            subrecord.to_string(this->journal_text);
+         }
+         bool Quest::LogEntry::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+            auto& QSDT = record.open_next_subrecord('QSDT');
+            QSDT.write(this->flags);
+            QSDT.close();
+            for (auto& cnd : this->conditions)
+               cnd.save(record, intfc);
+            auto& CNAM = record.open_next_subrecord('CNAM');
+            CNAM.write(this->journal_text);
+            CNAM.close();
+            record.write_formID_subrecord('NAM0', this->next_quest_id, true);
+            return true;
+         }
+         void Quest::LogEntry::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
+            for (auto& cnd : this->conditions)
+               cnd.sever_outbound_references_to(other, my_owner);
+            this->next_quest_id.clear_if(my_owner, other);
+         }
+         void Quest::LogEntry::clone_from(const LogEntry& copy, loaded_forms::Form& owner) {
+            this->flags         = copy.flags;
+            this->journal_text  = copy.journal_text;
+            this->next_quest_id = copy.next_quest_id;
+            this->conditions.append_all_of(owner, copy.conditions);
+            static_assert(false, "Quest::LogEntry::clone_from: Clone the script fragment.");
+         }
+         void Quest::LogEntry::clear(loaded_forms::Form& owner) {
+            this->flags = 0;
+            this->journal_text.reset();
+            this->next_quest_id.set(owner, nullptr);
+            this->conditions.clear(owner);
+            static_assert(false, "Quest::LogEntry::clear: Clear the script fragment.");
+         }
       #pragma endregion
 
       #pragma region Quest stages
@@ -702,6 +738,9 @@ namespace dovah::loaded_forms {
       if (!intfc.is_winning_record)
          return;
       //
+      std::vector<Alias::papyrus_attachment_data> pending_alias_scripts;
+      std::vector<LogEntry::script_fragment>      pending_log_entry_scripts;
+      //
       bool isInEventConditions = false;
       bool hasLastLogEntry     = false;
       while (auto& subrecord = record.next_subrecord()) {
@@ -713,6 +752,22 @@ namespace dovah::loaded_forms {
                break;
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
+               if (!subrecord.is_at_end()) {
+                  uint16_t count;
+                  //
+                  subrecord.unchecked_read(this->script_fragment_root.unknown);
+                  if (!subrecord.read(count)) // log entry fragment count
+                     break;
+                  subrecord.read_length_prefixed_string<2>(this->script_fragment_root.filename);
+                  for (uint16_t i = 0; i < count; ++i) {
+                     pending_log_entry_scripts.emplace_back().load(subrecord);
+                  }
+                  if (!subrecord.read(count)) // alias script data count
+                     break;
+                  for (uint16_t i = 0; i < count; ++i) {
+                     pending_alias_scripts.emplace_back().load(this->script_data, subrecord);
+                  }
+               }
                break;
             case 'DNAM': // required; TODO: fail if this is not present; fail if it is too short
                if (subrecord.is_in_bounds(12)) {
@@ -749,11 +804,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->next_alias_id);
                break;
             case 'INDX': // also handles QSDT
-               {
-                  this->stages.emplace_back();
-auto& stage = *this->stages.rbegin();
-stage.load(subrecord, intfc);
-               }
+               this->stages.emplace_back().load(subrecord, intfc);
                break;
             case 'QSDT':
                if (this->stages.size()) { // the game ignores QSDT that appear when there is no stage
@@ -851,54 +902,38 @@ stage.load(subrecord, intfc);
          }
       }
       //
-      // Lastly, the VMAD subrecord can provide script data that applies to just part of 
-      // this form rather than the whole form. To make managing this data easier, let's 
-      // pull it out of the general Papyrus data and physically place it inside of the 
-      // parts of this form that it actually belongs to.
+      // If we loaded any quest-specific VMAD data, this is the point where we need to distribute 
+      // that data among its owning aliases and log entries.
       //
-      if (auto* extra = this->script_data.fragment_data) {
-         assert(extra->type == components::papyrus::fragment_type::quest && "If this assertion fails, then the Papyrus extra data isn't of the right type for QUST.");
-         auto& base = *(components::papyrus::quest_fragment_data*)extra;
-         //
-         // Claim ownership over log entry fragments, where possible:
-         //
-         {
-            auto& list = base.unowned_data.fragments;
-            auto  size = list.size();
-            for (size_t i = 0; i < size; ++i) {
-               auto& fragment = list[i];
-               auto* stage    = this->lookup_stage_by_id(fragment.ownership.stage_id);
-               if (!stage)
+      if (!pending_alias_scripts.empty()) {
+         for (auto& data : pending_alias_scripts) {
+            if (data.alias.form == &this->stub) {
+               auto* alias = this->lookup_alias_by_id(data.alias.aliasID);
+               if (alias) {
+                  assert(alias->script_data.empty() && "TODO: How do the game and CK handle multiple VMAD entries for a single alias?"); // TODO
+                  alias->script_data = data;
                   continue;
-               if (fragment.ownership.entry_index >= stage->entries.size())
-                  continue;
-               auto& entry = stage->entries[fragment.ownership.entry_index];
-               assert(entry.fragment.defined == false && "TODO: what does the game do if a log entry is incorrectly given multiple fragments?"); // TODO
-               entry.fragment = fragment;
-               list.erase(list.begin() + i);
-               --i;
-               --size;
+               }
             }
+            static_assert(false, "If any VMAD-alias data specifies a bad alias, we should emit a load warning.");
+            this->script_fragment_root.unowned_alias_data.push_back(data);
          }
-         //
-         // Claim ownership over alias Papyrus data, where possible:
-         //
-         {
-            auto& list = base.unowned_data.aliases;
-            auto  size = list.size();
-            for (size_t i = 0; i < size; ++i) {
-               auto& papyrus = *list[i];
-               if (papyrus.alias.form != &this->stub)
+         pending_alias_scripts.clear();
+      }
+      if (!pending_log_entry_scripts.empty()) {
+         for (auto& data : pending_log_entry_scripts) {
+            auto* stage = this->lookup_stage_by_id(data.stage_id);
+            if (stage) {
+               auto& list = stage->entries;
+               if (data.entry_index < list.size()) {
+                  list[data.entry_index].fragment = data;
                   continue;
-               auto* alias = this->lookup_alias_by_id(papyrus.alias.aliasID);
-               if (!alias)
-                  continue;
-               assert(alias->script_data == nullptr && "TODO: what does the game do if an alias is incorrectly given multiple sets of script data?"); // TODO
-               alias->script_data = &papyrus;
-               list[i] = nullptr;
+               }
             }
-            list.erase(std::remove(list.begin(), list.end(), nullptr),  list.end());
+            static_assert(false, "If any VMAD-log-entry data specifies a bad stage or log entry, we should emit a load warning.");
+            this->script_fragment_root.unowned_log_entry_data.push_back(data);
          }
+         pending_log_entry_scripts.clear();
       }
    }
    /*static*/ void Quest::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -907,6 +942,9 @@ stage.load(subrecord, intfc);
          switch (subrecord.signature()) {
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               if (!subrecord.is_at_end()) {
+                  static_assert(false, "Quest::generate_use_info: handle quest-specific VMAD data here");
+               }
                break;
             case 'QTGL': // text global (there can be multiple)
             case 'NAM0': // log entry next quest
@@ -988,7 +1026,6 @@ stage.load(subrecord, intfc);
          return false;
       auto copy = (Quest*)out;
       //
-      // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
       copy->name         = this->name;
       copy->flags        = this->flags;
       copy->priority     = this->priority;
@@ -1029,14 +1066,52 @@ stage.load(subrecord, intfc);
             copy->aliases[i] = this->aliases[i]->clone(*copy);
       }
       //
+      static_assert(false, "Quest::_clone_impl: we forgot to clone the papyrus data, looks like.");
+      //
       return true;
    }
    bool Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       {
-         auto params = components::papyrus::script_data_save_parameters();
-         params.aliases             = this->get_owned_alias_papyrus_data();
-         params.log_entry_fragments = this->get_owned_log_entry_fragments();
-         this->script_data.save(record, intfc, params); // VMAD (won't write anything if no scripts are attached)
+         size_t alias_count = this->script_fragment_root.unowned_alias_data.size();
+         size_t log_count   = this->script_fragment_root.unowned_log_entry_data.size();
+         static_assert(false, "Strongly consider throwing a save error if any unowned data exists, so we don't have to worry about \"owners\" being created under it (e.g. an unowned alias-VMAD loaded with an invalid alias ID, but we later create an alias with that ID) and things getting mangled at save time.");
+         for (auto& s : this->stages)
+            for (auto& e : s.entries)
+               if (!e.fragment.empty())
+                  ++log_count;
+         for (auto* a : this->aliases)
+            if (!a->script_data.empty())
+               ++alias_count;
+         static_assert(false, "Fail with a save error if either count exceeds the bounds of a uint16_t.");
+         if (alias_count || log_count || !this->script_data.empty()) {
+            auto& VMAD = record.open_next_subrecord('VMAD');
+            this->script_data.save(VMAD, intfc);
+            //
+            VMAD.write(this->script_fragment_root.unknown);
+            VMAD.write(uint16_t(log_count));
+            VMAD.write_length_prefixed_string<2>(this->script_fragment_root.filename);
+            for (auto& data : this->script_fragment_root.unowned_log_entry_data)
+               data.save(VMAD, -1, data.entry_index); // don't preserve the original stage ID, as we may have since created a stage with that ID
+            for (auto& s : this->stages) {
+               auto& list = s.entries;
+               auto  size = list.size();
+               for (size_t i = 0; i < size; ++i) {
+                  auto& e = list[i];
+                  if (e.fragment.empty())
+                     continue;
+                  e.fragment.save(VMAD, s.index, i);
+               }
+            }
+            VMAD.write(uint16_t(alias_count));
+            for (auto& data : this->script_fragment_root.unowned_alias_data)
+               data.save(this->script_data, VMAD);
+            for (auto* a : this->aliases) {
+               if (a->script_data.empty())
+                  continue;
+               a->script_data.alias.aliasID = a->id;
+               a->script_data.save(this->script_data, VMAD);
+            }
+         }
       }
       //
       auto& FULL = record.open_next_subrecord('FULL');
@@ -1129,40 +1204,6 @@ stage.load(subrecord, intfc);
       }
    }
 
-   std::vector<const components::papyrus::quest_log_entry_fragment*> Quest::get_owned_log_entry_fragments() noexcept {
-      std::vector<const components::papyrus::quest_log_entry_fragment*> out;
-      auto& list = this->stages;
-      auto  size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto& stage = list[i];
-         //
-         auto& list  = stage.entries;
-         auto  size  = list.size();
-         for (size_t j = 0; j < size; ++j) {
-            auto& entry = list[j];
-            if (!entry.fragment.defined)
-               continue;
-            entry.fragment.ownership.stage_id    = i;
-            entry.fragment.ownership.entry_index = j;
-            out.push_back(&entry.fragment);
-         }
-      }
-      return out;
-   }
-
-   std::vector<const components::papyrus::quest_alias_script_data*> Quest::get_owned_alias_papyrus_data() noexcept {
-      std::vector<const components::papyrus::quest_alias_script_data*> out;
-      out.reserve(this->aliases.size());
-      for (auto* alias : this->aliases) {
-         auto* papyrus = alias->script_data;
-         if (!papyrus)
-            continue;
-         papyrus->alias.aliasID = alias->id;
-         out.push_back(papyrus);
-      }
-      return out;
-   }
-
    Quest::Stage* Quest::lookup_stage_by_id(uint16_t id) noexcept {
       auto& list = this->stages;
       if (!list.empty())
@@ -1182,8 +1223,6 @@ stage.load(subrecord, intfc);
       return &stage;
    }
    void Quest::remove_stage(int id) noexcept {
-      using fragment_data_t = components::papyrus::quest_fragment_data;
-      //
       auto& list = this->stages;
       auto  it   = list.begin();
       auto  end  = list.end();

@@ -43,13 +43,32 @@ namespace dovah::loaded_forms {
             };
          };
          using flags_t = std::underlying_type_t<flag::type>;
-         //
+         
          enum class alias_type {
             undifferentiated,
             reference,
             location,
          };
-         //
+
+         Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
+
+         struct papyrus_attachment_data {
+            using script_data = components::papyrus::script_data;
+            //
+            script_data::property_object_value alias; // quest form ID and alias index
+            int16_t version   = 5;
+            int16_t objFormat = 2;
+            std::vector<script_data::script> scripts;
+            //
+            void load(script_data& owner, tes_subrecord_reader&);
+            void save(script_data& owner, tes_subrecord_writer&) const;
+            papyrus_attachment_data clone_from(const papyrus_attachment_data& source, loaded_forms::Form& owner_of_clone) const noexcept;
+            void clear(loaded_forms::Form& owner);
+            void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+            //
+            inline bool empty() const noexcept { return this->scripts.empty(); }
+         };
+         
          Quest& owner;
          const alias_type type = alias_type::undifferentiated;
          uint32_t    id = 0;
@@ -60,10 +79,8 @@ namespace dovah::loaded_forms {
          story_event_code_t fill_from_event      = story_event_code::undefined; // same sentinel value used by the game
          uint32_t           fill_from_event_data; // e.g. 4C 32 00 00 -> 'L2'
          components::condition_list conditions; // for "Find Matching Reference" or "Find Matching Location"
-         components::papyrus::quest_alias_script_data* script_data = nullptr;
-         //
-         Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
-         //
+         papyrus_attachment_data script_data;
+         
       protected:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) = 0;
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) = 0;
@@ -196,13 +213,29 @@ namespace dovah::loaded_forms {
                   };
                };
                using flags_t = std::underlying_type_t<flag::type>;
-               //
+
+               struct script_fragment {
+                  uint16_t    stage_id; // not meaningful outside of load
+                  uint16_t    unknown02 = 0x0000;
+                  uint32_t    entry_index; // not meaningful outside of load
+                  uint8_t     unknown08 = 0x01;
+                  std::string filename;
+                  std::string function;
+                  //
+                  void load(tes_subrecord_reader&); // read from VMAD
+                  bool save(tes_subrecord_writer&, uint16_t stage_id, uint32_t entry_index); // write to VMAD
+                  //
+                  inline bool empty() const noexcept {
+                     return this->filename.empty() || this->function.empty();
+                  }
+               };
+               
                flags_t flags = 0;
                localized_string journal_text = localized_string(localized_string_type::description);
                form_reference_t next_quest_id;
                components::condition_list conditions;
-               components::papyrus::quest_log_entry_fragment fragment;
-               //
+               script_fragment fragment;
+               
             protected:
                void load(tes_record_reader&,    load_order_interfaces::form_load&); // assumes QSTD subrecord has already been opened
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
@@ -283,6 +316,12 @@ namespace dovah::loaded_forms {
 
          localized_string name;
          components::papyrus_attachment_data script_data; // VMAD
+         struct {
+            uint8_t     unknown = 2;
+            std::string filename;
+            std::vector<Alias::papyrus_attachment_data> unowned_alias_data;     // storage for VMAD alias data that specified an invalid alias, including an alias on a different quest
+            std::vector<LogEntry::script_fragment>      unowned_log_entry_data; // storage for VMAD log entry data that specified an invalid stage or log entry
+         } script_fragment_root;
          //
          // DNAM:
          //
@@ -311,18 +350,6 @@ namespace dovah::loaded_forms {
 
          Alias* lookup_alias_by_id(uint32_t id) const noexcept;
          void for_each_alias_of_type(Alias::alias_type, std::function<bool(Alias*)>);
-
-         // Returns a vector of pointers to log entry Papyrus data. These pointers will become invalid if 
-         // anything invalidates the quest's stage vector or any stage's log entry vector.
-         //
-         // Calling this function also updates stale ownership data on the returned fragments.
-         std::vector<const components::papyrus::quest_log_entry_fragment*> get_owned_log_entry_fragments() noexcept;
-
-         // Returns a vector of pointers to alias Papyrus data. A pointer will become invalid if the alias 
-         // or its Papyrus data are destroyed.
-         //
-         // Calling this function also updates stale ownership data on the returned objects.
-         std::vector<const components::papyrus::quest_alias_script_data*> get_owned_alias_papyrus_data() noexcept;
 
          Stage* lookup_stage_by_id(uint16_t id) noexcept;
          Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists

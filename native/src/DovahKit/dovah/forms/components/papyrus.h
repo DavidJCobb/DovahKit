@@ -21,7 +21,6 @@ namespace dovah::loaded_forms::components {
          info,
          package,
          perk,
-         quest,
          scene,
       };
       enum class property_type : uint8_t {
@@ -40,8 +39,6 @@ namespace dovah::loaded_forms::components {
       
       class script_data;
       class perk_entry_fragment;
-      class quest_alias_script_data;
-      class quest_log_entry_fragment;
       class scene_phase_fragment;
 
       //
@@ -53,8 +50,6 @@ namespace dovah::loaded_forms::components {
       // structure access to this "sub-form script data" so that it can be written to the subrecord.
       //
       struct script_data_save_parameters {
-         std::vector<const quest_alias_script_data*>  aliases;
-         std::vector<const quest_log_entry_fragment*> log_entry_fragments;
          std::vector<const perk_entry_fragment*>      perk_entry_fragments;
          std::vector<const scene_phase_fragment*>     scene_phase_fragments;
          //
@@ -97,6 +92,7 @@ namespace dovah::loaded_forms::components {
             void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
             void clear(loaded_forms::Form& my_owner) noexcept;
             //
+            inline bool empty() const noexcept { return this->scripts.empty(); }
             void for_each_script(std::function<bool(script*)>); // return true to stop iterating early
             //
          public:
@@ -164,38 +160,6 @@ namespace dovah::loaded_forms::components {
                   void clear(loaded_forms::Form& my_owner) noexcept;
             };
       };
-
-      #pragma region Quest data
-      class quest_log_entry_fragment {
-         public:
-            bool defined = false;
-            std::string filename;
-            std::string function;
-            //
-            struct {
-               uint16_t stage_id    = 0;
-               uint32_t entry_index = 0;
-            } ownership; // must be manually updated before save
-            //
-            bool load(tes_subrecord_reader&) noexcept;
-            void save(tes_subrecord_writer&) const noexcept;
-            void clone_from(const quest_log_entry_fragment&) noexcept;
-            void clear() noexcept;
-      };
-      class quest_alias_script_data {
-         public:
-            script_data::property_object_value alias; // quest form ID and alias index
-            int16_t version   = 5;
-            int16_t objFormat = 2;
-            std::vector<script_data::script> scripts;
-            //
-            void load(script_data& owner, tes_subrecord_reader&);
-            void save(script_data& owner, tes_subrecord_writer&) const;
-            quest_alias_script_data* clone(loaded_forms::Form& owner_of_clone) const noexcept;
-            void clear(loaded_forms::Form& owner);
-            void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
-      };
-      #pragma endregion
       
       #pragma region Script fragment definitions
       struct basic_fragment_entry {
@@ -271,30 +235,6 @@ namespace dovah::loaded_forms::components {
             uint8_t     unknown = 2;
             std::string filename;
             std::vector<fragment_t> fragments;
-      };
-      class quest_fragment_data : basic_fragment_data {
-         public:
-            quest_fragment_data() : basic_fragment_data(fragment_type::quest) {};
-            //
-            virtual void load(script_data& owner, tes_subrecord_reader&) override;
-            virtual void save(script_data& owner, tes_subrecord_writer&, const script_data_save_parameters&) override;
-            virtual basic_fragment_data* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
-            virtual void clear(loaded_forms::Form& owner) override;
-            virtual void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
-            //
-            uint8_t     unknown = 2;
-            std::string filename;
-            struct {
-               //
-               // These data structures are "unowned" when VMAD is first loaded, and can 
-               // then be "claimed" by the containing form. Structures that remain unclaimed 
-               // should not be discarded, as we can't anticipate that when building use info, 
-               // and discarding them after use info was built for their contents will cause 
-               // use info to desynch with the loaded form data.
-               //
-               std::vector<quest_log_entry_fragment> fragments;
-               std::vector<quest_alias_script_data*> aliases;
-            } unowned_data;
       };
       class scene_fragment_data : basic_fragment_data {
          public:
