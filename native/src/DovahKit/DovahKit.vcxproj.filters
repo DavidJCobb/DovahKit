@@ -696,6 +696,9 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\stringify_conditions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1428,6 +1431,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\stringify_conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

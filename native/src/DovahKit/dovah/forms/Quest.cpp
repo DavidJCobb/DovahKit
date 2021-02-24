@@ -755,8 +755,8 @@ namespace dovah::loaded_forms {
                   stage.load(subrecord, intfc);
                }
                break;
-            case 'QSTD':
-               if (this->stages.size()) { // the game ignores QSTD that appear when there is no stage
+            case 'QSDT':
+               if (this->stages.size()) { // the game ignores QSDT that appear when there is no stage
                   hasLastLogEntry = true;
                   auto& stage = this->stages.back();
                   auto& entry = stage.entries.emplace_back();

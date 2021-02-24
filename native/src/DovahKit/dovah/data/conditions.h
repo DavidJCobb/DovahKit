@@ -185,6 +185,8 @@ namespace dovah {
          //
          condition_function(uint16_t id, _sentinel_is_dummy) : valid(false), id(id), name("Invalid Condition Function"), description("This condition ID is not valid.") {}
 
+         int argument_count() const noexcept;
+
          static const condition_function* lookup_by_id(uint16_t) noexcept;
    };
 

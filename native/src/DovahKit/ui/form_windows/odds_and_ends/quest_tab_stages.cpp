@@ -3,6 +3,7 @@
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../dovah/core.h"
 #include "../../../editor/core.h"
+#include "../../../editor/helpers/stringify_conditions.h"
 
 QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent) : QWidget(parent), stub(s), form(q) {
    ui.setupUi(this);
@@ -12,6 +13,7 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       auto* widget = this->ui.index;
       auto* model  = new QStandardItemModel(widget);
       model->setColumnCount(1);
+      model->setSortRole(Qt::UserRole);
       widget->setModel(model);
       widget->setUniformItemSizes(true);
       //
@@ -43,9 +45,17 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       auto* widget = this->ui.logEntries;
       auto* model  = new QStandardItemModel(widget);
       model->setColumnCount(2);
-      model->setHeaderData(0, Qt::Orientation::Horizontal, tr("Journal Text"), Qt::DisplayRole);
-      model->setHeaderData(1, Qt::Orientation::Horizontal, tr("Conditions"), Qt::DisplayRole);
+      model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
       widget->setModel(model);
+      //
+      auto* header = widget->horizontalHeader();
+      header->setSortIndicatorShown(false);
+      header->setStretchLastSection(true);
+      {
+         auto* vh = widget->verticalHeader();
+         vh->setVisible(false);
+         vh->setDefaultSectionSize(vh->minimumSectionSize());
+      }
       //
       QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
          this->_redraw_entry_settings();
@@ -142,20 +152,21 @@ int QuestTabStages::_selected_stage_index() const noexcept {
    auto* sm     = widget->selectionModel();
    if (!sm)
       return -1;
-   auto rows = sm->selectedRows();
-   if (rows.isEmpty())
+   auto index = sm->currentIndex();
+   auto data  = widget->model()->data(index, Qt::UserRole);
+   if (!data.isValid())
       return -1;
-   return rows[0].row();
+   return data.toInt();
 }
 int QuestTabStages::_selected_log_entry_index() const noexcept {
    auto* widget = this->ui.logEntries;
    auto* sm     = widget->selectionModel();
    if (!sm)
       return -1;
-   auto rows = sm->selectedRows();
-   if (rows.isEmpty())
+   auto index = sm->currentIndex();
+   if (!index.isValid())
       return -1;
-   return rows[0].row();
+   return index.row();
 }
 
 void QuestTabStages::_modify_stage_flag(loaded_t::Stage::flags_t f, bool e) const noexcept {
@@ -176,10 +187,12 @@ void QuestTabStages::_redraw_stage_list() {
    model->clear();
    //
    auto& list = this->form.stages;
+   if (list.empty())
+      return;
    QStandardItem* prior = nullptr;
    for (auto& stage : list) {
       auto* item = new QStandardItem;
-      item->setData((int)stage.index);
+      item->setData((int)stage.index, Qt::UserRole);
       item->setText(QString::number(stage.index));
       item->setTextAlignment(Qt::AlignRight);
       model->appendRow(item);
@@ -214,10 +227,10 @@ void QuestTabStages::_redraw_stage_settings() {
    this->ui.stageFlagKeepInstanceData->setChecked(ptr->flags & loaded_t::Stage::flag::keep_instance_data);
 }
 void QuestTabStages::_redraw_entry_list() {
-   int   index    = this->_selected_log_entry_index();
-   auto* widget   = this->ui.logEntries;
-   auto  blocker  = QSignalBlocker(widget);
-   auto* model    = (QStandardItemModel*) widget->model();
+   int   index   = this->_selected_log_entry_index();
+   auto* widget  = this->ui.logEntries;
+   auto  blocker = QSignalBlocker(widget);
+   auto* model   = (QStandardItemModel*) widget->model();
    assert(model);
    model->clear();
    //
@@ -225,22 +238,21 @@ void QuestTabStages::_redraw_entry_list() {
    if (!ptr)
       return;
    //
+   auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
    auto& list = ptr->entries;
    auto  size = list.size();
-   QStandardItem* prior = nullptr;
+   QModelIndex prior;
    for (size_t i = 0; i < size; ++i) {
       auto& entry = list[i];
-      auto* item  = new QStandardItem;
-      item->setText(entry.journal_text.c_str()); // TODO: column 0 is journal text, column 1 is conditions
-      model->appendRow(item);
+      auto* col0  = new QStandardItem(entry.journal_text.c_str());
+      auto* col1  = new QStandardItem(editor_helpers::stringify_condition_list(entry.conditions, ctx));
+      model->appendRow({ col0, col1 });
       //
       if (i == index)
-         prior = item;
+         prior = col0->index();
    }
    //
-   if (prior) {
-      widget->setCurrentIndex(prior->index());
-   }
+   widget->setCurrentIndex(prior);
 }
 void QuestTabStages::_redraw_entry_settings() {
    auto* ptr = this->_get_log_entry();
@@ -248,8 +260,16 @@ void QuestTabStages::_redraw_entry_settings() {
    this->ui.logEntryFlagFail->setEnabled(ptr != nullptr);
    this->ui.logEntryNextQuest->setEnabled(ptr != nullptr);
    this->ui.logEntryText->setEnabled(ptr != nullptr);
+   //
+   // TODO: Papyrus fragment
+   //
+   this->ui.logEntryConditions->setEnabled(ptr != nullptr);
+   //
+   const auto blocker0 = QSignalBlocker(this->ui.logEntryText);
+   //
    if (!ptr) {
       this->ui.logEntryConditions->model()->clearTarget();
+      this->ui.logEntryText->clear();
       //
       // TODO: Papyrus fragment
       //
@@ -257,6 +277,7 @@ void QuestTabStages::_redraw_entry_settings() {
    }
    //
    this->ui.logEntryConditions->model()->setTarget(this->stub, ptr->conditions, true);
+   this->ui.logEntryText->setPlainText(ptr->journal_text.c_str());
    //
    // TODO: Papyrus fragment
    //

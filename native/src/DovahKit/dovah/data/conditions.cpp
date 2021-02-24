@@ -697,7 +697,16 @@ namespace dovah {
       }
       condition_parameter_type VATSValue = condition_parameter_type::make_union_type("VATSValue", VATSValueFunction, _VATSValueTypes::_decider);
    }
-   
+
+   int condition_function::argument_count() const noexcept {
+      for (int i = this->argument_types.size() - 1; i >= 0; --i) {
+         auto* type = this->argument_types[i];
+         if (type && type != &condition_parameter_types::None)
+            return i + 1;
+      }
+      return 0;
+   }
+
    /*static*/ const condition_function* condition_function::lookup_by_id(uint16_t id) noexcept {
       if (id < condition_function_list.size())
          return &condition_function_list[id];

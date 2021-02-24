@@ -31,8 +31,8 @@ class QuestTabStages : public QWidget {
       void _modify_stage_flag(loaded_t::Stage::flags_t, bool) const noexcept;
       void _modify_log_entry_flag(loaded_t::LogEntry::flags_t, bool) const noexcept;
 
-      void _redraw_stage_list(); // TODO
-      void _redraw_stage_settings(); // TODO
-      void _redraw_entry_list(); // TODO
-      void _redraw_entry_settings(); // TODO
+      void _redraw_stage_list();
+      void _redraw_stage_settings();
+      void _redraw_entry_list();
+      void _redraw_entry_settings();
 };
