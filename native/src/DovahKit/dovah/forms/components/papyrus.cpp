@@ -532,6 +532,88 @@ namespace dovah::loaded_forms::components::papyrus {
       return copy;
    }
 
+   bool quest_log_entry_fragment::load(tes_subrecord_reader& subrecord) noexcept {
+      if (!subrecord.is_in_bounds(5))
+         return false;
+      subrecord.unchecked_read(this->ownership.stage_id);
+      subrecord.skip_bytes(2); // UESP says this is always 0x0000
+      subrecord.unchecked_read(this->ownership.entry_index);
+      subrecord.skip_bytes(1); // UESP says this is always 0x01
+      if (!subrecord.read_length_prefixed_string<2>(this->filename))
+         return false;
+      if (!subrecord.read_length_prefixed_string<2>(this->function))
+         return false;
+      return true;
+   }
+   void quest_log_entry_fragment::save(tes_subrecord_writer& subrecord) noexcept {
+      subrecord.write(this->ownership.stage_id);
+      subrecord.write(uint16_t(0x0000)); // UESP says this is always 0x0000
+      subrecord.write(this->ownership.entry_index);
+      subrecord.write(uint8_t(0x01)); // UESP says this is always 0x01
+      subrecord.write_length_prefixed_string<2>(this->filename);
+      subrecord.write_length_prefixed_string<2>(this->function);
+   }
+   void quest_log_entry_fragment::clone_from(const quest_log_entry_fragment& source) noexcept {
+      this->ownership = source.ownership;
+      this->filename  = source.filename;
+      this->function  = source.function;
+   }
+   void quest_log_entry_fragment::clear() noexcept {
+      this->filename.clear();
+      this->function.clear();
+      this->ownership.stage_id    = 0;
+      this->ownership.entry_index = 0;
+   }
+
+   void quest_alias_script_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
+      this->alias.load(owner, subrecord);
+      subrecord.unchecked_read(this->version);
+      subrecord.unchecked_read(this->objFormat);
+      uint16_t scriptCount;
+      subrecord.unchecked_read(scriptCount);
+      for (uint16_t j = 0; j < scriptCount; j++) {
+         this->scripts.emplace_back();
+         auto& script = *this->scripts.rbegin();
+         script.load(owner, subrecord);
+      }
+   }
+   void quest_alias_script_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
+      this->alias.save(owner, subrecord);
+      subrecord.write(this->version);
+      subrecord.write(this->objFormat);
+      assert(this->scripts.size() <= std::numeric_limits<uint16_t>::max() && "Too many scripts on an alias in quest_fragment_data.");
+      subrecord.write(uint16_t(this->scripts.size()));
+      for (auto& script : this->scripts)
+         script.save(owner, subrecord);
+   }
+   quest_alias_script_data* quest_alias_script_data::clone(loaded_forms::Form& owner_of_clone) const noexcept {
+      auto* copy = new quest_alias_script_data;
+      //
+      copy->alias.clone_from(this->alias, owner_of_clone);
+      copy->version   = this->version;
+      copy->objFormat = this->objFormat;
+      //
+      size_t script_count = this->scripts.size();
+      copy->scripts.resize(script_count);
+      for (size_t j = 0; j < script_count; ++j) {
+         copy->scripts[j].clone_from(this->scripts[j], owner_of_clone);
+      }
+      //
+      return copy;
+   }
+   void quest_alias_script_data::clear(loaded_forms::Form& owner) {
+      this->alias.clear(owner);
+      for (auto& script : this->scripts) {
+         script.clear_properties(owner);
+      }
+      this->scripts.clear();
+   }
+   void quest_alias_script_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
+      this->alias.sever_outbound_references_to(target, my_owner);
+      for (auto& script : this->scripts)
+         script.sever_outbound_references_to(target, my_owner);
+   }
+
    void quest_fragment_data::load(script_data& owner, tes_subrecord_reader& subrecord) {
       subrecord.unchecked_read(this->unknown);
       uint16_t fragCount;

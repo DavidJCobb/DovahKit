@@ -65,6 +65,10 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
          this->_redraw_entry_settings();
       });
+      //
+      // Redraw log entries' conditions when they are edited:
+      //
+      QObject::connect(this->ui.logEntryConditions, &ConditionList::conditionEdited, this, &QuestTabStages::redrawEntryListSelectedItem);
    }
    #pragma endregion
    //
@@ -119,6 +123,36 @@ void QuestTabStages::deactivate() {
    //
    // TODO: disconnect the condition list and the fragment editor
    //
+}
+void QuestTabStages::redrawEntryListSelectedItem() {
+   loaded_t::LogEntry* entry = nullptr;
+   //
+   auto* widget = this->ui.logEntries;
+   auto* sm     = widget->selectionModel();
+   auto* model  = (QStandardItemModel*) widget->model();
+   if (!sm || !model)
+      return;
+   auto index = sm->currentIndex();
+   if (!index.isValid())
+      return;
+   auto row = index.row();
+   //
+   if (auto* s = this->_get_stage()) {
+      auto& list = s->entries;
+      if (row < 0 || row >= list.size())
+         return;
+      entry = &list[row];
+   }
+   if (!entry)
+      return;
+   //
+   auto* col0 = model->item(row, 0);
+   auto* col1 = model->item(row, 1);
+   if (!col0 || !col1)
+      return;
+   auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
+   col0->setText(entry->journal_text.c_str());
+   col1->setText(editor_helpers::stringify_condition_list(entry->conditions, ctx));
 }
 
 QuestTabStages::loaded_t::Stage* QuestTabStages::_get_stage() const noexcept {

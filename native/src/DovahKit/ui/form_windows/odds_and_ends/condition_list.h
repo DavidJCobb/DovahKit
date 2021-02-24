@@ -98,6 +98,9 @@ class ConditionList : public QWidget {
       void openCreateConditionModal();
       void openEditConditionModal();
       //
+   signals:
+      void conditionEdited();
+      //
    protected:
       Ui::ConditionList ui;
       struct {

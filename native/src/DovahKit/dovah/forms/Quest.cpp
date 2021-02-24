@@ -1073,4 +1073,94 @@ namespace dovah::loaded_forms {
             break;
       }
    }
+
+   Quest::Stage* Quest::insert_stage(int id) noexcept {
+      auto& list = this->stages;
+      if (!list.empty())
+         for (auto& stage : list)
+            if (stage.index == id)
+               return nullptr;
+      auto& stage = list.emplace_back();
+      stage.index = id;
+      return &stage;
+   }
+   void Quest::remove_stage(int id) noexcept {
+      using fragment_data_t = components::papyrus::quest_fragment_data;
+      //
+      auto& list = this->stages;
+      auto  it   = list.begin();
+      auto  end  = list.end();
+      for (; it != end; ++it)
+         if (it->index == id)
+            break;
+      if (it == end)
+         return;
+      //
+      // Update Papyrus fragments:
+      //
+      auto& papyrus = this->script_data;
+      if (auto* cast = dynamic_cast<fragment_data_t*>(papyrus.fragment_data)) {
+         auto& list = cast->fragments;
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [id](const fragment_data_t::fragment_t fragment) {
+                  return fragment.index == id;
+               }
+            ),
+            list.end()
+         );
+      }
+      //
+      // Remove the stage:
+      //
+      list.erase(it);
+   }
+   void Quest::remove_stage_log_entry(int stage_id, int entry_index) {
+      using fragment_data_t = components::papyrus::quest_fragment_data;
+      //
+      bool found = false;
+      for (auto& stage : this->stages) {
+         if (stage.index != stage_id)
+            continue;
+         auto& list = stage.entries;
+         auto  size = list.size();
+         if (entry_index < 0)
+            entry_index += size;
+         else if (entry_index >= size)
+            return;
+         stage.entries.erase(list.begin() + entry_index);
+         found = true;
+         break;
+      }
+      if (!found)
+         return;
+      //
+      // Update Papyrus fragments:
+      //
+      auto& papyrus = this->script_data;
+      if (auto* cast = dynamic_cast<fragment_data_t*>(papyrus.fragment_data)) {
+         auto& list = cast->fragments;
+         list.erase(
+            std::remove_if(
+               list.begin(),
+               list.end(),
+               [stage_id, entry_index](const fragment_data_t::fragment_t fragment) {
+                  return fragment.index == stage_id && fragment.logEntry == entry_index;
+               }
+            ),
+            list.end()
+         );
+         //
+         // Any log entries after this one will be shifted up. Fix them.
+         //
+         for (auto& remaining : list) {
+            if (remaining.index != stage_id)
+               continue;
+            if (remaining.logEntry >= entry_index)
+               --remaining.logEntry;
+         }
+      }
+   }
 }

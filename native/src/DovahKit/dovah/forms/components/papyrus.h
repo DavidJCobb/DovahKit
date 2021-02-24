@@ -142,6 +142,37 @@ namespace dovah::loaded_forms::components {
                   void clear(loaded_forms::Form& my_owner) noexcept;
             };
       };
+
+      #pragma region Quest data
+      class quest_log_entry_fragment {
+         public:
+            std::string filename;
+            std::string function;
+            //
+            struct {
+               uint16_t stage_id    = 0;
+               uint32_t entry_index = 0;
+            } ownership; // must be manually updated before save
+            //
+            bool load(tes_subrecord_reader&) noexcept;
+            void save(tes_subrecord_writer&) noexcept;
+            void clone_from(const quest_log_entry_fragment&) noexcept;
+            void clear() noexcept;
+      };
+      class quest_alias_script_data {
+         public:
+            script_data::property_object_value alias; // quest form ID and alias index
+            int16_t version;
+            int16_t objFormat;
+            std::vector<script_data::script> scripts;
+            //
+            void load(script_data& owner, tes_subrecord_reader&);
+            void save(script_data& owner, tes_subrecord_writer&);
+            quest_alias_script_data* clone(loaded_forms::Form& owner_of_clone) const noexcept;
+            void clear(loaded_forms::Form& owner);
+            void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+      };
+      #pragma endregion
       
       #pragma region Script fragment definitions
       struct basic_fragment_entry {

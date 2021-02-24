@@ -646,6 +646,7 @@ void ConditionList::openEditConditionModal() {
             return;
          cnd->commit(*form, *work);
          emit model->dataChanged(qmi, qmi);
+         emit this->conditionEdited();
       });
       QObject::connect(modal, &QDialog::finished, this, [work](int code) {
          //

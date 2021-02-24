@@ -310,6 +310,10 @@ namespace dovah::loaded_forms {
          Alias* lookup_alias_by_id(uint32_t id) const noexcept;
          void for_each_alias_of_type(Alias::alias_type, std::function<bool(Alias*)>);
 
+         Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists
+         void   remove_stage(int id) noexcept;
+         void   remove_stage_log_entry(int stage_id, int entry_index); // use this to ensure that Papyrus data is properly severed and adjusted
+
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
