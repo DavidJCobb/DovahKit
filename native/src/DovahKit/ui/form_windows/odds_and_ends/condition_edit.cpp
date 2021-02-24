@@ -305,7 +305,7 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, work
       if (target != this->context.quest)
          return;
       for (int i = 0; i < this->working.parameters.size(); ++i) {
-         if (this->working.parameters[i].underlying == dovah::condition_parameter_underlying_type::aliasID)
+         if (this->working.parameters[i].underlying == dovah::condition_parameter_underlying_type::alias)
             this->parameters[i].widget->rebuild();
       }
       this->_updateRunOn();

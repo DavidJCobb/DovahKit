@@ -45,10 +45,15 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       auto* widget = this->ui.logEntries;
       auto* model  = new QStandardItemModel(widget);
       model->setColumnCount(2);
-      model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
       widget->setModel(model);
+      model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
+      widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+      widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
       //
       auto* header = widget->horizontalHeader();
+      header->setDefaultAlignment(Qt::AlignLeft);
+      header->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+      header->setSectionResizeMode(1, QHeaderView::ResizeMode::Fixed);
       header->setSortIndicatorShown(false);
       header->setStretchLastSection(true);
       {
@@ -184,7 +189,7 @@ void QuestTabStages::_redraw_stage_list() {
    auto  blocker  = QSignalBlocker(widget);
    auto* model    = (QStandardItemModel*) widget->model();
    assert(model);
-   model->clear();
+   model->removeRows(0, model->rowCount()); // QStandardItemModel::clear nukes any headers, too, so we shouldn't use it
    //
    auto& list = this->form.stages;
    if (list.empty())
@@ -232,7 +237,7 @@ void QuestTabStages::_redraw_entry_list() {
    auto  blocker = QSignalBlocker(widget);
    auto* model   = (QStandardItemModel*) widget->model();
    assert(model);
-   model->clear();
+   model->removeRows(0, model->rowCount()); // QStandardItemModel::clear nukes any headers, too, so we can't use it
    //
    auto* ptr = this->_get_stage();
    if (!ptr)
@@ -281,4 +286,17 @@ void QuestTabStages::_redraw_entry_settings() {
    //
    // TODO: Papyrus fragment
    //
+}
+
+void QuestTabStages::showEvent(QShowEvent* event) {
+   QWidget::showEvent(event);
+   if (this->_did_first_show)
+      return;
+   this->_did_first_show = true;
+   if (auto* header = this->ui.logEntries->horizontalHeader()) {
+      auto width = header->width();
+      auto third = width / 3;
+      header->resizeSection(0, width - third);
+      header->resizeSection(1, 0); // set the last section to minimum size and let it stretch; that way, enlarging the prior sections doesn't cause this one to clip out of bounds
+   }
 }

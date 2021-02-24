@@ -222,9 +222,9 @@ namespace dovah::loaded_forms::components {
          public:
             quest_fragment_data() : basic_fragment_data(fragment_type::quest) {};
             struct fragment_t {
-               uint16_t    index;
+               uint16_t    index; // quest stage ID
                uint16_t    unknown02;
-               uint32_t    logEntry;
+               uint32_t    logEntry; // log entry index within that stage
                uint8_t     unknown08;
                std::string filename;
                std::string function;

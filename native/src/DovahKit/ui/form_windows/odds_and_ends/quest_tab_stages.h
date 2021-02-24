@@ -35,4 +35,7 @@ class QuestTabStages : public QWidget {
       void _redraw_stage_settings();
       void _redraw_entry_list();
       void _redraw_entry_settings();
+
+      bool _did_first_show = false;
+      void showEvent(QShowEvent* event) override;
 };

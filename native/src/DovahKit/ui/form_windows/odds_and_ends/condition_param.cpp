@@ -100,7 +100,7 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
       //
       auto& param = this->_get_parameter();
       switch (param.underlying) {
-         case dovah::condition_parameter_underlying_type::aliasID:
+         case dovah::condition_parameter_underlying_type::alias:
          case dovah::condition_parameter_underlying_type::character:
          case dovah::condition_parameter_underlying_type::int_signed:
          case dovah::condition_parameter_underlying_type::package_data:
@@ -214,7 +214,7 @@ void ConditionParameterEditor::clear() {
    param.form  = nullptr;
    param.string.clear();
    switch (param.underlying) {
-      case dovah::condition_parameter_underlying_type::aliasID:
+      case dovah::condition_parameter_underlying_type::alias:
       case dovah::condition_parameter_underlying_type::package_data:
          param.dword = -1;
          break;
@@ -266,7 +266,7 @@ void ConditionParameterEditor::rebuild() {
       case dovah::condition_parameter_underlying_type::none:
          this->_setCurrentWidget(this->subwidgets.blank);
          break;
-      case dovah::condition_parameter_underlying_type::aliasID:
+      case dovah::condition_parameter_underlying_type::alias:
          this->_setCurrentWidget(this->subwidgets.combobox);
          {
             auto* w = this->subwidgets.combobox;
@@ -277,7 +277,7 @@ void ConditionParameterEditor::rebuild() {
                //
                // TODO: Can we set up a custom proxy model to sort these?
                //
-               q->for_each_alias_of_type(dovah::loaded_forms::Alias::alias_type::reference, [w](dovah::loaded_forms::Alias* alias) {
+               q->for_each_alias_of_type(dovah::loaded_forms::Alias::alias_type::undifferentiated, [w](dovah::loaded_forms::Alias* alias) {
                   w->addItem(alias->name.c_str(), alias->id);
                   return false;
                });

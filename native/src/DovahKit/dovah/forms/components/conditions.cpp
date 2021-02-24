@@ -25,7 +25,7 @@ namespace dovah::loaded_forms::components {
          if (a) {
             if (a->allow_overrides) {
                if (this->flags & flag::use_aliases)
-                  return condition_parameter_underlying_type::aliasID;
+                  return condition_parameter_underlying_type::alias;
                if (this->flags & flag::use_package_data)
                   return condition_parameter_underlying_type::package_data;
             }
@@ -206,7 +206,7 @@ namespace dovah::loaded_forms::components {
                         auto under = type->underlying;
                         if (type->allow_overrides) {
                            if (uses_aliases)
-                              under = condition_parameter_underlying_type::aliasID;
+                              under = condition_parameter_underlying_type::alias;
                            if (uses_packdata)
                               under = condition_parameter_underlying_type::package_data;
                         }
@@ -440,7 +440,7 @@ namespace dovah::loaded_forms::components {
       if (a) {
          if (a->allow_overrides) {
             if (this->flags & flag::use_aliases)
-               return condition_parameter_underlying_type::aliasID;
+               return condition_parameter_underlying_type::alias;
             if (this->flags & flag::use_package_data)
                return condition_parameter_underlying_type::package_data;
          }
@@ -481,7 +481,7 @@ namespace dovah::loaded_forms::components {
             p.string.clear();
             p.underlying = u;
             switch (u) {
-               case condition_parameter_underlying_type::aliasID:
+               case condition_parameter_underlying_type::alias:
                case condition_parameter_underlying_type::package_data:
                   p.dword = -1;
                   break;
@@ -504,7 +504,7 @@ namespace dovah::loaded_forms::components {
          p.string.clear();
          p.underlying = u;
          switch (u) {
-            case condition_parameter_underlying_type::aliasID:
+            case condition_parameter_underlying_type::alias:
             case condition_parameter_underlying_type::package_data:
                p.dword = -1;
                break;

@@ -199,7 +199,7 @@ namespace dovah {
          {3, "Lockpick Success"},
          {4, "Lockpick Broken"},
       });
-      condition_parameter_type Alias           = condition_parameter_type("Alias", condition_parameter_underlying_type::aliasID);
+      condition_parameter_type Alias           = condition_parameter_type("Alias", condition_parameter_underlying_type::alias);
       condition_parameter_type Alignment       = condition_parameter_type::make_enum_type("Alignment", {
          {0, "Good"},
          {1, "Neutral"},

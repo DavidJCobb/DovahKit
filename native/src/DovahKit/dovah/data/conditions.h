@@ -15,7 +15,7 @@ namespace dovah::loaded_forms::components {
 namespace dovah {
    enum class condition_parameter_underlying_type {
       none,
-      aliasID, // the ID of an alias on the quest containing the condition (for conditions outside of quests, it is impossible to specify a valid value)
+      alias, // the ID of any alias on the condition's owning quest
       character, // e.g. Axis
       event, // dword 0xXXXXYYYY where X is the event member and Y is the event function
       formID,

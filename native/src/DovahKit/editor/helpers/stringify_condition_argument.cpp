@@ -77,7 +77,7 @@ namespace editor_helpers {
       }
       //
       switch (under) {
-         case dovah::condition_parameter_underlying_type::aliasID:
+         case dovah::condition_parameter_underlying_type::alias:
             if (value.dword == -1)
                return QObject::tr("NONE", "condition argument (no alias)");
             if (auto* q = context.get_owning_quest()) {

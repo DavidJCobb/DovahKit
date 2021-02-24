@@ -1067,7 +1067,7 @@ namespace dovah::loaded_forms {
    }
    void Quest::for_each_alias_of_type(Alias::alias_type t, std::function<bool(Alias*)> functor) {
       for (auto* alias : this->aliases) {
-         if (alias->type != t)
+         if (t != Alias::alias_type::undifferentiated && alias->type != t)
             continue;
          if ((functor)(alias))
             break;
