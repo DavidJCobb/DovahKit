@@ -857,7 +857,7 @@ stage.load(subrecord, intfc);
       // parts of this form that it actually belongs to.
       //
       if (auto* extra = this->script_data.fragment_data) {
-         assert(dynamic_cast<components::papyrus::quest_fragment_data*>(extra) != nullptr && "If this assertion fails, then the Papyrus extra data isn't of the right type for QUST.");
+         assert(extra->type == components::papyrus::fragment_type::quest && "If this assertion fails, then the Papyrus extra data isn't of the right type for QUST.");
          auto& base = *(components::papyrus::quest_fragment_data*)extra;
          //
          // Claim ownership over log entry fragments, where possible:
@@ -1127,6 +1127,40 @@ stage.load(subrecord, intfc);
          if ((functor)(alias))
             break;
       }
+   }
+
+   std::vector<const components::papyrus::quest_log_entry_fragment*> Quest::get_owned_log_entry_fragments() noexcept {
+      std::vector<const components::papyrus::quest_log_entry_fragment*> out;
+      auto& list = this->stages;
+      auto  size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& stage = list[i];
+         //
+         auto& list  = stage.entries;
+         auto  size  = list.size();
+         for (size_t j = 0; j < size; ++j) {
+            auto& entry = list[j];
+            if (!entry.fragment.defined)
+               continue;
+            entry.fragment.ownership.stage_id    = i;
+            entry.fragment.ownership.entry_index = j;
+            out.push_back(&entry.fragment);
+         }
+      }
+      return out;
+   }
+
+   std::vector<const components::papyrus::quest_alias_script_data*> Quest::get_owned_alias_papyrus_data() noexcept {
+      std::vector<const components::papyrus::quest_alias_script_data*> out;
+      out.reserve(this->aliases.size());
+      for (auto* alias : this->aliases) {
+         auto* papyrus = alias->script_data;
+         if (!papyrus)
+            continue;
+         papyrus->alias.aliasID = alias->id;
+         out.push_back(papyrus);
+      }
+      return out;
    }
 
    Quest::Stage* Quest::lookup_stage_by_id(uint16_t id) noexcept {

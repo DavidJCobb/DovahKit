@@ -44,6 +44,14 @@ namespace dovah::loaded_forms::components {
       class quest_log_entry_fragment;
       class scene_phase_fragment;
 
+      //
+      // The VMAD subrecord contains both the script data for a whole form, and the script data for 
+      // "sub-forms," such as log entries within a quest. In order to keep these sub-forms manage-
+      // able, we allow forms to claim ownership of them, physically moving them outside of the 
+      // script-data structure and into whatever part of the form they actually belong to. However, 
+      // this means that when saving the VMAD subrecord, we need to be able to grant the script-data 
+      // structure access to this "sub-form script data" so that it can be written to the subrecord.
+      //
       struct script_data_save_parameters {
          std::vector<const quest_alias_script_data*>  aliases;
          std::vector<const quest_log_entry_fragment*> log_entry_fragments;
@@ -57,7 +65,7 @@ namespace dovah::loaded_forms::components {
          public:
             using save_interface_t = load_order_interfaces::form_save;
          public:
-            fragment_type type;
+            const fragment_type type;
             //
             basic_fragment_data(fragment_type t) : type(t) {}
             //
@@ -75,8 +83,8 @@ namespace dovah::loaded_forms::components {
             using load_interface_t = load_order_interfaces::form_load;
             using save_interface_t = load_order_interfaces::form_save;
          public:
-            int16_t version;
-            int16_t object_format; // format of "object" property values
+            int16_t version       = 5;
+            int16_t object_format = 2; // format of "object" property values
             std::vector<script>  scripts;
             basic_fragment_data* fragment_data = nullptr;
             //
@@ -177,8 +185,8 @@ namespace dovah::loaded_forms::components {
       class quest_alias_script_data {
          public:
             script_data::property_object_value alias; // quest form ID and alias index
-            int16_t version;
-            int16_t objFormat;
+            int16_t version   = 5;
+            int16_t objFormat = 2;
             std::vector<script_data::script> scripts;
             //
             void load(script_data& owner, tes_subrecord_reader&);

@@ -314,11 +314,15 @@ namespace dovah::loaded_forms {
 
          // Returns a vector of pointers to log entry Papyrus data. These pointers will become invalid if 
          // anything invalidates the quest's stage vector or any stage's log entry vector.
-         std::vector<const components::papyrus::quest_log_entry_fragment*> get_owned_log_entry_fragments() const noexcept;
+         //
+         // Calling this function also updates stale ownership data on the returned fragments.
+         std::vector<const components::papyrus::quest_log_entry_fragment*> get_owned_log_entry_fragments() noexcept;
 
          // Returns a vector of pointers to alias Papyrus data. A pointer will become invalid if the alias 
          // or its Papyrus data are destroyed.
-         std::vector<const components::papyrus::quest_alias_script_data*> get_owned_alias_papyrus_data() const noexcept;
+         //
+         // Calling this function also updates stale ownership data on the returned objects.
+         std::vector<const components::papyrus::quest_alias_script_data*> get_owned_alias_papyrus_data() noexcept;
 
          Stage* lookup_stage_by_id(uint16_t id) noexcept;
          Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists

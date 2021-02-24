@@ -4,6 +4,8 @@
 #include <cassert>
 
 namespace dovah::loaded_forms::components::papyrus {
+   const script_data_save_parameters script_data_save_parameters::default = script_data_save_parameters();
+
    void script_data::for_each_script(std::function<bool(script_data::script*)> functor) {
       auto& list = this->scripts;
       for (auto it = list.begin(); it != list.end(); ++it) {
