@@ -21,8 +21,9 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
          page->setLayout(layout);
       };
       //
-      this->tabs.stages = new QuestTabStages(*stub, *(form_t*)this->clone);
-      _insert(1, this->tabs.stages);
+      auto& quest = *(form_t*)this->clone;
+      //
+      _insert(1, (this->tabs.stages = new QuestTabStages(*stub, quest)));
    }
    #pragma endregion
    //

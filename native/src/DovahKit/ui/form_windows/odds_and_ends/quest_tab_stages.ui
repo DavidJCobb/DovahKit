@@ -107,7 +107,7 @@
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QComboBox" name="logEntryNextQuest"/>
+           <widget class="FormsOfTypeCombobox" name="logEntryNextQuest"/>
           </item>
           <item row="1" column="0" colspan="2">
            <widget class="QPlainTextEdit" name="logEntryText"/>
@@ -117,12 +117,18 @@
             <property name="text">
              <string>Journal text:</string>
             </property>
+            <property name="buddy">
+             <cstring>logEntryText</cstring>
+            </property>
            </widget>
           </item>
           <item row="2" column="1">
            <widget class="QLabel" name="label_2">
             <property name="text">
              <string>Next quest (unused):</string>
+            </property>
+            <property name="buddy">
+             <cstring>logEntryNextQuest</cstring>
             </property>
            </widget>
           </item>
@@ -141,6 +147,9 @@
         <property name="text">
          <string>Conditions:</string>
         </property>
+        <property name="buddy">
+         <cstring>logEntryConditions</cstring>
+        </property>
        </widget>
       </item>
      </layout>
@@ -155,7 +164,23 @@
    <header>condition_list.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>FormsOfTypeCombobox</class>
+   <extends>QComboBox</extends>
+   <header>../../generic/FormsOfTypeCombobox.h</header>
+  </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>index</tabstop>
+  <tabstop>stageFlagStartup</tabstop>
+  <tabstop>stageFlagShutdown</tabstop>
+  <tabstop>stageFlagKeepInstanceData</tabstop>
+  <tabstop>logEntries</tabstop>
+  <tabstop>logEntryText</tabstop>
+  <tabstop>logEntryFlagComplete</tabstop>
+  <tabstop>logEntryFlagFail</tabstop>
+  <tabstop>logEntryNextQuest</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
