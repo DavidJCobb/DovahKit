@@ -56,13 +56,13 @@ namespace dovah::loaded_forms {
             using script_data = components::papyrus::script_data;
             //
             script_data::property_object_value alias; // quest form ID and alias index
-            int16_t version   = 5;
-            int16_t objFormat = 2;
+            script_data::header_t header; // applies to scripts below
             std::vector<script_data::script> scripts;
             //
-            void load(script_data& owner, tes_subrecord_reader&);
-            void save(script_data& owner, tes_subrecord_writer&) const;
-            papyrus_attachment_data clone_from(const papyrus_attachment_data& source, loaded_forms::Form& owner_of_clone) const noexcept;
+            void load(const script_data::header_t& quest_vmad_header, tes_subrecord_reader&);
+            void save(const script_data::header_t& quest_vmad_header, tes_subrecord_writer&) const;
+            static void generate_use_info(const script_data::header_t& quest_vmad_header, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib);
+            papyrus_attachment_data clone_from(const papyrus_attachment_data& source, loaded_forms::Form& dest_owner) noexcept;
             void clear(loaded_forms::Form& owner);
             void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
             //
@@ -224,6 +224,8 @@ namespace dovah::loaded_forms {
                   //
                   void load(tes_subrecord_reader&); // read from VMAD
                   bool save(tes_subrecord_writer&, uint16_t stage_id, uint32_t entry_index); // write to VMAD
+                  static void generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib);
+                  void clear();
                   //
                   inline bool empty() const noexcept {
                      return this->filename.empty() || this->function.empty();
@@ -354,6 +356,8 @@ namespace dovah::loaded_forms {
          Stage* lookup_stage_by_id(uint16_t id) noexcept;
          Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists
          void   remove_stage(int id) noexcept;
+
+         void discard_invalid_script_data();
 
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

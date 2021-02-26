@@ -775,6 +775,30 @@ namespace editor_helpers {
                text = text.arg(dlbr).arg(qust);
             }
             break;
+         case notice_code::worldspace_is_its_own_parent:
+            {
+               text = QObject::tr("Worldspace %1 is its own parent. The game will freeze when trying to load it.", "notice_code::worldspace_is_its_own_parent");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form);
+            }
+            break;
+         case notice_code::quest_has_phantom_script_data:
+            {
+               text = QObject::tr("Quest %1 contains script data for non-existent aliases or log entries, or for aliases from other quests. This data will be discarded by the editor.", "notice_code::quest_has_phantom_script_data");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:

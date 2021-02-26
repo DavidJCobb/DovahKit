@@ -71,21 +71,29 @@ namespace dovah::loaded_forms::components {
             virtual void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {}
       };
 
+      struct script_data_header {
+         int16_t version       = 5;
+         int16_t object_format = 2; // format of "object" property values
+         //
+         bool load(tes_subrecord_reader&);
+         void save(tes_subrecord_writer&) const;
+      };
+
       class script_data {
          public:
             class script;
             class property;
             using load_interface_t = load_order_interfaces::form_load;
             using save_interface_t = load_order_interfaces::form_save;
+            using header_t = script_data_header;
          public:
-            int16_t version       = 5;
-            int16_t object_format = 2; // format of "object" property values
+            script_data_header   header;
             std::vector<script>  scripts;
             basic_fragment_data* fragment_data = nullptr;
             //
             bool load(tes_subrecord_reader&, load_interface_t&); // assumes we're at a VMAD subrecord
             bool save(tes_subrecord_writer&, save_interface_t&, const script_data_save_parameters& = script_data_save_parameters::default);
-            static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
+            static script_data_header generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
             //
             bool save(tes_record_writer&, save_interface_t&, const script_data_save_parameters& = script_data_save_parameters::default); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
             void clone_from(const script_data& source, loaded_forms::Form& owner_of_clone) noexcept;
@@ -110,8 +118,8 @@ namespace dovah::loaded_forms::components {
                uint16_t aliasID;
                uint16_t always_zero = 0;
                //
-               bool load(script_data& owner, tes_subrecord_reader&);
-               bool save(script_data& owner, tes_subrecord_writer&) const noexcept;
+               bool load(const script_data_header& header, tes_subrecord_reader&);
+               bool save(const script_data_header& header, tes_subrecord_writer&) const noexcept;
                void clone_from(const property_object_value& source, loaded_forms::Form& owner_of_clone) noexcept;
                void clear(loaded_forms::Form& owner);
                void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
@@ -128,8 +136,8 @@ namespace dovah::loaded_forms::components {
                      std::string string;
                      property_object_value object;
                      //
-                     bool load(property_type, script_data& owner, tes_subrecord_reader&);
-                     bool save(property_type, script_data& owner, tes_subrecord_writer&) const noexcept;
+                     bool load(property_type, const script_data_header& header, tes_subrecord_reader&);
+                     bool save(property_type, const script_data_header& header, tes_subrecord_writer&) const noexcept;
                      void clone_from(property_type, const value_t& source, loaded_forms::Form& owner_of_clone) noexcept;
                   };
                   //
@@ -139,8 +147,8 @@ namespace dovah::loaded_forms::components {
                   property_status status;
                   std::vector<value_t> values;
                   //
-                  bool load(script_data& owner, tes_subrecord_reader&);
-                  bool save(script_data& owner, tes_subrecord_writer&) const noexcept;
+                  bool load(const script_data_header& header, tes_subrecord_reader&);
+                  bool save(const script_data_header& header, tes_subrecord_writer&) const noexcept;
                   void clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
                   void clear(loaded_forms::Form& my_owner) noexcept;
@@ -152,12 +160,14 @@ namespace dovah::loaded_forms::components {
                   script_status status;
                   std::vector<property> properties;
                   //
-                  bool load(script_data& owner, tes_subrecord_reader&);
-                  bool save(script_data& owner, tes_subrecord_writer&) const noexcept;
+                  bool load(const script_data_header& owner, tes_subrecord_reader&);
+                  bool save(const script_data_header& owner, tes_subrecord_writer&) const noexcept;
                   void clear_properties(loaded_forms::Form& owner);
                   void clone_from(const script& source, loaded_forms::Form& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
                   void clear(loaded_forms::Form& my_owner) noexcept;
+                  //
+                  static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&);
             };
       };
       

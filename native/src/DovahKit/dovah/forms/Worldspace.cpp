@@ -1,6 +1,7 @@
 #include "Worldspace.h"
 #include "_common_cpp.h"
 #include "factories/hardcoded.h"
+#include "../notice_code_list.h"
 
 namespace {
    //
@@ -214,6 +215,15 @@ namespace dovah::loaded_forms {
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
                   detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::worldspace, this->stub, this->parent.form)
                );
+               if (this->parent.form == &this->stub) {
+                  detailed_notice warning;
+                  warning.type    = detailed_notice::notice_type::warning;
+                  warning.context = detailed_notice::notice_context::on_demand_form_load;
+                  warning.code    = notice_code::worldspace_is_its_own_parent;
+                  warning.set_cause_form(this->stub);
+                  warning.set_cause_subrecord(subrecord.signature());
+                  intfc.log_load_warning(warning);
+               }
                break;
             case 'PNAM':
                subrecord.read(this->parent.flags);
