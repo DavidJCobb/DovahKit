@@ -96,6 +96,8 @@ namespace dovah {
          quest_has_phantom_script_data               = 0x00000057, // A quest contains script data for a non-existent alias or log entry, or for an alias in another quest.
          too_many_script_fragments_to_save           = 0x00000058, // A form has too many script fragments, and cannot be saved.
          too_many_aliases_with_scripts_to_save       = 0x00000059,
+         alias_papyrus_data_specifies_wrong_quest    = 0x0000005A, // An alias's Papyrus data was skipped because it claims to belong to a quest other than the containing quest.
+         alias_papyrus_data_belongs_to_missing_alias = 0x0000005B, // A quest's VMAD subrecord supplied Papyrus data for an alias that doesn't actually exist.
       };
    };
 }

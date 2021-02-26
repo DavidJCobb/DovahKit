@@ -5,73 +5,6 @@
 
 namespace dovah::loaded_forms {
    #pragma region Quest aliases
-      #pragma region papyrus_attachment_data
-      void Alias::papyrus_attachment_data::load(const script_data::header_t& header, tes_subrecord_reader& subrecord) {
-         this->alias.load(header, subrecord);
-         this->header.load(subrecord);
-         uint16_t scriptCount;
-         subrecord.unchecked_read(scriptCount);
-         for (uint16_t j = 0; j < scriptCount; j++)
-            this->scripts.emplace_back().load(this->header, subrecord);
-      }
-      void Alias::papyrus_attachment_data::save(const script_data::header_t& header, tes_subrecord_writer& subrecord) const {
-         this->alias.save(header, subrecord);
-         this->header.save(subrecord);
-         assert(this->scripts.size() <= std::numeric_limits<uint16_t>::max() && "Too many scripts on an alias in quest_fragment_data.");
-         subrecord.write(uint16_t(this->scripts.size()));
-         for (auto& script : this->scripts)
-            script.save(this->header, subrecord);
-      }
-      /*static*/ void Alias::papyrus_attachment_data::generate_use_info(const script_data::header_t& quest_vmad_header, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
-         form_id_t formID;
-         //
-         // Read the property_object_value use info:
-         //
-         if (quest_vmad_header.object_format == 2) {
-            subrecord.skip_bytes(4);
-            subrecord.read(formID);
-            uib.add_outbound_reference(formID);
-         } else {
-            subrecord.read(formID);
-            uib.add_outbound_reference(formID);
-            subrecord.skip_bytes(4);
-         }
-         //
-         script_data::header_t header;
-         if (!header.load(subrecord))
-            return;
-         uint16_t count;
-         if (subrecord.read(count))
-            script_data::script::generate_use_info(header, subrecord, uib);
-      }
-      Alias::papyrus_attachment_data Alias::papyrus_attachment_data::clone_from(const papyrus_attachment_data& source, loaded_forms::Form& dest_owner) noexcept {
-         this->clear(dest_owner);
-         //
-         this->alias.form.set(dest_owner, source.alias.form);
-         this->alias.aliasID     = source.alias.aliasID;
-         this->alias.always_zero = source.alias.always_zero;
-         //
-         this->header = source.header;
-         //
-         size_t size = source.scripts.size();
-         this->scripts.resize(size);
-         for (size_t i = 0; i < size; ++i)
-            this->scripts[i].clone_from(source.scripts[i], dest_owner);
-      }
-      void Alias::papyrus_attachment_data::clear(loaded_forms::Form& owner) {
-         this->alias.clear(owner);
-         for (auto& script : this->scripts) {
-            script.clear_properties(owner);
-         }
-         this->scripts.clear();
-      }
-      void Alias::papyrus_attachment_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-         this->alias.sever_outbound_references_to(target, my_owner);
-         for (auto& script : this->scripts)
-            script.sever_outbound_references_to(target, my_owner);
-      }
-      #pragma endregion
-
    void LocationAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
       assert(subrecord.signature() == 'ALLS' && "LocationAlias::load should only be called just after the ALLS subrecord is opened.");
@@ -823,8 +756,13 @@ namespace dovah::loaded_forms {
       if (!intfc.is_winning_record)
          return;
       //
-      std::vector<Alias::papyrus_attachment_data> pending_alias_scripts;
-      std::vector<LogEntry::script_fragment>      pending_log_entry_scripts;
+      struct _pending_alias_script_data {
+         alias_id_t alias_id = -1;
+         components::papyrus::script_data data;
+      };
+      //
+      std::vector<_pending_alias_script_data> pending_alias_scripts;
+      std::vector<LogEntry::script_fragment>  pending_log_entry_scripts;
       //
       bool isInEventConditions = false;
       bool hasLastLogEntry     = false;
@@ -850,7 +788,23 @@ namespace dovah::loaded_forms {
                   if (!subrecord.read(count)) // alias script data count
                      break;
                   for (uint16_t i = 0; i < count; ++i) {
-                     pending_alias_scripts.emplace_back().load(this->script_data.header, subrecord);
+                     components::papyrus::script_data::property_object_value owner;
+                     owner.load(this->script_data.header, subrecord);
+                     if (owner.form != &this->stub) {
+                        detailed_notice warning;
+                        warning.code = notice_code::alias_papyrus_data_specifies_wrong_quest;
+                        warning.set_cause_form(this->stub);
+                        warning.set_cause_subrecord(subrecord.signature());
+                        if (owner.form)
+                           warning.add_relevant_form(*owner.form.get_form_stub());
+                        warning.extra_integers[0] = owner.aliasID;
+                        intfc.log_load_warning(warning);
+                        //
+                        continue;
+                     }
+                     auto& entry = pending_alias_scripts.emplace_back();
+                     entry.alias_id = owner.aliasID;
+                     entry.data.load(subrecord, intfc);
                   }
                }
                break;
@@ -991,17 +945,20 @@ namespace dovah::loaded_forms {
       // that data among its owning aliases and log entries.
       //
       if (!pending_alias_scripts.empty()) {
-         for (auto& data : pending_alias_scripts) {
-            if (data.alias.form == &this->stub) {
-               auto* alias = this->lookup_alias_by_id(data.alias.aliasID);
-               if (alias) {
-                  assert(alias->script_data.empty() && "TODO: How do the game and CK handle multiple VMAD entries for a single alias?"); // TODO
-                  alias->script_data = data;
-                  continue;
-               }
+         for (auto& entry : pending_alias_scripts) {
+            auto* alias = this->lookup_alias_by_id(entry.alias_id);
+            if (!alias) {
+               detailed_notice warning;
+               warning.code = notice_code::alias_papyrus_data_belongs_to_missing_alias;
+               warning.set_cause_form(this->stub);
+               warning.set_cause_subrecord('VMAD');
+               warning.extra_integers[0] = entry.alias_id;
+               intfc.log_load_warning(warning);
+               //
+               continue;
             }
-            static_assert(false, "If any VMAD-alias data specifies a bad alias, we should emit a load warning.");
-            this->script_fragment_root.unowned_alias_data.push_back(data);
+            assert(alias->script_data.empty() && "TODO: How do the game and CK handle multiple VMAD entries for a single alias?"); // TODO
+            alias->script_data = entry.data;
          }
          pending_alias_scripts.clear();
       }
@@ -1020,7 +977,7 @@ namespace dovah::loaded_forms {
          }
          pending_log_entry_scripts.clear();
       }
-      if (!this->script_fragment_root.unowned_alias_data.empty() || !this->script_fragment_root.unowned_log_entry_data.empty()) {
+      if (!this->script_fragment_root.unowned_log_entry_data.empty()) {
          detailed_notice warning;
          warning.code = notice_code::quest_has_phantom_script_data;
          warning.set_cause_form(this->stub);
@@ -1029,6 +986,9 @@ namespace dovah::loaded_forms {
       }
    }
    /*static*/ void Quest::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         return;
+      //
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -1045,8 +1005,30 @@ namespace dovah::loaded_forms {
                         LogEntry::script_fragment::generate_use_info(subrecord, uib);
                      if (!subrecord.read(count)) // alias script data count
                         break;
-                     for (uint16_t i = 0; i < count; ++i)
-                        Alias::papyrus_attachment_data::generate_use_info(header, subrecord, uib);
+                     for (uint16_t i = 0; i < count; ++i) {
+                        components::papyrus::script_data::property_object_value owner;
+                        owner.load(header, subrecord);
+                        if (owner.form != uib.stub()) {
+                           components::papyrus::script_data::skip_use_info(subrecord);
+                           continue;
+                        }
+
+                           //
+                           // Maybe we can solve it by making (form_stub_use_info_builder) a virtual class. Then, we could 
+                           // define a subclass that retains use info for now and commits it all at once if asked to later. 
+                           // We could then instantiate one of these per found alias, and then at the end of this function, 
+                           // we remember which aliases existed and which ones didn't, and commit the use info for their 
+                           // script data accordingly.
+                           //
+                           // The issue with this design is that all connection-building calls become virtual. An alternative 
+                           // approach would be to make the normal use info also batch its connections -- it stores them 
+                           // locally and then explicitly commits them when asked -- with (form_stub) calling the commit 
+                           // function. Then, the same builder can be used per-alias, with us committing it as desired.
+                           //
+                        static_assert(false, "what do we do about an entry that maps to a non-existent alias? our load code discards that, but that's harder to do from here");
+
+                        // Alias::papyrus_attachment_data::generate_use_info(header, subrecord, uib); // OLD
+                     }
                   }
                }
                break;
@@ -1181,9 +1163,9 @@ namespace dovah::loaded_forms {
          //
          constexpr bool save_unowned_data = false;
          //
-         size_t alias_count = this->script_fragment_root.unowned_alias_data.size();
+         size_t alias_count = 0;
          size_t log_count   = this->script_fragment_root.unowned_log_entry_data.size();
-         if (!save_unowned_data && (alias_count || log_count)) {
+         if (!save_unowned_data && log_count) {
             static_assert(false, "Strongly consider throwing a save error if any unowned data exists, so we don't have to worry about \"owners\" being created under it (e.g. an unowned alias-VMAD loaded with an invalid alias ID, but we later create an alias with that ID) and things getting mangled at save time.");
             //
             // TODO: log (notice_code::quest_has_phantom_script_data) as a save error
@@ -1229,20 +1211,15 @@ namespace dovah::loaded_forms {
                }
             }
             VMAD.write(uint16_t(alias_count));
-            if (save_unowned_data) {
-               for (auto& data : this->script_fragment_root.unowned_alias_data)
-                  data.save(this->script_data.header, VMAD);
-            }
             for (auto* a : this->aliases) {
                if (a->script_data.empty())
                   continue;
-               auto& data  = a->script_data;
-               auto& owner = data.alias;
-               if (owner.form != &this->stub) {
-                  static_assert(false, "Emit a save error if (a->script_data.alias.form) has somehow come to point to a quest other than (this).");
-               }
+               components::papyrus::script_data::property_object_value owner;
+               owner.form.unmanaged_set(&this->stub);
                owner.aliasID = a->id;
-               data.save(this->script_data.header, VMAD);
+               owner.save(this->script_data.header, VMAD);
+               //
+               a->script_data.save(VMAD, intfc);
             }
          }
       }
@@ -1370,11 +1347,6 @@ namespace dovah::loaded_forms {
    void Quest::discard_invalid_script_data() {
       bool any_changes = false;
       //
-      if (!this->script_fragment_root.unowned_alias_data.empty()) {
-         any_changes = true;
-         for (auto& data : this->script_fragment_root.unowned_alias_data)
-            data.clear(*this);
-      }
       if (!this->script_fragment_root.unowned_log_entry_data.empty()) {
          any_changes = true;
          for (auto& data : this->script_fragment_root.unowned_log_entry_data)

@@ -4,8 +4,6 @@
 #include <cassert>
 
 namespace dovah::loaded_forms::components::papyrus {
-   const script_data_save_parameters script_data_save_parameters::default = script_data_save_parameters();
-
    bool script_data_header::load(tes_subrecord_reader& subrecord) {
       if (subrecord.read(this->version))
          if (subrecord.read(this->object_format))
@@ -61,7 +59,7 @@ namespace dovah::loaded_forms::components::papyrus {
          this->fragment_data->load(*this, subrecord);
       return subrecord.is_in_bounds();
    }
-   bool script_data::save(tes_subrecord_writer& subrecord, save_interface_t& intfc, const script_data_save_parameters& params) {
+   bool script_data::save(tes_subrecord_writer& subrecord, save_interface_t& intfc) {
       this->header.save(subrecord);
       if (this->scripts.size() > std::numeric_limits<uint16_t>::max())
          return false;
@@ -71,14 +69,14 @@ namespace dovah::loaded_forms::components::papyrus {
             return false;
       }
       if (this->fragment_data)
-         this->fragment_data->save(*this, subrecord, params);
+         this->fragment_data->save(*this, subrecord);
       return true;
    }
-   bool script_data::save(tes_record_writer& record, save_interface_t& intfc, const script_data_save_parameters& params) {
+   bool script_data::save(tes_record_writer& record, save_interface_t& intfc) {
       if (this->scripts.empty() && !this->fragment_data)
          return true;
       auto& VMAD = record.open_next_subrecord('VMAD');
-      auto result = this->save(VMAD, intfc, params);
+      auto result = this->save(VMAD, intfc);
       VMAD.close();
       return result;
    }
@@ -409,7 +407,7 @@ namespace dovah::loaded_forms::components::papyrus {
                subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void topic_info_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
+   void topic_info_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
       subrecord.write(this->unknown);
       subrecord.write(this->flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
@@ -461,7 +459,7 @@ namespace dovah::loaded_forms::components::papyrus {
                subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void package_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
+   void package_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
       subrecord.write(this->unknown);
       subrecord.write(this->flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
@@ -515,7 +513,7 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   void perk_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
+   void perk_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
       subrecord.write(this->unknown);
       subrecord.write_length_prefixed_string<2>(this->filename);
       assert(this->fragments.size() <= std::numeric_limits<uint16_t>::max() && "Too many fragments in perk_fragment_data.");
@@ -573,7 +571,7 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   void scene_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord, const script_data_save_parameters&) {
+   void scene_fragment_data::save(script_data& owner, tes_subrecord_writer& subrecord) {
       subrecord.write(this->unknown);
       subrecord.write(this->flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
@@ -670,6 +668,56 @@ namespace dovah::loaded_forms::components::papyrus {
                      subrecord.skip_bytes(4);
                   }
                }
+               break;
+            case property_type::array_of_string:
+               for (uint32_t k = 0; k < value_count; k++)
+                  subrecord.skip_length_prefixed_string<2>();
+               break;
+            case property_type::array_of_integer:
+            case property_type::array_of_float32:
+               subrecord.skip_bytes(4 * value_count);
+               break;
+            case property_type::array_of_boolean:
+               subrecord.skip_bytes(value_count);
+               break;
+         }
+      }
+   }
+   /*static*/ void script_data::script::skip_use_info(tes_subrecord_reader& subrecord) {
+      form_id_t formID;
+      //
+      subrecord.skip_length_prefixed_string<2>();
+      subrecord.skip_bytes(1); // script status
+      uint16_t prop_count;
+      if (!subrecord.read(prop_count))
+         return;
+      for (uint16_t j = 0; j < prop_count; j++) { // script properties
+         subrecord.skip_length_prefixed_string<2>();
+         //
+         property_type type;
+         subrecord.read(type);
+         subrecord.skip_bytes(1); // property status
+         uint32_t value_count = 1;
+         if (property_type_is_array(type)) {
+            if (!subrecord.read(value_count))
+               return;
+         }
+         switch (type) {
+            case property_type::object:
+               subrecord.skip_bytes(property_object_value::serialized_size);
+               break;
+            case property_type::string:
+               subrecord.skip_length_prefixed_string<2>();
+               break;
+            case property_type::integer:
+            case property_type::float32:
+               subrecord.skip_bytes(4);
+               break;
+            case property_type::boolean:
+               subrecord.skip_bytes(1);
+               break;
+            case property_type::array_of_object:
+               subrecord.skip_bytes(value_count * property_object_value::serialized_size);
                break;
             case property_type::array_of_string:
                for (uint32_t k = 0; k < value_count; k++)
@@ -794,6 +842,16 @@ namespace dovah::loaded_forms::components::papyrus {
             break;
       }
       return header;
+   }
+   /*static*/ void script_data::skip_use_info(tes_subrecord_reader& subrecord) {
+      script_data_header header;
+      if (!header.load(subrecord))
+         return;
+      uint16_t count;
+      if (!subrecord.read(count))
+         return;
+      for (uint16_t i = 0; i < count; ++i)
+         script::skip_use_info(subrecord);
    }
    #pragma endregion
 }

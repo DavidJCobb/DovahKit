@@ -41,21 +41,6 @@ namespace dovah::loaded_forms::components {
       class perk_entry_fragment;
       class scene_phase_fragment;
 
-      //
-      // The VMAD subrecord contains both the script data for a whole form, and the script data for 
-      // "sub-forms," such as log entries within a quest. In order to keep these sub-forms manage-
-      // able, we allow forms to claim ownership of them, physically moving them outside of the 
-      // script-data structure and into whatever part of the form they actually belong to. However, 
-      // this means that when saving the VMAD subrecord, we need to be able to grant the script-data 
-      // structure access to this "sub-form script data" so that it can be written to the subrecord.
-      //
-      struct script_data_save_parameters {
-         std::vector<const perk_entry_fragment*>      perk_entry_fragments;
-         std::vector<const scene_phase_fragment*>     scene_phase_fragments;
-         //
-         static const script_data_save_parameters default;
-      };
-
       class basic_fragment_data {
          public:
             using save_interface_t = load_order_interfaces::form_save;
@@ -65,7 +50,7 @@ namespace dovah::loaded_forms::components {
             basic_fragment_data(fragment_type t) : type(t) {}
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) = 0;
-            virtual void save(script_data& owner, tes_subrecord_writer&, const script_data_save_parameters&) = 0;
+            virtual void save(script_data& owner, tes_subrecord_writer&) = 0;
             virtual basic_fragment_data* clone(loaded_forms::Form& owner_of_clone) const noexcept = 0;
             virtual void clear(loaded_forms::Form& owner) {}
             virtual void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {}
@@ -92,10 +77,11 @@ namespace dovah::loaded_forms::components {
             basic_fragment_data* fragment_data = nullptr;
             //
             bool load(tes_subrecord_reader&, load_interface_t&); // assumes we're at a VMAD subrecord
-            bool save(tes_subrecord_writer&, save_interface_t&, const script_data_save_parameters& = script_data_save_parameters::default);
+            bool save(tes_subrecord_writer&, save_interface_t&);
             static script_data_header generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
+            static void skip_use_info(tes_subrecord_reader&);
             //
-            bool save(tes_record_writer&, save_interface_t&, const script_data_save_parameters& = script_data_save_parameters::default); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
+            bool save(tes_record_writer&, save_interface_t&); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
             void clone_from(const script_data& source, loaded_forms::Form& owner_of_clone) noexcept;
             void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
             void clear(loaded_forms::Form& my_owner) noexcept;
@@ -117,6 +103,8 @@ namespace dovah::loaded_forms::components {
                form_reference_t form;
                uint16_t aliasID;
                uint16_t always_zero = 0;
+               //
+               static constexpr int serialized_size = sizeof(bare_form_id_t) + sizeof(aliasID) + sizeof(always_zero);
                //
                bool load(const script_data_header& header, tes_subrecord_reader&);
                bool save(const script_data_header& header, tes_subrecord_writer&) const noexcept;
@@ -168,6 +156,7 @@ namespace dovah::loaded_forms::components {
                   void clear(loaded_forms::Form& my_owner) noexcept;
                   //
                   static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&);
+                  static void skip_use_info(tes_subrecord_reader&);
             };
       };
       
@@ -192,7 +181,7 @@ namespace dovah::loaded_forms::components {
             using fragment_t = basic_fragment_entry;
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
-            virtual void save(script_data& owner, tes_subrecord_writer&, const script_data_save_parameters&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             virtual basic_fragment_data* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
             //
             uint8_t         unknown = 2;
@@ -217,7 +206,7 @@ namespace dovah::loaded_forms::components {
             using fragment_t = basic_fragment_entry;
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
-            virtual void save(script_data& owner, tes_subrecord_writer&, const script_data_save_parameters&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             virtual basic_fragment_data* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
             //
             uint8_t         unknown = 2;
@@ -239,7 +228,7 @@ namespace dovah::loaded_forms::components {
             };
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
-            virtual void save(script_data& owner, tes_subrecord_writer&, const script_data_save_parameters&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             virtual basic_fragment_data* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
             //
             uint8_t     unknown = 2;
@@ -268,7 +257,7 @@ namespace dovah::loaded_forms::components {
             };
             //
             virtual void load(script_data& owner, tes_subrecord_reader&) override;
-            virtual void save(script_data& owner, tes_subrecord_writer&, const script_data_save_parameters&) override;
+            virtual void save(script_data& owner, tes_subrecord_writer&) override;
             virtual basic_fragment_data* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
             //
             uint8_t     unknown = 2;
