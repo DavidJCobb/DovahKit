@@ -113,20 +113,18 @@ namespace dovah::loaded_forms {
       if (!uib.is_final_file())
          return;
       //
-      form_id_t formID;
+      form_id_t starting_topic;
+      form_id_t owning_quest;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
-               if (uib.is_final_file())
-                  components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'SNAM':
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(starting_topic);
                break;
             case 'QNAM':
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_quest);
+               subrecord.read(owning_quest);
                break;
             case 'TNAM':
             case 'DNAM':
@@ -134,6 +132,8 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(starting_topic);
+      uib.add_outbound_reference(owning_quest, use_info_entry::flag::dialogue_quest);
    }
    /*virtual*/ bool DialogueBranch::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

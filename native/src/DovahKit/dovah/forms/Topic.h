@@ -309,8 +309,8 @@ namespace dovah::loaded_forms {
          };
 
          struct {
-            dialogue_branch_reference_t branch;
-            dialogue_quest_reference_t  quest;
+            dialogue_branch_reference_t branch; // BNAM
+            dialogue_quest_reference_t  quest;  // QNAM
          } owning_forms;
          localized_string text; // FULL // player's dialogue
          struct {

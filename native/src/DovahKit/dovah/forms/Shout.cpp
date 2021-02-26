@@ -99,6 +99,8 @@ namespace dovah::loaded_forms {
          while (auto& subrecord = record.next_subrecord()) {
             switch (subrecord.signature()) {
                case 'SNAM':
+                  if (word_count >= std::tuple_size_v<decltype(words)>)
+                     break;
                   subrecord.read(uib.extra_form_ids[(word_count * 2) + 0]);
                   subrecord.read(uib.extra_form_ids[(word_count * 2) + 1]);
                   ++word_count;
@@ -109,15 +111,19 @@ namespace dovah::loaded_forms {
       }
       //
       form_id_t formID;
+      form_id_t equip_type;
+      form_id_t menu_display_object;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'MDOB': // menu display object
+               subrecord.read(menu_display_object);
+               break;
             case 'ETYP': // equip type
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(equip_type);
                break;
             case 'SNAM':
-               ++word_count;
+               if (word_count >= std::tuple_size_v<decltype(words)>)
+                  break;
                if (subrecord.read(formID)) {
                   uib.add_outbound_reference(formID);
                   if (subrecord.read(formID)) {
@@ -125,6 +131,7 @@ namespace dovah::loaded_forms {
                      // and then a four-byte float, which we can ignore
                   }
                }
+               ++word_count;
                break;
             case 'EDID': // editor ID
             case 'FULL': // displayed name
@@ -132,6 +139,8 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(equip_type);
+      uib.add_outbound_reference(menu_display_object);
       for (; word_count < 3; ++word_count) {
          uib.add_outbound_reference(uib.extra_form_ids[(word_count * 2) + 0]);
          uib.add_outbound_reference(uib.extra_form_ids[(word_count * 2) + 1]);

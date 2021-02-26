@@ -310,7 +310,14 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      form_id_t formID;
+      form_id_t climate;
+      form_id_t lighting_template;
+      form_id_t encounter_zone;
+      form_id_t location;
+      form_id_t water_type;
+      form_id_t water_type_lod;
+      form_id_t parent_world;
+      form_id_t music_type;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
@@ -320,21 +327,35 @@ namespace dovah::loaded_forms {
                components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case 'CNAM': // climate
+               subrecord.read(climate);
+               break;
             case 'LTMP': // lighting template
+               subrecord.read(lighting_template);
+               break;
             case 'XEZN': // encounter zone
+               subrecord.read(encounter_zone);
+               break;
             case 'XLCN': // location
+               subrecord.read(location);
+               break;
             case 'NAM2': // water type
+               subrecord.read(water_type);
+               break;
             case 'NAM3': // water type (LOD)
+               subrecord.read(water_type_lod);
+               break;
             case 'WNAM': // parent worldspace
+               subrecord.read(parent_world);
+               break;
             case 'ZNAM': // music type
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(music_type);
                break;
             case 'RNAM': // large references // SSE-only, but we'll still load it if we see it in a Classic file.
                if (!subrecord.is_skyrim_special())
                   break;
                subrecord.skip_bytes(4);
                while (subrecord.is_in_bounds(8)) {
+                  form_id_t formID;
                   if (subrecord.read(formID))
                      uib.add_outbound_reference(formID);
                   subrecord.skip_bytes(4);
@@ -342,6 +363,14 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(climate);
+      uib.add_outbound_reference(lighting_template);
+      uib.add_outbound_reference(encounter_zone);
+      uib.add_outbound_reference(location);
+      uib.add_outbound_reference(water_type);
+      uib.add_outbound_reference(water_type_lod);
+      uib.add_outbound_reference(parent_world);
+      uib.add_outbound_reference(music_type);
    }
    void Worldspace::setup(const file_load_order& load_order) noexcept {
       auto* default_water = load_order.get_form(hardcoded_form_ids::DefaultWater);
