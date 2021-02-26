@@ -49,6 +49,30 @@ namespace dovah::loaded_forms {
             reference,
             location,
          };
+         
+         enum class fill_type_t {
+            none = 0,
+            //
+            other_alias_in_same_quest,  // ALFA
+            from_event,                 // ALFE + ALFD
+            other_alias_in_other_quest, // ALEQ
+            //
+            // Types unique to location aliases:
+            //
+            preset_location, // ALFL
+            //
+            // Types unique to reference aliases:
+            //
+            preset_placed_reference,    // ALFR: a preset Actor or ObjectReference is "forced" into this alias
+            other_alias_in_same_quest,  // ALFA
+            from_event,                 // ALFE
+            create_object,              // ALCO
+            other_alias_in_other_quest, // ALEQ
+            preset_unique_actor,        // ALUA
+            find_matching_reference,    // ALNA
+         };
+
+         static constexpr alias_id_t none_id = 0xFFFFFFFF;
 
          Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
          
@@ -58,60 +82,54 @@ namespace dovah::loaded_forms {
          std::string name;
          flags_t     flags = 0;
          uint32_t    hidden_flags = 0; // BNAM sets flag 0x01, ONAM sets flag 0x02
-         alias_id_t         force_into_alias_id  = 0xFFFFFFFF; // same sentinel value used by the game
-         story_event_code_t fill_from_event      = story_event_code::undefined; // same sentinel value used by the game
-         uint32_t           fill_from_event_data; // e.g. 4C 32 00 00 -> 'L2'
+         alias_id_t  force_into_alias_id  = none_id; // same sentinel value used by the game
+         //
+         fill_type_t fill_type = fill_type_t::none;
+         struct {
+            form_reference_t quest;           // ALEQ // if nullptr, then the specified alias is inside of this alias's containing quest
+            alias_id_t       alias = none_id; // ALEA, ALFA
+         } fill_from_alias;
+         struct {
+            story_event_code_t code   = story_event_code::undefined; // ALFE // same sentinel value used by the game
+            uint32_t           member = 0; // ALFD
+         } fill_from_event;
+         //
          components::condition_list       conditions; // for "Find Matching Reference" or "Find Matching Location"
          components::papyrus::script_data script_data;
-         
+
+         void load(tes_record_reader&, load_order_interfaces::form_load&);
+         void save(tes_record_writer&, load_order_interfaces::form_save&);
+         void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+         Alias* clone(loaded_forms::Form& clone_owner);
+         void clear(loaded_forms::Form& my_owner);
+         //
       protected:
-         virtual void load(tes_record_reader&, load_order_interfaces::form_load&) = 0;
-         virtual void save(tes_record_writer&, load_order_interfaces::form_save&) = 0;
-         virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept = 0;
-         virtual Alias* clone(loaded_forms::Form& clone_owner) = 0;
-         virtual void clear(loaded_forms::Form& my_owner) = 0;
+         virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
+         virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0; // return true if type handled; false if not
+         virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0;
+         virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept = 0;
+         virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) = 0;
+         virtual void _clear_impl(loaded_forms::Form& my_owner) = 0;
    };
    class LocationAlias : public Alias {
       friend class Quest;
       public:
-         enum class fill_type_t {
-            none,
-            preset, // ALFL: a preset Location form is "forced" into this alias
-            other_alias_in_same_quest, // ALFA
-            from_event, // ALFE
-            other_alias_in_other_quest, // ALEQ
-         };
-         //
-         fill_type_t      fill_type = fill_type_t::none;
          form_reference_t fill_from_location;
          form_reference_t fill_from_location_keyword;
-         alias_id_t       fill_from_alias = 0xFFFFFFFF; // ALEQ:ALEA or ALFA // same sentinel value used by the game
-         form_reference_t fill_from_quest; // ALEQ
          //
          LocationAlias(Quest& o) : Alias(o, alias_type::location) {}
          //
       protected:
-         virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
-         virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
-         virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
-         virtual Alias* clone(loaded_forms::Form& clone_owner) override;
-         virtual void clear(loaded_forms::Form& my_owner) override;
+         virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) override;
+         virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
+         virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
+         virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
+         virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) override;
+         virtual void _clear_impl(loaded_forms::Form& my_owner) override;
    };
    class ReferenceAlias : public Alias {
       friend class Quest;
       public:
-         enum class fill_type_t {
-            none                       = 0,
-            preset_placed_reference    = 1, // ALFR: a preset Actor or ObjectReference is "forced" into this alias
-            other_alias_in_same_quest  = 2, // ALFA
-            from_event                 = 3, // ALFE
-            create_object              = 4, // ALCO
-            other_alias_in_other_quest = 5, // ALEQ
-            preset_unique_actor        = 6, // ALUA
-            find_matching_reference    = 7, // ALNA
-         };
-         //
-         fill_type_t fill_type = fill_type_t::none;
          components::keyword_list      keywords; // KSIZ, KWDA
          components::container_data    inventory;
          std::vector<form_reference_t> packages; // ALPC
@@ -133,18 +151,17 @@ namespace dovah::loaded_forms {
          form_reference_t create_object_of_type; // ALCO
          alias_id_t       create_object_at_alias = 0; // ALCA; sign bit is a flag (create inside of / create at); the rest is the alias ID
          uint32_t         create_object_of_level = 0; // ALCL
-         alias_id_t       fill_from_alias = 0xFFFFFFFF; // same sentinel value used by the game
-         form_reference_t fill_from_quest;
          form_reference_t fill_from_unique_actor_base; // ALUA; should be the form ID of an NPC_ with the Unique flag set
          //
          ReferenceAlias(Quest& o) : Alias(o, alias_type::reference) {}
          //
       protected:
-         virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
-         virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
-         virtual void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
-         virtual Alias* clone(loaded_forms::Form& clone_owner) override;
-         virtual void clear(loaded_forms::Form& my_owner) override;
+         virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) override;
+         virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
+         virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
+         virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
+         virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) override;
+         virtual void _clear_impl(loaded_forms::Form& my_owner) override;
    };
 
    class Quest : public Form {

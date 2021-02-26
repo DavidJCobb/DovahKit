@@ -3,47 +3,41 @@
 #include "../logging.h"
 #include "../notice_code_list.h"
 
+namespace {
+   constexpr uint32_t _signature_for_alias_type(dovah::loaded_forms::Alias::alias_type t) {
+      using namespace dovah::loaded_forms;
+      switch (t) {
+         case Alias::alias_type::location:
+            return 'ALLS';
+         case Alias::alias_type::reference:
+            return 'ALST';
+      }
+      return 0;
+   }
+}
+
 namespace dovah::loaded_forms {
    #pragma region Quest aliases
-   void LocationAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
-      auto& subrecord = record.get_current_subrecord();
-      assert(subrecord.signature() == 'ALLS' && "LocationAlias::load should only be called just after the ALLS subrecord is opened.");
-      subrecord.read(this->id);
+   void Alias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      auto&    subrecord = record.get_current_subrecord();
+      uint32_t required  = _signature_for_alias_type(this->type);
+      if (required) {
+         //
+         // TODO: make this a load error, NOT an assert
+         //
+         assert(subrecord.signature() == required && "Alias::load should only be called just after the ALLS/ALST subrecord is opened.");
+      }
       //
+      subrecord.read(this->id);
       if (!record.next_subrecord())
          return;
-      uint32_t externalAliasID = 0xFFFFFFFF;
-      uint32_t internalAliasID = 0xFFFFFFFF;
+      //
+      alias_id_t external_alias = none_id; // ALEA
+      alias_id_t internal_alias = none_id; // ALFA
       for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
          switch (subrecord.signature()) {
-            case 'ALFA':
-               subrecord.read(internalAliasID);
-               break;
-            case 'ALEA':
-               subrecord.read(externalAliasID);
-               break;
-            case 'CTDA':
-               this->conditions.read_next(subrecord.get_containing_record(), intfc);
-               break;
-            case 'ALFD':
-               subrecord.read_signature(this->fill_from_event_data);
-               if (this->fill_from_event == story_event_code::undefined)
-                  this->fill_from_event_data = -1;
-               else {
-                  //
-                  // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291.
-                  //
-               }
-               break;
-            case 'ALFE':
-               subrecord.read_signature(this->fill_from_event);
-               this->fill_type = fill_type_t::from_event;
-               break;
             case 'ALID':
                subrecord.to_string(this->name);
-               break;
-            case 'ALFI':
-               subrecord.read(this->force_into_alias_id);
                break;
             case 'FNAM':
                subrecord.read(this->flags);
@@ -51,285 +45,172 @@ namespace dovah::loaded_forms {
             case 'BNAM':
                this->hidden_flags |= 1;
                break;
-            case 'ALFL':
-               subrecord.read(this->fill_from_location);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::location, intfc.target_stub, this->fill_from_location)
-               );
-               this->fill_type = fill_type_t::preset;
-               break;
-            case 'KNAM':
-               subrecord.read(this->fill_from_location_keyword);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->fill_from_location_keyword)
-               );
-               break;
-            case 'ALEQ':
-               subrecord.read(this->fill_from_quest);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::quest, intfc.target_stub, this->fill_from_quest)
-               );
-               this->fill_type = fill_type_t::other_alias_in_other_quest;
-               break;
             case 'ONAM':
                this->hidden_flags |= 2;
-               break;
-         }
-      }
-      if (this->fill_type == fill_type_t::other_alias_in_other_quest)
-         this->fill_from_alias = externalAliasID;
-      else if (this->fill_type == fill_type_t::other_alias_in_same_quest)
-         this->fill_from_alias = internalAliasID;
-   }
-   void LocationAlias::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      auto& ALLS = record.open_next_subrecord('ALLS');
-      ALLS.write(this->id);
-      ALLS.close();
-      auto& ALID = record.open_next_subrecord('ALID');
-      ALID.write(this->name);
-      ALID.close();
-      auto& FNAM = record.open_next_subrecord('FNAM');
-      FNAM.write(this->flags);
-      FNAM.close();
-      if (this->hidden_flags) {
-         if (this->hidden_flags & 1)
-            record.open_next_subrecord('BNAM').close();
-         if (this->hidden_flags & 2)
-            record.open_next_subrecord('ONAM').close();
-      }
-      if (this->force_into_alias_id) {
-         auto& ALFI = record.open_next_subrecord('ALFI');
-         ALFI.write(this->force_into_alias_id);
-         ALFI.close();
-      }
-      if (this->fill_type == fill_type_t::other_alias_in_other_quest) {
-         record.write_formID_subrecord('ALEQ', this->fill_from_quest);
-         auto& ALEA = record.open_next_subrecord('ALEA');
-         ALEA.write(this->fill_from_alias);
-         ALEA.close();
-      } else if (this->fill_type == fill_type_t::other_alias_in_same_quest) {
-         auto& ALFA = record.open_next_subrecord('ALFA');
-         ALFA.write(this->fill_from_alias);
-         ALFA.close();
-         record.write_formID_subrecord('KNAM', this->fill_from_location_keyword, true);
-      } else if (this->fill_type == fill_type_t::from_event) {
-         auto& ALFE = record.open_next_subrecord('ALFE');
-         ALFE.write_signature(this->fill_from_event);
-         ALFE.close();
-         auto& ALFD = record.open_next_subrecord('ALFD');
-         ALFD.write_signature(this->fill_from_event_data);
-         ALFD.close();
-      } else if (this->fill_type == fill_type_t::preset) {
-         record.write_formID_subrecord('ALFL', this->fill_from_location);
-      }
-      //
-      for (auto& cnd : this->conditions)
-         cnd.save(record, intfc);
-      //
-      record.open_next_subrecord('ALED').close(); // Alias end marker.
-   }
-   void LocationAlias::sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      this->fill_from_location.clear_if(my_owner, target);
-      this->fill_from_location_keyword.clear_if(my_owner, target);
-      this->fill_from_quest.clear_if(my_owner, target);
-      for (auto& cnd : this->conditions)
-         cnd.sever_outbound_references_to(target, my_owner);
-      static_assert(false, "LocationAlias::sever_outbound_references: Sever references from the Papyrus data. (Actually, it might be better to have "
-         "some non-virtual Alias::sever_outbound_references which handles the Papyrus data and anything else \"top-level,\" and then define a virtual "
-         "Alias::_sever_outbound_references_impl that the subtypes override, similar to what we do for forms. Consider this for the other operations "
-         "that need to deal with the Papyrus data as well (clone, clear, etc.)."
-      );
-   }
-   Alias* LocationAlias::clone(loaded_forms::Form& clone_owner) {
-      auto* copy = new LocationAlias(this->owner);
-      //
-      copy->id = this->id;
-      copy->name = this->name;
-      copy->flags = this->flags;
-      copy->hidden_flags = this->hidden_flags;
-      copy->force_into_alias_id = this->force_into_alias_id;
-      copy->fill_from_alias = this->fill_from_alias;
-      copy->fill_from_event = this->fill_from_event;
-      copy->fill_from_event_data = this->fill_from_event_data;
-      copy->fill_from_location.set(clone_owner, this->fill_from_location);
-      copy->fill_from_location_keyword.set(clone_owner, this->fill_from_location_keyword);
-      copy->fill_from_quest.set(clone_owner, this->fill_from_quest);
-      copy->fill_type = this->fill_type;
-      //
-      copy->conditions.append_all_of(clone_owner, this->conditions);
-      static_assert(false, "LocationAlias::clone: Clone the Papyrus data.");
-      //
-      return copy;
-   }
-   void LocationAlias::clear(loaded_forms::Form& my_owner) {
-      this->id = -1;
-      this->name.clear();
-      this->flags = 0;
-      this->hidden_flags = 0;
-      this->force_into_alias_id = -1;
-      this->fill_from_alias = -1;
-      this->fill_from_quest.set(my_owner, nullptr);
-      this->fill_from_event      = story_event_code::undefined;
-      this->fill_from_event_data = -1;
-      this->fill_from_location.set(my_owner, nullptr);
-      this->fill_from_location_keyword.set(my_owner, nullptr);
-      this->conditions.clear(my_owner);
-      static_assert(false, "LocationAlias::clear: Clear the Papyrus data.");
-   }
-
-   void ReferenceAlias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
-      auto& subrecord = record.get_current_subrecord();
-      assert(subrecord.signature() == 'ALST' && "ReferenceAlias::load should only be called just after the ALST subrecord is opened.");
-      subrecord.read(this->id);
-      //
-      if (!record.next_subrecord())
-         return;
-      uint32_t perkListSize  = 0;
-      uint32_t inventorySize = 0;
-      form_reference_t formID;
-      for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
-         switch (subrecord.signature()) {
-            case 'ALID':
-               subrecord.to_string(this->name);
-               break;
-            case 'FNAM':
-               subrecord.read(this->flags);
                break;
             case 'ALFI':
                subrecord.read(this->force_into_alias_id);
                break;
-            case 'BNAM': // shared with BGSRefAlias
-               this->hidden_flags |= 1;
+               //
+            case 'ALEA':
+               subrecord.read(external_alias);
                break;
-            case 'ONAM': // shared with BGSRefAlias
-               this->hidden_flags |= 2;
+            case 'ALFA':
+               subrecord.read(internal_alias);
                break;
-            case 'QNAM':
-               this->hidden_flags |= 4;
+            case 'ALEQ':
+               subrecord.read(this->fill_from_alias.quest);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::quest, intfc.target_stub, this->fill_from_alias.quest)
+               );
+               this->fill_type = fill_type_t::other_alias_in_other_quest;
                break;
+            case 'ALFE':
+               subrecord.read_signature(this->fill_from_event.code);
+               this->fill_type = fill_type_t::from_event;
+               break;
+            case 'ALFD':
+               subrecord.read_signature(this->fill_from_event.member);
+               if (this->fill_from_event.code == story_event_code::undefined)
+                  this->fill_from_event.member = -1;
+               else {
+                  //
+                  // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291.
+                  //
+               }
+               break;
+               //
             case 'CTDA':
                this->conditions.read_next(subrecord.get_containing_record(), intfc);
                break;
-            case 'KSIZ':
-            case 'KWDA':
-               this->keywords.load(subrecord, intfc);
-               break;
-            case 'COCT':
-            case 'CNTO':
-            case 'COED':
-               this->inventory.load(subrecord, intfc);
-               break;
-            case 'SCOR':
-               subrecord.read(this->package_override_lists.spectator);
-               break;
-            case 'OCOR':
-               subrecord.read(this->package_override_lists.observe_corpse);
-               break;
-            case 'GWOR':
-               subrecord.read(this->package_override_lists.guard_warn);
-               break;
-            case 'ECOR':
-               subrecord.read(this->package_override_lists.combat);
-               break;
-            case 'ALDN':
-               subrecord.read(this->display_name);
-               break;
-            case 'ALCO':
-               this->fill_type = fill_type_t::create_object;
-               subrecord.read(this->create_object_of_type);
-               break;
-            case 'ALCA':
-               if (this->fill_type == fill_type_t::create_object)
-                  subrecord.read(this->create_object_at_alias);
-               break;
-            case 'ALCL':
-               if (this->fill_type == fill_type_t::create_object)
-                  subrecord.read(this->create_object_of_level);
-               break;
-            case 'ALEQ':
-               subrecord.read(this->fill_from_quest);
-               this->fill_type = fill_type_t::other_alias_in_other_quest;
-               break;
-            case 'ALEA':
-               if (this->fill_type == fill_type_t::other_alias_in_other_quest)
-                  subrecord.read(this->fill_from_alias);
-               break;
-            case 'ALFA':
-               this->fill_type = fill_type_t::other_alias_in_same_quest;
-               subrecord.read(this->fill_from_alias);
-               break;
-            case 'ALNA':
-               this->fill_type = fill_type_t::find_matching_reference;
-               subrecord.read(this->fill_near_alias);
-               break;
-            case 'ALNT':
-               if (this->fill_type == fill_type_t::find_matching_reference)
-                  subrecord.read(this->fill_near_alias_type);
-               break;
-            case 'ALPC':
-               if (subrecord.read(formID)) {
-                  this->packages.push_back(formID);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, formID)
-                  );
-               }
-               break;
-            case 'ALFC':
-               if (subrecord.read(formID)) {
-                  this->factions.push_back(formID);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, intfc.target_stub, formID)
-                  );
-               }
-               break;
-            case 'ALSP':
-               if (subrecord.read(formID)) {
-                  this->spells.push_back(formID);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, intfc.target_stub, formID)
-                  );
-               }
-               break;
-            case 'ALUA':
-               this->fill_type = fill_type_t::preset_unique_actor;
-               subrecord.read(this->fill_from_unique_actor_base);
-               break;
-            case 'ALFE':
-               this->fill_type = fill_type_t::from_event;
-               subrecord.read_signature(this->fill_from_event);
-               break;
-            case 'ALFD':
-               subrecord.read_signature(this->fill_from_event_data);
-               if (this->fill_from_event == story_event_code::undefined)
-                  this->fill_from_event_data = -1;
-               else {
+               //
+            default:
+               if (!this->_load_impl(subrecord, intfc)) {
                   //
-                  // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291. 
-                  // (That code is for loc aliases; the ref alias code is stranger-looking but probably 
-                  // does the same stuff.)
+                  // TODO: log unrecognized subrecord warning
                   //
                }
-               break;
-            case 'ALFR':
-               this->fill_type = fill_type_t::preset_placed_reference;
-               subrecord.read(this->fill_from_reference);
-               break;
-            case 'VTCK':
-               subrecord.read(this->additional_voicetype);
-               break;
-            case 'ALRT':
-               subrecord.read(this->fill_loc_ref_type);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::location_ref_type, intfc.target_stub, this->fill_loc_ref_type)
-               );
                break;
          }
       }
+      if (this->fill_type == fill_type_t::other_alias_in_other_quest)
+         this->fill_from_alias.alias = external_alias;
+      else if (this->fill_type == fill_type_t::other_alias_in_same_quest)
+         this->fill_from_alias.alias = internal_alias;
    }
-   void ReferenceAlias::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      auto& ALST = record.open_next_subrecord('ALST');
-      ALST.write(this->id);
-      ALST.close();
+   bool LocationAlias::_load_impl(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+      switch (subrecord.signature()) {
+         case 'ALFL':
+            if (subrecord.read(this->fill_from_location))
+               this->fill_type = fill_type_t::preset_location;
+            return true;
+         case 'KNAM': // ALFA+KNAM
+            subrecord.read(this->fill_from_location_keyword);
+            return true;
+      }
+      return false;
+   }
+   bool ReferenceAlias::_load_impl(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+      form_reference_t formID;
+      switch (subrecord.signature()) {
+         case 'ALRT': // ALFA+ALRT
+            subrecord.read(this->fill_loc_ref_type);
+            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::location_ref_type, intfc.target_stub, this->fill_loc_ref_type)
+            );
+            break;
+         case 'ALFR':
+            if (subrecord.read(this->fill_from_reference))
+               this->fill_type = fill_type_t::preset_placed_reference;
+            return true;
+         case 'QNAM':
+            this->hidden_flags |= 4;
+            break;
+            //
+         case 'ALCO':
+            this->fill_type = fill_type_t::create_object;
+            subrecord.read(this->create_object_of_type);
+            break;
+         case 'ALCA':
+            if (this->fill_type == fill_type_t::create_object)
+               subrecord.read(this->create_object_at_alias);
+            break;
+         case 'ALCL':
+            if (this->fill_type == fill_type_t::create_object)
+               subrecord.read(this->create_object_of_level);
+            break;
+         case 'ALNA':
+            this->fill_type = fill_type_t::find_matching_reference;
+            subrecord.read(this->fill_near_alias);
+            break;
+         case 'ALNT':
+            if (this->fill_type == fill_type_t::find_matching_reference)
+               subrecord.read(this->fill_near_alias_type);
+            break;
+         case 'ALUA':
+            this->fill_type = fill_type_t::preset_unique_actor;
+            subrecord.read(this->fill_from_unique_actor_base);
+            break;
+            //
+         case 'ALPC':
+            if (subrecord.read(formID)) {
+               this->packages.push_back(formID);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, formID)
+               );
+            }
+            break;
+         case 'ALFC':
+            if (subrecord.read(formID)) {
+               this->factions.push_back(formID);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, intfc.target_stub, formID)
+               );
+            }
+            break;
+         case 'ALSP':
+            if (subrecord.read(formID)) {
+               this->spells.push_back(formID);
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, intfc.target_stub, formID)
+               );
+            }
+            break;
+         case 'VTCK':
+            subrecord.read(this->additional_voicetype);
+            break;
+         case 'KSIZ':
+         case 'KWDA':
+            this->keywords.load(subrecord, intfc);
+            break;
+         case 'COCT':
+         case 'CNTO':
+         case 'COED':
+            this->inventory.load(subrecord, intfc);
+            break;
+         case 'SCOR':
+            subrecord.read(this->package_override_lists.spectator);
+            break;
+         case 'OCOR':
+            subrecord.read(this->package_override_lists.observe_corpse);
+            break;
+         case 'GWOR':
+            subrecord.read(this->package_override_lists.guard_warn);
+            break;
+         case 'ECOR':
+            subrecord.read(this->package_override_lists.combat);
+            break;
+         case 'ALDN':
+            subrecord.read(this->display_name);
+            break;
+      }
+      return false;
+   }
+
+   void Alias::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      auto& start = record.open_next_subrecord(_signature_for_alias_type(this->type));
+      start.write(this->id);
+      start.close();
       auto& ALID = record.open_next_subrecord('ALID');
       ALID.write(this->name);
       ALID.close();
@@ -341,54 +222,113 @@ namespace dovah::loaded_forms {
             record.open_next_subrecord('BNAM').close();
          if (this->hidden_flags & 2)
             record.open_next_subrecord('ONAM').close();
-         if (this->hidden_flags & 4)
-            record.open_next_subrecord('QNAM').close();
       }
       if (this->force_into_alias_id) {
          auto& ALFI = record.open_next_subrecord('ALFI');
          ALFI.write(this->force_into_alias_id);
          ALFI.close();
       }
-      if (this->fill_type == fill_type_t::create_object) {
-         record.write_formID_subrecord('ALCO', this->create_object_of_type);
-         auto& ALCA = record.open_next_subrecord('ALCA');
-         ALCA.write(this->create_object_at_alias);
-         ALCA.close();
-         auto& ALCL = record.open_next_subrecord('ALCL');
-         ALCL.write(this->create_object_of_level);
-         ALCL.close();
-      } else if (this->fill_type == fill_type_t::other_alias_in_other_quest) {
-         record.write_formID_subrecord('ALEQ', this->fill_from_quest);
-         auto& ALEA = record.open_next_subrecord('ALEA');
-         ALEA.write(this->fill_from_alias);
-         ALEA.close();
-      } else if (this->fill_type == fill_type_t::other_alias_in_same_quest) {
-         auto& ALFA = record.open_next_subrecord('ALFA');
-         ALFA.write(this->fill_from_alias);
-         ALFA.close();
-         record.write_formID_subrecord('ALRT', this->fill_loc_ref_type);
-      } else if (this->fill_type == fill_type_t::from_event) {
-         auto& ALFE = record.open_next_subrecord('ALFE');
-         ALFE.write_signature(this->fill_from_event);
-         ALFE.close();
-         auto& ALFD = record.open_next_subrecord('ALFD');
-         ALFD.write_signature(this->fill_from_event_data);
-         ALFD.close();
-      } else if (this->fill_type == fill_type_t::preset_placed_reference) {
-         record.write_formID_subrecord('ALFR', this->fill_from_reference);
-      } else if (this->fill_type == fill_type_t::find_matching_reference) {
-         auto& ALNA = record.open_next_subrecord('ALNA');
-         ALNA.write(this->fill_near_alias);
-         ALNA.close();
-         auto& ALNT = record.open_next_subrecord('ALNT');
-         ALNT.write(this->fill_near_alias_type);
-         ALNT.close();
-      } else if (this->fill_type == fill_type_t::preset_unique_actor) {
-         record.write_formID_subrecord('ALUA', this->fill_from_unique_actor_base);
+      bool fully_handled = true;
+      switch (this->fill_type) {
+         case fill_type_t::none:
+            break;
+         case fill_type_t::other_alias_in_same_quest:
+            {
+            }
+            break;
+         case fill_type_t::from_event:
+            {
+               auto& ALFE = record.open_next_subrecord('ALFE');
+               ALFE.write_signature(this->fill_from_event.code);
+               ALFE.close();
+               auto& ALFD = record.open_next_subrecord('ALFD');
+               ALFD.write_signature(this->fill_from_event.member);
+               ALFD.close();
+            }
+            break;
+         case fill_type_t::other_alias_in_other_quest:
+            {
+               record.write_formID_subrecord('ALEQ', this->fill_from_alias.quest);
+               auto& ALEA = record.open_next_subrecord('ALEA');
+               ALEA.write(this->fill_from_alias.alias);
+               ALEA.close();
+            }
+            break;
+         default:
+            fully_handled = false;
+            break;
+      }
+      if (!this->_save_fill_impl(record, intfc) && !fully_handled) {
+         //
+         // Unrecognized type.
+         //
       }
       //
       for (auto& cnd : this->conditions)
          cnd.save(record, intfc);
+      this->_save_body_impl(record, intfc);
+      //
+      record.open_next_subrecord('ALED').close(); // Alias end marker.
+   }
+   //
+   bool LocationAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      switch (this->fill_type) {
+         case fill_type_t::preset_location:
+            record.write_formID_subrecord('ALFL', this->fill_from_location);
+            return true;
+            //
+         case fill_type_t::other_alias_in_same_quest:
+            //
+            // This is a special case: the base Alias class saved ALFA, but we need to also save KNAM.
+            //
+            record.write_formID_subrecord('KNAM', this->fill_from_location_keyword, true);
+            return true;
+      }
+      return false;
+   }
+   void LocationAlias::_save_body_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   }
+   //
+   bool ReferenceAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      switch (this->fill_type) {
+         case fill_type_t::create_object:
+            {
+               record.write_formID_subrecord('ALCO', this->create_object_of_type);
+               auto& ALCA = record.open_next_subrecord('ALCA');
+               ALCA.write(this->create_object_at_alias);
+               ALCA.close();
+               auto& ALCL = record.open_next_subrecord('ALCL');
+               ALCL.write(this->create_object_of_level);
+               ALCL.close();
+            }
+            return true;
+         case fill_type_t::preset_placed_reference:
+            record.write_formID_subrecord('ALFR', this->fill_from_reference);
+            return true;
+         case fill_type_t::find_matching_reference:
+            {
+               auto& ALNA = record.open_next_subrecord('ALNA');
+               ALNA.write(this->fill_near_alias);
+               ALNA.close();
+               auto& ALNT = record.open_next_subrecord('ALNT');
+               ALNT.write(this->fill_near_alias_type);
+               ALNT.close();
+            }
+            return true;
+         case fill_type_t::preset_unique_actor:
+            record.write_formID_subrecord('ALUA', this->fill_from_unique_actor_base);
+            return true;
+            //
+         case fill_type_t::other_alias_in_same_quest:
+            //
+            // This is a special case: the base Alias class saved ALFA, but we need to also save ALRT.
+            //
+            record.write_formID_subrecord('ALRT', this->fill_loc_ref_type);
+            return true;
+      }
+      return false;
+   }
+   void ReferenceAlias::_save_body_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->keywords.save(record, intfc);
       this->inventory.save(record, intfc);
       record.write_formID_subrecord('SPOR', this->package_override_lists.spectator, true);
@@ -404,15 +344,26 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('ALPC', id);
       record.write_formID_subrecord('VTCK', this->additional_voicetype, true);
       //
-      record.open_next_subrecord('ALED').close(); // Alias end marker.
+      if (this->hidden_flags & 4)
+         record.open_next_subrecord('QNAM').close();
    }
-   void ReferenceAlias::sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      this->create_object_of_type.clear_if(my_owner, target);
-      this->fill_from_quest.clear_if(my_owner, target);
-      this->fill_from_reference.clear_if(my_owner, target);
-      this->fill_from_unique_actor_base.clear_if(my_owner, target);
+
+   void Alias::sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept {
+      this->fill_from_alias.quest.clear_if(my_owner, target);
       for (auto& cnd : this->conditions)
          cnd.sever_outbound_references_to(target, my_owner);
+      this->script_data.sever_outbound_references_to(target, my_owner);
+      //
+      this->_sever_outbound_references_impl(target, my_owner);
+   }
+   void LocationAlias::_sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept {
+      this->fill_from_location.clear_if(my_owner, target);
+      this->fill_from_location_keyword.clear_if(my_owner, target);
+   }
+   void ReferenceAlias::_sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept {
+      this->create_object_of_type.clear_if(my_owner, target);
+      this->fill_from_reference.clear_if(my_owner, target);
+      this->fill_from_unique_actor_base.clear_if(my_owner, target);
       this->keywords.sever_outbound_references_to(target, my_owner);
       this->inventory.sever_outbound_references_to(target, my_owner);
       this->package_override_lists.spectator.clear_if(my_owner, target);
@@ -423,15 +374,42 @@ namespace dovah::loaded_forms {
       remove_form_from_reference_list(this->factions, target, my_owner);
       remove_form_from_reference_list(this->packages, target, my_owner);
       this->additional_voicetype.clear_if(my_owner, target);
-      static_assert(false, "ReferenceAlias::sever_outbound_references: Sever references from the Papyrus data.");
    }
-   Alias* ReferenceAlias::clone(loaded_forms::Form& clone_owner) {
-      auto* copy = new ReferenceAlias(this->owner);
+
+   Alias* Alias::clone(loaded_forms::Form& clone_owner) {
+      Alias* copy = this->_clone_impl(clone_owner);
+      if (!copy)
+         return nullptr;
       //
-      copy->id = this->id;
-      copy->name = this->name;
+      copy->id    = this->id;
+      copy->name  = this->name;
       copy->flags = this->flags;
       copy->hidden_flags = this->hidden_flags;
+      copy->force_into_alias_id = this->force_into_alias_id;
+      copy->fill_from_alias.alias = this->fill_from_alias.alias;
+      copy->fill_from_alias.quest.set(clone_owner, this->fill_from_alias.quest);
+      copy->fill_from_event.code   = this->fill_from_event.code;
+      copy->fill_from_event.member = this->fill_from_event.member;
+      copy->fill_type = this->fill_type;
+      //
+      copy->conditions.append_all_of(clone_owner, this->conditions);
+      copy->script_data.clone_from(this->script_data, clone_owner);
+      //
+      copy->_clone_impl(clone_owner);
+      //
+      return copy;
+   }
+   Alias* LocationAlias::_clone_impl(loaded_forms::Form& clone_owner) {
+      auto* copy = new LocationAlias(this->owner);
+      //
+      copy->fill_from_location.set(clone_owner, this->fill_from_location);
+      copy->fill_from_location_keyword.set(clone_owner, this->fill_from_location_keyword);
+      //
+      return copy;
+   }
+   Alias* ReferenceAlias::_clone_impl(loaded_forms::Form& clone_owner) {
+      auto* copy = new ReferenceAlias(this->owner);
+      //
       copy->keywords.clone_from(this->keywords, clone_owner);
       copy->inventory.clone_from(this->inventory, clone_owner);
       copy->additional_voicetype.set(clone_owner, this->additional_voicetype);
@@ -446,28 +424,35 @@ namespace dovah::loaded_forms {
       copy->package_override_lists.guard_warn.set(clone_owner, this->package_override_lists.guard_warn);
       copy->package_override_lists.observe_corpse.set(clone_owner, this->package_override_lists.observe_corpse);
       copy->package_override_lists.spectator.set(clone_owner, this->package_override_lists.spectator);
-      copy->force_into_alias_id = this->force_into_alias_id;
-      copy->fill_from_alias = this->fill_from_alias;
-      copy->fill_from_event = this->fill_from_event;
-      copy->fill_from_event_data = this->fill_from_event_data;
-      copy->fill_from_quest.set(clone_owner, this->fill_from_quest);
       copy->fill_from_reference.set(clone_owner, this->fill_from_reference);
       copy->fill_from_unique_actor_base.set(clone_owner, this->fill_from_unique_actor_base);
       copy->fill_loc_ref_type.set(clone_owner, this->fill_loc_ref_type);
       copy->fill_near_alias = this->fill_near_alias;
       copy->fill_near_alias_type = this->fill_near_alias_type;
-      copy->fill_type = this->fill_type;
-      //
-      copy->conditions.append_all_of(clone_owner, this->conditions);
-      static_assert(false, "ReferenceAlias::clone: Clone the Papyrus data.");
       //
       return copy;
    }
-   void ReferenceAlias::clear(loaded_forms::Form& my_owner) {
+
+   void Alias::clear(loaded_forms::Form& my_owner) {
       this->id = -1;
       this->name.clear();
       this->flags = 0;
       this->hidden_flags = 0;
+      this->force_into_alias_id = -1;
+      this->fill_from_alias.alias = none_id;
+      this->fill_from_alias.quest.set(my_owner, nullptr);
+      this->fill_from_event.code   = story_event_code::undefined;
+      this->fill_from_event.member = -1;
+      this->conditions.clear(my_owner);
+      this->script_data.clear(my_owner);
+      //
+      this->_clear_impl(my_owner);
+   }
+   void LocationAlias::_clear_impl(loaded_forms::Form& my_owner) {
+      this->fill_from_location.set(my_owner, nullptr);
+      this->fill_from_location_keyword.set(my_owner, nullptr);
+   }
+   void ReferenceAlias::_clear_impl(loaded_forms::Form& my_owner) {
       this->keywords.clear(my_owner);
       this->inventory.clear(my_owner);
       this->additional_voicetype.set(my_owner, nullptr);
@@ -477,23 +462,16 @@ namespace dovah::loaded_forms {
       this->display_name.set(my_owner, nullptr);
       clear_form_reference_list(this->packages, my_owner);
       clear_form_reference_list(this->factions, my_owner);
-      clear_form_reference_list(this->spells,   my_owner);
+      clear_form_reference_list(this->spells, my_owner);
       this->package_override_lists.combat.set(my_owner, nullptr);
       this->package_override_lists.guard_warn.set(my_owner, nullptr);
       this->package_override_lists.observe_corpse.set(my_owner, nullptr);
       this->package_override_lists.spectator.set(my_owner, nullptr);
-      this->force_into_alias_id  = -1;
-      this->fill_from_alias      = -1;
-      this->fill_from_event      = story_event_code::undefined;
-      this->fill_from_event_data = -1;
-      this->fill_from_quest.set(my_owner, nullptr);
       this->fill_from_reference.set(my_owner, nullptr);
       this->fill_from_unique_actor_base.set(my_owner, nullptr);
       this->fill_loc_ref_type.set(my_owner, nullptr);
-      this->fill_near_alias      = -1;
+      this->fill_near_alias = -1;
       this->fill_near_alias_type = 0;
-      this->conditions.clear(my_owner);
-      static_assert(false, "ReferenceAlias::clear: Clear the Papyrus data.");
    }
    #pragma endregion
 
@@ -989,8 +967,82 @@ namespace dovah::loaded_forms {
       if (!uib.is_final_file())
          return;
       //
+      // Use info for quests is challenging because we need to exactly synch it with all of the data 
+      // that we load *and retain.* We want to discard orphaned sub-form script data (e.g. VMAD data 
+      // for a non-existent alias), which means that we can't just blindly collect that data's use 
+      // info. We need to gather the data's use info and hold onto it, and only commit it when we 
+      // know that the alias with the given ID exists.
+      //
+      // The game doesn't require that VMAD come before aliases, so in practice we have to commit 
+      // any valid sub-form script data at the end.
+      //
+      struct _alias_papyrus_use_info {
+         uint16_t alias_id;
+         form_stub_use_info_builder* pending = nullptr;
+         //
+         _alias_papyrus_use_info(uint16_t i, form_stub_use_info_builder& owner) : alias_id(i), pending(owner.spawn_subordinate()) {}
+         ~_alias_papyrus_use_info() {
+            delete this->pending;
+            this->pending = nullptr;
+         }
+      };
+      std::vector<_alias_papyrus_use_info> alias_papyrus_use_info;
+      std::vector<uint32_t> seen_aliases;
+      //
       form_id_t formID;
+      bool      is_in_alias = false;
       while (auto& subrecord = record.next_subrecord()) {
+         if (is_in_alias) {
+            switch (subrecord.signature()) {
+               case 'SCOR': // alias spectator override package list ID
+               case 'OCOR': // alias override corpse override package list ID
+               case 'GWOR': // alias guard warn override package list ID
+               case 'ECOR': // alias combat override package list ID
+               case 'ALDN': // alias display name form ID
+               case 'ALCO': // alias create object base form ID
+               case 'ALEQ': // alias fill-from-quest ID
+               case 'ALPC': // alias package
+               case 'ALFC': // alias faction
+               case 'ALSP': // alias spell
+               case 'ALUA': // alias fill from unique actor base ID
+               case 'ALFR': // alias fill from preplaced ref ID
+               case 'VTCK': // alias additional voicetype ID
+               case 'ALRT': // alias fill from LocRefType ID
+               case 'ALFL': // alias fill from location ID
+               case 'KNAM': // alias fill from location keyword ID
+                  if (subrecord.read(formID))
+                     uib.add_outbound_reference(formID);
+                  break;
+               case 'KSIZ': // alias keywords
+               case 'KWDA':
+                  components::keyword_list::generate_use_info(subrecord, uib);
+                  break;
+               case 'COCT':
+               case 'CNTO':
+               case 'COED':
+                  components::container_data::generate_use_info(subrecord, uib);
+                  break;
+               case 'ALID': // alias ID
+               case 'ALFI': // alias force-into-alias ID
+               case 'BNAM': // alias hidden flag
+               case 'ONAM': // alias hidden flag
+               case 'ALFA': // alias fill from internal alias ID
+               case 'ALEA': // alias fill from external alias ID
+               case 'ALFE': // alias fill from event
+               case 'ALFD': // alias fill from event data
+               case 'ALCA': // alias create object at
+               case 'ALCL': // alias create object of level
+               case 'ALNA': // alias find matching reference near alias
+               case 'ALNT': // alias find matching reference near alias type
+               case 'QNAM': // alias hidden flag
+                  break;
+               case 'ALED': // alias end marker
+                  is_in_alias = false;
+                  break;
+            }
+            continue;
+         }
+         //
          switch (subrecord.signature()) {
             case 'VMAD':
                {
@@ -1012,58 +1064,29 @@ namespace dovah::loaded_forms {
                            components::papyrus::script_data::skip_use_info(subrecord);
                            continue;
                         }
-
-                           //
-                           // Maybe we can solve it by making (form_stub_use_info_builder) a virtual class. Then, we could 
-                           // define a subclass that retains use info for now and commits it all at once if asked to later. 
-                           // We could then instantiate one of these per found alias, and then at the end of this function, 
-                           // we remember which aliases existed and which ones didn't, and commit the use info for their 
-                           // script data accordingly.
-                           //
-                           // The issue with this design is that all connection-building calls become virtual. An alternative 
-                           // approach would be to make the normal use info also batch its connections -- it stores them 
-                           // locally and then explicitly commits them when asked -- with (form_stub) calling the commit 
-                           // function. Then, the same builder can be used per-alias, with us committing it as desired.
-                           //
-                        static_assert(false, "what do we do about an entry that maps to a non-existent alias? our load code discards that, but that's harder to do from here");
-
-                        // Alias::papyrus_attachment_data::generate_use_info(header, subrecord, uib); // OLD
+                        auto& entry = alias_papyrus_use_info.emplace_back(owner.aliasID, uib);
+                        components::papyrus::script_data::generate_use_info(subrecord, *entry.pending);
                      }
                   }
                }
                break;
             case 'QTGL': // text global (there can be multiple)
             case 'NAM0': // log entry next quest
-            case 'SCOR': // alias spectator override package list ID
-            case 'OCOR': // alias override corpse override package list ID
-            case 'GWOR': // alias guard warn override package list ID
-            case 'ECOR': // alias combat override package list ID
-            case 'ALDN': // alias display name form ID
-            case 'ALCO': // alias create object base form ID
-            case 'ALEQ': // alias fill-from-quest ID
-            case 'ALPC': // alias package
-            case 'ALFC': // alias faction
-            case 'ALSP': // alias spell
-            case 'ALUA': // alias fill from unique actor base ID
-            case 'ALFR': // alias fill from preplaced ref ID
-            case 'VTCK': // alias additional voicetype ID
-            case 'ALRT': // alias fill from LocRefType ID
-            case 'ALFL': // alias fill from location ID
-            case 'KNAM': // alias fill from location keyword ID
                if (subrecord.read(formID))
                   uib.add_outbound_reference(formID);
-               break;
-            case 'KSIZ': // alias keywords
-            case 'KWDA':
-               components::keyword_list::generate_use_info(subrecord, uib);
                break;
             case 'CTDA':
                components::condition::generate_use_info(record, uib);
                break;
-            case 'COCT':
-            case 'CNTO':
-            case 'COED':
-               components::container_data::generate_use_info(subrecord, uib);
+            case 'ALLS': // location alias start
+               [[fallthrough]];
+            case 'ALST': // reference alias start
+               is_in_alias = true;
+               {
+                  uint32_t id;
+                  if (subrecord.read(id))
+                     seen_aliases.push_back(id);
+               }
                break;
             #ifdef _DEBUG
             case 'EDID': // editor ID
@@ -1079,31 +1102,24 @@ namespace dovah::loaded_forms {
             case 'QSTA': // target
             case 'INDX': // stage
             case 'QSDT': // log entry
-            case 'ALLS': // location alias start
-            case 'ALST': // reference alias start
-            case 'ALID': // alias ID
-            case 'ALFI': // alias force-into-alias ID
-            case 'BNAM': // alias hidden flag
-            case 'ONAM': // alias hidden flag
-            case 'ALFA': // alias fill from internal alias ID
-            case 'ALEA': // alias fill from external alias ID
-            case 'ALFE': // alias fill from event
-            case 'ALFD': // alias fill from event data
-            case 'ALCA': // alias create object at
-            case 'ALCL': // alias create object of level
-            case 'ALNA': // alias find matching reference near alias
-            case 'ALNT': // alias find matching reference near alias type
-            case 'ALED': // alias end marker
             case 'SCHR': // DEPRECATED: ObScript header
             case 'SCDA': // DEPRECATED: ObScript compiled code
             case 'SCTX': // DEPRECATED: ObScript source code
             case 'SCRO': // DEPRECATED: ObScript ObjectReference
             case 'SCRV': // DEPRECATED: ObScript ObjectReference variable
             case 'SLSD': // ObScript data? game doesn't load this
-            case 'QNAM': // ObScript data? game doesn't load this / alias hidden flag
+            case 'QNAM': // ObScript data? game doesn't load this (when it's outside of an alias)
             case 'DNAM': // quest form version?
                break;
             #endif
+         }
+      }
+      for (auto& entry : alias_papyrus_use_info) {
+         for (auto id : seen_aliases) {
+            if (id == entry.alias_id) {
+               entry.pending->commit();
+               break;
+            }
          }
       }
    }

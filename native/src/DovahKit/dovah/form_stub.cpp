@@ -27,10 +27,27 @@ namespace dovah {
 
    #pragma region form_stub_use_info_builder
    void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
-      this->_stub._add_one_way_outbound_reference(to_stub, flags);
+      this->_pending.emplace_back(to_stub, flags);
    }
    void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
-      this->_stub._add_one_way_outbound_reference(toFormID, flags);
+      this->_pending.emplace_back(toFormID, flags);
+   }
+   void form_stub_use_info_builder::commit() {
+      for (auto& entry : this->_pending) {
+         if (auto* to_stub = entry.target_stub)
+            this->_stub._add_one_way_outbound_reference(to_stub, entry.flags);
+         else
+            this->_stub._add_one_way_outbound_reference(entry.target_id, entry.flags);
+      }
+      this->_pending.clear();
+   }
+   //
+   form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate() const noexcept {
+      auto sub = new form_stub_use_info_builder(this->_stub);
+      sub._is_final_file     = this->_is_final_file;
+      sub._last_record_flags = this->_last_record_flags;
+      sub.is_partial_record  = this->is_partial_record;
+      return sub;
    }
    //
    void form_stub_use_info_builder::clear_all_prior_use_info() const noexcept {
@@ -488,6 +505,7 @@ namespace dovah {
          auto* file = arr[i].pointer;
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             build_hardcoded_form_outbound_refs(use_interface);
+            use_interface.commit();
          } else {
             if (arr[i].offset == 0)
                continue;
@@ -499,6 +517,7 @@ namespace dovah {
                auto  builder = get_outbound_uses_builder_by_type(this->formType);
                if (builder) {
                   builder(record, use_interface);
+                  use_interface.commit();
                }
             }
          }

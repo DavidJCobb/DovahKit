@@ -184,21 +184,36 @@ namespace dovah {
    #pragma endregion
 
    #pragma region Interfaces for working with form stubs in specific contexts
-   class form_stub_deferred_use_info_builder;
    class form_stub_use_info_builder {
       friend class form_stub;
       protected:
+         struct _pending_entry {
+            uint32_t   target_id   = 0;
+            form_stub* target_stub = nullptr;
+            use_info_entry::flags_t flags = 0;
+            //
+            _pending_entry() {}
+            _pending_entry(uint32_t i, use_info_entry::flags_t f) : target_id(i), flags(f) {}
+            _pending_entry(form_stub* s, use_info_entry::flags_t f) : target_stub(s), flags(f) {}
+         };
+         //
          form_stub& _stub;
          bool _is_final_file     = false;
          bool _last_record_flags = 0;
+         std::vector<_pending_entry> _pending;
          //
-         form_stub_use_info_builder(form_stub& s) : _stub(s) {}
+         form_stub_use_info_builder(form_stub& s) : _stub(s) {
+            this->_pending.reserve(20);
+         }
          //
       public:
          bool is_partial_record = false;
          //
          void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         void commit();
+         //
+         form_stub_use_info_builder* spawn_subordinate() const noexcept;
          //
          inline const form_stub* stub() const noexcept { return &this->_stub; }
          inline bool is_final_file() const noexcept { return this->_is_final_file; }
@@ -208,23 +223,6 @@ namespace dovah {
          //
          // Generic state information, provided for form types that need it:
          form_id_t extra_form_ids[10];
-   };
-   class form_stub_deferred_use_info_builder : public form_stub_use_info_builder {
-      public:
-         //
-         // TODO: make (add_outbound_reference) in the above class virtual
-         //
-         // TODO: override (add_outbound_reference) here: we should store form stubs and 
-         //       form IDs to eventually build use info for, and have a "commit" function 
-         //       which actually carries that out on request
-         //
-         // TODO: i'm pretty sure that at present, a (form_stub_use_info_builder) can only 
-         //       be created by the form stub that wants use info built; we should therefore 
-         //       allow a normal builder to spawn a deferred builder via a public member 
-         //       function.
-         //
-         // TODO: use this for quest alias VMAD data
-         //
    };
    #pragma endregion
 
