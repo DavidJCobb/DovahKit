@@ -202,6 +202,7 @@
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_addenda.cpp" />
     <ClCompile Include="dovah\form_stub_helpers.cpp" />
+    <ClCompile Include="dovah\form_stub_use_info_builder.cpp" />
     <ClCompile Include="dovah\localization\common.cpp" />
     <ClCompile Include="dovah\localization\localized_string_store.cpp" />
     <ClCompile Include="dovah\localized_strings.cpp" />

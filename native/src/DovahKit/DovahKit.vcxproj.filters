@@ -699,6 +699,9 @@
     <ClCompile Include="editor\helpers\stringify_conditions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\form_stub_use_info_builder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">

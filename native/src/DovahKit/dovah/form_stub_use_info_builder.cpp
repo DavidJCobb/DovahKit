@@ -2,22 +2,40 @@
 
 namespace dovah {
    form_stub_use_info_builder::form_stub_use_info_builder(form_stub& s) : _stub(s) {
-      this->_pending.reserve(40);
    }
    void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
-      this->_pending.emplace_back(to_stub, flags);
+      if (++this->_pending.size < preallocated_array_size) {
+         this->_pending.fixed[this->_pending.size] = _pending_entry(to_stub, flags);
+      } else {
+         this->_pending.extra.emplace_back(to_stub, flags);
+      }
    }
    void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
-      this->_pending.emplace_back(toFormID, flags);
+      if (++this->_pending.size < preallocated_array_size) {
+         this->_pending.fixed[this->_pending.size] = _pending_entry(toFormID, flags);
+      } else {
+         this->_pending.extra.emplace_back(toFormID, flags);
+      }
    }
    void form_stub_use_info_builder::commit() {
-      for (auto& entry : this->_pending) {
+      size_t size = this->_pending.size;
+      if (size > preallocated_array_size)
+         size = preallocated_array_size;
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = this->_pending.fixed[i];
          if (auto* to_stub = entry.target_stub)
             this->_stub._add_one_way_outbound_reference(to_stub, entry.flags);
          else
             this->_stub._add_one_way_outbound_reference(entry.target_id, entry.flags);
       }
-      this->_pending.clear();
+      for (auto& entry : this->_pending.extra) {
+         if (auto* to_stub = entry.target_stub)
+            this->_stub._add_one_way_outbound_reference(to_stub, entry.flags);
+         else
+            this->_stub._add_one_way_outbound_reference(entry.target_id, entry.flags);
+      }
+      this->_pending.size = 0;
+      this->_pending.extra.clear();
    }
    //
    form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate() const noexcept {

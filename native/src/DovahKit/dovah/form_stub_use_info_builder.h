@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <vector>
 #include "form_stub.h"
 
 namespace dovah {
@@ -6,8 +8,8 @@ namespace dovah {
       friend class form_stub;
       protected:
          struct _pending_entry {
-            uint32_t   target_id   = 0;
             form_stub* target_stub = nullptr;
+            uint32_t   target_id   = 0;
             use_info_entry::flags_t flags = 0;
             //
             _pending_entry() {}
@@ -18,7 +20,13 @@ namespace dovah {
          form_stub& _stub;
          bool _is_final_file     = false;
          bool _last_record_flags = 0;
-         std::vector<_pending_entry> _pending;
+         struct _pending_list {
+            std::array<_pending_entry, 20> fixed;
+            std::vector<_pending_entry>    extra;
+            size_t size = 0;
+         } _pending;
+         //
+         static constexpr size_t preallocated_array_size = std::tuple_size<decltype(_pending_list::fixed)>::value;
          //
          form_stub_use_info_builder(form_stub& s);
          //
