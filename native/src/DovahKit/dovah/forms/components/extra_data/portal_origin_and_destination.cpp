@@ -1,4 +1,5 @@
 #include "portal_origin_and_destination.h"
+#include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
    extra_data_load_result portal_origin_and_destination::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {

@@ -1,4 +1,5 @@
 #include "linked_ref.h"
+#include "../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::extra {
    extra_data_load_result linked_ref::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {

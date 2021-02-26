@@ -8,6 +8,7 @@
 #include "forms/Form.h"
 #include "form_stub_addenda.h"
 #include "form_stub_heap.h"
+#include "form_stub_use_info_builder.h"
 #include "logging.h"
 
 namespace dovah {

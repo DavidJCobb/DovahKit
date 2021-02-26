@@ -473,6 +473,7 @@
     <ClInclude Include="dovah\form_stub_addenda.h" />
     <ClInclude Include="dovah\form_stub_heap.h" />
     <ClInclude Include="dovah\form_stub_helpers.h" />
+    <ClInclude Include="dovah\form_stub_use_info_builder.h" />
     <ClInclude Include="dovah\localization\common.h" />
     <ClInclude Include="dovah\localization\localized_string_store.h" />
     <ClInclude Include="dovah\localized_strings.h" />

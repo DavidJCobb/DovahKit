@@ -1,6 +1,7 @@
 #include "hardcoded.h"
 #include "../../core.h"
 #include "../../form_stub.h"
+#include "../../form_stub_use_info_builder.h"
 #include "../../files/tes_file_reading/file_loader.h"
 #include "../../files/file_load_order.h"
 #include "../../data/actor_values.h"

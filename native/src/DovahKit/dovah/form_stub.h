@@ -27,6 +27,7 @@ namespace dovah {
 
    class form_stub;
    class form_stub_addenda;
+   class form_stub_use_info_builder;
 
    template<typename loaded_form_t> class loaded_form_ptr {
       //
@@ -181,47 +182,6 @@ namespace dovah {
       static flags_t invert_flags(flags_t);
    };
    using use_info_list = std::map<bare_form_id_t, use_info_entry>;
-   #pragma endregion
-
-   #pragma region Interfaces for working with form stubs in specific contexts
-   class form_stub_use_info_builder {
-      friend class form_stub;
-      protected:
-         struct _pending_entry {
-            uint32_t   target_id   = 0;
-            form_stub* target_stub = nullptr;
-            use_info_entry::flags_t flags = 0;
-            //
-            _pending_entry() {}
-            _pending_entry(uint32_t i, use_info_entry::flags_t f) : target_id(i), flags(f) {}
-            _pending_entry(form_stub* s, use_info_entry::flags_t f) : target_stub(s), flags(f) {}
-         };
-         //
-         form_stub& _stub;
-         bool _is_final_file     = false;
-         bool _last_record_flags = 0;
-         std::vector<_pending_entry> _pending;
-         //
-         form_stub_use_info_builder(form_stub& s);
-         //
-      public:
-         bool is_partial_record = false;
-         //
-         void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
-         void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
-         void commit();
-         //
-         form_stub_use_info_builder* spawn_subordinate() const noexcept;
-         //
-         inline const form_stub* stub() const noexcept { return &this->_stub; }
-         inline bool is_final_file() const noexcept { return this->_is_final_file; }
-         inline uint32_t last_record_flags() const noexcept { return this->_last_record_flags; }
-         //
-         void clear_all_prior_use_info() const noexcept; // needed for TopicInfos due to their bizarre partial-record behavior
-         //
-         // Generic state information, provided for form types that need it:
-         form_id_t extra_form_ids[10];
-   };
    #pragma endregion
 
    class form_stub {
