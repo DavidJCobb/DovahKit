@@ -3,6 +3,12 @@
 #include "../logging.h"
 #include "../notice_code_list.h"
 
+#if !_DEBUG
+   static_assert(false, "for the love of dibella, please tell me you removed the #define static_assert that you put here for a quick test");
+#endif
+// FOR TESTING PURPOSES ONLY:
+//#define static_assert(...) /*...*/
+
 namespace {
    constexpr uint32_t _signature_for_alias_type(dovah::loaded_forms::Alias::alias_type t) {
       using namespace dovah::loaded_forms;
@@ -985,6 +991,17 @@ namespace dovah::loaded_forms {
             delete this->pending;
             this->pending = nullptr;
          }
+         _alias_papyrus_use_info(_alias_papyrus_use_info&& other) {
+            this->alias_id = other.alias_id;
+            this->pending  = other.pending;
+            other.pending  = nullptr;
+         }
+         _alias_papyrus_use_info& operator=(_alias_papyrus_use_info&& other) noexcept {
+            this->alias_id = other.alias_id;
+            this->pending  = other.pending;
+            other.pending  = nullptr;
+            return *this;
+         }
       };
       std::vector<_alias_papyrus_use_info> alias_papyrus_use_info;
       std::vector<uint32_t> seen_aliases;
@@ -993,6 +1010,8 @@ namespace dovah::loaded_forms {
       bool      is_in_alias = false;
       while (auto& subrecord = record.next_subrecord()) {
          if (is_in_alias) {
+            static_assert(false, "Add use-info builders for the Alias classes.");
+            static_assert(false, "For fields that can only appear once, only build use info for the last-seen forms specified in them; for example if there are multiple SCOR, only the last should count, since that's how it'll work when we load the form data later.");
             switch (subrecord.signature()) {
                case 'SCOR': // alias spectator override package list ID
                case 'OCOR': // alias override corpse override package list ID

@@ -202,9 +202,7 @@ namespace dovah {
          bool _last_record_flags = 0;
          std::vector<_pending_entry> _pending;
          //
-         form_stub_use_info_builder(form_stub& s) : _stub(s) {
-            this->_pending.reserve(20);
-         }
+         form_stub_use_info_builder(form_stub& s);
          //
       public:
          bool is_partial_record = false;

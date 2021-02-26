@@ -53,7 +53,7 @@ namespace dovah::loaded_forms {
          enum class fill_type_t {
             none = 0,
             //
-            other_alias_in_same_quest,  // ALFA
+            other_alias_in_same_quest,  // ALFA (typically followed by a type-specific field)
             from_event,                 // ALFE + ALFD
             other_alias_in_other_quest, // ALEQ
             //
@@ -64,10 +64,7 @@ namespace dovah::loaded_forms {
             // Types unique to reference aliases:
             //
             preset_placed_reference,    // ALFR: a preset Actor or ObjectReference is "forced" into this alias
-            other_alias_in_same_quest,  // ALFA
-            from_event,                 // ALFE
             create_object,              // ALCO
-            other_alias_in_other_quest, // ALEQ
             preset_unique_actor,        // ALUA
             find_matching_reference,    // ALNA
          };
@@ -105,7 +102,7 @@ namespace dovah::loaded_forms {
          //
       protected:
          virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
-         virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0; // return true if type handled; false if not
+         virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0; // handle the fill-type, if it is (or has any data) specific to the alias type. return true if type handled; false if not
          virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0;
          virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept = 0;
          virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) = 0;

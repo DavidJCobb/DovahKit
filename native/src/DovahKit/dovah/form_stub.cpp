@@ -26,6 +26,9 @@ namespace dovah {
    }
 
    #pragma region form_stub_use_info_builder
+   form_stub_use_info_builder::form_stub_use_info_builder(form_stub& s) : _stub(s) {
+      this->_pending.reserve(40);
+   }
    void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
       this->_pending.emplace_back(to_stub, flags);
    }
@@ -44,9 +47,9 @@ namespace dovah {
    //
    form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate() const noexcept {
       auto sub = new form_stub_use_info_builder(this->_stub);
-      sub._is_final_file     = this->_is_final_file;
-      sub._last_record_flags = this->_last_record_flags;
-      sub.is_partial_record  = this->is_partial_record;
+      sub->_is_final_file     = this->_is_final_file;
+      sub->_last_record_flags = this->_last_record_flags;
+      sub->is_partial_record  = this->is_partial_record;
       return sub;
    }
    //
