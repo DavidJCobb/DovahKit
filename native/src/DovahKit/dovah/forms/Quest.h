@@ -100,6 +100,8 @@ namespace dovah::loaded_forms {
          Alias* clone(loaded_forms::Form& clone_owner);
          void clear(loaded_forms::Form& my_owner);
          //
+         static alias_id_t generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         //
       protected:
          virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
          virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0; // handle the fill-type, if it is (or has any data) specific to the alias type. return true if type handled; false if not
@@ -109,6 +111,7 @@ namespace dovah::loaded_forms {
          virtual void _clear_impl(loaded_forms::Form& my_owner) = 0;
    };
    class LocationAlias : public Alias {
+      friend class Alias;
       friend class Quest;
       public:
          form_reference_t fill_from_location;
@@ -123,8 +126,15 @@ namespace dovah::loaded_forms {
          virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
          virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) override;
          virtual void _clear_impl(loaded_forms::Form& my_owner) override;
+         //
+         struct _use_info_field_state {
+            form_id_t fill_from_location;
+            form_id_t fill_from_location_keyword;
+         };
+         static void generate_use_info_for_subrecord(_use_info_field_state&, tes_subrecord_reader&, form_stub_use_info_builder&);
    };
    class ReferenceAlias : public Alias {
+      friend class Alias;
       friend class Quest;
       public:
          components::keyword_list      keywords; // KSIZ, KWDA
@@ -159,6 +169,22 @@ namespace dovah::loaded_forms {
          virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
          virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) override;
          virtual void _clear_impl(loaded_forms::Form& my_owner) override;
+         //
+         struct _use_info_field_state {
+            struct {
+               form_id_t spectator; // SPOR
+               form_id_t observe_corpse; // OCOR
+               form_id_t guard_warn; // GWOR
+               form_id_t combat; // ECOR
+            } package_override_lists;
+            form_id_t display_name;
+            form_id_t additional_voicetype;
+            form_id_t fill_loc_ref_type;
+            form_id_t fill_from_reference;
+            form_id_t create_object_of_type;
+            form_id_t fill_from_unique_actor_base;
+         };
+         static void generate_use_info_for_subrecord(_use_info_field_state&, tes_subrecord_reader&, form_stub_use_info_builder&);
    };
 
    class Quest : public Form {
@@ -318,7 +344,6 @@ namespace dovah::loaded_forms {
          struct {
             uint8_t     unknown = 2;
             std::string filename;
-            std::vector<LogEntry::script_fragment> unowned_log_entry_data; // storage for VMAD log entry data that specified an invalid stage or log entry
          } script_fragment_root;
          //
          // DNAM:
@@ -352,8 +377,6 @@ namespace dovah::loaded_forms {
          Stage* lookup_stage_by_id(uint16_t id) noexcept;
          Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists
          void   remove_stage(int id) noexcept;
-
-         void discard_invalid_script_data();
 
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

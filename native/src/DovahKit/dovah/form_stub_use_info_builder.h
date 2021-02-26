@@ -21,6 +21,10 @@ namespace dovah {
          bool _is_final_file     = false;
          bool _last_record_flags = 0;
          struct _pending_list {
+            //
+            // To improve performance, we use a fixed-size array and then fall back to a secondary 
+            // vector if we need more storage.
+            //
             std::array<_pending_entry, 20> fixed;
             std::vector<_pending_entry>    extra;
             size_t size = 0;

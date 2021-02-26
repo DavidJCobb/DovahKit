@@ -93,7 +93,7 @@ namespace dovah {
          partial_info_override_has_different_parent  = 0x00000054, // A partial-flagged INFO override has a different parent from the original. This can lead to all sorts of data mishandling in-game.
          dialogue_branch_mishandled_owning_quest_id  = 0x00000055, // A bug in the game's loader will cause it to mishandle this DLBR/QNAM subrecord.
          worldspace_is_its_own_parent                = 0x00000056, // A worldspace has been set to use itself as the parent world. The game will enter an infinite loading screen when trying to load it.
-         quest_has_phantom_script_data               = 0x00000057, // A quest contains script data for a non-existent alias or log entry, or for an alias in another quest.
+         quest_fragment_belongs_to_missing_log_entry = 0x00000057,
          too_many_script_fragments_to_save           = 0x00000058, // A form has too many script fragments, and cannot be saved.
          too_many_aliases_with_scripts_to_save       = 0x00000059,
          alias_papyrus_data_specifies_wrong_quest    = 0x0000005A, // An alias's Papyrus data was skipped because it claims to belong to a quest other than the containing quest.

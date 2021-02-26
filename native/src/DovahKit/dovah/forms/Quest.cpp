@@ -27,12 +27,8 @@ namespace dovah::loaded_forms {
    void Alias::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto&    subrecord = record.get_current_subrecord();
       uint32_t required  = _signature_for_alias_type(this->type);
-      if (required) {
-         //
-         // TODO: make this a load error, NOT an assert
-         //
-         assert(subrecord.signature() == required && "Alias::load should only be called just after the ALLS/ALST subrecord is opened.");
-      }
+      assert(required && "Alias::load doesn't know what subrecord to check for. Did someone try to implement a new alias type without updating _signature_for_alias_type?");
+      assert(subrecord.signature() == required && "Alias::load was asked to handle the wrong subrecord. How did this happen?");
       //
       subrecord.read(this->id);
       if (!record.next_subrecord())
@@ -128,7 +124,7 @@ namespace dovah::loaded_forms {
          case 'ALFR':
             if (subrecord.read(this->fill_from_reference))
                this->fill_type = fill_type_t::preset_placed_reference;
-            return true;
+            break;
          case 'QNAM':
             this->hidden_flags |= 4;
             break;
@@ -209,8 +205,138 @@ namespace dovah::loaded_forms {
          case 'ALDN':
             subrecord.read(this->display_name);
             break;
+         default:
+            return false;
       }
-      return false;
+      return true;
+   }
+
+   /*static*/ alias_id_t Alias::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      auto& subrecord = record.get_current_subrecord();
+      //
+      alias_type type = alias_type::undifferentiated;
+      switch (subrecord.signature()) {
+         case 'ALLS':
+            type = alias_type::location;
+            break;
+         case 'ALST':
+            type = alias_type::reference;
+            break;
+      }
+      if (type == alias_type::undifferentiated)
+         return;
+      LocationAlias::_use_info_field_state  state_location;
+      ReferenceAlias::_use_info_field_state state_reference;
+      //
+      alias_id_t id;
+      if (!subrecord.read(id))
+         return;
+      //
+      form_id_t fill_from_alias_quest_id;
+      for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'ALEQ': // quest which contains ALEA
+               subrecord.read(fill_from_alias_quest_id);
+               break;
+            case 'CTDA':
+               components::condition::generate_use_info(record, uib);
+               break;
+            case 'ALID': // alias name
+            case 'FNAM': // flags
+            case 'BNAM': // hidden flag
+            case 'ONAM': // hidden flag
+            case 'ALFI': // force-into-alias ID
+            case 'ALEA': // fill from external alias
+            case 'ALFA': // fill from internal alias
+            case 'ALFE': // fill from event code
+            case 'ALFD': // fill from event member
+               break;
+            default:
+               if (type == alias_type::reference)
+                  ReferenceAlias::generate_use_info_for_subrecord(state_reference, subrecord, uib);
+               else if (type == alias_type::location)
+                  LocationAlias::generate_use_info_for_subrecord(state_location, subrecord, uib);
+               break;
+         }
+      }
+      uib.add_outbound_reference(fill_from_alias_quest_id);
+      if (type == alias_type::reference) {
+         uib.add_outbound_reference(state_reference.package_override_lists.spectator);
+         uib.add_outbound_reference(state_reference.package_override_lists.observe_corpse);
+         uib.add_outbound_reference(state_reference.package_override_lists.guard_warn);
+         uib.add_outbound_reference(state_reference.package_override_lists.combat);
+         uib.add_outbound_reference(state_reference.display_name);
+         uib.add_outbound_reference(state_reference.additional_voicetype);
+         uib.add_outbound_reference(state_reference.fill_loc_ref_type);
+         uib.add_outbound_reference(state_reference.fill_from_reference);
+         uib.add_outbound_reference(state_reference.create_object_of_type);
+         uib.add_outbound_reference(state_reference.fill_from_unique_actor_base);
+      } else if (type == alias_type::location) {
+         uib.add_outbound_reference(state_location.fill_from_location);
+         uib.add_outbound_reference(state_location.fill_from_location_keyword);
+      }
+      //
+      return id;
+   }
+   /*static*/ void LocationAlias::generate_use_info_for_subrecord(_use_info_field_state& state, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
+      switch (subrecord.signature()) {
+         case 'ALFL':
+            subrecord.read(state.fill_from_location);
+            return;
+         case 'KNAM': // ALFA+KNAM
+            subrecord.read(state.fill_from_location_keyword);
+            return;
+      }
+   }
+   /*static*/ void ReferenceAlias::generate_use_info_for_subrecord(_use_info_field_state& state, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
+      form_id_t formID;
+      switch (subrecord.signature()) {
+         case 'ALRT': // ALFA+ALRT
+            subrecord.read(state.fill_loc_ref_type);
+            return;
+         case 'ALFR':
+            subrecord.read(state.fill_from_reference);
+            return;
+         case 'ALCO':
+            subrecord.read(state.create_object_of_type);
+            break;
+         case 'ALUA':
+            subrecord.read(state.fill_from_unique_actor_base);
+            break;
+         case 'ALPC':
+         case 'ALFC':
+         case 'ALSP':
+            if (subrecord.read(formID))
+               uib.add_outbound_reference(formID);
+            break;
+         case 'VTCK':
+            subrecord.read(state.additional_voicetype);
+            break;
+         case 'KSIZ':
+         case 'KWDA':
+            components::keyword_list::generate_use_info(subrecord, uib);
+            break;
+         case 'COCT':
+         case 'CNTO':
+         case 'COED':
+            components::container_data::generate_use_info(subrecord, uib);
+            break;
+         case 'SCOR':
+            subrecord.read(state.package_override_lists.spectator);
+            break;
+         case 'OCOR':
+            subrecord.read(state.package_override_lists.observe_corpse);
+            break;
+         case 'GWOR':
+            subrecord.read(state.package_override_lists.guard_warn);
+            break;
+         case 'ECOR':
+            subrecord.read(state.package_override_lists.combat);
+            break;
+         case 'ALDN':
+            subrecord.read(state.display_name);
+            break;
+      }
    }
 
    void Alias::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -775,6 +901,7 @@ namespace dovah::loaded_forms {
                      components::papyrus::script_data::property_object_value owner;
                      owner.load(this->script_data.header, subrecord);
                      if (owner.form != &this->stub) {
+                        static_assert(false, "How does the game implement this? Test this and implement game-accurate behavior if possible; write a detailed warning message if not");
                         detailed_notice warning;
                         warning.code = notice_code::alias_papyrus_data_specifies_wrong_quest;
                         warning.set_cause_form(this->stub);
@@ -941,6 +1068,7 @@ namespace dovah::loaded_forms {
                //
                continue;
             }
+            static_assert(false, "Test this and implement game-accurate behavior if possible");
             assert(alias->script_data.empty() && "TODO: How do the game and CK handle multiple VMAD entries for a single alias?"); // TODO
             alias->script_data = entry.data;
          }
@@ -956,17 +1084,15 @@ namespace dovah::loaded_forms {
                   continue;
                }
             }
-            static_assert(false, "If any VMAD-log-entry data specifies a bad stage or log entry, we should emit a load warning.");
-            this->script_fragment_root.unowned_log_entry_data.push_back(data);
+            detailed_notice warning;
+            warning.code = notice_code::quest_fragment_belongs_to_missing_log_entry;
+            warning.set_cause_form(this->stub);
+            warning.set_cause_subrecord('VMAD');
+            warning.extra_integers[0] = data.stage_id;
+            warning.extra_integers[1] = data.entry_index;
+            intfc.log_load_warning(warning);
          }
          pending_log_entry_scripts.clear();
-      }
-      if (!this->script_fragment_root.unowned_log_entry_data.empty()) {
-         detailed_notice warning;
-         warning.code = notice_code::quest_has_phantom_script_data;
-         warning.set_cause_form(this->stub);
-         warning.set_cause_subrecord('VMAD');
-         intfc.log_load_warning(warning);
       }
    }
    /*static*/ void Quest::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -1007,61 +1133,7 @@ namespace dovah::loaded_forms {
       std::vector<uint32_t> seen_aliases;
       //
       form_id_t formID;
-      bool      is_in_alias = false;
       while (auto& subrecord = record.next_subrecord()) {
-         if (is_in_alias) {
-            static_assert(false, "Add use-info builders for the Alias classes.");
-            static_assert(false, "For fields that can only appear once, only build use info for the last-seen forms specified in them; for example if there are multiple SCOR, only the last should count, since that's how it'll work when we load the form data later.");
-            switch (subrecord.signature()) {
-               case 'SCOR': // alias spectator override package list ID
-               case 'OCOR': // alias override corpse override package list ID
-               case 'GWOR': // alias guard warn override package list ID
-               case 'ECOR': // alias combat override package list ID
-               case 'ALDN': // alias display name form ID
-               case 'ALCO': // alias create object base form ID
-               case 'ALEQ': // alias fill-from-quest ID
-               case 'ALPC': // alias package
-               case 'ALFC': // alias faction
-               case 'ALSP': // alias spell
-               case 'ALUA': // alias fill from unique actor base ID
-               case 'ALFR': // alias fill from preplaced ref ID
-               case 'VTCK': // alias additional voicetype ID
-               case 'ALRT': // alias fill from LocRefType ID
-               case 'ALFL': // alias fill from location ID
-               case 'KNAM': // alias fill from location keyword ID
-                  if (subrecord.read(formID))
-                     uib.add_outbound_reference(formID);
-                  break;
-               case 'KSIZ': // alias keywords
-               case 'KWDA':
-                  components::keyword_list::generate_use_info(subrecord, uib);
-                  break;
-               case 'COCT':
-               case 'CNTO':
-               case 'COED':
-                  components::container_data::generate_use_info(subrecord, uib);
-                  break;
-               case 'ALID': // alias ID
-               case 'ALFI': // alias force-into-alias ID
-               case 'BNAM': // alias hidden flag
-               case 'ONAM': // alias hidden flag
-               case 'ALFA': // alias fill from internal alias ID
-               case 'ALEA': // alias fill from external alias ID
-               case 'ALFE': // alias fill from event
-               case 'ALFD': // alias fill from event data
-               case 'ALCA': // alias create object at
-               case 'ALCL': // alias create object of level
-               case 'ALNA': // alias find matching reference near alias
-               case 'ALNT': // alias find matching reference near alias type
-               case 'QNAM': // alias hidden flag
-                  break;
-               case 'ALED': // alias end marker
-                  is_in_alias = false;
-                  break;
-            }
-            continue;
-         }
-         //
          switch (subrecord.signature()) {
             case 'VMAD':
                {
@@ -1100,12 +1172,7 @@ namespace dovah::loaded_forms {
             case 'ALLS': // location alias start
                [[fallthrough]];
             case 'ALST': // reference alias start
-               is_in_alias = true;
-               {
-                  uint32_t id;
-                  if (subrecord.read(id))
-                     seen_aliases.push_back(id);
-               }
+               Alias::generate_use_info(record, uib);
                break;
             #ifdef _DEBUG
             case 'EDID': // editor ID
@@ -1192,21 +1259,8 @@ namespace dovah::loaded_forms {
    }
    bool Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       {
-         //
-         // Don't save unowned data, as we won't have corrected it e.g. to make sure that it doesn't refer 
-         // to log entries or aliases created after load.
-         //
-         constexpr bool save_unowned_data = false;
-         //
          size_t alias_count = 0;
-         size_t log_count   = this->script_fragment_root.unowned_log_entry_data.size();
-         if (!save_unowned_data && log_count) {
-            static_assert(false, "Strongly consider throwing a save error if any unowned data exists, so we don't have to worry about \"owners\" being created under it (e.g. an unowned alias-VMAD loaded with an invalid alias ID, but we later create an alias with that ID) and things getting mangled at save time.");
-            //
-            // TODO: log (notice_code::quest_has_phantom_script_data) as a save error
-            //
-            return false;
-         }
+         size_t log_count   = 0;
          for (auto& s : this->stages)
             for (auto& e : s.entries)
                if (!e.fragment.empty())
@@ -1231,10 +1285,6 @@ namespace dovah::loaded_forms {
             VMAD.write(this->script_fragment_root.unknown);
             VMAD.write(uint16_t(log_count));
             VMAD.write_length_prefixed_string<2>(this->script_fragment_root.filename);
-            if (save_unowned_data) {
-               for (auto& data : this->script_fragment_root.unowned_log_entry_data)
-                  data.save(VMAD, data.stage_id, data.entry_index);
-            }
             for (auto& s : this->stages) {
                auto& list = s.entries;
                auto  size = list.size();
@@ -1377,18 +1427,5 @@ namespace dovah::loaded_forms {
       if (it == end)
          return;
       list.erase(it);
-   }
-
-   void Quest::discard_invalid_script_data() {
-      bool any_changes = false;
-      //
-      if (!this->script_fragment_root.unowned_log_entry_data.empty()) {
-         any_changes = true;
-         for (auto& data : this->script_fragment_root.unowned_log_entry_data)
-            data.clear();
-      }
-      //
-      if (any_changes && !this->is_working_copy)
-         this->stub.set_edited(true);
    }
 }
