@@ -89,8 +89,6 @@ namespace dovah::loaded_forms {
       form_id_t sound_loop;
       form_id_t sound_activate;
       form_id_t water_type;
-      auto*     model_use_info = uib.spawn_subordinate();
-      static_assert(false, "What actually happens if there are redundant TESModel subrecords? Does the game discard what was loaded before, or add onto it? If the latter, then we don't need a subordinate builder for it.");
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
@@ -111,7 +109,7 @@ namespace dovah::loaded_forms {
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               components::model::generate_use_info(subrecord, *model_use_info);
+               components::model::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -133,8 +131,6 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(sound_loop);
       uib.add_outbound_reference(sound_activate);
       uib.add_outbound_reference(water_type);
-      model_use_info->commit();
-      delete model_use_info;
    }
    bool Activator::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

@@ -30,6 +30,11 @@ namespace dovah::loaded_forms::components {
                      subrecord.read_length_prefixed_string<4>(entry.nif_block_name);
                      subrecord.read(entry.texture_set);
                      subrecord.read(entry.nif_block_index);
+                     static_assert(false, "TODO: If the form version is less than 0xF, then we don't load a NIF block index, and we use -1 as the block index.");
+                        static_assert(false, "TODO: Speaking of which: test whether newer form-versions allow using -1 to mean \"don't use a NIF block index; match only by block name.\"");
+                     static_assert(false, "TODO: The game doesn't add an entry if any of these read operations fail because the subrecord ended unexpectedly.");
+                     static_assert(false, "TODO: The game doesn't add an entry if its NIF block name is zero-length (i.e. str[0] == 0) or if the texture set form is None.");
+                     static_assert(false, "TODO: The changes above need to be reflected in use info, too.");
                      //
                      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
                         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, intfc.target_stub, entry.texture_set)
