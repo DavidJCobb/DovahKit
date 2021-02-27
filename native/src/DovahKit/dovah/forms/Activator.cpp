@@ -85,24 +85,33 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      uint32_t keywordCount = 0;
-      form_id_t formID;
+      form_id_t interact_keyword;
+      form_id_t sound_loop;
+      form_id_t sound_activate;
+      form_id_t water_type;
+      auto*     model_use_info = uib.spawn_subordinate();
+      static_assert(false, "What actually happens if there are redundant TESModel subrecords? Does the game discard what was loaded before, or add onto it? If the latter, then we don't need a subordinate builder for it.");
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'SNAM': // looping sound (e.g. nirnroot bell)
+               subrecord.read(sound_loop);
+               break;
             case 'VNAM': // activation sound
+               subrecord.read(sound_activate);
+               break;
             case 'WNAM': // water type, for water activators
+               subrecord.read(water_type);
+               break;
             case 'KNAM': // interaction keyword
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(interact_keyword);
                break;
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               components::model::generate_use_info(subrecord, uib);
+               components::model::generate_use_info(subrecord, *model_use_info);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -120,6 +129,12 @@ namespace dovah::loaded_forms {
 
          }
       }
+      uib.add_outbound_reference(interact_keyword);
+      uib.add_outbound_reference(sound_loop);
+      uib.add_outbound_reference(sound_activate);
+      uib.add_outbound_reference(water_type);
+      model_use_info->commit();
+      delete model_use_info;
    }
    bool Activator::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

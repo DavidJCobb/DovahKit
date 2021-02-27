@@ -178,25 +178,58 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      form_id_t formID;
+      form_id_t jail_marker;
+      form_id_t follower_wait_marker;
+      form_id_t evidence_chest;
+      form_id_t player_belongings_chest;
+      form_id_t crime_group;
+      form_id_t jail_outfit;
+      form_id_t vendor_list;
+      form_id_t vendor_chest;
+      auto*     vendor_location_use_info = uib.spawn_subordinate();
+      static_assert(false, "What actually happens if there are redundant PLVD+ subrecords? Does the game discard what was loaded before, or add onto it? If the latter, then we don't need a subordinate builder for it.");
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
-            case 'JAIL':
-            case 'WAIT':
-            case 'STOL':
-            case 'PLCN':
-            case 'CRGR':
-            case 'JOUT':
-            case 'VEND':
-            case 'VENC':
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+            case 'JAIL': // jail marker
+               subrecord.read(jail_marker);
+               break;
+            case 'WAIT': // follower wait marker
+               subrecord.read(follower_wait_marker);
+               break;
+            case 'STOL': // evidence chest
+               subrecord.read(evidence_chest);
+               break;
+            case 'PLCN': // player belongings chest
+               subrecord.read(player_belongings_chest);
+               break;
+            case 'CRGR': // crime group
+               subrecord.read(crime_group);
+               break;
+            case 'JOUT': // jail outfit
+               subrecord.read(jail_outfit);
+               break;
+            case 'VEND': // vendor list
+               subrecord.read(vendor_list);
+               break;
+            case 'VENC': // vendor chest
+               subrecord.read(vendor_chest);
                break;
             case 'PLVD':
-               components::package_location::generate_use_info(subrecord, uib);
+               vendor_location_use_info->clear_pending_use_info();
+               components::package_location::generate_use_info(subrecord, *vendor_location_use_info);
                break;
          }
       }
+      uib.add_outbound_reference(jail_marker);
+      uib.add_outbound_reference(follower_wait_marker);
+      uib.add_outbound_reference(evidence_chest);
+      uib.add_outbound_reference(player_belongings_chest);
+      uib.add_outbound_reference(crime_group);
+      uib.add_outbound_reference(jail_outfit);
+      uib.add_outbound_reference(vendor_list);
+      uib.add_outbound_reference(vendor_chest);
+      vendor_location_use_info->commit();
+      delete vendor_location_use_info;
    }
    bool Faction::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

@@ -34,8 +34,7 @@ namespace dovah {
          else
             this->_stub._add_one_way_outbound_reference(entry.target_id, entry.flags);
       }
-      this->_pending.size = 0;
-      this->_pending.extra.clear();
+      this->clear_pending_use_info();
    }
    //
    form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate() const noexcept {
@@ -46,6 +45,10 @@ namespace dovah {
       return sub;
    }
    //
+   void form_stub_use_info_builder::clear_pending_use_info() noexcept {
+      this->_pending.size = 0;
+      this->_pending.extra.clear();
+   }
    void form_stub_use_info_builder::clear_all_prior_use_info() const noexcept {
       use_info_entry parent_entry;
       //

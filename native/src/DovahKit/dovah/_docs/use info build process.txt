@@ -1,0 +1,180 @@
+
+When DovahKit reads a file, it first indexes the file's forms and creates stubs 
+for each of them. After that, it builds use info as part of a two-pass process. 
+In the first pass,  we use multiple threads to identify  "outbound" connections 
+between  forms; in the second pass, we go over the outbound connections  and we 
+create matching "inbound" connections.
+
+Each form type builds outbound use info by following a stripped-down version of 
+the load process,  wherein the form ignores any data that  isn't a form ID. The 
+form IDs are supplied to a "use info builder" object, which in turn sets up the 
+appropriate data on the form stub. The goal is to create accurate use info such 
+that if the form is loaded in full later on, the use info exactly describes the 
+newly-loaded data.
+
+In short, during the use info build  step, we just skim the record data, and we 
+ignore anything not directly relevant to our current goal.
+
+There are some nuances to this that you might not expect. To illustrate some of 
+them, let's look at two pieces of code. Are they functionally equivalent? These 
+pieces of code generate use info for an imaginary form type. Forms of this type 
+can refer to at most one water type  and at most one X-marker, with a subrecord 
+for each.
+
+   //
+   // Snippet A:
+   //
+   // A function to build use info for a form type. In this case, our imaginary 
+   // form type has only two subrecords of interest: WNAM and XNAM, which refer 
+   // to... hm, let's  say a water type  and an X-marker. These  are properties 
+   // that our imaginary form  would have only one  of, such that a well-formed 
+   // record of this  type will have at most one WNAM subecord  and at most one 
+   // XNAM subrecord.
+   //
+
+   void generate_use_info(
+      tes_record_reader& record,
+      form_stub_use_info_builder& uib
+   ) {
+      if (!uib.is_final_file())
+         //
+         // There isn't any  data in this form type that gets  coalesced across 
+         // multiple files.
+         //
+         return;
+      //
+      form_id_t wnam_form;
+      form_id_t xnam_form;
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'WNAM':
+               subrecord.read(wnam_form);
+               break;
+            case 'XNAM':
+               subrecord.read(xnam_form);
+               break;
+         }
+      }
+      uib.add_outbound_reference(wnam_form);
+      uib.add_outbound_reference(xnam_form);
+   }
+
+   //
+   // Snippet B:
+   //
+   // This is an alternative approach to  the above code snippet. In this case, 
+   // we have a single (form_id_t) variable and we just add outbound references 
+   // the instant we detect them. This allows this function to be much simpler.
+   //
+
+   void generate_use_info(
+      tes_record_reader& record,
+      form_stub_use_info_builder& uib
+   ) {
+      if (!uib.is_final_file())
+         //
+         // There isn't any  data in this form type that gets  coalesced across 
+         // multiple files.
+         //
+         return;
+      //
+      form_id_t formID;
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'WNAM':
+            case 'XNAM':
+               if (subrecord.read(formID))
+                  uib.add_outbound_reference(formID);
+               break;
+         }
+      }
+   }
+   
+Is there a functional difference between the two snippets? Snippet B just looks 
+like a cleaner version  of Snippet A, right? Well, there  actually is a crucial 
+difference. We said earlier  that our imaginary form  type can refer to at most 
+one water  type and at most one X-marker. A well-formed record would  obey this 
+constraint and specify  at most one of each form. However,  if a file contained 
+an ill-formed  record which specified, say, more than one water type,  then the 
+game would  typically handle that  smoothly. Every time the game's  form loader 
+encounters a WNAM subrecord, it'll just  load a form ID and write that into the 
+single available slot for  a water type, so in practice,  the last seen WNAM is 
+the one that the  game loads. Do both of the code snippets above  behave in the 
+same way?
+
+Well, no. Snippet A  will properly emulate this behavior,  reacting only to the 
+last WNAM seen. Snippet B, however, will establish outbound connections to each 
+WNAM that it sees.
+
+This is not inherently a problem. We could design our form loader to store more 
+than one WNAM value, in which case it would indeed be accurate for the use info 
+generator to  build an outbound  connection for each WNAM seen.  This, however, 
+would be unwieldy (it means only being  able to use vectors of form_reference_t 
+and not single fields), and it would  run directly counter to one of DovahKit's 
+design pillars: handling game data as a thing-in-itself rather than focusing on 
+the file format.
+
+Snippet A, then,  is the right approach, even though Snippet  B is considerably 
+cleaner and simpler. What a shame.
+
+All of this, of course, is just a s pecific case, so let's focus on the broader 
+principle at hand: we must build use info for all of the data that we load *and 
+retain.* Simply *seeing* the data is  not enough; if the full form-load process 
+will not *retain*  the data, then we *must  not* build use  info for that data.
+Above, we see one strategy  for ensuring that we honor  this requirement. Let's 
+look at another strategy: spawning subordinate use info builders.
+
+The (form_stub_use_info_builder) class doesn't create outbound connections when 
+it's asked to. Instead, it holds off on creating any outbound connections until 
+it's explicitly told to "commit" them. Typically, a builder will be constructed 
+by the form stub and supplied to the  form type's "generate_use_info" function; 
+after that function returns, the form stub will commit the builder, so when you 
+are implementing new form types, you don't need to commit things yourself.
+
+However,  by calling  (form_stub_use_info_builder::spawn_subordinate),  you can 
+heap-allocate a new (form_stub_use_info_builder) instance. You can then send it 
+any outbound connections and later commit them at your discretion; if you don't 
+commit this  subordinate builder yourself,  then the connections  will never be 
+established. This is useful for when  you're not sure, at the time you discover 
+a connection, whether it will be retained.
+
+A practical example of this is QUST/VMAD. Papyrus data is typically attached to 
+whole forms, but some form types  allow Papyrus data to be attached to specific 
+parts of the form.  Quests allow "script  fragment" data  to be attached to log 
+entries inside of quest  stages, and quest aliases  can also have the same kind 
+of Papyrus data as whole forms. However,  the data in question isn't physically 
+placed inside of  the log entries and aliases. Instead,  absolutely all Papyrus 
+data for a Quest and for any part of a Quest goes into a single VMAD subrecord, 
+and this subrecord  typically appears  before any log entries  and aliases have 
+been loaded. This means two things:
+
+   a) The Papyrus data for a quest alias must refer to the alias by its ID, and 
+      the Papyrus data for a log entry must refer to the log entry by its index 
+      paired with the containing quest stage's ID.
+
+   b) When we read that  Papyrus data, we cannot be certain  that the specified 
+      alias or log entry actually exists.
+
+On top of this, the decision  decision that was made  for Quests was to discard 
+any Papyrus data that attempts to attach itself to a part of the form that does 
+not exist (i.e.  a non-existent alias  or log entry). This means  that we can't 
+just blindly generate use info for  quest-specific Papyrus data as we encounter 
+it, because we'd end up  generating use info for data that  isn't retained when 
+the form is actually loaded. So what do we do?
+
+Well, log entry script  fragments don't ever actually  refer to other forms, so 
+we can completely ignore them for use  info. That leaves alias Papyrus data. We 
+need to spawn a subordinate (form_stub_use_info_builder) instance for each such 
+collection of data that we encounter; we also need to keep track of every alias 
+ID that we  encounter while handling  the subrecords for aliases.  Then, at the 
+very end of generating  use info for the  Quest, we can  loop over the aliases' 
+use info builders and commit the ones  that correspond to an alias that we saw.
+
+Complicated, huh? Fortunately, quest aliases are an outlier, not the norm. QUST 
+may be the single  most complex record type in the entire  file format, and the 
+only reason I'm saying it "may" be is because as of this writing, nobody's done 
+any reverse-engineering work on NAVI.  If you go and scroll back up to the code 
+snippets above, that's the main thing you'll  have to consider 90% of the time: 
+just be careful about how you generate use info for simple data, and follow the 
+one convention instead of the other.
+
