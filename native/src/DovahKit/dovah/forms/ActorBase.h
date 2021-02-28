@@ -284,7 +284,7 @@ namespace dovah::loaded_forms {
          form_reference_t crime_faction; // CRIF
          form_reference_t death_item; // INAM
          std::vector<faction_membership> faction_memberships; // SNAM[]
-         uint8_t geared_up_weapons = 0; // DNAM+0x30
+         uint8_t geared_up_weapons = 0; // DNAM+0x30 // unused
          form_reference_t gift_filter; // GNAM // a FormList
          std::vector<form_reference_t> perks;
          uint8_t sound_level = 0;

@@ -53,22 +53,22 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      form_id_t formID;
+      form_id_t base_form;
+      auto*     extra_uib = uib.spawn_subordinate();
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
                decltype(script_data)::generate_use_info(subrecord, uib);
                break;
             case 'NAME': // base form (subrecord signature is vestigial from Morrowind, which used editor IDs instead of form IDs)
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID, use_info_entry::flag::object_reference);
+               subrecord.read(base_form);
                break;
             case 'EDID': // editor ID
             case 'ONAM':
             case 'DATA':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, uib) == components::extra_data_load_result::unrecognized) {
+               if (components::extra_data_list::generate_use_info(record, *extra_uib) == components::extra_data_load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //
@@ -76,6 +76,9 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(base_form, use_info_entry::flag::object_reference);
+      extra_uib->commit();
+      delete extra_uib;
    }
    bool ObjectReference::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

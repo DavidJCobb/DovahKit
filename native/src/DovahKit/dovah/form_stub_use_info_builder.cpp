@@ -19,6 +19,8 @@ namespace dovah {
    }
    void form_stub_use_info_builder::commit() {
       size_t size = this->_pending.size;
+      if (!size)
+         return;
       if (size > preallocated_array_size)
          size = preallocated_array_size;
       for (size_t i = 0; i < size; ++i) {
