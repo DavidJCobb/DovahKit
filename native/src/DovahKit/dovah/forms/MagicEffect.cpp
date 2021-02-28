@@ -10,7 +10,20 @@ namespace dovah::loaded_forms {
          return;
       //
       form_id_t formID;
-      uint32_t  keywordCount = 0;
+      form_id_t related;        // DATA+0x08
+      form_id_t light;          // DATA+0x18
+      form_id_t hit_shader;     // DATA+0x20
+      form_id_t enchant_shader; // DATA+0x24
+      form_id_t projectile;     // DATA+0x48
+      form_id_t explosion;      // DATA+0x4C
+      form_id_t casting_art;    // DATA+0x5C
+      form_id_t hit_effect;     // DATA+0x60
+      form_id_t impact_data;    // DATA+0x64
+      form_id_t dual_cast;      // DATA+0x6C
+      form_id_t enchant_art;    // DATA+0x74
+      form_id_t equip_ability;  // DATA+0x80
+      form_id_t imagespace_mod; // DATA+0x84
+      form_id_t perk;           // DATA+0x88
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
@@ -27,41 +40,27 @@ namespace dovah::loaded_forms {
                break;
             case 'DATA':
                subrecord.skip_bytes(8); // flags, base cost
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(related);
                subrecord.skip_bytes(12); // skill, resistance, unknown
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(light);
                subrecord.skip_bytes(4); // taper weight
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(hit_shader);
+               subrecord.read(enchant_shader);
                subrecord.skip_bytes(32); // skill level, area, casting time, taper curve, taper duration, second AV weight, effect type, primary AV
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(projectile);
+               subrecord.read(explosion);
                subrecord.skip_bytes(12);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(casting_art);
+               subrecord.read(hit_effect);
+               subrecord.read(impact_data);
                subrecord.skip_bytes(4); // skill usage mult
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(dual_cast);
                subrecord.skip_bytes(4); // dual cast scale
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(enchant_art);
                subrecord.skip_bytes(8);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(equip_ability);
+               subrecord.read(imagespace_mod);
+               subrecord.read(perk);
                subrecord.skip_bytes(12);
                break;
             case 'SNDD':
@@ -78,5 +77,19 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(related);        // DATA+0x08
+      uib.add_outbound_reference(light);          // DATA+0x18
+      uib.add_outbound_reference(hit_shader);     // DATA+0x20
+      uib.add_outbound_reference(enchant_shader); // DATA+0x24
+      uib.add_outbound_reference(projectile);     // DATA+0x48
+      uib.add_outbound_reference(explosion);      // DATA+0x4C
+      uib.add_outbound_reference(casting_art);    // DATA+0x5C
+      uib.add_outbound_reference(hit_effect);     // DATA+0x60
+      uib.add_outbound_reference(impact_data);    // DATA+0x64
+      uib.add_outbound_reference(dual_cast);      // DATA+0x6C
+      uib.add_outbound_reference(enchant_art);    // DATA+0x74
+      uib.add_outbound_reference(equip_ability);  // DATA+0x80
+      uib.add_outbound_reference(imagespace_mod); // DATA+0x84
+      uib.add_outbound_reference(perk);           // DATA+0x88
    }
 }
