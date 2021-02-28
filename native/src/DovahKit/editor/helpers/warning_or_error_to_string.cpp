@@ -825,7 +825,7 @@ namespace editor_helpers {
             break;
          case notice_code::alias_papyrus_data_specifies_wrong_quest:
             {
-               text = QObject::tr("Quest %1 contains script data for alias %2 in quest %3. DovahKit is incapable of loading this data; it will be discarded.", "notice_code::alias_papyrus_data_specifies_wrong_quest");
+               text = QObject::tr("Quest %1 contains script data for alias %2 in quest %3. DovahKit is incapable of loading this data, and the game doesn't seem to bother using it either, so it will be discarded.", "notice_code::alias_papyrus_data_specifies_wrong_quest");
                //
                QString quest = QObject::tr("<unknown form>", "log window");
                QString other = quest;
@@ -890,6 +890,18 @@ namespace editor_helpers {
                }
                //
                text = text.arg(form).arg(file);
+            }
+            break;
+         case notice_code::alias_has_multiple_sets_of_papyrus_data:
+            {
+               text = QObject::tr("Quest %1 contains multiple sets of script data for the alias with ID %2. As of this writing, it's not known how the game handles this case. Within DovahKit, only the first data seen will be used.", "notice_code::alias_has_multiple_sets_of_papyrus_data");
+               //
+               QString quest = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  quest = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(quest).arg(notice.extra_integers[0]);
             }
             break;
             //

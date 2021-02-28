@@ -3,12 +3,6 @@
 #include "../logging.h"
 #include "../notice_code_list.h"
 
-#if !_DEBUG
-   static_assert(false, "for the love of dibella, please tell me you removed the #define static_assert that you put here for a quick test");
-#endif
-// FOR TESTING PURPOSES ONLY:
-//#define static_assert(...) /*...*/
-
 namespace {
    constexpr uint32_t _signature_for_alias_type(dovah::loaded_forms::Alias::alias_type t) {
       using namespace dovah::loaded_forms;
@@ -917,7 +911,10 @@ namespace dovah::loaded_forms {
                      components::papyrus::script_data::property_object_value owner;
                      owner.load(this->script_data.header, subrecord);
                      if (owner.form != &this->stub) {
-                        static_assert(false, "How does the game implement this? Test this and implement game-accurate behavior if possible; write a detailed warning message if not");
+                        //
+                        // Testing indicates that the game either doesn't retain or doesn't properly apply 
+                        // this data. In any case, due to how we load forms, we can't retain it either.
+                        //
                         detailed_notice warning;
                         warning.code = notice_code::alias_papyrus_data_specifies_wrong_quest;
                         warning.set_cause_form(this->stub);
@@ -1084,8 +1081,31 @@ namespace dovah::loaded_forms {
                //
                continue;
             }
-            static_assert(false, "Test this and implement game-accurate behavior if possible");
-            assert(alias->script_data.empty() && "TODO: How do the game and CK handle multiple VMAD entries for a single alias?"); // TODO
+            if (!alias->script_data.empty()) {
+               //
+               // This alias has had multiple sets of Papyrus data provided for it. As of this writing, 
+               // we have no idea how to handle this, just like we don't know how to handle a form that 
+               // has multiple VMAD subrecords (the game would probably treat both the same way). For 
+               // now, the easiest approach is to discard all but the first set of data, so we'll do 
+               // that and log a warning.
+               //
+               // We endeavor to handle malformed data sensibly, but the bare minimum "sensible" behavior 
+               // is to make sure that we don't crash or corrupt use info. This meets that bar. Still,
+               //
+               // TODO: FIGURE OUT HOW THE GAME DEALS WITH REDUNDANT/DUPE VMAD DATA, AND MIMIC IT
+               //
+               // If we ever do figure this out, we have to make sure to update the use info function 
+               // and the error text for this notice code as well.
+               //
+               detailed_notice warning;
+               warning.code = notice_code::alias_has_multiple_sets_of_papyrus_data;
+               warning.set_cause_form(this->stub);
+               warning.set_cause_subrecord('VMAD');
+               warning.extra_integers[0] = entry.alias_id;
+               intfc.log_load_warning(warning);
+               //
+               continue;
+            }
             alias->script_data = entry.data;
          }
          pending_alias_scripts.clear();
@@ -1217,9 +1237,17 @@ namespace dovah::loaded_forms {
          }
       }
       for (auto& entry : alias_papyrus_use_info) {
-         for (auto id : seen_aliases) {
+         auto& seen = seen_aliases;
+         for (auto it = seen.begin(); it != seen.end(); ++it) {
+            auto id = *it;
             if (id == entry.alias_id) {
                entry.pending->commit();
+               //
+               // Remove the ID from the "seen" list, so that if there are multiple VMAD entries for 
+               // the same alias, we use only the first one seen (refer to Quest::load for info):
+               //
+               seen.erase(it);
+               //
                break;
             }
          }
