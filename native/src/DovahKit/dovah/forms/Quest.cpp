@@ -191,16 +191,32 @@ namespace dovah::loaded_forms {
             this->inventory.load(subrecord, intfc);
             break;
          case 'SCOR':
-            subrecord.read(this->package_override_lists.spectator);
+            if (subrecord.read(this->package_override_lists.spectator)) {
+               intfc.log_load_warning(
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.spectator)
+               );
+            }
             break;
          case 'OCOR':
-            subrecord.read(this->package_override_lists.observe_corpse);
+            if (subrecord.read(this->package_override_lists.observe_corpse)) {
+               intfc.log_load_warning(
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.observe_corpse)
+               );
+            }
             break;
          case 'GWOR':
-            subrecord.read(this->package_override_lists.guard_warn);
+            if (subrecord.read(this->package_override_lists.guard_warn)) {
+               intfc.log_load_warning(
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.guard_warn)
+               );
+            }
             break;
          case 'ECOR':
-            subrecord.read(this->package_override_lists.combat);
+            if (subrecord.read(this->package_override_lists.combat)) {
+               intfc.log_load_warning(
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.combat)
+               );
+            }
             break;
          case 'ALDN':
             subrecord.read(this->display_name);

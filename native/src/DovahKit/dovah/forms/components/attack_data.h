@@ -23,17 +23,17 @@ namespace dovah {
          using flags_t = std::underlying_type_t<flag::type>;
 
          form_reference_t race; // ATKR
-         float damage_mult   = 1.0F; // ATKD+0x00
-         float attack_chance = 1.0F; // ATKD+0x04
+         float   damage_mult   = 1.0F; // ATKD+0x00
+         float   attack_chance = 1.0F; // ATKD+0x04
          form_reference_t attack_spell; // ATKD+0x08
-         flags_t flags = 0; // ATKD+0x0C
-         float attack_angle = 0.0F; // ATKD+0x10
-         float strike_angle = 0.0F; // ATKD+0x14
-         float stagger      = 0.0F; // ATKD+0x18
+         flags_t flags         = 0; // ATKD+0x0C
+         float   attack_angle  = 0.0F; // ATKD+0x10
+         float   strike_angle  = 0.0F; // ATKD+0x14 // defaults to GMST:fCombatHitConeAngle
+         float   stagger       = 0.0F; // ATKD+0x18
          form_reference_t keyword; // ATKD+0x1C
-         float knockdown    = 0.0F; // ATKD+0x20
-         float recovery_time = 0.0F; // ATKD+0x24
-         float stamina_mult = 1.0F; // ATKD+0x28
+         float   knockdown     = 0.0F; // ATKD+0x20
+         float   recovery_time = 0.0F; // ATKD+0x24
+         float   stamina_mult  = 1.0F; // ATKD+0x28
          std::string event; // ATKE
          //
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

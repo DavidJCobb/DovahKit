@@ -20,6 +20,11 @@ namespace dovah::loaded_forms {
             case 'ATKR':
                this->attack_data.load(record, intfc);
                break;
+            case 'COCT':
+            case 'CNTO':
+            case 'COED':
+               this->inventory.load(subrecord, intfc);
+               break;
             case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
             case 'DSTD': // destruction stage data
             case 'DMDL': // destruction stage model
@@ -58,6 +63,36 @@ namespace dovah::loaded_forms {
                   subrecord.read(this->creature_sounds.back().chance);
                break;
             #pragma endregion
+            #pragma region Package override lists
+            case 'SCOR':
+               if (subrecord.read(this->package_override_lists.spectator)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.spectator)
+                  );
+               }
+               break;
+            case 'OCOR':
+               if (subrecord.read(this->package_override_lists.observe_corpse)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.observe_corpse)
+                  );
+               }
+               break;
+            case 'GWOR':
+               if (subrecord.read(this->package_override_lists.guard_warn)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.guard_warn)
+                  );
+               }
+               break;
+            case 'ECOR':
+               if (subrecord.read(this->package_override_lists.combat)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.combat)
+                  );
+               }
+               break;
+            #pragma endregion
             #pragma region Spells (TESSpellList)
             case 'SPCT':
                {
@@ -79,6 +114,10 @@ namespace dovah::loaded_forms {
             case 'TINI':
                subrecord.read(this->tint_layers.emplace_back().index);
                break;
+            case 'TIAS':
+               if (!this->tint_layers.empty())
+                  subrecord.read(this->tint_layers.back().preset);
+               break;
             case 'TINC':
                if (!this->tint_layers.empty())
                   this->tint_layers.back().color.load(subrecord);
@@ -94,6 +133,103 @@ namespace dovah::loaded_forms {
                break;
             case 'FULL':
                subrecord.to_string(this->name);
+               break;
+            case 'ACBS':
+               if (record.version() < 0x1D) {
+                  if (subrecord.is_in_bounds(0x1C)) {
+                     subrecord.unchecked_read(this->base_stats.flags);          // 00 -> 00
+                     subrecord.unchecked_read(this->base_stats.magicka_offset); // 04 -> 04
+                     subrecord.unchecked_read(this->base_stats.stamina_offset); // 06 -> 06
+                     subrecord.skip_bytes(2);                                   // 08
+                     subrecord.unchecked_read(this->base_stats.level);          // 0A -> 08
+                     subrecord.unchecked_read(this->base_stats.calc_min_level); // 0C -> 0A
+                     subrecord.unchecked_read(this->base_stats.calc_max_level); // 0E -> 0C
+                     subrecord.unchecked_read(this->base_stats.speed_mult);     // 10 -> 0E
+                     subrecord.unchecked_read(this->base_stats.disposition);    // 12 -> 10
+                     subrecord.unchecked_read(this->base_stats.template_flags); // 14 -> 12
+                     subrecord.unchecked_read(this->base_stats.health_offset);  // 16 -> 14
+                     subrecord.unchecked_read(this->base_stats.bleedout_override); // 18 -> 16
+                  }
+                  break;
+               }
+               if (subrecord.is_in_bounds(0x18)) {
+                  subrecord.unchecked_read(this->base_stats.flags);
+                  subrecord.unchecked_read(this->base_stats.magicka_offset);
+                  subrecord.unchecked_read(this->base_stats.stamina_offset);
+                  subrecord.unchecked_read(this->base_stats.level);
+                  subrecord.unchecked_read(this->base_stats.calc_min_level);
+                  subrecord.unchecked_read(this->base_stats.calc_max_level);
+                  subrecord.unchecked_read(this->base_stats.speed_mult);
+                  subrecord.unchecked_read(this->base_stats.disposition);
+                  subrecord.unchecked_read(this->base_stats.template_flags);
+                  subrecord.unchecked_read(this->base_stats.health_offset);
+                  subrecord.unchecked_read(this->base_stats.bleedout_override);
+               }
+               break;
+            case 'AIDT':
+               {
+                  decltype(ai_data) aid;
+                  if (subrecord.is_in_bounds(0x14)) {
+                     subrecord.read(aid.aggression);
+                     subrecord.read(aid.confidence);
+                     subrecord.read(aid.energy_level);
+                     subrecord.read(aid.morality);
+                     subrecord.read(aid.mood);
+                     subrecord.read(aid.assistance);
+                     subrecord.read(aid.aggression);
+                     subrecord.read(aid.aggro.use_radius);
+                     subrecord.skip_bytes(1);
+                     subrecord.read(aid.aggro.warn);
+                     if (record.version() < 0x1D) {
+                        uint32_t unused;
+                        subrecord.read(unused);
+                        subrecord.read(aid.aggro.attack);
+                     } else {
+                        subrecord.read(aid.aggro.warn_attack);
+                        subrecord.read(aid.aggro.attack);
+                     }
+                  }
+                  //
+                  if (record.version() < 4) {
+                     if (aid.aggression > 1)
+                        ++aid.aggression;
+                  }
+                  if (record.version() < 6) {
+                     switch ((uint8_t)aid.aggression) { // wait... is this a one-based version of the confidence enum?
+                        case 0:
+                           break;
+                        case 1:
+                           aid.aggression = aggression::unaggressive;
+                           aid.assistance = assistance::helps_allies;
+                           break;
+                        case 2:
+                           aid.aggression = aggression::aggressive;
+                           aid.assistance = assistance::helps_allies;
+                           break;
+                        case 3:
+                           aid.aggression = aggression::aggressive;
+                           aid.assistance = assistance::helps_friends_and_allies;
+                           break;
+                        case 4:
+                           aid.aggression = aggression::very_aggressive;
+                           aid.assistance = assistance::helps_friends_and_allies;
+                           break;
+                        case 5:
+                           aid.aggression = aggression::frenzied;
+                           aid.assistance = assistance::helps_nobody;
+                           break;
+                     }
+                  }
+                  if (record.version() < 7) {
+                     aid.confidence = 4 - aid.confidence;
+                  }
+                  if (record.version() < 0x21) {
+                     auto val = aid.aggro.warn;
+                     aid.aggro.warn        = 0;
+                     aid.aggro.warn_attack = val;
+                     aid.aggro.attack      = val >> 2;
+                  }
+               }
                break;
             case 'ANAM':
                if (subrecord.read(this->far_away_model)) {

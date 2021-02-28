@@ -143,11 +143,11 @@ namespace dovah::loaded_forms {
          std::vector<form_reference_t> factions; // ALFC
          std::vector<form_reference_t> spells;   // ALSP
          struct {
-            form_reference_t spectator; // SPOR
+            form_reference_t spectator;      // SPOR
             form_reference_t observe_corpse; // OCOR
-            form_reference_t guard_warn; // GWOR
-            form_reference_t combat; // ECOR
-         } package_override_lists;
+            form_reference_t guard_warn;     // GWOR
+            form_reference_t combat;         // ECOR
+         } package_override_lists; // same structure as on NPC_
          form_reference_t display_name; // ALDN; should be the form ID of a MESG
          form_reference_t additional_voicetype; // VTCK; xEdit says can be the ID of a VTYP; UESP says can also be the ID of a FLST?
          //

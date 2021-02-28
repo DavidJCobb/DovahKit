@@ -1,4 +1,5 @@
 #include "attack_data.h"
+#include "../_common_cpp.h"
 #include "../../notice_code_list.h"
 
 namespace dovah::loaded_forms::components {
@@ -66,5 +67,101 @@ namespace dovah::loaded_forms::components {
          return;
       }
    }
-   /*static*/ void attack_data::generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+   /*static*/ void attack_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      auto& subrecord = record.get_current_subrecord();
+      auto  signature = subrecord.signature();
+      switch (signature) {
+         case 'ATKR':
+         case 'ATKD':
+         case 'ATKE':
+            break;
+         default: // invalid
+            assert(false && "Why was attack_data::generate_use_info called on a subrecord it's not built to handle?");
+      }
+      //
+      form_id_t form_id;
+      if (signature == 'ATKR') {
+         if (subrecord.read(form_id))
+            uib.add_outbound_reference(form_id);
+         return;
+      }
+      if (signature == 'ATKD') {
+         if (subrecord.is_in_bounds(0x2C)) {
+            subrecord.skip_bytes(8);
+            if (subrecord.read(form_id))
+               uib.add_outbound_reference(form_id);
+            subrecord.skip_bytes(0x10);
+            if (subrecord.read(form_id))
+               uib.add_outbound_reference(form_id);
+            subrecord.skip_bytes(0x0C);
+         }
+         //
+         // The game assumes that the subrecord after ATKD is ATKE. Bethesda tried to check the signature, but 
+         // made a mistake: they retrieve the signature, but they never actually do check it, and the caller(s) 
+         // are arranged such that they've already opened the next subrecord anyway and would therefore skip it 
+         // even if they did detect a mismatch.
+         //
+         auto& next = record.next_subrecord();
+         return;
+      }
+   }
+   void attack_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      record.write_formID_subrecord('ATKR', this->race, true);
+      //
+      // TODO: under what conditions do we write ATKD+ATKE?
+      //
+      auto& ATKD = record.open_next_subrecord('ATKD');
+      ATKD.write(this->damage_mult);
+      ATKD.write(this->attack_chance);
+      ATKD.write(this->attack_spell);
+      ATKD.write(this->flags);
+      ATKD.write(this->attack_angle);
+      ATKD.write(this->strike_angle);
+      ATKD.write(this->stagger);
+      ATKD.write(this->keyword);
+      ATKD.write(this->knockdown);
+      ATKD.write(this->recovery_time);
+      ATKD.write(this->stamina_mult);
+      ATKD.close();
+      record.write_string_subrecord('ATKE', this->event);
+   }
+   void attack_data::clone_from(const attack_data& original, loaded_forms::Form& owner_of_clone) noexcept {
+      this->race.set(owner_of_clone, original.race);
+      //
+      this->damage_mult = original.damage_mult;
+      this->attack_chance = original.attack_chance;
+      this->attack_spell.set(owner_of_clone, original.attack_spell);
+      this->flags = original.flags;
+      this->attack_angle = original.attack_angle;
+      this->strike_angle = original.strike_angle;
+      this->stagger = original.stagger;
+      this->keyword.set(owner_of_clone, original.keyword);
+      this->knockdown = original.knockdown;
+      this->recovery_time = original.recovery_time;
+      this->stamina_mult = original.stamina_mult;
+      //
+      this->event = original.event;
+   }
+   void attack_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
+      this->race.clear_if(my_owner, target);
+      this->attack_spell.clear_if(my_owner, target);
+      this->keyword.clear_if(my_owner, target);
+   }
+   void attack_data::clear(loaded_forms::Form& my_owner) {
+      this->race.set(my_owner, nullptr);
+      //
+      this->damage_mult = 1.0F;
+      this->attack_chance = 1.0F;
+      this->attack_spell.set(my_owner, nullptr);
+      this->flags = 0;
+      this->attack_angle = 0;
+      this->strike_angle = 0;
+      this->stagger = 0;
+      this->keyword.set(my_owner, nullptr);
+      this->knockdown = 0;
+      this->recovery_time = 0;
+      this->stamina_mult = 1;
+      //
+      this->event.clear();
+   }
 }

@@ -11,6 +11,7 @@
 #include "components/destruction.h"
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
+#include "../utils/loose_enum.h"
 
 namespace dovah::loaded_forms {
    class ActorBase : public Form {
@@ -51,6 +52,27 @@ namespace dovah::loaded_forms {
          };
          using actor_flags_t = std::underlying_type_t<actor_flag::type>;
 
+         enum class aggression : uint8_t {
+            unaggressive    = 0, // Does not attack unless provoked.
+            aggressive      = 1, // Attacks enemies on sight.
+            very_aggressive = 2, // Attacks enemies and neutrals on sight.
+            frenzied        = 3, // Attacks everything on sight.
+         };
+
+         enum class assistance : uint8_t { // Controls whether the actor will assist other actors in combat.
+            helps_nobody = 0,
+            helps_allies = 1,
+            helps_friends_and_allies = 2,
+         };
+
+         enum class confidence : uint8_t {
+            cowardly  = 0, // Never engages in combat. Always avoids or flees from threats.
+            cautious  = 1, // Avoids or flees from any threat it doesn't know for certain it can beat.
+            average   = 2, // Avoids or flees from threats if outmatched.
+            brave     = 3, // Avoids or flees from threats only if severely outmatched.
+            foolhardy = 4, // Never avoids or flees from anything.
+         };
+
          enum class creature_sound_type : uint32_t {
             idle           = 0,
             aware          = 1,
@@ -70,6 +92,24 @@ namespace dovah::loaded_forms {
          struct faction_membership {
             form_reference_t faction;
             int8_t rank = 0;
+         };
+
+         enum class mood : uint8_t {
+            neutral   = 0,
+            angry     = 1,
+            fear      = 2,
+            happy     = 3,
+            sad       = 4,
+            surprised = 5,
+            puzzled   = 6,
+            disgusted = 7,
+         };
+
+         enum class morality : uint8_t { // controls what orders the actor is willing to obey from the player
+            any_crime                = 0, // the actor is willing to commit any crime
+            violence_against_enemies = 1, // the actor is willing to commit violent crimes against enemies
+            property_crimes_only     = 2, // the actor will refuse to commit violent crimes
+            no_crime                 = 3, // the actor will refuse to commit any crime
          };
 
          struct template_flag {
@@ -116,15 +156,31 @@ namespace dovah::loaded_forms {
          };
 
          struct tint_layer {
-            uint16_t index = 0;
-            color_t  color; // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
+            uint16_t index  = 0;
+            color_t  color;      // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
+            uint16_t preset = 0; // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
          };
 
          components::attack_data             attack_data; // ATKR, ATKD+ATKE
          components::object_bounds           bounds; // OBND
          components::destruction_stage_data  destruction_data; // DEST
+         components::container_data          inventory;
          components::papyrus_attachment_data script_data; // VMAD
          localized_string name;
+         struct {
+            loose_enum<aggression> aggression   = aggression::unaggressive;
+            loose_enum<confidence> confidence   = confidence::average;
+            uint8_t                energy_level = 0;
+            loose_enum<morality>   morality     = morality::any_crime;
+            mood                   mood         = mood::neutral;
+            loose_enum<assistance> assistance   = assistance::helps_friends_and_allies;
+            struct {
+               bool     use_radius = false;
+               uint32_t warn;        // warn targets while they're in this radius                        // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
+               uint32_t warn_attack; // warn targets while they're in this radius; attack if they remain // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
+               uint32_t attack;      // attack targets that enter this radius                            // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
+            } aggro;
+         } ai_data;
          struct {
             skill_byte_list skill_values;
             skill_byte_list skill_offsets;
@@ -200,12 +256,11 @@ namespace dovah::loaded_forms {
          std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
          std::vector<form_reference_t> package_list; // PKID[]
          struct {
-            form_reference_t spectator; // SPOR
+            form_reference_t spectator;      // SPOR
             form_reference_t observe_corpse; // OCOR
-            form_reference_t guard_warn; // GWOR
-            form_reference_t combat; // ECOR
-            static_assert(false, "This is actually the same structure as on QUST. Make it a shared component, for accuracy's sake.");
-         } package_override_lists;
+            form_reference_t guard_warn;     // GWOR
+            form_reference_t combat;         // ECOR
+         } package_override_lists; // same structure as on QUST
          form_reference_t race; // RNAM
          uint8_t sound_level = 0;
          std::vector<form_reference_t> spells; // SPLO[SPCT], but SPCT is just a suggestion; the game will properly reallocate the list as needed
