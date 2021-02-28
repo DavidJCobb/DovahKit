@@ -240,13 +240,13 @@ namespace dovah::loaded_forms {
             break;
       }
       if (type == alias_type::undifferentiated)
-         return;
+         return none_id;
       LocationAlias::_use_info_field_state  state_location;
       ReferenceAlias::_use_info_field_state state_reference;
       //
       alias_id_t id;
       if (!subrecord.read(id))
-         return;
+         return none_id;
       //
       form_id_t fill_from_alias_quest_id;
       for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
@@ -1282,16 +1282,22 @@ namespace dovah::loaded_forms {
                if (!e.fragment.empty())
                   ++log_count;
          if (log_count > std::numeric_limits<uint16_t>::max()) {
-            static_assert(false, "Log specific error");
-            // TODO: log (notice_code::too_many_script_fragments_to_save)
+            detailed_notice error;
+            error.code = notice_code::too_many_script_fragments_to_save;
+            error.extra_integers[0] = log_count;
+            error.extra_integers[1] = std::numeric_limits<uint16_t>::max();
+            intfc.set_save_error(error);
             return false;
          }
          for (auto* a : this->aliases)
             if (!a->script_data.empty())
                ++alias_count;
          if (alias_count > std::numeric_limits<uint16_t>::max()) {
-            static_assert(false, "Log specific error");
-            // TODO: log (notice_code::too_many_aliases_with_scripts_to_save)
+            detailed_notice error;
+            error.code = notice_code::too_many_aliases_with_scripts_to_save;
+            error.extra_integers[0] = log_count;
+            error.extra_integers[1] = std::numeric_limits<uint16_t>::max();
+            intfc.set_save_error(error);
             return false;
          }
          if (alias_count || log_count || !this->script_data.empty()) {

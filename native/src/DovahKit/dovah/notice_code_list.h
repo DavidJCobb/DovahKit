@@ -95,7 +95,7 @@ namespace dovah {
          worldspace_is_its_own_parent                = 0x00000056, // A worldspace has been set to use itself as the parent world. The game will enter an infinite loading screen when trying to load it.
          quest_fragment_belongs_to_missing_log_entry = 0x00000057,
          too_many_script_fragments_to_save           = 0x00000058, // A form has too many script fragments, and cannot be saved.
-         too_many_aliases_with_scripts_to_save       = 0x00000059,
+         too_many_aliases_with_scripts_to_save       = 0x00000059, // A quest has too many aliases with script data, and cannot be saved.
          alias_papyrus_data_specifies_wrong_quest    = 0x0000005A, // An alias's Papyrus data was skipped because it claims to belong to a quest other than the containing quest.
          alias_papyrus_data_belongs_to_missing_alias = 0x0000005B, // A quest's VMAD subrecord supplied Papyrus data for an alias that doesn't actually exist.
          info_response_subrecord_before_responses    = 0x0000005C, // An INFO contains LNAM or SNAM subrecords outside of any response.

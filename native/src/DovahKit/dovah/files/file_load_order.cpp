@@ -3147,6 +3147,11 @@ namespace dovah {
          warning.context = detailed_notice::notice_context::form_save;
          this->owner._log_save_warning(warning);
       }
+      void form_save::set_save_error(const detailed_notice& error) {
+         if (this->writer.error.is_defined())
+            return;
+         this->writer.error = error;
+      }
    }
    #pragma endregion
 }

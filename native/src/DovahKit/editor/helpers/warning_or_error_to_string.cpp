@@ -799,6 +799,58 @@ namespace editor_helpers {
                text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
             }
             break;
+         case notice_code::too_many_script_fragments_to_save:
+            {
+               text = QObject::tr("Form %1 contains %2 script fragments, but the file format can only encode up to %3 fragments.", "notice_code::too_many_script_fragments_to_save");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
+            }
+            break;
+         case notice_code::too_many_aliases_with_scripts_to_save:
+            {
+               text = QObject::tr("Quest %1 contains script data for %2 aliases, but the file format can only encode script data for up to %3 aliases.", "notice_code::too_many_aliases_with_scripts_to_save");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
+            }
+            break;
+         case notice_code::alias_papyrus_data_specifies_wrong_quest:
+            {
+               text = QObject::tr("Quest %1 contains script data for alias %2 in quest %3. DovahKit is incapable of loading this data; it will be discarded.", "notice_code::alias_papyrus_data_specifies_wrong_quest");
+               //
+               QString quest = QObject::tr("<unknown form>", "log window");
+               QString other = quest;
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  quest = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (!notice.relevant_forms.empty()) {
+                  other = _read_error_form_id_to_string(notice.relevant_forms[0]);
+               }
+               //
+               text = text.arg(quest).arg(notice.extra_integers[0]).arg(other);
+            }
+            break;
+         case notice_code::alias_papyrus_data_belongs_to_missing_alias:
+            {
+               text = QObject::tr("Quest %1 contains script data for a non-existent alias with ID %2.", "notice_code::info_response_subrecord_before_responses");
+               //
+               QString quest = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  quest = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(quest).arg(notice.extra_integers[0]);
+            }
+            break;
          case notice_code::info_response_subrecord_before_responses:
             {
                text = QObject::tr("TopicInfo %1 in file %3 contained a %2 subrecord before its response data. This data will be discarded by the editor.", "notice_code::info_response_subrecord_before_responses");

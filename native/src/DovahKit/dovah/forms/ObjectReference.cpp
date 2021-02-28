@@ -54,7 +54,7 @@ namespace dovah::loaded_forms {
          return;
       //
       form_id_t base_form;
-      auto*     extra_uib = uib.spawn_subordinate();
+      auto      extra_uib = uib.spawn_subordinate_on_stack();
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
@@ -68,7 +68,7 @@ namespace dovah::loaded_forms {
             case 'DATA':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, *extra_uib) == components::extra_data_load_result::unrecognized) {
+               if (components::extra_data_list::generate_use_info(record, extra_uib) == components::extra_data_load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //
@@ -77,8 +77,7 @@ namespace dovah::loaded_forms {
          }
       }
       uib.add_outbound_reference(base_form, use_info_entry::flag::object_reference);
-      extra_uib->commit();
-      delete extra_uib;
+      extra_uib.commit();
    }
    bool ObjectReference::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

@@ -175,7 +175,7 @@ namespace dovah::tes_file_writing {
          else if (!stub->file_list_includes(&this->source))
             record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
          //
-         auto intfc = load_order_interfaces::form_save(this->owner);
+         auto intfc = load_order_interfaces::form_save(this->owner, *this);
          intfc.previous_child = previous_child;
          //
          if (loaded->save(record, intfc)) {
@@ -221,9 +221,12 @@ namespace dovah::tes_file_writing {
             // The only suitable alternative to writing loaded form data, then, is failing with 
             // an error.
             //
-            if (!this->error.is_defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
-               this->error.code = notice_code::unknown_form_type;
-            this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
+            auto& error = this->error;
+            error.type    = detailed_notice::notice_type::error;
+            error.context = detailed_notice::notice_context::form_save;
+            if (!error.is_defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
+               error.code = notice_code::unknown_form_type;
+            error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
             return false;
          }
       } else {

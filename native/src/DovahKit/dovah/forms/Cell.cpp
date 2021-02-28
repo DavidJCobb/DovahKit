@@ -127,7 +127,7 @@ namespace dovah::loaded_forms {
          return;
       //
       form_id_t lighting_template;
-      auto*     extra_uib = uib.spawn_subordinate();
+      auto      extra_uib = uib.spawn_subordinate_on_stack();
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -150,7 +150,7 @@ namespace dovah::loaded_forms {
             case 'XNAM':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, uib) == components::extra_data_load_result::unrecognized) {
+               if (components::extra_data_list::generate_use_info(record, extra_uib) == components::extra_data_load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //
@@ -159,8 +159,7 @@ namespace dovah::loaded_forms {
          }
       }
       uib.add_outbound_reference(lighting_template);
-      extra_uib->commit();
-      delete extra_uib;
+      extra_uib.commit();
    }
    void Cell::setup(const file_load_order& load_order) noexcept {
       if (!this->is_working_copy)

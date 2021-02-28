@@ -76,8 +76,7 @@ namespace dovah {
          inline constexpr operator value_type() const noexcept { return this->value; }
 
          inline constexpr operator underlying_type() const noexcept {
-            return (T)this->value;
+            return (underlying_type)this->value;
          }
-
    };
 }

@@ -40,9 +40,21 @@ namespace dovah {
          void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
          void commit();
+         
+         //
+         // This class contains a reference, so it cannot be placed in a vector directly; however, it 
+         // can be heap-allocated and the pointers can be stored in a vector. When using this, remember 
+         // to delete the builder after you are done with it, whether or not you commit it.
          //
          form_stub_use_info_builder* spawn_subordinate() const noexcept;
+
          //
+         // The same as (spwan_subordinate), but it returns the subordinate builder directly; useful 
+         // for if only a fixed number of subordinate builders are needed, as you don't need to delete 
+         // them manually, etc..
+         //
+         form_stub_use_info_builder spawn_subordinate_on_stack() const noexcept;
+         
          inline const form_stub* stub() const noexcept { return &this->_stub; }
          inline bool is_final_file() const noexcept { return this->_is_final_file; }
          inline uint32_t last_record_flags() const noexcept { return this->_last_record_flags; }
