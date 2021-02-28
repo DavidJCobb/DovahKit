@@ -1,5 +1,6 @@
 #include "TopicInfo.h"
 #include "_common_cpp.h"
+#include "../notice_code_list.h"
 
 namespace dovah::loaded_forms {
    void TopicInfo::response::clear(TopicInfo& owner) {
@@ -99,6 +100,14 @@ namespace dovah::loaded_forms {
          }
       }
       //
+      auto _report_misplaced_response_subrecord = [this, &intfc](tes_subrecord_reader& subrecord) {
+         detailed_notice warning;
+         warning.code = notice_code::info_response_subrecord_before_responses;
+         warning.set_cause_form(this->stub);
+         warning.set_cause_subrecord(subrecord.signature());
+         intfc.log_load_warning(warning);
+      };
+      //
       form_reference_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -158,6 +167,12 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ANAM':
+               //
+               // I don't think the precise function of this subrecord is known, but I'm aware that the game retains 
+               // a hashmap at a static address, with TESTopicInfo pointers as keys and the loaded speaker form IDs 
+               // (which I assume are resolved to TESNPC pointers later on) as values. However, it doesn't look like 
+               // anything actually accesses this hashmap.
+               //
                if (subrecord.read(this->speaker)) {
                   intfc.log_load_warning(
                      detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::actor_base, this->stub, this->speaker)
@@ -189,22 +204,38 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'NAM1':
-               if (!partial && !this->responses.empty()) {
+               if (this->responses.empty()) {
+                  _report_misplaced_response_subrecord(subrecord);
+                  break;
+               }
+               if (!partial) {
                   subrecord.to_string(this->responses.back().text);
                }
                break;
             case 'NAM2':
-               if (!partial && !this->responses.empty()) {
+               if (this->responses.empty()) {
+                  _report_misplaced_response_subrecord(subrecord);
+                  break;
+               }
+               if (!partial) {
                   subrecord.to_string(this->responses.back().script_notes);
                }
                break;
             case 'NAM3':
-               if (!partial && !this->responses.empty()) {
+               if (this->responses.empty()) {
+                  _report_misplaced_response_subrecord(subrecord);
+                  break;
+               }
+               if (!partial) {
                   subrecord.to_string(this->responses.back().edits);
                }
                break;
             case 'LNAM':
-               if (!partial && !this->responses.empty()) {
+               if (this->responses.empty()) {
+                  _report_misplaced_response_subrecord(subrecord);
+                  break;
+               }
+               if (!partial) {
                   auto& form = this->responses.back().idles.listener;
                   if (subrecord.read(form)) {
                      intfc.log_load_warning(
@@ -214,7 +245,11 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'SNAM':
-               if (!partial && !this->responses.empty()) {
+               if (this->responses.empty()) {
+                  _report_misplaced_response_subrecord(subrecord);
+                  break;
+               }
+               if (!partial) {
                   auto& form = this->responses.back().idles.speaker;
                   if (subrecord.read(form)) {
                      intfc.log_load_warning(
@@ -249,17 +284,32 @@ namespace dovah::loaded_forms {
       }
       //
       form_id_t formID;
+      form_id_t sharedinfo;
+      form_id_t speaker;
+      form_id_t walk_away_topic;
+      form_id_t audio_output_override;
+      bool      seen_any_response_header = false;
+      form_id_t response_idle_for_listener;
+      form_id_t response_idle_for_speaker;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             //case 'PNAM': // previous-sibling topicinfo
-            case 'TCLT': // follow-up topics
             case 'DNAM': // sharedinfo to inherit from
+               subrecord.read(sharedinfo);
+               break;
             case 'ANAM': // speaker
+               subrecord.read(speaker);
+               break;
             case 'TWAT': // walk away topic
+               subrecord.read(walk_away_topic);
+               break;
             case 'ONAM': // audio output override
+               subrecord.read(audio_output_override);
+               break;
+            case 'TCLT': // follow-up topics (one per subrecord; multiple subrecords can appear)
                if (subrecord.read(formID))
                   uib.add_outbound_reference(formID);
                break;
@@ -284,6 +334,14 @@ namespace dovah::loaded_forms {
             case 'TRDT': // response header
                if (!uib.is_final_file())
                   break;
+               //
+               seen_any_response_header = true;
+               //
+               uib.add_outbound_reference(response_idle_for_listener); // add these from the previous response, if any, and then reset them for this response
+               uib.add_outbound_reference(response_idle_for_speaker);
+               response_idle_for_listener = 0;
+               response_idle_for_speaker  = 0;
+               //
                subrecord.skip_bytes(16); // emotion type (4) and value (4); unused bytes (4); response number (1); padding bytes (3)
                if (subrecord.read(formID)) // sound
                   uib.add_outbound_reference(formID);
@@ -291,9 +349,13 @@ namespace dovah::loaded_forms {
             case 'NAM1': // response text
             case 'NAM2': // response script notes
             case 'NAM3': // response edits
+               if (!seen_any_response_header)
+                  break;
                break;
             case 'SNAM': // response speaker idle anim
             case 'LNAM': // response listener idle anim
+               if (!seen_any_response_header)
+                  break;
                if (!uib.is_final_file())
                   break;
                if (subrecord.read(formID))
@@ -301,6 +363,12 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(sharedinfo);
+      uib.add_outbound_reference(speaker);
+      uib.add_outbound_reference(walk_away_topic);
+      uib.add_outbound_reference(audio_output_override);
+      uib.add_outbound_reference(response_idle_for_listener); // add these from the last response
+      uib.add_outbound_reference(response_idle_for_speaker);
    }
    /*virtual*/ bool TopicInfo::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

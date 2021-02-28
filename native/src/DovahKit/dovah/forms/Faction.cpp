@@ -187,7 +187,6 @@ namespace dovah::loaded_forms {
       form_id_t vendor_list;
       form_id_t vendor_chest;
       auto*     vendor_location_use_info = uib.spawn_subordinate();
-      static_assert(false, "What actually happens if there are redundant PLVD+ subrecords? Does the game discard what was loaded before, or add onto it? If the latter, then we don't need a subordinate builder for it.");
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'JAIL': // jail marker

@@ -3,6 +3,8 @@
 
 namespace dovah::loaded_forms::components {
    void package_location::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+      this->detail.form.unmanaged_set(nullptr); // prevent dangling pointers if a form contains multiple subrecords providing contradictory values for the same package location
+      //
       subrecord.read(this->type);
       switch (this->type) {
          case package_location_type::in_cell:

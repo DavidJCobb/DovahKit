@@ -22,9 +22,7 @@ namespace dovah::loaded_forms::components {
       package_location_type type = package_location_type::near_reference;
       struct {
          //
-         // This would be a union, except that the default constructor for (form_id_t) is "non-trivial" despite 
-         // doing literally nothing. Only implicit constructors can be "trivial" (even foo() = default doesn't 
-         // work), and those only get generated if a struct has *no* constructors. Ugh.
+         // Could be a union, but using a struct for clarity and to avoid compiler shenanigans.
          //
          form_reference_t form;
          uint32_t object_type = 0;

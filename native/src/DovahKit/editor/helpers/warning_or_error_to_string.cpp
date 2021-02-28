@@ -787,16 +787,36 @@ namespace editor_helpers {
                text = text.arg(form);
             }
             break;
-         case notice_code::quest_has_phantom_script_data:
+         case notice_code::quest_fragment_belongs_to_missing_log_entry:
             {
-               text = QObject::tr("Quest %1 contains script data for non-existent aliases or log entries, or for aliases from other quests. This data will be discarded by the editor.", "notice_code::quest_has_phantom_script_data");
+               text = QObject::tr("Quest %1 contains script data for log entry %3 in stage %2, but no such log entry exists. This data will be discarded by the editor.", "notice_code::quest_fragment_belongs_to_missing_log_entry");
                //
                QString form = QObject::tr("<unknown form>", "log window");
                if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
                   form = _read_error_form_id_to_string(notice.cause_form);
                }
                //
-               text = text.arg(form);
+               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
+            }
+            break;
+         case notice_code::info_response_subrecord_before_responses:
+            {
+               text = QObject::tr("TopicInfo %1 in file %3 contained a %2 subrecord before its response data. This data will be discarded by the editor.", "notice_code::info_response_subrecord_before_responses");
+               //
+               QString form      = QObject::tr("<unknown form>", "log window");
+               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
+               QString file      = QObject::tr("<unknown file>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
+                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
+                  file = QString::fromStdString(notice.cause_file);
+               }
+               //
+               text = text.arg(form).arg(subrecord).arg(file);
             }
             break;
             //
