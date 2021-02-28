@@ -819,6 +819,27 @@ namespace editor_helpers {
                text = text.arg(form).arg(subrecord).arg(file);
             }
             break;
+         case notice_code::attack_data_expected_event_subrecord:
+            {
+               QString text;
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord)
+                  text = QObject::tr("An ATKR subrecord in form %2 (in file %3) was followed by a subrecord with signature %1, instead of the expected ATKE subrecord. The next subrecord will be misinterpreted as an ATKE subrecord.", "notice_code::attack_data_expected_event_subrecord")
+                  .arg(cobb::qt::four_cc_to_string(notice.cause_subrecord));
+               else
+                  text = QObject::tr("An ATKR subrecord in form %1 (in file %2) was not followed by an ATKE subrecord. The next subrecord will be misinterpreted as an ATKE subrecord.", "notice_code::attack_data_expected_event_subrecord");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               QString file = QObject::tr("<unknown file>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
+                  file = QString::fromStdString(notice.cause_file);
+               }
+               //
+               text = text.arg(form).arg(file);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:

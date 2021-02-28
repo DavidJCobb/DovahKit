@@ -16,6 +16,10 @@ namespace dovah::loaded_forms {
                break;
                //
             #pragma region Components
+            case 'ATKD':
+            case 'ATKR':
+               this->attack_data.load(record, intfc);
+               break;
             case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
             case 'DSTD': // destruction stage data
             case 'DMDL': // destruction stage model
@@ -261,6 +265,7 @@ namespace dovah::loaded_forms {
                }
                break;
          }
+         static_assert(false, "FINISH ME");
       }
    }
    /*static*/ void ActorBase::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {

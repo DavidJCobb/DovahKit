@@ -5,6 +5,7 @@
 #include "Form.h"
 #include "_common.h"
 #include "structs/color_dword.h"
+#include "components/attack_data.h"
 #include "components/bounds.h"
 #include "components/container.h"
 #include "components/destruction.h"
@@ -119,6 +120,7 @@ namespace dovah::loaded_forms {
             color_t  color; // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
          };
 
+         components::attack_data             attack_data; // ATKR, ATKD+ATKE
          components::object_bounds           bounds; // OBND
          components::destruction_stage_data  destruction_data; // DEST
          components::papyrus_attachment_data script_data; // VMAD
@@ -197,6 +199,13 @@ namespace dovah::loaded_forms {
          std::vector<form_reference_t> hair_colors;  // HCLF[]
          std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
          std::vector<form_reference_t> package_list; // PKID[]
+         struct {
+            form_reference_t spectator; // SPOR
+            form_reference_t observe_corpse; // OCOR
+            form_reference_t guard_warn; // GWOR
+            form_reference_t combat; // ECOR
+            static_assert(false, "This is actually the same structure as on QUST. Make it a shared component, for accuracy's sake.");
+         } package_override_lists;
          form_reference_t race; // RNAM
          uint8_t sound_level = 0;
          std::vector<form_reference_t> spells; // SPLO[SPCT], but SPCT is just a suggestion; the game will properly reallocate the list as needed
