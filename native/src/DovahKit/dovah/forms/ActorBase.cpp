@@ -33,6 +33,10 @@ namespace dovah::loaded_forms {
             case 'DSTF': // destruction stage end marker
                this->destruction_data.load(subrecord, intfc);
                break;
+            case 'KSIZ':
+            case 'KWDA':
+               this->keywords.load(subrecord, intfc);
+               break;
             case 'OBND':
                this->bounds.load(subrecord, intfc);
                break;
@@ -93,6 +97,23 @@ namespace dovah::loaded_forms {
                }
                break;
             #pragma endregion
+            #pragma region Perks
+            case 'PRKZ':
+               {
+                  uint32_t size;
+                  if (subrecord.read(size))
+                     this->perks.reserve(size);
+               }
+               break;
+            case 'PRKR':
+               if (subrecord.read(form_id)) {
+                  this->perks.push_back(form_id);
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::perk, this->stub, form_id)
+                  );
+               }
+               break;
+            #pragma endregion
             #pragma region Spells (TESSpellList)
             case 'SPCT':
                {
@@ -122,6 +143,10 @@ namespace dovah::loaded_forms {
                if (!this->tint_layers.empty())
                   this->tint_layers.back().color.load(subrecord);
                break;
+            case 'TINV':
+               if (!this->tint_layers.empty())
+                  subrecord.read(this->tint_layers.back().interpolation);
+               break;
             #pragma endregion
                //
             case 'DATA':
@@ -133,6 +158,9 @@ namespace dovah::loaded_forms {
                break;
             case 'FULL':
                subrecord.to_string(this->name);
+               break;
+            case 'SHRT':
+               subrecord.to_string(this->short_name);
                break;
             case 'ACBS':
                if (record.version() < 0x1D) {
@@ -319,6 +347,41 @@ namespace dovah::loaded_forms {
                if (subrecord.read(this->crime_faction)) {
                   intfc.log_load_warning(
                      detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, this->stub, this->crime_faction)
+                  );
+               }
+               break;
+            case 'DOFT':
+               if (subrecord.read(this->outfits.default)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::outfit, this->stub, this->outfits.default)
+                  );
+               }
+               break;
+            case 'FTST':
+               if (subrecord.read(this->face_texture_set)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, this->stub, this->face_texture_set)
+                  );
+               }
+               break;
+            case 'SOFT':
+               if (subrecord.read(this->outfits.sleeping)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::outfit, this->stub, this->outfits.sleeping)
+                  );
+               }
+               break;
+            case 'DPLT':
+               if (subrecord.read(this->default_package_list)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, this->stub, this->default_package_list)
+                  );
+               }
+               break;
+            case 'TPLT':
+               if (subrecord.read(this->template_actor)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::leveled_character }, this->stub, this->template_actor)
                   );
                }
                break;

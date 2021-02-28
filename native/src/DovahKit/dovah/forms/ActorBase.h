@@ -156,8 +156,9 @@ namespace dovah::loaded_forms {
          };
 
          struct tint_layer {
-            uint16_t index  = 0;
+            uint16_t index = 0;
             color_t  color;      // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
+            uint32_t interpolation = 0; // fixed-point: float times 100
             uint16_t preset = 0; // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
          };
 
@@ -165,8 +166,10 @@ namespace dovah::loaded_forms {
          components::object_bounds           bounds; // OBND
          components::destruction_stage_data  destruction_data; // DEST
          components::container_data          inventory;
+         components::keyword_list            keywords; // KSIZ, KWDA
          components::papyrus_attachment_data script_data; // VMAD
-         localized_string name;
+         localized_string name;       // FULL
+         localized_string short_name; // SHRT
          struct {
             loose_enum<aggression> aggression   = aggression::unaggressive;
             loose_enum<confidence> confidence   = confidence::average;
@@ -249,21 +252,29 @@ namespace dovah::loaded_forms {
             uint32_t eyes;
             uint32_t mouth;
          } face_parts; // NAMA
+         form_reference_t face_texture_set; // FTST
          std::vector<faction_membership> faction_memberships; // SNAM[]
          form_reference_t far_away_model; // ANAM // an Armor
          form_reference_t gift_filter; // GNAM // a FormList
          std::vector<form_reference_t> hair_colors;  // HCLF[]
          std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
+         struct {
+            form_reference_t default;
+            form_reference_t sleeping;
+         } outfits;
          std::vector<form_reference_t> package_list; // PKID[]
+         form_reference_t default_package_list; // DPLT
          struct {
             form_reference_t spectator;      // SPOR
             form_reference_t observe_corpse; // OCOR
             form_reference_t guard_warn;     // GWOR
             form_reference_t combat;         // ECOR
          } package_override_lists; // same structure as on QUST
+         std::vector<form_reference_t> perks;
          form_reference_t race; // RNAM
          uint8_t sound_level = 0;
          std::vector<form_reference_t> spells; // SPLO[SPCT], but SPCT is just a suggestion; the game will properly reallocate the list as needed
+         form_reference_t template_actor; // TPLT
          struct {
             float r = 255.0F; // value in the range of [0.0F, 255.0F]... but then why the hell is it encoded as a float?
             float g = 255.0F;
