@@ -16,7 +16,7 @@ namespace dovah::loaded_forms {
                break;
                //
             #pragma region Components
-            case 'ATKD':
+            case 'ATKD': // not checking for ATKE is intentional. the NPC_ loader doesn't check for it, so if it appears anywhere other than after ATKD (such that the ATKD loader handles it), then it is unrecognized
             case 'ATKR':
                this->attack_data.load(record, intfc);
                break;
@@ -69,30 +69,30 @@ namespace dovah::loaded_forms {
             #pragma endregion
             #pragma region Package override lists
             case 'SCOR':
-               if (subrecord.read(this->package_override_lists.spectator)) {
+               if (subrecord.read(this->ai.package_override_lists.spectator)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.spectator)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.spectator)
                   );
                }
                break;
             case 'OCOR':
-               if (subrecord.read(this->package_override_lists.observe_corpse)) {
+               if (subrecord.read(this->ai.package_override_lists.observe_corpse)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.observe_corpse)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.observe_corpse)
                   );
                }
                break;
             case 'GWOR':
-               if (subrecord.read(this->package_override_lists.guard_warn)) {
+               if (subrecord.read(this->ai.package_override_lists.guard_warn)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.guard_warn)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.guard_warn)
                   );
                }
                break;
             case 'ECOR':
-               if (subrecord.read(this->package_override_lists.combat)) {
+               if (subrecord.read(this->ai.package_override_lists.combat)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.combat)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.combat)
                   );
                }
                break;
@@ -165,126 +165,132 @@ namespace dovah::loaded_forms {
             case 'ACBS':
                if (record.version() < 0x1D) {
                   if (subrecord.is_in_bounds(0x1C)) {
-                     subrecord.unchecked_read(this->base_stats.flags);          // 00 -> 00
-                     subrecord.unchecked_read(this->base_stats.magicka_offset); // 04 -> 04
-                     subrecord.unchecked_read(this->base_stats.stamina_offset); // 06 -> 06
+                     subrecord.unchecked_read(this->actor_flags);
+                     subrecord.unchecked_read(this->stats.offsets.magicka);
+                     subrecord.unchecked_read(this->stats.offsets.stamina);
                      subrecord.skip_bytes(2);                                   // 08
-                     subrecord.unchecked_read(this->base_stats.level);          // 0A -> 08
-                     subrecord.unchecked_read(this->base_stats.calc_min_level); // 0C -> 0A
-                     subrecord.unchecked_read(this->base_stats.calc_max_level); // 0E -> 0C
-                     subrecord.unchecked_read(this->base_stats.speed_mult);     // 10 -> 0E
-                     subrecord.unchecked_read(this->base_stats.disposition);    // 12 -> 10
-                     subrecord.unchecked_read(this->base_stats.template_flags); // 14 -> 12
-                     subrecord.unchecked_read(this->base_stats.health_offset);  // 16 -> 14
-                     subrecord.unchecked_read(this->base_stats.bleedout_override); // 18 -> 16
+                     subrecord.unchecked_read(this->stats.level);          // 0A -> 08
+                     subrecord.unchecked_read(this->stats.calc_min_level); // 0C -> 0A
+                     subrecord.unchecked_read(this->stats.calc_max_level); // 0E -> 0C
+                     subrecord.unchecked_read(this->stats.speed_mult);     // 10 -> 0E
+                     subrecord.unchecked_read(this->stats.disposition);    // 12 -> 10
+                     subrecord.unchecked_read(this->template_data.flags); // 14 -> 12
+                     subrecord.unchecked_read(this->stats.offsets.health);  // 16 -> 14
+                     subrecord.unchecked_read(this->stats.bleedout_threshold); // 18 -> 16
                   }
                   break;
                }
                if (subrecord.is_in_bounds(0x18)) {
-                  subrecord.unchecked_read(this->base_stats.flags);
-                  subrecord.unchecked_read(this->base_stats.magicka_offset);
-                  subrecord.unchecked_read(this->base_stats.stamina_offset);
-                  subrecord.unchecked_read(this->base_stats.level);
-                  subrecord.unchecked_read(this->base_stats.calc_min_level);
-                  subrecord.unchecked_read(this->base_stats.calc_max_level);
-                  subrecord.unchecked_read(this->base_stats.speed_mult);
-                  subrecord.unchecked_read(this->base_stats.disposition);
-                  subrecord.unchecked_read(this->base_stats.template_flags);
-                  subrecord.unchecked_read(this->base_stats.health_offset);
-                  subrecord.unchecked_read(this->base_stats.bleedout_override);
+                  subrecord.unchecked_read(this->actor_flags);
+                  subrecord.unchecked_read(this->stats.offsets.magicka);
+                  subrecord.unchecked_read(this->stats.offsets.stamina);
+                  subrecord.unchecked_read(this->stats.level);
+                  subrecord.unchecked_read(this->stats.calc_min_level);
+                  subrecord.unchecked_read(this->stats.calc_max_level);
+                  subrecord.unchecked_read(this->stats.speed_mult);
+                  subrecord.unchecked_read(this->stats.disposition);
+                  subrecord.unchecked_read(this->template_data.flags);
+                  subrecord.unchecked_read(this->stats.offsets.health);
+                  subrecord.unchecked_read(this->stats.bleedout_threshold);
+               }
+               break;
+            case 'TPLT':
+               if (subrecord.read(this->template_data.actor)) {
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::leveled_character }, this->stub, this->template_data.actor)
+                  );
                }
                break;
             case 'AIDT':
                {
-                  decltype(ai_data) aid;
                   if (subrecord.is_in_bounds(0x14)) {
-                     subrecord.read(aid.aggression);
-                     subrecord.read(aid.confidence);
-                     subrecord.read(aid.energy_level);
-                     subrecord.read(aid.morality);
-                     subrecord.read(aid.mood);
-                     subrecord.read(aid.assistance);
-                     subrecord.read(aid.aggression);
-                     subrecord.read(aid.aggro.use_radius);
+                     subrecord.read(this->ai.aggression);
+                     subrecord.read(this->ai.confidence);
+                     subrecord.read(this->ai.energy_level);
+                     subrecord.read(this->ai.morality);
+                     subrecord.read(this->ai.mood);
+                     subrecord.read(this->ai.assistance);
+                     subrecord.read(this->ai.aggression);
+                     subrecord.read(this->ai.aggro.use_radius);
                      subrecord.skip_bytes(1);
-                     subrecord.read(aid.aggro.warn);
+                     subrecord.read(this->ai.aggro.warn);
                      if (record.version() < 0x1D) {
                         uint32_t unused;
                         subrecord.read(unused);
-                        subrecord.read(aid.aggro.attack);
+                        subrecord.read(this->ai.aggro.attack);
                      } else {
-                        subrecord.read(aid.aggro.warn_attack);
-                        subrecord.read(aid.aggro.attack);
+                        subrecord.read(this->ai.aggro.warn_attack);
+                        subrecord.read(this->ai.aggro.attack);
                      }
                   }
                   //
                   if (record.version() < 4) {
-                     if (aid.aggression > 1)
-                        ++aid.aggression;
+                     if (this->ai.aggression > 1)
+                        ++this->ai.aggression;
                   }
                   if (record.version() < 6) {
-                     switch ((uint8_t)aid.aggression) { // wait... is this a one-based version of the confidence enum?
+                     switch ((uint8_t)this->ai.aggression) { // wait... is this a one-based version of the confidence enum?
                         case 0:
                            break;
                         case 1:
-                           aid.aggression = aggression::unaggressive;
-                           aid.assistance = assistance::helps_allies;
+                           this->ai.aggression = aggression::unaggressive;
+                           this->ai.assistance = assistance::helps_allies;
                            break;
                         case 2:
-                           aid.aggression = aggression::aggressive;
-                           aid.assistance = assistance::helps_allies;
+                           this->ai.aggression = aggression::aggressive;
+                           this->ai.assistance = assistance::helps_allies;
                            break;
                         case 3:
-                           aid.aggression = aggression::aggressive;
-                           aid.assistance = assistance::helps_friends_and_allies;
+                           this->ai.aggression = aggression::aggressive;
+                           this->ai.assistance = assistance::helps_friends_and_allies;
                            break;
                         case 4:
-                           aid.aggression = aggression::very_aggressive;
-                           aid.assistance = assistance::helps_friends_and_allies;
+                           this->ai.aggression = aggression::very_aggressive;
+                           this->ai.assistance = assistance::helps_friends_and_allies;
                            break;
                         case 5:
-                           aid.aggression = aggression::frenzied;
-                           aid.assistance = assistance::helps_nobody;
+                           this->ai.aggression = aggression::frenzied;
+                           this->ai.assistance = assistance::helps_nobody;
                            break;
                      }
                   }
                   if (record.version() < 7) {
-                     aid.confidence = 4 - aid.confidence;
+                     this->ai.confidence = 4 - this->ai.confidence;
                   }
                   if (record.version() < 0x21) {
-                     auto val = aid.aggro.warn;
-                     aid.aggro.warn        = 0;
-                     aid.aggro.warn_attack = val;
-                     aid.aggro.attack      = val >> 2;
+                     auto val = this->ai.aggro.warn;
+                     this->ai.aggro.warn        = 0;
+                     this->ai.aggro.warn_attack = val;
+                     this->ai.aggro.attack      = val >> 2;
                   }
                }
                break;
             case 'ANAM':
-               if (subrecord.read(this->far_away_model)) {
+               if (subrecord.read(this->far_away.model)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::armor, this->stub, this->far_away_model)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::armor, this->stub, this->far_away.model)
                   );
                }
                break;
             case 'CNAM':
-               if (subrecord.read(this->combat_class)) {
+               if (subrecord.read(this->stats.combat_class)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::combat_class, this->stub, this->combat_class)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::combat_class, this->stub, this->stats.combat_class)
                   );
                }
                break;
             case 'DNAM':
                if (subrecord.is_in_bounds(0x34)) {
-                  for (auto& byte : this->base_data.skill_values.list)
+                  for (auto& byte : this->stats.base.skills.list)
                      subrecord.unchecked_read(byte);
-                  for (auto& byte : this->base_data.skill_offsets.list)
+                  for (auto& byte : this->stats.offsets.skills.list)
                      subrecord.unchecked_read(byte);
-                  subrecord.unchecked_read(this->base_data.health);
-                  subrecord.unchecked_read(this->base_data.magicka);
-                  subrecord.unchecked_read(this->base_data.stamina);
+                  subrecord.unchecked_read(this->stats.base.health);
+                  subrecord.unchecked_read(this->stats.base.magicka);
+                  subrecord.unchecked_read(this->stats.base.stamina);
                   subrecord.skip_bytes(2);
-                  subrecord.unchecked_read(this->base_data.far_away_model_distance);
-                  subrecord.unchecked_read(this->base_data.geared_up_weapons);
+                  subrecord.unchecked_read(this->far_away.distance);
+                  subrecord.unchecked_read(this->geared_up_weapons);
                }
                break;
             case 'FNAM':
@@ -319,14 +325,13 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'SNAM':
-               {
-                  faction_membership entry;
-                  if (subrecord.read(entry)) {
-                     this->faction_memberships.push_back(entry);
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, this->stub, entry.faction)
-                     );
-                  }
+               if (subrecord.is_in_bounds(5)) {
+                  auto& entry = this->faction_memberships.emplace_back();
+                  subrecord.unchecked_read(entry.faction);
+                  subrecord.unchecked_read(entry.rank);
+                  intfc.log_load_warning(
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, this->stub, entry.faction)
+                  );
                }
                break;
             case 'WNAM':
@@ -337,9 +342,9 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ZNAM':
-               if (subrecord.read(this->combat_style)) {
+               if (subrecord.read(this->stats.combat_style)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::combat_style, this->stub, this->combat_style)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::combat_style, this->stub, this->stats.combat_style)
                   );
                }
                break;
@@ -357,13 +362,6 @@ namespace dovah::loaded_forms {
                   );
                }
                break;
-            case 'FTST':
-               if (subrecord.read(this->face_texture_set)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, this->stub, this->face_texture_set)
-                  );
-               }
-               break;
             case 'SOFT':
                if (subrecord.read(this->outfits.sleeping)) {
                   intfc.log_load_warning(
@@ -372,16 +370,16 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'DPLT':
-               if (subrecord.read(this->default_package_list)) {
+               if (subrecord.read(this->ai.default_package_list)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, this->stub, this->default_package_list)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, this->stub, this->ai.default_package_list)
                   );
                }
                break;
-            case 'TPLT':
-               if (subrecord.read(this->template_actor)) {
+            case 'FTST':
+               if (subrecord.read(this->face.texture_set)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::leveled_character }, this->stub, this->template_actor)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, this->stub, this->face.texture_set)
                   );
                }
                break;
@@ -391,11 +389,11 @@ namespace dovah::loaded_forms {
             [[fallthrough]];
             case 'PNAM':
                if (subrecord.read(form_id))
-                  this->head_parts.push_back(form_id);
+                  this->head.head_parts.push_back(form_id);
                break;
             case 'PKID':
                if (subrecord.read(form_id)) {
-                  this->package_list.push_back(form_id);
+                  this->ai.package_list.push_back(form_id);
                   intfc.log_load_warning(
                      detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, this->stub, form_id)
                   );
@@ -403,7 +401,7 @@ namespace dovah::loaded_forms {
                break;
             case 'HCLF':
                if (subrecord.read(form_id)) {
-                  this->hair_colors.push_back(form_id);
+                  this->head.hair_colors.push_back(form_id);
                   intfc.log_load_warning(
                      detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::color, this->stub, form_id)
                   );
@@ -442,29 +440,36 @@ namespace dovah::loaded_forms {
                   // If all of these floats are 0, then the TESNPC instance doesn't even bother 
                   // allocating storage for them.
                   //
-                  subrecord.unchecked_read(this->face_morphs.nose.length);
-                  subrecord.unchecked_read(this->face_morphs.nose.height);
-                  subrecord.unchecked_read(this->face_morphs.jaw.height);
-                  subrecord.unchecked_read(this->face_morphs.jaw.width);
-                  subrecord.unchecked_read(this->face_morphs.jaw.depth);
-                  subrecord.unchecked_read(this->face_morphs.cheeks.height);
-                  subrecord.unchecked_read(this->face_morphs.cheeks.depth);
-                  subrecord.unchecked_read(this->face_morphs.eyes.height);
-                  subrecord.unchecked_read(this->face_morphs.eyes.width);
-                  subrecord.unchecked_read(this->face_morphs.brows.height);
-                  subrecord.unchecked_read(this->face_morphs.brows.width);
-                  subrecord.unchecked_read(this->face_morphs.brows.depth);
-                  subrecord.unchecked_read(this->face_morphs.lips.height);
-                  subrecord.unchecked_read(this->face_morphs.lips.depth);
-                  subrecord.unchecked_read(this->face_morphs.chin.width);
-                  subrecord.unchecked_read(this->face_morphs.chin.height);
-                  subrecord.unchecked_read(this->face_morphs.chin.depth);
-                  subrecord.unchecked_read(this->face_morphs.eyes.depth);
-                  subrecord.unchecked_read(this->face_morphs.unknown);
+                  subrecord.unchecked_read(this->face.morphs.nose.length);
+                  subrecord.unchecked_read(this->face.morphs.nose.height);
+                  subrecord.unchecked_read(this->face.morphs.jaw.height);
+                  subrecord.unchecked_read(this->face.morphs.jaw.width);
+                  subrecord.unchecked_read(this->face.morphs.jaw.depth);
+                  subrecord.unchecked_read(this->face.morphs.cheeks.height);
+                  subrecord.unchecked_read(this->face.morphs.cheeks.depth);
+                  subrecord.unchecked_read(this->face.morphs.eyes.height);
+                  subrecord.unchecked_read(this->face.morphs.eyes.width);
+                  subrecord.unchecked_read(this->face.morphs.brows.height);
+                  subrecord.unchecked_read(this->face.morphs.brows.width);
+                  subrecord.unchecked_read(this->face.morphs.brows.depth);
+                  subrecord.unchecked_read(this->face.morphs.lips.height);
+                  subrecord.unchecked_read(this->face.morphs.lips.depth);
+                  subrecord.unchecked_read(this->face.morphs.chin.width);
+                  subrecord.unchecked_read(this->face.morphs.chin.height);
+                  subrecord.unchecked_read(this->face.morphs.chin.depth);
+                  subrecord.unchecked_read(this->face.morphs.eyes.depth);
+                  subrecord.unchecked_read(this->face.morphs.unknown);
+               }
+               break;
+            case 'NAMA':
+               if (subrecord.is_in_bounds(0x10)) {
+                  subrecord.unchecked_read(this->face.parts.nose);
+                  subrecord.unchecked_read(this->face.parts.unknown);
+                  subrecord.unchecked_read(this->face.parts.eyes);
+                  subrecord.unchecked_read(this->face.parts.mouth);
                }
                break;
          }
-         static_assert(false, "FINISH ME");
       }
    }
    /*static*/ void ActorBase::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -474,61 +479,48 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      form_id_t formID;
+      components::attack_data::use_info_state attack_data;
+      form_id_t form_id;
+      form_id_t combat_class;
+      form_id_t combat_style;
+      form_id_t crime_faction;
+      form_id_t death_item;
+      form_id_t default_package_list;
+      form_id_t face_texture_set;
+      form_id_t far_away_model;
+      form_id_t gift_filter;
+      struct {
+         form_id_t default;
+         form_id_t sleeping;
+      } outfits;
       form_id_t race;
       form_id_t template_actor;
       form_id_t voicetype;
+      form_id_t worn_armor;
+      struct {
+         form_id_t spectator;      // SPOR
+         form_id_t observe_corpse; // OCOR
+         form_id_t guard_warn;     // GWOR
+         form_id_t combat;         // ECOR
+      } package_override_lists;
+      bool      seen_any_creature_sound = false;
+      form_id_t creature_sound;
       while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
          switch (subrecord.signature()) {
-            case 'VMAD':
-               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+            case 'EDID': // already read by the FormStub
                break;
-            case 'RNAM': // race
-            case 'TPLT': // template actor base
-            case 'VTCK': // voicetype
-            case 'INAM': // death item
-            case 'SNAM': // faction (has four more bytes, but we don't need them)
-            case 'SPLO': // spell
-            case 'WNAM': // skin
-            case 'ANAM': // far-away skin
-            case 'ATKR': // attack race
-            case 'SPOR': // spectator package override
-            case 'OCOR': // observe corpse package override
-            case 'GWOR': // guard worn package override
-            case 'ECOR': // combat package override
-            case 'PRKR': // perk
-            case 'PKID': // package
-            case 'CNAM': // class
-            case 'PNAM': // head part
-            case 'HCLF': // hair color form
-            case 'ZNAM': // combat style
-            case 'GNAM': // gift filter list
-            case 'CSDI': // sound
-            case 'CSCR': // audio template
-            case 'DOFT': // default outfit
-            case 'SOFT': // sleep outfit
-            case 'DPLT': // default package list
-            case 'CRIF': // crime faction
-            case 'FTST': // face textureset
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               //
+            #pragma region Components
+            case 'ATKD': // not checking for ATKE is intentional. the NPC_ loader doesn't check for it, so if it appears anywhere other than after ATKD (such that the ATKD loader handles it), then it is unrecognized
+            case 'ATKR':
+               attack_data.read(record);
                break;
-            case 'KSIZ':
-            case 'KWDA':
-               components::keyword_list::generate_use_info(subrecord, uib);
-               break;
+            case 'COCT':
             case 'CNTO':
             case 'COED':
                components::container_data::generate_use_info(subrecord, uib);
-               break;
-            case 'ATKD': // attack data
-               subrecord.skip_bytes(8);
-               if (subrecord.read(formID)) // attack spell
-                  uib.add_outbound_reference(formID);
-               subrecord.skip_bytes(16);
-               if (subrecord.read(formID)) // attack type
-                  uib.add_outbound_reference(formID);
-               subrecord.skip_bytes(12);
                break;
             case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
             case 'DSTD': // destruction stage data
@@ -538,34 +530,133 @@ namespace dovah::loaded_forms {
             case 'DSTF': // destruction stage end marker
                components::destruction_stage_data::generate_use_info(subrecord, uib);
                break;
-            //
-            // End of destruction stage fields.
-            //
-            case 'ACBS': // character base stats
-            case 'ATKE': // attack event
-            case 'SPCT': // spell count
-            case 'PRKZ': // perk count
-            case 'COCT': // item count ("count of container")
-            case 'AIDT': // AI data
-            case 'FULL': // full name
+            case 'KSIZ':
+            case 'KWDA':
+               components::keyword_list::generate_use_info(subrecord, uib);
+               break;
+            case 'OBND':
+               components::object_bounds::generate_use_info(subrecord, uib);
+               break;
+            case 'VMAD':
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               break;
+            #pragma endregion
+            #pragma region Creature sounds
+            case 'CSDT': // creature sound type
+               uib.add_outbound_reference(creature_sound);
+               creature_sound = 0;
+               //
+               seen_any_creature_sound = true;
+               break;
+            case 'CSDI': // last creature sound form
+               if (seen_any_creature_sound)
+                  subrecord.read(creature_sound);
+               break;
+            case 'CDSC': // last creature sound chance
+               break;
+            #pragma endregion
+            #pragma region Package override lists
+            case 'SCOR':
+               subrecord.read(package_override_lists.spectator);
+               break;
+            case 'OCOR':
+               subrecord.read(package_override_lists.observe_corpse);
+               break;
+            case 'GWOR':
+               subrecord.read(package_override_lists.guard_warn);
+               break;
+            case 'ECOR':
+               subrecord.read(package_override_lists.combat);
+               break;
+            #pragma endregion
+            #pragma region Tint layers
+            case 'TINI': // tint index
+            case 'TIAS': // tint preset
+            case 'TINC': // tint color
+            case 'TINV': // tint value
+               break;
+            #pragma endregion
+               //
+            case 'PRKZ': // perk count (analogous to std::vector::reserve)
+            case 'SPCT': // spell count (analogous to std::vector::reserve)
+               break;
+            case 'PRKR': // perk
+            case 'SPLO': // spell
+            case 'SNAM': // faction relationship (form ID + a byte that we can ignore here)
+            case 'HEAD': // found via disassembly; identical to PNAM
+               [[fallthrough]];
+            case 'ENAM': // found via disassembly; identical to PNAM
+               [[fallthrough]];
+            case 'PNAM': // head-part array
+            case 'PKID': // package array
+            case 'HCLF': // hair color array
+               if (subrecord.read(form_id))
+                  uib.add_outbound_reference(form_id);
+               break;
+               //
+            case 'DATA': // no-op
+            case 'FULL': // name
             case 'SHRT': // short name
-            case 'DATA': // marker for DNAM position
-            case 'DNAM': // skill/stat data
-            case 'NAM5': // unknown two-byte int
+            case 'ACBS': // base stats
+            case 'DNAM':
+            case 'QNAM':
+               break;
+            case 'TPLT':
+               subrecord.read(template_actor);
+               break;
+            case 'AIDT':
+               break;
+            case 'ANAM':
+               subrecord.read(far_away_model);
+               break;
+            case 'CNAM':
+               subrecord.read(combat_class);
+               break;
+            case 'GNAM':
+               subrecord.read(gift_filter);
+               break;
+            case 'INAM':
+               subrecord.read(death_item);
+               break;
+            case 'RNAM':
+               subrecord.read(race);
+               break;
+            case 'WNAM':
+               subrecord.read(worn_armor);
+               break;
+            case 'ZNAM':
+               subrecord.read(combat_style);
+               break;
+            case 'CRIF':
+               subrecord.read(crime_faction);
+               break;
+            case 'DOFT':
+               subrecord.read(outfits.default);
+               break;
+            case 'SOFT':
+               subrecord.read(outfits.sleeping);
+               break;
+            case 'DPLT':
+               subrecord.read(default_package_list);
+               break;
+            case 'FTST':
+               subrecord.read(face_texture_set);
+               break;
+            case 'VTCK':
+               subrecord.read(voicetype);
+               break;
+            case 'NAM0':
+            case 'NAM1':
+            case 'NAM2':
+            case 'NAM3':
             case 'NAM6': // height
             case 'NAM7': // weight
             case 'NAM8': // sound level
-            case 'CSDT': // sound type
-            case 'CSDC': // sound chance
-            case 'QNAM': // skin tone
-            case 'NAM9': // face morphs values
-            case 'NAMA': // face part integers
-            case 'TINI': // tint item
-            case 'TINC': // tint color
-            case 'TINV': // tint value
-            case 'TIAS': // unknown two-byte int
+            case 'NAM9': // face morphs
+            case 'NAMA': // face parts
                break;
          }
       }
+      attack_data.commit(uib);
    }
 }

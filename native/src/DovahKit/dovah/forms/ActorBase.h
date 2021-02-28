@@ -158,7 +158,7 @@ namespace dovah::loaded_forms {
          struct tint_layer {
             uint16_t index = 0;
             color_t  color;      // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
-            uint32_t interpolation = 0; // fixed-point: float times 100
+            uint32_t interpolation = 0; // fixed-point: float times 100. 
             uint16_t preset = 0; // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
          };
 
@@ -168,9 +168,22 @@ namespace dovah::loaded_forms {
          components::container_data          inventory;
          components::keyword_list            keywords; // KSIZ, KWDA
          components::papyrus_attachment_data script_data; // VMAD
-         localized_string name;       // FULL
-         localized_string short_name; // SHRT
+         localized_string name;            // FULL
+         localized_string short_name;      // SHRT
+         actor_flags_t    actor_flags = 0; // ACBS+0x00
+         form_reference_t race;            // RNAM
          struct {
+            std::vector<form_reference_t> package_list; // PKID[]
+            form_reference_t default_package_list; // DPLT
+            struct {
+               form_reference_t spectator;      // SPOR
+               form_reference_t observe_corpse; // OCOR
+               form_reference_t guard_warn;     // GWOR
+               form_reference_t combat;         // ECOR
+            } package_override_lists; // same structure as on QUST
+            //
+            // Data below is from AIDT, the TESAIDataForm content.
+            //
             loose_enum<aggression> aggression   = aggression::unaggressive;
             loose_enum<confidence> confidence   = confidence::average;
             uint8_t                energy_level = 0;
@@ -183,98 +196,99 @@ namespace dovah::loaded_forms {
                uint32_t warn_attack; // warn targets while they're in this radius; attack if they remain // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
                uint32_t attack;      // attack targets that enter this radius                            // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
             } aggro;
-         } ai_data;
-         struct {
-            skill_byte_list skill_values;
-            skill_byte_list skill_offsets;
-            uint16_t health;  // base value; offset is in ACBS
-            uint16_t magicka; // base value; offset is in ACBS
-            uint16_t stamina; // base value; offset is in ACBS
-            float    far_away_model_distance = 0.0F; // distance at which the far-away model is applied
-            uint8_t  geared_up_weapons       = 0;    // unused
-         } base_data; // DNAM
-         struct {
-            actor_flags_t flags = 0;
-            int16_t  magicka_offset    = 0; // a fixed amount by which to modify the actor's computed stat
-            int16_t  stamina_offset    = 0; // a fixed amount by which to modify the actor's computed stat
-            int16_t  level             = 1; // this is a multiplier (fixed-point; convert to a float by dividing by 1000) if the PC Level Mult flag is set
-            int16_t  calc_min_level    = 0; // applies if the PC Level Mult flag is set
-            int16_t  calc_max_level    = 0; // applies if the PC Level Mult flag is set
-            int16_t  speed_mult        = 0;
-            int16_t  disposition       = 0;
-            template_flags_t template_flags = 0;
-            int16_t  health_offset     = 0; // a fixed amount by which to modify the actor's computed stat
-            uint16_t bleedout_override = 0; // override the Bleedout Default on the actor's CLAS form, if the Bleedout Override actor flag is set
-         } base_stats; // ACBS
-         form_reference_t combat_class; // CNAM
-         form_reference_t combat_style; // ZNAM
-         std::vector<creature_sound> creature_sounds;
-         form_reference_t crime_faction; // CRIF
-         form_reference_t death_item; // INAM
+         } ai;
          struct {
             struct {
-               float length;
-               float height;
-            } nose;
+               struct {
+                  float length;
+                  float height;
+               } nose;
+               struct {
+                  float height;
+                  float width;
+                  float depth;
+               } jaw;
+               struct {
+                  float height;
+                  float depth;
+               } cheeks;
+               struct {
+                  float height;
+                  float width;
+                  float depth; // read AFTER chin
+               } eyes;
+               struct {
+                  float height;
+                  float width;
+                  float depth;
+               } brows;
+               struct {
+                  float height;
+                  float depth;
+               } lips;
+               struct {
+                  float width;
+                  float height;
+                  float depth;
+               } chin;
+               float unknown;
+            } morphs; // NAM9 // The game doesn't even bother to store this if they're all zero.
             struct {
-               float height;
-               float width;
-               float depth;
-            } jaw;
-            struct {
-               float height;
-               float depth;
-            } cheeks;
-            struct {
-               float height;
-               float width;
-               float depth; // read AFTER chin
-            } eyes;
-            struct {
-               float height;
-               float width;
-               float depth;
-            } brows;
-            struct {
-               float height;
-               float depth;
-            } lips;
-            struct {
-               float width;
-               float height;
-               float depth;
-            } chin;
-            float unknown;
-         } face_morphs; // NAM9
+               uint32_t nose;
+               uint32_t unknown;
+               uint32_t eyes;
+               uint32_t mouth;
+            } parts; // NAMA
+            form_reference_t texture_set; // FTST
+         } face;
          struct {
-            uint32_t nose;
-            uint32_t unknown;
-            uint32_t eyes;
-            uint32_t mouth;
-         } face_parts; // NAMA
-         form_reference_t face_texture_set; // FTST
-         std::vector<faction_membership> faction_memberships; // SNAM[]
-         form_reference_t far_away_model; // ANAM // an Armor
-         form_reference_t gift_filter; // GNAM // a FormList
-         std::vector<form_reference_t> hair_colors;  // HCLF[]
-         std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
+            form_reference_t model; // ANAM // an Armor
+            float distance = 0.0F; // DNAM+0x2C // distance at which the far-away model is applied
+         } far_away;
+         struct {
+            std::vector<form_reference_t> hair_colors;  // HCLF[]
+            std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
+         } head;
          struct {
             form_reference_t default;
             form_reference_t sleeping;
          } outfits;
-         std::vector<form_reference_t> package_list; // PKID[]
-         form_reference_t default_package_list; // DPLT
          struct {
-            form_reference_t spectator;      // SPOR
-            form_reference_t observe_corpse; // OCOR
-            form_reference_t guard_warn;     // GWOR
-            form_reference_t combat;         // ECOR
-         } package_override_lists; // same structure as on QUST
+            struct {
+               skill_byte_list skills; // DNAM+0x00
+               uint16_t health;  // DNAM+0x24
+               uint16_t magicka; // DNAM+0x26
+               uint16_t stamina; // DNAM+0x28
+            } base;
+            struct {
+               skill_byte_list skills; // DNAM+0x18
+               int16_t health  = 0; // ABCS+0x14
+               int16_t magicka = 0; // ABCS+0x04
+               int16_t stamina = 0; // ABCS+0x06
+            } offsets;
+            int16_t  level;              // ABCS+0x08 // this is a multiplier (fixed-point; convert to a float by dividing by 1000) if the PC Level Mult flag is set
+            int16_t  calc_min_level = 0; // ABCS+0x0A // applies if the PC Level Mult flag is set
+            int16_t  calc_max_level = 0; // ABCS+0x0C // applies if the PC Level Mult flag is set
+            int16_t  speed_mult     = 0; // ABCS+0x0E
+            int16_t  disposition    = 0; // ABCS+0x10
+            uint16_t bleedout_threshold; // ABCS+0x16 // override the Bleedout Default on the actor's CLAS form, if the Bleedout Override actor flag is set
+            form_reference_t combat_class; // CNAM
+            form_reference_t combat_style; // ZNAM
+         } stats;
+         struct {
+            form_reference_t actor;     // TPLT
+            template_flags_t flags = 0; // ABCS+0x12
+         } template_data;
+         //
+         std::vector<creature_sound> creature_sounds;
+         form_reference_t crime_faction; // CRIF
+         form_reference_t death_item; // INAM
+         std::vector<faction_membership> faction_memberships; // SNAM[]
+         uint8_t geared_up_weapons = 0; // DNAM+0x30
+         form_reference_t gift_filter; // GNAM // a FormList
          std::vector<form_reference_t> perks;
-         form_reference_t race; // RNAM
          uint8_t sound_level = 0;
          std::vector<form_reference_t> spells; // SPLO[SPCT], but SPCT is just a suggestion; the game will properly reallocate the list as needed
-         form_reference_t template_actor; // TPLT
          struct {
             float r = 255.0F; // value in the range of [0.0F, 255.0F]... but then why the hell is it encoded as a float?
             float g = 255.0F;

@@ -67,44 +67,6 @@ namespace dovah::loaded_forms::components {
          return;
       }
    }
-   /*static*/ void attack_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
-      auto& subrecord = record.get_current_subrecord();
-      auto  signature = subrecord.signature();
-      switch (signature) {
-         case 'ATKR':
-         case 'ATKD':
-         case 'ATKE':
-            break;
-         default: // invalid
-            assert(false && "Why was attack_data::generate_use_info called on a subrecord it's not built to handle?");
-      }
-      //
-      form_id_t form_id;
-      if (signature == 'ATKR') {
-         if (subrecord.read(form_id))
-            uib.add_outbound_reference(form_id);
-         return;
-      }
-      if (signature == 'ATKD') {
-         if (subrecord.is_in_bounds(0x2C)) {
-            subrecord.skip_bytes(8);
-            if (subrecord.read(form_id))
-               uib.add_outbound_reference(form_id);
-            subrecord.skip_bytes(0x10);
-            if (subrecord.read(form_id))
-               uib.add_outbound_reference(form_id);
-            subrecord.skip_bytes(0x0C);
-         }
-         //
-         // The game assumes that the subrecord after ATKD is ATKE. Bethesda tried to check the signature, but 
-         // made a mistake: they retrieve the signature, but they never actually do check it, and the caller(s) 
-         // are arranged such that they've already opened the next subrecord anyway and would therefore skip it 
-         // even if they did detect a mismatch.
-         //
-         auto& next = record.next_subrecord();
-         return;
-      }
-   }
    void attack_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       record.write_formID_subrecord('ATKR', this->race, true);
       //
@@ -163,5 +125,47 @@ namespace dovah::loaded_forms::components {
       this->stamina_mult = 1;
       //
       this->event.clear();
+   }
+
+   void attack_data::use_info_state::read(tes_record_reader& record) {
+      auto& subrecord = record.get_current_subrecord();
+      auto  signature = subrecord.signature();
+      switch (signature) {
+         case 'ATKR':
+         case 'ATKD':
+         case 'ATKE':
+            break;
+         default: // invalid
+            assert(false && "Why was attack_data::generate_use_info called on a subrecord it's not built to handle?");
+      }
+      //
+      form_id_t form_id;
+      if (signature == 'ATKR') {
+         subrecord.read(this->race);
+         return;
+      }
+      if (signature == 'ATKD') {
+         if (subrecord.is_in_bounds(0x2C)) {
+            subrecord.skip_bytes(8);
+            subrecord.read(this->race);
+            subrecord.read(this->spell);
+            subrecord.skip_bytes(0x10);
+            subrecord.read(this->keyword);
+            subrecord.skip_bytes(0x0C);
+         }
+         //
+         // The game assumes that the subrecord after ATKD is ATKE. Bethesda tried to check the signature, but 
+         // made a mistake: they retrieve the signature, but they never actually do check it, and the caller(s) 
+         // are arranged such that they've already opened the next subrecord anyway and would therefore skip it 
+         // even if they did detect a mismatch.
+         //
+         auto& next = record.next_subrecord();
+         return;
+      }
+   }
+   void attack_data::use_info_state::commit(form_stub_use_info_builder& uib) {
+      uib.add_outbound_reference(this->race);
+      uib.add_outbound_reference(this->spell);
+      uib.add_outbound_reference(this->keyword);
    }
 }
