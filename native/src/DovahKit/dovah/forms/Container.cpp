@@ -35,16 +35,18 @@ namespace dovah::loaded_forms {
                subrecord.read(this->weight);
                break;
             case 'SNAM': // open sound
-               subrecord.read(this->open_sound);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->open_sound)
-               );
+               if (subrecord.read(this->open_sound)) {
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->open_sound)
+                  );
+               }
                break;
             case 'QNAM': // close sound
-               subrecord.read(this->close_sound);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->close_sound)
-               );
+               if (subrecord.read(this->close_sound)) {
+                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->close_sound)
+                  );
+               }
                break;
             default:
                intfc.log_load_warning(
@@ -61,16 +63,18 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      form_id_t formID;
+      form_id_t sound_open;
+      form_id_t sound_close;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'SNAM': // open sound
+               subrecord.read(sound_open);
+               break;
             case 'QNAM': // close sound
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
+               subrecord.read(sound_close);
                break;
             case 'MODL':
             case 'MODT':
@@ -91,6 +95,8 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(sound_open);
+      uib.add_outbound_reference(sound_close);
    }
    void Container::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

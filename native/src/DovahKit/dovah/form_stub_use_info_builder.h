@@ -8,8 +8,8 @@ namespace dovah {
       friend class form_stub;
       protected:
          struct _pending_entry {
-            form_stub* target_stub = nullptr;
-            uint32_t   target_id   = 0;
+            form_stub* target_stub = nullptr; // form stub
+            uint32_t   target_id   = 0;       // form ID
             use_info_entry::flags_t flags = 0;
             //
             _pending_entry() {}
@@ -64,5 +64,6 @@ namespace dovah {
          //
          // Generic state information, provided for form types that need it:
          form_id_t extra_form_ids[10];
+         void*     extra_pointer = nullptr;
    };
 }
