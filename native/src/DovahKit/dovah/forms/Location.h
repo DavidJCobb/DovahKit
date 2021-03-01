@@ -4,7 +4,9 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "components/bounds.h"
 #include "components/keyword_list.h"
+#include "components/papyrus.h"
 
 class TESPluginRecord;
 
@@ -18,8 +20,6 @@ namespace dovah::loaded_forms {
             subrecord_flag() = delete;
             enum type : uint8_t {
                population_is_a = 0x01, // ACPR instead of LCPR?
-               unique_is_a     = 0x02, // ACUN instead of LCUN?
-               static_is_a     = 0x04, // ACSR instead of LCSR?
                encounter_is_a  = 0x08, // ACEC instead of LCEC?
                enable_is_a     = 0x10, // ACEP instead of LCEP?
                cid_is_a        = 0x20, // ACID instead of LCID?
@@ -30,20 +30,22 @@ namespace dovah::loaded_forms {
          struct PopulationRef {
             form_reference_t actor; // ACHR
             form_reference_t cell_or_world;
-            int16_t          grid_y;
-            int16_t          grid_x;
+            int16_t          grid_y = 0;
+            int16_t          grid_x = 0;
          };
-         struct UniqueRef {
+         struct unique_ref_entry { // ACUN and LCUN add; RCUN removes
             form_reference_t actor_base;
             form_reference_t actor;
-            form_reference_t location; // usually self
+            form_reference_t editor_location; // usually self
+            bool removed_by_active_file = false;
          };
-         struct StaticRef {
+         struct special_ref {
             form_reference_t ref_type; // LocRefType
             form_reference_t reference;
             form_reference_t cell_or_world;
-            uint16_t         unk0C;
-            uint16_t         unk0E;
+            int16_t          grid_y = 0;
+            int16_t          grid_x = 0;
+            bool removed_by_active_file = false;
          };
          struct Encounter { // unverified
             form_reference_t worldID;
@@ -56,13 +58,15 @@ namespace dovah::loaded_forms {
             int16_t          grid_x;
          };
 
-         components::keyword_list keywords;
+         components::object_bounds bounds;   // OBND
+         components::keyword_list  keywords; // KWDA[KSIZ+]
+         components::papyrus_attachment_data script_data; // VMAD
          subrecord_flags_t subrecordFlags = 0; // whether we're using Axxx subrecords or Lxxx subrecords
          std::vector<PopulationRef> population; // ACPR/LCPR
          std::vector<form_reference_t> populationActors; // RCPR // Dawnguard only?
-         std::vector<UniqueRef> uniques; // ACUN/LCUN
+         std::vector<unique_ref_entry> uniques; // ACUN/LCUN // RCUN removes
          std::vector<form_reference_t> uniques_R; // RCUN
-         std::vector<StaticRef> statics; // ACSR/LCSR
+         std::vector<special_ref>      special_refs; // ACSR/LCSR
          std::vector<Encounter> encounters; // ACEC/LCEC
          std::vector<EnablePoint> enablePoints; // ACEP/LCEP
          std::vector<form_reference_t> acid; // ACID/LCID - xEdit says "cell marker reference?"

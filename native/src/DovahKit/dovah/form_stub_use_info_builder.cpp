@@ -3,6 +3,7 @@
 namespace dovah {
    form_stub_use_info_builder::form_stub_use_info_builder(form_stub& s) : _stub(s) {
    }
+
    void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
       if (++this->_pending.size < preallocated_array_size) {
          this->_pending.fixed[this->_pending.size] = _pending_entry(to_stub, flags);
@@ -15,6 +16,46 @@ namespace dovah {
          this->_pending.fixed[this->_pending.size] = _pending_entry(toFormID, flags);
       } else {
          this->_pending.extra.emplace_back(toFormID, flags);
+      }
+   }
+   void form_stub_use_info_builder::cancel_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
+      auto full = this->_pending.size;
+      auto size = std::min(full, preallocated_array_size);
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = this->_pending.fixed[i];
+         if (entry.target_stub == to_stub && entry.flags == flags) {
+            entry = _pending_entry();
+            return;
+         }
+      }
+      auto& list = this->_pending.extra;
+      size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = list[i];
+         if (entry.target_stub == to_stub && entry.flags == flags) {
+            list.erase(list.begin() + i);
+            return;
+         }
+      }
+   }
+   void form_stub_use_info_builder::cancel_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+      auto full = this->_pending.size;
+      auto size = std::min(full, preallocated_array_size);
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = this->_pending.fixed[i];
+         if (entry.target_id == toFormID && entry.flags == flags) {
+            entry = _pending_entry();
+            return;
+         }
+      }
+      auto& list = this->_pending.extra;
+      size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& entry = list[i];
+         if (entry.target_id == toFormID && entry.flags == flags) {
+            list.erase(list.begin() + i);
+            return;
+         }
       }
    }
    void form_stub_use_info_builder::commit() {

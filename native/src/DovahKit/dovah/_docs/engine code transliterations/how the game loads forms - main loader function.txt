@@ -67,7 +67,7 @@ lAfterTypeMismatchCheck:
    if (!Arg1.IsMaster() || Arg1.unk3F0 || Arg1.unk3EC) {
       if (!Arg3)
          jump to 0x00440373;
-      if (Arg3->Unk_34()) { // returns bool
+      if (Arg3->IsParentForm()) { // returns bool
          if (tls2E9 == 0 || Arg3->formType == form_type::cell || Arg3->formType == form_type::worldspace) {
             //
             // Note that we don't test for (form_type::topic) here, so DIAL would 

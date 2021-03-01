@@ -18,6 +18,7 @@ namespace dovah {
          };
          //
          form_stub& _stub;
+         bool _is_active_file    = false;
          bool _is_final_file     = false;
          bool _last_record_flags = 0;
          struct _pending_list {
@@ -39,6 +40,8 @@ namespace dovah {
          //
          void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
          void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         void cancel_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
+         void cancel_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
          void commit();
          
          //
@@ -56,6 +59,7 @@ namespace dovah {
          form_stub_use_info_builder spawn_subordinate_on_stack() const noexcept;
          
          inline const form_stub* stub() const noexcept { return &this->_stub; }
+         inline bool is_active_file() const noexcept { return this->_is_active_file; }
          inline bool is_final_file() const noexcept { return this->_is_final_file; }
          inline uint32_t last_record_flags() const noexcept { return this->_last_record_flags; }
          //

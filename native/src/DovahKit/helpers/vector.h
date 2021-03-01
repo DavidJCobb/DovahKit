@@ -22,4 +22,26 @@ namespace cobb {
       }
       std::rotate(first, middle, last);
    }
+
+   //
+   // Quickly erase from an std::vector by avoiding having to shuffle all elements 
+   // when erasing values from the middle: we just move the to-be-erased value to 
+   // the end and then erase it.
+   //
+   // Finds the first matching value and erases it.
+   //
+   template<typename T> void unordered_erase(std::vector<T>& v, const T& value) {
+      auto it = std::find(v.begin(), v.end(), value);
+      if (it != v.end()) {
+         std::iter_swap(it, v.end() - 1);
+         v.erase(v.end() - 1);
+      }
+   }
+   template<typename T, class unary_predicate_t> void unordered_erase(std::vector<T>& v, unary_predicate_t functor) {
+      auto it = std::find_if(v.begin(), v.end(), functor);
+      if (it != v.end()) {
+         std::iter_swap(it, v.end() - 1);
+         v.erase(v.end() - 1);
+      }
+   }
 }

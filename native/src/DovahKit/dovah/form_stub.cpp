@@ -69,7 +69,7 @@ namespace dovah {
    }
    file_load_order& form_stub::_get_load_order() const noexcept {
       auto* file = this->get_file_at_index(0);
-      assert(file);
+      assert(file && "Cannot retrieve a form stub's owning load order if it has no files!");
       return file->get_load_order();
    }
    loaded_form_ptr<loaded_forms::Form> form_stub::_load(bool force) {
@@ -454,11 +454,13 @@ namespace dovah {
       //
       form_stub_use_info_builder use_interface(*this);
       bool can_be_parent = form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children;
+      auto& lo = this->_get_load_order();
       //
       for (uint16_t i = 0; i < size; ++i) {
          if (i == size - 1)
             use_interface._is_final_file = true;
          auto* file = arr[i].pointer;
+         use_interface._is_active_file = lo.file_is_active(*file);
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             build_hardcoded_form_outbound_refs(use_interface);
             use_interface.commit();
