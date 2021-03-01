@@ -568,6 +568,19 @@ namespace dovah {
          //
          // This is not an override.
          //
+         if (stub->formType == form_type::actor_value_info) {
+            detailed_notice warning;
+            warning.code = notice_code::the_game_doesnt_load_new_actor_value_infos;
+            warning.cause_form.localID = stub->formID;
+            warning.cause_form.fixedID = formID;
+            warning.cause_form.type    = stub->formType;
+            warning.set_flag(detailed_notice::flag::has_cause_form);
+            if (auto* file = stub->get_file_at_index(-1)) {
+               warning.cause_file = file->get_filename();
+               warning.set_flag(detailed_notice::flag::has_cause_file);
+            }
+            this->_log_load_warning(warning);
+         }
          if (stub->source_file_count() == 1) {
             if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
                bool injected = stub->is_injected();

@@ -39,10 +39,11 @@ flag, while overrides  of all other parent  forms are always  "partial." If the
 record is "partial," then the game does a special "partial" load and then stops 
 all further processing: the record is at this point fully loaded.
 
-(The purpose of "partial" loads is to allow  files to add child forms to parent 
-forms in a dependency (and potentially make other changes to the parents) while 
-avoiding the need to override the entire parent form. Remember that the process 
-just described only applies to overrides.)
+(The purpose of "partial" loads is to  serve as a source control mechanism. One 
+author can modify, say, a REFR,  without including a "false" edit of the parent 
+CELL that might conflict with another author's changes to that CELL; child form 
+edits don't cause  Rule of One conflicts with the parent form  when the flag is 
+used.)
 
 If the form does  *not* already exist  in memory (i.e. if  this record isn't an 
 override), then the game  checks if the record is  flagged as "partial." If so, 
@@ -121,7 +122,7 @@ at offset 0x004401B0.
 -------------------------------------------------------------------------------
 
 [1] This is likely a leftover behavior  from Fallout 3, where one of these form 
-types was just a more  advanced version of the other.  Elminster has speculated 
+types was just a more advanced version of the other. ElminsterAU has speculated 
 that this may specifically be a GECK leftover intended to help Bethesda convert 
 forms from one type  to the other. Recall  that the Creation  Kit is a modified 
 build of the  game itself (and that  each game is based on the  previous game's 
@@ -135,28 +136,51 @@ likely to still be compatible.
 Classic: CELL; CPTH; DIAL; DOBJ; GMST;  IDLE; INFO; LAND; NAVI; NAVM; REFR (and 
 all subclasses); TES4; WRLD. Special-case behaviors are as follows:
 
+
+   AVIF (actor value info)
+      If the  form already exists, then data is loaded. New  forms of this type 
+      are never created.
+
+
    CELL (cell)
       The cell is loaded as normal. If  the cell  is an exterior  and is not an 
       override, then additional processing will connect it to its worldspace as 
-      appropriate: if it is  the first persistent-flagged  cell to load in that 
-      worldspace,  then it will  be set as  the worldspace's  persistent  cell; 
-      otherwise, it will be  inserted into the worldspace as  appropriate based 
-      on its grid  coordinates. Either way, a pointer to  the cell is retained; 
-      the pointer is used  to keep track of what cell any child  records should 
-      be associated with.
+      appropriate:
 
-   CPTH (camera path), IDLE (idle)
+       - If it is the first persistent-flagged cell to load in that worldspace, 
+         then it will be set as the worldspace's persistent cell.
+
+       - If it isn't set as the worldspace's persistent cell, and if the world-
+         space already  has a cell in  the same grid coordinates,  then the new 
+         cell form will be  deleted. The record will be  loaded by the existing 
+         cell, effectively overriding that cell instead.
+
+       - Otherwise, the new cell is inserted into the worldspace as expected.
+
+      A pointer to the appropriate cell is  retained, and used to keep track of 
+      what cell any child records should be associated with.
+
+
+   CPTH (camera path), QUST (idle)
       Instances of the  forms are created in  memory, and the  appropriate form 
-      loader (TESForm::LoadForm override) is called.
+      loader  (TESForm::LoadForm override)  is called. Behavior is in  practice 
+      the same as pretty much all other forms.
+
 
    DIAL (dialogue topic)
       The form is loaded as normal, and then additional functions are called on 
       the file object,  with the loaded form  passed as an argument.
 
+
    DOBJ (default object list)
       The game stores default-object list  in a singleton that is a subclass of 
       TESForm. The game  calls the appropriate  form loader  (TESForm::LoadForm 
       override) on the singleton.
+
+
+   DLVW (dialogue view)
+      The game aborts here and therefore never loads these.
+
 
    GMST (game setting)
       The game checks for an  EDID subrecord and immediately  skips the rest of 
@@ -173,14 +197,17 @@ all subclasses); TES4; WRLD. Special-case behaviors are as follows:
       but default behaviors  that conflict with other tools  would be unwise if 
       not outright discourteous.
 
+
    INFO (dialogue topic info)
       The form  is loaded as normal.  A pointer to it is retained for  use when 
       opening TOFT records [4].
+
 
    LAND (heightmapped landscape)
       An instance is created,  and some tasks are performed  using the instance 
       and its parent  cell. Then,  the game calls the  appropriate  form loader 
       (TESForm::LoadForm  override) for the  landscape.
+
 
    NAVI (navmesh info map)
       The game will only ever create a single NavMeshInfoMap instance, retained 
@@ -188,11 +215,13 @@ all subclasses); TES4; WRLD. Special-case behaviors are as follows:
       reused. The appropriate form loader  (TESForm::LoadForm override) will be 
       called.
 
+
    NAVM (navmesh)
       Instances of the  forms are created in  memory, and the  appropriate form 
       loader  (TESForm::LoadForm override)  is called. After that,  the  parent 
       cell  is retrieved,  and special functionality  is used  to integrate the 
       navmesh into the cell.
+
 
    REFR and subclasses (object-reference)
       A reference is created and given a reference handle. The appropriate form 
@@ -206,8 +235,10 @@ all subclasses); TES4; WRLD. Special-case behaviors are as follows:
       lists); and flagging the reference  as persistent at run-time if the file 
       that provides it is not a master.
 
+
    TES4 (file header)
       The game loads and processes the ONAM subrecord, if present.
+
 
    WRLD (worldspace)
       The game loads the form as normal, with the sole exception that it stores 

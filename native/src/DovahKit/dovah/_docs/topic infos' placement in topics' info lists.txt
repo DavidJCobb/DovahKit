@@ -47,9 +47,9 @@ topic lists. Stop here.
 
 If the current info is also a partial-flagged  override and was originally part 
 of a different topic, then this will  result in it believing that it belongs to 
-a topic other than the one it really belongs to. A later-loading non-partial 
-override will attempt to remove it from the new topic, thus failing to remove 
-it from its original topic and potentially allowing it to appear in multiple 
+a topic other  than the one it really belongs  to. A later-loading  non-partial 
+override will attempt to  remove it from the new  topic, thus failing to remove 
+it from  its original topic and  potentially allowing it to appear  in multiple 
 topics at once.
 
 

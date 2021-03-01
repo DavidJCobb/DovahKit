@@ -1714,5 +1714,6 @@
     <Text Include="dovah\_docs\topic infos%27 placement in topics%27 info lists.txt" />
     <Text Include="dovah\_docs\feature list.txt" />
     <Text Include="dovah\_docs\use info build process.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
   </ItemGroup>
 </Project>

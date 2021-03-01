@@ -680,6 +680,7 @@
   <ItemGroup>
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
     <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
     <Text Include="dovah\_docs\feature list.txt" />
     <Text Include="dovah\_docs\form stubs.txt" />

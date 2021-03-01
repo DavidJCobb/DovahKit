@@ -1,0 +1,477 @@
+static thread_local uint8_t  tls2E9;
+static thread_local bool     tls2EB; // indicates that TESDataHandler::sub004401B0 is currently running?
+static thread_local uint8_t  tls2EC;
+static thread_local uint32_t tls334;
+
+//
+// State vars used so that child forms can find their parents while loading:
+//
+static TESObjectCELL* current_loaded_cell = nullptr;
+static TESTopic*      current_loaded_dial = nullptr;
+static TESWorldSpace* current_loaded_wrld = nullptr;
+
+using form_type_t = uint8_t;
+enum form_type : uint8_t; // i'm not gonna dump a 120-line enum in here, sorry
+
+//
+// Notation for unidentified locals:
+//
+// [EBP-8]     ebpn08 // usually a local
+//
+// [EBP+8]     ebpp08 // usually Arg1, but it's common to pull args into 
+//                    // registers and then repurpose the original spot 
+//                    // as a local
+
+
+//
+// Load a record. Return a success bool.
+// Args:
+//  - TESFile& Arg1 == The file to load from.
+//  - bool     Arg2 == Whether to skip form type mismatch tests for hardcoded forms.
+//  - TESForm* Arg3 == An already-existing form to load (when loading content on-demand rather than at startup)
+//  - bool     Arg4 == 
+//
+bool TESDataHandler::sub004401B0(TESFile& Arg1, bool Arg2, TESForm* Arg3, bool Arg4) {
+   tls2EB = true;
+   // [EBP-0x0C] == this
+   // EBX        == Arg1
+   // ESI        == Arg3
+   bool     creating_new_form = true; // BYTE PTR [EBP-0x01]
+   uint32_t form_type_to_load = Arg1.VerifyTopLevelRecord(); // DWORD PTR [EBP+0x08]
+   if (this->unkAA6 == 0 && form_type_to_load == form_type::setting) {
+      this->unkAA6 = 1;
+   } else if (this->unkAA6 == 1 && form_type_to_load != form_type::setting) {
+      this->unkAA6 = 2;
+   }
+   if (Arg2) { // at 0x00440231
+      if (IsHardcodedFormID(Arg1.recordFormID)) // just checks if the ID is non-zero and below 0x800
+         goto lAfterTypeMismatchCheck;
+   }
+   if (!Arg3) {
+      Arg3 = LookupFormByID(Arg1.recordFormID);
+      if (!Arg3)
+         goto lAfterTypeMismatchCheck;
+   }
+   if (Arg3->formType != form_type_to_load) {
+      //
+      // Throw an error if the record type doesn't match the form we're loading, 
+      // unless it's an ARMA/ARMO mismatch, which is allowed (presumably as a 
+      // leftover behavior from the GECK).
+      //
+      if (!(form_type_to_load == form_type::armor && al == form_type::armor_addon) && !(form_type_to_load == form_type::armor_addon && al == form_type::armor)) {
+         return false;
+      }
+   }
+lAfterTypeMismatchCheck:
+   // at 0x0044029E
+   if (!Arg1.IsMaster() || Arg1.unk3F0 || Arg1.unk3EC) {
+      if (!Arg3)
+         jump to 0x00440373;
+      if (Arg3->Unk_34()) { // returns bool
+         if (tls2E9 == 0 || Arg3->formType == form_type::cell || Arg3->formType == form_type::worldspace) {
+            //
+            // Note that we don't test for (form_type::topic) here, so DIAL would 
+            // always be treated as partial -- at least while that value in thread-
+            // local storage is zero...
+            //
+            if (!(Arg1.recordFlags & 0x4000))
+               goto lAfterPartialParentHandling;
+         }
+         // at 0x004402FB
+         switch (Arg3->formType) {
+            case form_type::cell:       current_loaded_cell = Arg3; break;
+            case form_type::worldspace: current_loaded_wrld = Arg3; break;
+            case form_type::topic:      current_loaded_dial = Arg3; break;
+         }
+         Arg3->LoadPartial(Arg1); // virtual 0x07
+         Arg3->sub004515F0(Arg1);
+      }
+      if (tls2E9 == 0) {
+         Arg3->ModifyFlag00000008(false); // clear flag
+      }
+      if (Arg1.sub00444720()) { // tests flag 0x00000008 on TESFile::unk3E8
+         Arg3->SetAlteredFlag(true);
+      }
+      return true;
+   }
+lAfterPartialParentHandling:
+   // at 0x0044036F
+   if (!Arg3) {
+      // at 0x00440373
+      if (!(Arg1.recordFlags & 0x4000)) // if not partial
+         goto lAfterDeletedCheck;
+      if ((Arg1.recordFormID >> 0x18) == Arg1.GetModIndex()) {
+         //
+         // If a non-injected non-override record is flagged as partial, we strip 
+         // the partial flag.
+         //
+         Arg1.recordFlags &= ~0x00004000; // clear "partial" flag
+         goto lAfterDeletedCheck;
+      }
+      //
+      // If an injected record is flagged as partial and is not overriding anything, 
+      // then it is skipped.
+      //
+      return false;
+   }
+   // at 0x004403C9
+   if (!(Arg1.recordFlags & 0x00000020)) { // if form is not deleted
+      //
+      // Whenever we load an override of a non-deleted, non-effectively-partial form, 
+      // we clear its data by hand to enforce the Rule of One.
+      //
+      if (Arg3->formType >= 0x3D) {
+         if (Arg3->formType <= 0x46) { // REFR ande all subclasses
+            refr_ptr ebpn10 = Arg3; // smart pointer
+            if (auto* eax = Arg3->GetParentOrPersistentCell()) {
+               if (eax != current_loaded_cell) {
+                  eax->RemoveRefFromCell(Arg3); // unconfirmed, but likely
+               }
+            }
+            // at 0x0044043F
+            // ebpn10->~refr_ptr();
+         } else if (Arg3->formType == form_type::quest) {
+            if (Arg3->unk13A && Arg3->sub0043B9D0()) { // bytes/bools, both
+               (*g_thePlayer)->sub0073F9B0(Arg3);
+               Arg3->sub00573C40();
+            }
+         }
+      }
+      // at 0x00440447
+      //
+      // Papyrus time! :'D
+      //
+      BSTSmartPointer<VirtualMachine> vm; // [EBP+0x10] // smart pointer type assumed
+      GetSmartPointerForVirtualMachine(vm);
+      IObjectHandlePolicy* eax = vm->Unk_2C();
+      uint64_t eax_edx = eax->GetHandleForObject(Arg3->formType, Arg3);
+      auto*    eax     = vm->Unk_2E(eax_edx); // at 0x00440483
+      eax->sub00C2DF10();
+      //
+      // We of course must clear the normal stuff, too:
+      //
+      Arg3->ClearAllComponentData();
+      Arg3->ClearData();
+      Arg3->sub00450C50();
+      Arg3->InitializeData();
+      // vm->~unknown_ptr();
+   }
+lAfterDeletedCheck:
+   // at 0x004404C8
+   //
+   // The switch-case below handles special behaviors for various form types. 
+   // The default case creates a form if it does not exist, and then loads its 
+   // data from the file.
+   //
+   switch (form_type_to_load) { // form type // jump table relies on [form_type_to_load-1], clamping with unsigned < 0x74
+      case form_type::file_header: // TES4 // at 0x004404E3
+         {
+            auto signature = Arg1.GetSubrecordSignature();
+            if (!signature)
+               break;
+            bool break_2 = false;
+            while (signature != 'ONAM') {
+               if (!Arg1.OpenNextSubrecord()) {
+                  break_2 = false;
+                  break;
+               }
+               signature = Arg1.GetSubrecordSignature();
+            }
+            if (break_2)
+               break;
+            //
+            // Process TES4/ONAM:
+            //
+            auto bytes = Arg1.subrecordSize;
+            auto count = bytes / 4;
+            uint32_t* ids = (uint32_t*)malloc(count * 4); // Bethesda uses a class called ScrapHeap
+            Arg1.ReadCString(ids, bytes);
+            for(uint32_t i = 0; count; --count, ++i) {
+               if (Arg1.byteswap_needed)
+                  ids[i] = _byteswap_ulong(ids[i]);
+               auto* id_source_file = Arg1.GetFileByLoadPrefix(ids[i] >> 0x18 + 1);
+               if (!id_source_file)
+                  id_source_file = &Arg1;
+               auto fixed_form_id = (ids[i] & 0x00FFFFFF) | (id_source_file->GetModIndex() << 0x18);
+               sub00446900(fixed_form_id, Arg1);
+            }
+            delete ids;
+         }
+         break;
+      case form_type::game_setting: // GMST // at 0x00440A36
+         if (Arg1.GetSubrecordSignature() == 'EDID') {
+            auto* buffer = _malloca(Arg1.subrecordSize);
+            Arg1.ReadCStringWhole(buffer); // read an entire subrecord
+            GameSettingCollection::GetSingleton()->Unk_09(Arg1, buffer);
+         }
+         break;
+      case form_type::navmesh_info_map: // at 0x00440CAF
+         //
+         // NavMeshInfoMap is a singleton.
+         //
+         LoadFormAndMaybeDoOtherStuff(Arg3 ? Arg3 : (*g_TES)->GetOrCreateNavMeshInfoMap(), Arg1);
+         break;
+      case form_type::cell: // at 0x004405ED
+         {
+            bool ebpp0F = false;
+            if (!Arg3) {
+               Arg3 = new TESObjectCELL;
+               ebpp0F = true;
+            }
+            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            if (this->unkA9E) {
+               Arg3->Unk_24(1);
+            }
+            Arg3->sub004506D0(1);
+            if (ebpp0F) { // at 0x00440658
+               if (Arg3->IsInterior()) {
+                  this->unk660.sub0043BEF0(this->unk66A, &ebpn14);
+                  current_loaded_cell = Arg3;
+                  break;
+               }
+               if (!current_loaded_wrld) {
+                  void  ebpn30;
+                  auto* eax = this->formsByType[form_type::worldspace].sub004A51A0(&ebpn30);
+                  current_loaded_wrld = **eax;
+               }
+               if (!current_loaded_wrld->SetPersistentCell(Arg3)) {
+                  //
+                  // If Arg3 can't be this worldspace's persistent cell, then check to see if 
+                  // the worldspace already has a cell at its coordinates. If so, then yeet it 
+                  // and operate on the existing cell instead.
+                  //
+                  TESObjectCELL* eax = current_loaded_wrld->sub004382F0(Arg3->GetExteriorXCellCoordinate(), Arg3->GetExteriorYCellCoordinate());
+                  delete Arg3; // TESObjectCELL::Dispose(true);
+                  Arg3 = eax;
+               }
+            }
+            // at 0x004406E9
+            current_loaded_cell = Arg3;
+         }
+         break;
+      case form_type::reference:
+      case form_type::actor:
+      case form_type::missile_projectile:
+      case form_type::arrow_projectile:
+      case form_type::grenade_projectile:
+      case form_type::beam_projectile:
+      case form_type::flame_projectile:
+      case form_type::cone_projectile:
+      case form_type::barrier_projectile:
+      case form_type::placed_hazard: // at 0x004406FD
+         if (!current_loaded_cell && !Arg4) {
+            return false;
+         }
+         Arg4 = false;
+         if (Arg3 && Arg3->GetParentOrPersistentCell() == current_loaded_cell && current_loaded_cell) {
+            creating_new_form = false;
+         } else {
+            ref_handle ebpn28; // handles are typically passed by reference
+            CreateReferenceAndReturnHandle(ref_handle, form_type_to_load, 1);
+            refr_ptr ebpp14;
+            TESObjectREFRHandleInterface::GetRef(ref_handle, ebpp14);
+            Arg3 = ebpp14;
+         }
+         // at 0x00440771
+         if (Arg3) {
+            if (!LoadFormAndMaybeDoOtherStuff(Arg3, Arg1)) {
+               ref_handle ebpn34;
+               CreateRefHandleFor(ebpn34, Arg3);
+               if (!ebpn34) {
+                  CreateRefHandleFor(ebpn34, Arg3); // Oh. Okay.
+               }
+               if (!Arg3->baseForm) {
+                  Arg3->formType = form_type_to_load; // Oh. Okay.
+               }
+               if (current_loaded_cell->GetFlag00000400()) {
+                  Arg3->extraData.sub004112A0(current_loaded_cell); // set persistent cell?
+               } else {
+                  Arg3->SetParentCell(current_loaded_cell);
+               }
+               auto ebpp0C = &this->unk680;
+               if (*ebpp0C) {
+                  //
+                  // ...
+                  //
+               }
+               // at 0x00440815
+               ebpp0C->sub0043C4F0(&ebpn2C);
+               creating_new_form = false;
+               if (auto* eax = dynamic_cast<Actor*>(Arg3)) {
+                  ref_handle scratch;
+                  eax->GetOrCreateRefHandle(scratch);
+                  ProcessLists::GetSingleton()->RemoveActorFromAIList(scratch, 3);
+               }
+            }
+            // at 0x0044085F
+            if (!Arg3->baseForm)
+               break; // jumps to 0x004409A3
+            if (tls334 & 2)
+               creating_new_form = false;
+            if (tls2EC != 0) {
+               Arg3->ModifyPersistentFlag(true);
+               if (current_loaded_cell && !(current_loaded_cell->IsInterior())) {
+                  if (current_loaded_wrld)
+                     current_loaded_cell = current_loaded_wrld->GetPersistentCell();
+               }
+            }
+            // at 0x004408B1
+            if (creating_new_form) {
+               if (current_loaded_cell) {
+                  if (current_loaded_cell != Arg3->parentCell) {
+                     current_loaded_cell->AddRefToCell(Arg3, 0); // unconfirmed, but likely
+                  }
+                  // at 0x004408DC
+                  if (current_loaded_cell->IsPersistent()) {
+                     //
+                     // If the ref is already persistent, double-check that it's in the expected 
+                     // cell, and I think move it there if it isn't.
+                     //
+                     TESObjectCELL* current = Arg3->parentCell;
+                     if (current) {
+                        TESWorldSpace* world    = (!current_loaded_cell->IsInterior()) ? current_loaded_cell->parentWorld : nullptr;
+                        TESObjectCELL* expected = world->GetCellThatContainsPoint(&Arg3->pos);
+                        if (current != expected) {
+                           if (eax) {
+                              expected->AddRefToCell(Arg3, 0);
+                           } else {
+                              if (!Arg3->Unk_43()) // checks a flag that exists on non-actor, non-light refs only
+                                 current->RemoveRefFromCell(Arg3);
+                           }
+                        }
+                     }
+                  } else {
+                     // at 0x0044093E
+                     //
+                     // Force refs in non-master files to be persistent.
+                     //
+                     if (!Arg1.IsMaster() && !Arg3->IsPersistent()) { // flag checks
+                        Arg3->ModifyPersistentFlag(true);
+                        Arg3->SetFormHighFlags(0x40, true);
+                        Arg3->SetFormHighFlags(0x02, true);
+                     }
+                  }
+               }
+               // at 0x00440973
+               if (Arg3->flags & 0x20) // "deleted"
+                  break; // jumps to 0x004409A3
+               Arg3->baseForm->Unk_46();
+               break; // jumps to 0x004409A3
+            }
+            // at 0x0044098B
+            if (Arg3->flags & 0x20) // "deleted"
+               Arg3->baseForm->Unk_47();
+         }
+         // at 0x004409A3
+         // ebpp14.~refr_ptr();
+         break;
+      case form_type::worldspace: // at 0x00440A81
+         if (!Arg3)
+            Arg3 = new TESWorldSpace;
+         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         this->formsByType[form_type::worldspace].push_back(Arg3);
+         current_loaded_wrld = Arg3;
+         break;
+      case form_type::landscape: // at 0x004409B9
+         if (current_loaded_cell) {
+            Arg3 = current_loaded_cell->GetOrCreateLand();
+            if (!Arg3) {
+               Arg3 = new TESObjectLAND;
+               Arg3->sub004B9260(current_loaded_cell);
+               current_loaded_cell->sub004C2380(Arg3);
+            }
+            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         }
+         break;
+      case form_type::navmesh: // at 0x00440BD9
+         if (Arg1.recordFlags & 0x80000000)
+            return true;
+         if (!Arg3) {
+            //
+            // Branch for a new navmesh:
+            //
+            Arg3 = new NavMesh; // also stored in a smart pointer
+            if (LoadFormAndMaybeDoOtherStuff(navmesh, Arg1)) {
+               if (TESObjectCELL* cell = Arg3->sub005F6780()) {
+                  //
+                  // Every time we use (cell) in this block, we're redundantly calling that 
+                  // getter we just tested. Not sure if that's relevant.
+                  //
+                  auto eax = cell->sub00C9D500();
+                  if (!eax) {
+                     Arg3->sub005F6780(new Struct0056B5E0)->sub004CC240();
+                  }
+                  // at 0x00440C76
+                  cell->sub00C9D500()->sub0043D4E0();
+               }
+            }
+            // at 0x00440C99
+            // smart pointer destructor here
+            break;
+         }
+         // at 0x00440CA3
+         //
+         // Branch for overriding a navmesh:
+         //
+         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         break;
+      case form_type::topic: // at 0x00440AF8
+         if (!Arg3) {
+            Arg3 = new TESTopic;
+            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            //
+            // ... weird stuff here ...
+            //
+            break;
+         }
+         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         break;
+      case form_type::topic_info: // at 0x00440B5F
+         if (!Arg3)
+            Arg3 = new TESTopicInfo;
+         {
+            bool al = LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            tls2EB = false;
+            return al;
+         }
+         break;
+      case form_type::quest: // at 0x00440BB4
+      case form_type::camera_path:
+         if (Arg3) {
+            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            break;
+         }
+         LoadFormAndMaybeDoOtherStuff(CreateFormByType(form_type_to_load), Arg1);
+         break;
+      case form_type::actor_value_info: // at 0x00440CD2
+         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1); // note that we never create new forms
+         break;
+      case form_type::default_object_manager: // at 0x004405D0
+         //
+         // DefaultObjectManager is a singleton.
+         //
+         LoadFormAndMaybeDoOtherStuff(GetDefaultObjectManager(), Arg1);
+         break;
+      case form_type::dialogue_view: // at 0x00440D20
+         //
+         // Abort here and never load DLVW.
+         //
+         return true;
+      default: // at 0x00440CE7
+         if (Arg3) {
+            creating_new_form = false;
+         } else {
+            Arg3 = CreateFormByType(form_type_to_load);
+         }
+         if (!Arg3)
+            return false;
+         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         if (creating_new_form) {
+            this->RegisterForm(Arg3);
+         }
+         break;
+   }
+   // at 0x00440D20
+   tls2EB = false;
+   return true;
+}
