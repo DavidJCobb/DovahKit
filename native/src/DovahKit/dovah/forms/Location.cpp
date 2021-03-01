@@ -7,17 +7,109 @@ namespace dovah::loaded_forms {
       Form::load(record, intfc);
       //
       bool is_active_file = intfc.is_active_file();
-      if (!intfc.is_winning_record) {
-         this->name.reset();
-      }
       //
-      this->subrecordFlags = 0;
       form_reference_t formID;
       uint32_t  keywordCount = 0;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
+            #pragma region Enable points
+            case 'ACEP':
+               [[fallthrough]];
+            case 'LCEP':
+               while (subrecord.is_in_bounds(12)) {
+                  auto& entry = this->enable_points.emplace_back();
+                  subrecord.read(entry.actor);
+                  subrecord.read(entry.enable_parent);
+                  subrecord.read(entry.grid.y);
+                  subrecord.read(entry.grid.x);
+               }
+               break;
+            case 'RCEP':
+               if (subrecord.read(formID)) {
+                  auto& list = this->enable_points;
+                  for (auto it = list.begin(); it != list.end(); ++it) {
+                     auto& entry = *it;
+                     if (entry.actor == formID) {
+                        if (is_active_file)
+                           entry.removed_by_active_file = true;
+                        else
+                           list.erase(it);
+                        break;
+                     }
+                  }
+               }
+               break;
+            #pragma endregion
+            #pragma region Exterior cells
+            case 'ACEC':
+               [[fallthrough]];
+            case 'LCEC':
+               if (!subrecord.is_in_bounds(4))
+                  break;
+               {
+                  auto& entry = this->exterior_cells.emplace_back();
+                  subrecord.unchecked_read(entry.worldspace);
+                  while (subrecord.is_in_bounds(4)) {
+                     auto& gc = entry.cells.emplace_back();
+                     subrecord.read(gc.y);
+                     subrecord.read(gc.x);
+                  }
+               }
+               break;
+            case 'RCEC':
+               if (subrecord.read(formID)) {
+                  auto& list = this->exterior_cells;
+                  for (auto it = list.begin(); it != list.end(); ++it) {
+                     auto& entry = *it;
+                     if (entry.worldspace == formID) {
+                        if (is_active_file)
+                           entry.removed_by_active_file = true;
+                        else
+                           list.erase(it);
+                        break;
+                     }
+                  }
+               }
+               break;
+            #pragma endregion
+            #pragma region Markers
+            case 'ACID':
+               [[fallthrough]];
+            case 'LCID':
+               if (subrecord.read(formID))
+                  markers.push_back(formID);
+               break;
+            #pragma endregion
+            #pragma region Persistent refs
+            case 'ACPR':
+               [[fallthrough]];
+            case 'LCPR':
+               while (subrecord.is_in_bounds(12)) {
+                  auto& entry = this->persistent_refs.emplace_back();
+                  subrecord.unchecked_read(entry.actor);
+                  subrecord.unchecked_read(entry.cell_or_world);
+                  subrecord.unchecked_read(entry.grid.y);
+                  subrecord.unchecked_read(entry.grid.x);
+               }
+               break;
+            case 'RCPR':
+               if (subrecord.read(formID)) {
+                  auto& list = this->persistent_refs;
+                  for (auto it = list.begin(); it != list.end(); ++it) {
+                     auto& entry = *it;
+                     if (entry.actor == formID) {
+                        if (is_active_file)
+                           entry.removed_by_active_file = true;
+                        else
+                           list.erase(it);
+                        break;
+                     }
+                  }
+               }
+               break;
+            #pragma endregion
             #pragma region Special refs
             case 'ACSR':
                [[fallthrough]];
@@ -27,8 +119,8 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(stat.ref_type);
                   subrecord.unchecked_read(stat.reference);
                   subrecord.unchecked_read(stat.cell_or_world);
-                  subrecord.unchecked_read(stat.grid_y);
-                  subrecord.unchecked_read(stat.grid_x);
+                  subrecord.unchecked_read(stat.grid.y);
+                  subrecord.unchecked_read(stat.grid.x);
                }
                break;
             case 'RCSR':
@@ -74,61 +166,11 @@ namespace dovah::loaded_forms {
                }
                break;
             #pragma endregion
-            static_assert(false, "identify *CPR and fix load and use info code for it");
-            static_assert(false, "identify *CEC and fix load and use info code for it");
-            static_assert(false, "identify *CEP and fix load and use info code for it");
-            static_assert(false, "identify *CID and fix load and use info code for it");
-            case 'ACPR':
-               this->subrecordFlags |= subrecord_flag::population_is_a;
-               // and fall through
-            case 'LCPR':
-               while (subrecord.is_in_bounds(12)) {
-                  auto& pop = this->population.emplace_back();
-                  subrecord.unchecked_read(pop.actor);
-                  subrecord.unchecked_read(pop.cell_or_world);
-                  subrecord.unchecked_read(pop.grid_y);
-                  subrecord.unchecked_read(pop.grid_x);
-               }
-               break;
-            case 'RCPR':
-               while (subrecord.is_in_bounds(4))
-                  if (subrecord.read(formID))
-                     this->populationActors.push_back(formID);
-               break;
-            case 'ACEC':
-               this->subrecordFlags |= subrecord_flag::encounter_is_a;
-               // and fall through
-            case 'LCEC':
-               {
-                  auto enc = this->encounters.emplace_back();
-                  subrecord.read(enc.worldID);
-                  enc.ints.reserve((subrecord.size() - 4) / 4);
-                  while (subrecord.is_in_bounds(4)) {
-                     uint32_t i;
-                     subrecord.unchecked_read(i);
-                     enc.ints.push_back(i);
-                  }
-               }
-               break;
-            case 'ACEP':
-               this->subrecordFlags |= subrecord_flag::enable_is_a;
-               // and fall through
-            case 'LCEP':
-               while (subrecord.is_in_bounds(12)) {
-                  auto& ep = this->enablePoints.emplace_back();
-                  subrecord.unchecked_read(ep.actor);
-                  subrecord.unchecked_read(ep.reference);
-                  subrecord.unchecked_read(ep.grid_y);
-                  subrecord.unchecked_read(ep.grid_x);
-               }
-               break;
-            case 'ACID':
-               this->subrecordFlags |= subrecord_flag::cid_is_a;
-               // and fall through
-            case 'LCID':
-               while (subrecord.is_in_bounds(4))
-                  if (subrecord.read(formID))
-                     this->populationActors.push_back(formID);
+               //
+            case 'FULL':
+               if (!intfc.is_winning_record)
+                  break;
+               subrecord.to_string(this->name);
                break;
             case 'KSIZ':
             case 'KWDA':
@@ -169,10 +211,7 @@ namespace dovah::loaded_forms {
             case 'CNAM':
                if (!intfc.is_winning_record)
                   break;
-               subrecord.read(this->color.r);
-               subrecord.read(this->color.g);
-               subrecord.read(this->color.b);
-               subrecord.read(this->color.alpha);
+               this->color.load(subrecord);
                break;
             default:
                intfc.log_load_warning(
@@ -183,6 +222,14 @@ namespace dovah::loaded_forms {
       }
    }
    /*static*/ void Location::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      struct _ep {
+         form_id_t actor;
+         form_id_t enable_point;
+      };
+      struct _pr {
+         form_id_t actor;
+         form_id_t cell_or_world;
+      };
       struct _sr {
          form_id_t ref_type;
          form_id_t reference;
@@ -199,11 +246,86 @@ namespace dovah::loaded_forms {
       form_id_t horse_marker;
       form_id_t music;
       form_id_t parent;
+      std::vector<form_id_t> markers;
+      std::vector<form_id_t> worldspaces;
+      std::vector<_ep> enable_points;
+      std::vector<_pr> persistent_refs;
       std::vector<_sr> special_refs;
       std::vector<_un> unique_refs;
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
+            #pragma region Enable points
+            case 'ACEP':
+               [[fallthrough]];
+            case 'LCEP':
+               while (subrecord.is_in_bounds(12)) {
+                  auto& entry = enable_points.emplace_back();
+                  subrecord.unchecked_read(entry.actor);
+                  subrecord.unchecked_read(entry.enable_point);
+                  subrecord.skip_bytes(4);
+               }
+               break;
+            case 'RCEP': // Remove entries
+               if (uib.is_active_file())
+                  break;
+               while (subrecord.is_in_bounds(4)) {
+                  if (!subrecord.read(formID))
+                     continue;
+                  cobb::unordered_erase(enable_points, [formID](const _ep& entry) {
+                     return formID == entry.actor;
+                  });
+               }
+               break;
+            #pragma endregion
+            #pragma region Exterior cells
+            case 'ACEC':
+               [[fallthrough]];
+            case 'LCEC':
+               if (subrecord.read(formID))
+                  worldspaces.push_back(formID);
+               break;
+            case 'RCEC':
+               if (uib.is_active_file())
+                  break;
+               if (subrecord.read(formID)) {
+                  cobb::unordered_erase(worldspaces, [formID](const form_id_t entry) {
+                     return formID == entry;
+                  });
+               }
+               break;
+            #pragma endregion
+            #pragma region Markers
+            case 'ACID':
+               [[fallthrough]];
+            case 'LCID':
+               if (subrecord.read(formID))
+                  markers.push_back(formID);
+               break;
+            #pragma endregion
+            #pragma region Persistent refs
+            case 'ACPR':
+               [[fallthrough]];
+            case 'LCPR':
+               while (subrecord.is_in_bounds(16)) {
+                  auto& stat = persistent_refs.emplace_back();
+                  subrecord.unchecked_read(stat.actor);
+                  subrecord.unchecked_read(stat.cell_or_world);
+                  subrecord.skip_bytes(4);
+               }
+               break;
+            case 'RCPR': // Remove entries
+               if (uib.is_active_file())
+                  break;
+               while (subrecord.is_in_bounds(4)) {
+                  if (!subrecord.read(formID))
+                     continue;
+                  cobb::unordered_erase(persistent_refs, [formID](const _pr& entry) {
+                     return formID == entry.actor;
+                  });
+               }
+               break;
+            #pragma endregion
             #pragma region Special refs
             case 'ACSR':
                [[fallthrough]];
@@ -273,51 +395,6 @@ namespace dovah::loaded_forms {
                   break;
                components::keyword_list::generate_use_info(subrecord, uib);
                break;
-            case 'ACLR':
-            case 'LCPR':
-               //
-               // TODO: Is this coalesced across multiple files?
-               //
-               while (subrecord.is_in_bounds(12)) {
-                  subrecord.unchecked_read(formID);
-                  uib.add_outbound_reference(formID);
-                  subrecord.unchecked_read(formID);
-                  uib.add_outbound_reference(formID);
-                  subrecord.skip_bytes(4);
-               }
-               break;
-            case 'RCPR':
-            case 'ACID':
-            case 'LCID':
-               //
-               // TODO: Is this coalesced across multiple files?
-               //
-               while (subrecord.is_in_bounds(4))
-                  if (subrecord.read(formID))
-                     uib.add_outbound_reference(formID);
-               break;
-            case 'ACEP':
-            case 'LCEP':
-               //
-               // TODO: Is this coalesced across multiple files?
-               //
-               while (subrecord.is_in_bounds(12)) {
-                  subrecord.unchecked_read(formID);
-                  uib.add_outbound_reference(formID);
-                  subrecord.unchecked_read(formID);
-                  uib.add_outbound_reference(formID);
-                  subrecord.skip_bytes(4);
-               }
-               break;
-            case 'ACEC':
-            case 'LCEC':
-               //
-               // TODO: Is this coalesced across multiple files?
-               //
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               // we can ignore the rest
-               break;
             case 'EDID': // editor ID
             case 'FULL': // name
             case 'RNAM': // radius
@@ -331,6 +408,18 @@ namespace dovah::loaded_forms {
          uib.add_outbound_reference(horse_marker);
          uib.add_outbound_reference(music);
          uib.add_outbound_reference(parent);
+      }
+      for (auto id : markers)
+         uib.add_outbound_reference(id);
+      for (auto id : worldspaces)
+         uib.add_outbound_reference(id);
+      for (auto& entry : enable_points) {
+         uib.add_outbound_reference(entry.actor);
+         uib.add_outbound_reference(entry.enable_point);
+      }
+      for (auto& entry : persistent_refs) {
+         uib.add_outbound_reference(entry.actor);
+         uib.add_outbound_reference(entry.cell_or_world);
       }
       for (auto& entry : special_refs) {
          uib.add_outbound_reference(entry.ref_type);
