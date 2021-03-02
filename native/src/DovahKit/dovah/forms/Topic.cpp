@@ -79,7 +79,6 @@ namespace dovah::loaded_forms {
       // Because DIAL coalesces data across all records, we need to be careful in how we 
       // manage its use info.
       //
-      static_assert(false, "Double-check the above statement. Doesn't the game treat all DIAL overrides as partial? So all overrides should in practice be no-ops that neither add/alter nor remove data.");
       constexpr int stored_qnam = 0;
       constexpr int stored_bnam = 1;
       //

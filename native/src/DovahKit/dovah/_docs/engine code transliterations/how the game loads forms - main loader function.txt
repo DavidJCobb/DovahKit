@@ -1,4 +1,4 @@
-static thread_local uint8_t  tls2E9;
+static thread_local bool     tls_is_in_HotLoadPlugin; // set by a TESDataHandler member function whose sole caller is the HotLoadPlugin console command; is (true) for the duration of that function
 static thread_local bool     tls2EB; // indicates that TESDataHandler::sub004401B0 is currently running?
 static thread_local uint8_t  tls2EC;
 static thread_local uint32_t tls334;
@@ -68,11 +68,11 @@ lAfterTypeMismatchCheck:
       if (!Arg3)
          jump to 0x00440373;
       if (Arg3->IsParentForm()) { // returns bool
-         if (tls2E9 == 0 || Arg3->formType == form_type::cell || Arg3->formType == form_type::worldspace) {
+         if (tls_is_in_HotLoadPlugin == 0 || Arg3->formType == form_type::cell || Arg3->formType == form_type::worldspace) {
             //
-            // Note that we don't test for (form_type::topic) here, so DIAL would 
-            // always be treated as partial -- at least while that value in thread-
-            // local storage is zero...
+            // Note that we don't test for (form_type::topic) here, so while 
+            // HotLoadPlugin is running, DIAL overrides would always be treated 
+            // as partial. The DIAL partial loader is a no-op.
             //
             if (!(Arg1.recordFlags & 0x4000))
                goto lAfterPartialParentHandling;
@@ -86,7 +86,7 @@ lAfterTypeMismatchCheck:
          Arg3->LoadPartial(Arg1); // virtual 0x07
          Arg3->sub004515F0(Arg1);
       }
-      if (tls2E9 == 0) {
+      if (tls_is_in_HotLoadPlugin == 0) {
          Arg3->ModifyFlag00000008(false); // clear flag
       }
       if (Arg1.sub00444720()) { // tests flag 0x00000008 on TESFile::unk3E8
