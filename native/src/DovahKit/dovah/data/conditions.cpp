@@ -534,6 +534,7 @@ namespace dovah {
          {uint32_t(0x949FA7BC), "Words of Power Learned"},
          {uint32_t(0x2C6E3FC0), "Words of Power Unlocked"},
       });
+      condition_parameter_type Note            = condition_parameter_type::make_form_type("Note", { form_type::note });
       condition_parameter_type ObjectReference = condition_parameter_type::make_form_type("ObjectReference", {
          form_type::actor,
          form_type::reference,
@@ -1099,7 +1100,7 @@ namespace dovah {
       condition_function(378, "HasShout", "", condition_parameter_types::Shout),
       condition_function(379, condition_function::dummy),
       condition_function(380, condition_function::dummy),
-      condition_function(381, "GetHasNote", "", condition_parameter_types::Integer), // arg type needs verification
+      condition_function(381, "GetHasNote", "", condition_parameter_types::Note),
       condition_function(382, condition_function::dummy),
       condition_function(383, condition_function::dummy),
       condition_function(384, condition_function::dummy),

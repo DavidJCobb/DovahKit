@@ -101,63 +101,64 @@ namespace dovah {
    };
 
    namespace condition_parameter_types {
-      extern condition_parameter_type      None; // already defined
-      extern condition_parameter_type  Actor;
-      extern condition_parameter_type  ActorBase;
+      extern condition_parameter_type None; // already defined
+      extern condition_parameter_type Actor;
+      extern condition_parameter_type ActorBase;
       extern condition_parameter_type ActorValue;
-      extern condition_parameter_type      AdvanceAction;
-      extern condition_parameter_type      Alias; // though some conditions require a ref alias or a loc alias specifically, the CK makes no attempt to ensure you are providing an alias of the correct type
-      extern condition_parameter_type      Alignment;
-      extern condition_parameter_type  AssociationType;
-      extern condition_parameter_type      Axis;
-      extern condition_parameter_type  BaseForm; // also includes a few other form types even though GetIsID et. al could never run on them; probably a mistake on Beth's part
-      extern condition_parameter_type      CastingSource;
-      extern condition_parameter_type  Cell; // testing in CK indicates that only interiors are allowed; named exteriors are not
-      extern condition_parameter_type  Class;
-      extern condition_parameter_type      CrimeType;
-      extern condition_parameter_type      CriticalStage;
-      extern condition_parameter_type  EffectItem; // SPEL, ENCH, ALCH, etc.
-      extern condition_parameter_type  EncounterZone;
-      extern condition_parameter_type      EquipType; // this enum was removed from the game and is only used in one condition, which is both deprecated and broken in two different ways. the CK shows an empty drop-down when trying to choose a value.
-      extern condition_parameter_type      Event;
-      extern condition_parameter_type  EventData;
-      extern condition_parameter_type  Faction;
-      extern condition_parameter_type      Float;
-      extern condition_parameter_type  FormList;
+      extern condition_parameter_type AdvanceAction;
+      extern condition_parameter_type Alias; // though some conditions require a ref alias or a loc alias specifically, the CK makes no attempt to ensure you are providing an alias of the correct type
+      extern condition_parameter_type Alignment;
+      extern condition_parameter_type AssociationType;
+      extern condition_parameter_type Axis;
+      extern condition_parameter_type BaseForm; // also includes a few other form types even though GetIsID et. al could never run on them; probably a mistake on Beth's part
+      extern condition_parameter_type CastingSource;
+      extern condition_parameter_type Cell; // testing in CK indicates that only interiors are allowed; named exteriors are not
+      extern condition_parameter_type Class;
+      extern condition_parameter_type CrimeType;
+      extern condition_parameter_type CriticalStage;
+      extern condition_parameter_type EffectItem; // SPEL, ENCH, ALCH, etc.
+      extern condition_parameter_type EncounterZone;
+      extern condition_parameter_type EquipType; // this enum was removed from the game and is only used in one condition, which is both deprecated and broken in two different ways. the CK shows an empty drop-down when trying to choose a value.
+      extern condition_parameter_type Event;
+      extern condition_parameter_type EventData;
+      extern condition_parameter_type Faction;
+      extern condition_parameter_type Float;
+      extern condition_parameter_type FormList;
       extern condition_parameter_type FormType;
-      extern condition_parameter_type  Furniture; // TODO: xEdit defs say this can also take a FLST; double-check that and implement if so
-      extern condition_parameter_type      FurnitureAnim;
-      extern condition_parameter_type      FurnitureEntry;
-      extern condition_parameter_type  Global;
-      extern condition_parameter_type  Idle;
-      extern condition_parameter_type      Integer;
-      extern condition_parameter_type  InventoryItem;
-      extern condition_parameter_type  Keyword;
-      extern condition_parameter_type  KnowableForm; // TODO: Reverse-engineer conditions that use this; if they're not strict about form type, we don't need to be either, since the "Is Known" flag is common to all form types IIRC
-      extern condition_parameter_type  Location;
-      extern condition_parameter_type  LocRefType;
-      extern condition_parameter_type  MagicEffect;
-      extern condition_parameter_type      MiscStat; // the values of this enum are CRCs of misc stat name strings
-      extern condition_parameter_type  ObjectReference;
-      extern condition_parameter_type  OwnerForm;
-      extern condition_parameter_type  Package;
-      extern condition_parameter_type      PackageData;
-      extern condition_parameter_type  Perk;
-      extern condition_parameter_type  Quest;
-      extern condition_parameter_type      QuestStage;
-      extern condition_parameter_type  Race;
-      extern condition_parameter_type  Region;
-      extern condition_parameter_type  Scene;
-      extern condition_parameter_type      Sex;
-      extern condition_parameter_type  Shout;
-      extern condition_parameter_type  Spell;
-      extern condition_parameter_type      String;
+      extern condition_parameter_type Furniture; // TODO: xEdit defs say this can also take a FLST; double-check that and implement if so
+      extern condition_parameter_type FurnitureAnim;
+      extern condition_parameter_type FurnitureEntry;
+      extern condition_parameter_type Global;
+      extern condition_parameter_type Idle;
+      extern condition_parameter_type Integer;
+      extern condition_parameter_type InventoryItem;
+      extern condition_parameter_type Keyword;
+      extern condition_parameter_type KnowableForm; // TODO: Reverse-engineer conditions that use this; if they're not strict about form type, we don't need to be either, since the "Is Known" flag is common to all form types IIRC
+      extern condition_parameter_type Location;
+      extern condition_parameter_type LocRefType;
+      extern condition_parameter_type MagicEffect;
+      extern condition_parameter_type MiscStat; // the values of this enum are CRCs of misc stat name strings
+      extern condition_parameter_type Note;
+      extern condition_parameter_type ObjectReference;
+      extern condition_parameter_type OwnerForm;
+      extern condition_parameter_type Package;
+      extern condition_parameter_type PackageData;
+      extern condition_parameter_type Perk;
+      extern condition_parameter_type Quest;
+      extern condition_parameter_type QuestStage;
+      extern condition_parameter_type Race;
+      extern condition_parameter_type Region;
+      extern condition_parameter_type Scene;
+      extern condition_parameter_type Sex;
+      extern condition_parameter_type Shout;
+      extern condition_parameter_type Spell;
+      extern condition_parameter_type String;
       extern condition_parameter_type VATSValue;
-      extern condition_parameter_type      VATSValueFunction;
-      extern condition_parameter_type  Voicetype; // TODO: xEdit defs say this can also take a FLST; double-check that and implement if so
-      extern condition_parameter_type      WardState;
-      extern condition_parameter_type  Weather;
-      extern condition_parameter_type  Worldspace;
+      extern condition_parameter_type VATSValueFunction;
+      extern condition_parameter_type Voicetype; // TODO: xEdit defs say this can also take a FLST; double-check that and implement if so
+      extern condition_parameter_type WardState;
+      extern condition_parameter_type Weather;
+      extern condition_parameter_type Worldspace;
    }
 
    class condition_function {
