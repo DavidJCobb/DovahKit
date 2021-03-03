@@ -11,6 +11,7 @@
 #include "../FormList.h"
 #include "../Location.h"
 #include "../MagicEffect.h"
+#include "../Note.h"
 #include "../ObjectReference.h"
 #include "../Quest.h"
 #include "../Shout.h"
@@ -35,6 +36,7 @@ namespace {
       { form_type::activator,              dovah::loaded_forms::Activator::generate_use_info },
       { form_type::container,              dovah::loaded_forms::Container::generate_use_info },
       { form_type::actor_base,             dovah::loaded_forms::ActorBase::generate_use_info },
+      { form_type::note,                   dovah::loaded_forms::Note::generate_use_info },
       { form_type::cell,                   dovah::loaded_forms::Cell::generate_use_info },
       { form_type::reference,              dovah::loaded_forms::ObjectReference::generate_use_info },
       { form_type::actor,                  dovah::loaded_forms::Actor::generate_use_info },

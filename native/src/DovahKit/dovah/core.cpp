@@ -484,7 +484,7 @@ namespace dovah {
          );
       }
    }
-   void copy_form_reference_list(loaded_forms::Form& target_owner, std::vector<form_reference_t>& target, std::vector<form_reference_t>& source) {
+   void copy_form_reference_list(loaded_forms::Form& target_owner, std::vector<form_reference_t>& target, const std::vector<form_reference_t>& source) {
       size_t size = source.size();
       if (target.size() < size)
          target.resize(size);

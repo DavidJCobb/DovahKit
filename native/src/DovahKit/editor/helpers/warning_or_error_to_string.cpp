@@ -128,8 +128,12 @@ namespace editor_helpers {
             {
                QString form      = QObject::tr("<unknown form>", "log window");
                QString subrecord = QObject::tr("<unknown subrecord>", "log window");
+               QString addendum;
                if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
                   form = _read_error_form_id_to_string(notice.cause_form);
+                  if (notice.cause_form.type == dovah::form_type::note) {
+                     addendum = QObject::tr("Note that some subrecords in NOTE forms are only read for specific note types, and will be treated as unrecognized should they appear in other types.", "notice_code::unrecognized_subrecord - NOTE addendum");
+                  }
                }
                if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
                   subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
@@ -137,11 +141,11 @@ namespace editor_helpers {
                //
                if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
                   QString file = QString::fromStdString(notice.cause_file);
-                  text = QObject::tr("Form %1 in file %3 contained at least one unrecognized subrecord with signature %2.")
-                     .arg(form).arg(subrecord).arg(file);
+                  text = QObject::tr("Form %1 in file %3 contained at least one unrecognized subrecord with signature %2. %4")
+                     .arg(form).arg(subrecord).arg(file).arg(addendum);
                } else {
-                  text = QObject::tr("Form %1 contained at least one unrecognized subrecord with signature %2.")
-                     .arg(form).arg(subrecord);
+                  text = QObject::tr("Form %1 contained at least one unrecognized subrecord with signature %2. %3")
+                     .arg(form).arg(subrecord).arg(addendum);
                }
             }
             break;
@@ -902,6 +906,34 @@ namespace editor_helpers {
                }
                //
                text = text.arg(quest).arg(notice.extra_integers[0]);
+            }
+            break;
+         case notice_code::the_game_doesnt_load_new_actor_value_infos:
+            {
+               text = QObject::tr("File %2 supplied new actor value definition %1, but Skyrim doesn't load new actor value infos; it only loads overrides of the hardcoded ones.", "notice_code::the_game_doesnt_load_new_actor_value_infos");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               QString file = QObject::tr("<unknown file>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
+                  file = QString::fromStdString(notice.cause_file);
+               }
+               //
+               text = text.arg(form).arg(file);
+            }
+            break;
+         case notice_code::non_texture_note_includes_texture_path:
+            {
+               text = QObject::tr("Note %1 is not a texture note but includes a texture path in an XNAM subrecord. Neither the game nor DovahKit will read the texture path.", "notice_code::non_texture_note_includes_texture_path");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form);
             }
             break;
             //

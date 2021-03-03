@@ -8,6 +8,7 @@
 #include "../Faction.h"
 #include "../FormList.h"
 #include "../Location.h"
+#include "../Note.h"
 #include "../ObjectReference.h"
 #include "../Package.h"
 #include "../Quest.h"
@@ -53,6 +54,7 @@ namespace {
    _entry _builders[] = {
       { form_type::faction,                _handlers::make<loaded_forms::Faction>() },
       { form_type::activator,              _handlers::make<loaded_forms::Activator>() },
+      { form_type::note,                   _handlers::make<loaded_forms::Note>() },
       { form_type::cell,                   _handlers::make<loaded_forms::Cell>() },
       { form_type::reference,              _handlers::make<loaded_forms::ObjectReference>() },
       { form_type::actor,                  _handlers::make<loaded_forms::Actor>() },

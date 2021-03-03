@@ -7,7 +7,6 @@
 FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
    form_dialog_helpers::initialize(*this);
    this->load(); // this creates the working copy. we need that on hand before we create our tab-body widgets
-   this->get_working_copy<form_t>()->discard_invalid_script_data();
    //
    this->ui.tabWidget->setCurrentIndex(0);
    this->ui.dialogueTabbox->setCurrentIndex(0);
