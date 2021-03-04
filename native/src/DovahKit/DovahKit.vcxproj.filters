@@ -705,6 +705,12 @@
     <ClCompile Include="dovah\forms\components\attack_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\Note.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1451,6 +1457,15 @@
     <ClInclude Include="dovah\utils\loose_enum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\Note.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\impl\component_templates.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1715,5 +1730,10 @@
     <Text Include="dovah\_docs\feature list.txt" />
     <Text Include="dovah\_docs\use info build process.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dovah\forms\impl\form_subclass_components.txt">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

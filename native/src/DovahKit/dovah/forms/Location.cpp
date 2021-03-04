@@ -367,8 +367,11 @@ namespace dovah::loaded_forms {
                while (subrecord.is_in_bounds(4)) {
                   if (!subrecord.read(formID))
                      continue;
-                  cobb::unordered_erase(unique_refs, [formID](const _sr& entry) {
-                     return formID == entry.reference;
+                  cobb::unordered_erase(unique_refs, [formID](const _un& entry) {
+                     //
+                     // TODO: Is this what RCUN looks for, or does it want the actor-base?
+                     //
+                     return formID == entry.actor;
                   });
                }
                break;

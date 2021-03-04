@@ -896,18 +896,6 @@ namespace editor_helpers {
                text = text.arg(form).arg(file);
             }
             break;
-         case notice_code::alias_has_multiple_sets_of_papyrus_data:
-            {
-               text = QObject::tr("Quest %1 contains multiple sets of script data for the alias with ID %2. As of this writing, it's not known how the game handles this case. Within DovahKit, only the first data seen will be used.", "notice_code::alias_has_multiple_sets_of_papyrus_data");
-               //
-               QString quest = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  quest = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(quest).arg(notice.extra_integers[0]);
-            }
-            break;
          case notice_code::the_game_doesnt_load_new_actor_value_infos:
             {
                text = QObject::tr("File %2 supplied new actor value definition %1, but Skyrim doesn't load new actor value infos; it only loads overrides of the hardcoded ones.", "notice_code::the_game_doesnt_load_new_actor_value_infos");

@@ -67,6 +67,7 @@
     <addaction name="actionDebugListNoneStubs"/>
     <addaction name="actionDebugCompiledPapyrusScriptTests"/>
     <addaction name="actionDebugBreakOnForm"/>
+    <addaction name="actionDebugBreakOnFormPapyrus"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -214,6 +215,11 @@
   <action name="actionDebugBreakOnForm">
    <property name="text">
     <string>Debugbreak on form</string>
+   </property>
+  </action>
+  <action name="actionDebugBreakOnFormPapyrus">
+   <property name="text">
+    <string>Debugbreak on form Papyrus data</string>
    </property>
   </action>
  </widget>

@@ -191,6 +191,7 @@
     <ClCompile Include="dovah\forms\FormList.cpp" />
     <ClCompile Include="dovah\forms\Location.cpp" />
     <ClCompile Include="dovah\forms\MagicEffect.cpp" />
+    <ClCompile Include="dovah\forms\Note.cpp" />
     <ClCompile Include="dovah\forms\ObjectReference.cpp" />
     <ClCompile Include="dovah\forms\Quest.cpp" />
     <ClCompile Include="dovah\forms\Shout.cpp" />
@@ -326,6 +327,7 @@
     <ClCompile Include="ui\main_window\script_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
@@ -449,6 +451,8 @@
     <ClInclude Include="dovah\forms\factories\hardcoded.h" />
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\Actor.h" />
+    <ClInclude Include="dovah\forms\impl\component_templates.h" />
+    <ClInclude Include="dovah\forms\Note.h" />
     <ClInclude Include="dovah\forms\Package.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
     <ClInclude Include="dovah\forms\Topic.h" />
@@ -570,6 +574,7 @@
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
@@ -664,7 +669,7 @@
     <QtRcc Include="ui\resources\resources.qrc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\DovahKitSln\zlib\zlib.vcxproj">
+    <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Lua\Lua.vcxproj">
@@ -697,6 +702,9 @@
     <Text Include="editor\scripting\_docs\case studies.txt" />
     <Text Include="editor\scripting\_docs\native classes.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dovah\forms\impl\form_subclass_components.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

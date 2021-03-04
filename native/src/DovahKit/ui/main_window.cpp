@@ -30,6 +30,7 @@
 #include "main_window/_debug_hooks/list_none_stubs.h"
 #include "main_window/_debug_hooks/compiled_papyrus_script_tests.h"
 #include "main_window/_debug_hooks/debug_target_form.h"
+#include "main_window/_debug_hooks/debug_target_form_papyrus.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -322,6 +323,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(this->ui.actionDebugBreakOnForm, &QAction::triggered, this, [this]() {
       DovahKitDebug::debug_target_form(this);
+   });
+   QObject::connect(this->ui.actionDebugBreakOnFormPapyrus, &QAction::triggered, this, [this]() {
+      DovahKitDebug::debug_target_form_papyrus(this);
    });
    #pragma endregion
 }

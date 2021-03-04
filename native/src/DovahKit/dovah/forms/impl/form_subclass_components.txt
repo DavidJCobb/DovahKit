@@ -1,0 +1,1 @@
+virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return impl::get_papyrus_data(*this); }
