@@ -10,6 +10,7 @@
 
 namespace dovah::loaded_forms {
    class Container : public Form {
+      #include "impl/form_subclass_components.txt"
       public:
          static constexpr form_type_t form_type = form_type::container;
          Container(const constructor_params& c) : Form(form_type, c) {};
@@ -38,7 +39,5 @@ namespace dovah::loaded_forms {
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
          virtual void _clear_impl() noexcept override;
-         //
-         virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
    };
 }

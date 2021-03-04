@@ -11,6 +11,7 @@
 
 namespace dovah::loaded_forms {
    class Worldspace : public Form {
+      #include "impl/form_subclass_components.txt"
       public:
          static constexpr form_type_t form_type = form_type::worldspace;
          Worldspace(const constructor_params& c) : Form(form_type, c) {};
@@ -194,8 +195,6 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
-         virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
          //
          virtual void setup(const file_load_order&) noexcept override;
          //

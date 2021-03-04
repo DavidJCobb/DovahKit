@@ -1,1 +1,18 @@
+//
+// This file is code, not plain-text. It is designed to be included inside of a 
+// the definitions for subclasses of dovah::loaded_forms::Form. It automatically 
+// creates a set of virtual overrides that rely on templates, as a convenient 
+// way to quickly create accessors for fields that subclasses may or may not 
+// have.
+//
+// The templates work like this: if they're called on an instance of a class 
+// that has a particular member, then they return that member; if the class 
+// doesn't have that member, then they return nullptr.
+//
+// This is a text file because it's not something that IntelliSense or other 
+// code analysis systems would be able to properly parse; if I used the H, INL, 
+// or CPP file extensions, then they would attempt to parse it as an independent 
+// file rather than the fragment that it is, and they would treat its contents 
+// as syntax errors.
+//
 virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return impl::get_papyrus_data(*this); }

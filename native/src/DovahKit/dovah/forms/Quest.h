@@ -188,6 +188,7 @@ namespace dovah::loaded_forms {
    };
 
    class Quest : public Form {
+      #include "impl/form_subclass_components.txt"
       public:
          class Stage;
          class Objective;
@@ -367,8 +368,6 @@ namespace dovah::loaded_forms {
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
-         virtual components::papyrus_attachment_data* get_papyrus_data() noexcept override { return &this->script_data; }
 
          Alias* lookup_alias_by_id(uint32_t id) const noexcept;
          void for_each_alias_of_type(Alias::alias_type, std::function<bool(Alias*)>);

@@ -8,6 +8,7 @@
 
 namespace dovah::loaded_forms {
    class Color : public Form {
+      #include "impl/form_subclass_components.txt"
       public:
          struct color_flag {
             color_flag() = delete;

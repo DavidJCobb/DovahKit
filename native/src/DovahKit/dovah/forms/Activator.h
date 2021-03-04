@@ -12,6 +12,7 @@
 
 namespace dovah::loaded_forms {
    class Activator : public Form {
+      #include "impl/form_subclass_components.txt"
       public:
          static constexpr form_type_t form_type = form_type::activator;
          Activator(const constructor_params& c) : Form(form_type, c) {};
@@ -60,8 +61,6 @@ namespace dovah::loaded_forms {
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
 
-         #include "impl/form_subclass_components.txt"
-         
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
