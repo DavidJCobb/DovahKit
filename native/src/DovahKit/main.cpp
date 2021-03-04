@@ -202,28 +202,6 @@
 //       the form ID of the baseline NAVI, and is there any data that should be cleared in 
 //       an override (that therefore wouldn't be cleared by a non-override)?
 //
-//  - Multiple-file form loading
-//
-//     - Examine all form types except SHOU and FACT (we already checked those): check to 
-//       see what data they clear when loading overrides, and modify our load code to act 
-//       consistently with what we find.
-//
-//        - Use Info generation also needs to behave consistently.
-//
-//  - Support for special-case relationships between records
-//
-//     - WRLD can only have one persistent cell, and it's the first persistent-flagged 
-//       child CELL to load.
-//
-//     - DIAL needs to maintain a list of all of its child INFOs outside of the loaded 
-//       form. It's my understanding that INFO/PNAM is just used to positioning a 
-//       TESTopicInfo within its TESTopic's info vector, which means that our existing 
-//       setup (relying solely on use info to link a topic to its infos, and the infos 
-//       to their siblings) is not adequate. The form stub for DIALs will need to be able 
-//       to store a dedicated list of INFOs, and we'll need to build this list during 
-//       stub generation. We can generalize this situation -- allow form stubs to 
-//       optionally store an "ordered child form list."
-//
 //  - Localized string support
 //
 //     - The UI should physically prevent the user from entering glyphs that are not 
@@ -250,12 +228,6 @@
 //     - All of the placed projectile records are just direct subclasses of REFR 
 //       and load all of the same things. Implement them the same way we implemented 
 //       ACHR.
-//
-//  - Code for deleting forms.
-//
-//     - Test the severing of outbound references to a deleted form.
-//
-//        - Test keyword lists in specific.
 //
 // THINGS TO LOOK INTO:
 //
@@ -333,14 +305,6 @@
 //
 //        - We don't have a warnings dialog at present, and that's something that 
 //          would be valuable to have just in general.
-//
-//  - Support for DIAL and INFO
-//
-//     - DIAL/QNAM should use dialogue_form_id_t instead of form_id_t. Use info generation 
-//       for this subrecord should use the "dialogue" use info entry flag.
-//
-//     - INFO/PNAM should use dialogue_form_id_t instead of form_id_t. Use info generation 
-//       for this subrecord should use the "dialogue" use info entry flag.
 //
 //  - Form deletion: some form types skip saving some subrecords if the form is flagged as 
 //    deleted. Should we replicate this behavior? We'll want to continue testing in the 
@@ -477,17 +441,6 @@
 //                               CK, checking "Use Pack Data" on the condition will get 
 //                               the function to accept only package data of other 
 //                               types; this feels like a bug.
-//
-//                             - GetHasNote shows an empty drop-down as its argument in 
-//                               the CK.
-//
-//                                - If we find the ParamInfo, we can find the type value 
-//                                  for that argument, but that'll just be an enum. We 
-//                                  could then RE the part of the command parser that 
-//                                  validates argument types, if we can find it, to see 
-//                                  what that enum value means.
-//
-//                       - Class
 //
 //                       - Basic Data
 //
@@ -888,6 +841,54 @@
 //
 //        - Access to this widget should require permission, just because scripts 
 //          could use it to draw rude things.
+//
+//  - QUST/VMAD alias-script transplant handling
+//
+//     = Quests can specify script data to attach to aliases. The thing is, each 
+//       piece of script data is prefixed not simply with an alias ID, but with a 
+//       form ID and alias ID. This implies that one quest can attach scripts to 
+//       aliases in different quests, and in-game testing confirms that that's the 
+//       case.
+//
+//       We can't currently handle this, because we don't have any way to handle 
+//       cases where the record for one form contains data for a different form.
+//
+//     - The way to handle this would be to create a concept of "donor forms," 
+//       which "donate" data to some subject form. The subject form's stub would 
+//       have a list of its lenders in the addenda. We would then need to define 
+//       some function (Form::load_from_donor).
+//
+//       Then, we'd have to modify (form_stub::load) as follows:
+//
+//        - For each source file on the subject form, gather up a list of records 
+//          to load; this list would be the subject's record, and any records 
+//          from the same source file belonging to donor forms.
+//
+//        - Sort the records by file offset.
+//
+//        - Load them in order.
+//
+//       This would obviously complicate the loader quite a bit.
+//
+//     - Another issue is use info: how the hell do we even handle this case? If 
+//       we delete the donor form, then we lose the data it was donating to the 
+//       subject form, unless we forcibly load the subject form and flag it as 
+//       edited at that time. I guess we could manage that if we had a use info 
+//       flag for donor/recipient relationships. When we delete form A, we loop 
+//       over every user B relying on the use info, force the Bs to load, and 
+//       flag them as edited. In forcing the subject to load, we'd pull in all 
+//       of the donated data from each donor.
+//
+//       That works when the donor and subject are both in the active file, but 
+//       if data is being donated across files or within masters, I'm not sure 
+//       how we'd handle that. Hell, I'm not sure how the *game* would handle 
+//       a donor being flagged as deleted.
+//
+//       The interactions get a bit more complicated when saving: we'd end up 
+//       move the donated data from the donor to the subject, and once that's 
+//       done, we need to sever the donor/recipient relationship including 
+//       within use info (again, ignoring cross-file and within-master donor 
+//       stuff for now).
 //
 //  - Loading Papyrus data
 //
