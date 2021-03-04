@@ -898,7 +898,13 @@ namespace dovah::loaded_forms {
                if (!subrecord.is_at_end()) {
                   uint16_t count;
                   //
+                  // Load unknown field that is only present when log entries are present, but that is 
+                  // highly consequential to whether alias script data is even loaded:
+                  //
                   subrecord.unchecked_read(this->script_fragment_root.unknown);
+                  //
+                  // Load log entry fragment data:
+                  //
                   if (!subrecord.read(count)) // log entry fragment count
                      break;
                   subrecord.read_length_prefixed_string<2>(this->script_fragment_root.filename);
@@ -912,8 +918,13 @@ namespace dovah::loaded_forms {
                      owner.load(this->script_data.header, subrecord);
                      if (owner.form != &this->stub) {
                         //
-                        // Testing indicates that the game either doesn't retain or doesn't properly apply 
-                        // this data. In any case, due to how we load forms, we can't retain it either.
+                        // A quest actually can attach scripts to aliases on other quests, by specifying 
+                        // those quests instead. I have no idea why the hell Bethesda implemented this, 
+                        // and their own tools never make use of it. This is an unfortunate case where 
+                        // while the data is technically ill-formed, the game actually has no problem 
+                        // loading it -- but we do. We load forms completely independently of one another, 
+                        // so we can't properly handle this. At least, not without adding some major 
+                        // special-case code for this deep into the loader...
                         //
                         detailed_notice warning;
                         warning.code = notice_code::alias_papyrus_data_specifies_wrong_quest;
@@ -926,6 +937,19 @@ namespace dovah::loaded_forms {
                         //
                         continue;
                      }
+                     //
+                     // Load alias script data:
+                     //
+                     bool already_present = false;
+                     for (auto& prior : pending_alias_scripts) {
+                        if (prior.alias_id == owner.aliasID) {
+                           prior.data.load(subrecord, intfc);
+                           already_present = true;
+                           break;
+                        }
+                     }
+                     if (already_present)
+                        break;
                      auto& entry = pending_alias_scripts.emplace_back();
                      entry.alias_id = owner.aliasID;
                      entry.data.load(subrecord, intfc);
@@ -936,7 +960,7 @@ namespace dovah::loaded_forms {
                if (subrecord.is_in_bounds(12)) {
                   subrecord.unchecked_read(this->flags);
                   subrecord.unchecked_read(this->priority);
-                  subrecord.unchecked_read(this->form_version);
+                  subrecord.skip_bytes(1);
                   subrecord.unchecked_read(this->unknown);
                   uint32_t type;
                   subrecord.unchecked_read(type); // stored as a uint32_t, but only the low byte is retained in memory
@@ -1081,31 +1105,7 @@ namespace dovah::loaded_forms {
                //
                continue;
             }
-            if (!alias->script_data.empty()) {
-               //
-               // This alias has had multiple sets of Papyrus data provided for it. As of this writing, 
-               // we have no idea how to handle this, just like we don't know how to handle a form that 
-               // has multiple VMAD subrecords (the game would probably treat both the same way). For 
-               // now, the easiest approach is to discard all but the first set of data, so we'll do 
-               // that and log a warning.
-               //
-               // We endeavor to handle malformed data sensibly, but the bare minimum "sensible" behavior 
-               // is to make sure that we don't crash or corrupt use info. This meets that bar. Still,
-               //
-               // TODO: FIGURE OUT HOW THE GAME DEALS WITH REDUNDANT/DUPE VMAD DATA, AND MIMIC IT
-               //
-               // If we ever do figure this out, we have to make sure to update the use info function 
-               // and the error text for this notice code as well.
-               //
-               detailed_notice warning;
-               warning.code = notice_code::alias_has_multiple_sets_of_papyrus_data;
-               warning.set_cause_form(this->stub);
-               warning.set_cause_subrecord('VMAD');
-               warning.extra_integers[0] = entry.alias_id;
-               intfc.log_load_warning(warning);
-               //
-               continue;
-            }
+            assert(alias->script_data.empty() && "We should've prevented duplicate entries from appearing in this list, coalescing them as they were loaded!");
             alias->script_data = entry.data;
          }
          pending_alias_scripts.clear();
@@ -1116,6 +1116,10 @@ namespace dovah::loaded_forms {
             if (stage) {
                auto& list = stage->entries;
                if (data.entry_index < list.size()) {
+                  //
+                  // Log entries can only have a single fragment. If multiple fragments are provided, 
+                  // the last loaded one "wins." This is basically the same behavior as overriding.
+                  //
                   list[data.entry_index].fragment = data;
                   continue;
                }
@@ -1259,12 +1263,11 @@ namespace dovah::loaded_forms {
       auto copy = (Quest*)out;
       //
       copy->script_data.clone_from(this->script_data, *copy);
-      copy->name         = this->name;
-      copy->flags        = this->flags;
-      copy->priority     = this->priority;
-      copy->form_version = this->form_version;
-      copy->unknown      = this->unknown;
-      copy->quest_type   = this->quest_type;
+      copy->name       = this->name;
+      copy->flags      = this->flags;
+      copy->priority   = this->priority;
+      copy->unknown    = this->unknown;
+      copy->quest_type = this->quest_type;
       //
       copy->event = this->event;
       //
@@ -1366,7 +1369,7 @@ namespace dovah::loaded_forms {
       auto& DNAM = record.open_next_subrecord('DNAM');
       DNAM.write(this->flags);
       DNAM.write(this->priority);
-      DNAM.write(this->form_version);
+      DNAM.skip_bytes(1);
       DNAM.write(this->unknown);
       DNAM.write(this->quest_type);
       DNAM.close();

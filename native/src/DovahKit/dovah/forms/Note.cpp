@@ -87,7 +87,7 @@ namespace dovah::loaded_forms {
                      //
                      case note_type::image:
                         switch (subrecord.signature()) {
-                           case 'ICON':
+                           case 'ICON': // this handler should never actually run
                               handled = true;
                               subrecord.to_string(this->content.image);
                               break;

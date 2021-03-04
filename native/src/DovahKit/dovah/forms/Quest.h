@@ -321,7 +321,7 @@ namespace dovah::loaded_forms {
             public:
                struct flag {
                   enum type : uint32_t {
-                     or_with_previous = 0x00000001,
+                     or_with_previous = 0x00000001, // prepends "or" to the objective text, in addition to any non-cosmetic behaviors it may have
                   };
                };
                using flags_t = std::underlying_type_t<flag::type>;
@@ -342,7 +342,7 @@ namespace dovah::loaded_forms {
          localized_string name;
          components::papyrus_attachment_data script_data; // VMAD
          struct {
-            uint8_t     unknown = 2;
+            uint8_t     unknown = 2; // if this is present in the file at all and isn't 2, then quest aliases don't load? what the hell?!
             std::string filename;
          } script_fragment_root;
          //
@@ -350,7 +350,6 @@ namespace dovah::loaded_forms {
          //
          quest_flags_t flags = 0;
          uint8_t       priority;
-         uint8_t       form_version = 0;
          uint32_t      unknown; // DNAM, offset 0x04
          quest_type_t  quest_type;
          //

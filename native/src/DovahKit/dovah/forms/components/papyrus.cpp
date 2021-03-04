@@ -30,9 +30,10 @@ namespace dovah::loaded_forms::components::papyrus {
          uint16_t count;
          if (!subrecord.read(count))
             return false;
-         this->scripts.resize(count);
+         size_t size = this->scripts.size();
+         this->scripts.reserve(size + count);
          for (uint16_t i = 0; i < count; i++) {
-            auto& script = this->scripts[i];
+            auto& script = this->scripts.emplace_back();
             if (!script.load(this->header, subrecord))
                return false;
          }

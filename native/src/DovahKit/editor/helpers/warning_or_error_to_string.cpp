@@ -829,7 +829,7 @@ namespace editor_helpers {
             break;
          case notice_code::alias_papyrus_data_specifies_wrong_quest:
             {
-               text = QObject::tr("Quest %1 contains script data for alias %2 in quest %3. DovahKit is incapable of loading this data, and the game doesn't seem to bother using it either, so it will be discarded.", "notice_code::alias_papyrus_data_specifies_wrong_quest");
+               text = QObject::tr("Quest %1 contains script data for alias %2 in quest %3. Although the game allows one quest to transplant script data onto aliases in other quests, DovahKit is incapable of loading this data, so it will be discarded.", "notice_code::alias_papyrus_data_specifies_wrong_quest");
                //
                QString quest = QObject::tr("<unknown form>", "log window");
                QString other = quest;

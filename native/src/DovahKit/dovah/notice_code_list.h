@@ -100,9 +100,8 @@ namespace dovah {
          alias_papyrus_data_belongs_to_missing_alias = 0x0000005B, // A quest's VMAD subrecord supplied Papyrus data for an alias that doesn't actually exist.
          info_response_subrecord_before_responses    = 0x0000005C, // An INFO contains LNAM or SNAM subrecords outside of any response.
          attack_data_expected_event_subrecord        = 0x0000005D, // An ATKR subrecord was not followed by an ATKE subrecord; it will "eat" the next subrecord and assume it's ATKE.
-         alias_has_multiple_sets_of_papyrus_data     = 0x0000005E, // An alias has multiple sets of Papyrus data. We don't know how to handle this, so we'll discard all but the first one seen.
-         the_game_doesnt_load_new_actor_value_infos  = 0x0000005F, // Skyrim doesn't load new AVIF records. AVIF records that don't override a hardcoded AVIF form will be ignored.
-         non_texture_note_includes_texture_path      = 0x00000060, // A NOTE form included an XNAM subrecord but is not a texture note.
+         the_game_doesnt_load_new_actor_value_infos  = 0x0000005E, // Skyrim doesn't load new AVIF records. AVIF records that don't override a hardcoded AVIF form will be ignored.
+         non_texture_note_includes_texture_path      = 0x0000005F, // A NOTE form included an XNAM subrecord but is not a texture note.
       };
    };
 }
