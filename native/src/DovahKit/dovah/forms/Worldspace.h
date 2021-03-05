@@ -137,7 +137,7 @@ namespace dovah::loaded_forms {
             uint16_t flags = 0; // PNAM
          } parent;
          std::string map_icon; // ICON
-         components::model cloud_model; // MODL and friends
+         components::model_ts cloud_model; // MODL and friends
          struct {
             struct {
                int32_t x = 0;

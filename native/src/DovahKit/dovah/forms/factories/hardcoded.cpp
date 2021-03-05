@@ -61,6 +61,10 @@ namespace dovah {
                return form;
             }
             break;
+         case 0x1B: // DefaultAshPile1
+            return new loaded_forms::Activator(fcp);
+         case 0x22: // DefaultAshPile2
+            return new loaded_forms::Activator(fcp);
          case 0x2D:
             return new loaded_forms::Voicetype(fcp);
          case 0x2E:

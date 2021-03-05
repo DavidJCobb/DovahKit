@@ -35,7 +35,7 @@ namespace dovah {
             form_reference_t explosion;
             form_reference_t debris;
             uint32_t         debrisCount;
-            model            replacementModel;
+            model_ts         replacementModel;
          };
          //
          uint32_t     health;

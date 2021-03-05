@@ -253,7 +253,7 @@ namespace dovah::loaded_forms {
          return false;
       auto copy = (Note*)out;
       //
-      copy->model.clone_from(this->model, *copy);
+      copy->model.clone_from(this->model);
       copy->script_data.clear(*copy);
       copy->drop_sound.set(*copy, this->drop_sound);
       copy->take_sound.set(*copy, this->take_sound);
@@ -272,7 +272,7 @@ namespace dovah::loaded_forms {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
-      this->model.save(record, intfc, 'MODL', 'MODT', 'MODS'); // TODO: texture swaps not supported
+      this->model.save(record, intfc, 'MODL', 'MODT');
       record.write_string_subrecord('ICON', this->icon);
       record.write_formID_subrecord('YNAM', this->take_sound, true);
       record.write_formID_subrecord('ZNAM', this->drop_sound, true);
@@ -296,7 +296,7 @@ namespace dovah::loaded_forms {
       return true;
    }
    void Note::_clear_impl() noexcept {
-      this->model.clear(*this);
+      this->model.clear();
       this->script_data.clear(*this);
       this->drop_sound.set(*this, nullptr);
       this->take_sound.set(*this, nullptr);

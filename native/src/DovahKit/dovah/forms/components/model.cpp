@@ -64,7 +64,7 @@ namespace dovah::loaded_forms::components {
    }
    bool model_ts::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (model::load(subrecord, intfc))
-         return;
+         return true;
       switch (subrecord.signature()) {
          case 'MODS':
          case 'MO2S':
