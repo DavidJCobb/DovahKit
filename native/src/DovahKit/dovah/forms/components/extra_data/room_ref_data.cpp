@@ -1,5 +1,6 @@
 #include "room_ref_data.h"
 #include "../../_common_cpp.h"
+#include "_use_info.h"
 
 namespace dovah::loaded_forms::components::extra {
    extra_data_load_result room_ref_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
@@ -80,7 +81,7 @@ namespace dovah::loaded_forms::components::extra {
          record.write_formID_subrecord('XLRM', this->linked_rooms[i]);
    }
    //
-   /*static*/ void room_ref_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void room_ref_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
       decltype(linked_room_count) linked_room_count;
       decltype(flags) flags;
       auto& XRMR = record.get_current_subrecord();
@@ -93,15 +94,13 @@ namespace dovah::loaded_forms::components::extra {
       if (flags & flag::has_lighting_template) {
          if (record.peek_next_subrecord_type() == 'LNAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
             auto& subrecord = record.next_subrecord();
-            if (subrecord.read(formID))
-               uib.add_outbound_reference(formID);
+            subrecord.read(state.by_name.room_ref_data.lighting_template);
          }
       }
       if (flags & flag::has_imagespace) {
          if (record.peek_next_subrecord_type() == 'INAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
             auto& subrecord = record.next_subrecord();
-            if (subrecord.read(formID))
-               uib.add_outbound_reference(formID);
+            subrecord.read(state.by_name.room_ref_data.imagespace);
          }
       }
       if (linked_room_count > 0) {

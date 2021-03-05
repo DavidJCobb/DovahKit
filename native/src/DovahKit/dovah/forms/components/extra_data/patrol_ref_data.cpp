@@ -1,5 +1,6 @@
 #include "patrol_ref_data.h"
 #include "../../_common_cpp.h"
+#include "_use_info.h"
 
 namespace dovah::loaded_forms::components::extra {
    extra_data_load_result patrol_ref_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
@@ -25,10 +26,30 @@ namespace dovah::loaded_forms::components::extra {
          this->event.save(record);
    }
    //
-   /*static*/ void patrol_ref_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void patrol_ref_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
       auto& subrecord = record.get_current_subrecord();
-      if (subrecord.signature() == signature_event)
-         package_event_dialogue::generate_use_info(record, uib);
+      if (subrecord.signature() == signature_event) {
+         //package_event_dialogue::generate_use_info(record, uib); // can't use this for extra-data :(
+         //
+         package_event_dialogue::topic_type type;
+         while (auto& subrecord = record.next_subrecord()) {
+            switch (subrecord.signature()) {
+               case 'INAM':
+                  subrecord.read(state.by_name.patrol_ref_data.idle);
+                  break;
+               case 'TNAM':
+                  subrecord.read(state.by_name.patrol_ref_data.topic);
+                  return; // TESPackage::Data::Load aborts after reading TNAM
+               case 'PDTO':
+                  {
+                     subrecord.read(type);
+                     if (type == package_event_dialogue::topic_type::ref)
+                        subrecord.read(state.by_name.patrol_ref_data.topic);
+                  }
+                  return; // TESPackage::Data::Load aborts after reading PDTO
+            }
+         }
+      }
    }
    basic_extra_data* patrol_ref_data::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new patrol_ref_data;

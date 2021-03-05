@@ -13,7 +13,8 @@
 //
 
 namespace dovah {
-   class form_stub_use_info_builder;
+   class  form_stub_use_info_builder;
+   struct extra_data_use_info_state;
 }
 
 namespace dovah::loaded_forms::components {
@@ -128,9 +129,6 @@ namespace dovah::loaded_forms::components {
          using save_interface_t = load_order_interfaces::form_save;
          //
       public:
-         static constexpr uint8_t scalar_use_count = 0;
-         //
-      public:
          virtual extra_data_type get_type() const noexcept = 0;
          //
          virtual load_result load(tes_subrecord_reader&, load_interface_t&) = 0;
@@ -166,7 +164,7 @@ namespace dovah::loaded_forms::components {
          // an extra-data class only has one subrecord signature, its use info builder 
          // doesn't need to check the current subrecord's signature.
          //
-         static void generate_use_info(tes_record_reader&, form_stub*) = delete;
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state&) = delete;
          //
          virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept = 0;
          virtual void clear_contained_formIDs(loaded_forms::Form& my_owner) {}
@@ -195,7 +193,7 @@ namespace dovah::loaded_forms::components {
          void clone_from(const extra_data_list& source, loaded_forms::Form& owner_of_clone);
          void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          //
-         static extra_data_load_result generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         static extra_data_load_result generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state&);
          //
          basic_extra_data* lookup_by_type(extra_data_type) const noexcept;
          template<class e> inline e* lookup(extra_data_type et) const noexcept {
@@ -206,11 +204,5 @@ namespace dovah::loaded_forms::components {
          template<class e> inline e* get_or_create(extra_data_type et) noexcept {
             return dynamic_cast<e*>(this->get_or_create_by_type(et));
          }
-   };
-
-   struct extra_data_use_info_state {
-      static constexpr size_t count = 36;
-      //
-      std::array<form_id_t, count> ids;
    };
 }

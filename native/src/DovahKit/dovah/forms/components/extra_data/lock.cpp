@@ -1,5 +1,6 @@
 #include "lock.h"
 #include "../../_common_cpp.h"
+#include "_use_info.h"
 
 namespace dovah::loaded_forms::components::extra {
    extra_data_load_result lock::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
@@ -29,12 +30,10 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.close();
    }
    //
-   /*static*/ void lock::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void lock::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
       auto& subrecord = record.get_current_subrecord();
       subrecord.skip_bytes(sizeof(level) + sizeof(pad01));
-      form_id_t formID;
-      if (subrecord.read(formID) && formID)
-         uib.add_outbound_reference(formID);
+      subrecord.read(state.by_name.lock.key);
    }
    basic_extra_data* lock::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new lock;

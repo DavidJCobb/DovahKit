@@ -22,10 +22,10 @@ namespace dovah::loaded_forms::components::extra {
       }
    }
    //
-   /*static*/ void lit_water::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void lit_water::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state&) {
       auto& subrecord = record.get_current_subrecord();
       form_id_t formID;
-      if (subrecord.read(formID) && formID)
+      if (subrecord.read(formID))
          uib.add_outbound_reference(formID);
    }
    basic_extra_data* lit_water::clone(loaded_forms::Form& clone_owner) const noexcept {

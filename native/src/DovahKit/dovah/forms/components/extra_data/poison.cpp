@@ -1,5 +1,6 @@
 #include "poison.h"
 #include "../../_common_cpp.h"
+#include "_use_info.h"
 
 namespace dovah::loaded_forms::components::extra {
    extra_data_load_result poison::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
@@ -27,12 +28,10 @@ namespace dovah::loaded_forms::components::extra {
       XPSC.close();
    }
    //
-   /*static*/ void poison::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void poison::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature_type) {
-         form_id_t formID;
-         if (subrecord.read(formID) && formID)
-            uib.add_outbound_reference(formID);
+         subrecord.read(state.by_name.poison.type);
       }
    }
    basic_extra_data* poison::clone(loaded_forms::Form& clone_owner) const noexcept {

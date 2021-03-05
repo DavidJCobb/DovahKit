@@ -40,7 +40,7 @@ namespace dovah::loaded_forms::components::extra {
       }
    }
    //
-   /*static*/ void activate_parent_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void activate_parent_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature_parent) {
          form_id_t formID;

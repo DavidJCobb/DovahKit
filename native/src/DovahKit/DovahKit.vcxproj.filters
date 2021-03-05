@@ -711,6 +711,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\_use_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1467,6 +1470,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\small_vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\_use_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

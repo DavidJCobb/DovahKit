@@ -2,6 +2,7 @@
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 #include "../form_stub_addenda.h"
+#include "components/extra_data/_use_info.h"
 
 namespace dovah::loaded_forms {
    void Cell::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -127,7 +128,7 @@ namespace dovah::loaded_forms {
          return;
       //
       form_id_t lighting_template;
-      auto      extra_uib = uib.spawn_subordinate_on_stack();
+      extra_data_use_info_state eduis;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -150,7 +151,7 @@ namespace dovah::loaded_forms {
             case 'XNAM':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, extra_uib) == components::extra_data_load_result::unrecognized) {
+               if (components::extra_data_list::generate_use_info(record, uib, eduis) == components::extra_data_load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //
@@ -159,7 +160,7 @@ namespace dovah::loaded_forms {
          }
       }
       uib.add_outbound_reference(lighting_template);
-      extra_uib.commit();
+      eduis.commit_to(uib);
    }
    void Cell::setup(const file_load_order& load_order) noexcept {
       if (!this->is_working_copy)

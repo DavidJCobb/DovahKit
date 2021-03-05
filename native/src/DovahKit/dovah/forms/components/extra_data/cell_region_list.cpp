@@ -25,13 +25,13 @@ namespace dovah::loaded_forms::components::extra {
       subrecord.close();
    }
    //
-   /*static*/ void cell_region_list::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void cell_region_list::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() == signature) {
          auto count = subrecord.size() / 4;
          for (size_t i = 0; i < count; ++i) {
             form_id_t formID;
-            if (subrecord.read(formID) && formID)
+            if (subrecord.read(formID))
                uib.add_outbound_reference(formID);
          }
       }

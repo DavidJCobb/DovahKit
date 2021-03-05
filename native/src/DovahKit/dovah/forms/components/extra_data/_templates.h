@@ -1,6 +1,7 @@
 #pragma once
 #include "../extra_data.h"
 #include "../../../form_stub_use_info_builder.h"
+#include "_use_info.h"
 
 namespace dovah::loaded_forms::components {
    template<uint32_t signature, extra_data_type et, int bytecount> class buffer_extra_data : public basic_extra_data {
@@ -25,7 +26,7 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->bytes.data());
             subrecord.close();
          }
-         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state) {}
          virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept override {
             auto* clone = new buffer_extra_data<signature, et, bytecount>();
             for (int i = 0; i < bytecount; ++i)
@@ -57,7 +58,7 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->bytes.data(), this->bytes.size());
             subrecord.close();
          }
-         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state) {}
          virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept override {
             auto* clone = new binary_extra_data<signature, et>();
             size_t size = this->bytes.size();
@@ -85,7 +86,7 @@ namespace dovah::loaded_forms::components {
             auto& subrecord = record.open_next_subrecord(signature);
             subrecord.close();
          }
-         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state) {}
          virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept override {
             auto* clone = new empty_extra_data<signature, et>();
             return clone;
@@ -110,7 +111,7 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->value);
             subrecord.close();
          }
-         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state) {}
          virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept override {
             auto* clone = new float_extra_data<signature, et>();
             clone->value = this->value;
@@ -118,8 +119,6 @@ namespace dovah::loaded_forms::components {
          }
    };
    template<uint32_t signature, extra_data_type et, form_type_t desired_form_type = form_type::none> class formID_extra_data : public basic_extra_data {
-      public:
-         static constexpr uint8_t scalar_use_count = 1;
       public:
          static constexpr uint32_t signature = signature;
          //
@@ -142,13 +141,7 @@ namespace dovah::loaded_forms::components {
          virtual void save(tes_record_writer& record, save_interface_t& intfc) override {
             record.write_formID_subrecord(signature, this->form);
          }
-         static void generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
-            auto&     subrecord = record.get_current_subrecord();
-            form_id_t formID;
-            subrecord.read(formID);
-            if (formID)
-               uib.add_outbound_reference(formID);
-         }
+         static void generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) = delete; // the subclass must define this
          virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept override {
             auto* clone = new formID_extra_data<signature, et>();
             clone->form.set(clone_owner, this->form);
@@ -188,7 +181,7 @@ namespace dovah::loaded_forms::components {
             subrecord.write(this->value.data(), this->value.size() + 1);
             subrecord.close();
          }
-         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {}
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&, extra_data_use_info_state) {}
          virtual basic_extra_data* clone(loaded_forms::Form& clone_owner) const noexcept override {
             auto* clone = new string_extra_data<signature, et>();
             clone->value = this->value;
