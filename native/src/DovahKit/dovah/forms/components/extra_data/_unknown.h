@@ -8,10 +8,18 @@ namespace dovah::loaded_forms::components::extra::unknown {
    class XCZC : public formID_extra_data<'XCZC', extra_data_type::unknown_xczc> { // appears on REFR
       // The form should be a CELL.
       // The game skips loading this subrecord.
+      public:
+         static void generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
+            record.get_current_subrecord().read(state.by_name.unknown.xczc);
+         }
    };
    class XCZR : public formID_extra_data<'XCZR', extra_data_type::unknown_xczr> {
       // The form should be a REFR.
       // The game skips loading this subrecord.
+      public:
+         static void generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
+            record.get_current_subrecord().read(state.by_name.unknown.xczr);
+         }
    };
    class XEDL : public empty_extra_data<'XEDL', extra_data_type::unknown_xedl> {
       // The game skips loading this subrecord, and no one's ever seen it before.
