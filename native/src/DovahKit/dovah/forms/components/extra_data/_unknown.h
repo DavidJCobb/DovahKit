@@ -46,6 +46,9 @@ namespace dovah::loaded_forms::components::extra::unknown {
 }
 
 namespace dovah::loaded_forms::components::extra::deprecated {
+   class XCET : public empty_extra_data<'XCET', extra_data_type::deprecated_xcet> {
+      // The game skips loading this subrecord. In FO3, it was a Decal Reference.
+   };
    class XDCR : public empty_extra_data<'XDCR', extra_data_type::deprecated_xdcr> {
       // The game skips loading this subrecord. In FO3, it was a Decal Reference.
    };

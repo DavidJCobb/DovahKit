@@ -1466,6 +1466,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\small_vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

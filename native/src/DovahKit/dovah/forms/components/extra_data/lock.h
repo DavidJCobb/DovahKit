@@ -4,6 +4,8 @@
 namespace dovah::loaded_forms::components::extra {
    class lock : public basic_extra_data {
       public:
+         static constexpr uint8_t scalar_use_count = 1;
+      public:
          static constexpr uint32_t signature = 'XLOC';
          struct flag {
             flag() = delete;

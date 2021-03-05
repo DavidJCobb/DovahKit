@@ -4,6 +4,8 @@
 namespace dovah::loaded_forms::components::extra {
    class portal_origin_and_destination : public basic_extra_data {
       public:
+         static constexpr uint8_t scalar_use_count = 2;
+      public:
          static constexpr uint32_t signature = 'XPOD';
          //
          form_reference_t origin;      // REFR

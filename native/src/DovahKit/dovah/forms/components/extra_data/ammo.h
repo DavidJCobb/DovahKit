@@ -7,6 +7,8 @@ namespace dovah::loaded_forms::components::extra {
       // Apparently a Fallout 3 leftover.
       //
       public:
+         static constexpr uint8_t scalar_use_count = 1;
+      public:
          static constexpr uint32_t signature_type  = 'XAMT';
          static constexpr uint32_t signature_count = 'XAMC';
          //

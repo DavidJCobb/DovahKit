@@ -4,6 +4,8 @@
 namespace dovah::loaded_forms::components::extra {
    class navmesh_door_portal : public basic_extra_data {
       public:
+         static constexpr uint8_t scalar_use_count = 1;
+      public:
          static constexpr uint32_t signature = 'XNDP';
          //
          form_reference_t navmesh;

@@ -49,14 +49,20 @@ namespace dovah {
          // can be heap-allocated and the pointers can be stored in a vector. When using this, remember 
          // to delete the builder after you are done with it, whether or not you commit it.
          //
-         form_stub_use_info_builder* spawn_subordinate() const noexcept;
+         [[nodiscard]] form_stub_use_info_builder* spawn_subordinate() const noexcept;
+         
+         //
+         // Placement-new version of the previous function. Only use this if you know what you're doing. 
+         // Only useful for disgusting hacks.
+         //
+         form_stub_use_info_builder* spawn_subordinate_at(void* memory) const noexcept;
 
          //
          // The same as (spwan_subordinate), but it returns the subordinate builder directly; useful 
          // for if only a fixed number of subordinate builders are needed, as you don't need to delete 
          // them manually, etc..
          //
-         form_stub_use_info_builder spawn_subordinate_on_stack() const noexcept;
+         [[nodiscard]] form_stub_use_info_builder spawn_subordinate_on_stack() const noexcept;
          
          inline const form_stub* stub() const noexcept { return &this->_stub; }
          inline bool is_active_file() const noexcept { return this->_is_active_file; }

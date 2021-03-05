@@ -5,6 +5,8 @@
 namespace dovah::loaded_forms::components::extra {
    class patrol_ref_data : public basic_extra_data {
       public:
+         static constexpr uint8_t scalar_use_count = 2;
+      public:
          static constexpr uint32_t signature_time  = 'XPRD';
          static constexpr uint32_t signature_event = 'XPPA'; // "patrol perform action?"
          //

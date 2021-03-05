@@ -280,4 +280,12 @@ namespace dovah::loaded_forms::components {
       }
       return extra_data_load_result::unrecognized;
    }
+   extra_data_type get_extra_data_type_for_subrecord(uint32_t signature) {
+      for (int i = 0; i < std::extent<decltype(_factories)>::value; ++i) {
+         auto& entry = _factories[i];
+         if (signature == entry.signature)
+            return entry.type;
+      }
+      return extra_data_type::invalid;
+   }
 }

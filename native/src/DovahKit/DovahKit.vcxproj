@@ -552,6 +552,7 @@
     <ClInclude Include="helpers\matrix.h" />
     <ClInclude Include="helpers\qt\basic_bindings.h" />
     <ClInclude Include="helpers\rotation.h" />
+    <ClInclude Include="helpers\small_vector.h" />
     <ClInclude Include="helpers\vector.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />

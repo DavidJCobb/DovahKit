@@ -12,8 +12,14 @@
 //  - CELL/XCLW
 //
 
+namespace dovah {
+   class form_stub_use_info_builder;
+}
+
 namespace dovah::loaded_forms::components {
    enum class extra_data_type {
+      invalid = -1,
+      //
       unknown_xcza,
       unknown_xczc,
       unknown_xczr,
@@ -120,6 +126,10 @@ namespace dovah::loaded_forms::components {
          using load_result      = extra_data_load_result;
          using load_interface_t = load_order_interfaces::form_load;
          using save_interface_t = load_order_interfaces::form_save;
+         //
+      public:
+         static constexpr uint8_t scalar_use_count = 0;
+         //
       public:
          virtual extra_data_type get_type() const noexcept = 0;
          //
@@ -196,5 +206,11 @@ namespace dovah::loaded_forms::components {
          template<class e> inline e* get_or_create(extra_data_type et) noexcept {
             return dynamic_cast<e*>(this->get_or_create_by_type(et));
          }
+   };
+
+   struct extra_data_use_info_state {
+      static constexpr size_t count = 36;
+      //
+      std::array<form_id_t, count> ids;
    };
 }

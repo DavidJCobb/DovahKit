@@ -3,6 +3,7 @@
 #include "../notice_code_list.h"
 #include "factories/hardcoded.h"
 #include "components/extra_data/enable_state_parent.h"
+#include "components/extra_data/_factory.h"
 
 namespace dovah::loaded_forms {
    void ObjectReference::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -53,8 +54,8 @@ namespace dovah::loaded_forms {
          //
          return;
       //
+      auto&     extra_uib = components::extra_data_use_info_builder::get(uib);
       form_id_t base_form;
-      auto      extra_uib = uib.spawn_subordinate_on_stack();
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
@@ -68,16 +69,15 @@ namespace dovah::loaded_forms {
             case 'DATA':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, extra_uib) == components::extra_data_load_result::unrecognized) {
+               if (extra_uib->generate_use_info(record) == components::extra_data_load_result::unrecognized) {
                   //
-                  // Subrecord is not extra-data.
+                  // If execution reaches this spot, then the subrecord is not extra-data.
                   //
                }
                break;
          }
       }
       uib.add_outbound_reference(base_form, use_info_entry::flag::object_reference);
-      extra_uib.commit();
    }
    bool ObjectReference::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

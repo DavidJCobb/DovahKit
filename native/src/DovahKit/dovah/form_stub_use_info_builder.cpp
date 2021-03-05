@@ -6,14 +6,14 @@ namespace dovah {
 
    void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
       if (++this->_pending.size < preallocated_array_size) {
-         this->_pending.fixed[this->_pending.size] = _pending_entry(to_stub, flags);
+         this->_pending.fixed[this->_pending.size - 1] = _pending_entry(to_stub, flags);
       } else {
          this->_pending.extra.emplace_back(to_stub, flags);
       }
    }
    void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
       if (++this->_pending.size < preallocated_array_size) {
-         this->_pending.fixed[this->_pending.size] = _pending_entry(toFormID, flags);
+         this->_pending.fixed[this->_pending.size - 1] = _pending_entry(toFormID, flags);
       } else {
          this->_pending.extra.emplace_back(toFormID, flags);
       }
@@ -80,14 +80,21 @@ namespace dovah {
       this->clear_pending_use_info();
    }
    //
-   form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate() const noexcept {
+   [[nodiscard]] form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate() const noexcept {
       auto sub = new form_stub_use_info_builder(this->_stub);
       sub->_is_final_file     = this->_is_final_file;
       sub->_last_record_flags = this->_last_record_flags;
       sub->is_partial_record  = this->is_partial_record;
       return sub;
    }
-   form_stub_use_info_builder form_stub_use_info_builder::spawn_subordinate_on_stack() const noexcept {
+   form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate_at(void* memory) const noexcept {
+      auto sub = new (memory) form_stub_use_info_builder(this->_stub);
+      sub->_is_final_file     = this->_is_final_file;
+      sub->_last_record_flags = this->_last_record_flags;
+      sub->is_partial_record  = this->is_partial_record;
+      return sub;
+   }
+   [[nodiscard]] form_stub_use_info_builder form_stub_use_info_builder::spawn_subordinate_on_stack() const noexcept {
       auto sub = form_stub_use_info_builder(this->_stub);
       sub._is_final_file     = this->_is_final_file;
       sub._last_record_flags = this->_last_record_flags;

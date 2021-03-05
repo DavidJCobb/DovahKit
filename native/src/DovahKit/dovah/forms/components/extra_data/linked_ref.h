@@ -4,6 +4,8 @@
 namespace dovah::loaded_forms::components::extra {
    class linked_ref : public basic_extra_data {
       public:
+         static constexpr uint8_t scalar_use_count = 2;
+      public:
          static constexpr uint32_t signature = 'XLKR';
          //
          form_reference_t keyword; // optional; struct can be 8 bytes (KYWD, ref) or 4 bytes (ref)
