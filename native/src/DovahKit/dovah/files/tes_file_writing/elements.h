@@ -73,6 +73,7 @@ namespace dovah {
             //
             inline bool is_skyrim_special() const noexcept { return this->header.version >= 44; }
             inline uint32_t flags() const noexcept { return this->header.flags; }
+            inline uint16_t version() const noexcept { return this->header.version; }
             //
             operator bool() const noexcept { return this->exists(); }
             inline bool exists() const noexcept { return this->header.signature != 0; }
