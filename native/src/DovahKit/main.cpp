@@ -842,6 +842,11 @@
 //        - Access to this widget should require permission, just because scripts 
 //          could use it to draw rude things.
 //
+//  - Extra data: room ref data: this is another multi-subrecord structure where the 
+//    game will blindly "eat" subrecords without even checking their signature. We 
+//    don't emulate that behavior here even though we emulate it (with warnings) in 
+//    other places. We should emulate that behavior here.
+//
 //  - QUST/VMAD alias-script transplant handling
 //
 //     = Quests can specify script data to attach to aliases. The thing is, each 
