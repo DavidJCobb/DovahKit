@@ -93,6 +93,7 @@ namespace {
       _association("iVATSConcentratedFireBonus",      QObject::tr("Unused. Used in Fallout to compute the accuracy percentage bonus conferred by the Concentrated Fire perk when launching multiple consecutive strikes on the same target in VATS.", disambig)),
       //
       _association("sActivationChoiceMessage",   QObject::tr("The text of a message box menu displayed when the player activates an object, if the player's perks result in them having multiple activation choices for the object.", disambig)),
+      _association("sAddedNote",                 QObject::tr("Notification shown when the player collects a Note. The format string parameter is the name of the note.", disambig)),
       _association("sAlchemy",                   QObject::tr("The title of the alchemy menu, shown at the top of the menu layout with the description (sAlchemyMenuDescription). The title and description are inserted into the format string \"%s: %s\".", disambig)),
       _association("sAlchemyMenuDescription",    QObject::tr("Descriptive text for the alchemy menu, shown at the top of the menu layout with the title (sAlchemy). The title and description are inserted into the format string \"%s: %s\".", disambig)),
       _association("sAlreadyKnown",              QObject::tr("The error message shown when the player attempts to read a spell book after they have already learned its spell. The spell name will be appended to this string, separated by a single space.", disambig)),

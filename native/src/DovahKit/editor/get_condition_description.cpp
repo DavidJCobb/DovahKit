@@ -283,7 +283,7 @@ namespace {
       //
       _condition_desc(378, "HasShout",                   ""),
       //
-      _condition_desc(381, "GetHasNote",                 ""), // arg type needs verification
+      _condition_desc(381, "GetHasNote",                 "If run on the player, returns 1 if they have ever collected a note of the specified type (unless they \"collected\" it from an EquipItem call, which doesn't count due to a bug). Returns 0 otherwise."),
       //
       _condition_desc(390, "GetHitLocation",             "Returns the ID of the last body part on this actor that was hit by an attack. Because Skyrim doesn't use the same limb IDs as Fallout, this function isn't terribly useful."),
       _condition_desc(391, "IsPC1stPerson",              ""),

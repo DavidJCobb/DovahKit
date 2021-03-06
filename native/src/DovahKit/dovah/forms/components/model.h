@@ -33,7 +33,7 @@ namespace dovah::loaded_forms::components {
             std::vector<texture_hash> hashes;
             std::vector<uint32_t> addenda;
          } texture_hash_data;
-         facegen_flags_t facegen_flags = 0;
+         facegen_flags_t facegen_flags = 0; // MODD, but per xEdit that never shows up anywhere? TODO: check the executable and add proper load/save code if needed
          
          bool load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc); // returns (true) if the subrecord is recognized and handled
          static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);

@@ -23,7 +23,7 @@ namespace dovah::loaded_forms {
          };
 
          components::object_bounds bounds; // OBND
-         components::model model; // MODL, MODT // TODO: Texture swaps (MODS) aren't supported. We need to indicate this somehow.
+         components::model model; // MODL, MODT
          components::papyrus_attachment_data script_data; // VMAD
          //
          note_type type = note_type::text;
