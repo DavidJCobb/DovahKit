@@ -87,13 +87,6 @@ namespace dovah {
       sub->is_partial_record  = this->is_partial_record;
       return sub;
    }
-   form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate_at(void* memory) const noexcept {
-      auto sub = new (memory) form_stub_use_info_builder(this->_stub);
-      sub->_is_final_file     = this->_is_final_file;
-      sub->_last_record_flags = this->_last_record_flags;
-      sub->is_partial_record  = this->is_partial_record;
-      return sub;
-   }
    [[nodiscard]] form_stub_use_info_builder form_stub_use_info_builder::spawn_subordinate_on_stack() const noexcept {
       auto sub = form_stub_use_info_builder(this->_stub);
       sub._is_final_file     = this->_is_final_file;

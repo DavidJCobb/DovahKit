@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include "../../../core.h"
+#include "../package_event_dialogue.h"
 
 namespace dovah {
    class form_stub_use_info_builder;
@@ -47,10 +48,6 @@ namespace dovah {
             } navmesh_door_portal;
             form_id_t ownership;
             struct {
-               form_id_t idle; // TODO: this is part of another struct
-               form_id_t topic;
-            } patrol_ref_data;
-            struct {
                form_id_t type;
             } poison;
             struct {
@@ -68,8 +65,18 @@ namespace dovah {
             } teleport;
             form_id_t teleport_name;
          } by_name;
-         std::array<form_id_t, 36> list;
+         std::array<form_id_t, 34> list;
       };
+      struct {
+         //
+         // Sometimes, an extra-data struct contains other structs that can also appear in 
+         // form data, and that require their own use info state. We'll put the details for 
+         // these extra data types here instead of in the list above, to ensure that we 
+         // don't cause any issues with the struct/array union.
+         //
+         loaded_forms::components::package_event_dialogue::use_info_state patrol_ref_data;
+      } specials;
+
       static_assert(sizeof(list) >= sizeof(by_name), "The array has too few elements.");
       static_assert(sizeof(list) <= sizeof(by_name), "The array has too many elements.");
 

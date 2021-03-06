@@ -5,6 +5,7 @@ namespace dovah {
    void extra_data_use_info_state::clear() {
       for (auto& id : this->list)
          id = 0;
+      this->specials.patrol_ref_data.clear();
    }
    void extra_data_use_info_state::commit_to(form_stub_use_info_builder& uib) {
       for (auto id : this->list)
@@ -31,5 +32,7 @@ namespace dovah {
          //
          if (id)
             uib.add_outbound_reference(id);
+      //
+      this->specials.patrol_ref_data.commit_to(uib);
    }
 }

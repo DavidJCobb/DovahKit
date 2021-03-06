@@ -49,30 +49,6 @@ namespace dovah::loaded_forms::components {
       }
       return false;
    }
-   /*static*/ void package_event_dialogue::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
-      form_id_t  formID;
-      topic_type type;
-      while (auto& subrecord = record.next_subrecord()) {
-         switch (subrecord.signature()) {
-            case 'INAM':
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               break;
-            case 'TNAM':
-               if (subrecord.read(formID))
-                  uib.add_outbound_reference(formID);
-               return; // TESPackage::Data::Load aborts after reading TNAM
-            case 'PDTO':
-               {
-                  subrecord.read(type);
-                  if (type == topic_type::ref)
-                     if (subrecord.read(formID))
-                        uib.add_outbound_reference(formID);
-               }
-               return; // TESPackage::Data::Load aborts after reading PDTO
-         }
-      }
-   }
    void package_event_dialogue::save(tes_record_writer& record) {
       if (this->idle)
          record.write_formID_subrecord('INAM', this->idle);
@@ -111,4 +87,35 @@ namespace dovah::loaded_forms::components {
          return false;
       return true;
    }
+
+   #pragma region package_event_dialogue::use_info_state
+   void package_event_dialogue::use_info_state::generate_use_info(tes_record_reader& record) {
+      topic_type type;
+      while (auto& subrecord = record.next_subrecord()) {
+         switch (subrecord.signature()) {
+            case 'INAM':
+               subrecord.read(this->idle);
+               break;
+            case 'TNAM':
+               subrecord.read(this->topic);
+               return; // TESPackage::Data::Load aborts after reading TNAM
+            case 'PDTO':
+               subrecord.read(type);
+               if (subrecord.read(type) && type == topic_type::ref)
+                  subrecord.read(this->topic);
+               return; // TESPackage::Data::Load aborts after reading PDTO
+         }
+      }
+   }
+   void package_event_dialogue::use_info_state::clear() {
+      this->idle  = 0;
+      this->topic = 0;
+   }
+   void package_event_dialogue::use_info_state::commit_to(form_stub_use_info_builder& uib) {
+      if (this->idle)
+         uib.add_outbound_reference(this->idle);
+      if (this->topic)
+         uib.add_outbound_reference(this->topic);
+   }
+   #pragma endregion
 }

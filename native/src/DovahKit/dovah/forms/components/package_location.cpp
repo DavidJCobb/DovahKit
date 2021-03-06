@@ -46,21 +46,6 @@ namespace dovah::loaded_forms::components {
       }
       subrecord.read(this->radius);
    }
-   /*static*/ void package_location::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
-      package_location_type t;
-      if (subrecord.read(t)) {
-         form_id_t formID;
-         switch (t) {
-            case package_location_type::near_reference:
-            case package_location_type::in_cell:
-            case package_location_type::object_id:
-            case package_location_type::near_linked_reference:
-               if (subrecord.read(formID) && formID)
-                  uib.add_outbound_reference(formID);
-               break;
-         }
-      }
-   }
    void package_location::save(tes_subrecord_writer& subrecord) {
       subrecord.write(this->type);
       switch (this->type) {
@@ -106,4 +91,27 @@ namespace dovah::loaded_forms::components {
       this->detail.padding     =  0;
       this->radius = 0;
    }
+
+   #pragma region package_location::use_info_state
+   void package_location::use_info_state::generate_use_info(tes_subrecord_reader& subrecord) {
+      package_location_type t;
+      if (subrecord.read(t)) {
+         switch (t) {
+            case package_location_type::near_reference:
+            case package_location_type::in_cell:
+            case package_location_type::object_id:
+            case package_location_type::near_linked_reference:
+               subrecord.read(this->form);
+               break;
+         }
+      }
+   }
+   void package_location::use_info_state::clear() {
+      this->form = 0;
+   }
+   void package_location::use_info_state::commit_to(form_stub_use_info_builder& uib) {
+      if (this->form)
+         uib.add_outbound_reference(this->form);
+   }
+   #pragma endregion
 }

@@ -1,0 +1,119 @@
+
+Here's an interesting question:
+
+ObjectReference (TESObjectREFR internally) is  the form type that the game uses 
+for all objects placed in the game world. If it is a "thing" that "exists" at a 
+point in space, then it's an ObjectReference. Treasure chests, mountain ridges, 
+dropped items,  characters, furniture, trigger volumes, fired  projectiles, and 
+more... They're all just ObjectReferences with different base forms. Characters 
+and projectiles use subclasses, but nothing else does.
+
+This, of course, means that TESObjectREFR needs to be able to handle all of the 
+data and behaviors  needed by all of these very different  types. And just what 
+data and behaviors are we  talking about? Well, here's  a "brief" partial list:
+
+
+   ALPHA CUTOFF
+      Specific scenery objects can use  this to adjust the threshold value used 
+      for one-bit alpha transparency. The Creation Kit helpfully lists tattered 
+      banners as an example.
+
+
+   CHARGE
+      Enchanted weapons have a limited supply of energy.
+
+
+   CONTAINER CHANGES
+      Inventories consist of two parts: the data on the base form and "changes" 
+      stored on the ObjectReference.
+
+
+   COUNT
+      A single ObjectReference  in the game world can  represent multiple of an 
+      item; for example, if the player drops  fifteen arrows at once, they will 
+      appear as a single ObjectReference, displayed with a quiver model.
+
+
+   DISMEMBERED LIMBS
+      Actors could have any  limb severed in the Fallout games,  and in Skyrim, 
+      they can be decapitated. This data is also used to track whether an actor 
+      has been cannibalized by another actor,  to prevent cannibal players from 
+      feeding on the same corpse repeatedly.
+
+
+   EMITTANCE SOURCE
+      Lights and some special-effects objects  (like smoke and dust) can be set 
+      to inherit their color from the time of day.
+
+
+   ENABLE STATE PARENT
+      Any ObjectReference can be configured  to have its enable state depend on 
+      the enable state of some other  ObjectReference (the "parent"). This is a 
+      feature that  is used relatively rarely, but it is vitally  important for 
+      things like environmental changes (like the Dark Brotherhood Sanctuary in 
+      Falkreath being destroyed) and so must be available on all objects.
+
+
+   LINKED REFERENCES
+      ObjectReferences can be "linked" to each other for a variety of purposes. 
+      Some hardcoded systems, like packages, are able to work with these links, 
+      and they are  also accessible in  conditions and scripts.  As with enable 
+      state parents, this needs  to be available on  all ObjectReferences,  but 
+      will be used by comparatively few of them.
+
+
+   LOCATION REF TYPE
+      Flags the ObjectReference as belonging  to some arbitrary classification, 
+      such as  "boss enemy"  or "boss enemy's treasure chest."  Useful  for the 
+      alias and story manager systems.
+
+
+   LOCK
+      Containers and doors can be locked.  Locks can have a fixed difficulty or 
+      be "leveled," and they can optionally be  tied to a key which opens them.
+
+
+   OWNERSHIP
+      Furniture,  items,  and some other objects can be owned by characters and 
+      factions.
+
+
+   POISON
+      If a weapon has a poison applied to  it and is then dropped, it will keep 
+      that poison.
+
+
+   PRIMITIVE
+      Portals, roombounds, and trigger volumes  all use abstract shapes instead 
+      of 3D models.
+
+
+   RADIUS
+      Some kinds of markers use this; it is also used by light emitters.
+
+
+   SOUL
+      Soul gems contain souls of various sizes.
+
+
+   TELEPORT
+      Load doors are,  functionally,  teleporters. Each door  needs to know the 
+      other door  that it connects to, and  needs coordinates (relative  to the 
+      destination door) to place an actor at.
+
+
+That's a lot! If every ObjectReference needed to have room for every one of the 
+above fields at all times, then the game would waste a huge amount of memory. A 
+typical ObjectReference won't use any of  the above behaviors, and it'd be rare 
+for an ObjectReference to use more than a few, so couldn't Bethesda optimize it 
+somehow? Well, they could and they did.
+
+In-game, every TESObjectREFR has a list of "extra-data," or single-purpose data 
+structures suited for the above tasks. Each extra-data type has a unique ID, so 
+the game can easily look up the extra-data  relevant to a given situation. This 
+means that any  ObjectReference can theoretically be given  inventory data, for 
+example, but in practice they'll only have  that data (which is to say: they'll 
+only have memory set aside to hold that data) when they actually need it.
+
+Incidentally,  cells (TESObjectCELL) also have extra-data lists  for properties 
+like the cell's music type override, climate, region list, and water type.

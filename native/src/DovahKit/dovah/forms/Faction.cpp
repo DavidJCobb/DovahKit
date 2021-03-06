@@ -186,7 +186,7 @@ namespace dovah::loaded_forms {
       form_id_t jail_outfit;
       form_id_t vendor_list;
       form_id_t vendor_chest;
-      auto*     vendor_location_use_info = uib.spawn_subordinate();
+      components::package_location::use_info_state vendor_location;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'JAIL': // jail marker
@@ -214,8 +214,7 @@ namespace dovah::loaded_forms {
                subrecord.read(vendor_chest);
                break;
             case 'PLVD':
-               vendor_location_use_info->clear_pending_use_info();
-               components::package_location::generate_use_info(subrecord, *vendor_location_use_info);
+               vendor_location.generate_use_info(subrecord);
                break;
          }
       }
@@ -227,8 +226,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(jail_outfit);
       uib.add_outbound_reference(vendor_list);
       uib.add_outbound_reference(vendor_chest);
-      vendor_location_use_info->commit();
-      delete vendor_location_use_info;
+      vendor_location.commit_to(uib);
    }
    bool Faction::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)

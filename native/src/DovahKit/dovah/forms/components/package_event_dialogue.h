@@ -15,12 +15,21 @@ namespace dovah::loaded_forms::components {
       uint32_t         topic_subtype = 0; // signature
       //
       bool load(tes_record_reader&, load_order_interfaces::form_load& intfc);
-      static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+      static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) = delete; // use (use_info_state)
       void save(tes_record_writer&);
       void clone_from(const package_event_dialogue& original, loaded_forms::Form& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
       void clear(loaded_forms::Form& my_owner);
 
       bool empty() const noexcept;
+      
+      struct use_info_state {
+         form_id_t idle;
+         form_id_t topic;
+         //
+         void generate_use_info(tes_record_reader&);
+         void clear();
+         void commit_to(form_stub_use_info_builder&);
+      };
    };
 }

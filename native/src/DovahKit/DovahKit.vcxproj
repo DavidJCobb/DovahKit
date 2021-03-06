@@ -690,6 +690,7 @@
     <Text Include="dovah\_docs\conditions.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
     <Text Include="dovah\_docs\error code documentation\file_write_error.txt" />
+    <Text Include="dovah\_docs\extra data.txt" />
     <Text Include="dovah\_docs\feature list.txt" />
     <Text Include="dovah\_docs\form stubs.txt" />
     <Text Include="dovah\_docs\game settings.txt" />
@@ -700,6 +701,7 @@
     <Text Include="dovah\_docs\singleton forms.txt" />
     <Text Include="dovah\_docs\threading.txt" />
     <Text Include="dovah\_docs\topic infos%27 placement in topics%27 info lists.txt" />
+    <Text Include="dovah\_docs\use info build process - extra data.txt" />
     <Text Include="dovah\_docs\use info build process.txt" />
     <Text Include="editor\scripting\_docs\abstract.txt" />
     <Text Include="editor\scripting\_docs\case studies.txt" />

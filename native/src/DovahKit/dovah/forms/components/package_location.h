@@ -32,10 +32,18 @@ namespace dovah::loaded_forms::components {
       int32_t radius = 0;
       //
       void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
-      static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
+      static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&) = delete; // use (package_location::use_info_state)
       void save(tes_subrecord_writer&);
       void clone_from(const package_location& original, loaded_forms::Form& owner_of_clone) noexcept;
       void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
       void clear(loaded_forms::Form& my_owner);
+      //
+      struct use_info_state {
+         form_id_t form;
+         //
+         void generate_use_info(tes_subrecord_reader&);
+         void clear();
+         void commit_to(form_stub_use_info_builder&);
+      };
    };
 }

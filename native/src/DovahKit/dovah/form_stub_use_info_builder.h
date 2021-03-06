@@ -50,12 +50,6 @@ namespace dovah {
          // to delete the builder after you are done with it, whether or not you commit it.
          //
          [[nodiscard]] form_stub_use_info_builder* spawn_subordinate() const noexcept;
-         
-         //
-         // Placement-new version of the previous function. Only use this if you know what you're doing. 
-         // Only useful for disgusting hacks.
-         //
-         form_stub_use_info_builder* spawn_subordinate_at(void* memory) const noexcept;
 
          //
          // The same as (spwan_subordinate), but it returns the subordinate builder directly; useful 

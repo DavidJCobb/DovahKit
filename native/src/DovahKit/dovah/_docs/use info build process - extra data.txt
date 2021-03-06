@@ -1,0 +1,45 @@
+
+The document  <use info build process.txt>  is required reading.  This document 
+builds and elaborates on that one, describing  the conventions for handling use 
+info within extra-data.  We also assume that you're already  familiar with what 
+extra-data actually are.
+
+Form-to-form references outbound from  extra-data can be divided into two basic 
+categories: "single" uses and "vector" uses. These are roughly analogous to the 
+references that can exist in whole forms.  Consider the following two examples:
+
+   a) The XPSN+XPSC subrecords represent the "poison" extra-data type. This can 
+      be applied to a pre-placed weapon in order to pre-poison the weapon, with 
+      XPSN specifying a  form to serve as the poison type,  and XPSC specifying 
+      the number of doses on the weapon. (Skyrim players won't be familiar with 
+      the latter, as in  typical play weapons can only have  one dose of poison 
+      applied to them.)
+
+      A weapon can only have one kind of poison applied to it, so if a REFR has 
+      multiple XPSN subrecords, only the last will be retained in memory. Thus, 
+      XPSN is a "single" use.
+
+   b) The XCLR subrecord represents the  "region list" for a cell, and consists 
+      entirely of form IDs for regions. The game does not clear a cell's region 
+      list upon encountering  a new XCLR subrecord, so if a  cell should happen 
+      to have multiple XCLR subrecords, the contents of the two would simply be 
+      concatenated into a single list. Thus, XCLR produces "vector" uses.
+
+The conventions for safely handling use  info (per the considerations described 
+in <use info build process.txt>) are as follows:
+
+   a) A struct named (extra_data_use_info_state) has been defined with room for 
+      every possible  "single" use in every known extra-data  type. Each extra-
+      data type will be given access to both the normal use-info-builder object 
+      and to this state object, and will be expected to load "single" uses into 
+      the state object rather than committing them to the use-info-builder.
+
+   b) "Array" uses, on the other hand, should be sent directly to the use-info-
+      builder.
+
+   c) The containing form's use info generator should create an instance of the 
+      state struct, and commit it after the record has been read.
+
+Following these  conventions should  ensure that we generate  use info properly 
+even when extra-data subrecords for "single" uses wrongly appear multiple times 
+in a single form.
