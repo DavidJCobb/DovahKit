@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "../../../helpers/memory.h"
 
 namespace dovah {
@@ -14,14 +15,24 @@ namespace dovah {
             lz4_error,
          };
       protected:
-         cobb::generic_buffer owned;
+         cobb::generic_buffer owned; // used for files that needed to be decompressed and, theoretically, loose files
          struct {
             const void* data = nullptr;
             size_t size = 0;
-         } shared;
+         } shared; // used for files that could be pulled directly out of a memory-mapped BSA file
          error_code error = error_code::none;
          //
       public:
+         bsa_archived_file() {};
+         //
+         bsa_archived_file(const cobb::generic_buffer& buf) : owned(buf) {};
+         bsa_archived_file(cobb::generic_buffer&& buf) : owned(buf) {};
+         //
+         bsa_archived_file(const void* shared_data, size_t s) {
+            this->shared.data = shared_data;
+            this->shared.size = s;
+         }
+         
          inline const void* data() const noexcept {
             const void* d = this->owned.data();
             if (!d)
@@ -35,7 +46,8 @@ namespace dovah {
          }
          inline error_code get_error() const noexcept { return this->error; }
          inline bool has_error() const noexcept { return this->error != error_code::none; }
-         //
+         inline bool is_shared() const noexcept { return !this->owned.data(); }
+         
          void read(size_t offset, void* value, size_t size) const noexcept {
             if (!this->data())
                return;
