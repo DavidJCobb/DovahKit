@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <QAction>
 #include <QWidget>
 #include "ui_quest_tab_stages.h"
 #include "../../../dovah/form_stub.h"
@@ -20,11 +21,26 @@ class QuestTabStages : public QWidget {
       Ui::QuestTabStages ui;
       dovah::form_stub&  stub;
       loaded_t&          form;
+
+      struct {
+         struct {
+            QAction* insert = nullptr;
+            QAction* remove = nullptr;
+         } stage_list;
+         struct {
+            QAction* insert   = nullptr;
+            QAction* remove   = nullptr;
+            QAction* moveUp   = nullptr;
+            QAction* moveDown = nullptr;
+         } log_entry_list;
+      } context_menu_actions;
       
       loaded_t::Stage*    _get_stage() const noexcept;
       loaded_t::Stage*    _get_stage(int) const noexcept;
       loaded_t::LogEntry* _get_log_entry() const noexcept;
       loaded_t::LogEntry* _get_log_entry(int stage, int entry) const noexcept;
+
+      void _select_stage(int) noexcept;
 
       int _selected_stage_index() const noexcept;
       int _selected_log_entry_index() const noexcept;

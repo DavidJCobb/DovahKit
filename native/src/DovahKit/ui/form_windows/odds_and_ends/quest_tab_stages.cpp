@@ -1,28 +1,116 @@
 #include "quest_tab_stages.h"
+#include <QInputDialog>
+#include <QMenu>
+#include <QMessageBox>
 #include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../dovah/core.h"
 #include "../../../editor/core.h"
 #include "../../../editor/helpers/stringify_conditions.h"
 
+namespace {
+   constexpr int no_stage = -1;
+   static_assert(std::numeric_limits<decltype(dovah::loaded_forms::Quest::Stage::index)>::min() > no_stage, "The sentinel value that this UI uses for \"no stage\" needs to be outside of the range of valid stage IDs.");
+}
+
 QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent) : QWidget(parent), stub(s), form(q) {
    ui.setupUi(this);
 
    #pragma region Stage list
-   {
-      auto* widget = this->ui.index;
-      auto* model  = new QStandardItemModelDKEx(widget);
-      model->setColumnCount(1);
-      model->setSortRole(Qt::UserRole);
-      widget->setModel(model);
-      widget->setUniformItemSizes(true);
+      {
+         auto* widget = this->ui.index;
+         auto* model  = new QStandardItemModelDKEx(widget);
+         model->setColumnCount(1);
+         model->setSortRole(Qt::UserRole);
+         widget->setModel(model);
+         widget->setUniformItemSizes(true);
+         //
+         QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
+            this->_redraw_stage_settings();
+            this->_redraw_entry_list();
+            this->_redraw_entry_settings();
+         });
+      }
+      #pragma region Context menu
+      this->context_menu_actions.stage_list.insert = new QAction(tr("New..."), this->ui.index);
+      this->context_menu_actions.stage_list.remove = new QAction(tr("Delete"), this->ui.index);
       //
-      QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
-         this->_redraw_stage_settings();
-         this->_redraw_entry_list();
-         this->_redraw_entry_settings();
+      QObject::connect(this->context_menu_actions.stage_list.insert, &QAction::triggered, this, [this]() {
+         int initial = this->_selected_stage_index();
+         if (initial >= 0)
+            ++initial;
+         else
+            initial = 0;
+         //
+         bool ok;
+         int value = QInputDialog::getInt(
+            this,
+            tr("Create quest stage"),
+            tr("What number should this quest stage use? The value must be unique."),
+            initial,
+            std::numeric_limits<decltype(loaded_t::Stage::index)>::min(),
+            std::numeric_limits<decltype(loaded_t::Stage::index)>::max(),
+            1,  // step
+            &ok // set to (true) if the user clicked OK
+         );
+         if (!ok)
+            return;
+         //
+         if (auto* existing = this->_get_stage(value)) {
+            QMessageBox::critical(
+               this,
+               tr("Error"),
+               tr("This quest already has a stage with ID number %1.").arg(value)
+            );
+            return;
+         }
+         if (this->form.insert_stage(value)) {
+            this->_select_stage(value);
+         }
       });
-   }
+      QObject::connect(this->context_menu_actions.stage_list.remove, &QAction::triggered, this, [this]() {
+         int prev = std::numeric_limits<int>::min();
+         int next = std::numeric_limits<int>::max();
+         int sel  = this->_selected_stage_index();
+         if (sel < 0) // exit if no selection
+            return;
+         for (auto& stage : this->form.stages) {
+            auto id = stage.index;
+            if (id > sel) {
+               if (id > prev)
+                  prev = id;
+            } else if (id < sel) {
+               if (id < next)
+                  next = id;
+            }
+         }
+         this->form.remove_stage(sel);
+         if (next >= 0)
+            this->_select_stage(next);
+         else
+            this->_select_stage(prev);
+         this->_redraw_stage_list();
+      });
+      //
+      this->ui.index->setContextMenuPolicy(Qt::CustomContextMenu);
+      QObject::connect(this->ui.index, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+         auto* opener = this->ui.index;
+         auto* sm     = opener->selectionModel();
+         if (!sm)
+            return;
+         auto rows = sm->selectedRows();
+         //
+         this->context_menu_actions.stage_list.remove->setVisible(!rows.isEmpty());
+         //
+         QMenu menu(opener);
+         menu.addAction(this->context_menu_actions.stage_list.insert);
+         menu.addAction(this->context_menu_actions.stage_list.remove);
+         //
+         if (menu.isEmpty())
+            return; // don't show a menu if all of its contents are disabled or hidden
+         menu.exec(opener->mapToGlobal(pos));
+      });
+      #pragma endregion
    #pragma endregion
    //
    // TODO: editing stages
@@ -187,15 +275,28 @@ QuestTabStages::loaded_t::LogEntry* QuestTabStages::_get_log_entry(int stage, in
    return &list[entry];
 }
 
+void QuestTabStages::_select_stage(int id) noexcept {
+   auto* widget  = this->ui.index;
+   auto* model   = (QStandardItemModelDKEx*) widget->model();
+   auto  indices = model->match(
+      model->index(0, 0),
+      Qt::UserRole,
+      id,
+      1,
+      Qt::MatchExactly
+   );
+   widget->setCurrentIndex(indices[0]);
+}
+
 int QuestTabStages::_selected_stage_index() const noexcept {
    auto* widget = this->ui.index;
    auto* sm     = widget->selectionModel();
    if (!sm)
-      return -1;
+      return no_stage;
    auto index = sm->currentIndex();
    auto data  = widget->model()->data(index, Qt::UserRole);
    if (!data.isValid())
-      return -1;
+      return no_stage;
    return data.toInt();
 }
 int QuestTabStages::_selected_log_entry_index() const noexcept {

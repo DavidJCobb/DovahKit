@@ -373,7 +373,7 @@ namespace dovah::loaded_forms {
          void for_each_alias_of_type(Alias::alias_type, std::function<bool(Alias*)>);
 
          Stage* lookup_stage_by_id(uint16_t id) noexcept;
-         Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists
+         Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists or if the ID is out of bounds
          void   remove_stage(int id) noexcept;
 
       protected:

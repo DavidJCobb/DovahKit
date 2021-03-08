@@ -1461,6 +1461,8 @@ namespace dovah::loaded_forms {
       return nullptr;
    }
    Quest::Stage* Quest::insert_stage(int id) noexcept {
+      if (id < 0 || id > std::numeric_limits<decltype(Stage::index)>::max())
+         return nullptr;
       auto& list = this->stages;
       if (!list.empty())
          for (auto& stage : list)
