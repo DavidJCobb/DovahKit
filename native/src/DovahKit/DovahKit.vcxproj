@@ -300,6 +300,7 @@
     </ClCompile>
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
+    <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
     <ClCompile Include="ui\generic\RefPickerButton.cpp" />
     <ClCompile Include="ui\generic\TESFilePicker.cpp" />
@@ -575,6 +576,7 @@
     <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
+    <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h" />

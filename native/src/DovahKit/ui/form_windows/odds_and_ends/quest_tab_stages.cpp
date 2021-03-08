@@ -1,5 +1,5 @@
 #include "quest_tab_stages.h"
-#include <QStandardItemModel>
+#include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../dovah/core.h"
 #include "../../../editor/core.h"
@@ -11,7 +11,7 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
    #pragma region Stage list
    {
       auto* widget = this->ui.index;
-      auto* model  = new QStandardItemModel(widget);
+      auto* model  = new QStandardItemModelDKEx(widget);
       model->setColumnCount(1);
       model->setSortRole(Qt::UserRole);
       widget->setModel(model);
@@ -43,7 +43,8 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
    #pragma region Log entry list
    {
       auto* widget = this->ui.logEntries;
-      auto* model  = new QStandardItemModel(widget);
+      auto* model  = new QStandardItemModelDKEx(widget);
+      model->setAutoTooltips(true); // QStandardItemModelDKEx
       model->setColumnCount(2);
       widget->setModel(model);
       model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
@@ -129,7 +130,7 @@ void QuestTabStages::redrawEntryListSelectedItem() {
    //
    auto* widget = this->ui.logEntries;
    auto* sm     = widget->selectionModel();
-   auto* model  = (QStandardItemModel*) widget->model();
+   auto* model  = (QStandardItemModelDKEx*) widget->model();
    if (!sm || !model)
       return;
    auto index = sm->currentIndex();
@@ -221,9 +222,9 @@ void QuestTabStages::_redraw_stage_list() {
    int   prior_id = this->_selected_stage_index(); // prior selected stage ID
    auto* widget   = this->ui.index;
    auto  blocker  = QSignalBlocker(widget);
-   auto* model    = (QStandardItemModel*) widget->model();
+   auto* model    = (QStandardItemModelDKEx*) widget->model();
    assert(model);
-   model->removeRows(0, model->rowCount()); // QStandardItemModel::clear nukes any headers, too, so we shouldn't use it
+   model->clearBody();
    //
    auto& list = this->form.stages;
    if (list.empty())
@@ -269,9 +270,9 @@ void QuestTabStages::_redraw_entry_list() {
    int   index   = this->_selected_log_entry_index();
    auto* widget  = this->ui.logEntries;
    auto  blocker = QSignalBlocker(widget);
-   auto* model   = (QStandardItemModel*) widget->model();
+   auto* model   = (QStandardItemModelDKEx*) widget->model();
    assert(model);
-   model->removeRows(0, model->rowCount()); // QStandardItemModel::clear nukes any headers, too, so we can't use it
+   model->clearBody();
    //
    auto* ptr = this->_get_stage();
    if (!ptr)

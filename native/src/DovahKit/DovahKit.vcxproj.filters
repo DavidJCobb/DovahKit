@@ -714,6 +714,9 @@
     <ClCompile Include="dovah\forms\components\extra_data\_use_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1473,6 +1476,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\components\extra_data\_use_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\generic\QStandardItemModelDKEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
