@@ -65,6 +65,7 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
             return;
          }
          if (this->form.insert_stage(value)) {
+            this->_redraw_stage_list();
             this->_select_stage(value);
          }
       });
@@ -76,10 +77,10 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
             return;
          for (auto& stage : this->form.stages) {
             auto id = stage.index;
-            if (id > sel) {
+            if (id < sel) {
                if (id > prev)
                   prev = id;
-            } else if (id < sel) {
+            } else if (id > sel) {
                if (id < next)
                   next = id;
             }
@@ -285,6 +286,10 @@ void QuestTabStages::_select_stage(int id) noexcept {
       1,
       Qt::MatchExactly
    );
+   if (indices.isEmpty()) {
+      widget->setCurrentIndex(QModelIndex());
+      return;
+   }
    widget->setCurrentIndex(indices[0]);
 }
 
