@@ -157,6 +157,8 @@ namespace dovah {
             std::vector<global_variable> variables;
             std::vector<property> properties;
             std::vector<state> states;
+
+            const state* get_auto_state() const noexcept;
          };
          //
       protected:

@@ -225,6 +225,7 @@
     <ClCompile Include="editor\helpers\stringify_condition_argument.cpp" />
     <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
+    <ClCompile Include="editor\papyrus.cpp" />
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\api\form_type_values.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
@@ -299,6 +300,7 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
+    <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
@@ -503,6 +505,7 @@
     <ClInclude Include="editor\helpers\stringify_condition_argument.h" />
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
     <QtMoc Include="editor\scripting\editor_script_core.h" />
+    <ClInclude Include="editor\papyrus.h" />
     <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
     <ClInclude Include="editor\scripting\api\form_type_values.h" />
     <ClInclude Include="editor\scripting\classes.h" />
@@ -576,6 +579,7 @@
     <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
+    <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
@@ -655,6 +659,7 @@
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
+    <QtUic Include="ui\generic\PapyrusFragmentEditor.ui" />
     <QtUic Include="ui\generic\TESFilePicker.ui" />
     <QtUic Include="ui\generic\windows\ref_picker_window.ui" />
     <QtUic Include="ui\main_window.ui" />

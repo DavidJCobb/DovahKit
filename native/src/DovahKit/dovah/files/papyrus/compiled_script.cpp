@@ -42,6 +42,13 @@ namespace dovah {
       {"array_rfind",  4, false},
    }};
 
+   const compiled_papyrus_script::state* compiled_papyrus_script::object::get_auto_state() const noexcept {
+      for (auto& state : this->states)
+         if (state.name == this->auto_state_name)
+            return &state;
+      return nullptr;
+   }
+
    void compiled_papyrus_script::_read(void* to, size_t s) {
       assert(to);
       if (s + this->file._pos > this->file._size)

@@ -180,7 +180,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QWidget" name="logEntryFragment" native="true"/>
+         <widget class="PapyrusFragmentEditor" name="logEntryFragment" native="true"/>
         </item>
        </layout>
       </item>
@@ -213,6 +213,12 @@
    <class>FormsOfTypeCombobox</class>
    <extends>QComboBox</extends>
    <header>../../generic/FormsOfTypeCombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>PapyrusFragmentEditor</class>
+   <extends>QWidget</extends>
+   <header>../../generic/PapyrusFragmentEditor.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>

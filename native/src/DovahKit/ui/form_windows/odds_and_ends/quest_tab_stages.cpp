@@ -2,6 +2,7 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
+#include "../../generic/PapyrusFragmentEditor.h"
 #include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../dovah/core.h"
@@ -264,9 +265,23 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       });
       #pragma endregion
       #pragma region Fragment
-         //
-         // TODO
-         //
+         {
+            PapyrusFragmentEditor* widget = this->ui.logEntryFragment;
+            auto& papyrus = this->form.script_data;
+            for (auto& script : papyrus.scripts)
+               widget->addScriptname(script.name.c_str());
+            //
+            QObject::connect(widget, &PapyrusFragmentEditor::currentScriptnameChanged, this, [this](const QString& name) {
+               auto* lo = this->_get_log_entry();
+               if (lo) 
+                  lo->fragment.filename = name.toStdString().c_str();
+            });
+            QObject::connect(widget, &PapyrusFragmentEditor::currentFunctionChanged, this, [this](const QString& name) {
+               auto* lo = this->_get_log_entry();
+               if (lo)
+                  lo->fragment.function = name.toStdString().c_str();
+            });
+         }
       #pragma endregion
    #pragma endregion
 
@@ -519,27 +534,23 @@ void QuestTabStages::_redraw_entry_settings() {
    this->ui.logEntryFlagFail->setEnabled(ptr != nullptr);
    this->ui.logEntryNextQuest->setEnabled(ptr != nullptr);
    this->ui.logEntryText->setEnabled(ptr != nullptr);
-   //
-   // TODO: Papyrus fragment
-   //
+   this->ui.logEntryFragment->setEnabled(ptr != nullptr);
    this->ui.logEntryConditions->setEnabled(ptr != nullptr);
    //
    const auto blocker0 = QSignalBlocker(this->ui.logEntryText);
+   const auto blocker1 = QSignalBlocker(this->ui.logEntryFragment);
    //
    if (!ptr) {
       this->ui.logEntryConditions->model()->clearTarget();
       this->ui.logEntryText->clear();
-      //
-      // TODO: Papyrus fragment
-      //
+      this->ui.logEntryFragment->clearCurrentValues();
       return;
    }
    //
    this->ui.logEntryConditions->model()->setTarget(this->stub, ptr->conditions, true);
    this->ui.logEntryText->setPlainText(ptr->journal_text.c_str());
-   //
-   // TODO: Papyrus fragment
-   //
+   this->ui.logEntryFragment->setCurrentScriptname(ptr->fragment.filename.c_str());
+   this->ui.logEntryFragment->setCurrentFunction(ptr->fragment.function.c_str());
 }
 
 void QuestTabStages::showEvent(QShowEvent* event) {
