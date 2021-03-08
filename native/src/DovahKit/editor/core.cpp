@@ -693,14 +693,13 @@ dovah::bsa_archived_file* DovahKitCore::lookup_loose_game_asset(const std::files
    loose_path /= "Data";
    loose_path /= path;
    //
-   std::error_code error;
-   auto size = std::filesystem::file_size(path, error);
-   if ((bool)error)
-      return nullptr;
-   //
    std::ifstream stream;
    stream.open(path, std::ios_base::in | std::ios_base::binary);
    if (!stream.is_open())
+      return nullptr;
+   std::error_code error;
+   auto size = std::filesystem::file_size(path, error);
+   if ((bool)error)
       return nullptr;
    //
    cobb::generic_buffer buffer;

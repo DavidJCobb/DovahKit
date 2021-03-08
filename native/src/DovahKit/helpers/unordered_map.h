@@ -18,7 +18,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <unordered_map>
 
 namespace cobb {
-   template<typename key_type, typename value_type> bool unordered_map_contains(const std::unordered_map<key_type, value_type>& map, const key_type& k) {
+   template<typename key_type, typename value_type, typename hash_type> bool unordered_map_contains(const std::unordered_map<key_type, value_type, hash_type>& map, const key_type& k) {
       //
       // Polyfill for C++20 (std::unordered_map::contains) intended for use in C++17. 
       // Better than wrapping (std::unordered_map::at) in a try/catch block, probably.
@@ -32,7 +32,7 @@ namespace cobb {
       }
       return false;
    }
-   template<typename key_type, typename value_type> const value_type& unordered_map_get_if_present(const std::unordered_map<key_type, value_type>& map, const key_type& k, value_type& fallback) {
+   template<typename key_type, typename value_type, typename hash_type> const value_type& unordered_map_get_if_present(const std::unordered_map<key_type, value_type, hash_type>& map, const key_type& k, value_type& fallback) {
       if (!map.bucket_count())
          return fallback;
       size_t bucket = map.bucket(k);
@@ -42,7 +42,7 @@ namespace cobb {
       }
       return fallback;
    }
-   template<typename key_type, typename value_type> value_type* unordered_map_get_if_present(const std::unordered_map<key_type, value_type*>& map, const key_type& k, value_type* fallback) {
+   template<typename key_type, typename value_type, typename hash_type> value_type* unordered_map_get_if_present(const std::unordered_map<key_type, value_type*, hash_type>& map, const key_type& k, value_type* fallback) {
       if (!map.bucket_count())
          return fallback;
       size_t bucket = map.bucket(k);
@@ -52,7 +52,7 @@ namespace cobb {
       }
       return fallback;
    }
-   template<typename key_type, typename value_type> value_type* unordered_map_get_if_present(const std::unordered_map<key_type, value_type*>& map, const key_type& k) {
+   template<typename key_type, typename value_type, typename hash_type> value_type* unordered_map_get_if_present(const std::unordered_map<key_type, value_type*, hash_type>& map, const key_type& k) {
       return unordered_map_get_if_present(map, k, (value_type*)nullptr);
    }
 }
