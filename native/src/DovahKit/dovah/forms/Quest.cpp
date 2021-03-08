@@ -1481,6 +1481,19 @@ namespace dovah::loaded_forms {
             break;
       if (it == end)
          return;
+      it->clear(*this);
       list.erase(it);
+   }
+   void Quest::remove_log_entry(int stage_id, int log_entry) noexcept {
+      if (log_entry < 0)
+         return;
+      auto* stage = this->lookup_stage_by_id(stage_id);
+      if (!stage)
+         return;
+      auto& list = stage->entries;
+      if (log_entry >= list.size())
+         return;
+      list[log_entry].clear(*this);
+      list.erase(list.begin() + log_entry);
    }
 }

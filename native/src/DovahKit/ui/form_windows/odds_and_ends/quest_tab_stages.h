@@ -41,6 +41,7 @@ class QuestTabStages : public QWidget {
       loaded_t::LogEntry* _get_log_entry(int stage, int entry) const noexcept;
 
       void _select_stage(int) noexcept;
+      void _select_log_entry(int) noexcept;
 
       int _selected_stage_index() const noexcept;
       int _selected_log_entry_index() const noexcept;

@@ -285,7 +285,7 @@ namespace dovah::loaded_forms {
                uint16_t index;
                flags_t  flags;
                uint8_t  padding;
-               std::vector<LogEntry> entries;
+               std::vector<LogEntry> entries; // do not remove elements from here without first calling LogEntry::clear, or you risk breaking the quest's use info
                //
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes INDX subrecord has already been opened
@@ -330,7 +330,7 @@ namespace dovah::loaded_forms {
                uint16_t index;
                flags_t  flags = 0;
                localized_string    text;
-               std::vector<Target> targets;
+               std::vector<Target> targets; // do not remove elements from here without first calling Target::clear, or you risk breaking the quest's use info
                //
             protected:
                void load(tes_record_reader&, load_order_interfaces::form_load&); // assumes QOBJ subrecord has already been opened
@@ -375,6 +375,8 @@ namespace dovah::loaded_forms {
          Stage* lookup_stage_by_id(uint16_t id) noexcept;
          Stage* insert_stage(int id) noexcept; // returns nullptr if a stage with that ID already exists or if the ID is out of bounds
          void   remove_stage(int id) noexcept;
+
+         void remove_log_entry(int stage_id, int entry_index) noexcept; // needed to fix up use info
 
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

@@ -113,9 +113,6 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       });
       #pragma endregion
    #pragma endregion
-   //
-   // TODO: editing stages
-   //
    
    #pragma region Stage flags
    QObject::connect(this->ui.stageFlagStartup, &QCheckBox::stateChanged, this, [this](int state) {
@@ -130,36 +127,105 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
    #pragma endregion
    
    #pragma region Log entry list
-   {
-      auto* widget = this->ui.logEntries;
-      auto* model  = new QStandardItemModelDKEx(widget);
-      model->setAutoTooltips(true); // QStandardItemModelDKEx
-      model->setColumnCount(2);
-      widget->setModel(model);
-      model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
-      widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-      widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-      //
-      auto* header = widget->horizontalHeader();
-      header->setDefaultAlignment(Qt::AlignLeft);
-      header->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
-      header->setSectionResizeMode(1, QHeaderView::ResizeMode::Fixed);
-      header->setSortIndicatorShown(false);
-      header->setStretchLastSection(true);
       {
-         auto* vh = widget->verticalHeader();
-         vh->setVisible(false);
-         vh->setDefaultSectionSize(vh->minimumSectionSize());
+         auto* widget = this->ui.logEntries;
+         auto* model  = new QStandardItemModelDKEx(widget);
+         model->setAutoTooltips(true); // QStandardItemModelDKEx
+         model->setColumnCount(2);
+         widget->setModel(model);
+         model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
+         widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+         widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         //
+         auto* header = widget->horizontalHeader();
+         header->setDefaultAlignment(Qt::AlignLeft);
+         header->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+         header->setSectionResizeMode(1, QHeaderView::ResizeMode::Fixed);
+         header->setSortIndicatorShown(false);
+         header->setStretchLastSection(true);
+         {
+            auto* vh = widget->verticalHeader();
+            vh->setVisible(false);
+            vh->setDefaultSectionSize(vh->minimumSectionSize());
+         }
+         //
+         QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
+            this->_redraw_entry_settings();
+         });
+         //
+         // Redraw log entries' conditions when they are edited:
+         //
+         QObject::connect(this->ui.logEntryConditions, &ConditionList::conditionEdited, this, &QuestTabStages::redrawEntryListSelectedItem);
       }
+      #pragma region Context menu
+      this->context_menu_actions.log_entry_list.insert   = new QAction(tr("New..."), this->ui.logEntries);
+      this->context_menu_actions.log_entry_list.remove   = new QAction(tr("Delete"), this->ui.logEntries);
+      this->context_menu_actions.log_entry_list.moveUp   = new QAction(tr("Move up"), this->ui.logEntries);
+      this->context_menu_actions.log_entry_list.moveDown = new QAction(tr("Move down"), this->ui.logEntries);
       //
-      QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
-         this->_redraw_entry_settings();
+      QObject::connect(this->context_menu_actions.log_entry_list.insert, &QAction::triggered, this, [this]() {
+         auto* stage = this->_get_stage();
+         if (!stage)
+            return;
+         auto  index = stage->entries.size();
+         stage->entries.emplace_back();
+         this->_redraw_entry_list();
+         this->_select_log_entry(index);
+      });
+      QObject::connect(this->context_menu_actions.log_entry_list.remove, &QAction::triggered, this, [this]() {
+         auto* stage = this->_get_stage();
+         if (!stage)
+            return;
+         int s = this->_selected_stage_index();
+         int e = this->_selected_log_entry_index();
+         this->form.remove_log_entry(s, e);
+         this->_redraw_entry_list();
+         //
+         if (e < stage->entries.size())
+            this->_select_log_entry(e + 1);
+         else if (e > 0)
+            this->_select_log_entry(e - 1);
+      });
+      QObject::connect(this->context_menu_actions.log_entry_list.moveUp, &QAction::triggered, this, [this]() {
+         auto* stage = this->_get_stage();
+         if (!stage)
+            return;
+         //
+         // TODO
+         //
+      });
+      QObject::connect(this->context_menu_actions.log_entry_list.moveDown, &QAction::triggered, this, [this]() {
+         auto* stage = this->_get_stage();
+         if (!stage)
+            return;
+         //
+         // TODO
+         //
       });
       //
-      // Redraw log entries' conditions when they are edited:
-      //
-      QObject::connect(this->ui.logEntryConditions, &ConditionList::conditionEdited, this, &QuestTabStages::redrawEntryListSelectedItem);
-   }
+      this->ui.logEntries->setContextMenuPolicy(Qt::CustomContextMenu);
+      QObject::connect(this->ui.logEntries, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+         auto* opener = this->ui.logEntries;
+         auto* sm     = opener->selectionModel();
+         if (!sm)
+            return;
+         auto rows = sm->selectedRows();
+         //
+         this->context_menu_actions.log_entry_list.moveUp->setVisible(!rows.isEmpty());
+         this->context_menu_actions.log_entry_list.moveDown->setVisible(!rows.isEmpty());
+         this->context_menu_actions.log_entry_list.remove->setVisible(!rows.isEmpty());
+         //
+         QMenu menu(opener);
+         menu.addAction(this->context_menu_actions.log_entry_list.insert);
+         menu.addAction(this->context_menu_actions.log_entry_list.moveUp);
+         menu.addAction(this->context_menu_actions.log_entry_list.moveDown);
+         menu.addAction(this->context_menu_actions.log_entry_list.remove);
+         //
+         if (menu.isEmpty())
+            return; // don't show a menu if all of its contents are disabled or hidden
+         menu.exec(opener->mapToGlobal(pos));
+      });
+      #pragma endregion
    #pragma endregion
    //
    // TODO: editing log entries
@@ -191,6 +257,9 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
    #pragma endregion
 
    this->_redraw_stage_list();
+   this->_redraw_stage_settings();
+   this->_redraw_entry_list();
+   this->_redraw_entry_settings();
 
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &QuestTabStages::deactivate);
@@ -291,6 +360,12 @@ void QuestTabStages::_select_stage(int id) noexcept {
       return;
    }
    widget->setCurrentIndex(indices[0]);
+}
+void QuestTabStages::_select_log_entry(int index) noexcept {
+   auto* widget = this->ui.logEntries;
+   auto* model  = (QStandardItemModelDKEx*)widget->model();
+   auto  qmi    = model->index(index, 0, QModelIndex());
+   widget->setCurrentIndex(qmi);
 }
 
 int QuestTabStages::_selected_stage_index() const noexcept {
