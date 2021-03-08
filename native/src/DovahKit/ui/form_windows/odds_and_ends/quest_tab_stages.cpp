@@ -153,7 +153,7 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
             this->_redraw_entry_settings();
          });
          //
-         // Redraw log entries' conditions when they are edited:
+         // Redraw log entries in the table if the fields we list in the table are edited:
          //
          QObject::connect(this->ui.logEntryConditions, &ConditionList::conditionEdited, this, &QuestTabStages::redrawEntryListSelectedItem);
       }
@@ -182,7 +182,7 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
          this->_redraw_entry_list();
          //
          if (e < stage->entries.size())
-            this->_select_log_entry(e + 1);
+            this->_select_log_entry(e);
          else if (e > 0)
             this->_select_log_entry(e - 1);
       });
@@ -190,17 +190,25 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
          auto* stage = this->_get_stage();
          if (!stage)
             return;
-         //
-         // TODO
-         //
+         auto& list = stage->entries;
+         int   e    = this->_selected_log_entry_index();
+         if (e <= 0)
+            return;
+         std::swap(list[e], list[e - 1]);
+         this->_redraw_entry_list();
+         this->_select_log_entry(e - 1);
       });
       QObject::connect(this->context_menu_actions.log_entry_list.moveDown, &QAction::triggered, this, [this]() {
          auto* stage = this->_get_stage();
          if (!stage)
             return;
-         //
-         // TODO
-         //
+         auto& list = stage->entries;
+         int   e    = this->_selected_log_entry_index();
+         if (e >= list.size() - 1)
+            return;
+         std::swap(list[e], list[e + 1]);
+         this->_redraw_entry_list();
+         this->_select_log_entry(e + 1);
       });
       //
       this->ui.logEntries->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -210,10 +218,17 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
          if (!sm)
             return;
          auto rows = sm->selectedRows();
+         bool any  = !rows.isEmpty();
          //
-         this->context_menu_actions.log_entry_list.moveUp->setVisible(!rows.isEmpty());
-         this->context_menu_actions.log_entry_list.moveDown->setVisible(!rows.isEmpty());
-         this->context_menu_actions.log_entry_list.remove->setVisible(!rows.isEmpty());
+         this->context_menu_actions.log_entry_list.moveUp->setVisible(any);
+         this->context_menu_actions.log_entry_list.moveDown->setVisible(any);
+         this->context_menu_actions.log_entry_list.remove->setVisible(any);
+         if (any) {
+            int   row   = rows[0].row();
+            auto* stage = this->_get_stage();
+            this->context_menu_actions.log_entry_list.moveUp->setEnabled(row > 0);
+            this->context_menu_actions.log_entry_list.moveDown->setEnabled(stage && row + 1 < stage->entries.size());
+         }
          //
          QMenu menu(opener);
          menu.addAction(this->context_menu_actions.log_entry_list.insert);
@@ -227,9 +242,6 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       });
       #pragma endregion
    #pragma endregion
-   //
-   // TODO: editing log entries
-   //
 
    #pragma region Log entries
       #pragma region Entry settings
@@ -237,8 +249,10 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       this->ui.logEntryNextQuest->populate();
       //
       QObject::connect(this->ui.logEntryText, &QPlainTextEdit::textChanged, this, [this]() {
-         if (auto* entry = this->_get_log_entry())
+         if (auto* entry = this->_get_log_entry()) {
             entry->journal_text = this->ui.logEntryText->toPlainText().toStdString();
+            this->redrawEntryListSelectedItemText();
+         }
       });
       QObject::connect(this->ui.logEntryFlagComplete, &QCheckBox::stateChanged, this, [this](int state) {
          if (auto* entry = this->_get_log_entry())
@@ -312,6 +326,30 @@ void QuestTabStages::redrawEntryListSelectedItem() {
    auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
    col0->setText(entry->journal_text.c_str());
    col1->setText(editor_helpers::stringify_condition_list(entry->conditions, ctx));
+}
+void QuestTabStages::redrawEntryListSelectedItemText() {
+   loaded_t::LogEntry* entry = nullptr;
+   //
+   auto* widget = this->ui.logEntries;
+   auto  index  = widget->currentIndex();
+   if (!index.isValid())
+      return;
+   auto row = index.row();
+   //
+   if (auto* s = this->_get_stage()) {
+      auto& list = s->entries;
+      if (row < 0 || row >= list.size())
+         return;
+      entry = &list[row];
+   }
+   if (!entry)
+      return;
+   //
+   auto* model = (QStandardItemModelDKEx*)widget->model();
+   auto* col0  = model->item(row, 0);
+   if (!col0)
+      return;
+   col0->setText(entry->journal_text.c_str());
 }
 
 QuestTabStages::loaded_t::Stage* QuestTabStages::_get_stage() const noexcept {

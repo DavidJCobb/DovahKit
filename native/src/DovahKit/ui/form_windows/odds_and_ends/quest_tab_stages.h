@@ -16,6 +16,7 @@ class QuestTabStages : public QWidget {
    private slots:
       void deactivate();
       void redrawEntryListSelectedItem();
+      void redrawEntryListSelectedItemText();
       //
    private:
       Ui::QuestTabStages ui;
