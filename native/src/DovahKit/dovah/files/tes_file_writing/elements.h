@@ -164,7 +164,7 @@ namespace dovah {
                }
                this->reserve_more(length_bytes + v.size());
                this->write(length);
-               this->write(v);
+               this->write(v.c_str(), v.size());
             }
             //
             void skip_bytes(uint32_t bytes);

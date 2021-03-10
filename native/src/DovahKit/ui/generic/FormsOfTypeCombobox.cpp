@@ -30,6 +30,10 @@ namespace {
 FormsOfTypeCombobox::FormsOfTypeCombobox(QWidget* parent) : QComboBox(parent) {
    this->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon); // needed for performance with large data sets
    //
+   QObject::connect(this, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+      emit this->formChanged(this->formStub());
+   });
+   //
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
       const auto blocker = QSignalBlocker(this);

@@ -43,5 +43,6 @@ class FormsOfTypeCombobox : public QComboBox {
       dovah::bare_form_id_t _defaultFormID = 0;
       //
    signals:
+      void formChanged(dovah::form_stub*);
       void populated();
 };

@@ -168,7 +168,7 @@ namespace dovah::tes_file_writing {
       this->write(uint8_t(l));
       while (--bytes)
          this->write(uint8_t(0));
-      this->write(out);
+      this->write(out.c_str(), l);
    }
    //
    record& subrecord::get_containing_record() const {
