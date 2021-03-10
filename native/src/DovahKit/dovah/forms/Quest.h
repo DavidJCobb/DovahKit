@@ -243,8 +243,8 @@ namespace dovah::loaded_forms {
                   uint16_t    unknown02 = 0x0000;
                   uint32_t    entry_index; // not meaningful outside of load
                   uint8_t     unknown08 = 0x01;
-                  std::string filename;
-                  std::string function;
+                  std::string filename; // read as a length-prefixed string, capped to 65535 chars
+                  std::string function; // read as a length-prefixed string, capped to 65535 chars
                   //
                   void load(tes_subrecord_reader&); // read from VMAD
                   bool save(tes_subrecord_writer&, uint16_t stage_id, uint32_t entry_index); // write to VMAD
@@ -349,10 +349,10 @@ namespace dovah::loaded_forms {
          //
          // DNAM:
          //
-         quest_flags_t flags = 0;
-         uint8_t       priority;
-         uint32_t      unknown; // DNAM, offset 0x04
-         quest_type_t  quest_type;
+         quest_flags_t flags      = 0;
+         uint8_t       priority   = 50;
+         float         unknown    = 1.0F; // DNAM, offset 0x04 // suspected to be leftover script interval from ObScript
+         quest_type_t  quest_type = quest_type::none;
          //
          std::string editor_category; // FLTR // "abc/def/ghi" to nest within the CK Object Window tree
          struct {

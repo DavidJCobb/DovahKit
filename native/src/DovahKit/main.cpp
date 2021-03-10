@@ -847,6 +847,24 @@
 //    don't emulate that behavior here even though we emulate it (with warnings) in 
 //    other places. We should emulate that behavior here.
 //
+//  - Papyrus fragment editor
+//
+//     - Consider using a QValidator or something similar to vary the field's look 
+//       based on whether the script exists but isn't attached to the containing 
+//       form, or whether the script doesn't exist. For example, we might show an 
+//       icon next to the scriptname.
+//
+//        - Perhaps, for unattached scripts, clicking the icon could attach the 
+//          script to the form -- after a confirmation prompt, of course.
+//
+//  - The (write_length_prefixed_string) function for saving has no way to handle 
+//    the error of a string being too long. Should the form save functions handle 
+//    that, so as to be able to report the error more intelligently?
+//
+//     - The backend should generate a save error identifying the current form, 
+//       subrecord, and if possible, offset into the subrecord. Currently, we'd 
+//       just produce corrupt data.
+//
 //  - QUST/VMAD alias-script transplant handling
 //
 //     = Quests can specify script data to attach to aliases. The thing is, each 

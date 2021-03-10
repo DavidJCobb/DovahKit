@@ -23,6 +23,11 @@ class PapyrusFragmentEditor : public QWidget {
       void setCurrentFunction(const QString&);
       void setCurrentFunction(const char*);
       //
+      int scriptnameMaxLength() const noexcept;
+      void setScriptnameMaxLength(int) noexcept;
+      int functionMaxLength() const noexcept;
+      void setFunctionMaxLength(int) noexcept;
+      //
       void addScriptname(const QString&);
       void clearAvailableScriptnames();
       void clearCurrentValues();

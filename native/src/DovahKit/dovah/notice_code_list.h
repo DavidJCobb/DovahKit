@@ -102,6 +102,7 @@ namespace dovah {
          attack_data_expected_event_subrecord        = 0x0000005D, // An ATKR subrecord was not followed by an ATKE subrecord; it will "eat" the next subrecord and assume it's ATKE.
          the_game_doesnt_load_new_actor_value_infos  = 0x0000005E, // Skyrim doesn't load new AVIF records. AVIF records that don't override a hardcoded AVIF form will be ignored.
          non_texture_note_includes_texture_path      = 0x0000005F, // A NOTE form included an XNAM subrecord but is not a texture note.
+         length_prefixed_string_was_too_long_to_save = 0x00000060,
       };
    };
 }

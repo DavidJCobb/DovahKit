@@ -248,6 +248,12 @@ void FormsOfTypeCombobox::setFormByID(dovah::bare_form_id_t formID) noexcept {
    if (i >= 0)
       this->setCurrentIndex(i);
 }
+void FormsOfTypeCombobox::setFormStub(dovah::form_stub* stub) noexcept {
+   dovah::bare_form_id_t id = 0;
+   if (stub)
+      id = stub->formID;
+   this->setFormByID(id);
+}
 void FormsOfTypeCombobox::setDefaultFormID(dovah::bare_form_id_t formID) noexcept {
    this->_defaultFormID = formID;
 }

@@ -1,6 +1,7 @@
 #include "PapyrusFragmentEditor.h"
 #include "../../editor/papyrus_dictionary.h"
 #include "../../dovah/files/papyrus/compiled_script.h"
+#include <QLineEdit>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 
@@ -92,6 +93,25 @@ void PapyrusFragmentEditor::setCurrentFunction(const QString& value) {
 }
 void PapyrusFragmentEditor::setCurrentFunction(const char* value) {
    this->ui.function->setCurrentText(value);
+}
+
+int PapyrusFragmentEditor::scriptnameMaxLength() const noexcept {
+   if (auto* line = this->ui.scriptname->lineEdit())
+      return line->maxLength();
+   return -1;
+}
+void PapyrusFragmentEditor::setScriptnameMaxLength(int s) noexcept {
+   if (auto* line = this->ui.scriptname->lineEdit())
+      line->setMaxLength(s);
+}
+int PapyrusFragmentEditor::functionMaxLength() const noexcept {
+   if (auto* line = this->ui.function->lineEdit())
+      return line->maxLength();
+   return -1;
+}
+void PapyrusFragmentEditor::setFunctionMaxLength(int s) noexcept {
+   if (auto* line = this->ui.function->lineEdit())
+      line->setMaxLength(s);
 }
 
 void PapyrusFragmentEditor::addScriptname(const QString& scriptname) {

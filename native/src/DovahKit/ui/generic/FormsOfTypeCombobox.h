@@ -31,6 +31,7 @@ class FormsOfTypeCombobox : public QComboBox {
       void setToUndefined() noexcept; // fails if undefined is not allowed
       //
       void setFormByID(dovah::bare_form_id_t) noexcept; // set value
+      void setFormStub(dovah::form_stub*) noexcept;
       void setDefaultFormID(dovah::bare_form_id_t) noexcept; // used if you call setFormByID(0) and allow-none is false
       //
    protected:

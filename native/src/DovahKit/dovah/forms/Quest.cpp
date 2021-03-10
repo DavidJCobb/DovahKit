@@ -1371,7 +1371,7 @@ namespace dovah::loaded_forms {
       DNAM.write(this->priority);
       DNAM.skip_bytes(1);
       DNAM.write(this->unknown);
-      DNAM.write(this->quest_type);
+      DNAM.write((uint32_t)this->quest_type);
       DNAM.close();
       //
       if (this->event) {

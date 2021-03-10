@@ -107,6 +107,9 @@ namespace dovah {
             void _write_impl(const struct_form_reference_t&);
             void _write_impl(const localized_string&);
             //
+            void _report_length_prefixed_string_too_long_to_save(size_t len, size_t max);
+            void _write_placeholder_for_length_prefixed_string_too_long_to_save(size_t len, size_t bytes);
+            //
          public:
             subrecord& operator=(const subrecord& other) = delete; // no copy
             subrecord(subrecord& other) = delete; // no copy
@@ -148,8 +151,18 @@ namespace dovah {
             //
             template<int length_bytes> void write_length_prefixed_string(const std::string& v) {
                using int_t = cobb::bytecount_to_int_t<length_bytes>;
+               auto  size  = v.size();
+               if (size > std::numeric_limits<int_t>::max()) {
+                  this->_report_length_prefixed_string_too_long_to_save(size, std::numeric_limits<int_t>::max());
+                  this->_write_placeholder_for_length_prefixed_string_too_long_to_save(size, length_bytes);
+                  return;
+               }
                int_t length = v.size();
-               this->reserve_more(length_bytes + v.size() + 1);
+               if (!length) {
+                  this->write(length);
+                  return;
+               }
+               this->reserve_more(length_bytes + v.size());
                this->write(length);
                this->write(v);
             }

@@ -2,6 +2,7 @@
 #include "file_writer.h"
 #include "../../localized_strings.h"
 #include "../file_load_order.h"
+#include "../../notice_code_list.h"
 
 namespace dovah::tes_file_writing {
    void record::_write_impl(const void* source, uint32_t size) {
@@ -143,6 +144,31 @@ namespace dovah::tes_file_writing {
          return;
       }
       this->write(field.value);
+   }
+   void subrecord::_report_length_prefixed_string_too_long_to_save(size_t len, size_t max) {
+      auto& error = this->owner.error;
+      if (error.is_defined())
+         return;
+      error.code = notice_code::length_prefixed_string_was_too_long_to_save;
+      error.set_cause_subrecord(this->signature());
+      error.extra_integers[0] = len;
+      error.extra_integers[1] = max;
+   }
+   void subrecord::_write_placeholder_for_length_prefixed_string_too_long_to_save(size_t len, size_t bytes) {
+      assert(bytes >= 1);
+      std::string out = "STRING TOO LONG (";
+      out += std::to_string(len);
+      out += ')';
+      auto l = out.size();
+      if (l >= 256) {
+         out = "BAD STRING";
+         l = out.size();
+         assert(l < 256);
+      }
+      this->write(uint8_t(l));
+      while (--bytes)
+         this->write(uint8_t(0));
+      this->write(out);
    }
    //
    record& subrecord::get_containing_record() const {

@@ -924,6 +924,22 @@ namespace editor_helpers {
                text = text.arg(form);
             }
             break;
+         case notice_code::length_prefixed_string_was_too_long_to_save:
+            {
+               text = QObject::tr("Form %1 subrecord %2 contained a subrecord that was too long to save (%3 bytes out of %4 allowed).", "notice_code::length_prefixed_string_was_too_long_to_save");
+               //
+               QString form      = QObject::tr("<unknown form>",      "log window");
+               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
+                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
+               }
+               //
+               text = text.arg(form).arg(subrecord).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:
