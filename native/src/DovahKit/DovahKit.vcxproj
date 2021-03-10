@@ -225,7 +225,7 @@
     <ClCompile Include="editor\helpers\stringify_condition_argument.cpp" />
     <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp" />
     <ClCompile Include="editor\open_window_for_form.cpp" />
-    <ClCompile Include="editor\papyrus.cpp" />
+    <ClCompile Include="editor\papyrus_dictionary.cpp" />
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\api\form_type_values.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
@@ -302,6 +302,7 @@
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
+    <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
     <ClCompile Include="ui\generic\RefPickerButton.cpp" />
@@ -505,7 +506,7 @@
     <ClInclude Include="editor\helpers\stringify_condition_argument.h" />
     <ClInclude Include="editor\helpers\warning_or_error_to_string.h" />
     <QtMoc Include="editor\scripting\editor_script_core.h" />
-    <ClInclude Include="editor\papyrus.h" />
+    <QtMoc Include="editor\papyrus_dictionary.h" />
     <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
     <ClInclude Include="editor\scripting\api\form_type_values.h" />
     <ClInclude Include="editor\scripting\classes.h" />
@@ -580,6 +581,7 @@
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
+    <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />

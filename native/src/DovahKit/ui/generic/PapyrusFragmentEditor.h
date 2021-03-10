@@ -15,6 +15,7 @@ class PapyrusFragmentEditor : public QWidget {
    //
    public:
       PapyrusFragmentEditor(QWidget* parent = nullptr);
+      //
       QString currentScriptname() const noexcept;
       QString currentFunction() const noexcept;
       void setCurrentScriptname(const QString&);
@@ -25,6 +26,7 @@ class PapyrusFragmentEditor : public QWidget {
       void addScriptname(const QString&);
       void clearAvailableScriptnames();
       void clearCurrentValues();
+      void removeScriptname(const QString&);
       //
    signals:
       void currentScriptnameChanged(const QString&);

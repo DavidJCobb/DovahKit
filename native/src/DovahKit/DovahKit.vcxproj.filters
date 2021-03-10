@@ -717,10 +717,13 @@
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\papyrus.cpp">
+    <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp">
+    <ClCompile Include="editor\papyrus_dictionary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1487,9 +1490,6 @@
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\papyrus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1729,6 +1729,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\papyrus_dictionary.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

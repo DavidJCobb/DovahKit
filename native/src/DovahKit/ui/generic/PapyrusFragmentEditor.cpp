@@ -1,21 +1,30 @@
 #include "PapyrusFragmentEditor.h"
-#include "../../editor/papyrus.h"
+#include "../../editor/papyrus_dictionary.h"
 #include "../../dovah/files/papyrus/compiled_script.h"
+#include <QSortFilterProxyModel>
+#include <QStandardItemModel>
+
+namespace {
+   inline void _append_combobox_item(QComboBox* widget, QStandardItem* item) {
+      auto* proxy = (QSortFilterProxyModel*) widget->model();
+      auto* model = (QStandardItemModel*) proxy->sourceModel();
+      model->appendRow(item);
+   }
+   inline void _append_combobox_item(QComboBox* widget, const QString& text, const QVariant& userdata = QVariant()) {
+      auto* proxy = (QSortFilterProxyModel*) widget->model();
+      auto* model = (QStandardItemModel*) proxy->sourceModel();
+      auto* item  = new QStandardItem(text);
+      item->setData(userdata, Qt::UserRole);
+      model->appendRow(item);
+   }
+}
 
 PapyrusFragmentEditor::PapyrusFragmentEditor(QWidget* parent) : QWidget(parent) {
    this->ui.setupUi(this);
    //
    QObject::connect(this->ui.scriptname, &QComboBox::currentTextChanged, this, [this](const QString& name) {
       auto* widget = this->ui.function;
-      auto  count  = widget->count();
-      for (int i = 0; i < count; ++i) {
-         auto data = widget->itemData(i, Qt::UserRole);
-         if (data.type() == QMetaType::Bool && data.toBool()) {
-            widget->removeItem(i);
-            --i;
-            --count;
-         }
-      }
+      widget->clear();
       //
       auto* entry = this->_getOrCreateScriptData(name);
       if (entry) {
@@ -34,7 +43,8 @@ PapyrusFragmentEditor::PapyrusFragmentEditor(QWidget* parent) : QWidget(parent) 
                      continue;
                   if (function.name == "GetState") // apparently this isn't hardcoded, then?
                      continue;
-                  widget->addItem(function.name.c_str(), true);
+                  // QComboBox::addItem seems to break when using a QSortFilterProxyModel, so we have to do it ourselves...
+                  _append_combobox_item(widget, function.name.c_str(), true);
                }
             }
          }
@@ -44,6 +54,25 @@ PapyrusFragmentEditor::PapyrusFragmentEditor(QWidget* parent) : QWidget(parent) 
    QObject::connect(this->ui.function, &QComboBox::currentTextChanged, this, [this](const QString& name) {
       emit currentFunctionChanged(name);
    });
+   //
+   #pragma region sorting
+   {
+      auto* widget = this->ui.scriptname;
+      auto* model  = new QStandardItemModel(widget); // can't reuse the original model; QComboBox kills it when you call setModel
+      auto* proxy  = new QSortFilterProxyModel(widget);
+      proxy->setSourceModel(model);
+      widget->setModel(proxy);
+      proxy->sort(0);
+   }
+   {
+      auto* widget = this->ui.function;
+      auto* model  = new QStandardItemModel(widget); // can't reuse the original model; QComboBox kills it when you call setModel
+      auto* proxy  = new QSortFilterProxyModel(widget);
+      proxy->setSourceModel(model);
+      widget->setModel(proxy);
+      proxy->sort(0);
+   }
+   #pragma endregion
 }
 
 QString PapyrusFragmentEditor::currentScriptname() const noexcept {
@@ -67,21 +96,7 @@ void PapyrusFragmentEditor::setCurrentFunction(const char* value) {
 
 void PapyrusFragmentEditor::addScriptname(const QString& scriptname) {
    if (this->_getScriptData(scriptname)) {
-      //
-      // The item could still have been typed in by the user; flag it as predefined.
-      //
-      auto* widget = this->ui.function;
-      auto  count  = widget->count();
-      for (int i = 0; i < count; ++i) {
-         auto data = widget->itemData(i, Qt::UserRole);
-         if (data.type() == QMetaType::Bool && !data.toBool()) {
-            data = widget->itemData(i, Qt::DisplayRole);
-            if (scriptname.compare(data.toString(), Qt::CaseInsensitive) == 0) {
-               widget->setItemData(i, true, Qt::UserRole);
-               break;
-            }
-         }
-      }
+      _append_combobox_item(this->ui.scriptname, scriptname, true);
       return;
    }
    auto* data = DovahKitPapyrusDictionary::get().get_script_for(this, scriptname);
@@ -91,24 +106,30 @@ void PapyrusFragmentEditor::addScriptname(const QString& scriptname) {
       entry.compiled = data;
       this->scripts.append(entry);
    }
-   this->ui.scriptname->addItem(scriptname, true);
+   // QComboBox::addItem seems to break when using a QSortFilterProxyModel, so we have to do it ourselves...
+   _append_combobox_item(this->ui.scriptname, scriptname, true);
 }
 void PapyrusFragmentEditor::clearAvailableScriptnames() {
-   auto* widget = this->ui.scriptname;
-   int   count  = widget->count();
-   for (int i = 0; i < count; ++i) {
-      auto data = widget->itemData(i, Qt::UserRole);
-      if (data.type() == QMetaType::Bool && data.toBool()) {
-         widget->removeItem(i);
-         --i;
-         --count;
-      }
-   }
+   this->ui.scriptname->clear();
+   //
+   auto& dictionary = DovahKitPapyrusDictionary::get();
+   for (auto& script : this->scripts)
+      dictionary.relinquish_script_from(this, script.name);
    this->scripts.clear();
 }
 void PapyrusFragmentEditor::clearCurrentValues() {
    this->ui.scriptname->clearEditText();
    this->ui.function->clearEditText();
+}
+void PapyrusFragmentEditor::removeScriptname(const QString& name) {
+   auto& list = this->scripts;
+   for (auto it = list.begin(); it != list.end(); ++it) {
+      if (it->name == name) {
+         list.erase(it);
+         DovahKitPapyrusDictionary::get().relinquish_script_from(this, name);
+         return;
+      }
+   }
 }
 
 PapyrusFragmentEditor::script* PapyrusFragmentEditor::_getScriptData(const QString& name) {

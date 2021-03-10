@@ -9,7 +9,14 @@ namespace dovah {
    class compiled_papyrus_script;
 }
 
-class DovahKitPapyrusDictionary {
+class DovahKitPapyrusDictionary : protected QObject {
+   Q_OBJECT;
+   //
+   // This singleton manages the loading and unloading of compiled script content for use by the 
+   // UI. This means that multiple widgets that refer to the same script can share the in-memory 
+   // data for that script, with the data being appropriately discarded once both widgets are 
+   // destroyed.
+   //
    public:
       static DovahKitPapyrusDictionary& get() {
          static DovahKitPapyrusDictionary instance;
@@ -29,6 +36,7 @@ class DovahKitPapyrusDictionary {
 
       std::unordered_map<std::filesystem::path, known_file, _std_hash_filesystem_path> known_files;
 
+      static std::filesystem::path _path_from_scriptname(const QString& name) noexcept;
       void _register_destroy_handler(QWidget*, const std::filesystem::path&);
 
    public:
@@ -41,4 +49,7 @@ class DovahKitPapyrusDictionary {
       script_t* get_script_for(QWidget*, const std::filesystem::path&);
 
       script_t* get_script_for(QWidget*, const QString& name);
+
+      void relinquish_script_from(QWidget*, const std::filesystem::path&);
+      void relinquish_script_from(QWidget*, const QString& name);
 };

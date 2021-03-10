@@ -135,6 +135,9 @@
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
+        <property name="spacing">
+         <number>9</number>
+        </property>
         <item>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="3" column="0">
