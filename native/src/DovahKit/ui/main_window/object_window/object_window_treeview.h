@@ -21,6 +21,7 @@ class ObjectWindowTreeItem {
       };
 
       ObjectWindowTreeItem() {}
+      ~ObjectWindowTreeItem();
 
       static ObjectWindowTreeItem& make_top_level(const QString&);
       static ObjectWindowTreeItem& make_form_type(const QString&, int);
@@ -42,6 +43,7 @@ class ObjectWindowTreeItem {
          return this->children[i];
       }
       [[nodiscard]] inline int indexOf(ObjectWindowTreeItem* child) const noexcept { return this->children.indexOf(child); }
+      [[nodiscard]] int indexOf(const QString& name) const noexcept;
 
       void gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept;
 };
@@ -51,9 +53,12 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
    public:
       using item_type = ObjectWindowTreeItem;
    protected:
-      item_type* root   = nullptr;
-      item_type* all    = nullptr;
-      item_type* quests = nullptr;
+      struct {
+         item_type* root   = nullptr;
+         item_type* all    = nullptr;
+         item_type* quests = nullptr;
+      } _nodes;
+      QHash<dovah::bare_form_id_t, QString> _pending_filter_changes;
       //
       static item_type* _itemFromIndex(const QModelIndex&) noexcept;
       QModelIndex _indexOfItem(item_type*) const noexcept;
@@ -82,7 +87,7 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       void buildAllQuestFilters();
       void clearAllQuestFilters();
       void prepForQuestFilterChange(const QString& filter); // takes the filter the quest used to have
-      void finishQuestFilterChange(const QString& filter); // takes the filter the quest currently has, which may be the same one it used to have
+      void finishQuestFilterChange(dovah::bare_form_id_t formID, const QString& filter); // takes the filter the quest currently has, which may be the same one it used to have
 };
 
 class ObjectWindowTree : public QLinedTreeView {
