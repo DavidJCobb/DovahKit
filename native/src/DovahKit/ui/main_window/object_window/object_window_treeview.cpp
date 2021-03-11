@@ -4,9 +4,7 @@
 
 #pragma region ObjectWindowTreeItem
 ObjectWindowTreeItem::~ObjectWindowTreeItem() {
-   for(auto* item : this->children)
-      delete item;
-   this->children.clear();
+   this->clear();
 }
 
 /*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_top_level(const QString& name) {
@@ -47,6 +45,11 @@ void ObjectWindowTreeItem::takeChild(ObjectWindowTreeItem& child) {
    return -1;
 }
 
+void ObjectWindowTreeItem::clear() {
+   for (auto* child : this->children)
+      delete child;
+   this->children.clear();
+}
 void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept {
    if (this->form_type != no_form_type_filter) {
       if (!out.contains(this->form_type))
@@ -54,8 +57,18 @@ void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) con
       return;
    }
    for (auto* child : this->children)
-      if (child)
-         child->gatherFormTypes(out);
+      child->gatherFormTypes(out);
+}
+void ObjectWindowTreeItem::recursiveSort() {
+   this->sort();
+   for (auto* item : this->children)
+      item->recursiveSort();
+}
+void ObjectWindowTreeItem::sort() {
+   auto& list = this->children;
+   qSort(list.begin(), list.end(), [](const ObjectWindowTreeItem* a, const ObjectWindowTreeItem* b) {
+      return a->name.compare(b->name, Qt::CaseInsensitive) < 0;
+   });
 }
 #pragma endregion
 
@@ -214,6 +227,14 @@ void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) con
          this->finishQuestFilterChange(form->formID, filter);
       });
    }
+   ObjectWindowTreeModel::~ObjectWindowTreeModel() {
+      this->_nodes.all    = nullptr;
+      this->_nodes.quests = nullptr;
+      delete this->_nodes.root;
+      this->_nodes.root   = nullptr;
+      //
+      this->_pending_filter_changes.clear();
+   }
 
    ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_itemFromIndex(const QModelIndex& index) noexcept {
       if (!index.isValid())
@@ -249,6 +270,45 @@ void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) con
       }
       list.erase(list.begin() + row, list.begin() + max);
       this->endRemoveRows();
+   }
+   void ObjectWindowTreeModel::_sortChildrenOf(item_type* item) {
+      if (!item->children.size())
+         return;
+      //
+      auto& list = item->children;
+      auto  size = list.size();
+      decltype(item->children) sorted;
+      sorted.reserve(size);
+      for (auto* child : list)
+         sorted.push_back(child);
+      qSort(sorted.begin(), sorted.end(), [](const item_type* a, const item_type* b) {
+         return a->name.compare(b->name, Qt::CaseInsensitive) < 0;
+      });
+      //
+      auto persistent = this->persistentIndexList();
+      if (!persistent.isEmpty()) {
+         QModelIndexList change_from;
+         QModelIndexList change_to;
+         for (int i = 0; i < size; ++i) {
+            auto* item = list[i];
+            auto  from = this->createIndex(i, 0, item);
+            if (persistent.contains(from)) {
+               auto to_i = sorted.indexOf(item);
+               auto to   = this->createIndex(to_i, 0, item);
+               change_from.push_back(from);
+               change_to.push_back(to);
+            }
+         }
+         if (!change_from.isEmpty()) {
+            this->changePersistentIndexList(change_from, change_to);
+         }
+      }
+      std::swap(list, sorted);
+   }
+   void ObjectWindowTreeModel::_sortDescendantsOf(item_type* item) {
+      this->_sortChildrenOf(item);
+      for (auto* child : item->children)
+         this->_sortDescendantsOf(child);
    }
 
    #pragma region QAbstractItemModel overrides
@@ -306,48 +366,105 @@ void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) con
       }
    #pragma endregion
 
+   QModelIndex ObjectWindowTreeModel::indexOfAllCategory() const noexcept {
+      return this->_indexOfItem(this->_nodes.all);
+   }
+   QVector<dovah::form_type_t> ObjectWindowTreeModel::formTypesFor(const QModelIndexList& qmil) const noexcept {
+      QVector<dovah::form_type_t> out;
+      for (auto& qmi : qmil) {
+         auto* item = this->_itemFromIndex(qmi);
+         if (item) {
+            item->gatherFormTypes(out);
+         }
+      }
+      return out;
+   }
+   ObjectWindowTreeModel::filter_info ObjectWindowTreeModel::getFilterInfoFor(const QModelIndexList& qmil) const noexcept {
+      filter_info out;
+      if (qmil.contains(this->_indexOfItem(this->_nodes.all))) {
+         //
+         // The "All" item is selected.
+         //
+         for (auto* child : this->_nodes.root->children)
+            if (child->form_type != dovah::form_type::none)
+               child->gatherFormTypes(out.form_types);
+         return out;
+      }
+      for (const auto& qmi : qmil) {
+         auto* item = this->_itemFromIndex(qmi);
+         if (!item)
+            continue;
+         item->gatherFormTypes(out.form_types);
+         //
+         // Filters:
+         //
+         if (item->type != item_type::item_type::filter)
+            continue;
+         const auto& full = item->full_filter;
+         if (full.isEmpty())
+            continue;
+         bool found = false;
+         for (auto& existing : out.filters) {
+            if (existing.startsWith(full, Qt::CaseInsensitive)) {
+               existing = full;
+               found    = true;
+               break;
+            }
+         }
+         if (!found)
+            out.filters.push_back(full);
+      }
+      return out;
+   }
+
    void ObjectWindowTreeModel::buildAllQuestFilters() {
-      this->clearAllQuestFilters();
-      auto qmi = this->_indexOfQuests();
-      if (!qmi.isValid())
-         return;
+      assert(this->_nodes.quests);
       //
-      struct _working {
-         QString text;
-         int     refcount = 0;
-      };
-      QHash<QString, _working> hash;
-      DovahKitCore::get().for_each_form_of_type(dovah::form_type::quest, [&hash](dovah::form_stub* stub) {
-
-         //
-         // TODO: this is also wrong; it doesn't split "Foo/Bar" into "Foo" with child "Bar" etc.
-         //
-
+      this->beginResetModel();
+      //
+      this->_nodes.quests->clear();
+      //
+      DovahKitCore::get().for_each_form_of_type(dovah::form_type::quest, [this](dovah::form_stub* stub) {
          if (!stub->addenda)
             return false; // continue
          auto filter = QString::fromStdString(stub->addenda->filter);
-         if (!filter.isEmpty()) {
-            auto& entry = hash[filter.toLower()];
-            if (entry.text.isEmpty())
-               entry.text = filter;
-            ++entry.refcount;
+         if (filter.isEmpty())
+            return false; // continue
+         //
+         // Increment refcounts and create nodes as appropriate:
+         //
+         QString fragment;
+         auto*   node = this->_nodes.quests;
+         for (int i = 0; i < filter.size(); ++i) {
+            QChar c = filter[i];
+            if (c == '/' || c == '\\') {
+               if (fragment.isEmpty()) // Treat "Foo//Bar" the same as "Foo/Bar"
+                  continue;
+               auto index = node->indexOf(fragment);
+               if (index < 0) {
+                  auto* child = &item_type::make_filter(fragment);
+                  if (node == this->_nodes.quests) {
+                     child->full_filter = fragment;
+                  } else {
+                     child->full_filter = node->full_filter + '/' + fragment;
+                  }
+                  node->children.push_back(child);
+                  node = child;
+               } else {
+                  node = node->child(index);
+               }
+               ++node->refcount;
+               fragment.clear();
+               continue;
+            }
+            fragment += c;
          }
          return false; // continue
       });
       //
-      this->beginInsertRows(qmi, 0, hash.size());
-      auto* parent = _itemFromIndex(qmi);
-      auto& list   = parent->children;
-      for (auto& entry : hash) {
-         auto& item = item_type::make_filter(entry.text);
-         item.refcount = entry.refcount;
-         list.push_back(&item);
-      }
-      hash.clear();
-      qSort(list.begin(), list.end(), [](const item_type* a, const item_type* b) {
-         return a->name.compare(b->name, Qt::CaseInsensitive) < 0;
-      });
-      this->endInsertRows();
+      this->_nodes.quests->recursiveSort();
+      //
+      this->endResetModel();
    }
    void ObjectWindowTreeModel::clearAllQuestFilters() {
       auto qmi = this->_indexOfQuests();
@@ -396,19 +513,27 @@ void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) con
       //
       // Increment refcounts and create nodes as appropriate:
       //
+      QVector<item_type*> added_to;
       QString fragment;
       auto*   node = this->_nodes.quests;
-      for (int i = 0; i < old.size(); ++i) {
-         QChar c = old[i];
+      for (int i = 0; i < filter.size(); ++i) {
+         QChar c = filter[i];
          if (c == '/' || c == '\\') {
             if (fragment.isEmpty()) // Treat "Foo//Bar" the same as "Foo/Bar"
                continue;
             auto index = node->indexOf(fragment);
             if (index < 0) {
+               QString full_filter;
+               if (node != this->_nodes.quests)
+                  full_filter = node->full_filter + '/';
+               full_filter += fragment;
+               //
+               added_to.push_back(node);
                auto& list = node->children;
                auto  size = list.size();
                this->beginInsertRows(this->_indexOfItem(node), size, size);
                node = &item_type::make_filter(fragment);
+               node->full_filter = full_filter;
                list.push_back(node);
                this->endInsertRows();
             } else {
@@ -420,5 +545,29 @@ void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) con
          }
          fragment += c;
       }
+      for (auto* node : added_to) {
+         emit this->layoutAboutToBeChanged({ this->_indexOfItem(node) }, LayoutChangeHint::VerticalSortHint);
+         this->_sortChildrenOf(node);
+         emit this->layoutChanged({ this->_indexOfItem(node) }, LayoutChangeHint::VerticalSortHint);
+      }
    }
+#pragma endregion
+
+#pragma region ObjectWindowTree
+ObjectWindowTree::ObjectWindowTree(QWidget* parent) : QLinedTreeView(parent) {
+   auto* model = new model_type(this);
+   this->setModel(model);
+   //
+   if (auto* sel = this->selectionModel()) {
+      sel->select(model->indexOfAllCategory(), QItemSelectionModel::ClearAndSelect);
+   }
+   this->expandAll();
+}
+ObjectWindowTree::filter_info ObjectWindowTree::filterInfo() const noexcept {
+   auto* sm    = this->selectionModel();
+   auto* model = (model_type*) this->model();
+   if (!sm || !model)
+      return filter_info();
+   return model->getFilterInfoFor(sm->selectedRows());
+}
 #pragma endregion
