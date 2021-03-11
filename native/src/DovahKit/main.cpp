@@ -416,8 +416,6 @@
 //
 //                          - UI for editing a condition
 //
-//                             - IN PROGRESS
-//
 //                             - Parameters
 //
 //                                - Shouldn't GetStageDone conditions only care about 
@@ -444,17 +442,13 @@
 //
 //                       - Basic Data
 //
+//                          - Strongly consider moving quests' category/filter strings 
+//                            out of the form and onto the form stub addenda, so that 
+//                            we can actually use them as filters in the Object Window.
+//
 //                          - A friend has requested being able to click a button 
 //                            next to the event dropdown to jump directly to the 
 //                            SM Event form for that event type.
-//
-//                          - Conditions UI
-//
-//                       - Stages
-//
-//                          - Stage-specific and entry-specific content
-//
-//                          - Conditions UI
 //
 //                       - Objectives
 //
@@ -469,15 +463,6 @@
 //                       - Dialogue
 //
 //                          - Support for Topics and TopicInfos
-//
-//                             - Changes to form_stub
-//
-//                                - We can also sync quests' object window filter 
-//                                  to the form-stub-cached-data area, which would 
-//                                  allow us to then tailor the Object Window to 
-//                                  let the user take advantage of those.
-//
-//                             - Support for these form types
 //
 //                             - UI for these form types
 //
@@ -1135,6 +1120,32 @@
 //
 //  - Phantom has requested camera path editing, and pointed me to the GECK wiki as the 
 //    sole known source of information on that.
+//
+//  - Dialogue flowchart editor
+//
+//     - The CK editor doesn't let you (reliably) control how connecting lines are drawn 
+//       between topics and infos. We should. Consider this case:
+//
+//                                                +---------------+
+//                               +----------------+     Topic     |
+//                               |                +---------------+
+//       +-------------+         |
+//       |   Topic     +---------+
+//       +-------------+
+//
+//       If you were to right-click on the upper segment of that connector, we'd want to 
+//       give you a context menu item to "add a bend." Doing that would turn the graph 
+//       into this:
+//
+//                               +----------+     +---------------+
+//                               +          +-----+     Topic     |
+//                               |                +---------------+
+//       +-------------+         |
+//       |   Topic     +---------+
+//       +-------------+
+//
+//       Essentially, we'd add a new bend or joint to the middle of that line segment, 
+//       and displace one half of the line segment either up or down slightly.
 //
 // HORIZON TASKS:
 //
