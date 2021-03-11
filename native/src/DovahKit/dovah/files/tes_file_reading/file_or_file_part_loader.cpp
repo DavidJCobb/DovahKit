@@ -189,6 +189,11 @@ namespace dovah::tes_file_reading {
                   subrecord.to_string(stub.editorID);
                }
                break;
+            case 'FLTR':
+               if (stub.formType == form_type::quest) {
+                  subrecord.to_string(stub.get_or_create_addenda().filter);
+               }
+               break;
             case 'PNAM':
                if (parent_topic) {
                   assert(stub.formType == form_type::topic_info);

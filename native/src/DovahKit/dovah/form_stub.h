@@ -319,6 +319,8 @@ namespace dovah {
          bool test_record_flags_for_file(uint32_t mask, owner_file_t&) const noexcept;
 
          #pragma region Addenda helper functions
+         form_stub_addenda& get_or_create_addenda() noexcept;
+         //
          bool get_grid_coordinates(int32_t& x, int32_t& y) const noexcept;
          size_t child_info_count() const noexcept;
          size_t index_of_child_info(form_stub& info) const noexcept; // search a topic's list of infos; returns std::string::npos if no match

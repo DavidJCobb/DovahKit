@@ -1,5 +1,6 @@
 #include "form.h"
 #include "../form_stub.h"
+#include "../form_stub_addenda.h"
 #include "../files/tes_file_reading/elements.h"
 #include "../files/tes_file_writing/elements.h"
 #include "factories/construct.h"
@@ -24,8 +25,9 @@ namespace dovah::loaded_forms {
       if (instance) {
          receiving_stub.form = instance;
          receiving_stub.set_edited(true);
+         if (this->stub.addenda)
+            receiving_stub.get_or_create_addenda().clone_from(*this->stub.addenda);
          bool result = this->_clone_impl(instance);
-         receiving_stub.set_edited(true);
          if (out_complete)
             *out_complete = result;
       }

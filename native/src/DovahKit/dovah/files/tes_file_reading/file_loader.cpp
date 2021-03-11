@@ -361,13 +361,6 @@ namespace dovah::tes_file_reading {
 
    bool file_loader::_open_mapped_file() {
       this->file = cobb::mapped_file();
-      //
-      /*//
-      std::wstring foo;
-      auto size = MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), 0);
-      foo.resize(size);
-      MultiByteToWideChar(CP_ACP, 0, this->path.data(), this->path.size(), foo.data(), size);
-      //*/
       this->file.open(this->path.c_str());
       if (!this->file) {
          detailed_notice error;

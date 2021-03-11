@@ -641,6 +641,12 @@ namespace dovah {
    }
 
    #pragma region Addenda helper functions
+   form_stub_addenda& form_stub::get_or_create_addenda() noexcept {
+      if (!this->addenda)
+         this->addenda = new form_stub_addenda;
+      return *this->addenda;
+   }
+   //
    bool form_stub::get_grid_coordinates(int32_t& x, int32_t& y) const noexcept {
       x = 0;
       y = 0;

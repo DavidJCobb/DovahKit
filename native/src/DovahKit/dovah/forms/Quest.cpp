@@ -1,5 +1,6 @@
 #include "Quest.h"
 #include "_common_cpp.h"
+#include "../form_stub_addenda.h"
 #include "../logging.h"
 #include "../notice_code_list.h"
 
@@ -981,8 +982,7 @@ namespace dovah::loaded_forms {
                   }
                }
                break;
-            case 'FLTR': // required; TODO: fail if this is not present
-               subrecord.to_string(this->editor_category);
+            case 'FLTR': // handled by the file reader as a special case, and stored in the form stub addenda
                break;
             case 'NEXT':
                isInEventConditions = true;
@@ -1278,8 +1278,6 @@ namespace dovah::loaded_forms {
             copy->text_display_globals[i].set(*copy, this->text_display_globals[i]);
       }
       //
-      copy->editor_category = this->editor_category;
-      //
       copy->conditions.dialogue.append_all_of(*copy, this->conditions.dialogue);
       copy->conditions.event.append_all_of(*copy, this->conditions.event);
       {
@@ -1384,9 +1382,11 @@ namespace dovah::loaded_forms {
          QTGL.write(id);
          QTGL.close();
       }
-      auto& FLTR = record.open_next_subrecord('FLTR');
-      FLTR.write(this->editor_category);
-      FLTR.close();
+      if (auto* addenda = this->stub.addenda) {
+         auto& filter = addenda->filter;
+         if (!filter.empty())
+            record.write_string_subrecord('FLTR', filter);
+      }
       for (auto& cnd : this->conditions.dialogue) {
          cnd.save(record, intfc);
       }

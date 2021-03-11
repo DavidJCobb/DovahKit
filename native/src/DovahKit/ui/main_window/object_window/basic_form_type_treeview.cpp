@@ -1,4 +1,5 @@
 #include "basic_form_type_treeview.h"
+#include "../../../editor/core.h"
 
 #pragma region BasicFormTypeTreeModelItem
 void BasicFormTypeTreeModelItem::_destroyDescendants() noexcept {
@@ -41,6 +42,17 @@ void BasicFormTypeTreeModelItem::addToSet(QVector<dovah::form_type_t>& out) cons
 #pragma endregion
 
 #pragma region BasicFormTypeTreeModel
+BasicFormTypeTreeModel::BasicFormTypeTreeModel(QObject* parent) : QAbstractItemModel(parent) {
+   this->root = new item_type(QString(""), dovah::form_type::none);
+   //
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* form) {
+      if (form->formType != dovah::form_type::quest)
+         return;
+      this->rebuildQuestFilters();
+   });
+}
+
 QModelIndex BasicFormTypeTreeModel::index(int row, int column, const QModelIndex& parent) const {
    if (!this->hasIndex(row, column, parent))
       return QModelIndex();
@@ -101,6 +113,13 @@ void BasicFormTypeTreeModel::clear() {
    this->beginResetModel();
    this->root->_destroyDescendants();
    this->endResetModel();
+}
+
+void BasicFormTypeTreeModel::rebuildQuestFilters() {
+   auto* item = this->_findSingleFormType(dovah::form_type::quest);
+   if (!item)
+      return;
+
 }
 #pragma endregion
 

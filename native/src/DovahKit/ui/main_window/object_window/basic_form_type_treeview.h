@@ -13,16 +13,19 @@ class BasicFormTypeTreeModelItem { // represents a (sub)category
    public:
       static constexpr int no_filter = -1;
       //
-      const int form_type = no_filter;
+      const int  form_type = no_filter;
+      const bool is_filter = false;
    protected:
       const QString _name;
       BasicFormTypeTreeModelItem* _parent = nullptr;
       std::vector<BasicFormTypeTreeModelItem*> _children;
+      int _filter_refcount = 0;
       //
       void _destroyDescendants() noexcept;
       //
    public:
       BasicFormTypeTreeModelItem(const QString& n, int ft) : _name(n), form_type(ft) {}
+      BasicFormTypeTreeModelItem(const QString& n) : _name(n), is_filter(true) {}
       //
       void appendChild(BasicFormTypeTreeModelItem*) noexcept;
       void removeChild(BasicFormTypeTreeModelItem*) noexcept;
@@ -47,10 +50,10 @@ class BasicFormTypeTreeModel : public QAbstractItemModel {
    protected:
       item_type* root = nullptr;
       //
+      item_type* _findSingleFormType(dovah::form_type_t);
+      //
    public:
-      BasicFormTypeTreeModel(QObject* parent = nullptr) : QAbstractItemModel(parent) {
-         this->root = new item_type(QString(""), dovah::form_type::none);
-      }
+      BasicFormTypeTreeModel(QObject* parent = nullptr);
       ~BasicFormTypeTreeModel() {
          this->clear();
       }
@@ -66,6 +69,9 @@ class BasicFormTypeTreeModel : public QAbstractItemModel {
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       //
       void clear();
+      //
+   public slots:
+      void rebuildQuestFilters();
 };
 
 class BasicFormTypeTree : public QLinedTreeView {
