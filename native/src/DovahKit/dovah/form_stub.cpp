@@ -160,7 +160,7 @@ namespace dovah {
          return false;
       return data->pointer->fetch_record_header(data->offset, out, out_record_decompressed_size);
    }
-   void form_stub::do_custom_parse(void(*loader)(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept {
+   void form_stub::do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept {
       if (!loader)
          return; // no loader supplied
       if (!this->has_source_files())

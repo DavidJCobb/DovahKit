@@ -5,7 +5,7 @@
 #include <QString>
 #include "../dovah/form_stub.h"
 
-class DovahKitFormDataCache {
+class DovahKitFormDataCache : public QObject {
    Q_OBJECT;
    public:
       static DovahKitFormDataCache& get() noexcept {
@@ -20,14 +20,14 @@ class DovahKitFormDataCache {
          QHash<dovah::bare_form_id_t, QString> static_models;
       } _data;
 
-      static void _parseQuest(dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
-      static void _parseStatic(dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
+      static void _parseQuest(const dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
+      static void _parseStatic(const dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
 
    protected slots:
       void buildAllData();
       void clear();
-      void handleFormChange(dovah::form_stub&);
-      void handleFormDelete(dovah::form_stub&, bool will_be_flagged);
+      void handleFormChange(dovah::form_stub*);
+      void handleFormDelete(dovah::form_stub*, bool will_be_flagged);
 
    signals:
       void cachedDataBuilt(); // emitted when all data is built

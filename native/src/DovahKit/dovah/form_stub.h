@@ -298,7 +298,7 @@ namespace dovah {
          // A service provided to allow frontends to rapidly extract specific subrecords that are of interest, 
          // without having to fully load a form. As with form loading, this is not thread-safe.
          //
-         void do_custom_parse(void(*loader)(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept;
+         void do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept;
          
          #pragma region Source file member functions
          const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;
