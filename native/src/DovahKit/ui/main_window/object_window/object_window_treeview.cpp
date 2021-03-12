@@ -7,6 +7,12 @@ ObjectWindowTreeItem::~ObjectWindowTreeItem() {
    this->clear();
 }
 
+/*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_filter(const QString& name) {
+   auto* item = new ObjectWindowTreeItem;
+   item->name = name;
+   item->type = item_type::filter;
+   return *item;
+}
 /*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_top_level(const QString& name) {
    auto* item = new ObjectWindowTreeItem;
    item->name = name;
@@ -49,6 +55,15 @@ void ObjectWindowTreeItem::clear() {
    for (auto* child : this->children)
       delete child;
    this->children.clear();
+}
+dovah::form_type_t ObjectWindowTreeItem::containingFormType() const noexcept {
+   auto* node = this;
+   do {
+      auto ft = node->form_type;
+      if (ft != dovah::form_type::none && ft != no_form_type_filter)
+         return ft;
+   } while (node = node->parent);
+   return dovah::form_type::none;
 }
 void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept {
    if (this->form_type != no_form_type_filter) {
@@ -314,6 +329,7 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       }
       list.erase(list.begin() + row, list.begin() + max);
       this->endRemoveRows();
+      return true;
    }
    void ObjectWindowTreeModel::_sortChildrenOf(item_type* item) {
       if (!item->children.size())

@@ -129,7 +129,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    #pragma region Context menu
    this->_actionCreateForm = new QAction(tr("New form...", "object window form actions"), this->ui.table);
    QObject::connect(this->_actionCreateForm, &QAction::triggered, this, [this]() {
-      auto form_types = this->ui.tree->selectedFormTypes();
+      auto form_types = this->ui.tree->filterInfo().form_types;
       if (form_types.size() != 1)
          return;
       //
@@ -227,7 +227,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       auto opener = this->ui.table;
       //
       auto* stub       = _get_selected_form(opener);
-      auto  form_types = this->ui.tree->selectedFormTypes();
+      auto  form_types = this->ui.tree->filterInfo().form_types;
       //
       bool form_exists  = (stub != nullptr);
       bool is_alterable = form_exists && !stub->is_none_stub();

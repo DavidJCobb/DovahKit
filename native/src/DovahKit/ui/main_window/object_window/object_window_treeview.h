@@ -122,7 +122,6 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
    public slots:
       void buildAllQuestFilters();
       void clearAllQuestFilters();
-      void prepForQuestFilterChange(const QString& filter); // takes the filter the quest used to have
       void finishQuestFilterChange(dovah::bare_form_id_t formID, const QString& filter); // takes the filter the quest currently has, which may be the same one it used to have
 };
 

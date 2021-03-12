@@ -50,8 +50,6 @@ class BasicFormTypeTreeModel : public QAbstractItemModel {
    protected:
       item_type* root = nullptr;
       //
-      item_type* _findSingleFormType(dovah::form_type_t);
-      //
    public:
       BasicFormTypeTreeModel(QObject* parent = nullptr);
       ~BasicFormTypeTreeModel() {

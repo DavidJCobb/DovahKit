@@ -116,10 +116,6 @@ void BasicFormTypeTreeModel::clear() {
 }
 
 void BasicFormTypeTreeModel::rebuildQuestFilters() {
-   auto* item = this->_findSingleFormType(dovah::form_type::quest);
-   if (!item)
-      return;
-
 }
 #pragma endregion
 
