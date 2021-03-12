@@ -326,7 +326,6 @@
     <ClCompile Include="ui\main_window\log_window.cpp" />
     <ClCompile Include="ui\main_window\log_window\log_list_view.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
-    <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
     <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp" />
     <ClCompile Include="ui\main_window\save_window.cpp" />
@@ -634,7 +633,6 @@
     <QtMoc Include="ui\form_windows\odds_and_ends\shout_word.h" />
     <QtMoc Include="ui\main_window\object_window\form_table.h" />
     <QtMoc Include="ui\generic\QLinedTreeView.h" />
-    <QtMoc Include="ui\main_window\object_window\basic_form_type_treeview.h" />
     <QtMoc Include="ui\main_window\object_window.h" />
     <QtMoc Include="editor\core.h" />
     <ClInclude Include="helpers\bitset.h" />

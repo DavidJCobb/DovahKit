@@ -10,19 +10,19 @@ ObjectWindowTreeItem::~ObjectWindowTreeItem() {
 /*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_filter(const QString& name) {
    auto* item = new ObjectWindowTreeItem;
    item->name = name;
-   item->type = item_type::filter;
+   item->type = type_t::filter;
    return *item;
 }
 /*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_top_level(const QString& name) {
    auto* item = new ObjectWindowTreeItem;
    item->name = name;
-   item->type = item_type::top_level;
+   item->type = type_t::top_level;
    return *item;
 }
 /*static*/ ObjectWindowTreeItem& ObjectWindowTreeItem::make_form_type(const QString& name, int ft) {
    auto* item = new ObjectWindowTreeItem;
    item->name = name;
-   item->type = item_type::top_level;
+   item->type = type_t::top_level;
    item->form_type = ft;
    return *item;
 }
@@ -66,7 +66,7 @@ dovah::form_type_t ObjectWindowTreeItem::containingFormType() const noexcept {
    return dovah::form_type::none;
 }
 void ObjectWindowTreeItem::gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept {
-   if (this->type == item_type::filter) {
+   if (this->type == type_t::filter) {
       auto ft = this->containingFormType();
       if (!out.contains(ft))
          out.push_back(ft);
@@ -164,7 +164,7 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
 #pragma region ObjectWindowTreeModel
    ObjectWindowTreeModel::ObjectWindowTreeModel(QObject* parent) : QAbstractItemModel(parent) {
       this->_nodes.root = new item_type;
-      this->_nodes.root->type = item_type::item_type::root;
+      this->_nodes.root->type = item_type::type_t::root;
       //
       this->beginResetModel();
       #pragma region Build contents
@@ -454,6 +454,14 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
          switch (role) {
             case Qt::DisplayRole:
                return item->name;
+            case Qt::FontRole:
+               if (item->type == item_type::type_t::filter)
+                  return QVariant();
+               {
+                  QFont font;
+                  font.setBold(true);
+                  return font;
+               }
          }
          return QVariant();
       }
@@ -494,7 +502,7 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
          //
          // Filters:
          //
-         if (item->type != item_type::item_type::filter)
+         if (item->type != item_type::type_t::filter)
             continue;
          const auto& full = item->full_filter;
          if (full.isEmpty())

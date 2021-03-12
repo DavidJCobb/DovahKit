@@ -11,7 +11,6 @@
 namespace dovah {
    class form_stub;
 }
-class BasicFormTypeTree;
 
 class FormTableModel;
 class FormTableModelItem {

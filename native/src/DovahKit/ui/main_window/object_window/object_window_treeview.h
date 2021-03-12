@@ -13,7 +13,7 @@ class ObjectWindowTreeItem {
    friend class ObjectWindowTreeModel;
    protected:
       static constexpr int no_form_type_filter = -1;
-      enum class item_type {
+      enum class type_t {
          root,
          top_level,
          form_type,
@@ -27,11 +27,11 @@ class ObjectWindowTreeItem {
       static ObjectWindowTreeItem& make_form_type(const QString&, int);
       static ObjectWindowTreeItem& make_filter(const QString&);
 
-      QString   name;
-      QString   full_filter;
-      item_type type      = item_type::form_type;
-      int       form_type = no_form_type_filter;
-      int       refcount  = 0;
+      QString name;
+      QString full_filter;
+      type_t  type      = type_t::form_type;
+      int     form_type = no_form_type_filter;
+      int     refcount  = 0;
       ObjectWindowTreeItem* parent = nullptr;
       QVector<ObjectWindowTreeItem*> children;
 

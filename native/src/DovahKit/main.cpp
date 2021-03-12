@@ -442,10 +442,6 @@
 //
 //                       - Basic Data
 //
-//                          - Strongly consider moving quests' category/filter strings 
-//                            out of the form and onto the form stub addenda, so that 
-//                            we can actually use them as filters in the Object Window.
-//
 //                          - A friend has requested being able to click a button 
 //                            next to the event dropdown to jump directly to the 
 //                            SM Event form for that event type.

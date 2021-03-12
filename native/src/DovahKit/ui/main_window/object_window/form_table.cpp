@@ -2,7 +2,6 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include <QMimeData>
-#include "basic_form_type_treeview.h"
 #include "../../../editor/core.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/files/common.h"
