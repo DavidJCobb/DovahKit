@@ -66,7 +66,7 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="BasicFormTypeTree" name="tree">
+    <widget class="ObjectWindowTree" name="tree">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>1</horstretch>
@@ -94,14 +94,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BasicFormTypeTree</class>
-   <extends>QTreeView</extends>
-   <header>object_window/basic_form_type_treeview.h</header>
-  </customwidget>
-  <customwidget>
    <class>FormTable</class>
    <extends>QTableView</extends>
    <header>object_window/form_table.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ObjectWindowTree</class>
+   <extends>QTreeView</extends>
+   <header>object_window/object_window_treeview.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

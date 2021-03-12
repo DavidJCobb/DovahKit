@@ -726,6 +726,9 @@
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1735,6 +1738,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\object_window\object_window_treeview.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -44,7 +44,10 @@ FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
 }
 
 void FormTableModel::formCreated(dovah::form_stub* stub) {
-   if (!this->last_used_form_types.contains(stub->formType))
+   auto& fi = this->last_used_filter_info;
+   if (!fi.form_types.contains(stub->formType))
+      return;
+   if (!fi.testFormStubFilter(stub))
       return;
    this->insertItem(stub, false);
 }
@@ -320,15 +323,15 @@ void FormTableModel::clear() {
    this->forms_pending_use_info_update.clear();
    this->endResetModel();
 }
-void FormTableModel::rebuild(const form_type_set& types) {
-   this->last_used_form_types = types;
+void FormTableModel::rebuild(const ObjectWindowFilterInfo& fi) {
+   this->last_used_filter_info = fi;
    this->rebuild();
 }
 void FormTableModel::rebuild() {
    this->clear();
    //
-   auto& types = this->last_used_form_types;
-   if (!types.size())
+   auto& fi = this->last_used_filter_info;
+   if (fi.form_types.empty())
       return;
    //
    auto& editor = DovahKitCore::get();
@@ -336,19 +339,31 @@ void FormTableModel::rebuild() {
       return;
    //
    uint32_t total = 0;
-   for (auto ft : types)
+   for (auto ft : fi.form_types)
       total += editor.count_forms_of_type(ft);
    if (!total)
       return;
-   for (auto ft : types) {
+   for (auto ft : fi.form_types) {
       if (ft == dovah::form_type::none)
          editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) {
             if (stub->is_none_stub())
                this->insertItem(stub, true);
             return false;
          });
-      else
-         editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) { this->insertItem(stub, true); return false; });
+      else {
+         if (fi.filterListFor(ft)) {
+            editor.for_each_form_of_type(ft, [this, &fi](dovah::form_stub* stub) {
+               if (fi.testFormStubFilter(stub))
+                  this->insertItem(stub, true);
+               return false;
+            });
+         } else {
+            editor.for_each_form_of_type(ft, [this, &fi](dovah::form_stub* stub) {
+               this->insertItem(stub, true);
+               return false;
+            });
+         }
+      }
    }
    //
    auto count = this->pending_additions.size();
@@ -363,20 +378,10 @@ void FormTableModel::rebuild() {
    this->pending_additions.clear();
    this->endInsertRows();
 }
-void FormTableModel::setFormTypes(const form_type_set& list) {
-   auto& prior = this->last_used_form_types;
-   auto  size  = prior.size();
-   if (size == list.size()) {
-      bool same = true;
-      for (int i = 0; i < size; ++i)
-         if (!list.contains(prior[i])) {
-            same = false;
-            break;
-         }
-      if (same)
-         return;
-   }
-   //
+void FormTableModel::setFilterInfo(const ObjectWindowFilterInfo& list) {
+   auto& prior = this->last_used_filter_info;
+   if (prior == list)
+      return;
    this->rebuild(list);
 }
 #pragma endregion
@@ -419,7 +424,7 @@ void FormTable::recheckFormTypes() {
    auto* model = this->unwrappedModel();
    if (!model)
       return;
-   model->setFormTypes(this->_source->selectedFormTypes());
+   model->setFilterInfo(this->_source->filterInfo());
 }
 void FormTable::rebuildModel() {
    if (auto* model = this->unwrappedModel())
@@ -473,7 +478,7 @@ void FormTable::setFilter(QLineEdit* field) {
    QObject::connect(field, &QLineEdit::textEdited, this, &FormTable::filterChanged);
    QObject::connect(field, &QLineEdit::editingFinished, this, &FormTable::filterFinished);
 }
-void FormTable::setSource(BasicFormTypeTree* tree) {
+void FormTable::setSource(ObjectWindowTree* tree) {
    if (this->_source)
       QObject::disconnect(this->_source->selectionModel(), &QItemSelectionModel::selectionChanged , this, &FormTable::recheckFormTypes);
    this->_source = tree;

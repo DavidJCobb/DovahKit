@@ -47,6 +47,7 @@ class ObjectWindowTreeItem {
       [[nodiscard]] int indexOf(const QString& name) const noexcept;
 
       void clear();
+      dovah::form_type_t containingFormType() const noexcept; // for filters
       void gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept;
 
       //
@@ -59,14 +60,26 @@ class ObjectWindowTreeItem {
       void sort();
 };
 
+class ObjectWindowFilterInfo {
+   public:
+      using filter_list_t = QVector<QString>;
+   public:
+      QVector<dovah::form_type_t> form_types;
+      struct {
+         filter_list_t quests;
+      } filters;
+   
+      bool operator==(const ObjectWindowFilterInfo& other) const noexcept;
+
+      filter_list_t* filterListFor(dovah::form_type_t) noexcept;
+      const filter_list_t* filterListFor(dovah::form_type_t) const noexcept;
+      bool testFormStubFilter(const dovah::form_stub*) const noexcept;
+};
+
 class ObjectWindowTreeModel : public QAbstractItemModel {
    Q_OBJECT
    public:
       using item_type = ObjectWindowTreeItem;
-      struct filter_info {
-         QVector<dovah::form_type_t> form_types;
-         QVector<QString> filters;
-      };
       //
    protected:
       struct {
@@ -104,7 +117,7 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       QModelIndex indexOfAllCategory() const noexcept;
       QVector<dovah::form_type_t> formTypesFor(const QModelIndexList&) const noexcept;
 
-      filter_info getFilterInfoFor(const QModelIndexList&) const noexcept;
+      ObjectWindowFilterInfo getFilterInfoFor(const QModelIndexList&) const noexcept;
       
    public slots:
       void buildAllQuestFilters();
@@ -117,8 +130,7 @@ class ObjectWindowTree : public QLinedTreeView {
    Q_OBJECT
    public:
       ObjectWindowTree(QWidget* parent);
-      using model_type  = ObjectWindowTreeModel;
-      using filter_info = model_type::filter_info;
+      using model_type = ObjectWindowTreeModel;
       //
-      filter_info filterInfo() const noexcept;
+      ObjectWindowFilterInfo filterInfo() const noexcept;
 };

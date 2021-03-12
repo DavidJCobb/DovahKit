@@ -328,6 +328,7 @@
     <ClCompile Include="ui\main_window\object_window.cpp" />
     <ClCompile Include="ui\main_window\object_window\basic_form_type_treeview.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
+    <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp" />
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\script_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
@@ -583,6 +584,7 @@
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
+    <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h" />

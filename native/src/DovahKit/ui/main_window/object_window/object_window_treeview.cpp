@@ -72,6 +72,50 @@ void ObjectWindowTreeItem::sort() {
 }
 #pragma endregion
 
+#pragma region ObjectWindowFilterInfo
+bool ObjectWindowFilterInfo::operator==(const ObjectWindowFilterInfo& other) const noexcept {
+   if (this->filters.quests.size() != other.filters.quests.size())
+      return false;
+   if (this->form_types.size() != other.form_types.size())
+      return false;
+   for (auto ft : this->form_types)
+      if (!other.form_types.contains(ft))
+         return false;
+   for (const auto& a : this->filters.quests)
+      for (const auto& b : other.filters.quests)
+         if (a.compare(b, Qt::CaseInsensitive) != 0)
+            return false;
+   return true;
+}
+ObjectWindowFilterInfo::filter_list_t* ObjectWindowFilterInfo::filterListFor(dovah::form_type_t ft) noexcept {
+   switch (ft) {
+      case dovah::form_type::quest:
+         return &this->filters.quests;
+   }
+   return nullptr;
+}
+const ObjectWindowFilterInfo::filter_list_t* ObjectWindowFilterInfo::filterListFor(dovah::form_type_t ft) const noexcept {
+   return const_cast<ObjectWindowFilterInfo*>(this)->filterListFor(ft);
+}
+bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) const noexcept {
+   auto* list = this->filterListFor(stub->formType);
+   if (!list)
+      return true;
+   if (list->isEmpty())
+      return true;
+   //
+   // The list is not empty, so apply the filters therein. Treat it as an "OR" match.
+   //
+   if (!stub->addenda)
+      return false;
+   auto filter = QString::fromStdString(stub->addenda->filter);
+   for (const auto& match : *list)
+      if (filter.compare(match, Qt::CaseInsensitive) == 0)
+         return true;
+   return false;
+}
+#pragma endregion
+
 #pragma region ObjectWindowTreeModel
    ObjectWindowTreeModel::ObjectWindowTreeModel(QObject* parent) : QAbstractItemModel(parent) {
       this->_nodes.root = new item_type;
@@ -379,8 +423,8 @@ void ObjectWindowTreeItem::sort() {
       }
       return out;
    }
-   ObjectWindowTreeModel::filter_info ObjectWindowTreeModel::getFilterInfoFor(const QModelIndexList& qmil) const noexcept {
-      filter_info out;
+   ObjectWindowFilterInfo ObjectWindowTreeModel::getFilterInfoFor(const QModelIndexList& qmil) const noexcept {
+      ObjectWindowFilterInfo out;
       if (qmil.contains(this->_indexOfItem(this->_nodes.all))) {
          //
          // The "All" item is selected.
@@ -403,8 +447,11 @@ void ObjectWindowTreeItem::sort() {
          const auto& full = item->full_filter;
          if (full.isEmpty())
             continue;
+         auto* gather_to = out.filterListFor(item->containingFormType());
+         if (!gather_to)
+            continue;
          bool found = false;
-         for (auto& existing : out.filters) {
+         for (auto& existing : *gather_to) {
             if (existing.startsWith(full, Qt::CaseInsensitive)) {
                existing = full;
                found    = true;
@@ -412,7 +459,7 @@ void ObjectWindowTreeItem::sort() {
             }
          }
          if (!found)
-            out.filters.push_back(full);
+            gather_to->push_back(full);
       }
       return out;
    }
@@ -563,11 +610,11 @@ ObjectWindowTree::ObjectWindowTree(QWidget* parent) : QLinedTreeView(parent) {
    }
    this->expandAll();
 }
-ObjectWindowTree::filter_info ObjectWindowTree::filterInfo() const noexcept {
+ObjectWindowFilterInfo ObjectWindowTree::filterInfo() const noexcept {
    auto* sm    = this->selectionModel();
    auto* model = (model_type*) this->model();
    if (!sm || !model)
-      return filter_info();
+      return ObjectWindowFilterInfo();
    return model->getFilterInfoFor(sm->selectedRows());
 }
 #pragma endregion

@@ -6,6 +6,7 @@
 #include <QTableView>
 #include <QTimer>
 #include "../../../dovah/core.h"
+#include "object_window_treeview.h"
 
 namespace dovah {
    class form_stub;
@@ -43,7 +44,7 @@ class FormTableModel : public QAbstractTableModel {
       using form_type_set = QVector<dovah::form_type_t>;
       //
    protected:
-      form_type_set last_used_form_types;
+      ObjectWindowFilterInfo last_used_filter_info;
       QVector<item_type*> children;
       QVector<item_type*> pending_additions;
       QVector<form_stub*> forms_pending_use_info_update;
@@ -80,8 +81,8 @@ class FormTableModel : public QAbstractTableModel {
       virtual QStringList mimeTypes() const override;
       //
       void rebuild();
-      void rebuild(const form_type_set&);
-      void setFormTypes(const form_type_set&);
+      void rebuild(const ObjectWindowFilterInfo&);
+      void setFilterInfo(const ObjectWindowFilterInfo&);
 };
 
 class FormTableModelProxy : public QSortFilterProxyModel {
@@ -110,7 +111,7 @@ class FormTable : public QTableView {
       }
       //
       void setFilter(QLineEdit*);
-      void setSource(BasicFormTypeTree*);
+      void setSource(ObjectWindowTree*);
       //
    public slots:
       void recheckFormTypes();
@@ -124,7 +125,7 @@ class FormTable : public QTableView {
       void select(dovah::form_stub*);
       //
    protected:
-      BasicFormTypeTree* _source = nullptr;
+      ObjectWindowTree* _source  = nullptr;
       QLineEdit* _filter         = nullptr;
       QTimer*    _filterThrottle = new QTimer(this);
 };
