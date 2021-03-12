@@ -160,7 +160,7 @@ namespace dovah {
          return false;
       return data->pointer->fetch_record_header(data->offset, out, out_record_decompressed_size);
    }
-   void form_stub::do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept {
+   void form_stub::do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&), tes_file_reading::basic_reader* reader) const noexcept {
       if (!loader)
          return; // no loader supplied
       if (!this->has_source_files())
@@ -192,11 +192,28 @@ namespace dovah {
          intfc.current_file      = file;
          intfc.is_partial_record = can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
          intfc.last_record_flags = last_record_flags;
-         if (file->load_record_at(offset)) {
-            auto& record = file->get_current_record();
-            (loader)(*this, record, intfc);
+         //
+         bool result;
+         if (reader) {
+            file->adopt(*reader);
+            result = reader->load_record_at(offset);
+         } else {
+            result = file->load_record_at(offset);
+         }
+         //
+         if (result) {
+            if (reader)
+               (loader)(*this, reader->get_current_record(), intfc);
+            else
+               (loader)(*this, file->get_current_record(), intfc);
          }
          last_record_flags = arr[i].flags;
+      }
+      //
+      if (reader) {
+         reader->file_data = nullptr;
+         reader->file_size = 0;
+         reader->loader    = nullptr;
       }
    }
 

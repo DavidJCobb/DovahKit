@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <mutex>
 #include <QHash>
 #include <QObject>
 #include <QString>
@@ -16,9 +17,14 @@ class DovahKitFormDataCache : public QObject {
    protected:
       DovahKitFormDataCache();
 
+      template<typename D> struct _lockable_hash {
+         QHash<dovah::bare_form_id_t, D> data;
+         std::mutex lock; // only used for insertions
+      };
+
       struct {
-         QHash<dovah::bare_form_id_t, QString> quest_filters;
-         QHash<dovah::bare_form_id_t, QString> static_models;
+         _lockable_hash<QString> quest_filters;
+         _lockable_hash<QString> static_models;
       } _data;
 
       static void _parseQuest(const dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);

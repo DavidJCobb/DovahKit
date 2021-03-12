@@ -287,7 +287,9 @@ namespace dovah {
          use_info_list  inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
          
          //
-         // Loads a form, if possible. This is not thread-safe.
+         // Loads a form, if possible. This accesses the form's original source files and is not thread-safe; 
+         // loading multiple forms concurrently risks accessing the same file concurrently, which will cause 
+         // corruption or crashes.
          //
          loaded_form_ptr<loaded_forms::Form> load() { return this->_load(); }
          loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
@@ -296,9 +298,11 @@ namespace dovah {
 
          //
          // A service provided to allow frontends to rapidly extract specific subrecords that are of interest, 
-         // without having to fully load a form. As with form loading, this is not thread-safe.
+         // without having to fully load a form. This has the same thread-safety issues as (load) unless you 
+         // pass your own reader object. If you do pass a reader, it must be blank, so that it can be "adopted" 
+         // by the form's source files and then eventually severed from them.
          //
-         void do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept;
+         void do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&), tes_file_reading::basic_reader* = nullptr) const noexcept;
          
          #pragma region Source file member functions
          const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;

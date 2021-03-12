@@ -729,6 +729,9 @@
     <ClCompile Include="editor\form_data_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1491,6 +1494,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\form_data_cache_internals\threaded_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

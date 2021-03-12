@@ -4,6 +4,7 @@
 #include "../dovah/forms/Quest.h"
 #include "../dovah/form_stub.h"
 #include "../dovah/form_stub_addenda.h"
+#include "form_data_cache_internals/threaded_builder.h"
 #include <QVariant>
 
 constexpr bool quest_filters_are_in_addenda = true;
@@ -33,7 +34,7 @@ void DovahKitFormDataCache::handleFormChange(dovah::form_stub* stub) {
                //
             }
             //
-            auto& set = this->_data.quest_filters;
+            auto& set = this->_data.quest_filters.data;
             auto  it  = set.find(form_id);
             if (it != set.end()) {
                if (*it != working) {
@@ -67,7 +68,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
    switch (stub->formType) {
       case dovah::form_type::quest:
          {
-            auto& set = this->_data.quest_filters;
+            auto& set = this->_data.quest_filters.data;
             auto  it  = set.find(form_id);
             if (it != set.end()) {
                QVariant prior = *it;
@@ -78,7 +79,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
          break;
       case dovah::form_type::statik:
          {
-            auto& set = this->_data.static_models;
+            auto& set = this->_data.static_models.data;
             auto  it  = set.find(form_id);
             if (it != set.end()) {
                QVariant prior = *it;
@@ -99,7 +100,10 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
       auto& store = DovahKitFormDataCache::get();
       std::string raw;
       subrecord.to_string(raw);
-      store._data.quest_filters[stub.formID] = QString::fromStdString(raw);
+      //
+      auto& set   = store._data.quest_filters;
+      auto  guard = std::lock_guard(set.lock);
+      set.data[stub.formID] = QString::fromStdString(raw);
       break;
    }
 }
@@ -112,40 +116,57 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
       auto& store = DovahKitFormDataCache::get();
       std::string raw;
       subrecord.to_string(raw);
-      store._data.static_models[stub.formID] = QString::fromStdString(raw);
+      //
+      auto& set   = store._data.static_models;
+      auto  guard = std::lock_guard(set.lock);
+      set.data[stub.formID] = QString::fromStdString(raw);
       break;
    }
 }
 
 void DovahKitFormDataCache::buildAllData() {
+   std::array<DovahKitEditorInternals::form_data_cache_builder, 8> builders;
+   uint32_t count = 0;
+   //
    auto& editor = DovahKitCore::get();
-   editor.for_each_form_of_type(dovah::form_type::quest, [this](dovah::form_stub* stub) {
-      stub->do_custom_parse(&DovahKitFormDataCache::_parseQuest);
+   editor.for_each_form_of_type(dovah::form_type::quest, [&builders, &count](dovah::form_stub* stub) {
+      builders[count % builders.size()].add_to_queue(&DovahKitFormDataCache::_parseQuest, stub);
+      ++count;
       return false;
    });
-   editor.for_each_form_of_type(dovah::form_type::statik, [this](dovah::form_stub* stub) {
-      stub->do_custom_parse(&DovahKitFormDataCache::_parseStatic);
+   this->_data.quest_filters.data.reserve(count / 1.5);
+   //
+   editor.for_each_form_of_type(dovah::form_type::statik, [&builders, &count](dovah::form_stub* stub) {
+      builders[count % builders.size()].add_to_queue(&DovahKitFormDataCache::_parseStatic, stub);
+      ++count;
       return false;
    });
+   this->_data.static_models.data.reserve(count / 1.5);
+   //
+   for (auto& b : builders)
+      b.start();
+   for (auto& b : builders)
+      b.wait_for();
+   //
    emit this->cachedDataBuilt();
 }
 
 void DovahKitFormDataCache::clear() {
-   this->_data.quest_filters.clear();
-   this->_data.static_models.clear();
+   this->_data.quest_filters.data.clear();
+   this->_data.static_models.data.clear();
    //
    emit this->cachedDataCleared();
 }
 
 void DovahKitFormDataCache::forAllDataOfType(dovah::form_type_t ft, uint32_t code, std::function<bool(const QVariant&)> functor) const {
    if (ft == dovah::form_type::quest && code == 'FLTR') {
-      for (auto& data : this->_data.quest_filters)
+      for (auto& data : this->_data.quest_filters.data)
          if ((functor)(data))
             break;
       return;
    }
    if (ft == dovah::form_type::statik && code == 'MODL') {
-      for (auto& data : this->_data.static_models)
+      for (auto& data : this->_data.static_models.data)
          if ((functor)(data))
             break;
       return;
@@ -157,7 +178,7 @@ QVariant DovahKitFormDataCache::dataFor(const dovah::form_stub* stub, uint32_t c
    auto ft = stub->formType;
    auto id = stub->formID;
    if (ft == dovah::form_type::quest && code == 'FLTR') {
-      auto& set = this->_data.quest_filters;
+      auto& set = this->_data.quest_filters.data;
       auto  it  = set.find(id);
       if (it != set.end())
          return *it;
@@ -165,7 +186,7 @@ QVariant DovahKitFormDataCache::dataFor(const dovah::form_stub* stub, uint32_t c
    }
    if (code == 'MODL') {
       if (ft == dovah::form_type::statik) {
-         auto& set = this->_data.static_models;
+         auto& set = this->_data.static_models.data;
          auto  it  = set.find(id);
          if (it != set.end())
             return *it;

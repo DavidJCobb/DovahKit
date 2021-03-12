@@ -216,6 +216,7 @@
     <ClCompile Include="editor\core_internals\load_task.cpp" />
     <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp" />
     <ClCompile Include="editor\form_data_cache.cpp" />
+    <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp" />
     <ClCompile Include="editor\get_condition_description.cpp" />
     <ClCompile Include="editor\get_default_object_info.cpp" />
     <ClCompile Include="editor\get_game_setting_description.cpp" />
@@ -499,6 +500,7 @@
     <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h" />
     <ClInclude Include="dovah\utils\loose_enum.h" />
     <QtMoc Include="editor\form_data_cache.h" />
+    <ClInclude Include="editor\form_data_cache_internals\threaded_builder.h" />
     <ClInclude Include="editor\get_condition_description.h" />
     <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
