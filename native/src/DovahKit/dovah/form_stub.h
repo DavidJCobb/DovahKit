@@ -15,11 +15,15 @@ namespace dovah {
    namespace loaded_forms {
       class Form;
    }
+   namespace load_order_interfaces {
+      class form_load;
+   }
    namespace tes_file_reading {
       class basic_reader;
       class file_or_file_part_loader;
       class file_loader;
       class threaded_load_order_use_info_builder;
+      class record;
    }
    namespace tes_file_writing {
       class file_writer;
@@ -281,12 +285,21 @@ namespace dovah {
          loaded_forms::Form* working_copy = nullptr;
          use_info_list  outbound; // other forms that this one refers to. flags describe (this), the form that is referring.
          use_info_list  inbound;  // other forms that refer to this one.  flags describe (this), the form that is referred to.
+         
+         //
+         // Loads a form, if possible. This is not thread-safe.
          //
          loaded_form_ptr<loaded_forms::Form> load() { return this->_load(); }
          loaded_form_ptr<loaded_forms::Form> get_content_if_loaded(); // returns a pointer to (this->form) only if it's already loaded
-         //
+         
          bool fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size, int16_t source_file_index = -1) const noexcept;
+
          //
+         // A service provided to allow frontends to rapidly extract specific subrecords that are of interest, 
+         // without having to fully load a form. As with form loading, this is not thread-safe.
+         //
+         void do_custom_parse(void(*loader)(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept;
+         
          #pragma region Source file member functions
          const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;
          bool file_list_includes(const owner_file_t*) const noexcept;

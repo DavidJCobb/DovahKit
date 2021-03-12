@@ -160,6 +160,45 @@ namespace dovah {
          return false;
       return data->pointer->fetch_record_header(data->offset, out, out_record_decompressed_size);
    }
+   void form_stub::do_custom_parse(void(*loader)(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)) const noexcept {
+      if (!loader)
+         return; // no loader supplied
+      if (!this->has_source_files())
+         return; // no files to load from
+      //
+      auto& lo = this->_get_load_order();
+      if (lo.is_form_loading_blocked(this)) // don't allow a load if the file's load order is in the middle of a save operation or some other unsafe circumstance
+         return;
+      //
+      file_data* arr;
+      uint16_t   size;
+      this->_get_source_file_list(arr, size);
+      if (!size)
+         return; // no source files (this should never occur; it is only possible while the stub is being built)
+      //
+      auto     intfc             = load_order_interfaces::form_load(lo, *this);
+      bool     can_be_parent     = form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children;
+      uint32_t last_record_flags = 0;
+      for (uint16_t i = 0; i < size; ++i) {
+         auto* file   = arr[i].pointer;
+         auto  offset = arr[i].offset;
+         if (!file || !offset) // no file, or file has no actual data (e.g. unsaved new file); skip it.
+            continue;
+         if (i == 0) {
+            if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy)
+               continue;
+         }
+         intfc.is_winning_record = (i + 1 == size);
+         intfc.current_file      = file;
+         intfc.is_partial_record = can_be_parent && (arr[i].flags & tes_file_record_header::flag::partial);
+         intfc.last_record_flags = last_record_flags;
+         if (file->load_record_at(offset)) {
+            auto& record = file->get_current_record();
+            (loader)(*this, record, intfc);
+         }
+         last_record_flags = arr[i].flags;
+      }
+   }
 
    #pragma region form_stub file list
    void form_stub::_add_file(owner_file_t& f, uint32_t offset, uint32_t record_flags) {
