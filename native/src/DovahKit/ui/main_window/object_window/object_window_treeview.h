@@ -71,6 +71,8 @@ class ObjectWindowFilterInfo {
    
       bool operator==(const ObjectWindowFilterInfo& other) const noexcept;
 
+      static QString normalize(const QString& filter) noexcept;
+
       filter_list_t* filterListFor(dovah::form_type_t) noexcept;
       const filter_list_t* filterListFor(dovah::form_type_t) const noexcept;
       bool testFormStubFilter(const dovah::form_stub*) const noexcept;
