@@ -83,7 +83,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
             if (it != set.end()) {
                QVariant prior = *it;
                set.erase(it);
-               emit this->cachedDataRemoved(stub, 'MODT', prior);
+               emit this->cachedDataRemoved(stub, 'MODL', prior);
             }
          }
          break;
@@ -107,7 +107,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
    if (!intfc.is_winning_record)
       return;
    while (auto& subrecord = record.next_subrecord()) {
-      if (subrecord.signature() != 'MODT')
+      if (subrecord.signature() != 'MODL')
          continue;
       auto& store = DovahKitFormDataCache::get();
       std::string raw;
@@ -135,4 +135,42 @@ void DovahKitFormDataCache::clear() {
    this->_data.static_models.clear();
    //
    emit this->cachedDataCleared();
+}
+
+void DovahKitFormDataCache::forAllDataOfType(dovah::form_type_t ft, uint32_t code, std::function<bool(const QVariant&)> functor) const {
+   if (ft == dovah::form_type::quest && code == 'FLTR') {
+      for (auto& data : this->_data.quest_filters)
+         if ((functor)(data))
+            break;
+      return;
+   }
+   if (ft == dovah::form_type::statik && code == 'MODL') {
+      for (auto& data : this->_data.static_models)
+         if ((functor)(data))
+            break;
+      return;
+   }
+}
+QVariant DovahKitFormDataCache::dataFor(const dovah::form_stub* stub, uint32_t code) const {
+   if (!stub || !code)
+      return QVariant();
+   auto ft = stub->formType;
+   auto id = stub->formID;
+   if (ft == dovah::form_type::quest && code == 'FLTR') {
+      auto& set = this->_data.quest_filters;
+      auto  it  = set.find(id);
+      if (it != set.end())
+         return *it;
+      return QVariant();
+   }
+   if (code == 'MODL') {
+      if (ft == dovah::form_type::statik) {
+         auto& set = this->_data.static_models;
+         auto  it  = set.find(id);
+         if (it != set.end())
+            return *it;
+      }
+      return QVariant();
+   }
+   return QVariant();
 }

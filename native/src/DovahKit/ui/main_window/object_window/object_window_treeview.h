@@ -46,6 +46,8 @@ class ObjectWindowTreeItem {
       [[nodiscard]] inline int indexOf(ObjectWindowTreeItem* child) const noexcept { return this->children.indexOf(child); }
       [[nodiscard]] int indexOf(const QString& name) const noexcept;
 
+      ObjectWindowTreeItem* findChildByFormType(int) const noexcept;
+
       void clear();
       dovah::form_type_t containingFormType() const noexcept; // for filters
       void gatherFormTypes(QVector<dovah::form_type_t>& out) const noexcept;
@@ -66,11 +68,13 @@ class ObjectWindowFilterInfo {
    public:
       QVector<dovah::form_type_t> form_types;
       struct {
+         filter_list_t statics;
          filter_list_t quests;
       } filters;
    
       bool operator==(const ObjectWindowFilterInfo& other) const noexcept;
 
+      static uint32_t cacheCodeFor(dovah::form_type_t) noexcept;
       static QString normalize(const QString& filter) noexcept;
 
       filter_list_t* filterListFor(dovah::form_type_t) noexcept;
@@ -89,15 +93,20 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
          item_type* all    = nullptr;
          item_type* quests = nullptr;
       } _nodes;
-      QHash<dovah::bare_form_id_t, QString> _pending_filter_changes;
       //
       static item_type* _itemFromIndex(const QModelIndex&) noexcept;
+      item_type* _findFormTypeItem(int form_type) const noexcept;
       QModelIndex _indexOfItem(item_type*) const noexcept;
       QModelIndex _indexOfQuests() const noexcept;
       QModelIndex _indexOfAll() const noexcept;
       bool _removeRows(int row, int count, const QModelIndex& parent = QModelIndex());
       void _sortChildrenOf(item_type*);
       void _sortDescendantsOf(item_type*);
+      //
+      void _buildFilters(item_type* root, dovah::form_type_t, uint32_t, bool include_trailing = true);
+      void _clearFilters(item_type* root);
+      void _removeFilter(item_type* root, const QString& full);
+      void _addFilter(item_type* root, const QString& full, bool include_trailing = true);
       //
    public:
       ObjectWindowTreeModel(QObject* parent = nullptr);
@@ -120,11 +129,6 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       QVector<dovah::form_type_t> formTypesFor(const QModelIndexList&) const noexcept;
 
       ObjectWindowFilterInfo getFilterInfoFor(const QModelIndexList&) const noexcept;
-      
-   public slots:
-      void buildAllQuestFilters();
-      void clearAllQuestFilters();
-      void finishQuestFilterChange(dovah::bare_form_id_t formID, const QString& filter); // takes the filter the quest currently has, which may be the same one it used to have
 };
 
 class ObjectWindowTree : public QLinedTreeView {

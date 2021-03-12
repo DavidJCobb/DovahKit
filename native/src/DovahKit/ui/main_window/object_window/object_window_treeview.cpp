@@ -1,6 +1,7 @@
 #include "object_window_treeview.h"
 #include "../../../dovah/form_stub_addenda.h"
 #include "../../../editor/core.h"
+#include "../../../editor/form_data_cache.h"
 
 #pragma region ObjectWindowTreeItem
 ObjectWindowTreeItem::~ObjectWindowTreeItem() {
@@ -51,6 +52,19 @@ void ObjectWindowTreeItem::takeChild(ObjectWindowTreeItem& child) {
    return -1;
 }
 
+ObjectWindowTreeItem* ObjectWindowTreeItem::findChildByFormType(int ft) const noexcept {
+   for (auto* child : this->children) {
+      if (child->form_type == ft)
+         return child;
+      if (child->type == type_t::filter)
+         continue;
+      auto* result = child->findChildByFormType(ft);
+      if (result)
+         return result;
+   }
+   return nullptr;
+}
+
 void ObjectWindowTreeItem::clear() {
    for (auto* child : this->children)
       delete child;
@@ -97,6 +111,8 @@ void ObjectWindowTreeItem::sort() {
 bool ObjectWindowFilterInfo::operator==(const ObjectWindowFilterInfo& other) const noexcept {
    if (this->filters.quests.size() != other.filters.quests.size())
       return false;
+   if (this->filters.statics.size() != other.filters.statics.size())
+      return false;
    if (this->form_types.size() != other.form_types.size())
       return false;
    for (auto ft : this->form_types)
@@ -106,9 +122,22 @@ bool ObjectWindowFilterInfo::operator==(const ObjectWindowFilterInfo& other) con
       for (const auto& b : other.filters.quests)
          if (a.compare(b, Qt::CaseInsensitive) != 0)
             return false;
+   for (const auto& a : this->filters.statics)
+      for (const auto& b : other.filters.statics)
+         if (a.compare(b, Qt::CaseInsensitive) != 0)
+            return false;
    return true;
 }
 
+/*static*/ uint32_t ObjectWindowFilterInfo::cacheCodeFor(dovah::form_type_t ft) noexcept {
+   switch (ft) {
+      case dovah::form_type::quest:
+         return 'FLTR';
+      case dovah::form_type::statik:
+         return 'MODL';
+   }
+   return 0;
+}
 /*static*/ QString ObjectWindowFilterInfo::normalize(const QString& filter) noexcept {
    auto size = filter.size();
    //
@@ -136,6 +165,8 @@ ObjectWindowFilterInfo::filter_list_t* ObjectWindowFilterInfo::filterListFor(dov
    switch (ft) {
       case dovah::form_type::quest:
          return &this->filters.quests;
+      case dovah::form_type::statik:
+         return &this->filters.statics;
    }
    return nullptr;
 }
@@ -151,9 +182,10 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
    //
    // The list is not empty, so apply the filters therein. Treat it as an "OR" match.
    //
-   if (!stub->addenda)
+   auto data = DovahKitFormDataCache::get().dataFor(stub, cacheCodeFor(stub->formType));
+   if (!data.isValid())
       return false;
-   auto filter = normalize(QString::fromStdString(stub->addenda->filter));
+   auto filter = normalize(data.toString());
    for (const auto& match : *list)
       if (filter.startsWith(match, Qt::CaseInsensitive))
          return true;
@@ -304,22 +336,43 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       #pragma endregion
       this->endResetModel();
       //
-      auto& editor = DovahKitCore::get();
-      QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &ObjectWindowTreeModel::clearAllQuestFilters);
-      QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &ObjectWindowTreeModel::buildAllQuestFilters);
-      QObject::connect(&editor, &DovahKitCore::formModificationImminent, this, [this](dovah::form_stub* form) { // TODO: this will break if we receive imminents for multiple forms before any corresponding commits
-         if (form->formType != dovah::form_type::quest)
-            return;
-         if (form->addenda)
-            this->_pending_filter_changes[form->formID] = QString::fromStdString(form->addenda->filter);
+      auto& cache = DovahKitFormDataCache::get();
+      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataBuilt,   this, [this]() {
+         if (auto* qust = this->_nodes.quests) {
+            this->_buildFilters(qust, dovah::form_type::quest, 'FLTR', true);
+         }
+         this->_buildFilters(nullptr, dovah::form_type::statik, 'MODL', false);
       });
-      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* form) {
-         if (form->formType != dovah::form_type::quest)
-            return;
-         QString filter;
-         if (form->addenda)
-            filter = QString::fromStdString(form->addenda->filter);
-         this->finishQuestFilterChange(form->formID, filter);
+      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataChanged, this, [this](dovah::form_stub* stub, uint32_t code, const QVariant& prior, const QVariant& after) {
+         if (stub->formType == dovah::form_type::quest && code == 'FLTR') {
+            auto* root = this->_nodes.quests;
+            if (prior.isValid())
+               this->_removeFilter(root, prior.toString());
+            this->_addFilter(root, after.toString(), true);
+         }
+         if (stub->formType == dovah::form_type::statik && code == 'MODL') {
+            auto* root = this->_findFormTypeItem(stub->formType);
+            if (root) {
+               if (prior.isValid())
+                  this->_removeFilter(root, prior.toString());
+               this->_addFilter(root, after.toString(), false);
+            }
+         }
+      });
+      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataCleared, this, [this]() {
+         this->_clearFilters(this->_nodes.quests);
+         if (auto* node = this->_findFormTypeItem(dovah::form_type::statik))
+            this->_clearFilters(node);
+      });
+      QObject::connect(&cache, &DovahKitFormDataCache::cachedDataRemoved, this, [this](dovah::form_stub* stub, uint32_t code, const QVariant& data) {
+         if (stub->formType == dovah::form_type::quest && code == 'FLTR') {
+            this->_removeFilter(this->_nodes.quests, data.toString());
+         }
+         if (stub->formType == dovah::form_type::statik && code == 'MODL') {
+            auto* root = this->_findFormTypeItem(stub->formType);
+            if (root)
+               this->_removeFilter(root, data.toString());
+         }
       });
    }
    ObjectWindowTreeModel::~ObjectWindowTreeModel() {
@@ -327,14 +380,15 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       this->_nodes.quests = nullptr;
       delete this->_nodes.root;
       this->_nodes.root   = nullptr;
-      //
-      this->_pending_filter_changes.clear();
    }
 
    ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_itemFromIndex(const QModelIndex& index) noexcept {
       if (!index.isValid())
          return nullptr;
       return (item_type*) index.internalPointer();
+   }
+   ObjectWindowTreeModel::item_type* ObjectWindowTreeModel::_findFormTypeItem(int form_type) const noexcept {
+      return this->_nodes.root->findChildByFormType(form_type);
    }
    QModelIndex ObjectWindowTreeModel::_indexOfItem(item_type* item) const noexcept {
       if (!item)
@@ -351,6 +405,8 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       return this->_indexOfItem(this->_nodes.all);
    }
    bool ObjectWindowTreeModel::_removeRows(int row, int count, const QModelIndex& parent) {
+      if (count < 1)
+         return false;
       auto* item = _itemFromIndex(parent);
       if (!item)
          return false;
@@ -524,10 +580,12 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       return out;
    }
 
-   void ObjectWindowTreeModel::buildAllQuestFilters() {
-      assert(this->_nodes.quests);
+   void ObjectWindowTreeModel::_buildFilters(item_type* root, dovah::form_type_t ft, uint32_t code, bool include_trailing) {
+      if (!root) {
+         root = this->_findFormTypeItem(ft);
+         assert(root);
+      }
       //
-      auto* root = this->_nodes.quests;
       auto& list = root->children;
       auto  qmi  = this->_indexOfItem(root);
       if (!list.isEmpty()) {
@@ -543,10 +601,10 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       // root, and then proceed as planned.
       //
       auto* surrogate_parent = new item_type;
-      DovahKitCore::get().for_each_form_of_type(dovah::form_type::quest, [this, root, surrogate_parent](dovah::form_stub* stub) {
-         if (!stub->addenda)
-            return false; // continue
-         auto filter = QString::fromStdString(stub->addenda->filter);
+      DovahKitFormDataCache::get().forAllDataOfType(ft, code, [root, surrogate_parent, include_trailing](const QVariant& data) {
+         if (!data.isValid())
+            return false;
+         auto filter = data.toString();
          if (filter.isEmpty())
             return false; // continue
          //
@@ -586,67 +644,83 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
             }
             fragment += c;
          }
+         if (include_trailing && !fragment.isEmpty()) {
+            auto* parent = (node == root) ? surrogate_parent : node;
+            int   index  = parent->indexOf(fragment);
+            if (index < 0) {
+               //
+               // This fragment doesn't exist, so create it.
+               //
+               auto* child = &item_type::make_filter(fragment);
+               if (node == root) {
+                  child->full_filter = fragment;
+               } else {
+                  child->full_filter = node->full_filter + '/' + fragment;
+               }
+               parent->appendChild(*child);
+               node = child;
+            } else {
+               //
+               // The fragment already exists. Let's just bump up its refcount.
+               //
+               node = parent->child(index);
+            }
+            ++node->refcount;
+         }
          return false; // continue
       });
       //
-      this->beginInsertRows(qmi, 0, surrogate_parent->children.size() - 1);
-      std::swap(list, surrogate_parent->children);
-      delete surrogate_parent;
-      for (auto* child : list)
-         child->parent = root; // fix up parent/child relationships
-      root->recursiveSort();
-      this->endInsertRows();
+      if (!surrogate_parent->children.isEmpty()) {
+         this->beginInsertRows(qmi, 0, surrogate_parent->children.size() - 1);
+         std::swap(list, surrogate_parent->children);
+         delete surrogate_parent;
+         for (auto* child : list)
+            child->parent = root; // fix up parent/child relationships
+         root->recursiveSort();
+         this->endInsertRows();
+      }
    }
-   void ObjectWindowTreeModel::clearAllQuestFilters() {
-      auto qmi = this->_indexOfQuests();
+   void ObjectWindowTreeModel::_clearFilters(item_type* root) {
+      auto qmi = this->_indexOfItem(root);
       if (qmi.isValid())
          this->_removeRows(0, this->rowCount(qmi), qmi);
    }
-   void ObjectWindowTreeModel::finishQuestFilterChange(dovah::bare_form_id_t formID, const QString& filter) {
-      QString old = this->_pending_filter_changes.value(formID);
-      this->_pending_filter_changes.remove(formID);
-      if (old.compare(filter, Qt::CaseInsensitive) == 0) // no change
+   void ObjectWindowTreeModel::_removeFilter(item_type* root, const QString& full) {
+      if (full.isEmpty())
          return;
-      //
-      if (!old.isEmpty()) {
-         //
-         // Decrement refcounts as appropriate:
-         //
-         QString fragment;
-         auto*   node = this->_nodes.quests;
-         for (int i = 0; i < old.size(); ++i) {
-            QChar c = old[i];
-            if (c == '/' || c == '\\') {
-               if (fragment.isEmpty()) // Treat "Foo//Bar" the same as "Foo/Bar"
-                  continue;
-               auto index = node->indexOf(fragment);
-               fragment.clear();
-               if (index < 0) {
-                  node = nullptr;
-                  break;
-               }
-               node = node->child(index);
-               if (--node->refcount == 0)
-                  break;
+      QString fragment;
+      auto*   node = root;
+      for (int i = 0; i < full.size(); ++i) {
+         QChar c = full[i];
+         if (c == '/' || c == '\\') {
+            if (fragment.isEmpty()) // Treat "Foo//Bar" the same as "Foo/Bar"
                continue;
+            auto index = node->indexOf(fragment);
+            fragment.clear();
+            if (index < 0) {
+               node = nullptr;
+               break;
             }
-            fragment += c;
+            node = node->child(index);
+            if (--node->refcount == 0)
+               break;
+            continue;
          }
-         if (node && node != this->_nodes.quests && node->refcount == 0) {
-            //
-            // Destroy the outermost node whose refcount dropped to zero.
-            //
-            auto* parent = node->parent;
-            auto  index  = parent->indexOf(node);
-            this->_removeRows(index, 0, this->_indexOfItem(parent));
-         }
+         fragment += c;
       }
-      //
-      // Increment refcounts and create nodes as appropriate:
-      //
+      if (node && node != this->_nodes.quests && node->refcount == 0) {
+         //
+         // Destroy the outermost node whose refcount dropped to zero.
+         //
+         auto* parent = node->parent;
+         auto  index  = parent->indexOf(node);
+         this->_removeRows(index, 1, this->_indexOfItem(parent));
+      }
+   }
+   void ObjectWindowTreeModel::_addFilter(item_type* root, const QString& filter, bool include_trailing) {
       QVector<item_type*> added_to;
       QString fragment;
-      auto*   node = this->_nodes.quests;
+      auto*   node = root;
       for (int i = 0; i < filter.size(); ++i) {
          QChar c = filter[i];
          if (c == '/' || c == '\\') {
@@ -660,7 +734,7 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
                auto  size = list.size();
                this->beginInsertRows(this->_indexOfItem(node), size, size);
                auto* child = &item_type::make_filter(fragment);
-               if (node == this->_nodes.quests) {
+               if (node == root) {
                   child->full_filter = fragment;
                } else {
                   child->full_filter = node->full_filter + '/' + fragment;
@@ -677,6 +751,28 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
             continue;
          }
          fragment += c;
+      }
+      if (include_trailing && !fragment.isEmpty()) {
+         int   index  = node->indexOf(fragment);
+         if (index < 0) {
+            //
+            // This fragment doesn't exist, so create it.
+            //
+            auto* child = &item_type::make_filter(fragment);
+            if (node == root) {
+               child->full_filter = fragment;
+            } else {
+               child->full_filter = node->full_filter + '/' + fragment;
+            }
+            node->appendChild(*child);
+            node = child;
+         } else {
+            //
+            // The fragment already exists. Let's just bump up its refcount.
+            //
+            node = node->child(index);
+         }
+         ++node->refcount;
       }
       for (auto* node : added_to) {
          emit this->layoutAboutToBeChanged({ this->_indexOfItem(node) }, LayoutChangeHint::VerticalSortHint);

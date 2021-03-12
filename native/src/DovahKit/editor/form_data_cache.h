@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <QHash>
 #include <QObject>
 #include <QString>
@@ -34,4 +35,8 @@ class DovahKitFormDataCache : public QObject {
       void cachedDataChanged(dovah::form_stub*, uint32_t code, const QVariant& prior, const QVariant& after); // if !prior.isValid(), then the data was just added
       void cachedDataCleared(); // emitted when all data is cleared
       void cachedDataRemoved(dovah::form_stub*, uint32_t code, const QVariant& data); // emitted only when one form's data is cleared
+
+   public:
+      void forAllDataOfType(dovah::form_type_t, uint32_t code, std::function<bool(const QVariant&)> functor) const;
+      QVariant dataFor(const dovah::form_stub*, uint32_t code) const;
 };
