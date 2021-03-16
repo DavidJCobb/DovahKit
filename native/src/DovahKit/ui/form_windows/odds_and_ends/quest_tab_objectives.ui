@@ -26,9 +26,6 @@
    <property name="bottomMargin">
     <number>0</number>
    </property>
-   <item row="0" column="0">
-    <widget class="QTableWidget" name="objectives"/>
-   </item>
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
@@ -36,7 +33,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="1">
-       <widget class="QSpinBox" name="objectiveID">
+       <widget class="QSpinBoxDKEx" name="objectiveID">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -91,9 +88,6 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QTableWidget" name="targets"/>
-   </item>
    <item row="3" column="0">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
@@ -138,13 +132,32 @@
        </layout>
       </item>
       <item row="1" column="0">
-       <widget class="QWidget" name="targetConditions" native="true"/>
+       <widget class="ConditionList" name="targetConditions" native="true"/>
       </item>
      </layout>
     </widget>
    </item>
+   <item row="0" column="0">
+    <widget class="QTableView" name="objectives"/>
+   </item>
+   <item row="2" column="0">
+    <widget class="QTableView" name="targets"/>
+   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ConditionList</class>
+   <extends>QWidget</extends>
+   <header>condition_list.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QSpinBoxDKEx</class>
+   <extends>QSpinBox</extends>
+   <header>../../generic/QSpinBoxDKEx.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>objectives</tabstop>
   <tabstop>objectiveID</tabstop>

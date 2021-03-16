@@ -315,9 +315,7 @@ void QuestTabStages::deactivate() {
    QObject::disconnect(this->ui.logEntryFlagFail);
    QObject::disconnect(this->ui.logEntryNextQuest);
    this->ui.logEntryConditions->model()->clearTarget();
-   //
-   // TODO: disconnect the condition list and the fragment editor
-   //
+   QObject::disconnect(this->ui.logEntryFragment);
 }
 void QuestTabStages::redrawEntryListSelectedItem() {
    loaded_t::LogEntry* entry = nullptr;

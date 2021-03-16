@@ -4,6 +4,7 @@
 #include "ui_quest.h"
 
 class QuestTabStages;
+class QuestTabObjectives;
 
 class FormDialogQuest : public FormDialogWorkingCopyBase {
    Q_OBJECT
@@ -18,7 +19,8 @@ class FormDialogQuest : public FormDialogWorkingCopyBase {
    protected:
       Ui::FormDialogQuest ui;
       struct {
-         QuestTabStages* stages;
+         QuestTabStages*     stages     = nullptr;
+         QuestTabObjectives* objectives = nullptr;
       } tabs;
       //
       virtual void _load_impl() override;

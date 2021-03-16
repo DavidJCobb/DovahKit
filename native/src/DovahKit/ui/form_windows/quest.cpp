@@ -3,7 +3,8 @@
 #include "../../dovah/core.h"
 #include "../../dovah/form_stub_addenda.h"
 #include "../../helpers/qt/basic_bindings.h"
-#include "odds_and_ends//quest_tab_stages.h"
+#include "odds_and_ends/quest_tab_stages.h"
+#include "odds_and_ends/quest_tab_objectives.h"
 
 FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
    form_dialog_helpers::initialize(*this);
@@ -25,7 +26,8 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
       //
       auto& quest = *(form_t*)this->clone;
       //
-      _insert(1, (this->tabs.stages = new QuestTabStages(*stub, quest)));
+      _insert(1, (this->tabs.stages     = new QuestTabStages(*stub, quest)));
+      _insert(2, (this->tabs.objectives = new QuestTabObjectives(*stub, quest)));
    }
    #pragma endregion
    //

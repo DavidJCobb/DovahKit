@@ -63,7 +63,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabBase">
       <attribute name="title">
@@ -263,103 +263,6 @@
       <attribute name="title">
        <string>Objectives</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QTableView" name="objectiveList"/>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Selected objective</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_7">
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="objectiveIndex"/>
-          </item>
-          <item row="2" column="0" colspan="4">
-           <widget class="QTableWidget" name="objectiveTargetList"/>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_14">
-            <property name="text">
-             <string>Display text</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>Index</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="4">
-           <widget class="QCheckBox" name="objectiveFlagOr">
-            <property name="text">
-             <string>OR'd with previous</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLineEdit" name="objectiveText"/>
-          </item>
-          <item row="3" column="0" colspan="4">
-           <widget class="QGroupBox" name="groupBox_2">
-            <property name="title">
-             <string>Selected target</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,0,0,0">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_15">
-               <property name="text">
-                <string>Target alias</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="objectiveTargetAlias"/>
-             </item>
-             <item row="0" column="2">
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="1" column="0" colspan="4">
-              <widget class="QLabel" name="label_16">
-               <property name="text">
-                <string>Conditions:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <widget class="QCheckBox" name="objectiveTargetFlagIgnoreLocks">
-               <property name="text">
-                <string>Compass markers ignore locks</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0" colspan="4">
-              <widget class="QLabel" name="label_17">
-               <property name="text">
-                <string>TODO: CONDITION LIST UI HERE</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
      </widget>
      <widget class="QWidget" name="tabAliases">
       <attribute name="title">
@@ -472,13 +375,6 @@
   <tabstop>buttonCancel</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>aliasList</tabstop>
-  <tabstop>objectiveList</tabstop>
-  <tabstop>objectiveIndex</tabstop>
-  <tabstop>objectiveText</tabstop>
-  <tabstop>objectiveFlagOr</tabstop>
-  <tabstop>objectiveTargetList</tabstop>
-  <tabstop>objectiveTargetAlias</tabstop>
-  <tabstop>objectiveTargetFlagIgnoreLocks</tabstop>
   <tabstop>dialogueTabbox</tabstop>
  </tabstops>
  <resources/>

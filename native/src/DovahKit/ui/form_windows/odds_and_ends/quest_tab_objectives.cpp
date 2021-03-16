@@ -21,10 +21,13 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
       {
          auto* widget = this->ui.objectives;
          auto* model  = new QStandardItemModelDKEx(widget);
+         model->setAutoTooltips(true); // QStandardItemModelDKEx
          model->setColumnCount(2);
          model->setSortRole(Qt::UserRole);
          widget->setModel(model);
-         widget->setUniformItemSizes(true);
+         model->setHorizontalHeaderLabels({ tr("Index"), tr("Text") });
+         widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+         widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
          //
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_objective_settings();
@@ -115,15 +118,43 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
       #pragma endregion
    #pragma endregion
    
-   #pragma region Stage flags
-   QObject::connect(this->ui.stageFlagStartup, &QCheckBox::stateChanged, this, [this](int state) {
-      this->_modify_stage_flag(loaded_t::Stage::flag::startup, state == Qt::CheckState::Checked);
+   #pragma region Stage settings
+   QObject::connect(this->ui.objectiveID, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+      if (auto* obj = this->_get_objective()) {
+         auto* other = this->_get_objective(value);
+         if (other && other != obj) {
+            return;
+         }
+         obj->index = value;
+         this->_redraw_objective_list();
+         this->_select_objective(value);
+      }
    });
-   QObject::connect(this->ui.stageFlagShutdown, &QCheckBox::stateChanged, this, [this](int state) {
-      this->_modify_stage_flag(loaded_t::Stage::flag::shutdown, state == Qt::CheckState::Checked);
+   this->ui.objectiveID->setValidateHandler([this](const QSpinBoxDKEx& widget, QString& input, int& pos) {
+      bool ok    = false;
+      int  value = input.toInt(&ok);
+      if (!ok) {
+         if (input.isEmpty())
+            return QValidator::State::Intermediate;
+         return QValidator::State::Invalid;
+      }
+      auto sel = this->_selected_objective_id();
+      if (value == sel)
+         return QValidator::State::Acceptable;
+      if (this->_get_objective(value))
+         return QValidator::State::Invalid; // TODO: should this be intermediate instead?
+      return QValidator::State::Acceptable;
    });
-   QObject::connect(this->ui.stageFlagKeepInstanceData, &QCheckBox::stateChanged, this, [this](int state) {
-      this->_modify_stage_flag(loaded_t::Stage::flag::keep_instance_data, state == Qt::CheckState::Checked);
+   //
+   QObject::connect(this->ui.objectiveFlagOR, &QCheckBox::stateChanged, this, [this](int state) {
+      if (auto* obj = this->_get_objective())
+         cobb::edit_bit(obj->flags, loaded_t::Objective::flag::or_with_previous, state == Qt::CheckState::Checked);
+   });
+   QObject::connect(this->ui.objectiveText, &QLineEdit::textEdited, this, [this](const QString& text) {
+      if (auto* obj = this->_get_objective()) {
+         DovahKitCore::get().assign_localized_string(obj->text, text);
+         this->redrawObjectiveListSelectedItemText();
+      }
    });
    #pragma endregion
    
@@ -134,7 +165,7 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          model->setAutoTooltips(true); // QStandardItemModelDKEx
          model->setColumnCount(2);
          widget->setModel(model);
-         model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
+         model->setHorizontalHeaderLabels({ tr("Alias"), tr("Conditions") });
          widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
          widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
          //
@@ -153,9 +184,6 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_target_settings();
          });
-         //
-         // Redraw log entries in the table if the fields we list in the table are edited:
-         //
          QObject::connect(this->ui.targetConditions, &ConditionList::conditionEdited, this, &QuestTabObjectives::redrawTargetListSelectedItemConditions);
       }
       #pragma region Context menu
@@ -165,34 +193,36 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
       this->context_menu_actions.target_list.moveDown = new QAction(tr("Move down"), this->ui.targets);
       //
       QObject::connect(this->context_menu_actions.target_list.insert, &QAction::triggered, this, [this]() {
-         auto* stage = this->_get_objective();
-         if (!stage)
+         auto* obj = this->_get_objective();
+         if (!obj)
             return;
-         auto  index = stage->entries.size();
-         stage->entries.emplace_back();
+         auto index = obj->targets.size();
+         obj->targets.emplace_back();
          this->_redraw_target_list();
          this->_select_target(index);
       });
       QObject::connect(this->context_menu_actions.target_list.remove, &QAction::triggered, this, [this]() {
-         auto* stage = this->_get_objective();
-         if (!stage)
+         auto* obj = this->_get_objective();
+         if (!obj)
             return;
-         int s = this->_selected_objective_id();
-         int e = this->_selected_target_index();
-         //this->form.remove_log_entry(s, e);
-         static_assert(false, "remove the objective");
+         auto  ti   = this->_selected_target_index();
+         auto& list = obj->targets;
+         if (ti < 0 || ti >= list.size())
+            return;
+         list[ti].clear(this->form);
+         list.erase(list.begin() + ti);
          this->_redraw_target_list();
          //
-         if (e < stage->entries.size())
-            this->_select_target(e);
-         else if (e > 0)
-            this->_select_target(e - 1);
+         if (ti < obj->targets.size())
+            this->_select_target(ti);
+         else if (ti > 0)
+            this->_select_target(ti - 1);
       });
       QObject::connect(this->context_menu_actions.target_list.moveUp, &QAction::triggered, this, [this]() {
-         auto* stage = this->_get_objective();
-         if (!stage)
+         auto* obj = this->_get_objective();
+         if (!obj)
             return;
-         auto& list = stage->entries;
+         auto& list = obj->targets;
          int   e    = this->_selected_target_index();
          if (e <= 0)
             return;
@@ -201,10 +231,10 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          this->_select_target(e - 1);
       });
       QObject::connect(this->context_menu_actions.target_list.moveDown, &QAction::triggered, this, [this]() {
-         auto* stage = this->_get_objective();
-         if (!stage)
+         auto* obj = this->_get_objective();
+         if (!obj)
             return;
-         auto& list = stage->entries;
+         auto& list = obj->targets;
          int   e    = this->_selected_target_index();
          if (e >= list.size() - 1)
             return;
@@ -226,10 +256,10 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          this->context_menu_actions.target_list.moveDown->setVisible(any);
          this->context_menu_actions.target_list.remove->setVisible(any);
          if (any) {
-            int   row   = rows[0].row();
-            auto* stage = this->_get_objective();
+            int   row = rows[0].row();
+            auto* obj = this->_get_objective();
             this->context_menu_actions.target_list.moveUp->setEnabled(row > 0);
-            this->context_menu_actions.target_list.moveDown->setEnabled(stage && row + 1 < stage->entries.size());
+            this->context_menu_actions.target_list.moveDown->setEnabled(obj && row + 1 < obj->targets.size());
          }
          //
          QMenu menu(opener);
@@ -247,31 +277,21 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
 
    #pragma region Log entries
       #pragma region Entry settings
-      this->ui.logEntryNextQuest->setAllowedFormType(dovah::form_type::quest);
-      this->ui.logEntryNextQuest->setAllowNone(true);
-      this->ui.logEntryNextQuest->populate();
-      QObject::connect(this->ui.logEntryNextQuest, &FormsOfTypeCombobox::formChanged, this, [this](dovah::form_stub* selected) {
-         if (auto* entry = this->_get_log_entry())
-            entry->next_quest_id.set(this->form, selected);
-      });
-      //
-      QObject::connect(this->ui.logEntryText, &QPlainTextEdit::textChanged, this, [this]() {
-         if (auto* entry = this->_get_log_entry()) {
-            entry->journal_text = this->ui.logEntryText->toPlainText().toStdString();
-            this->redrawEntryListSelectedItemText();
+      QObject::connect(this->ui.targetAlias, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+         if (auto* target = this->_get_target()) {
+            auto data = this->ui.targetAlias->currentData();
+            target->aliasID = data.isValid() ? data.toInt() : -1;
+            this->redrawTargetListSelectedItemAliasName();
          }
       });
-      QObject::connect(this->ui.logEntryFlagComplete, &QCheckBox::stateChanged, this, [this](int state) {
-         if (auto* entry = this->_get_log_entry())
-            cobb::edit_bit(entry->flags, loaded_t::LogEntry::flag::complete, state == Qt::CheckState::Checked);
-      });
-      QObject::connect(this->ui.logEntryFlagFail, &QCheckBox::stateChanged, this, [this](int state) {
-         if (auto* entry = this->_get_log_entry())
-            cobb::edit_bit(entry->flags, loaded_t::LogEntry::flag::fail, state == Qt::CheckState::Checked);
+      QObject::connect(this->ui.targetFlagIgnoreLocks, &QCheckBox::stateChanged, this, [this](int state) {
+         if (auto* entry = this->_get_target())
+            cobb::edit_bit(entry->flags, loaded_t::Target::flag::marker_pathing_ignores_locks, state == Qt::CheckState::Checked);
       });
       #pragma endregion
    #pragma endregion
 
+   this->_redraw_alias_picker();
    this->_redraw_objective_list();
    this->_redraw_objective_settings();
    this->_redraw_target_list();
@@ -286,21 +306,57 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
 }
 
 void QuestTabObjectives::deactivate() {
-   QObject::disconnect(this->ui.stageFlagStartup);
-   QObject::disconnect(this->ui.stageFlagShutdown);
-   QObject::disconnect(this->ui.stageFlagKeepInstanceData);
-   QObject::disconnect(this->ui.logEntries);
-   QObject::disconnect(this->ui.logEntryText);
-   QObject::disconnect(this->ui.logEntryFlagComplete);
-   QObject::disconnect(this->ui.logEntryFlagFail);
-   QObject::disconnect(this->ui.logEntryNextQuest);
+   QObject::disconnect(this->ui.objectives);
+   QObject::disconnect(this->ui.objectiveFlagOR);
+   QObject::disconnect(this->ui.objectiveID);
+   QObject::disconnect(this->ui.objectiveText);
+   QObject::disconnect(this->ui.targets);
+   QObject::disconnect(this->ui.targetAlias);
+   QObject::disconnect(this->ui.targetFlagIgnoreLocks);
    this->ui.targetConditions->model()->clearTarget();
+}
+
+void QuestTabObjectives::redrawObjectiveListSelectedItemText() {
+   loaded_t::Objective* obj = this->_get_objective();
+   if (!obj)
+      return;
    //
-   // TODO: disconnect the condition list and the fragment editor
+   auto* widget = this->ui.objectives;
+   auto  qmi    = widget->currentIndex();
+   if (!qmi.isValid())
+      return;
+   auto* model  = (QStandardItemModelDKEx*) widget->model();
+   auto* col    = model->item(qmi.row(), 1);
+   if (!col)
+      return;
+   col->setText(DovahKitCore::get().convert_localized_string(obj->text));
+}
+void QuestTabObjectives::redrawTargetListSelectedItemAliasName() {
+   loaded_t::Target* target = nullptr;
    //
+   auto* widget = this->ui.targets;
+   auto  index  = widget->currentIndex();
+   if (!index.isValid())
+      return;
+   auto row = index.row();
+   //
+   if (auto* s = this->_get_objective()) {
+      auto& list = s->targets;
+      if (row < 0 || row >= list.size())
+         return;
+      target = &list[row];
+   }
+   if (!target)
+      return;
+   //
+   auto* model = (QStandardItemModelDKEx*)widget->model();
+   auto* col0  = model->item(row, 0);
+   if (!col0)
+      return;
+   col0->setText(this->_get_alias_name(target->aliasID));
 }
 void QuestTabObjectives::redrawTargetListSelectedItemConditions() {
-   loaded_t::Target* entry = nullptr;
+   loaded_t::Target* target = nullptr;
    //
    auto* widget = this->ui.targets;
    auto* sm     = widget->selectionModel();
@@ -312,44 +368,29 @@ void QuestTabObjectives::redrawTargetListSelectedItemConditions() {
       return;
    auto row = index.row();
    //
-   if (auto* s = this->_get_stage()) {
-      auto& list = s->entries;
+   if (auto* s = this->_get_objective()) {
+      auto& list = s->targets;
       if (row < 0 || row >= list.size())
          return;
-      entry = &list[row];
+      target = &list[row];
    }
-   if (!entry)
+   if (!target)
       return;
    //
    auto* col1 = model->item(row, 1);
    if (!col1)
       return;
    auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
-   col1->setText(editor_helpers::stringify_condition_list(entry->conditions, ctx));
+   col1->setText(editor_helpers::stringify_condition_list(target->conditions, ctx));
 }
-void QuestTabObjectives::redrawTargetListSelectedItemText() {
-   loaded_t::Target* entry = nullptr;
-   //
-   auto* widget = this->ui.targets;
-   auto  index  = widget->currentIndex();
-   if (!index.isValid())
-      return;
-   auto row = index.row();
-   //
-   if (auto* s = this->_get_objective()) {
-      auto& list = s->entries;
-      if (row < 0 || row >= list.size())
-         return;
-      entry = &list[row];
-   }
-   if (!entry)
-      return;
-   //
-   auto* model = (QStandardItemModelDKEx*)widget->model();
-   auto* col0  = model->item(row, 0);
-   if (!col0)
-      return;
-   col0->setText(entry->journal_text.c_str());
+
+dovah::loaded_forms::Alias* QuestTabObjectives::_get_alias(int id) const noexcept {
+   return this->form.lookup_alias_by_id(id);
+}
+QString QuestTabObjectives::_get_alias_name(int id) const noexcept {
+   if (auto* alias = this->_get_alias(id))
+      return QString::fromStdString(alias->name);
+   return tr("NONE", "alias name in quest objective tab");
 }
 
 QuestTabObjectives::loaded_t::Objective* QuestTabObjectives::_get_objective() const noexcept {
@@ -358,7 +399,7 @@ QuestTabObjectives::loaded_t::Objective* QuestTabObjectives::_get_objective() co
 QuestTabObjectives::loaded_t::Objective* QuestTabObjectives::_get_objective(int id) const noexcept {
    if (id < 0)
       return nullptr;
-   for (auto& s : this->form.stages)
+   for (auto& s : this->form.objectives)
       if (s.index == id)
          return &s;
    return nullptr;
@@ -366,7 +407,7 @@ QuestTabObjectives::loaded_t::Objective* QuestTabObjectives::_get_objective(int 
 QuestTabObjectives::loaded_t::Target* QuestTabObjectives::_get_target() const noexcept {
    if (auto* s = this->_get_objective()) {
       auto  i    = this->_selected_target_index();
-      auto& list = s->entries;
+      auto& list = s->targets;
       if (i < 0 || i >= list.size())
          return nullptr;
       return &list[i];
@@ -377,7 +418,7 @@ QuestTabObjectives::loaded_t::Target* QuestTabObjectives::_get_target(int stage,
    auto* s = this->_get_objective(stage);
    if (!s)
       return nullptr;
-   auto& list = s->entries;
+   auto& list = s->targets;
    if (entry < 0 || entry >= list.size())
       return nullptr;
    return &list[entry];
@@ -428,8 +469,27 @@ int QuestTabObjectives::_selected_target_index() const noexcept {
    return index.row();
 }
 
+void QuestTabObjectives::_redraw_alias_picker() {
+   int prior_id = -1;
+   if (auto* target = this->_get_target())
+      prior_id = target->aliasID;
+   //
+   auto* widget  = this->ui.targetAlias;
+   auto  blocker = QSignalBlocker(widget);
+   //
+   widget->clear();
+   this->form.for_each_alias_of_type(dovah::loaded_forms::Alias::alias_type::reference, [widget](dovah::loaded_forms::Alias* alias) {
+      if (widget->findData(alias->id))
+         return false; // continue
+      widget->addItem(QString::fromStdString(alias->name), alias->id);
+      return false; // continue
+   });
+   widget->model()->sort(0);
+   widget->insertItem(0, tr("NONE", "alias name in quest objective tab"), -1);
+   widget->setCurrentIndex(widget->findData(prior_id));
+}
 void QuestTabObjectives::_redraw_objective_list() {
-   int   prior_id = this->_selected_objective_id(); // prior selected stage ID
+   int   prior_id = this->_selected_objective_id();
    auto* widget   = this->ui.objectives;
    auto  blocker  = QSignalBlocker(widget);
    auto* model    = (QStandardItemModelDKEx*) widget->model();
@@ -458,23 +518,23 @@ void QuestTabObjectives::_redraw_objective_list() {
 }
 void QuestTabObjectives::_redraw_objective_settings() {
    auto* ptr = this->_get_objective();
-   this->ui.stageFlagStartup->setEnabled(ptr != nullptr);
-   this->ui.stageFlagShutdown->setEnabled(ptr != nullptr);
-   this->ui.stageFlagKeepInstanceData->setEnabled(ptr != nullptr);
-   this->ui.logEntries->setEnabled(ptr != nullptr);
+   this->ui.objectiveFlagOR->setEnabled(ptr != nullptr);
+   this->ui.objectiveID->setEnabled(ptr != nullptr);
+   this->ui.objectiveText->setEnabled(ptr != nullptr);
+   this->ui.targets->setEnabled(ptr != nullptr);
    //
-   const auto blocker0 = QSignalBlocker(this->ui.stageFlagStartup);
-   const auto blocker1 = QSignalBlocker(this->ui.stageFlagShutdown);
-   const auto blocker2 = QSignalBlocker(this->ui.stageFlagKeepInstanceData);
+   const auto blocker0 = QSignalBlocker(this->ui.objectiveFlagOR);
+   const auto blocker1 = QSignalBlocker(this->ui.objectiveID);
+   const auto blocker2 = QSignalBlocker(this->ui.objectiveText);
    if (!ptr) {
-      this->ui.stageFlagStartup->setChecked(false);
-      this->ui.stageFlagShutdown->setChecked(false);
-      this->ui.stageFlagKeepInstanceData->setChecked(false);
+      this->ui.objectiveFlagOR->setChecked(false);
+      this->ui.objectiveID->clear();
+      this->ui.objectiveText->clear();
       return;
    }
-   this->ui.stageFlagStartup->setChecked(ptr->flags & loaded_t::Stage::flag::startup);
-   this->ui.stageFlagShutdown->setChecked(ptr->flags & loaded_t::Stage::flag::shutdown);
-   this->ui.stageFlagKeepInstanceData->setChecked(ptr->flags & loaded_t::Stage::flag::keep_instance_data);
+   this->ui.objectiveFlagOR->setChecked(ptr->flags & loaded_t::Objective::flag::or_with_previous);
+   this->ui.objectiveID->setValue(ptr->index);
+   this->ui.objectiveText->setText(DovahKitCore::get().convert_localized_string(ptr->text));
 }
 void QuestTabObjectives::_redraw_target_list() {
    int   index   = this->_selected_target_index();
@@ -489,13 +549,13 @@ void QuestTabObjectives::_redraw_target_list() {
       return;
    //
    auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
-   auto& list = ptr->entries;
+   auto& list = ptr->targets;
    auto  size = list.size();
    QModelIndex prior;
    for (size_t i = 0; i < size; ++i) {
-      auto& entry = list[i];
-      auto* col0  = new QStandardItem(entry.journal_text.c_str());
-      auto* col1  = new QStandardItem(editor_helpers::stringify_condition_list(entry.conditions, ctx));
+      auto& target = list[i];
+      auto* col0   = new QStandardItem(this->_get_alias_name(target.aliasID));
+      auto* col1   = new QStandardItem(editor_helpers::stringify_condition_list(target.conditions, ctx));
       model->appendRow({ col0, col1 });
       //
       if (i == index)
@@ -506,43 +566,40 @@ void QuestTabObjectives::_redraw_target_list() {
 }
 void QuestTabObjectives::_redraw_target_settings() {
    auto* ptr = this->_get_target();
-   this->ui.logEntryFlagComplete->setEnabled(ptr != nullptr);
-   this->ui.logEntryFlagFail->setEnabled(ptr != nullptr);
-   this->ui.logEntryNextQuest->setEnabled(ptr != nullptr);
-   this->ui.logEntryText->setEnabled(ptr != nullptr);
-   this->ui.logEntryFragment->setEnabled(ptr != nullptr);
-   this->ui.logEntryConditions->setEnabled(ptr != nullptr);
+   this->ui.targetFlagIgnoreLocks->setEnabled(ptr != nullptr);
+   this->ui.targetAlias->setEnabled(ptr != nullptr);
+   this->ui.targetConditions->setEnabled(ptr != nullptr);
    //
-   const auto blocker0 = QSignalBlocker(this->ui.logEntryText);
-   const auto blocker1 = QSignalBlocker(this->ui.logEntryFragment);
-   const auto blocker2 = QSignalBlocker(this->ui.logEntryFlagComplete);
-   const auto blocker3 = QSignalBlocker(this->ui.logEntryFlagFail);
-   const auto blocker4 = QSignalBlocker(this->ui.logEntryNextQuest);
+   const auto blocker0 = QSignalBlocker(this->ui.targetFlagIgnoreLocks);
+   const auto blocker1 = QSignalBlocker(this->ui.targetAlias);
    //
    if (!ptr) {
-      this->ui.logEntryFlagComplete->setChecked(false);
-      this->ui.logEntryFlagFail->setChecked(false);
-      this->ui.logEntryNextQuest->setFormStub(nullptr);
-      this->ui.logEntryConditions->model()->clearTarget();
-      this->ui.logEntryText->clear();
-      this->ui.logEntryFragment->clearCurrentValues();
+      this->ui.targetFlagIgnoreLocks->setChecked(false);
+      this->ui.targetAlias->setCurrentIndex(this->ui.targetAlias->findData(-1));
+      this->ui.targetConditions->model()->clearTarget();
       return;
    }
    //
-   this->ui.logEntryFlagComplete->setChecked(ptr->flags & loaded_t::LogEntry::flag::complete);
-   this->ui.logEntryFlagFail->setChecked(ptr->flags & loaded_t::LogEntry::flag::fail);
-   this->ui.logEntryNextQuest->setFormStub(ptr->next_quest_id.get_form_stub());
-   this->ui.logEntryText->setPlainText(ptr->journal_text.c_str());
-   this->ui.logEntryFragment->setCurrentScriptname(ptr->fragment.filename.c_str());
-   this->ui.logEntryFragment->setCurrentFunction(ptr->fragment.function.c_str());
-   this->ui.logEntryConditions->model()->setTarget(this->stub, ptr->conditions, true);
+   this->ui.targetFlagIgnoreLocks->setChecked(ptr->flags & loaded_t::Target::flag::marker_pathing_ignores_locks);
+   this->ui.targetAlias->setCurrentIndex(this->ui.targetAlias->findData(ptr->aliasID));
+   this->ui.targetConditions->model()->setTarget(this->stub, ptr->conditions, true);
 }
 
 void QuestTabObjectives::showEvent(QShowEvent* event) {
    QWidget::showEvent(event);
+   //
+   this->_redraw_alias_picker(); // aliases could've been changed in another tab
+   this->_redraw_target_list();  // aliases could've been changed in another tab
+   //
    if (this->_did_first_show)
       return;
    this->_did_first_show = true;
+   if (auto* header = this->ui.objectives->horizontalHeader()) {
+      auto width = header->width();
+      auto third = width / 3;
+      header->resizeSection(0, width - third);
+      header->resizeSection(1, 0); // set the last section to minimum size and let it stretch; that way, enlarging the prior sections doesn't cause this one to clip out of bounds
+   }
    if (auto* header = this->ui.targets->horizontalHeader()) {
       auto width = header->width();
       auto third = width / 3;

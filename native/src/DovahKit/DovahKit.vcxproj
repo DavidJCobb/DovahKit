@@ -286,6 +286,7 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_param.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\formlist_listview.cpp" />
+    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
@@ -305,6 +306,7 @@
     <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
+    <ClCompile Include="ui\generic\QSpinBoxDKEx.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
     <ClCompile Include="ui\generic\RefPickerButton.cpp" />
@@ -586,6 +588,8 @@
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
+    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
+    <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
@@ -658,6 +662,7 @@
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
     <QtUic Include="ui\form_windows\quest.ui" />

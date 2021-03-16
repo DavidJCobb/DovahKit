@@ -15,8 +15,9 @@ class QuestTabObjectives : public QWidget {
       //
    private slots:
       void deactivate();
+      void redrawObjectiveListSelectedItemText();
+      void redrawTargetListSelectedItemAliasName();
       void redrawTargetListSelectedItemConditions();
-      void redrawTargetListSelectedItemText();
       //
    private:
       Ui::QuestTabObjectives ui;
@@ -36,6 +37,9 @@ class QuestTabObjectives : public QWidget {
          } target_list;
       } context_menu_actions;
       
+      dovah::loaded_forms::Alias* _get_alias(int id) const noexcept;
+      QString _get_alias_name(int id) const noexcept;
+
       loaded_t::Objective* _get_objective() const noexcept;
       loaded_t::Objective* _get_objective(int) const noexcept;
       loaded_t::Target* _get_target() const noexcept;
@@ -47,6 +51,7 @@ class QuestTabObjectives : public QWidget {
       int _selected_objective_id() const noexcept;
       int _selected_target_index() const noexcept;
 
+      void _redraw_alias_picker();
       void _redraw_objective_list();
       void _redraw_objective_settings();
       void _redraw_target_list();

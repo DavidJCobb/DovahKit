@@ -732,6 +732,12 @@
     <ClCompile Include="editor\form_data_cache_internals\threaded_builder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\generic\QSpinBoxDKEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1499,6 +1505,9 @@
     <ClInclude Include="editor\form_data_cache_internals\threaded_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\generic\QSpinBoxDKEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1580,6 +1589,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\generic\PapyrusFragmentEditor.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -1747,6 +1759,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\form_data_cache.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
