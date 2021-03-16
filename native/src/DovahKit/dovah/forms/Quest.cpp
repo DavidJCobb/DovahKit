@@ -982,7 +982,8 @@ namespace dovah::loaded_forms {
                   }
                }
                break;
-            case 'FLTR': // handled by the file reader as a special case, and stored in the form stub addenda
+            case 'FLTR':
+               subrecord.to_string(this->filter);
                break;
             case 'NEXT':
                isInEventConditions = true;
@@ -1268,6 +1269,7 @@ namespace dovah::loaded_forms {
       copy->priority   = this->priority;
       copy->unknown    = this->unknown;
       copy->quest_type = this->quest_type;
+      copy->filter     = this->filter;
       //
       copy->event = this->event;
       //
@@ -1382,11 +1384,8 @@ namespace dovah::loaded_forms {
          QTGL.write(id);
          QTGL.close();
       }
-      if (auto* addenda = this->stub.addenda) {
-         auto& filter = addenda->filter;
-         if (!filter.empty())
-            record.write_string_subrecord('FLTR', filter);
-      }
+      if (!this->filter.empty())
+         record.write_string_subrecord('FLTR', this->filter);
       for (auto& cnd : this->conditions.dialogue) {
          cnd.save(record, intfc);
       }

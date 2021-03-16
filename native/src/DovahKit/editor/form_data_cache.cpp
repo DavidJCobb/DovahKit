@@ -7,8 +7,6 @@
 #include "form_data_cache_internals/threaded_builder.h"
 #include <QVariant>
 
-constexpr bool quest_filters_are_in_addenda = true;
-
 DovahKitFormDataCache::DovahKitFormDataCache() {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &DovahKitFormDataCache::clear);
@@ -23,15 +21,10 @@ void DovahKitFormDataCache::handleFormChange(dovah::form_stub* stub) {
       case dovah::form_type::quest:
          {
             QString working;
-            if (quest_filters_are_in_addenda) {
-               if (stub->addenda)
-                  working = QString::fromStdString(stub->addenda->filter);
-            } else {
+            {
                auto form = stub->load().ptr_cast<dovah::loaded_forms::Quest>();
                assert(form);
-               //
-               // ... TODO ...
-               //
+               working = QString::fromStdString(form->filter);
             }
             //
             auto& set = this->_data.quest_filters.data;

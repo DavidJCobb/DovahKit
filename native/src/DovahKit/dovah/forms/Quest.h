@@ -354,6 +354,7 @@ namespace dovah::loaded_forms {
          float         unknown    = 1.0F; // DNAM, offset 0x04 // suspected to be leftover script interval from ObScript
          quest_type_t  quest_type = quest_type::none;
          //
+         std::string filter; // FLTR
          struct {
             components::condition_list dialogue;
             components::condition_list event;

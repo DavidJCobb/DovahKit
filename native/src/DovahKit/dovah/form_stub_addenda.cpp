@@ -3,7 +3,6 @@
 
 namespace dovah {
    void form_stub_addenda::clone_from(const form_stub_addenda& other) {
-      this->filter = other.filter;
    }
    void form_stub_addenda::sever_references_to(form_stub& target) {
       if (this->persistent_cell == &target)

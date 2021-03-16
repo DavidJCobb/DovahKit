@@ -98,9 +98,7 @@ void FormDialogQuest::_load_impl() {
    //
    #pragma region Basic Data
       this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-      if (auto* addenda = this->stub->addenda) {
-         this->ui.editorCategory->setText(addenda->filter.c_str());
-      }
+      cobb::qt::bind(this->ui.editorCategory, working.filter);
       this->ui.name->setText(editor.convert_localized_string(working.name));
       cobb::qt::bind(this->ui.questType, working.quest_type);
       cobb::qt::bind(this->ui.flagAllowRepeatedStages, working.flags, form_t::quest_flag::allow_repeated_stages);
@@ -141,7 +139,6 @@ void FormDialogQuest::_save_impl() {
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
    editor.assign_localized_string(working.name, this->ui.name->text());
-   this->stub->get_or_create_addenda().filter = this->ui.editorCategory->text().toStdString();
    this->ui.textDisplayGlobals->commit(working.text_display_globals, working);
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
