@@ -69,7 +69,7 @@ namespace dovah::loaded_forms {
             find_matching_reference,    // ALNA
          };
 
-         static constexpr alias_id_t none_id = 0xFFFFFFFF;
+         static constexpr int none_id = -1;
 
          Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
          
@@ -267,6 +267,8 @@ namespace dovah::loaded_forms {
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+
+            public:
                void clone_from(const LogEntry&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
@@ -281,16 +283,18 @@ namespace dovah::loaded_forms {
                   };
                };
                using flags_t = std::underlying_type_t<flag::type>;
-               //
+               
                uint16_t index;
-               flags_t  flags;
-               uint8_t  padding;
+               flags_t  flags   = 0;
+               uint8_t  padding = 0;
                std::vector<LogEntry> entries; // do not remove elements from here without first calling LogEntry::clear, or you risk breaking the quest's use info
-               //
+               
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes INDX subrecord has already been opened
                bool save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+
+            public:
                void clone_from(const Stage&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
@@ -305,15 +309,17 @@ namespace dovah::loaded_forms {
                   };
                };
                using flags_t = std::underlying_type_t<flag::type>;
-               //
+               
                uint32_t aliasID = -1;
                flags_t  flags   =  0; // stored in the file as a uint32_t, but loaded by the game as a uint8_t; the game doesn't BSWAP if the endianness is wrong, so it must be a single byte with three padding bytes
                components::condition_list conditions;
-               //
+               
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes QSTA subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+
+            public:
                void clone_from(const Target&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
@@ -326,16 +332,18 @@ namespace dovah::loaded_forms {
                   };
                };
                using flags_t = std::underlying_type_t<flag::type>;
-               //
+               
                uint16_t index;
                flags_t  flags = 0;
                localized_string    text;
                std::vector<Target> targets; // do not remove elements from here without first calling Target::clear, or you risk breaking the quest's use info
-               //
+               
             protected:
                void load(tes_record_reader&, load_order_interfaces::form_load&); // assumes QOBJ subrecord has already been opened
                bool save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
+
+            public:
                void clone_from(const Objective&, loaded_forms::Form& my_owner);
                void clear(loaded_forms::Form&);
          };
@@ -377,6 +385,8 @@ namespace dovah::loaded_forms {
          void   remove_stage(int id) noexcept;
 
          void remove_log_entry(int stage_id, int entry_index) noexcept; // needed to fix up use info
+
+         void remove_objective(int id) noexcept;
 
       protected:
          virtual bool _clone_impl(Form* out) const noexcept override;

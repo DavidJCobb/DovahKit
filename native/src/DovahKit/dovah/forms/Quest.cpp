@@ -1495,4 +1495,16 @@ namespace dovah::loaded_forms {
       list[log_entry].clear(*this);
       list.erase(list.begin() + log_entry);
    }
+   void Quest::remove_objective(int id) noexcept {
+      auto& list = this->objectives;
+      auto  it   = list.begin();
+      auto  end  = list.end();
+      for (; it != end; ++it)
+         if (it->index == id)
+            break;
+      if (it == end)
+         return;
+      it->clear(*this);
+      list.erase(it);
+   }
 }

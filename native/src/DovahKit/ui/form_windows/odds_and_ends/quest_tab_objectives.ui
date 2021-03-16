@@ -33,7 +33,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="1">
-       <widget class="QSpinBoxDKEx" name="objectiveID">
+       <widget class="QSpinBox" name="objectiveID">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -151,11 +151,6 @@
    <extends>QWidget</extends>
    <header>condition_list.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>QSpinBoxDKEx</class>
-   <extends>QSpinBox</extends>
-   <header>../../generic/QSpinBoxDKEx.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

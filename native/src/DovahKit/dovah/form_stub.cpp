@@ -555,14 +555,14 @@ namespace dovah {
          use_info_entry::flags_t flags = use_info_entry::invert_flags(it->second.flags);
          //
          if (it->second.other)
-            it->second.other->receive_inbound_ref(this, flags);
+            it->second.other->receive_inbound_ref(this, it->second.refcount, flags);
       }
    }
-   void form_stub::receive_inbound_ref(form_stub* inbound, use_info_entry::flags_t flags) noexcept {
+   void form_stub::receive_inbound_ref(form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags) noexcept {
       auto& list  = this->inbound;
       auto& entry = list[inbound->formID];
       entry.other = inbound;
-      entry.refcount++;
+      entry.refcount += refcount;
       entry.flags = flags;
    }
 
@@ -985,7 +985,7 @@ namespace dovah {
          return;
       //
       this->_add_one_way_outbound_reference(new_stub, flags);
-      new_stub->receive_inbound_ref(this, use_info_entry::invert_flags(flags));
+      new_stub->receive_inbound_ref(this, 1, use_info_entry::invert_flags(flags));
    }
    void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {
       auto& lo       = this->_get_load_order();

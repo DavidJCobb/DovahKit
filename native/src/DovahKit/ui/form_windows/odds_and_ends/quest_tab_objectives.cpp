@@ -17,7 +17,7 @@ namespace {
 QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget* parent) : QWidget(parent), stub(s), form(q) {
    ui.setupUi(this);
 
-   #pragma region Stage list
+   #pragma region Objective list
       {
          auto* widget = this->ui.objectives;
          auto* model  = new QStandardItemModelDKEx(widget);
@@ -28,6 +28,20 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          model->setHorizontalHeaderLabels({ tr("Index"), tr("Text") });
          widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
          widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         widget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+         //
+         auto* header = widget->horizontalHeader();
+         header->setDefaultAlignment(Qt::AlignLeft);
+         header->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
+         header->setSectionResizeMode(1, QHeaderView::ResizeMode::Fixed);
+         header->setSortIndicatorShown(false);
+         header->setStretchLastSection(true);
+         model->setHeaderData(0, Qt::Horizontal, (int)(Qt::AlignRight | Qt::AlignVCenter), Qt::TextAlignmentRole);
+         {
+            auto* vh = widget->verticalHeader();
+            vh->setVisible(false);
+            vh->setDefaultSectionSize(vh->minimumSectionSize());
+         }
          //
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_objective_settings();
@@ -68,10 +82,10 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
             );
             return;
          }
-         if (this->form.insert_stage(value)) {
-            this->_redraw_objective_list();
-            this->_select_objective(value);
-         }
+         auto& obj = this->form.objectives.emplace_back();
+         obj.index = value;
+         this->_redraw_objective_list();
+         this->_select_objective(value);
       });
       QObject::connect(this->context_menu_actions.objective_list.remove, &QAction::triggered, this, [this]() {
          int prev = std::numeric_limits<int>::min();
@@ -79,8 +93,8 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          int sel  = this->_selected_objective_id();
          if (sel < 0) // exit if no selection
             return;
-         for (auto& stage : this->form.stages) {
-            auto id = stage.index;
+         for (auto& obj : this->form.objectives) {
+            auto id = obj.index;
             if (id < sel) {
                if (id > prev)
                   prev = id;
@@ -89,7 +103,7 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
                   next = id;
             }
          }
-         this->form.remove_stage(sel);
+         this->form.remove_objective(sel);
          if (next >= 0)
             this->_select_objective(next);
          else
@@ -118,32 +132,32 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
       #pragma endregion
    #pragma endregion
    
-   #pragma region Stage settings
-   QObject::connect(this->ui.objectiveID, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+   #pragma region Objective settings
+   QObject::connect(this->ui.objectiveID, &QSpinBox::editingFinished, this, [this]() {
+      auto* widget = this->ui.objectiveID;
       if (auto* obj = this->_get_objective()) {
+         int   value = widget->value();
          auto* other = this->_get_objective(value);
          if (other && other != obj) {
+            //
+            // Using a QValidator doesn't work. Why? Well, suppose we try to change Objective 40 
+            // into Objective 30 when we already have an Objective 30. What we want to happen is, 
+            // no change is made and we revert back to 40. Here's the problem, however: how do we 
+            // actually change it to Stage 30? Well, we clear the value, we type a 3, and then we 
+            // type an 0.
+            //
+            // If we use a QValidator to reject the change to 30, then the value changes to just 
+            // 3, since that was the last valid value entered. Not intuitive behavior.
+            //
+            QApplication::beep();
+            const auto blocker = QSignalBlocker(widget);
+            widget->setValue(obj->index);
             return;
          }
          obj->index = value;
          this->_redraw_objective_list();
          this->_select_objective(value);
       }
-   });
-   this->ui.objectiveID->setValidateHandler([this](const QSpinBoxDKEx& widget, QString& input, int& pos) {
-      bool ok    = false;
-      int  value = input.toInt(&ok);
-      if (!ok) {
-         if (input.isEmpty())
-            return QValidator::State::Intermediate;
-         return QValidator::State::Invalid;
-      }
-      auto sel = this->_selected_objective_id();
-      if (value == sel)
-         return QValidator::State::Acceptable;
-      if (this->_get_objective(value))
-         return QValidator::State::Invalid; // TODO: should this be intermediate instead?
-      return QValidator::State::Acceptable;
    });
    //
    QObject::connect(this->ui.objectiveFlagOR, &QCheckBox::stateChanged, this, [this](int state) {
@@ -158,7 +172,7 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
    });
    #pragma endregion
    
-   #pragma region Log entry list
+   #pragma region Target list
       {
          auto* widget = this->ui.targets;
          auto* model  = new QStandardItemModelDKEx(widget);
@@ -168,6 +182,7 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          model->setHorizontalHeaderLabels({ tr("Alias"), tr("Conditions") });
          widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
          widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         widget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
          //
          auto* header = widget->horizontalHeader();
          header->setDefaultAlignment(Qt::AlignLeft);
@@ -275,8 +290,8 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
       #pragma endregion
    #pragma endregion
 
-   #pragma region Log entries
-      #pragma region Entry settings
+   #pragma region Targets
+      #pragma region Settings
       QObject::connect(this->ui.targetAlias, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
          if (auto* target = this->_get_target()) {
             auto data = this->ui.targetAlias->currentData();
@@ -479,14 +494,18 @@ void QuestTabObjectives::_redraw_alias_picker() {
    //
    widget->clear();
    this->form.for_each_alias_of_type(dovah::loaded_forms::Alias::alias_type::reference, [widget](dovah::loaded_forms::Alias* alias) {
-      if (widget->findData(alias->id))
+      if (widget->findData(alias->id) >= 0)
          return false; // continue
       widget->addItem(QString::fromStdString(alias->name), alias->id);
       return false; // continue
    });
    widget->model()->sort(0);
    widget->insertItem(0, tr("NONE", "alias name in quest objective tab"), -1);
-   widget->setCurrentIndex(widget->findData(prior_id));
+   //
+   auto i = widget->findData(prior_id);
+   if (i < 0)
+      i = 0;
+   widget->setCurrentIndex(i);
 }
 void QuestTabObjectives::_redraw_objective_list() {
    int   prior_id = this->_selected_objective_id();
@@ -496,19 +515,21 @@ void QuestTabObjectives::_redraw_objective_list() {
    assert(model);
    model->clearBody();
    //
-   auto& list = this->form.stages;
+   auto& list = this->form.objectives;
    if (list.empty())
       return;
    QStandardItem* prior = nullptr;
-   for (auto& stage : list) {
-      auto* item = new QStandardItem;
-      item->setData((int)stage.index, Qt::UserRole);
-      item->setText(QString::number(stage.index));
-      item->setTextAlignment(Qt::AlignRight);
-      model->appendRow(item);
+   auto& editor = DovahKitCore::get();
+   for (auto& obj : list) {
+      auto* col0 = new QStandardItem(QString::number(obj.index));
+      auto* col1 = new QStandardItem(editor.convert_localized_string(obj.text));
+      col0->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+      col0->setData((int)obj.index, Qt::UserRole);
+      col1->setData((int)obj.index, Qt::UserRole); // *sigh* having absolutely everything be per-cell and not per-row is annoying
+      model->appendRow({ col0, col1 });
       //
-      if (stage.index == prior_id)
-         prior = item;
+      if (obj.index == prior_id)
+         prior = col0;
    }
    model->sort(0);
    //
@@ -595,15 +616,15 @@ void QuestTabObjectives::showEvent(QShowEvent* event) {
       return;
    this->_did_first_show = true;
    if (auto* header = this->ui.objectives->horizontalHeader()) {
-      auto width = header->width();
-      auto third = width / 3;
-      header->resizeSection(0, width - third);
+      auto metrics = QFontMetrics(this->ui.targets->font());
+      auto index   = metrics.boundingRect("655350").width() * 1.5F + 4;
+      header->resizeSection(0, index);
       header->resizeSection(1, 0); // set the last section to minimum size and let it stretch; that way, enlarging the prior sections doesn't cause this one to clip out of bounds
    }
    if (auto* header = this->ui.targets->horizontalHeader()) {
       auto width = header->width();
       auto third = width / 3;
-      header->resizeSection(0, width - third);
+      header->resizeSection(0, third);
       header->resizeSection(1, 0); // set the last section to minimum size and let it stretch; that way, enlarging the prior sections doesn't cause this one to clip out of bounds
    }
 }

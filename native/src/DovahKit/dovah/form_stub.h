@@ -252,7 +252,7 @@ namespace dovah {
          std::atomic<uint32_t> refcount = 0;
          void build_outbound_refs(tes_file_reading::basic_reader&) noexcept;
          void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
-         void receive_inbound_ref(form_stub* inbound, use_info_entry::flags_t flags = 0) noexcept;
+         void receive_inbound_ref(form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags = 0) noexcept;
          //
          file_load_order& form_stub::_get_load_order() const noexcept;
          loaded_form_ptr<loaded_forms::Form> _load(bool force = false);
