@@ -165,6 +165,9 @@ void QHeaderViewDKEx::_reapplyColumnFlex(int length) {
       // two cases are largely mirrors of each other. So, we'll accomplish this with some 
       // temporary variables and a pointer-to-member.
       //
+      // Note that we only apply *either of* flex grow or flex shrink, depending on whether 
+      // there is extra space or insufficient space, respectively.
+      //
       int _column_flex_info::* factor;
       int sign;
       int total_factor;

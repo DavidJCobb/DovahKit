@@ -289,6 +289,8 @@ QVariant ConditionListModel::headerData(int section, Qt::Orientation orientation
       return QVariant();
    switch (role) {
       case Qt::DisplayRole:
+         [[fallthrough]];
+      case Qt::ToolTipRole:
          switch (section) {
             case ColumnTarget:   return tr("Target",    "condition list");
             case ColumnFunction: return tr("Function",  "condition list");
@@ -494,29 +496,19 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
       header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
       header->setMinimumSectionSize(2);
       header->setSortIndicatorShown(false);
-      header->setColumnFlex(model_type::ColumnTarget,   2, 1, metrics.boundingRect("Target").width() * 1.5F + 4);
-      header->setColumnFlex(model_type::ColumnFunction, 4, 1);
+      header->setColumnFlex(model_type::ColumnTarget,   1, 1, metrics.boundingRect("Target").width() * 1.5F + 4);
+      header->setColumnFlex(model_type::ColumnFunction, 1, 1, metrics.boundingRect("GetVMScriptVariable").width() * 1.5F + 4);
       header->setColumnFlex(model_type::ColumnOperator, 0, 0, metrics.boundingRect("==").width() * 1.5F + 4);
-      header->setColumnFlex(model_type::ColumnArgs,     6, 1);
+      header->setColumnFlex(model_type::ColumnArgs,     5, 1, metrics.boundingRect("GetVMScriptVariable").width() * 1.5F + 4);
       header->setColumnFlex(model_type::ColumnOperand,  1, 1, metrics.boundingRect("9999999").width() * 1.5F + 4);
       {
          auto size_or  = metrics.boundingRect(tr("OR", "condition list - condition link - or")).width();
          auto size_and = metrics.boundingRect(tr("AND", "condition list - condition link - and")).width();
          header->setColumnFlex(model_type::ColumnUsesOr, 0, 0, std::max(size_or, size_and) * 1.5F + 4);
       }
-      /*//
-      header->resizeSection(model_type::ColumnTarget,   metrics.boundingRect("Target").width() * 1.5F + 4);
-      header->resizeSection(model_type::ColumnFunction, metrics.boundingRect("GetVMScriptVariable").width() * 1.5F + 4);
-      header->resizeSection(model_type::ColumnOperator, metrics.boundingRect("==").width() * 1.5F + 4);
-      {
-         auto size_or  = metrics.boundingRect(tr("OR",  "condition list - condition link - or")).width();
-         auto size_and = metrics.boundingRect(tr("AND", "condition list - condition link - and")).width();
-         header->resizeSection(model_type::ColumnUsesOr, std::max(size_or, size_and) * 1.5F + 4);
-      }
-      //*/
       for(int i = 0; i < list->model()->columnCount(); ++i)
          header->setSectionResizeMode(i, QHeaderView::Interactive);
-      header->setSectionResizeMode(model_type::ColumnOperator, QHeaderView::Fixed);
+      //header->setSectionResizeMode(model_type::ColumnOperator, QHeaderView::Fixed);
       header->setSectionResizeMode(model_type::ColumnUsesOr,   QHeaderView::Fixed);
       header->setStretchLastSection(false);
    }
