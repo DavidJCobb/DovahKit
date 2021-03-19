@@ -3,7 +3,7 @@
 
 class QHeaderViewDKEx : public QHeaderView {
    public:
-      using QHeaderView::QHeaderView;
+      QHeaderViewDKEx(Qt::Orientation, QWidget* parent = nullptr);
       
       inline bool flexResizeEnabled() const noexcept { return this->_flexResizeEnabled; }
       void setFlexResizeEnabled(bool);
@@ -25,12 +25,14 @@ class QHeaderViewDKEx : public QHeaderView {
          int grow   = 1;
          int shrink = 0;
          int basis  = 0;
+         int mod    = 0;
+         int render = 0; // last rendered size
       };
       QVector<_column_flex_info> _flexColumns;
 
       struct {
          QVector<int> factors;
       } _flex;
-
+      bool _flexInProgress    = false;
       bool _flexResizeEnabled = false;
 };
