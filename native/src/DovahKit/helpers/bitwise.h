@@ -58,4 +58,9 @@ namespace cobb {
       else
          value &= ~mask;
    }
+
+   template<typename T> inline constexpr int sign_via_bit(T v) noexcept { // returns -1 or 1, never 0
+      bool bit = v >> (bits_in<T> - 1);
+      return 1 - bit - bit;
+   }
 }

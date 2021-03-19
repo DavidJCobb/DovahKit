@@ -21,4 +21,8 @@ namespace cobb {
       static_assert(std::is_integral<U>(), "exponent must be integral");
       return exponent == 0 ? 1 : base * pow(base, exponent - 1);
    }
+
+   template<typename T> auto constexpr sign(T v) {
+      return (T(0) < v) - (v < T(0));
+   }
 }

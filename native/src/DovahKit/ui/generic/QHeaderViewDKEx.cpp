@@ -121,6 +121,7 @@ void QHeaderViewDKEx::_reapplyColumnFlex(int length) {
    //
    // Compute all column widths. We will apply them later, after corrections.
    //
+   double carry = 0;
    if (total_basis == length) {
       for (int i = 0; i < count; ++i) {
          if (this->isSectionHidden(i))
@@ -129,77 +130,42 @@ void QHeaderViewDKEx::_reapplyColumnFlex(int length) {
          entry.render = std::max(minimum_size, entry.basis + entry.mod);
          total_render += entry.render;
       }
-   } else if (total_basis < length) {
-      int    extra   = length - total_basis;
-      double consume = extra / total_grow;
-      for (int i = 0; i < count; ++i) {
-         if (this->isSectionHidden(i))
-            continue;
-         auto& entry = this->_flexColumns[i];
-         int   basis = std::max(minimum_size, entry.basis + entry.mod);
-         int   grow  = entry.grow * consume;
-         entry.render = basis + grow;
-         total_render += entry.render;
-      }
    } else {
-      int    excess = total_basis - length;
-      double recede = (double)excess / total_shrink;
+      //
+      // We want to use the same basic approach, the same basic instructions, for the case 
+      // where we need to grow columns and the case where we need to shrink columns. These 
+      // two cases are largely mirrors of each other. So, we'll accomplish this with some 
+      // temporary variables and a pointer-to-member.
+      //
+      int _column_flex_info::* factor;
+      int sign;
+      int total_factor;
+      if (length > total_basis) {
+         factor = &_column_flex_info::grow;
+         sign   = 1;
+         total_factor = total_grow;
+      } else {
+         factor = &_column_flex_info::shrink;
+         sign   = -1;
+         total_factor = total_shrink;
+      }
+      //
+      int    diff = length - total_basis;
+      double per  = (double)diff / total_factor;
+      //
+      double carry = 0; // helper for sub-pixel values, to prevent jittering
       for (int i = 0; i < count; ++i) {
          if (this->isSectionHidden(i))
             continue;
-         auto& entry = this->_flexColumns[i];
-         int   basis  = std::max(minimum_size, entry.basis + entry.mod);
-         int   shrink = entry.shrink * recede;
-         entry.render = basis - shrink;
+         auto&  entry  = this->_flexColumns[i];
+         int    basis  = std::max(minimum_size, entry.basis + entry.mod);
+         double offset = sign * (per * (entry.*factor)) + carry;
+         //
+         double rounded = round(offset);
+         carry = offset - rounded; // The effect of this is that if we round one column up by 0.33px, the next will have its computed width reduced by 0.33px.
+         //
+         entry.render = basis + rounded;
          total_render += entry.render;
-      }
-   }
-   //
-   // Account for leftover pixels due to integer rounding:
-   //
-   if (total_render < length) {
-      int extra = length - total_render;
-      if (extra < flex_count) {
-         int diff = extra / flex_count;
-         if (diff > 0) {
-            //
-            // Distribute the extra pixels into the flexible columns.
-            //
-            for (int i = 0; i < count; ++i) {
-               if (this->isSectionHidden(i))
-                  continue;
-               auto& entry = this->_flexColumns[i];
-               if (entry.grow + entry.shrink)
-                  entry.render += diff;
-            }
-         }
-         //
-         // Distribute any final remaining pixels into the first column.
-         //
-         extra -= (diff * flex_count);
-         if (extra > 0) {
-            this->_flexColumns[0].render += extra;
-         }
-      } else if (count) {
-         int diff = extra / count;
-         if (diff > 0) {
-            //
-            // Distribute the extra pixels into the first few columns.
-            //
-            for (int i = 0; i < count; ++i) {
-               if (this->isSectionHidden(i))
-                  continue;
-               auto& entry = this->_flexColumns[i];
-               entry.render += diff;
-            }
-         }
-         //
-         // Distribute any final remaining pixels into the first column.
-         //
-         extra -= (diff * count);
-         if (extra > 0) {
-            this->_flexColumns[0].render += extra;
-         }
       }
    }
    //
