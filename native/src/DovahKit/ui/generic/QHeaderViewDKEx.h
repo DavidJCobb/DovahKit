@@ -7,6 +7,9 @@ class QHeaderViewDKEx : public QHeaderView {
       
       inline bool flexResizeEnabled() const noexcept { return this->_flexResizeEnabled; }
       void setFlexResizeEnabled(bool);
+
+      int totalRenderedColumnSizes() const noexcept;
+      int visibleLength() const noexcept;
       
       int  columnGrowFactor(int logicalIndex) const noexcept;
       void setColumnGrowFactor(int logicalIndex, int factor);

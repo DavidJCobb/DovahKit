@@ -15,12 +15,49 @@ QHeaderViewDKEx::QHeaderViewDKEx(Qt::Orientation o, QWidget* parent) : QHeaderVi
       if (list[index].mod < 0 || after < list[index].basis) {
          list[index].mod = 0;
       }
+      int  length  = this->totalRenderedColumnSizes();
+      int  visible = this->visibleLength();
       this->reapplyColumnFlex();
+      if (length > visible) {
+         auto resized = this->totalRenderedColumnSizes();
+         if (resized < length) {
+            //
+            // The user had previously resized one or more columns such that it's no longer possible 
+            // to fit the entire header in the viewport, and after having done so, they have reduced 
+            // the size of a column. This *can* cause the scroll position to pull back, but it won't 
+            // *always* do so, which means that there can be an empty margin left behind.
+            //
+            // Notably, in these cases, QHeaderView::length may remain "stuck" past the end of the 
+            // header as well.
+            //
+            // This fix isn't perfect; there are still some margins and bad sizing that can be left 
+            // behind once the user has resized the column widths back to within the viewport, but 
+            // it's good enough and I've already spent hours on this. It's not worth any more time.
+            //
+            this->setOffsetToLastSection();
+         }
+      }
    });
 }
 
 void QHeaderViewDKEx::setFlexResizeEnabled(bool s) {
    this->_flexResizeEnabled = true;
+}
+
+int QHeaderViewDKEx::totalRenderedColumnSizes() const noexcept {
+   int total = 0;
+   for (auto& entry : this->_flexColumns)
+      total += entry.render;
+   return total;
+}
+int QHeaderViewDKEx::visibleLength() const noexcept {
+   auto* vp = this->viewport();
+   if (!vp)
+      return 0;
+   int size;
+   if (this->orientation() == Qt::Horizontal)
+      return vp->width();
+   return vp->height();
 }
 
 int QHeaderViewDKEx::columnGrowFactor(int logicalIndex) const noexcept {
@@ -84,15 +121,7 @@ void QHeaderViewDKEx::setColumnFlex(int logicalIndex, int grow, int shrink, int 
 }
 
 void QHeaderViewDKEx::reapplyColumnFlex() {
-   auto* vp = this->viewport();
-   if (!vp)
-      return;
-   int size;
-   if (this->orientation() == Qt::Horizontal)
-      size = vp->width();
-   else
-      size = vp->height();
-   this->_reapplyColumnFlex(size);
+   this->_reapplyColumnFlex(this->visibleLength());
 }
 void QHeaderViewDKEx::_reapplyColumnFlex(int length) {
    int count = this->count();
@@ -121,7 +150,6 @@ void QHeaderViewDKEx::_reapplyColumnFlex(int length) {
    //
    // Compute all column widths. We will apply them later, after corrections.
    //
-   double carry = 0;
    if (total_basis == length) {
       for (int i = 0; i < count; ++i) {
          if (this->isSectionHidden(i))
@@ -153,18 +181,34 @@ void QHeaderViewDKEx::_reapplyColumnFlex(int length) {
       int    diff = length - total_basis;
       double per  = (double)diff / total_factor;
       //
+      // We need to account for integer rounding errors on these calculations, which would 
+      // result in there being leftover pixels at the end of the header viewport. If we just 
+      // distribute these pixels into arbitrary sections, then we'll end up with jittering 
+      // when the user resizes a section.
+      //
+      // What we need to do instead is actively carry the rounding error from one section 
+      // into the next section. If rounding makes one section 0.33 pixels larger, then it 
+      // should make the next section 0.33 pixels smaller, and vice versa, rather than us 
+      // adding whole pixels to what are essentially random and irrelevant sections.
+      //
       double carry = 0; // helper for sub-pixel values, to prevent jittering
+      //
       for (int i = 0; i < count; ++i) {
          if (this->isSectionHidden(i))
             continue;
          auto&  entry  = this->_flexColumns[i];
          int    basis  = std::max(minimum_size, entry.basis + entry.mod);
-         double offset = sign * (per * (entry.*factor)) + carry;
+         double offset = (per * (entry.*factor)) + carry;
          //
          double rounded = round(offset);
-         carry = offset - rounded; // The effect of this is that if we round one column up by 0.33px, the next will have its computed width reduced by 0.33px.
-         //
          entry.render = basis + rounded;
+         if (entry.render < minimum_size) {
+            entry.render = minimum_size;
+            carry = offset - minimum_size;
+         } else {
+            carry = offset - rounded; // The effect of this is that if we round one column up by 0.33px, the next will have its computed width reduced by 0.33px.
+         }
+         //
          total_render += entry.render;
       }
    }
