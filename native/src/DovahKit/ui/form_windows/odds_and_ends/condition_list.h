@@ -14,8 +14,6 @@ namespace dovah {
    class form_stub;
    namespace loaded_forms {
       class Form;
-      class Package;
-      class Quest;
    }
 }
 

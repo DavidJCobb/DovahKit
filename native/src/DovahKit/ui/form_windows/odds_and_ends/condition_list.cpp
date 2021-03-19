@@ -12,6 +12,7 @@
 #include "../../../helpers/qt/strings.h"
 #include "../../../helpers/vector.h"
 #include "condition_edit.h"
+#include "../../generic/QHeaderViewDKEx.h"
 
 namespace {
    uint16_t _index_of_GetIsID() noexcept {
@@ -482,11 +483,28 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
          vh->setDefaultSectionSize(vh->minimumSectionSize());
       }
       //
-      auto header  = list->horizontalHeader();
+      {
+         auto* hdr = new QHeaderViewDKEx(Qt::Horizontal, list);
+         hdr->setFlexResizeEnabled(true);
+         list->setHorizontalHeader(hdr);
+      }
+      //
+      auto header  = (QHeaderViewDKEx*)list->horizontalHeader();
       auto metrics = QFontMetrics(list->font());
       header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
       header->setMinimumSectionSize(2);
       header->setSortIndicatorShown(false);
+      header->setColumnFlex(model_type::ColumnTarget,   2, 1, metrics.boundingRect("Target").width() * 1.5F + 4);
+      header->setColumnFlex(model_type::ColumnFunction, 4, 1);
+      header->setColumnFlex(model_type::ColumnOperator, 0, 0, metrics.boundingRect("==").width() * 1.5F + 4);
+      header->setColumnFlex(model_type::ColumnArgs,     6, 1);
+      header->setColumnFlex(model_type::ColumnOperand,  1, 1, metrics.boundingRect("9999999").width() * 1.5F + 4);
+      {
+         auto size_or  = metrics.boundingRect(tr("OR", "condition list - condition link - or")).width();
+         auto size_and = metrics.boundingRect(tr("AND", "condition list - condition link - and")).width();
+         header->setColumnFlex(model_type::ColumnUsesOr, 0, 0, std::max(size_or, size_and) * 1.5F + 4);
+      }
+      /*//
       header->resizeSection(model_type::ColumnTarget,   metrics.boundingRect("Target").width() * 1.5F + 4);
       header->resizeSection(model_type::ColumnFunction, metrics.boundingRect("GetVMScriptVariable").width() * 1.5F + 4);
       header->resizeSection(model_type::ColumnOperator, metrics.boundingRect("==").width() * 1.5F + 4);
@@ -495,6 +513,7 @@ ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
          auto size_and = metrics.boundingRect(tr("AND", "condition list - condition link - and")).width();
          header->resizeSection(model_type::ColumnUsesOr, std::max(size_or, size_and) * 1.5F + 4);
       }
+      //*/
       for(int i = 0; i < list->model()->columnCount(); ++i)
          header->setSectionResizeMode(i, QHeaderView::Interactive);
       header->setSectionResizeMode(model_type::ColumnOperator, QHeaderView::Fixed);

@@ -738,6 +738,9 @@
     <ClCompile Include="ui\generic\QSpinBoxDKEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\generic\QHeaderViewDKEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1506,6 +1509,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\generic\QHeaderViewDKEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

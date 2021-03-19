@@ -304,6 +304,7 @@
     </ClCompile>
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
+    <ClCompile Include="ui\generic\QHeaderViewDKEx.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QSpinBoxDKEx.cpp" />
@@ -589,6 +590,7 @@
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
+    <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
