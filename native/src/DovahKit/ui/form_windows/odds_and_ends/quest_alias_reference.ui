@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabBasic">
       <attribute name="title">
@@ -248,7 +248,7 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="5" column="4">
-        <widget class="QComboBox" name="comboBox_2"/>
+        <widget class="QComboBox" name="fillFromExtAliasID"/>
        </item>
        <item row="8" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -278,7 +278,7 @@
         </layout>
        </item>
        <item row="2" column="0">
-        <widget class="QRadioButton" name="radioButton_3">
+        <widget class="QRadioButton" name="fillTypeLocRefType">
          <property name="text">
           <string>Location Alias</string>
          </property>
@@ -292,13 +292,16 @@
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
+         <property name="buddy">
+          <cstring>fillFromExtAliasID</cstring>
+         </property>
         </widget>
        </item>
        <item row="9" column="4">
         <widget class="QComboBox" name="findMatchingNearType"/>
        </item>
        <item row="1" column="0">
-        <widget class="QRadioButton" name="radioButton_2">
+        <widget class="QRadioButton" name="fillTypeUniqueActor">
          <property name="text">
           <string>Unique Actor</string>
          </property>
@@ -311,6 +314,9 @@
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>findMatchingEventData</cstring>
          </property>
         </widget>
        </item>
@@ -439,20 +445,23 @@
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
+         <property name="buddy">
+          <cstring>fillFromLocationRefType</cstring>
+         </property>
         </widget>
        </item>
        <item row="6" column="1">
         <widget class="QComboBox" name="createBaseForm"/>
        </item>
        <item row="5" column="0">
-        <widget class="QRadioButton" name="radioButton_4">
+        <widget class="QRadioButton" name="fillTypeExternalAlias">
          <property name="text">
           <string>Reference Alias on Other Quest</string>
          </property>
         </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QRadioButton" name="radioButton">
+        <widget class="QRadioButton" name="fillTypePredefined">
          <property name="text">
           <string>Specific Reference</string>
          </property>
@@ -462,14 +471,14 @@
         <widget class="QComboBox" name="findMatchingEventData"/>
        </item>
        <item row="7" column="0">
-        <widget class="QRadioButton" name="radioButton_6">
+        <widget class="QRadioButton" name="fillTypeMatching">
          <property name="text">
           <string>Find Matching Reference...</string>
          </property>
         </widget>
        </item>
        <item row="6" column="0">
-        <widget class="QRadioButton" name="radioButton_5">
+        <widget class="QRadioButton" name="fillTypeCreate">
          <property name="text">
           <string>Create Reference</string>
          </property>
@@ -482,6 +491,9 @@
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>findMatchingNearType</cstring>
          </property>
         </widget>
        </item>
@@ -524,7 +536,7 @@
         </widget>
        </item>
        <item row="5" column="1" colspan="2">
-        <widget class="QComboBox" name="comboBox"/>
+        <widget class="QComboBox" name="fillFromExtAliasQuest"/>
        </item>
        <item row="2" column="1" colspan="2">
         <widget class="QComboBox" name="fillFromLocationAlias"/>
@@ -533,7 +545,7 @@
         <widget class="QComboBox" name="fillFromUniqueActorBase"/>
        </item>
        <item row="0" column="1" colspan="2">
-        <widget class="QPushButton" name="pushButton">
+        <widget class="RefPickerButton" name="fillFromPredefined">
          <property name="text">
           <string>PushButton</string>
          </property>
@@ -703,6 +715,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RefPickerButton</class>
+   <extends>QPushButton</extends>
+   <header>../../generic/RefPickerButton.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>name</tabstop>
@@ -723,6 +742,40 @@
   <tabstop>flagStoreText</tabstop>
   <tabstop>flagInitiallyDisabled</tabstop>
   <tabstop>flagClearNameWhenRemoved</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+  <tabstop>fillTypePredefined</tabstop>
+  <tabstop>fillFromPredefined</tabstop>
+  <tabstop>fillTypeUniqueActor</tabstop>
+  <tabstop>fillFromUniqueActorBase</tabstop>
+  <tabstop>fillTypeLocRefType</tabstop>
+  <tabstop>fillFromLocationAlias</tabstop>
+  <tabstop>fillFromLocationRefType</tabstop>
+  <tabstop>fillTypeExternalAlias</tabstop>
+  <tabstop>fillFromExtAliasQuest</tabstop>
+  <tabstop>fillFromExtAliasID</tabstop>
+  <tabstop>fillTypeCreate</tabstop>
+  <tabstop>createBaseForm</tabstop>
+  <tabstop>createLevel</tabstop>
+  <tabstop>createVerb</tabstop>
+  <tabstop>createAtSiblingReferenceAlias</tabstop>
+  <tabstop>fillTypeMatching</tabstop>
+  <tabstop>findMatchingFlagClosest</tabstop>
+  <tabstop>findMatchingFlagInLoadedArea</tabstop>
+  <tabstop>findMatchingFlagEvent</tabstop>
+  <tabstop>findMatchingEvent</tabstop>
+  <tabstop>findMatchingEventData</tabstop>
+  <tabstop>findMatchingFlagNearAlias</tabstop>
+  <tabstop>findMatchingNearAliasID</tabstop>
+  <tabstop>findMatchingNearType</tabstop>
+  <tabstop>packages</tabstop>
+  <tabstop>packageOverrideListSpectator</tabstop>
+  <tabstop>packageOverrideListObserveCorpse</tabstop>
+  <tabstop>packageOverrideListGuardWarn</tabstop>
+  <tabstop>packageOverrideListCombat</tabstop>
+  <tabstop>factions</tabstop>
+  <tabstop>keywords</tabstop>
+  <tabstop>spells</tabstop>
  </tabstops>
  <resources/>
  <connections/>
