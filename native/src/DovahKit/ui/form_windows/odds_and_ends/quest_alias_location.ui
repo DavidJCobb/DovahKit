@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LocationAliasEditDialog</class>
+ <widget class="QDialog" name="LocationAliasEditDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>642</width>
+    <height>393</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabDetails">
+      <attribute name="title">
+       <string>Details</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="2" column="0">
+        <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Fill from...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Name:</string>
+           </property>
+           <property name="buddy">
+            <cstring>name</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="forceInto"/>
+         </item>
+         <item row="0" column="1" colspan="2">
+          <widget class="QLineEdit" name="name"/>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Force into alias when filled:</string>
+           </property>
+           <property name="buddy">
+            <cstring>forceInto</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3" rowspan="2">
+          <layout class="QGridLayout" name="layoutFlags">
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="flagReserve">
+             <property name="text">
+              <string>Reserves Location</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QCheckBox" name="flagOptional">
+             <property name="text">
+              <string>Optional</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QCheckBox" name="flagAllowCleared">
+             <property name="text">
+              <string>Allow Cleared</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QCheckBox" name="flagStoresText">
+             <property name="text">
+              <string>Stores Text</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QCheckBox" name="flagAllowReserved">
+             <property name="text">
+              <string>Allow Reserved</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QCheckBox" name="flagAllowReuse">
+             <property name="text">
+              <string>Allow Reuse in Quest</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0">
+        <layout class="QGridLayout" name="layoutFill">
+         <item row="1" column="1">
+          <widget class="QComboBox" name="fillFromSiblingAlias"/>
+         </item>
+         <item row="2" column="3">
+          <widget class="QComboBox" name="fillFromExtAliasName"/>
+         </item>
+         <item row="1" column="3">
+          <widget class="QComboBox" name="fillFromSiblingAliasParentKeyword"/>
+         </item>
+         <item row="4" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Maximum</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>30</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="findMatchingFlagEvent">
+             <property name="text">
+              <string>...From Event</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QRadioButton" name="fillTypeSiblingAlias">
+           <property name="text">
+            <string>Reference Alias Location</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Event Data:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>findMatchingEventData</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="fillFromExtAliasQuest"/>
+         </item>
+         <item row="4" column="1">
+          <widget class="QComboBox" name="findMatchingEventName"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QRadioButton" name="fillTypePredefined">
+           <property name="text">
+            <string>Specific Location</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="fillFromPredefined"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QRadioButton" name="fillTypeMatching">
+           <property name="text">
+            <string>Find Matching Location...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Find Parent by Keyword:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>fillFromSiblingAliasParentKeyword</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Alias:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>fillFromExtAliasName</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
+          <widget class="QComboBox" name="findMatchingEventData"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QRadioButton" name="fillTypeExternalAlias">
+           <property name="text">
+            <string>Location Alias on Other Quest</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="4">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Maximum</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>30</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QWidget" name="findMatchingConditions" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabScripts">
+      <attribute name="title">
+       <string>Scripts</string>
+      </attribute>
+     </widget>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout">
+     <property name="spacing">
+      <number>6</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <spacer>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>forceInto</tabstop>
+  <tabstop>flagReserve</tabstop>
+  <tabstop>flagOptional</tabstop>
+  <tabstop>flagStoresText</tabstop>
+  <tabstop>flagAllowReuse</tabstop>
+  <tabstop>flagAllowReserved</tabstop>
+  <tabstop>flagAllowCleared</tabstop>
+  <tabstop>fillTypePredefined</tabstop>
+  <tabstop>fillFromPredefined</tabstop>
+  <tabstop>fillTypeSiblingAlias</tabstop>
+  <tabstop>fillFromSiblingAlias</tabstop>
+  <tabstop>fillFromSiblingAliasParentKeyword</tabstop>
+  <tabstop>fillTypeExternalAlias</tabstop>
+  <tabstop>fillFromExtAliasQuest</tabstop>
+  <tabstop>fillFromExtAliasName</tabstop>
+  <tabstop>fillTypeMatching</tabstop>
+  <tabstop>findMatchingFlagEvent</tabstop>
+  <tabstop>findMatchingEventName</tabstop>
+  <tabstop>findMatchingEventData</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
