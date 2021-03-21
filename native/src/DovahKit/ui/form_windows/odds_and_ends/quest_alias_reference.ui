@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>694</width>
-    <height>419</height>
+    <height>446</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Reference Alias</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -72,10 +72,18 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QComboBox" name="additionalVoicetypes"/>
+          <widget class="QComboBox" name="additionalVoicetypes">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this to provide DovahKit and the Creation Kit with some guidance when editing dialogue: if the options on the &amp;quot;Fill&amp;quot; tab don't give the editor enough information to determine what Voicetypes are valid for this alias, you can specify an ActorBase or a FormList of Voicetypes here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="5">
-          <widget class="QComboBox" name="displayName"/>
+          <widget class="QComboBox" name="displayName">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A Message form whose &amp;quot;title&amp;quot; will replace the name of any ObjectReference that this alias is filled with. The &amp;quot;Clears Name When Removed&amp;quot; checkbox controls whether the name change is permanent.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_2">
@@ -129,6 +137,9 @@
         <layout class="QGridLayout" name="layoutFlags">
          <item row="1" column="1">
           <widget class="QCheckBox" name="flagAllowDead">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Normally, the Story Manager will not fill an alias with a dead Actor. This checkbox exempts this alias from that limitation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Allow Dead</string>
            </property>
@@ -150,6 +161,9 @@
          </item>
          <item row="0" column="0">
           <widget class="QCheckBox" name="flagReserve">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the quest is started via a Story Manager event, and if this alias &amp;quot;reserves&amp;quot; its ObjectReference, then the Story Manager will not fill any other alias with this ObjectReference unless one of the following is true: the other alias allows &amp;quot;reserved&amp;quot; ObjectReferences; the other alias uses the &amp;quot;Reference Alias on Other Quest&amp;quot; fill type; or the other alias belongs to a &amp;quot;Start Game Enabled&amp;quot; quest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Reserves Reference</string>
            </property>
@@ -157,6 +171,9 @@
          </item>
          <item row="1" column="0">
           <widget class="QCheckBox" name="flagAllowReuse">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Normally, when a quest is started via the Story Manager, the Story Manager will not fill multiple aliases with the same ObjectReference. This checkbox exempts this alias from that restriction.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Allow Reuse in Quest</string>
            </property>
@@ -164,6 +181,9 @@
          </item>
          <item row="0" column="3">
           <widget class="QCheckBox" name="flagProtected">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, an Actor used to fill this alias will be made Essential until they are no longer in the alias: it will be impossible for them to be killed by anything except the player, and they will enter a temporary &amp;quot;bleedout&amp;quot; state if their health is knocked to or below zero by something other than the player.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Protected</string>
            </property>
@@ -185,6 +205,9 @@
          </item>
          <item row="0" column="2">
           <widget class="QCheckBox" name="flagEssential">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, an Actor used to fill this alias will be made Essential until they are no longer in the alias: it will be impossible for them to die by any means, and they will enter a temporary &amp;quot;bleedout&amp;quot; state if their health is knocked to or below zero.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Essential</string>
            </property>
@@ -192,6 +215,9 @@
          </item>
          <item row="0" column="4">
           <widget class="QCheckBox" name="flagQuestObject">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Items that are Quest Objects cannot be dropped or sold by the player, and can only be transferred to containers that are also Quest Objects. Containers that are Quest Objects will not be cleaned up by the game engine.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Quest Object</string>
            </property>
@@ -213,6 +239,9 @@
          </item>
          <item row="2" column="2">
           <widget class="QCheckBox" name="flagInitiallyDisabled">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If this is checked, the ObjectReference will automatically be disabled when it is assigned to this alias.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Initially Disabled</string>
            </property>
@@ -220,6 +249,9 @@
          </item>
          <item row="2" column="3" colspan="2">
           <widget class="QCheckBox" name="flagClearNameWhenRemoved">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, any Display Name assigned by this alias will be removed from the ObjectReference when the alias is cleared or refilled. If unchecked, the Display Name is permanent.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Clears Name When Removed</string>
            </property>
@@ -235,7 +267,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>0</width>
-           <height>170</height>
+           <height>197</height>
           </size>
          </property>
         </spacer>
@@ -250,7 +282,7 @@
        <item row="5" column="4">
         <widget class="QComboBox" name="fillFromExtAliasID"/>
        </item>
-       <item row="8" column="0">
+       <item row="9" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <spacer name="horizontalSpacer_4">
@@ -269,7 +301,10 @@
           </spacer>
          </item>
          <item>
-          <widget class="QCheckBox" name="findMatchingFlagEvent">
+          <widget class="QRadioButton" name="findMatchingModeEvent">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only available for quests that are started from a Story Manager event.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>...From Event</string>
            </property>
@@ -279,10 +314,16 @@
        </item>
        <item row="2" column="0">
         <widget class="QRadioButton" name="fillTypeLocRefType">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Search the specified Location Alias for an ObjectReference with the specified Location Ref Type. If one is found, fill this alias with it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Location Alias</string>
          </property>
         </widget>
+       </item>
+       <item row="1" column="1" colspan="2">
+        <widget class="QComboBox" name="fillFromUniqueActorBase"/>
        </item>
        <item row="5" column="3">
         <widget class="QLabel" name="label_6">
@@ -297,17 +338,20 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="4">
+       <item row="10" column="4">
         <widget class="QComboBox" name="findMatchingNearType"/>
        </item>
        <item row="1" column="0">
         <widget class="QRadioButton" name="fillTypeUniqueActor">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Fill this alias with a unique Actor. This only works if the Actor has been assigned a Persist Location.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Unique Actor</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="3">
+       <item row="9" column="3">
         <widget class="QLabel" name="label_8">
          <property name="text">
           <string>Event Data:</string>
@@ -320,7 +364,7 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0" colspan="5">
+       <item row="12" column="0" colspan="5">
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <spacer name="horizontalSpacer_6">
@@ -346,9 +390,26 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The conditions that an ObjectReference must match in order to fill a &amp;quot;Find Matching Reference&amp;quot; alias. In most cases, the Subject is whatever the alias is about to be filled with; however, the &amp;quot;Unique Actor,&amp;quot; &amp;quot;Location Alias Reference,&amp;quot; and &amp;quot;Create Reference&amp;quot; fill types treat the player-character as the Subject, because there are no loaded references available to test.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
           </widget>
          </item>
         </layout>
+       </item>
+       <item row="5" column="1" colspan="2">
+        <widget class="QComboBox" name="fillFromExtAliasQuest">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The other Quest to use.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="RefPickerButton" name="fillFromPredefined">
+         <property name="text">
+          <string>PushButton</string>
+         </property>
+        </widget>
        </item>
        <item row="6" column="3">
         <widget class="QComboBox" name="createVerb">
@@ -357,6 +418,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Whether to spawn the new ObjectReference at some other object, or inside of that other object's inventory. The latter is only possible if the new ObjectReference is an item and the other object is a container.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="sizeAdjustPolicy">
           <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
@@ -373,7 +437,7 @@
          </item>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="10" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <spacer name="horizontalSpacer_5">
@@ -392,7 +456,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QCheckBox" name="findMatchingFlagNearAlias">
+          <widget class="QRadioButton" name="findMatchingModeNearAlias">
            <property name="text">
             <string>...Near Alias</string>
            </property>
@@ -403,39 +467,15 @@
        <item row="2" column="4">
         <widget class="QComboBox" name="fillFromLocationRefType"/>
        </item>
-       <item row="7" column="1" colspan="4">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QCheckBox" name="findMatchingFlagClosest">
-           <property name="text">
-            <string>Closest</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="findMatchingFlagInLoadedArea">
-           <property name="text">
-            <string>In Loaded Area</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
        <item row="6" column="4">
-        <widget class="QComboBox" name="createAtSiblingReferenceAlias"/>
+        <widget class="QComboBox" name="createAtSiblingReferenceAlias">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Another Reference Alias on this Quest. The new ObjectReference will be spawned at that alias's ObjectReference. You can only specify a &amp;quot;sibling&amp;quot; alias that fills before this alias (i.e. one with a lower ID number, appearing higher in the alias list).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1" colspan="2">
+        <widget class="QComboBox" name="findMatchingEvent"/>
        </item>
        <item row="2" column="3">
         <widget class="QLabel" name="label_5">
@@ -450,11 +490,21 @@
          </property>
         </widget>
        </item>
+       <item row="10" column="1" colspan="2">
+        <widget class="QComboBox" name="findMatchingNearAliasID"/>
+       </item>
        <item row="6" column="1">
-        <widget class="QComboBox" name="createBaseForm"/>
+        <widget class="QComboBox" name="createBaseForm">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The base form to use for the spawned ObjectReference.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="5" column="0">
         <widget class="QRadioButton" name="fillTypeExternalAlias">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check the specified Reference Alias on the specified Quest, and fill this alias with its ObjectReference. If the other Quest isn't running, if the other alias isn't filled, or if the other alias's ObjectReference is inside of a container's inventory, then this alias here will fail to fill.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Reference Alias on Other Quest</string>
          </property>
@@ -462,12 +512,15 @@
        </item>
        <item row="0" column="0">
         <widget class="QRadioButton" name="fillTypePredefined">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Fill this alias with a pre-placed ObjectReference in the game world. Note that this will make the ObjectReference permanently persistent, even when this Quest isn't running.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Specific Reference</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="4">
+       <item row="9" column="4">
         <widget class="QComboBox" name="findMatchingEventData"/>
        </item>
        <item row="7" column="0">
@@ -479,21 +532,11 @@
        </item>
        <item row="6" column="0">
         <widget class="QRadioButton" name="fillTypeCreate">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Spawn a new ObjectReference in the world, and fill this alias with it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>Create Reference</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="3">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Near Type:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>findMatchingNearType</cstring>
          </property>
         </widget>
        </item>
@@ -535,27 +578,68 @@
          </item>
         </widget>
        </item>
-       <item row="5" column="1" colspan="2">
-        <widget class="QComboBox" name="fillFromExtAliasQuest"/>
-       </item>
        <item row="2" column="1" colspan="2">
-        <widget class="QComboBox" name="fillFromLocationAlias"/>
-       </item>
-       <item row="1" column="1" colspan="2">
-        <widget class="QComboBox" name="fillFromUniqueActorBase"/>
-       </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="RefPickerButton" name="fillFromPredefined">
-         <property name="text">
-          <string>PushButton</string>
+        <widget class="QComboBox" name="fillFromLocationAlias">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A Location Alias on this Quest. It must be higher in the list (lower ID number) than this alias.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="1" colspan="2">
-        <widget class="QComboBox" name="findMatchingEvent"/>
+       <item row="10" column="3">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Near Type:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>findMatchingNearType</cstring>
+         </property>
+        </widget>
        </item>
-       <item row="9" column="1" colspan="2">
-        <widget class="QComboBox" name="findMatchingNearAliasID"/>
+       <item row="8" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <spacer name="horizontalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Maximum</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>30</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="findMatchingModeLoadedArea">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The matching reference will be selected from the loaded area. If you use this option, you must specify at least one condition.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>...In Loaded Area</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="8" column="1">
+        <widget class="QCheckBox" name="findMatchingFlagClosest">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If unchecked, the alias will be filled with an ObjectReference chosen randomly from all ObjectReferences in the loaded area that match the given conditions. If checked, the alias will be filled with the matching ObjectReference that is closest to the player-character.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Closest</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -565,7 +649,26 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QTableView" name="packages"/>
+        <widget class="QTableView" name="packages">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These Packages will be added to the aliased actor's package stack. If the actor is in multiple aliases, the packages from these aliases stack according to the containing quests' priority values.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>false</bool>
+         </property>
+         <property name="cornerButtonEnabled">
+          <bool>true</bool>
+         </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="verticalHeaderHighlightSections">
+          <bool>false</bool>
+         </attribute>
+        </widget>
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayout_5">
@@ -760,14 +863,13 @@
   <tabstop>createVerb</tabstop>
   <tabstop>createAtSiblingReferenceAlias</tabstop>
   <tabstop>fillTypeMatching</tabstop>
-  <tabstop>findMatchingFlagClosest</tabstop>
-  <tabstop>findMatchingFlagInLoadedArea</tabstop>
-  <tabstop>findMatchingFlagEvent</tabstop>
+  <tabstop>findMatchingModeEvent</tabstop>
   <tabstop>findMatchingEvent</tabstop>
   <tabstop>findMatchingEventData</tabstop>
-  <tabstop>findMatchingFlagNearAlias</tabstop>
+  <tabstop>findMatchingModeNearAlias</tabstop>
   <tabstop>findMatchingNearAliasID</tabstop>
   <tabstop>findMatchingNearType</tabstop>
+  <tabstop>findMatchingModeLoadedArea</tabstop>
   <tabstop>packages</tabstop>
   <tabstop>packageOverrideListSpectator</tabstop>
   <tabstop>packageOverrideListObserveCorpse</tabstop>

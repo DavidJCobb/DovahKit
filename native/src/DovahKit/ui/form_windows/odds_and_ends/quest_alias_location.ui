@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Location Alias</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -69,6 +69,9 @@
           <layout class="QGridLayout" name="layoutFlags">
            <item row="0" column="1">
             <widget class="QCheckBox" name="flagReserve">
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the quest is started via a Story Manager event, and if this alias &amp;quot;reserves&amp;quot; its Location, then the Story Manager will not fill any other alias with this Location unless one of the following is true: the other alias allows &amp;quot;reserved&amp;quot; Locations; the other alias uses the &amp;quot;Location Alias on Other Quest&amp;quot; fill type; or the other alias belongs to a &amp;quot;Start Game Enabled&amp;quot; quest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Reserves Location</string>
              </property>
@@ -83,15 +86,21 @@
            </item>
            <item row="1" column="3">
             <widget class="QCheckBox" name="flagAllowCleared">
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If unchecked, the Story Manager will not fill aliases with Locations that have been cleared. If checked, this alias will be exempt from that limitation, though the Story Manager will still prefer Locations that have not been cleared whenever any are available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Allow Cleared</string>
              </property>
             </widget>
            </item>
            <item row="0" column="3">
-            <widget class="QCheckBox" name="flagStoresText">
+            <widget class="QCheckBox" name="flagDisplaysText">
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Allows this alias's Location to be used in text replacement.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
-              <string>Stores Text</string>
+              <string>Displays Text</string>
              </property>
             </widget>
            </item>
@@ -104,6 +113,9 @@
            </item>
            <item row="1" column="1">
             <widget class="QCheckBox" name="flagAllowReuse">
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Normally, when a quest is started via the Story Manager, the Story Manager will not fill multiple aliases with the same Location. This checkbox exempts this alias from that restriction.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Allow Reuse in Quest</string>
              </property>
@@ -196,6 +208,9 @@
          </item>
          <item row="1" column="2">
           <widget class="QLabel" name="label_4">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If a Keyword is specified, the game will attempt to find a parent or ancestor Location with that Keyword.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>Find Parent by Keyword:</string>
            </property>
@@ -332,7 +347,7 @@
   <tabstop>forceInto</tabstop>
   <tabstop>flagReserve</tabstop>
   <tabstop>flagOptional</tabstop>
-  <tabstop>flagStoresText</tabstop>
+  <tabstop>flagDisplaysText</tabstop>
   <tabstop>flagAllowReuse</tabstop>
   <tabstop>flagAllowReserved</tabstop>
   <tabstop>flagAllowCleared</tabstop>
