@@ -40,7 +40,7 @@ LogListModelItem::LogListModelItem(const dovah::detailed_notice& warning) {
    text = editor_helpers::warning_or_error_to_string(warning);
    switch (warning.code) {
       case notice_code::save_complete_but_reopen_failed:
-      case notice_code::game_conversion_form_cleanup_failed:
+      case notice_code::unsaved_form_cleanup_failed:
       case notice_code::post_save_none_stub_cleanup_failed:
          non_continuable_success = true;
          break;

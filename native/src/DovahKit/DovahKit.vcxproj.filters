@@ -1600,6 +1600,15 @@
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_location.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_reference.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">

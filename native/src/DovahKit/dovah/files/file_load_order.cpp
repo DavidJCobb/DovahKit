@@ -753,7 +753,7 @@ namespace dovah {
          std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
          //
          form_stub*& prior = this->forms.forms[formID];
-         if (prior && prior->formType != form_type::setting) {
+         if (prior) {
             if (prior->formType == form_type::setting) {
                prior->_add_file(*const_cast<loaded_file*>(file), 0);
             } else {
@@ -2690,7 +2690,7 @@ namespace dovah {
             auto request      = this->request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
             request.commit();
             if (request.get_error_code() != default_notice_code) {
-               results.error.code = notice_code::game_conversion_form_cleanup_failed;
+               results.error.code = notice_code::unsaved_form_cleanup_failed;
                if (is_none_stub)
                   results.error.code = notice_code::post_save_none_stub_cleanup_failed;
             }

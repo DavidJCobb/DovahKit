@@ -94,10 +94,6 @@
 //       a pointer to itself. At least we're able to leverage the same (file_loader) pointer 
 //       that (basic_reader) unfortunately has to offer.
 //
-//  - Rename (notice_code::game_conversion_form_cleanup_failed) to (unsaved_form_cleanup_failed), 
-//    as there's nothing which says that a form can ONLY fail to save as the result of it 
-//    being lost in a conversion between games.
-//
 //  - UI for editing Papyrus script data
 //
 //     - We have a loader for ACTI; we can write form save code and then build a UI 

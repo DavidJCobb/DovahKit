@@ -151,6 +151,13 @@ namespace {
          lua_pushstring(L, self.stub->get_editor_id());
          return 1;
       }
+      luastackchange_t flags(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub)
+            return 0;
+         lua_pushinteger(L, self.stub->get_record_flags());
+         return 1;
+      }
       luastackchange_t form_id(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
          if (!self.stub)
@@ -231,6 +238,7 @@ namespace editor_script::wrappers {
    };
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_getters = {
       { "editor_id", &_getters::editor_id },
+      { "flags",     &_getters::flags },
       { "form_id",   &_getters::form_id },
       { "papyrus",   &_getters::papyrus },
    };

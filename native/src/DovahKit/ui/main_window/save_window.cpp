@@ -257,7 +257,7 @@ void ActiveFileSaveDialog::handleLastSaveError(const dovah::tes_file_writing::wr
       case dovah::notice_code::load_order_contains_light_files:
          message = tr("The current load order would not be possible in Skyrim Classic. The load order contains ESL files (besides the active file).", "write error");
          break;
-      case dovah::notice_code::game_conversion_form_cleanup_failed:
+      case dovah::notice_code::unsaved_form_cleanup_failed:
          requires_reload = true;
          message = tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
          //

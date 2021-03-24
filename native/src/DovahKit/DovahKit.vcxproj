@@ -664,6 +664,9 @@
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_location.ui" />
+    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_reference.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />

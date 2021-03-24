@@ -174,7 +174,11 @@ namespace dovah::loaded_forms {
             }
             break;
          case 'VTCK':
-            subrecord.read(this->additional_voicetype);
+            if (subrecord.read(this->additional_voicetype)) {
+               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::formlist }, intfc.target_stub, this->additional_voicetype)
+               );
+            }
             break;
          case 'KSIZ':
          case 'KWDA':
@@ -614,7 +618,7 @@ namespace dovah::loaded_forms {
       this->fill_from_unique_actor_base.set(my_owner, nullptr);
       this->fill_loc_ref_type.set(my_owner, nullptr);
       this->fill_near_alias = -1;
-      this->fill_near_alias_type = 0;
+      this->fill_near_alias_type = near_alias_type::linked_ref_child;
    }
    #pragma endregion
 

@@ -137,6 +137,10 @@ namespace dovah::loaded_forms {
       friend class Alias;
       friend class Quest;
       public:
+         enum class near_alias_type : uint32_t {
+            linked_ref_child = 0,
+         };
+      public:
          components::keyword_list      keywords; // KSIZ, KWDA
          components::container_data    inventory;
          std::vector<form_reference_t> packages; // ALPC
@@ -149,11 +153,11 @@ namespace dovah::loaded_forms {
             form_reference_t combat;         // ECOR
          } package_override_lists; // same structure as on NPC_
          form_reference_t display_name; // ALDN; should be the form ID of a MESG
-         form_reference_t additional_voicetype; // VTCK; xEdit says can be the ID of a VTYP; UESP says can also be the ID of a FLST?
+         form_reference_t additional_voicetype; // VTCK; value is an NPC_ or FLST
          //
          form_reference_t fill_loc_ref_type; // ALRT; should be the form ID of an LCRT
-         alias_id_t       fill_near_alias = 0xFFFFFFFF; // ALNA
-         uint32_t         fill_near_alias_type = 0; // ALNT
+         alias_id_t       fill_near_alias      = none_id; // ALNA
+         near_alias_type  fill_near_alias_type = near_alias_type::linked_ref_child; // ALNT
          form_reference_t fill_from_reference;
          form_reference_t create_object_of_type; // ALCO
          alias_id_t       create_object_at_alias = 0; // ALCA; sign bit is a flag (create inside of / create at); the rest is the alias ID

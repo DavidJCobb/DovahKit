@@ -476,7 +476,7 @@ namespace editor_helpers {
          case notice_code::load_order_contains_light_files:
             text = QObject::tr("The current load order would not be possible in Skyrim Classic. The load order contains ESL files (besides the active file).", "write error");
             break;
-         case notice_code::game_conversion_form_cleanup_failed:
+         case notice_code::unsaved_form_cleanup_failed:
             non_continuable_success = true;
             text = QObject::tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
             break;

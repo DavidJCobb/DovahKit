@@ -21,7 +21,7 @@ namespace dovah {
          file_has_too_many_dependencies              = 0x0000000C,
          no_active_file                              = 0x0000000D,
          save_complete_but_to_temporary_file         = 0x0000000E, // The file was saved successfully, but only to a temporary file. It was not possible to rename that temporary file to the desired filename.
-         game_conversion_form_cleanup_failed         = 0x0000000F, // Some forms were not saved due to the file, but could not be deleted from memory. It is not safe to continue this editing session.
+         unsaved_form_cleanup_failed                 = 0x0000000F, // Some forms were not saved due to the file, but could not be deleted from memory. It is not safe to continue this editing session.
          form_override_has_type_mismatch             = 0x00000010,
          form_override_has_armo_arma_mismatch        = 0x00000011,
          cell_flags_not_yet_found                    = 0x00000012, // CELL full load: a subrecord specific to interior or exterior cells was found before we discovered (by virtue of CELL/DATA) what type of cell this is.
