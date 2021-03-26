@@ -1,5 +1,6 @@
 #include "wrapper_util.h"
 #include "wrappers/_all_forms.h"
+#include "wrappers/_all_ui.h"
 
 namespace editor_script {
    extern const char* wrap_form(wrapper& out, dovah::form_stub* stub) {
@@ -18,5 +19,14 @@ namespace editor_script {
          }
       }
       return wrappers::form::metatable_key;
+   }
+   extern const char* wrap_widget(wrapper& out, QWidget* widget) {
+      out.widget = widget;
+      out.type   = wrapper_type::ui;
+      if (widget) {
+         if (qobject_cast<QDialog*>(widget))
+            return wrappers::ui::window::metatable_key;
+      }
+      return static_assert(false, "TODO: generic widget");
    }
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <QWidget>
 #include "../../helpers/eight_cc.h"
 #include "../../dovah/form_stub.h"
 #include "../../../Lua/lua.hpp"
@@ -95,6 +96,8 @@ namespace editor_script {
          uint8_t depth         = 0;     // such that this->parts[this->depth - 1] is the innermost part
          bool    is_collection = false; // if this is (true), then parts[depth] has no index or name but rather identifies the collection itself (i.e. allowing Lua to refer to, say, `shout.words` and not just `shout` and `shout.words[2]`)
          std::array<part, part_count> parts;
+         //
+         QWidget* widget = nullptr;
          
          inline part& last_part() noexcept {
             if (!this->depth)

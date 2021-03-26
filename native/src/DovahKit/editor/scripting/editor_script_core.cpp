@@ -19,6 +19,8 @@ namespace {
    constexpr char* wrapper_weakmap_metatable_key = "__weakmap_mode_metatable";
 
    constexpr char* string_format_registry_key = "cached:string.format"; // key for a cached copy of (string.format), in case a script monkeypatches/replaces the original
+
+   constexpr int max_script_windows = 10;
 }
 
 namespace {
@@ -470,6 +472,19 @@ bool DovahKitScriptVM::_should_keep_running() const noexcept {
    return false;
 }
 
+QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
+   if (this->widgets.windows.size() >= max_script_windows)
+      return nullptr;
+   auto* dialog = new QDialog(nullptr);
+   this->widgets.windows.push_back(dialog);
+   return dialog;
+}
+void DovahKitScriptVM::accept_new_orphaned_widget(QWidget* widget) {
+   if (!widget)
+      return;
+   this->widgets.orphans.push_back(widget);
+}
+
 void DovahKitScriptVM::abort() {
    auto guard = std::lock_guard(this->exec_lock);
    if (this->running)
@@ -541,7 +556,7 @@ void DovahKitScriptVMMessenger::send_message(editor_script::cross_thread_task* m
 }
 #pragma endregion 
 
-#pragma region
+#pragma region DovahKitScriptVMPermissionInterface
 /*static*/ void DovahKitScriptVMPermissionInterface::verify_form_write_permissions() {
    auto& intfc = DovahKitScriptVMPermissionInterface::get();
    if (false) { // TODO: permission check, when we implement those
@@ -549,7 +564,23 @@ void DovahKitScriptVMMessenger::send_message(editor_script::cross_thread_task* m
       __assume(0);
    }
 }
+/*static*/ void DovahKitScriptVMPermissionInterface::verify_ui_permissions() {
+   auto& intfc = DovahKitScriptVMPermissionInterface::get();
+   if (false) { // TODO: permission check, when we implement those
+      luaL_error(intfc.vm.lua_vm, "The script does not have permission to use APIs related to the UI.");
+      __assume(0);
+   }
+}
 #pragma endregion
+
+//
+// Given a dovah::form_stub& named stub:
+// 
+//    __lua_registry[wrapper_storage_registry_key][&stub] == { wrapper, wrapper, wrapper }
+//
+// Lua allows us to use void pointers as "light userdata," essentially allowing us to use 
+// raw pointers as keys or values in Lua tables.
+//
 
 void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance) {
    auto* L     = this->vm.lua_vm;

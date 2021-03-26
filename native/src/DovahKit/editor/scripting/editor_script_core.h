@@ -5,6 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <QDialog>
 #include <QObject>
 #include <QString>
 #include <QTimer>
@@ -73,6 +74,11 @@ class DovahKitScriptVM : public QObject {
             _task_queue normal;
          } m2s;
       } task_queues;
+      //
+      struct {
+         std::vector<QDialog*> windows;
+         std::vector<QWidget*> orphans;
+      } widgets;
       
    public:
       static DovahKitScriptVM& get() {
@@ -88,6 +94,9 @@ class DovahKitScriptVM : public QObject {
       inline bool is_running() const noexcept { return this->running; }
 
       inline QWidget* get_ui_parent_widget() const noexcept { return this->ui_parent; }
+
+      QDialog* try_spawn_script_window() noexcept;
+      void accept_new_orphaned_widget(QWidget*);
       
    signals:
       void messageLogged(const QString&);
@@ -144,6 +153,7 @@ class DovahKitScriptVMPermissionInterface {
       DovahKitScriptVM& vm;
 
       static void verify_form_write_permissions();
+      static void verify_ui_permissions();
 };
 
 class DovahKitScriptVMUserdataInterface {
