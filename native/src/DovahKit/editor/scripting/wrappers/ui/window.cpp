@@ -3,6 +3,7 @@
 #include "../../wrapper_util.h"
 
 #include "../../cross_thread_tasks/s2m/spawn_window.h"
+#include "../../cross_thread_tasks/s2m/ui_dialog_operation.h"
 
 namespace {
    using namespace editor_script;
@@ -15,8 +16,12 @@ namespace {
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
-
-         static_assert(false, "show the window");
+         auto* task = new tasks::s2m::ui_dialog_operation;
+         task->target         = (QDialog*) self.widget;
+         task->operation      = tasks::s2m::ui_dialog_operation::operation_type::set_visibility;
+         task->params.boolean = false;
+         DovahKitScriptVMMessenger::get().send_message(task);
+         delete task;
          return 0;
       }
       luastackchange_t show(lua_State* L) {
@@ -24,29 +29,73 @@ namespace {
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
-
-         static_assert(false, "show the window");
+         auto* task = new tasks::s2m::ui_dialog_operation;
+         task->target         = (QDialog*) self.widget;
+         task->operation      = tasks::s2m::ui_dialog_operation::operation_type::set_visibility;
+         task->params.boolean = true;
+         DovahKitScriptVMMessenger::get().send_message(task);
+         delete task;
          return 0;
       }
    }
    namespace _getters {
+      luastackchange_t has_size_handle(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.stub)
+            return 0;
+         //
+         auto* task = new tasks::s2m::ui_dialog_operation;
+         task->target         = (QDialog*) self.widget;
+         task->operation      = tasks::s2m::ui_dialog_operation::operation_type::get_size_grip;
+         DovahKitScriptVMMessenger::get().send_message(task);
+         lua_pushboolean(L, task->results.boolean);
+         delete task;
+         //
+         return 1;
+      }
       luastackchange_t title(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.stub)
             return 0;
-         lua_pushstring(L, self.widget->windowTitle().toUtf8());
+         //
+         auto* task = new tasks::s2m::ui_dialog_operation;
+         task->target         = (QDialog*) self.widget;
+         task->operation      = tasks::s2m::ui_dialog_operation::operation_type::get_title;
+         DovahKitScriptVMMessenger::get().send_message(task);
+         lua_pushstring(L, task->results.text.toUtf8());
+         delete task;
+         //
          return 1;
       }
    }
    namespace _setters {
+      luastackchange_t has_size_handle(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.stub)
+            return 0;
+         //
+         auto* task = new tasks::s2m::ui_dialog_operation;
+         task->target         = (QDialog*) self.widget;
+         task->operation      = tasks::s2m::ui_dialog_operation::operation_type::set_size_grip;
+         task->params.boolean = lua_toboolean(L, 2);
+         DovahKitScriptVMMessenger::get().send_message(task);
+         delete task;
+         //
+         return 0;
+      }
       luastackchange_t title(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "window title (string) expected");
          if (!self.widget)
             return 0;
          //
-         auto title = lua_tostring(L, 2);
-         self.widget->setWindowTitle(QString::fromUtf8(title));
+         auto* task = new tasks::s2m::ui_dialog_operation;
+         task->target         = (QDialog*) self.widget;
+         task->operation      = tasks::s2m::ui_dialog_operation::operation_type::set_title;
+         task->params.text    = QString::fromUtf8(lua_tostring(L, 2));
+         DovahKitScriptVMMessenger::get().send_message(task);
+         delete task;
          //
          return 0;
       }
@@ -101,9 +150,11 @@ namespace editor_script::wrappers::ui {
       lua_setglobal(L, cls::global_name);
    }
    /*static*/ const std::initializer_list<luaL_Reg> window::metatable_getters = {
-      { "title", &_getters::title },
+      { "has_size_handle", &_getters::has_size_handle },
+      { "title",           &_getters::title },
    };
    /*static*/ const std::initializer_list<luaL_Reg> window::metatable_setters = {
-      { "title", &_setters::title },
+      { "has_size_handle", &_setters::has_size_handle },
+      { "title",           &_setters::title },
    };
 }

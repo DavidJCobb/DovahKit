@@ -27,6 +27,6 @@ namespace editor_script {
          if (qobject_cast<QDialog*>(widget))
             return wrappers::ui::window::metatable_key;
       }
-      return static_assert(false, "TODO: generic widget");
+      return wrappers::ui::window::metatable_key; // TODO: use a generic widget metatable
    }
 }

@@ -443,6 +443,19 @@ void DovahKitScriptVM::_teardown_lua_vm() {
       lua_close(this->lua_vm);
       this->lua_vm = nullptr;
    }
+   for (auto* window : this->widgets.windows) {
+      if (!window)
+         continue;
+      window->done(-2);
+      window->deleteLater();
+   }
+   this->widgets.windows.clear();
+   for (auto* widget : this->widgets.orphans) {
+      if (!widget)
+         continue;
+      widget->deleteLater();
+   }
+   this->widgets.orphans.clear();
 }
 
 void DovahKitScriptVM::_script_thread_loop() {
@@ -460,26 +473,40 @@ void DovahKitScriptVM::_script_thread_loop() {
 
 bool DovahKitScriptVM::_should_keep_running() const noexcept {
    //
-   // TODO: If the script has any script-spawned UI windows open and visible, then 
-   // this should return (true). If we want to be more sophisticated, then we can 
-   // double-check that the windows or any controls in them have any event listeners 
-   // registered.
+   // If the script has any script-spawned UI windows open and visible, then this function 
+   // should return (true). If we want to be more sophisticated, then we can double-check 
+   // that the windows or any controls in them have any event listeners registered.
    //
-   // The basic thing we're checking for is, "We're not running script code *right 
-   // now*, but can we *end up* running them as a result of any extant event 
-   // listeners?"
+   // The basic thing we're checking for is, "We're not running script code *right now*, 
+   // but can we *end up* running them as a result of any extant event listeners?"
    //
+   for (auto* window : this->widgets.windows) {
+      if (!window)
+         continue;
+      if (window->isVisible())
+         return true;
+   }
    return false;
 }
 
 QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
+   {
+      auto guard = std::lock_guard(this->exec_lock);
+      if (!this->running)
+         return;
+   }
    if (this->widgets.windows.size() >= max_script_windows)
       return nullptr;
-   auto* dialog = new QDialog(nullptr);
+   auto* dialog = new QDialog(this->ui_parent);
    this->widgets.windows.push_back(dialog);
    return dialog;
 }
 void DovahKitScriptVM::accept_new_orphaned_widget(QWidget* widget) {
+   {
+      auto guard = std::lock_guard(this->exec_lock);
+      if (!this->running)
+         return;
+   }
    if (!widget)
       return;
    this->widgets.orphans.push_back(widget);

@@ -660,6 +660,21 @@
 //                any unacknowledged UI-related script-to-main messages. Similarly, moving 
 //                widgets within layouts or structures, or removing widgets, should block 
 //                until the message queue is empty.
+//
+//                 - The current cross-thread messaging system can't handle this. Messages 
+//                   can be blocking or non-blocking, but they cannot change "blockingness" 
+//                   once they're in the queue. At least, I don't think it'd be safe.
+//
+//                   The alternative, then, would be to...
+//
+//                    - Have a queue for "get" operations and a queue for "set" operations.
+//
+//                    - Attempting to send a "get" operation blocks if there are any pending 
+//                      "set" operations; similarly, attempting to send a "set" operation 
+//                      blocks if there are any pending "get" operations.
+//
+//                    - Whenever a piece of Lua code finishes executing, block until all 
+//                      pending operations are done.
 //          
 //           - Scripts need to be able to register Lua functions to be called when certain 
 //             UI events occur.
