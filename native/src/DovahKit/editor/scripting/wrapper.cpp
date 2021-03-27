@@ -24,6 +24,13 @@ namespace editor_script { // base metatable
 }
 
 namespace editor_script {
+   wrapper::~wrapper() {
+      if (this->type == wrapper_type::ui) {
+         DovahKitScriptVM::get().widget_no_longer_referenced(this->widget);
+         this->widget = nullptr;
+      }
+   }
+
    void wrapper::append_part(part_type_t signature, uint32_t index) {
       assert(this->depth < part_count && "Too many parts!");
       auto& part = this->parts[this->depth];

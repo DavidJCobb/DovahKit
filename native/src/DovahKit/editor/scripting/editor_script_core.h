@@ -111,6 +111,7 @@ class DovahKitScriptVM : public QObject {
       QDialog* try_spawn_script_window() noexcept;
       void accept_new_orphaned_widget(QWidget*);
       void widget_no_longer_orphaned(QWidget*);
+      void widget_no_longer_referenced(QWidget*);
       
    signals:
       void messageLogged(const QString&);
@@ -227,4 +228,22 @@ class DovahKitScriptVMUserdataInterface {
       }
 
       void remove_from_sequential_collection(editor_script::wrapper& to_remove);
+};
+
+class DovahKitScriptUIListenerInterface {
+   protected:
+      DovahKitScriptUIListenerInterface(DovahKitScriptVM& w) : vm(w) {}
+   public:
+      static DovahKitScriptUIListenerInterface& get() {
+         static DovahKitScriptUIListenerInterface instance(DovahKitScriptVM::get());
+         return instance;
+      }
+      
+      DovahKitScriptVM& vm;
+
+      void add_listener(QWidget&, const char* event_name, const char* listener_name, int listener_index);
+      void remove_listener(QWidget&, const char* event_name, const char* listener_name = nullptr);
+      void remove_all_listeners(QWidget&);
+
+      void fire_event(QWidget&, const char* event_name, const std::vector<QVariant> params);
 };

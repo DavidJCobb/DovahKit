@@ -12,12 +12,19 @@
 #include "api/form_type_values.h"
 #include "classes/_all.h"
 #include "../../helpers/lua/dump.h"
+#include "../../helpers/lua/isempty.h"
+#include "../../helpers/lua/push_qt_variant.h"
+#include "../../helpers/lua/set_top_on_exit.h"
+
+#include <QPushButton>
 
 #include "api/namespaces/dovah.h"
 
 namespace {
    constexpr char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
    constexpr char* wrapper_weakmap_metatable_key = "__weakmap_mode_metatable";
+
+   constexpr char* ui_listener_registry_key = "dovah.internals.ui_listeners"; // registry[key][widget_pointer][event_name][listener_name]
 
    constexpr int max_script_windows = 10;
 }
@@ -265,6 +272,7 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    for (auto* window : this->widgets.windows) {
       if (!window)
          continue;
+      QObject::disconnect(window);
       window->done(-2);
       window->deleteLater();
    }
@@ -272,6 +280,7 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    for (auto* widget : this->widgets.orphans) {
       if (!widget)
          continue;
+      QObject::disconnect(widget);
       widget->deleteLater();
    }
    this->widgets.orphans.clear();
@@ -341,6 +350,20 @@ void DovahKitScriptVM::widget_no_longer_orphaned(QWidget* widget) {
       return;
    auto& v = this->widgets.orphans;
    v.erase(std::remove(v.begin(), v.end(), widget), v.end());
+}
+void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
+   if (!widget)
+      return;
+   if (widget->parentWidget())
+      return;
+   auto& list = this->widgets.orphans;
+   for (auto it = list.begin(); it != list.end(); ++it) {
+      if (*it == widget) {
+         delete widget;
+         list.erase(it);
+         return;
+      }
+   }
 }
 
 void DovahKitScriptVM::abort() {
@@ -484,7 +507,7 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
 // Lua allows us to use void pointers as "light userdata," essentially allowing us to use 
 // raw pointers as keys or values in Lua tables.
 //
-
+#pragma region DovahKitScriptVMUserdataInterface
 void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance) {
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
@@ -715,3 +738,164 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
    assert(to_remove.depth && !to_remove.is_collection && "The (to_remove) argument must be an element in a sequential collection.");
    this->remove(to_remove);
 }
+#pragma endregion
+
+#pragma region DovahKitScriptUIListenerInterface
+//
+// Event names within this system must be lowercase.
+//
+
+namespace {
+   namespace _ui_listener_responses {
+      namespace _button {
+         void OnActivate() {
+
+         }
+         void OnCheckStateChange(bool state) {
+
+         }
+      }
+   }
+
+   const char* signal_name_for_event(const QWidget& widget, const char* event_name) {
+      if (qobject_cast<const QPushButton*>(&widget)) {
+         if (_stricmp(event_name, "OnActivate") == 0)
+            return SIGNAL("clicked");
+         if (_stricmp(event_name, "OnCheckStateChange") == 0)
+            return SIGNAL("toggled");
+      }
+      return nullptr;
+   }
+
+   template<typename T, typename... Args> void _register_ev(T* widget, void(*signal)(Args...), const char* lua_event_name) {
+      auto& vm = DovahKitScriptVM::get();
+      QObject::connect(widget, signal, &vm, [widget, lua_event_name](Args&&... args) {
+         DovahKitScriptUIListenerInterface::get().fire_event(*casted, event_name, { ...args });
+         static_assert(false, "finish me - want templates so we can do things more automatically");
+      });
+   }
+
+   void _register_event(QWidget& widget, const char* event_name) {
+      auto& vm = DovahKitScriptVM::get();
+      if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
+         if (_stricmp(event_name, "OnActivate") == 0) {
+            QObject::connect(casted, &QPushButton::clicked, &vm, [casted, event_name](bool checked) {
+               DovahKitScriptUIListenerInterface::get().fire_event(*casted, event_name, { checked });
+            });
+            return;
+         }
+         if (_stricmp(event_name, "OnCheckStateChange") == 0)
+            return SIGNAL("toggled");
+      }
+
+
+   }
+}
+
+void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char* event_name, const char* listener_name, int listener_index) {
+   auto* signal_name = signal_name_for_event(widget, event_name);
+   //
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   //
+   auto  si_storage = start + 1;
+   auto  si_events  = start + 2;
+   auto  si_funcs   = start + 3;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_pushlightuserdata(L, &widget);
+   lua_rawget(L, si_storage); // STACK: - [ ..., storage_root[&widget] ] +
+   if (lua_isnoneornil(L, -1)) {
+      lua_pop(L, 1);
+      lua_createtable(L, 0, 1);
+      lua_pushlightuserdata(L, &widget);
+      lua_pushvalue(L, si_events);
+      lua_rawset(L, si_storage);
+   }
+   lua_getfield(L, si_events, event_name);
+   bool empty = lua_isnoneornil(L, si_funcs);
+   if (empty) {
+      lua_pop(L, 1);
+      lua_createtable(L, 0, 1);
+      lua_pushstring(L, event_name);
+      lua_pushvalue(L, si_funcs);
+      lua_rawset(L, si_events);
+   }
+   lua_pushstring(L, listener_name);
+   lua_pushvalue(L, listener_index);
+   lua_rawset(L, si_funcs);
+   //
+   lua_settop(L, start);
+}
+void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const char* event_name, const char* listener_name) {
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   //
+   auto  si_storage = start + 1;
+   auto  si_events  = start + 2;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   lua_pushlightuserdata(L, &widget);
+   lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[&widget] ] +
+   assert(lua_istable(L, -1));
+   lua_copy  (L, -1, si_storage);
+   lua_settop(L, si_storage); // STACK: - [ ..., storage_root[&widget] ] +
+   lua_getfield(L, si_storage, event_name); // STACK: - [ ..., storage_root[&widget], storage_root[&widget][event_name] ] +
+   if (lua_isnoneornil(L, si_events)) { // no events to remove
+      lua_settop(L, start);
+      return;
+   }
+   bool empty = true;
+   if (listener_name) {
+      empty = false;
+      lua_pushnil(L);
+      lua_setfield(L, si_events, listener_name);
+      empty = cobb::lua::isempty(L, si_events);
+   }
+   if (empty) {
+      lua_pushnil(L);
+      lua_setfield(L, si_storage, event_name);
+      //
+      auto* signal_name = signal_name_for_event(widget, event_name);
+      if (signal_name)
+         widget.disconnect(signal_name);
+   }
+}
+void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_pushlightuserdata(L, &widget);
+   lua_pushnil(L);
+   lua_rawset(L, start + 1);
+   //
+   widget.disconnect();
+}
+void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const std::vector<QVariant> params) {
+   auto* signal_name = signal_name_for_event(widget, event_name);
+   //
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   auto  guard = cobb::lua::set_top_on_exit(L, start);
+   //
+   auto  si_storage = start + 1;
+   auto  si_events  = start + 2;
+   auto  si_funcs   = start + 3;
+   auto  si_nk      = start + 4;
+   auto  si_nv      = start + 5;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_pushlightuserdata(L, &widget);
+   if (lua_rawget(L, si_storage) != LUA_TTABLE)
+      return;
+   if (lua_getfield(L, si_events, event_name) != LUA_TTABLE)
+      return;
+   lua_pushnil(L); // nk
+   while (lua_next(L, si_funcs) != 0) {
+      for (auto& p : params)
+         cobb::lua::push_qt_variant(L, p);
+      lua_call(L, params.size(), 0); // pops (nv), since that's the function
+   }
+}
+#pragma endregion

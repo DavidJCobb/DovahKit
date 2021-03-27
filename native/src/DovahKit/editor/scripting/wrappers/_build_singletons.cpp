@@ -5,6 +5,7 @@ namespace editor_script {
    void build_all_ui_wrapper_singletons(lua_State* L) {
       using namespace wrappers;
       //
+      ui::button::setup(L);
       ui::progress_bar::setup(L);
       ui::text::setup(L);
       ui::widget::setup(L);

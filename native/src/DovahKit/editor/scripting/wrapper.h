@@ -47,6 +47,7 @@ namespace editor_script {
             *this = other;
             this->lua_key = LUA_NOREF;
          }
+         ~wrapper();
 
          //
          // There are certain objects that we actually *don't* want to provide to scripts, like none-stubs 
