@@ -60,7 +60,7 @@ class DovahKitScriptVM : public QObject {
       };
       
       void _setup_lua_vm();
-      void _teardown_lua_vm();
+      void _teardown_lua_vm(); // can only safely run on the main thread, since it tears down Qt objects now too
 
       void _script_thread_loop();
 

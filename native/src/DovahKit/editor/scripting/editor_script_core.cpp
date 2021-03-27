@@ -141,6 +141,7 @@ DovahKitScriptVM::DovahKitScriptVM() {
    //
    QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &DovahKitScriptVM::mainThreadLoop);
    QObject::connect(this, &DovahKitScriptVM::scriptEnded, this, [this]() {
+      this->_teardown_lua_vm();
       //
       // Delete script-to-main tasks in the case of a script being terminated early, and delete 
       // main-to-script tasks when a script finishes execution for any reason.
@@ -279,14 +280,15 @@ void DovahKitScriptVM::_teardown_lua_vm() {
 void DovahKitScriptVM::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
    //
-   while (this->_should_keep_running()) {
+   do {
+      this->task_queues.s2m.wait_until_empty(); // these can be non-blocking + fire-and-forget
+      this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
       this->task_queues.m2s.urgent.process();
       this->task_queues.m2s.normal.process();
-   }
+   } while (this->_should_keep_running());
    //
-   this->_teardown_lua_vm();
    this->running = false;
-   emit this->scriptEnded(false);
+   emit this->scriptEnded(false); // a main-thread handler will catch this and tear down the VM
 }
 
 bool DovahKitScriptVM::_should_keep_running() const noexcept {
@@ -311,7 +313,7 @@ QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
    {
       auto guard = std::lock_guard(this->exec_lock);
       if (!this->running)
-         return;
+         return nullptr;
    }
    if (this->widgets.windows.size() >= max_script_windows)
       return nullptr;
@@ -375,6 +377,8 @@ void DovahKitScriptVM::setUIParentWidget(QWidget* widget) {
 
 void DovahKitScriptVM::mainThreadLoop() {
    this->task_queues.s2m.process();
+   this->ui_queues.read.process();
+   this->ui_queues.write.process();
 }
 #pragma endregion
 
