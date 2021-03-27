@@ -58,8 +58,8 @@ namespace {
          if (!arg->widget)
             return 0;
          //
-         int row = -1; // or (index) for boxes
-         int col = -1;
+         int row     = 0; // or (index) for boxes
+         int col     = 0;
          int rowspan = 1;
          int colspan = 1;
          //
@@ -71,6 +71,8 @@ namespace {
             rowspan = lua_tonumber(L, 5);
          if (lua_isnumber(L, 6))
             colspan = lua_tonumber(L, 6);
+         --row; // Lua one-indexed -> C zero-indexed
+         --col; // Lua one-indexed -> C zero-indexed
          //
          auto* widget = self.widget;
          auto* child  = arg->widget;
@@ -79,23 +81,20 @@ namespace {
             auto* layout = widget->layout();
             if (!layout) {
                child->setParent(widget);
-               return;
-            }
-            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+            } else if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
                if (row >= 0 && col >= 0) {
                   grid->addWidget(child, row, col, rowspan, colspan);
                } else {
                   grid->addWidget(child);
                }
-               return;
-            }
-            if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
+            } else if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
                if (row >= 0) {
                   box->insertWidget(row, child);
                } else {
                   box->addWidget(child);
                }
             }
+            DovahKitScriptVM::get().widget_no_longer_orphaned(child);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
@@ -159,7 +158,7 @@ namespace {
    namespace _getters {
       luastackchange_t enabled(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.stub)
+         if (!self.widget)
             return 0;
          bool result;
          {
@@ -177,7 +176,7 @@ namespace {
       luastackchange_t enabled(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
-         if (!self.stub)
+         if (!self.widget)
             return 0;
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);

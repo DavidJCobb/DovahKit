@@ -37,7 +37,7 @@ namespace {
    namespace _getters {
       luastackchange_t has_size_handle(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.stub)
+         if (!self.widget)
             return 0;
          bool result;
          {
@@ -52,7 +52,7 @@ namespace {
       }
       luastackchange_t title(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.stub)
+         if (!self.widget)
             return 0;
          QString result;
          {
@@ -70,7 +70,7 @@ namespace {
       luastackchange_t has_size_handle(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
-         if (!self.stub)
+         if (!self.widget)
             return 0;
          auto* widget  = (QDialog*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);

@@ -110,6 +110,7 @@ class DovahKitScriptVM : public QObject {
 
       QDialog* try_spawn_script_window() noexcept;
       void accept_new_orphaned_widget(QWidget*);
+      void widget_no_longer_orphaned(QWidget*);
       
    signals:
       void messageLogged(const QString&);

@@ -331,6 +331,17 @@ void DovahKitScriptVM::accept_new_orphaned_widget(QWidget* widget) {
       return;
    this->widgets.orphans.push_back(widget);
 }
+void DovahKitScriptVM::widget_no_longer_orphaned(QWidget* widget) {
+   {
+      auto guard = std::lock_guard(this->exec_lock);
+      if (!this->running)
+         return;
+   }
+   if (!widget || !widget->parentWidget())
+      return;
+   auto& v = this->widgets.orphans;
+   v.erase(std::remove(v.begin(), v.end(), widget), v.end());
+}
 
 void DovahKitScriptVM::abort() {
    auto guard = std::lock_guard(this->exec_lock);

@@ -1,4 +1,4 @@
-#include "text.h"
+#include "progress_bar.h"
 #include "../../editor_script_core.h"
 #include "../../wrapper_util.h"
 
@@ -6,18 +6,18 @@
 
 namespace {
    using namespace editor_script;
-   using cls = wrappers::ui::text;
+   using cls = wrappers::ui::progress_bar;
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
-      luastackchange_t clear(lua_State* L) {
+      luastackchange_t reset(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [widget]() { widget->clear(); };
+         task->handler = [widget]() { widget->reset(); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -71,7 +71,7 @@ namespace {
          lua_pushstring(L, result.c_str());
          return 1;
       }
-      luastackchange_t text(lua_State* L) {
+      luastackchange_t current_text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
@@ -86,19 +86,79 @@ namespace {
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
-      luastackchange_t word_wrap(lua_State* L) {
+      luastackchange_t format(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QString result;
+         {
+            auto* widget = (wrapped_type*)self.widget;
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->format(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushstring(L, result.toUtf8());
+         return 1;
+      }
+      luastackchange_t maximum(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result;
+         {
+            auto* widget  = (wrapped_type*) self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->maximum(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushinteger(L, result);
+         return 1;
+      }
+      luastackchange_t minimum(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result;
+         {
+            auto* widget  = (wrapped_type*) self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->minimum(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushinteger(L, result);
+         return 1;
+      }
+      luastackchange_t show_text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
          bool result;
          {
-            auto* widget  = (wrapped_type*) self.widget;
+            auto* widget  = (wrapped_type*)self.widget;
             auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->wordWrap(); };
+            task->handler = [widget, &result]() { result = widget->isTextVisible(); };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
          lua_pushboolean(L, result);
+         return 1;
+      }
+      luastackchange_t value(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result;
+         {
+            auto* widget  = (wrapped_type*) self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->value(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushinteger(L, result);
          return 1;
       }
    }
@@ -183,7 +243,7 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
-      luastackchange_t text(lua_State* L) {
+      luastackchange_t format(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
          if (!self.widget)
@@ -191,19 +251,55 @@ namespace {
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setText(value); };
+         task->handler = [widget, value]() { widget->setFormat(value); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
-      luastackchange_t word_wrap(lua_State* L) {
+      luastackchange_t maximum(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         bool  value   = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setWordWrap(value); };
+         int   value   = lua_tointeger(L, 2);
+         task->handler = [widget, value]() { widget->setMaximum(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t minimum(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         int   value   = lua_tointeger(L, 2);
+         task->handler = [widget, value]() { widget->setMinimum(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t show_text(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         auto* widget = (wrapped_type*)self.widget;
+         auto* task = new tasks::s2m::lambda(false);
+         bool  value = lua_toboolean(L, 2);
+         task->handler = [widget, value]() { widget->setTextVisible(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t value(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         int   value   = lua_tointeger(L, 2);
+         task->handler = [widget, value]() { widget->setValue(value); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -213,16 +309,13 @@ namespace {
       luastackchange_t new_(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_ui_permissions();
          //
-         QString text;
-         if (lua_gettop(L) > 0) {
-            luaL_argcheck(L, lua_isstring(L, 1), 1, "nil or string expected");
-            text = QString::fromUtf8(lua_tostring(L, 1));
-         }
+         if (lua_gettop(L) > 0)
+            luaL_error(L, "the ui.progress_bar.new function should not be called with a colon or passed any arguments");
          //
          wrapped_type* created = nullptr;
          auto*         task    = new tasks::s2m::lambda(true);
-         task->handler = [&created, &text]() {
-            created = new wrapped_type(text);
+         task->handler = [&created]() {
+            created = new wrapped_type();
             DovahKitScriptVM::get().accept_new_orphaned_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -242,17 +335,24 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "clear", &_methods::clear },
+      { "reset", &_methods::reset },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "alignment", &_getters::alignment },
-      { "text",      &_getters::text },
-      { "word_wrap", &_getters::word_wrap },
+      { "alignment",    &_getters::alignment },
+      { "current_text", &_getters::current_text },
+      { "format",       &_getters::format },
+      { "maximum",      &_getters::maximum },
+      { "minimum",      &_getters::minimum },
+      { "show_text",    &_getters::show_text },
+      { "value",        &_getters::value },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "alignment", &_setters::alignment },
-      { "text",      &_setters::text },
-      { "word_wrap", &_setters::word_wrap },
+      { "format",    &_setters::format },
+      { "maximum",   &_setters::maximum },
+      { "minimum",   &_setters::minimum },
+      { "show_text", &_setters::show_text },
+      { "value",     &_setters::value },
    };
 
    /*static*/ void cls::setup(lua_State* L) {

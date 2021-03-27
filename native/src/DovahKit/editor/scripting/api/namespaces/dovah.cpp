@@ -31,6 +31,24 @@ namespace {
          self->finish();
          return 0;
       }
+      luastackchange_t count_forms_of_type(lua_State* L) {
+         luaL_argcheck(L, lua_isnumber(L, 1), 1, "form type (number) expected");
+         auto& editor = DovahKitCore::get();
+         if (!editor.has_data())
+            return 0;
+         //
+         bool  valid = false;
+         auto  ft    = editor_script::get_form_type_from_stack(L, 1, valid);
+         if (!valid)
+            return 0;
+         auto& info = dovah::form_type_info::lookup(ft);
+         if (info.flags & dovah::form_type_info::flag::is_singleton) {
+            lua_pushinteger(L, 1);
+            return 1;
+         }
+         lua_pushinteger(L, editor.count_forms_of_type(ft));
+         return 1;
+      }
       luastackchange_t create_form(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
@@ -102,8 +120,8 @@ namespace {
          auto  ft    = editor_script::get_form_type_from_stack(L, 1, valid);
          if (!valid)
             return 0;
-         auto& info  = ::dovah::form_type_info::lookup(ft);
-         if (info.flags & ::dovah::form_type_info::flag::is_singleton) {
+         auto& info  = dovah::form_type_info::lookup(ft);
+         if (info.flags & dovah::form_type_info::flag::is_singleton) {
             //
             // For singleton forms, only use the canonical stub.
             //
@@ -118,7 +136,7 @@ namespace {
             return 0;
          }
          //
-         editor.for_each_form_of_type(ft, [L](::dovah::form_stub* stub) {
+         editor.for_each_form_of_type(ft, [L](dovah::form_stub* stub) {
             lua_pushvalue(L, 2); // push the function
             wrapper out;
             auto*   mt = wrap_form(out, stub);
@@ -187,6 +205,7 @@ namespace {
    std::array _functions = {
       luaL_Reg{ "benchmark_start",        &_definitions::benchmark_start },
       luaL_Reg{ "benchmark_stop",         &_definitions::benchmark_stop },
+      luaL_Reg{ "count_forms_of_type",    &_definitions::count_forms_of_type },
       luaL_Reg{ "create_form",            &_definitions::create_form },
       luaL_Reg{ "for_each_form_of_type",  &_definitions::for_each_form_of_type },
       luaL_Reg{ "get_form_by_id",         &_definitions::get_form_by_id },
