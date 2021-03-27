@@ -259,6 +259,7 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\text.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\widget.cpp" />
@@ -273,8 +274,10 @@
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
+    <ClCompile Include="helpers\lua\isempty.cpp" />
     <ClCompile Include="helpers\lua\metamethod_names.cpp" />
     <ClCompile Include="helpers\lua\dump.cpp" />
+    <ClCompile Include="helpers\lua\push_qt_variant.cpp" />
     <ClCompile Include="helpers\lua\setfuncs.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
@@ -558,6 +561,7 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\text.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\widget.h" />
@@ -573,8 +577,10 @@
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
     <ClInclude Include="helpers\eight_cc.h" />
     <ClInclude Include="helpers\geometry.h" />
+    <ClInclude Include="helpers\lua\isempty.h" />
     <ClInclude Include="helpers\lua\metamethod_names.h" />
     <ClInclude Include="helpers\lua\dump.h" />
+    <ClInclude Include="helpers\lua\push_qt_variant.h" />
     <ClInclude Include="helpers\lua\setfuncs.h" />
     <ClInclude Include="helpers\lua\set_top_on_exit.h" />
     <ClInclude Include="helpers\math.h" />

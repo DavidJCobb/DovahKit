@@ -195,6 +195,16 @@ namespace {
          DovahKitScriptVMMessenger::get().send_message(m);
          return 0;
       }
+      luastackchange_t queue_deferred_function(lua_State* L) {
+         luaL_argcheck(L, lua_isfunction(L, 1), 1, "function expected");
+         lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
+         auto storage = lua_gettop(L);
+         assert(lua_type(L, -1) == LUA_TTABLE);
+         lua_rawlen(L, storage);
+         lua_pushvalue(L, 1);
+         lua_rawset(L, storage);
+         return 0;
+      }
       luastackchange_t test_call_and_response(lua_State* L) {
          auto* m = new editor_script::tasks::s2m::test_call_and_response();
          DovahKitScriptVMMessenger::get().send_message(m);
@@ -203,14 +213,15 @@ namespace {
    }
 
    std::array _functions = {
-      luaL_Reg{ "benchmark_start",        &_definitions::benchmark_start },
-      luaL_Reg{ "benchmark_stop",         &_definitions::benchmark_stop },
-      luaL_Reg{ "count_forms_of_type",    &_definitions::count_forms_of_type },
-      luaL_Reg{ "create_form",            &_definitions::create_form },
-      luaL_Reg{ "for_each_form_of_type",  &_definitions::for_each_form_of_type },
-      luaL_Reg{ "get_form_by_id",         &_definitions::get_form_by_id },
-      luaL_Reg{ "log_message",            &_definitions::log_message },
-      luaL_Reg{ "test_call_and_response", &_definitions::test_call_and_response },
+      luaL_Reg{ "benchmark_start",         &_definitions::benchmark_start },
+      luaL_Reg{ "benchmark_stop",          &_definitions::benchmark_stop },
+      luaL_Reg{ "count_forms_of_type",     &_definitions::count_forms_of_type },
+      luaL_Reg{ "create_form",             &_definitions::create_form },
+      luaL_Reg{ "for_each_form_of_type",   &_definitions::for_each_form_of_type },
+      luaL_Reg{ "get_form_by_id",          &_definitions::get_form_by_id },
+      luaL_Reg{ "log_message",             &_definitions::log_message },
+      luaL_Reg{ "queue_deferred_function", &_definitions::queue_deferred_function },
+      luaL_Reg{ "test_call_and_response",  &_definitions::test_call_and_response },
    };
 }
 namespace editor_script::namespace_setup {

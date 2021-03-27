@@ -233,6 +233,10 @@ void DovahKitScriptVM::_setup_lua_vm() {
    //
    // Prepare API classes:
    //
+   #pragma region Queued functions
+      lua_newtable(this->lua_vm);
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
+   #pragma endregion
    #pragma region Wrapper storage table
       lua_newtable(this->lua_vm);
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
@@ -286,12 +290,38 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    this->widgets.orphans.clear();
 }
 
+void DovahKitScriptVM::_run_queued_functions() {
+   auto start      = lua_gettop(this->lua_vm);
+   auto index_list = start + 1;
+   auto index_nk   = start + 2;
+   auto index_nv   = start + 3;
+   if (lua_getfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key) == LUA_TTABLE) {
+      //
+      // Clear the list out of the registry (replace it with a blank table), leaving the original list 
+      // on the stack for us to use here.
+      //
+      lua_createtable(this->lua_vm, 0, 0);
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
+      //
+      // Execute each individual function in the list.
+      //
+      lua_pushnil(this->lua_vm);
+      while (lua_next(this->lua_vm, index_list) != 0) {
+         if (lua_type(this->lua_vm, index_nv) == LUA_TFUNCTION)
+            editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
+         else
+            lua_pop(this->lua_vm, 1);
+      }
+   }
+   lua_settop(this->lua_vm, start);
+}
 void DovahKitScriptVM::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
    //
    do {
       this->task_queues.s2m.wait_until_empty(); // these can be non-blocking + fire-and-forget
       this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
+      this->_run_queued_functions();
       this->task_queues.m2s.urgent.process();
       this->task_queues.m2s.normal.process();
    } while (this->_should_keep_running());
@@ -746,17 +776,6 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
 //
 
 namespace {
-   namespace _ui_listener_responses {
-      namespace _button {
-         void OnActivate() {
-
-         }
-         void OnCheckStateChange(bool state) {
-
-         }
-      }
-   }
-
    const char* signal_name_for_event(const QWidget& widget, const char* event_name) {
       if (qobject_cast<const QPushButton*>(&widget)) {
          if (_stricmp(event_name, "OnActivate") == 0)
@@ -766,29 +785,28 @@ namespace {
       }
       return nullptr;
    }
+   template<typename... Args> struct _event_forwarding_lambda {
+      _event_forwarding_lambda(QWidget& w, const char* n) : widget(w), event_name(n) {}
 
-   template<typename T, typename... Args> void _register_ev(T* widget, void(*signal)(Args...), const char* lua_event_name) {
-      auto& vm = DovahKitScriptVM::get();
-      QObject::connect(widget, signal, &vm, [widget, lua_event_name](Args&&... args) {
-         DovahKitScriptUIListenerInterface::get().fire_event(*casted, event_name, { ...args });
-         static_assert(false, "finish me - want templates so we can do things more automatically");
-      });
-   }
+      QWidget& widget;
+      const char* const event_name;
 
+      void operator()(Args&&... a) {
+         DovahKitScriptUIListenerInterface::get().fire_event(this->widget, this->event_name, { std::forward<Args>(args)... });
+      }
+   };
    void _register_event(QWidget& widget, const char* event_name) {
       auto& vm = DovahKitScriptVM::get();
       if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
          if (_stricmp(event_name, "OnActivate") == 0) {
-            QObject::connect(casted, &QPushButton::clicked, &vm, [casted, event_name](bool checked) {
-               DovahKitScriptUIListenerInterface::get().fire_event(*casted, event_name, { checked });
-            });
+            QObject::connect(casted, &QPushButton::clicked, &vm, _event_forwarding_lambda(widget, event_name), Qt::ConnectionType::UniqueConnection);
             return;
          }
-         if (_stricmp(event_name, "OnCheckStateChange") == 0)
-            return SIGNAL("toggled");
+         if (_stricmp(event_name, "OnCheckStateChange") == 0) {
+            QObject::connect(casted, &QPushButton::toggled, &vm, _event_forwarding_lambda(widget, event_name), Qt::ConnectionType::UniqueConnection);
+            return;
+         }
       }
-
-
    }
 }
 
@@ -820,6 +838,8 @@ void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char
       lua_pushstring(L, event_name);
       lua_pushvalue(L, si_funcs);
       lua_rawset(L, si_events);
+      //
+      _register_event(widget, event_name);
    }
    lua_pushstring(L, listener_name);
    lua_pushvalue(L, listener_index);
@@ -852,7 +872,7 @@ void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const c
       lua_setfield(L, si_events, listener_name);
       empty = cobb::lua::isempty(L, si_events);
    }
-   if (empty) {
+   if (empty) { // no listeners left for this event. disconnect the Qt signal for it
       lua_pushnil(L);
       lua_setfield(L, si_storage, event_name);
       //

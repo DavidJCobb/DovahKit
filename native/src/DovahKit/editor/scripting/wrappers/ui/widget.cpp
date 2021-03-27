@@ -107,6 +107,29 @@ namespace {
          lua_pushboolean(L, _can_have_layout(*self.widget));
          return 1;
       }
+      luastackchange_t on(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "event name (string) expected");
+         luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
+         luaL_argcheck(L, lua_isfunction(L, 4), 4, "listener (function) expected");
+         lua_settop(L, 4);
+         if (!self.widget)
+            return 0;
+         DovahKitScriptUIListenerInterface::get().add_listener(*self.widget, lua_tostring(L, 2), lua_tostring(L, 3), 4);
+         return 0;
+      }
+      luastackchange_t remove_event_listener(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "event name (string) expected");
+         luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
+         lua_settop(L, 3);
+         if (!lua_isnoneornil(L, 3))
+            luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
+         if (!self.widget)
+            return 0;
+         DovahKitScriptUIListenerInterface::get().remove_listener(*self.widget, lua_tostring(L, 2), lua_tostring(L, 3));
+         return 0;
+      }
       luastackchange_t set_layout(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "layout type (string) expected");
@@ -217,9 +240,11 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "add_child",       &_methods::add_child },
-      { "can_have_layout", &_methods::can_have_layout },
-      { "set_layout",      &_methods::set_layout },
+      { "add_child",             &_methods::add_child },
+      { "can_have_layout",       &_methods::can_have_layout },
+      { "on",                    &_methods::on },
+      { "remove_event_listener", &_methods::remove_event_listener },
+      { "set_layout",            &_methods::set_layout },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "enabled", &_getters::enabled },

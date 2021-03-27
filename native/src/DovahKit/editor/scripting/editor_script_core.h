@@ -35,7 +35,18 @@ class DovahKitScriptVM : public QObject {
    friend class DovahKitScriptVMPermissionInterface;
    friend class DovahKitScriptVMUserdataInterface;
    public:
-      static constexpr char* string_format_registry_key = "cached:string.format"; // key for a cached copy of (string.format), to guard against scripts monkeypatching/replacing the original
+
+      // Storage in the Lua registry for a cached copy of (string.format), which we place there 
+      // when we start up the VM, to ensure that hardcoded functions that need that behavior can 
+      // access it even if the Lua script tries to monkeypatch or replace its own copy.
+      static constexpr char* string_format_registry_key   = "cached:string.format";
+
+      // Storage in the Lua registry for functions that have been queued by the script to execute 
+      // after all listeners have completed. If a user script needs to trigger some lengthy task  
+      // in response to a UI event listener, it should queue that task to run outside of that UI 
+      // event listener, so that the scripted UI isn't blocked from updating by the task.
+      static constexpr char* queued_function_registry_key = "dovah.internals.deferred_execution_queue";
+
    protected:
       DovahKitScriptVM();
       ~DovahKitScriptVM();
@@ -62,6 +73,7 @@ class DovahKitScriptVM : public QObject {
       void _setup_lua_vm();
       void _teardown_lua_vm(); // can only safely run on the main thread, since it tears down Qt objects now too
 
+      void _run_queued_functions();
       void _script_thread_loop();
 
       //
