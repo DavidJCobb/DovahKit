@@ -299,7 +299,8 @@ void DovahKitScriptVM::_run_queued_functions() {
    auto index_nk   = start + 2;
    auto index_nv   = start + 3;
    if (lua_getfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key) == LUA_TTABLE) {
-      if (cobb::lua::isempty(this->lua_vm, -1)) {
+      int count = lua_rawlen(this->lua_vm, -1);
+      if (!count) {
          lua_settop(this->lua_vm, start);
          return;
       }
@@ -309,6 +310,18 @@ void DovahKitScriptVM::_run_queued_functions() {
       //
       lua_createtable(this->lua_vm, 0, 0);
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
+      //
+      // Execute each individual function in the list.
+      //
+      for (int i = 0; i < count; ++i) {
+         lua_geti(this->lua_vm, -1, i + 1);
+         editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
+      }
+      /*
+      if (cobb::lua::isempty(this->lua_vm, -1)) {
+         lua_settop(this->lua_vm, start);
+         return;
+      }
       assert(lua_type(this->lua_vm, index_list) == LUA_TTABLE);
       //
       // Execute each individual function in the list.
@@ -317,6 +330,7 @@ void DovahKitScriptVM::_run_queued_functions() {
       while (lua_next(this->lua_vm, index_list) != 0) {
          editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
       }
+      */
    }
    lua_settop(this->lua_vm, start);
 }
@@ -362,8 +376,14 @@ QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
    if (this->widgets.windows.size() >= max_script_windows)
       return nullptr;
    auto* dialog = new QDialog(this->ui_parent);
+   dialog->installEventFilter(this);
    this->widgets.windows.push_back(dialog);
    return dialog;
+}
+void DovahKitScriptVM::set_up_new_scripted_widget(QWidget* widget) {
+   widget->installEventFilter(this);
+   if (!widget->parentWidget())
+      this->accept_new_orphaned_widget(widget);
 }
 void DovahKitScriptVM::accept_new_orphaned_widget(QWidget* widget) {
    {
@@ -449,6 +469,12 @@ void DovahKitScriptVM::mainThreadLoop() {
    this->ui_queues.read.process();
    this->ui_queues.write.process();
 }
+
+bool DovahKitScriptVM::eventFilter(QObject* object, QEvent* event) {
+   if (!this->pending_ui_event_count)
+      return false;
+   return true;
+}
 #pragma endregion
 
 #pragma region DovahKitScriptVMMessenger
@@ -497,12 +523,14 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::ui_read_task& ta
 void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_task& task) {
    auto& vm = DovahKitScriptVM::get();
    vm.ui_queues.read.wait_until_empty();
+   //
+   bool blocking = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
    {
       auto  guard = std::lock_guard(vm.ui_queues.write.lock);
       auto& list = vm.ui_queues.write.list;
       list.push_back(&task);
    }
-   if (task.is_blocking()) {
+   if (blocking) {
       while (!task.seen)
          if (vm.is_aborted())
             break;
@@ -932,12 +960,16 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
    assert(lua_gettop(L)   == si_storage);
    assert(lua_type(L, -1) == LUA_TTABLE);
    lua_pushlightuserdata(L, &widget);
-   if (lua_rawget(L, si_storage) != LUA_TTABLE)
+   if (lua_rawget(L, si_storage) != LUA_TTABLE) {
+      --this->vm.pending_ui_event_count;
       return;
+   }
    // STACK: - [ ..., storage, storage[&widget] ] +
    assert(lua_gettop(L) == si_events);
-   if (lua_getfield(L, si_events, event_name) != LUA_TTABLE)
+   if (lua_getfield(L, si_events, event_name) != LUA_TTABLE) {
+      --this->vm.pending_ui_event_count;
       return;
+   }
    // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name] ] +
    lua_pushnil(L); // nk
    while (lua_next(L, si_funcs) != 0) {
@@ -947,9 +979,11 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
          argcount += cobb::lua::push_qt_variant(L, p);
       editor_script::util::safe_call(L, argcount, 0); // pops (nv), since that's the function
    }
+   --this->vm.pending_ui_event_count;
 }
 
 void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& widget, const char* event_name, const std::vector<QVariant> params) {
+   ++this->vm.pending_ui_event_count;
    //
    // Called by the main thread; sends a message to the script thread.
    //

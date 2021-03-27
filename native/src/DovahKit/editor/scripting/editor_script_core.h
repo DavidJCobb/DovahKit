@@ -112,10 +112,11 @@ class DovahKitScriptVM : public QObject {
          static DovahKitScriptVM instance;
          return instance;
       }
-      //
+      
       lua_State*  lua_vm = nullptr;
       std::thread thread;
       QTimer      main_thread_tick_timer;
+      std::atomic<unsigned int> pending_ui_event_count = 0;
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }
@@ -123,6 +124,7 @@ class DovahKitScriptVM : public QObject {
       inline QWidget* get_ui_parent_widget() const noexcept { return this->ui_parent; }
 
       QDialog* try_spawn_script_window() noexcept;
+      void set_up_new_scripted_widget(QWidget*);
       void accept_new_orphaned_widget(QWidget*);
       void widget_no_longer_orphaned(QWidget*);
       void widget_no_longer_referenced(QWidget*);
@@ -139,6 +141,11 @@ class DovahKitScriptVM : public QObject {
       //
    protected slots:
       void mainThreadLoop();
+
+   protected:
+      // Installed on all widgets and windows owned by script. Allows us to block ALL interaction with 
+      // scripted UI while a Lua event listener is running.
+      virtual bool eventFilter(QObject* object, QEvent* event) override;
 };
 
 class DovahKitScriptVMMessenger {

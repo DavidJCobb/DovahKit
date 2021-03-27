@@ -200,7 +200,7 @@ namespace {
          lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
          auto storage = lua_gettop(L);
          assert(lua_type(L, -1) == LUA_TTABLE);
-         lua_rawlen(L, storage);
+         lua_pushinteger(L, lua_rawlen(L, storage) + 1);
          lua_pushvalue(L, 1);
          lua_rawset(L, storage);
          return 0;

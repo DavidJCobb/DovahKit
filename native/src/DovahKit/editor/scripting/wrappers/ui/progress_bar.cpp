@@ -316,7 +316,7 @@ namespace {
          auto*         task    = new tasks::s2m::lambda(true);
          task->handler = [&created]() {
             created = new wrapped_type();
-            DovahKitScriptVM::get().accept_new_orphaned_widget(created);
+            DovahKitScriptVM::get().set_up_new_scripted_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
