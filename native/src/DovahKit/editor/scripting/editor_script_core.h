@@ -21,6 +21,7 @@ class DovahKitScriptVMMessenger;
 class DovahKitScriptVMUITaskConduit;
 class DovahKitScriptVMPermissionInterface;
 class DovahKitScriptVMUserdataInterface;
+class DovahKitScriptUIListenerInterface;
 
 class DovahKitScriptVM : public QObject {
    Q_OBJECT
@@ -34,6 +35,7 @@ class DovahKitScriptVM : public QObject {
    friend class DovahKitScriptVMUITaskConduit;
    friend class DovahKitScriptVMPermissionInterface;
    friend class DovahKitScriptVMUserdataInterface;
+   friend class DovahKitScriptUIListenerInterface;
    public:
 
       // Storage in the Lua registry for a cached copy of (string.format), which we place there 
@@ -257,5 +259,8 @@ class DovahKitScriptUIListenerInterface {
       void remove_listener(QWidget&, const char* event_name, const char* listener_name = nullptr);
       void remove_all_listeners(QWidget&);
 
+      // The script thread calls this in response to the main thread firing an evnet.
       void fire_event(QWidget&, const char* event_name, const std::vector<QVariant> params);
+
+      void receive_event_from_main_thread(QWidget&, const char* event_name, const std::vector<QVariant> params);
 };

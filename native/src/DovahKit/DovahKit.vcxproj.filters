@@ -771,6 +771,9 @@
     <ClCompile Include="helpers\lua\push_qt_variant.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\cross_thread_tasks\m2s\ui_event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1523,9 +1526,6 @@
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\small_vector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\forms\components\extra_data\_use_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1575,6 +1575,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\lua\push_qt_variant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\cross_thread_tasks\m2s\ui_event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

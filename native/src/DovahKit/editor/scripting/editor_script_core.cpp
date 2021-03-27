@@ -299,6 +299,10 @@ void DovahKitScriptVM::_run_queued_functions() {
    auto index_nk   = start + 2;
    auto index_nv   = start + 3;
    if (lua_getfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key) == LUA_TTABLE) {
+      if (cobb::lua::isempty(this->lua_vm, -1)) {
+         lua_settop(this->lua_vm, start);
+         return;
+      }
       //
       // Clear the list out of the registry (replace it with a blank table), leaving the original list 
       // on the stack for us to use here.
@@ -310,15 +314,8 @@ void DovahKitScriptVM::_run_queued_functions() {
       // Execute each individual function in the list.
       //
       lua_pushnil(this->lua_vm);
-      #if _DEBUG
-         if (lua_gettop(this->lua_vm) != index_nk) {
-            cobb::lua::print_stack_and_vars(this->lua_vm);
-         }
-         assert(lua_gettop(this->lua_vm) == index_nk);
-      #endif
       while (lua_next(this->lua_vm, index_list) != 0) {
          editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
-         lua_settop(this->lua_vm, index_nk);
       }
    }
    lua_settop(this->lua_vm, start);
@@ -329,7 +326,7 @@ void DovahKitScriptVM::_script_thread_loop() {
    do {
       this->task_queues.s2m.wait_until_empty(); // these can be non-blocking + fire-and-forget
       this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
-   //   this->_run_queued_functions();
+      this->_run_queued_functions();
       this->task_queues.m2s.urgent.process();
       this->task_queues.m2s.normal.process();
    } while (this->_should_keep_running());
@@ -793,6 +790,7 @@ namespace {
       }
       return nullptr;
    }
+
    template<typename... Args> struct _event_forwarding_lambda {
       _event_forwarding_lambda(QWidget& w, const char* n) : widget(w), event_name(n) {}
 
@@ -800,10 +798,17 @@ namespace {
       const std::string event_name;
 
       void operator()(Args&&... a) {
-         DovahKitScriptUIListenerInterface::get().fire_event(this->widget, this->event_name.c_str(), { std::forward<Args>(args)... });
+         //
+         // Runs on the main thread.
+         //
+         DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(this->widget, this->event_name.c_str(), { std::forward<Args>(args)... });
       }
    };
+
    void _register_event(QWidget& widget, const char* event_name) {
+      //
+      // Runs on the script thread.
+      //
       auto& vm = DovahKitScriptVM::get();
       if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
          if (_stricmp(event_name, "OnActivate") == 0) {
@@ -942,5 +947,16 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
          argcount += cobb::lua::push_qt_variant(L, p);
       editor_script::util::safe_call(L, argcount, 0); // pops (nv), since that's the function
    }
+}
+
+void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& widget, const char* event_name, const std::vector<QVariant> params) {
+   //
+   // Called by the main thread; sends a message to the script thread.
+   //
+   auto* task  = new editor_script::tasks::m2s::ui_event(widget, event_name, params);
+   //
+   auto& tq    = DovahKitScriptVM::get().task_queues.m2s.normal;
+   auto  guard = std::lock_guard(tq.lock);
+   tq.list.push_back(task);
 }
 #pragma endregion
