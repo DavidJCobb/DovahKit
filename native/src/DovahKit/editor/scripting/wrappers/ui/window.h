@@ -4,6 +4,7 @@
 
 namespace editor_script::wrappers::ui {
    struct window : public wrapper_metatable {
+      static constexpr char* global_name    = "window";
       static constexpr char* superclass_key = metatable_key;
       static constexpr char* metatable_key  = "dovah.classes.ui.window";
       static const std::initializer_list<luaL_Reg> metatable_methods;
@@ -23,6 +24,6 @@ namespace editor_script::wrappers::ui {
             luaL_error(L, "function called with bad self (expected %s)", metatable_key);
       }
 
-      static void setup(lua_State*);
+      static void setup(lua_State*); // the "ui" table should be at the top of the stack
    };
 }

@@ -230,6 +230,7 @@
     <ClCompile Include="editor\papyrus_dictionary.cpp" />
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\api\form_type_values.cpp" />
+    <ClCompile Include="editor\scripting\api\namespaces\dovah.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
     <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
     <ClCompile Include="editor\scripting\classes\euler.cpp" />
@@ -246,6 +247,7 @@
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\duplicate_form.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\log_message.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\renumber_form.cpp" />
+    <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\spawn_window.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\test_call_and_response.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
@@ -257,9 +259,11 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\window.cpp" />
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
     <ClCompile Include="editor\scripting\wrappers\word_of_power.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\_build_singletons.cpp" />
     <ClCompile Include="editor\scripting\wrapper_util.cpp" />
     <ClCompile Include="helpers\assert.cpp" />
     <ClCompile Include="helpers\endianness.cpp" />
@@ -516,6 +520,7 @@
     <QtMoc Include="editor\papyrus_dictionary.h" />
     <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
     <ClInclude Include="editor\scripting\api\form_type_values.h" />
+    <ClInclude Include="editor\scripting\api\namespaces\dovah.h" />
     <ClInclude Include="editor\scripting\classes.h" />
     <ClInclude Include="editor\scripting\classes\benchmark.h" />
     <ClInclude Include="editor\scripting\classes\euler.h" />
@@ -533,12 +538,13 @@
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\create_form.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\delete_form.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\duplicate_form.h" />
+    <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\lambda.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\log_message.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\renumber_form.h" />
+    <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\spawn_window.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\test_call_and_response.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\_all.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\_all.h" />
-    <ClInclude Include="editor\scripting\messages.h" />
     <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
@@ -549,11 +555,14 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\window.h" />
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
     <ClInclude Include="editor\scripting\wrappers\word_of_power.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
+    <ClInclude Include="editor\scripting\wrappers\_all_ui.h" />
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />
+    <ClInclude Include="editor\scripting\wrappers\_build_singletons.h" />
     <ClInclude Include="editor\scripting\wrapper_util.h" />
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
     <ClInclude Include="helpers\eight_cc.h" />

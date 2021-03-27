@@ -4,21 +4,20 @@
 #include "api/allowed_standard_apis.h"
 #include "cross_thread_tasks/_all.h"
 #include "wrappers/_build_metatables.h"
+#include "wrappers/_build_singletons.h"
 #include "class_killer.h"
 
-#include "../core.h" // for dovah.get_form_by_id
+#include "../core.h" // needed for DovahKitCore signals
 #include "../../dovah/forms/Form.h" // needed for any loaded_form_ptr
 #include "api/form_type_values.h"
-#include "wrapper_util.h"
-#include "wrappers/form.h"
 #include "classes/_all.h"
 #include "../../helpers/lua/dump.h"
+
+#include "api/namespaces/dovah.h"
 
 namespace {
    constexpr char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
    constexpr char* wrapper_weakmap_metatable_key = "__weakmap_mode_metatable";
-
-   constexpr char* string_format_registry_key = "cached:string.format"; // key for a cached copy of (string.format), in case a script monkeypatches/replaces the original
 
    constexpr int max_script_windows = 10;
 }
@@ -102,199 +101,6 @@ namespace {
    }
 }
 
-namespace _api { // APIs
-   using namespace editor_script;
-   struct function {
-      using ptr_t = luastackchange_t(*)(lua_State*);
-
-      const char* name;
-      ptr_t pointer = nullptr;
-   };
-
-   namespace definitions {
-      namespace dovah {
-         luastackchange_t benchmark_start(lua_State* L) {
-            auto* p = lua_newuserdata(L, sizeof(classes::benchmark)); // push 1
-            luaL_getmetatable(L, classes::benchmark::metatable_key); // push 1
-            lua_setmetatable(L, -2); // pop 1
-            new (p) classes::benchmark;
-            return 1;
-         }
-         luastackchange_t benchmark_stop(lua_State* L) {
-            auto* self = (classes::benchmark*) editor_script::cast_to_exact_class(L, 1, classes::benchmark::metatable_key);
-            if (self == nullptr) {
-               luaL_error(L, "bad argument #1 to dovah.benchmark_stop (expected %s)", classes::benchmark::metatable_key);
-            }
-            __assume(self != nullptr);
-            self->finish();
-            return 0;
-         }
-         luastackchange_t create_form(lua_State* L) {
-            DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
-            //
-            luaL_argcheck(L, lua_isnumber(L, 1), 1, "form type (number) expected");
-            auto& editor = DovahKitCore::get();
-            if (!editor.has_data())
-               luaL_error(L, "cannot create a new form because no data is loaded in the editor");
-            bool  valid = false;
-            auto  ft    = editor_script::get_form_type_from_stack(L, 1, valid);
-            if (!valid)
-               luaL_error(L, "cannot create a new form because no valid form type was supplied");
-            
-            auto* m = new tasks::s2m::create_form;
-            m->form_type = ft;
-            if (lua_gettop(L) > 1 && lua_type(L, 2) == LUA_TTABLE) { // if an options table was passed
-               lua_settop(L, 2);
-               //
-               lua_getfield(L, 2, "parent");
-               if (!lua_isnoneornil(L, 3)) {
-                  auto* wrap = (wrapper*)editor_script::cast_to_class(L, 3, wrappers::form::metatable_key);
-                  if (wrap) {
-                     m->parent = wrap->stub;
-                  } else {
-                     lua_warning(L, "dovah.create_form() call tried to specify a parent but didn't pass a form", 0);
-                  }
-               }
-               lua_settop(L, 2);
-               //
-               lua_getfield(L, 2, "grid_coordinates");
-               if (!lua_isnoneornil(L, 3)) {
-                  if (lua_type(L, 3) == LUA_TTABLE) {
-                     lua_getfield(L, 3, "x");
-                     lua_getfield(L, 3, "y");
-                     m->cell_grid_coordinates.x = lua_tonumber(L, 4);
-                     m->cell_grid_coordinates.y = lua_tonumber(L, 5);
-                  } else {
-                     lua_warning(L, "dovah.create_form() call tried to specify grid coordinates for an exterior cell, but didn't pass valid numbers", 0);
-                  }
-               }
-               lua_settop(L, 2);
-               //
-               lua_getfield(L, 2, "editor_id");
-               if (!lua_isnoneornil(L, 3)) {
-                  m->editorID = luaL_tolstring(L, 3, nullptr);
-               }
-               lua_settop(L, 2);
-            }
-            DovahKitScriptVMMessenger::get().send_message(m);
-            if (m->error) {
-               if (!m->error_text)
-                  m->error_text = "";
-               luaL_error(L, m->error_text);
-            }
-            auto* stub = m->result;
-            delete m;
-            //
-            wrapper out;
-            auto* mt = wrap_form(out, stub);
-            return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
-         }
-         luastackchange_t for_each_form_of_type(lua_State* L) {
-            luaL_argcheck(L, lua_isnumber(L, 1),   1, "form type (number) expected");
-            luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
-            auto& editor = DovahKitCore::get();
-            if (!editor.has_data())
-               return 0;
-            //
-            bool  valid = false;
-            auto  ft    = editor_script::get_form_type_from_stack(L, 1, valid);
-            if (!valid)
-               return 0;
-            auto& info  = ::dovah::form_type_info::lookup(ft);
-            if (info.flags & ::dovah::form_type_info::flag::is_singleton) {
-               //
-               // For singleton forms, only use the canonical stub.
-               //
-               auto* stub = editor.get_singleton_form(ft, false);
-               if (stub) {
-                  lua_pushvalue(L, 2); // push the function
-                  wrapper out;
-                  auto*   mt = wrap_form(out, stub);
-                  if (DovahKitScriptVMUserdataInterface::get().push(L, out, mt))
-                     lua_call(L, 1, 1);
-               }
-               return 0;
-            }
-            //
-            editor.for_each_form_of_type(ft, [L](::dovah::form_stub* stub) {
-               lua_pushvalue(L, 2); // push the function
-               wrapper out;
-               auto*   mt = wrap_form(out, stub);
-               if (DovahKitScriptVMUserdataInterface::get().push(L, out, mt)) {
-                  lua_call(L, 1, 1);
-                  if (lua_toboolean(L, -1) == 1) {
-                     return true;
-                  }
-               } else {
-                  lua_settop(L, 2);
-               }
-               return false;
-            });
-            //
-            return 0;
-         }
-         luastackchange_t get_form_by_id(lua_State* L) {
-            luaL_argcheck(L, lua_isnumber(L, 1), 1, "form ID (number) expected");
-            auto& editor = DovahKitCore::get();
-            if (!editor.has_data())
-               return 0;
-            auto  id   = lua_tonumber(L, 1);
-            auto* stub = editor.get_form(id);
-            if (!stub)
-               return 0;
-            //
-            wrapper out;
-            auto*   mt = wrap_form(out, stub);
-            return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
-         }
-         luastackchange_t log_message(lua_State* L) {
-            auto m = new editor_script::tasks::s2m::log_message();
-            //
-            auto argcount = lua_gettop(L);
-            if (!argcount)
-               return 0;
-            //
-            if (lua_type(L, 1) != LUA_TSTRING) { // coerce argument 1 to a string if it isn't one, as string.format doesn't do this automatically
-               luaL_tolstring(L, 1, nullptr);
-               lua_copy(L, argcount + 1, 1);
-               lua_pop(L, 1);
-            }
-            //
-            lua_getfield(L, LUA_REGISTRYINDEX, string_format_registry_key);
-            if (lua_isfunction(L, argcount + 1)) {
-               lua_rotate(L, 1, 1); // move (string.format) ahead of the other stack elements
-               lua_call  (L, argcount, 1);
-            }
-            //
-            const char* out = lua_tostring(L, 1);
-            if (!out) {
-               out = "";
-            }
-            m->text = QString::fromUtf8(out);
-            //
-            DovahKitScriptVMMessenger::get().send_message(m);
-            return 0;
-         }
-         luastackchange_t test_call_and_response(lua_State* L) {
-            auto* m = new editor_script::tasks::s2m::test_call_and_response();
-            DovahKitScriptVMMessenger::get().send_message(m);
-            return 0;
-         }
-      }
-   }
-   namespace declarations {
-      std::array dovah = {
-         function{ "benchmark_start",        &definitions::dovah::benchmark_start },
-         function{ "benchmark_stop",         &definitions::dovah::benchmark_stop },
-         function{ "create_form",            &definitions::dovah::create_form },
-         function{ "for_each_form_of_type",  &definitions::dovah::for_each_form_of_type },
-         function{ "get_form_by_id",         &definitions::dovah::get_form_by_id },
-         function{ "log_message",            &definitions::dovah::log_message },
-         function{ "test_call_and_response", &definitions::dovah::test_call_and_response },
-      };
-   }
-}
-
 void DovahKitScriptVM::_task_queue::process() {
    auto  guard = std::lock_guard(this->lock);
    auto& list  = this->list;
@@ -306,6 +112,15 @@ void DovahKitScriptVM::_task_queue::process() {
          delete task;
    }
    list.clear();
+}
+void DovahKitScriptVM::_task_queue::wait_until_empty() {
+   auto& list = this->list;
+   while (!list.empty()) {
+   }
+   auto& vm = DovahKitScriptVM::get();
+   if (!vm.is_aborted()) {
+      vm.task_queues.m2s.urgent.process();
+   }
 }
 void DovahKitScriptVM::_task_queue::clear() {
    auto  guard = std::lock_guard(this->lock);
@@ -403,7 +218,7 @@ void DovahKitScriptVM::_setup_lua_vm() {
    //
    lua_getglobal(this->lua_vm, "string");
    lua_getfield (this->lua_vm, -1, "format");
-   lua_setfield (this->lua_vm, LUA_REGISTRYINDEX, string_format_registry_key);
+   lua_setfield (this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::string_format_registry_key);
    lua_pop(this->lua_vm, 1);
    //
    editor_script::expose_form_types_to_lua(this->lua_vm);
@@ -429,13 +244,16 @@ void DovahKitScriptVM::_setup_lua_vm() {
    //
    // Make API functions available via tables:
    //
-   lua_newtable(this->lua_vm); // create a new table
-   for (auto& entry : _api::declarations::dovah) {
-      lua_pushstring   (this->lua_vm, entry.name);    // key
-      lua_pushcfunction(this->lua_vm, entry.pointer); // value
-      lua_rawset(this->lua_vm, -3);
+   {  // dovah
+      lua_newtable(this->lua_vm); // create a new table
+      editor_script::namespace_setup::dovah(this->lua_vm);
+      lua_setglobal(this->lua_vm, "dovah"); // assign the new table to a variable
    }
-   lua_setglobal(this->lua_vm, "dovah"); // assign the new table to a variable
+   {  // ui
+      lua_newtable(this->lua_vm);
+      editor_script::build_all_ui_wrapper_singletons(this->lua_vm);
+      lua_setglobal(this->lua_vm, "ui");
+   }
 }
 void DovahKitScriptVM::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->exec_lock);
@@ -582,6 +400,49 @@ void DovahKitScriptVMMessenger::send_message(editor_script::cross_thread_task* m
    }
 }
 #pragma endregion 
+
+#pragma region DovahKitScriptVMUITaskConduit
+void DovahKitScriptVMUITaskConduit::send_message(editor_script::ui_read_task& task) {
+   auto& vm = DovahKitScriptVM::get();
+   vm.ui_queues.write.wait_until_empty();
+   {
+      auto  guard = std::lock_guard(vm.ui_queues.read.lock);
+      auto& list = vm.ui_queues.read.list;
+      list.push_back(&task);
+   }
+   while (!task.seen)
+      if (vm.is_aborted())
+         break;
+   if (!vm.is_aborted()) {
+      vm.task_queues.m2s.urgent.process();
+   }
+   if (vm.is_running() && vm.is_aborted()) {
+      luaL_error(vm.lua_vm, "Script terminated at the user's request.");
+      __assume(0); // luaL_error performs a jump and so does not return
+   }
+}
+void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_task& task) {
+   auto& vm = DovahKitScriptVM::get();
+   vm.ui_queues.read.wait_until_empty();
+   {
+      auto  guard = std::lock_guard(vm.ui_queues.write.lock);
+      auto& list = vm.ui_queues.write.list;
+      list.push_back(&task);
+   }
+   if (task.is_blocking()) {
+      while (!task.seen)
+         if (vm.is_aborted())
+            break;
+      if (!vm.is_aborted()) {
+         vm.task_queues.m2s.urgent.process();
+      }
+      if (vm.is_running() && vm.is_aborted()) {
+         luaL_error(vm.lua_vm, "Script terminated at the user's request.");
+         __assume(0); // luaL_error performs a jump and so does not return
+      }
+   }
+}
+#pragma endregion
 
 #pragma region DovahKitScriptVMPermissionInterface
 /*static*/ void DovahKitScriptVMPermissionInterface::verify_form_write_permissions() {

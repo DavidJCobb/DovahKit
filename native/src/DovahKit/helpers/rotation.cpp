@@ -77,7 +77,7 @@ namespace {
       constexpr double EPSILON = 0.000001F;
       //
       // The trigonometric acos and asin functions fail if their input is outside of the 
-      // range [-1, 1]. doubleing-point imprecision (stemming from multiple rotation math 
+      // range [-1, 1]. Floating-point imprecision (stemming from multiple rotation math 
       // operations) can cause us to fall a hair's breadth outside of that range. This 
       // function will correct a double if and only if it is indeed a hair's breadth or 
       // less outside of that range. If it's much more inaccurate, then we don't bother 

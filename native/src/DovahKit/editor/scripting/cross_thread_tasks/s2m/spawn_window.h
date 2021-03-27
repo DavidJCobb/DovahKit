@@ -9,6 +9,7 @@ namespace editor_script::tasks::s2m {
          bool     error  = false;
          //
          virtual bool is_blocking() const noexcept override { return true; }
+         virtual bool is_fire_and_forget() const noexcept override { return false; }
       protected:
          virtual void _exec_impl() override;
    };

@@ -49,4 +49,10 @@ namespace editor_script {
          //
          virtual bool is_blocking() const noexcept { return false; }
    };
+
+   class ui_read_task : public cross_thread_task {
+      public:
+         virtual bool is_blocking() const noexcept final { return true; }
+         virtual bool is_fire_and_forget() const noexcept final { return false; }
+   };
 }

@@ -18,6 +18,7 @@ namespace dovah {
 }
 
 class DovahKitScriptVMMessenger;
+class DovahKitScriptVMUITaskConduit;
 class DovahKitScriptVMPermissionInterface;
 class DovahKitScriptVMUserdataInterface;
 
@@ -30,8 +31,11 @@ class DovahKitScriptVM : public QObject {
    // to block script execution  while waiting for any needed  information from the main thread.
    //
    friend class DovahKitScriptVMMessenger;
+   friend class DovahKitScriptVMUITaskConduit;
    friend class DovahKitScriptVMPermissionInterface;
    friend class DovahKitScriptVMUserdataInterface;
+   public:
+      static constexpr char* string_format_registry_key = "cached:string.format"; // key for a cached copy of (string.format), to guard against scripts monkeypatching/replacing the original
    protected:
       DovahKitScriptVM();
       ~DovahKitScriptVM();
@@ -46,6 +50,11 @@ class DovahKitScriptVM : public QObject {
          // The receiving thread should use this function to execute tasks.
          //
          void process();
+
+         //
+         // Suitable only for use by the sending thread.
+         //
+         void wait_until_empty();
 
          void clear();
       };
@@ -70,8 +79,8 @@ class DovahKitScriptVM : public QObject {
       struct {
          _task_queue s2m; // script-to-main
          struct { // main-to-script
-            _task_queue urgent;
-            _task_queue normal;
+            _task_queue urgent; // urgent messages MUST NOT trigger Lua code to execute!
+            _task_queue normal; // TODO: UI signals should feed into this queue to trigger Lua code, or we should make a separate queue to replace this
          } m2s;
       } task_queues;
       //
@@ -79,6 +88,10 @@ class DovahKitScriptVM : public QObject {
          std::vector<QDialog*> windows;
          std::vector<QWidget*> orphans;
       } widgets;
+      struct {
+         _task_queue read;
+         _task_queue write;
+      } ui_queues;
       
    public:
       static DovahKitScriptVM& get() {
@@ -137,6 +150,24 @@ class DovahKitScriptVMMessenger {
       //
       void send_message(editor_script::cross_thread_task* m);
       
+      inline bool is_aborted() const noexcept { return vm.aborted; }
+      inline bool is_running() const noexcept { return vm.running; }
+};
+
+class DovahKitScriptVMUITaskConduit {
+   protected:
+      DovahKitScriptVMUITaskConduit(DovahKitScriptVM& w) : vm(w) {}
+   public:
+      static DovahKitScriptVMUITaskConduit& get() {
+         static DovahKitScriptVMUITaskConduit instance(DovahKitScriptVM::get());
+         return instance;
+      }
+
+      DovahKitScriptVM& vm;
+
+      void send_message(editor_script::ui_read_task&);
+      void send_message(editor_script::cross_thread_task&);
+
       inline bool is_aborted() const noexcept { return vm.aborted; }
       inline bool is_running() const noexcept { return vm.running; }
 };
