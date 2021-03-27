@@ -1,27 +1,27 @@
 #include "push_qt_variant.h"
 
 namespace cobb::lua {
-   extern void push_qt_variant(lua_State* L, const QVariant& variant) {
+   extern int push_qt_variant(lua_State* L, const QVariant& variant) {
       if (!variant.isValid()) {
          lua_pushnil(L);
-         return;
+         return 1;
       }
       if (variant.canConvert<int>()) {
          lua_pushinteger(L, variant.toInt());
-         return;
+         return 1;
       }
       switch (variant.type()) {
          case QMetaType::Bool:
             lua_pushboolean(L, variant.toBool());
-            return;
+            return 1;
          case QMetaType::Double:
          case QMetaType::Float:
             lua_pushnumber(L, variant.toDouble());
-            return;
+            return 1;
          case QMetaType::QChar:
          case QMetaType::QString:
             lua_pushstring(L, variant.toString().toUtf8());
-            return;
+            return 1;
          case QMetaType::QStringList:
             {
                auto sl   = variant.toStringList();
@@ -31,10 +31,10 @@ namespace cobb::lua {
                   lua_pushstring(L, sl[i].toUtf8());
                   lua_rawseti(L, -2, i);
                }
+               return size;
             }
-            return;
       }
       lua_pushnil(L);
-      return;
+      return 1;
    }
 }

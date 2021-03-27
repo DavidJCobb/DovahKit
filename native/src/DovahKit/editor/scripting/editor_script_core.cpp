@@ -237,7 +237,7 @@ void DovahKitScriptVM::_setup_lua_vm() {
       lua_newtable(this->lua_vm);
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
    #pragma endregion
-   #pragma region Wrapper storage table
+   #pragma region Wrapper and listener storage tables
       lua_newtable(this->lua_vm);
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
       //
@@ -245,6 +245,9 @@ void DovahKitScriptVM::_setup_lua_vm() {
       lua_pushstring(this->lua_vm, "v");
       lua_setfield  (this->lua_vm, -2, "__mode");
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key);
+      //
+      lua_newtable(this->lua_vm);
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, ui_listener_registry_key);
    #pragma endregion
    editor_script::build_all_wrapper_metatables(this->lua_vm);
    editor_script::define_class(this->lua_vm, editor_script::classes::benchmark::metatable_key, nullptr, editor_script::classes::benchmark::metatable_methods);
@@ -302,15 +305,20 @@ void DovahKitScriptVM::_run_queued_functions() {
       //
       lua_createtable(this->lua_vm, 0, 0);
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
+      assert(lua_type(this->lua_vm, index_list) == LUA_TTABLE);
       //
       // Execute each individual function in the list.
       //
       lua_pushnil(this->lua_vm);
+      #if _DEBUG
+         if (lua_gettop(this->lua_vm) != index_nk) {
+            cobb::lua::print_stack_and_vars(this->lua_vm);
+         }
+         assert(lua_gettop(this->lua_vm) == index_nk);
+      #endif
       while (lua_next(this->lua_vm, index_list) != 0) {
-         if (lua_type(this->lua_vm, index_nv) == LUA_TFUNCTION)
-            editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
-         else
-            lua_pop(this->lua_vm, 1);
+         editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
+         lua_settop(this->lua_vm, index_nk);
       }
    }
    lua_settop(this->lua_vm, start);
@@ -321,7 +329,7 @@ void DovahKitScriptVM::_script_thread_loop() {
    do {
       this->task_queues.s2m.wait_until_empty(); // these can be non-blocking + fire-and-forget
       this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
-      this->_run_queued_functions();
+   //   this->_run_queued_functions();
       this->task_queues.m2s.urgent.process();
       this->task_queues.m2s.normal.process();
    } while (this->_should_keep_running());
@@ -384,12 +392,12 @@ void DovahKitScriptVM::widget_no_longer_orphaned(QWidget* widget) {
 void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
    if (!widget)
       return;
-   if (widget->parentWidget())
+   if (widget->parentWidget() || qobject_cast<QDialog*>(widget))
       return;
    auto& list = this->widgets.orphans;
    for (auto it = list.begin(); it != list.end(); ++it) {
       if (*it == widget) {
-         delete widget;
+         widget->deleteLater();
          list.erase(it);
          return;
       }
@@ -789,10 +797,10 @@ namespace {
       _event_forwarding_lambda(QWidget& w, const char* n) : widget(w), event_name(n) {}
 
       QWidget& widget;
-      const char* const event_name;
+      const std::string event_name;
 
       void operator()(Args&&... a) {
-         DovahKitScriptUIListenerInterface::get().fire_event(this->widget, this->event_name, { std::forward<Args>(args)... });
+         DovahKitScriptUIListenerInterface::get().fire_event(this->widget, this->event_name.c_str(), { std::forward<Args>(args)... });
       }
    };
    void _register_event(QWidget& widget, const char* event_name) {
@@ -820,17 +828,22 @@ void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char
    auto  si_events  = start + 2;
    auto  si_funcs   = start + 3;
    //
-   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_getfield(L, LUA_REGISTRYINDEX, ui_listener_registry_key);
+   assert(lua_type(L, -1) == LUA_TTABLE);
+   // STACK: - [ ..., storage_root ] +
    lua_pushlightuserdata(L, &widget);
-   lua_rawget(L, si_storage); // STACK: - [ ..., storage_root[&widget] ] +
-   if (lua_isnoneornil(L, -1)) {
+   lua_rawget(L, si_storage);
+   // STACK: - [ ..., storage_root, storage_root[&widget] ] +
+   if (lua_isnoneornil(L, si_events)) {
       lua_pop(L, 1);
       lua_createtable(L, 0, 1);
       lua_pushlightuserdata(L, &widget);
       lua_pushvalue(L, si_events);
       lua_rawset(L, si_storage);
    }
+   // STACK: - [ ..., storage_root, storage_root[&widget] ] +
    lua_getfield(L, si_events, event_name);
+   // STACK: - [ ..., storage_root, storage_root[&widget], storage_root[&widget][event_name] ] +
    bool empty = lua_isnoneornil(L, si_funcs);
    if (empty) {
       lua_pop(L, 1);
@@ -854,7 +867,7 @@ void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const c
    auto  si_storage = start + 1;
    auto  si_events  = start + 2;
    //
-   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   lua_getfield(L, LUA_REGISTRYINDEX, ui_listener_registry_key); // push 1
    lua_pushlightuserdata(L, &widget);
    lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[&widget] ] +
    assert(lua_istable(L, -1));
@@ -880,17 +893,21 @@ void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const c
       if (signal_name)
          widget.disconnect(signal_name);
    }
+   //
+   lua_settop(L, start);
 }
 void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    //
-   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_getfield(L, LUA_REGISTRYINDEX, ui_listener_registry_key);
    lua_pushlightuserdata(L, &widget);
    lua_pushnil(L);
    lua_rawset(L, start + 1);
    //
    widget.disconnect();
+   //
+   lua_settop(L, start);
 }
 void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const std::vector<QVariant> params) {
    auto* signal_name = signal_name_for_event(widget, event_name);
@@ -905,17 +922,25 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
    auto  si_nk      = start + 4;
    auto  si_nv      = start + 5;
    //
-   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_getfield(L, LUA_REGISTRYINDEX, ui_listener_registry_key);
+   // STACK: - [ ..., storage ] +
+   assert(lua_gettop(L)   == si_storage);
+   assert(lua_type(L, -1) == LUA_TTABLE);
    lua_pushlightuserdata(L, &widget);
    if (lua_rawget(L, si_storage) != LUA_TTABLE)
       return;
+   // STACK: - [ ..., storage, storage[&widget] ] +
+   assert(lua_gettop(L) == si_events);
    if (lua_getfield(L, si_events, event_name) != LUA_TTABLE)
       return;
+   // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name] ] +
    lua_pushnil(L); // nk
    while (lua_next(L, si_funcs) != 0) {
+      // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name], key, value ] +
+      int argcount = 0;
       for (auto& p : params)
-         cobb::lua::push_qt_variant(L, p);
-      lua_call(L, params.size(), 0); // pops (nv), since that's the function
+         argcount += cobb::lua::push_qt_variant(L, p);
+      editor_script::util::safe_call(L, argcount, 0); // pops (nv), since that's the function
    }
 }
 #pragma endregion

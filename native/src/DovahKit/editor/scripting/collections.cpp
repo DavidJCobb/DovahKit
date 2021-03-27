@@ -104,15 +104,15 @@ namespace {
          luaL_newmetatable(L, iterator_mt_pairs);
          lua_pushcfunction(L, &__pairs_call);
          lua_setfield(L, start + 1, "__call");
-         lua_settop(L, start);
       }
+      lua_settop(L, start);
       if (luaL_getmetatable(L, iterator_mt_ipairs) != LUA_TTABLE) {
          lua_settop(L, start); // when the metatable isn't present, nil is pushed
          luaL_newmetatable(L, iterator_mt_ipairs);
          lua_pushcfunction(L, &__ipairs_call);
          lua_setfield(L, start + 1, "__call");
-         lua_settop(L, start);
       }
+      lua_settop(L, start);
    }
    
    #pragma region Collection metamethods
