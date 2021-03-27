@@ -1,0 +1,73 @@
+
+UI scripting relies on  two message queues: one for  "read" operations, and one 
+for "write" operations. Read operations  always block the calling script, since 
+the script needs to  actually receive the values it asked  for before execution 
+can resume;  but write operations can be non-blocking. If, however,  the script 
+attempts a read operation  while any  write operations  are pending, the script 
+will then be blocked until all write operations  and the read operation finish.
+
+But that just applies to when scripts access data on their own prerogative, and 
+there's another  layer to everything: UI events. Scripts must be  able to react 
+to events like button  presses and form control state changes.  How do we allow 
+for that when the script is running on a separate thread from the UI?
+
+We're quite lucky that QObject::connect  is thread-safe; that allows the script 
+VM internals to attach event listeners to widgets from the script thread. We do 
+still end  up actually having those listeners fire on the main thread,  so what 
+we do is send a main-to-script-thread task to forward the event into Lua. Since 
+Lua executes  asynchronously from the  main thread, however,  how do we prevent 
+the script itself from being vulnerable to race conditions?
+
+Consider the case of a scripted dialog box where a button triggers some complex 
+and lengthy operation. Clicking the button should disable it, perform the task, 
+and then enable  the button again. However, if we don't  implement engine-level 
+safeguards, then it can be possible for a user to mash the button and send more 
+than one press through before the script is able to disable the button.
+
+We're quite lucky  that Qt gives us a way to deal with this:  we can use "event 
+filters"  to intercept all UI events  that hit a given QObject. The VM  core is 
+already a QObject, so we can  register it as the  event filter for all scripted 
+widgets and windows. If we keep track of how many UI events are pending -- that 
+is, how many  events were sent from the  main thread to the script  thread, but 
+haven't finished  executing all of their Lua handlers -- then we  can block all 
+events and consequently all  user interaction with  the scripted UI whenever an 
+event is still being responded to. A nice bonus to doing things this way is, we 
+can avoid  any visual changes  to the scripted  UI when we're locking  it down, 
+whereas if we just did  (window:setEnabled(false)),  the windows would grey out
+seemingly at random.
+
+There's one more layer that goes into this, though.
+
+Consider a basic script that counts all of the persistent ObjectReference forms 
+in the loaded content: the instant it's run, it creates a dialog box containing 
+a progress bar, and it animates the progress bar as it runs. Because the script 
+runs off the main thread, it's not capable of hanging or lagging the editor; it 
+can run at full tilt  and blindly write to the progress bar,  without having to 
+worry about editor stability. (This is in opposition to things like JavaScript, 
+where scripts have to use setTimeout  and other mechanisms to "take breaks" and 
+avoid hanging a web page.)
+
+The problem, however,  is that if we trigger a lengthy  operation from within a 
+UI event listener, we'll end up locking  the entire UI for the duration of that 
+operation. The solution is to give Lua a means to defer the execution of one of 
+its functions until after all listeners  have finished firing. We offer this in 
+the form of the (dovah.queue_deferred_function) API. The typical pattern, then, 
+would be something like this:
+
+   function some_long_operation()
+      --
+      -- ...
+      --
+      button.enabled = true
+   end
+
+   button:on("OnActivated", "", function()
+      button.enabled = false
+      dovah.queue_deferred_function(some_long_operation)
+   end)
+    
+So we disable the button  immediately (and we can do  anything else that has to 
+be done  instantly), and defer the lengthy operation until after our  listener. 
+That way, the  scripted UI doesn't  wait on the  lengthy operation  itself: the 
+button disables properly, but the window itself (and any other controls that we 
+want to be usable) remains interactable.

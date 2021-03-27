@@ -194,6 +194,36 @@ namespace {
          lua_pushboolean(L, result);
          return 1;
       }
+      luastackchange_t tooltip(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QString result;
+         {
+            auto* widget = (wrapped_type*)self.widget;
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->toolTip(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushstring(L, result.toUtf8());
+         return 1;
+      }
+      luastackchange_t whats_this(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QString result;
+         {
+            auto* widget = (wrapped_type*)self.widget;
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->whatsThis(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushstring(L, result.toUtf8());
+         return 1;
+      }
    }
    namespace _setters {
       luastackchange_t enabled(lua_State* L) {
@@ -205,6 +235,30 @@ namespace {
          auto* task    = new tasks::s2m::lambda(false);
          bool  value   = lua_toboolean(L, 2);
          task->handler = [widget, value]() { widget->setEnabled(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t tooltip(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "tooltip text (string) expected");
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
+         task->handler = [widget, value]() { widget->setToolTip(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t whats_this(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
+         task->handler = [widget, value]() { widget->setWhatsThis(value); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -247,10 +301,14 @@ namespace editor_script::wrappers::ui {
       { "set_layout",            &_methods::set_layout },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "enabled", &_getters::enabled },
+      { "enabled",    &_getters::enabled },
+      { "tooltip",    &_getters::tooltip },
+      { "whats_this", &_getters::whats_this },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "enabled", &_setters::enabled },
+      { "enabled",    &_setters::enabled },
+      { "tooltip",    &_setters::tooltip },
+      { "whats_this", &_setters::whats_this },
    };
 
    /*static*/ void cls::setup(lua_State* L) {

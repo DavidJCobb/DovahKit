@@ -1876,6 +1876,7 @@
     <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />
     <Text Include="dovah\_docs\use info build process - extra data.txt" />
     <Text Include="dovah\_docs\extra data.txt" />
+    <Text Include="editor\scripting\_docs\ui.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt">

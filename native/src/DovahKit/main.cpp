@@ -617,70 +617,6 @@
 //                complicated.)
 //
 //        - PHASE 3: UI ACCESS
-//          Lua scripts should be able to spawn windows and widgets, and should be able 
-//          to manipulate them and respond to important events by way of Qt signals and 
-//          slots. The Lua VM should not be killed until after the script has run to 
-//          completion and all script-spawned windows (that have been shown) have closed.
-//          
-//           - We need code to allow wrappers to wrap QWidgets.
-//          
-//           - "Write" operations in the UI should not block the script unless and until 
-//             the script performs a "read" or "write" operation that depends, or may 
-//             depend, on the results of a "write" operation that the main thread has 
-//             not yet attended to.
-//             
-//              - One way to account for this, for operations that are "local" to a widget, 
-//                would be to maintain a set of "change counts" on the UI wrappers. Calling 
-//                a "write" method would increment the change count, send a message to the 
-//                main thread, and then return to script execution immediately; the message 
-//                would decrement the change count when acknowledged; and APIs which access 
-//                related data would block if the change count is non-zero.
-//                
-//                (In order for the message to decrement the change count safely, it would 
-//                have to have a pointer to the target widget's wrapper.)
-//             
-//                An example of a "local" operation is adding a new row to a list view. 
-//                This could increment a "view contents change count" on the wrapper. If 
-//                you then added another row, that wouldn't have to block; but if you were 
-//                to try and modify a row, or check the state of the rows, then that would 
-//                block.
-//                
-//                An example of a "non-local" operation is modifying font properties on a 
-//                widget. It's my understanding that font properties are heritable, which 
-//                means that an "is in italics" getter would have to check not just the 
-//                widget that it's called on, but all ancestor widgets, were we to add a 
-//                per-widget change count for font properties. We could compromise a bit 
-//                and have a global font property change count that is shared across all 
-//                widgets; then, setting font properties, too, can be asynchronous.
-//                
-//                Another "non-local" operation would be getting a widget's rendered size 
-//                or bounds -- something that can be influenced by virtually any change 
-//                to a widget, its ancestors, or its descendants. That probably shouldn't 
-//                use a change count at all, but rather should probably block if there are 
-//                any unacknowledged UI-related script-to-main messages. Similarly, moving 
-//                widgets within layouts or structures, or removing widgets, should block 
-//                until the message queue is empty.
-//
-//                 - The current cross-thread messaging system can't handle this. Messages 
-//                   can be blocking or non-blocking, but they cannot change "blockingness" 
-//                   once they're in the queue. At least, I don't think it'd be safe.
-//
-//                   The alternative, then, would be to...
-//
-//                    - Have a queue for "get" operations and a queue for "set" operations.
-//
-//                    - Attempting to send a "get" operation blocks if there are any pending 
-//                      "set" operations; similarly, attempting to send a "set" operation 
-//                      blocks if there are any pending "get" operations.
-//
-//                    - Whenever a piece of Lua code finishes executing, block until all 
-//                      pending operations are done.
-//          
-//           - Scripts need to be able to register Lua functions to be called when certain 
-//             UI events occur.
-//
-//              - The UI events themselves will occur on the main thread, and should result 
-//                in a non-urgent cross-thread-task being sent from main to script.
 //          
 //           - Scripts will need an API to queue the form-edit dialog for a form. See, we 
 //             need to block the editor while a script is running, so if for example a 
@@ -753,17 +689,6 @@
 //          confirmation box asking whether to terminate the script. If the user 
 //          cancels, then don't close the window.
 //
-//     - The script execution window should consist of a status message and progress 
-//       bar. Scripts should be able to set the status message, the progress bar 
-//       bounds, the progress bar current value, and the progress bar state (i.e. 
-//       it should be possible to recolor the progress bar to represent "running," 
-//       "paused," and "stopped," as one can with the Windows taskbar button progress 
-//       bar). Additionally, setting the progress bar bounds to a zero width should 
-//       show an "indeterminate" animation.
-//
-//        - If we really want to go the extra mile, we can have a log panel that 
-//          shows *every* call into any of the script APIs that we provide.
-//
 //     - Scripts should be able to include Greasemonkey-style comments at the top of 
 //       the file as a way of specifying extended configuration options. Options that 
 //       we could support can include:
@@ -793,32 +718,9 @@
 //     - Scripts should be able to spawn UI windows and widgets, and to register Lua 
 //       functions to run in response to Qt signals on these widgets.
 //
-//        - There should be a cap on how many windows a script can spawn.
-//
 //        - There should be a cap on how quickly a script can spawn windows.
 //
-//        - All script windows should have a modeless relationship with DovahKit, so 
-//          that scripts cannot block access to the editor UI.
-//
 //        - We'll probably want to provide generic table, list, and tree views to Lua.
-//
-//        = Lua-spawned windows must exist on the main thread (QWidgets can only 
-//          function there), which means that in order to allow Lua to influence and 
-//          be influenced by the UI, we must pass messages across threads. This, of 
-//          course, introduces the issue of concurrency -- of what to do with a signal 
-//          that Qt emits while Lua is already processing another signal.
-//
-//          The only reliable way to prevent these sorts of issues is to just straight-
-//          up disable all script-spawned windows while processing a Lua event (and if 
-//          we don't want them showing the disabled graphics, then we can disable their 
-//          repaints via QWidget::setUpdatesEnabled as well). That means that we'll 
-//          need to be very selective about what signals we make available to Lua; 
-//          specifically, we can only allow Lua to respond to an event if disabling the 
-//          UI during that response would not interrupt the user. As an example, Lua 
-//          cannot respond to each individual keypress in a QLineEdit (as would happen 
-//          with the built-in QLineEdit::textEdited signal), but rather must be given a 
-//          custom "change" event that fires when the widget loses focus after having 
-//          been edited (compare to JS "onchange").
 //
 //     - It'd be nice if scripts had access to a UI widget that would allow them to 
 //       draw arbitrary rasters, like JS canvas (but maybe with a friendlier API).

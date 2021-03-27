@@ -350,6 +350,8 @@ void DovahKitScriptVM::_script_thread_loop() {
 }
 
 bool DovahKitScriptVM::_should_keep_running() const noexcept {
+   if (this->aborted)
+      return false;
    //
    // If the script has any script-spawned UI windows open and visible, then this function 
    // should return (true). If we want to be more sophisticated, then we can double-check 
