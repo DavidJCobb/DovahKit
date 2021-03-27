@@ -113,31 +113,28 @@ namespace {
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t is(lua_State* L) {
-         if (cls::check_arg_type(L, 1)) {
-            lua_pushboolean(L, 1);
-            return 1;
-         }
-         lua_pushboolean(L, 0);
+         auto* wrapper = wrapper_from_stack<cls>(L, 1);
+         lua_pushboolean(L, wrapper != nullptr);
          return 1;
       }
    }
 }
 
 namespace editor_script::wrappers::ui {
-   /*static*/ const std::initializer_list<luaL_Reg> window::metatable_methods = {
+   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
       { "hide", &_methods::hide },
       { "show", &_methods::show },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> window::metatable_getters = {
+   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "has_size_handle", &_getters::has_size_handle },
       { "title",           &_getters::title },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> window::metatable_setters = {
+   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "has_size_handle", &_setters::has_size_handle },
       { "title",           &_setters::title },
    };
 
-   /*static*/ void window::setup(lua_State* L) {
+   /*static*/ void cls::setup(lua_State* L) {
       int pos = lua_gettop(L);
       editor_script::define_class(L, metatable_key, nullptr, metatable_methods);
       //
