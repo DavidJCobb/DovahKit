@@ -156,6 +156,11 @@ DovahKitScriptVM::DovahKitScriptVM() {
       this->task_queues.m2s.normal.clear();
       this->task_queues.m2s.urgent.clear();
       this->task_queues.s2m.clear();
+      //
+      this->ui_queues.read.clear();
+      this->ui_queues.write.clear();
+      //
+      this->pending_ui_event_count = 0;
    });
    //
    auto& editor = DovahKitCore::get();
@@ -269,13 +274,16 @@ void DovahKitScriptVM::_setup_lua_vm() {
       editor_script::build_all_ui_wrapper_singletons(this->lua_vm);
       lua_setglobal(this->lua_vm, "ui");
    }
+   this->pending_ui_event_count = 0;
 }
 void DovahKitScriptVM::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->exec_lock);
+   //
    if (this->lua_vm) {
       lua_close(this->lua_vm);
       this->lua_vm = nullptr;
    }
+   //
    for (auto* window : this->widgets.windows) {
       if (!window)
          continue;
@@ -291,6 +299,8 @@ void DovahKitScriptVM::_teardown_lua_vm() {
       widget->deleteLater();
    }
    this->widgets.orphans.clear();
+   //
+   this->pending_ui_event_count = 0;
 }
 
 void DovahKitScriptVM::_run_queued_functions() {

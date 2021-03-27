@@ -4,7 +4,8 @@ for "write" operations. Read operations  always block the calling script, since
 the script needs to  actually receive the values it asked  for before execution 
 can resume;  but write operations can be non-blocking. If, however,  the script 
 attempts a read operation  while any  write operations  are pending, the script 
-will then be blocked until all write operations  and the read operation finish.
+will then be blocked until all write operations  and the read operation finish. 
+This means that "write" operations block the script as little as possible.
 
 But that just applies to when scripts access data on their own prerogative, and 
 there's another  layer to everything: UI events. Scripts must be  able to react 
