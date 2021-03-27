@@ -259,6 +259,7 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\text.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\widget.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\window.cpp" />
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
@@ -556,6 +557,7 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\text.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\widget.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\window.h" />
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />

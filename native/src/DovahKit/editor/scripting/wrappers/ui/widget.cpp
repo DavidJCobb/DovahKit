@@ -48,8 +48,11 @@ namespace {
          auto& self     = get_wrapper_for_thiscall<cls>(L);
          auto* arg      = wrapper_from_stack<cls>(L, 2);
          luaL_argcheck(L, arg != nullptr, 2, "child (widget) expected");
+         __assume(arg != nullptr);
          if (!self.widget)
             return 0;
+         if (arg->widget == self.widget)
+            luaL_error(L, "a widget cannot be its own child");
          if (!_can_have_layout(*self.widget))
             luaL_error(L, "this widget cannot have a layout and so cannot have children either");
          if (!arg->widget)
@@ -107,7 +110,7 @@ namespace {
       }
       luastackchange_t set_layout(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isboolean(L, 2), 2, "layout type (string) expected");
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "layout type (string) expected");
          lua_settop(L, 2);
          if (!self.widget)
             return 0;
@@ -176,7 +179,7 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.stub)
             return 0;
-         auto* widget  = (QDialog*) self.widget;
+         auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          bool  value   = lua_toboolean(L, 2);
          task->handler = [widget, value]() { widget->setEnabled(value); };
@@ -188,14 +191,14 @@ namespace {
    namespace _singleton_functions {
       luastackchange_t new_(lua_State* L) {
          if (lua_gettop(L) > 0)
-            luaL_error(L, "the ui.dialog.new function should not be called with a colon or passed any arguments");
+            luaL_error(L, "the ui.widget.new function should not be called with a colon or passed any arguments");
          //
          DovahKitScriptVMPermissionInterface::verify_ui_permissions();
          //
-         QWidget* created = nullptr;
-         auto*    task    = new tasks::s2m::lambda(true);
+         wrapped_type* created = nullptr;
+         auto*         task    = new tasks::s2m::lambda(true);
          task->handler = [&created]() {
-            created = new QWidget;
+            created = new wrapped_type;
             DovahKitScriptVM::get().accept_new_orphaned_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);

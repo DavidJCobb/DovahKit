@@ -111,7 +111,7 @@ namespace editor_script {
                case wrapper_type::form_data:
                   return this->stub;
                case wrapper_type::ui:
-                  break;
+                  return this->widget;
             }
             return nullptr;
          }
