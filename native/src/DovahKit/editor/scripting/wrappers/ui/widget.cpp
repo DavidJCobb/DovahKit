@@ -2,8 +2,10 @@
 #include "../../editor_script_core.h"
 #include "../../wrapper_util.h"
 
+#include <QBoxLayout>
 #include <QDialog>
 #include <QFrame>
+#include <QGridLayout>
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
@@ -12,21 +14,143 @@ namespace {
    using cls = wrappers::ui::widget;
    using wrapped_type = cls::wrapped_type;
 
+   bool _can_have_layout(QWidget& widget) {
+      if (widget.metaObject() == &QWidget::staticMetaObject) // is QWidget and NOT a subclass
+         return true;
+      if (qobject_cast<QDialog*>(&widget))
+         return true;
+      if (qobject_cast<QFrame*>(&widget))
+         return true;
+      return false;
+   }
+
+   struct _layout_type {
+      const char* name;
+      bool is_box  = false;
+      bool is_grid = false;
+      QBoxLayout::Direction box_direction = QBoxLayout::Direction::LeftToRight;
+   };
+
+   std::array _layout_types = {
+      _layout_type{ "none", false, false },
+      _layout_type{ "grid", false, true },
+      _layout_type{ "h",    true,  false, QBoxLayout::Direction::LeftToRight },
+      _layout_type{ "v",    true,  false, QBoxLayout::Direction::TopToBottom },
+      _layout_type{ "ltr",  true,  false, QBoxLayout::Direction::LeftToRight },
+      _layout_type{ "rtl",  true,  false, QBoxLayout::Direction::RightToLeft },
+      _layout_type{ "down", true,  false, QBoxLayout::Direction::TopToBottom },
+      _layout_type{ "up",   true,  false, QBoxLayout::Direction::BottomToTop },
+   };
+
    namespace _methods {
+      luastackchange_t add_child(lua_State* L) {
+         int   argcount = lua_gettop(L);
+         auto& self     = get_wrapper_for_thiscall<cls>(L);
+         auto* arg      = wrapper_from_stack<cls>(L, 2);
+         luaL_argcheck(L, arg != nullptr, 2, "child (widget) expected");
+         if (!self.widget)
+            return 0;
+         if (!_can_have_layout(*self.widget))
+            luaL_error(L, "this widget cannot have a layout and so cannot have children either");
+         if (!arg->widget)
+            return 0;
+         //
+         int row = -1; // or (index) for boxes
+         int col = -1;
+         int rowspan = 1;
+         int colspan = 1;
+         //
+         if (lua_isnumber(L, 3))
+            row     = lua_tonumber(L, 3);
+         if (lua_isnumber(L, 4))
+            col     = lua_tonumber(L, 4);
+         if (lua_isnumber(L, 5))
+            rowspan = lua_tonumber(L, 5);
+         if (lua_isnumber(L, 6))
+            colspan = lua_tonumber(L, 6);
+         //
+         auto* widget = self.widget;
+         auto* child  = arg->widget;
+         auto* task   = new tasks::s2m::lambda(false);
+         task->handler = [widget, child, row, col, rowspan, colspan]() {
+            auto* layout = widget->layout();
+            if (!layout) {
+               child->setParent(widget);
+               return;
+            }
+            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+               if (row >= 0 && col >= 0) {
+                  grid->addWidget(child, row, col, rowspan, colspan);
+               } else {
+                  grid->addWidget(child);
+               }
+               return;
+            }
+            if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
+               if (row >= 0) {
+                  box->insertWidget(row, child);
+               } else {
+                  box->addWidget(child);
+               }
+            }
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t can_have_layout(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
-         if (
-            self.widget->metaObject() == &QWidget::staticMetaObject // is QWidget and NOT a subclass?
-         || qobject_cast<QDialog*>(self.widget)
-         || qobject_cast<QFrame*>(self.widget)
-         )
-            lua_pushboolean(L, true);
-         else
-            lua_pushboolean(L, false);
+         lua_pushboolean(L, _can_have_layout(*self.widget));
          return 1;
+      }
+      luastackchange_t set_layout(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "layout type (string) expected");
+         lua_settop(L, 2);
+         if (!self.widget)
+            return 0;
+         if (!_can_have_layout(*self.widget))
+            luaL_error(L, "this widget cannot have a layout");
+         //
+         _layout_type* known_type = nullptr;
+         auto*         type_name  = lua_tostring(L, 2);
+         for (auto& t : _layout_types) {
+            if (_stricmp(type_name, t.name) == 0) {
+               known_type = &t;
+               break;
+            }
+         }
+         if (!known_type) {
+            luaL_error(L, "layout type \"%s\" is unrecognized", type_name);
+            __assume(0); // unreachable
+         }
+         auto* widget = self.widget;
+         auto* task   = new tasks::s2m::lambda(false);
+         task->handler = [widget, known_type]() {
+            auto* old = widget->layout();
+            if (known_type->is_grid) {
+               if (qobject_cast<QGridLayout*>(old))
+                  return;
+               widget->setLayout(nullptr);
+               widget->setLayout(new QGridLayout(widget));
+               return;
+            } else if (known_type->is_box) {
+               auto dir = known_type->box_direction;
+               if (auto* box = qobject_cast<QBoxLayout*>(old)) {
+                  box->setDirection(dir);
+               } else {
+                  widget->setLayout(nullptr);
+                  widget->setLayout(new QBoxLayout(dir, widget));
+               }
+               return;
+            } else {
+               widget->setLayout(nullptr); // "none"
+            }
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
       }
    }
    namespace _getters {
@@ -91,7 +215,9 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "add_child",       &_methods::add_child },
       { "can_have_layout", &_methods::can_have_layout },
+      { "set_layout",      &_methods::set_layout },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "enabled", &_getters::enabled },
