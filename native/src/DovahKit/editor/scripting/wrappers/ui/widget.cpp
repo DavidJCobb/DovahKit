@@ -210,45 +210,6 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
-      luastackchange_t set_layout_margins(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isinteger(L, 2), 2, "integer expected");
-         //
-         int top    = lua_tointeger(L, 2);
-         int bottom = top;
-         int left   = top;
-         int right  = top;
-         int argcount = std::min(4, lua_gettop(L) - 1);
-         for (int i = 2; i <= argcount; ++i)
-            luaL_argcheck(L, lua_isnoneornil(L, i + 1) || lua_isinteger(L, i + 1), i + 1, "integer or nil expected");
-         switch (argcount) {
-            case 2:
-               left = right = lua_tointeger(L, 3);
-               break;
-            case 3:
-               left = right = lua_tointeger(L, 3);
-               bottom = lua_tointeger(L, 4);
-               break;
-            case 4:
-               right  = lua_tointeger(L, 3);
-               bottom = lua_tointeger(L, 4);
-               left   = lua_tointeger(L, 5);
-               break;
-         }
-         //
-         if (!self.widget)
-            return 0;
-         auto* widget = self.widget;
-         auto* task   = new tasks::s2m::lambda(false);
-         task->handler = [widget, top, right, bottom, left]() {
-            auto* layout = widget->layout();
-            if (!layout)
-               return;
-            layout->setContentsMargins(left, top, right, bottom);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         return 0;
-      }
       luastackchange_t set_layout_stretch_at(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -350,6 +311,55 @@ namespace {
          lua_pushboolean(L, result);
          return 1;
       }
+      luastackchange_t layout_margins(lua_State* L) {
+         lua_settop(L, 1);
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         if (!_can_have_layout(*self.widget))
+            return 0;
+         QMargins result;
+         {
+            auto* widget = (wrapped_type*)self.widget;
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() {
+               auto* layout = widget->layout();
+               if (layout)
+                  result = layout->contentsMargins();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_createtable(L, 4, 4);
+         int value;
+         //
+         value = result.top();
+         lua_pushinteger(L, value);
+         lua_rawseti(L, 2, 1);
+         lua_pushinteger(L, value);
+         lua_setfield(L, 2, "top");
+         //
+         value = result.right();
+         lua_pushinteger(L, value);
+         lua_rawseti(L, 2, 2);
+         lua_pushinteger(L, value);
+         lua_setfield(L, 2, "right");
+         //
+         value = result.bottom();
+         lua_pushinteger(L, value);
+         lua_rawseti(L, 2, 3);
+         lua_pushinteger(L, value);
+         lua_setfield(L, 2, "bottom");
+         //
+         value = result.left();
+         lua_pushinteger(L, value);
+         lua_rawseti(L, 2, 4);
+         lua_pushinteger(L, value);
+         lua_setfield(L, 2, "left");
+         //
+         return 1;
+      }
       luastackchange_t tooltip(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -391,6 +401,152 @@ namespace {
          auto* task    = new tasks::s2m::lambda(false);
          bool  value   = lua_toboolean(L, 2);
          task->handler = [widget, value]() { widget->setEnabled(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t layout_margins(lua_State* L) {
+         //
+         // Accepts any of the following kinds of values:
+         // 
+         //    my_widget.layout_margins = 5
+         //    my_widget.layout_margins = { 5 }
+         //    my_widget.layout_margins = { 1, 2, 3, 4 }
+         //    my_widget.layout_margins = { top = 1, right = 2, bottom = 3, left = 4 }
+         //
+         // When fewer than four values are supplied, follows the same rules as CSS's "margin" 
+         // property. Non-integer numeric values are truncated to integers. Non-numeric values 
+         // are treated as "unchanged," but supplying a table that offers no valid numbers is 
+         // an error. If both named keys and numeric keys are provided, only the latter are 
+         // used.
+         //
+         // Supplying alternate values (e.g. an integer; an "incomplete" table) does not change 
+         // the return type of the corresponding getter:
+         //
+         //    my_widget.layout_margins = 5
+         //    local now = my_widget.layout_margins -- table
+         //
+         lua_settop(L, 2);
+         //
+         constexpr int unchanged  = -1;
+         constexpr int offset_arg = 2;
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int top    = unchanged;
+         int bottom = unchanged;
+         int left   = unchanged;
+         int right  = unchanged;
+         int unchanged_count = 4;
+         if (lua_istable(L, 2)) {
+            lua_len(L, 2);
+            int argcount = 0;
+            if (lua_isnumber(L, 3))
+               argcount = std::min(4, (int)lua_tonumber(L, 3));
+            lua_pop(L, 1);
+            if (argcount) {
+               //
+               // The user passed in an array of numbers.
+               //
+               for (int i = 1; i <= 4; ++i) {
+                  lua_geti(L, 2, i);
+                  if (!lua_isnumber(L, -1)) {
+                     lua_pop(L, 1);
+                     lua_pushinteger(L, unchanged);
+                  } else if (lua_tonumber(L, -1) < 0) {
+                     lua_pop(L, 1);
+                     lua_pushinteger(L, 0);
+                  }
+               }
+               switch (argcount) {
+                  case 1:
+                     top = bottom = left = right = lua_tonumber(L, offset_arg + 1);
+                  case 2:
+                     top = bottom = lua_tonumber(L, offset_arg + 1);
+                     left = right = lua_tonumber(L, offset_arg + 2);
+                     break;
+                  case 3:
+                     top    = lua_tonumber(L, offset_arg + 1);
+                     left   = lua_tonumber(L, offset_arg + 2);
+                     right  = lua_tonumber(L, offset_arg + 2);
+                     bottom = lua_tonumber(L, offset_arg + 3);
+                     break;
+                  case 4:
+                     top    = lua_tonumber(L, offset_arg + 1);
+                     right  = lua_tonumber(L, offset_arg + 2);
+                     bottom = lua_tonumber(L, offset_arg + 3);
+                     left   = lua_tonumber(L, offset_arg + 4);
+                     break;
+               }
+               unchanged_count = 0;
+            } else {
+               //
+               // The user passed in an arbitrary table. Check if it has the needed fields.
+               //
+               lua_getfield(L, 2, "top");
+               lua_getfield(L, 2, "left");
+               lua_getfield(L, 2, "right");
+               lua_getfield(L, 2, "bottom");
+               if (lua_isnumber(L, 3)) {
+                  --unchanged_count;
+                  top = lua_tonumber(L, 3);
+                  if (top < 0)
+                     top = 0;
+               }
+               if (lua_isnumber(L, 4)) {
+                  --unchanged_count;
+                  left = lua_tonumber(L, 4);
+                  if (left < 0)
+                     left = 0;
+               }
+               if (lua_isnumber(L, 5)) {
+                  --unchanged_count;
+                  right = lua_tonumber(L, 5);
+                  if (right < 0)
+                     right = 0;
+               }
+               if (lua_isnumber(L, 6)) {
+                  --unchanged_count;
+                  bottom = lua_tonumber(L, 6);
+                  if (bottom < 0)
+                     bottom = 0;
+               }
+               lua_pop(L, 4);
+               //
+               if (unchanged_count == 4)
+                  luaL_error(L, "the supplied table didn't specify any margins");
+            }
+         } else {
+            int isnum;
+            top = lua_tointegerx(L, 2, &isnum);
+            luaL_argcheck(L, isnum, 2, "integer or table expected");
+            if (top < 0)
+               top = 0;
+            left = right = bottom = top;
+            unchanged_count = 0;
+         }
+         //
+         if (!self.widget)
+            return 0;
+         if (!_can_have_layout(*self.widget))
+            luaL_error(L, "this widget cannot have a layout");
+         auto* widget = self.widget;
+         auto* task   = new tasks::s2m::lambda(false);
+         task->handler = [widget, top, right, bottom, left, unchanged_count, unchanged]() mutable {
+            auto* layout = widget->layout();
+            if (!layout)
+               return;
+            if (unchanged_count) {
+               auto old = layout->contentsMargins();
+               if (top == unchanged)
+                  top = old.top();
+               if (left == unchanged)
+                  left = old.left();
+               if (right == unchanged)
+                  right = old.right();
+               if (bottom == unchanged)
+                  bottom = old.bottom();
+            }
+            layout->setContentsMargins(left, top, right, bottom);
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -456,18 +612,19 @@ namespace editor_script::wrappers::ui {
       { "on",                    &_methods::on },
       { "remove_event_listener", &_methods::remove_event_listener },
       { "set_layout",            &_methods::set_layout },
-      { "set_layout_margins",    &_methods::set_layout_margins },
       { "set_layout_stretch_at", &_methods::set_layout_stretch_at },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "enabled",    &_getters::enabled },
-      { "tooltip",    &_getters::tooltip },
-      { "whats_this", &_getters::whats_this },
+      { "enabled",        &_getters::enabled },
+      { "layout_margins", &_getters::layout_margins },
+      { "tooltip",        &_getters::tooltip },
+      { "whats_this",     &_getters::whats_this },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "enabled",    &_setters::enabled },
-      { "tooltip",    &_setters::tooltip },
-      { "whats_this", &_setters::whats_this },
+      { "enabled",        &_setters::enabled },
+      { "layout_margins", &_setters::layout_margins },
+      { "tooltip",        &_setters::tooltip },
+      { "whats_this",     &_setters::whats_this },
    };
 
    /*static*/ void cls::setup(lua_State* L) {

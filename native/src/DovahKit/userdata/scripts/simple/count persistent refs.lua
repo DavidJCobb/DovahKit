@@ -33,7 +33,7 @@ local text_value_esp
 do
    local grid = ui.widget.new()
    grid:set_layout("grid")
-   grid:set_layout_margins(0)
+   grid.layout_margins = 0
    window:add_child(grid)
 
    local label = ui.text.new("Refs flagged as persistent:")
