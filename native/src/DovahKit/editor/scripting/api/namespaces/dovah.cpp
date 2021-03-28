@@ -34,8 +34,10 @@ namespace {
       luastackchange_t count_forms_of_type(lua_State* L) {
          luaL_argcheck(L, lua_isnumber(L, 1), 1, "form type (number) expected");
          auto& editor = DovahKitCore::get();
-         if (!editor.has_data())
-            return 0;
+         if (!editor.has_data()) {
+            lua_pushinteger(L, 0);
+            return 1;
+         }
          //
          bool  valid = false;
          auto  ft    = editor_script::get_form_type_from_stack(L, 1, valid);

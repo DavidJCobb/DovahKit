@@ -107,10 +107,42 @@ namespace {
          lua_pushboolean(L, _can_have_layout(*self.widget));
          return 1;
       }
+      luastackchange_t get_layout_stretch_at(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         auto* layout = self.widget->layout();
+         if (!layout)
+            return 0;
+         if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+            luaL_argcheck(L, lua_isstring (L, 2), 2, "axis name (\"row\" or \"col\" or \"column\") expected");
+            luaL_argcheck(L, lua_isinteger(L, 3), 3, "index (integer) expected");
+            lua_settop(L, 3);
+            auto* axis  = lua_tostring(L, 2);
+            int   index = lua_tointeger(L, 3);
+            if (_stricmp(axis, "row") == 0) {
+               lua_pushinteger(L, grid->rowStretch(index));
+               return 1;
+            }
+            if (_stricmp(axis, "col") == 0 || _stricmp(axis, "column") == 0) {
+               lua_pushinteger(L, grid->columnStretch(index));
+               return 1;
+            }
+            luaL_error(L, "axis name \"%s\" is unrecognized", axis);
+            __assume(0); // unreachable
+         }
+         if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
+            luaL_argcheck(L, lua_isinteger(L, 2), 2, "layout index (integer) expected");
+            lua_settop(L, 2);
+            lua_pushinteger(L, box->stretch(lua_tointeger(L, 2)));
+            return 1;
+         }
+         return 0;
+      }
       luastackchange_t on(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "event name (string) expected");
-         luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
+         luaL_argcheck(L, lua_isstring  (L, 2), 2, "event name (string) expected");
+         luaL_argcheck(L, lua_isstring  (L, 3), 3, "listener name (string) expected");
          luaL_argcheck(L, lua_isfunction(L, 4), 4, "listener (function) expected");
          lua_settop(L, 4);
          if (!self.widget)
@@ -175,6 +207,41 @@ namespace {
             }
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t set_layout_stretch_at(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         auto* layout = self.widget->layout();
+         if (!layout)
+            return 0;
+         if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+            luaL_argcheck(L, lua_isstring (L, 2), 2, "axis name (\"row\" or \"col\" or \"column\") expected");
+            luaL_argcheck(L, lua_isinteger(L, 3), 3, "index (integer) expected");
+            luaL_argcheck(L, lua_isinteger(L, 4), 3, "stretch (integer) expected");
+            lua_settop(L, 4);
+            const char* axis = lua_tostring(L, 2);
+            int index = lua_tointeger(L, 3) - 1;
+            if (_stricmp(axis, "row") == 0) {
+               grid->setRowStretch(index, lua_tointeger(L, 4));
+               return 0;
+            }
+            if (_stricmp(axis, "col") == 0 || _stricmp(axis, "column") == 0) {
+               grid->setColumnStretch(index, lua_tointeger(L, 4));
+               return 0;
+            }
+            luaL_error(L, "axis name \"%s\" is unrecognized", axis);
+            __assume(0); // unreachable
+         }
+         if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
+            luaL_argcheck(L, lua_isinteger(L, 2), 2, "layout index (integer) expected");
+            luaL_argcheck(L, lua_isinteger(L, 3), 3, "stretch (integer) expected");
+            lua_settop(L, 3);
+            int index = lua_tointeger(L, 2) - 1;
+            box->setStretch(index, lua_tointeger(L, 3));
+            return 0;
+         }
          return 0;
       }
    }
@@ -296,9 +363,11 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
       { "add_child",             &_methods::add_child },
       { "can_have_layout",       &_methods::can_have_layout },
+      { "get_layout_stretch_at", &_methods::get_layout_stretch_at },
       { "on",                    &_methods::on },
       { "remove_event_listener", &_methods::remove_event_listener },
       { "set_layout",            &_methods::set_layout },
+      { "set_layout_stretch_at", &_methods::set_layout_stretch_at },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "enabled",    &_getters::enabled },
