@@ -278,7 +278,7 @@
     <ClCompile Include="helpers\lua\isempty.cpp" />
     <ClCompile Include="helpers\lua\metamethod_names.cpp" />
     <ClCompile Include="helpers\lua\dump.cpp" />
-    <ClCompile Include="helpers\lua\push_qt_variant.cpp" />
+    <ClCompile Include="helpers\lua\qt_variant.cpp" />
     <ClCompile Include="helpers\lua\setfuncs.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
@@ -582,7 +582,7 @@
     <ClInclude Include="helpers\lua\isempty.h" />
     <ClInclude Include="helpers\lua\metamethod_names.h" />
     <ClInclude Include="helpers\lua\dump.h" />
-    <ClInclude Include="helpers\lua\push_qt_variant.h" />
+    <ClInclude Include="helpers\lua\qt_variant.h" />
     <ClInclude Include="helpers\lua\setfuncs.h" />
     <ClInclude Include="helpers\lua\set_top_on_exit.h" />
     <ClInclude Include="helpers\math.h" />

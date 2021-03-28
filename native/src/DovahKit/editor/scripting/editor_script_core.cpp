@@ -13,7 +13,7 @@
 #include "classes/_all.h"
 #include "../../helpers/lua/dump.h"
 #include "../../helpers/lua/isempty.h"
-#include "../../helpers/lua/push_qt_variant.h"
+#include "../../helpers/lua/qt_variant.h"
 #include "../../helpers/lua/set_top_on_exit.h"
 
 #include <QPushButton>

@@ -8,6 +8,7 @@
 #include <QGridLayout>
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
+#include "../../../../helpers/lua/qt_variant.h"
 
 namespace {
    using namespace editor_script;
@@ -209,38 +210,126 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t set_layout_margins(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isinteger(L, 2), 2, "integer expected");
+         //
+         int top    = lua_tointeger(L, 2);
+         int bottom = top;
+         int left   = top;
+         int right  = top;
+         int argcount = std::min(4, lua_gettop(L) - 1);
+         for (int i = 2; i <= argcount; ++i)
+            luaL_argcheck(L, lua_isnoneornil(L, i + 1) || lua_isinteger(L, i + 1), i + 1, "integer or nil expected");
+         switch (argcount) {
+            case 2:
+               left = right = lua_tointeger(L, 3);
+               break;
+            case 3:
+               left = right = lua_tointeger(L, 3);
+               bottom = lua_tointeger(L, 4);
+               break;
+            case 4:
+               right  = lua_tointeger(L, 3);
+               bottom = lua_tointeger(L, 4);
+               left   = lua_tointeger(L, 5);
+               break;
+         }
+         //
+         if (!self.widget)
+            return 0;
+         auto* widget = self.widget;
+         auto* task   = new tasks::s2m::lambda(false);
+         task->handler = [widget, top, right, bottom, left]() {
+            auto* layout = widget->layout();
+            if (!layout)
+               return;
+            layout->setContentsMargins(left, top, right, bottom);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t set_layout_stretch_at(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         auto* layout = self.widget->layout();
-         if (!layout)
-            return 0;
-         if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-            luaL_argcheck(L, lua_isstring (L, 2), 2, "axis name (\"row\" or \"col\" or \"column\") expected");
-            luaL_argcheck(L, lua_isinteger(L, 3), 3, "index (integer) expected");
-            luaL_argcheck(L, lua_isinteger(L, 4), 3, "stretch (integer) expected");
-            lua_settop(L, 4);
-            const char* axis = lua_tostring(L, 2);
-            int index = lua_tointeger(L, 3) - 1;
-            if (_stricmp(axis, "row") == 0) {
-               grid->setRowStretch(index, lua_tointeger(L, 4));
-               return 0;
-            }
-            if (_stricmp(axis, "col") == 0 || _stricmp(axis, "column") == 0) {
-               grid->setColumnStretch(index, lua_tointeger(L, 4));
-               return 0;
-            }
-            luaL_error(L, "axis name \"%s\" is unrecognized", axis);
-            __assume(0); // unreachable
+         //
+         QVector<QVariant> args;
+         auto argcount = lua_gettop(L) - 1;
+         for (int i = 0; i < argcount; ++i) {
+            args.push_back(cobb::lua::to_qt_variant(L, i + 2));
          }
-         if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
-            luaL_argcheck(L, lua_isinteger(L, 2), 2, "layout index (integer) expected");
-            luaL_argcheck(L, lua_isinteger(L, 3), 3, "stretch (integer) expected");
-            lua_settop(L, 3);
-            int index = lua_tointeger(L, 2) - 1;
-            box->setStretch(index, lua_tointeger(L, 3));
-            return 0;
+         //
+         auto* widget = self.widget;
+         auto* task   = new tasks::s2m::lambda(true); // IMPORTANT: this must be a blocking task, so that we can react to its results (e.g. report errors)
+         struct {
+            const char* text = nullptr;
+            int         arg  = 0;
+            const char* bad  = nullptr;
+         } error;
+         task->handler = [widget, args, &error]() {
+            auto* layout = widget->layout();
+            if (!layout)
+               return;
+            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+               if (args.size() < 3) {
+                  error.text = "this widget has a grid layout, so you must pass the axis name, an index, and a stretch value";
+                  return;
+               }
+               if (args[0].type() != QMetaType::QString) {
+                  error.arg  = 2;
+                  error.text = "axis name (\"row\" or \"col\" or \"column\") expected";
+                  return;
+               }
+               if (!cobb::lua::qt_variant_is_int(args[1])) {
+                  error.arg  = 3;
+                  error.text = "index (integer) expected";
+                  return;
+               }
+               if (!cobb::lua::qt_variant_is_int(args[2])) {
+                  error.arg = 4;
+                  error.text = "stretch (integer) expected";
+                  return;
+               }
+               auto axis    = args[0].toString();
+               auto index   = args[1].toInt() - 1;
+               auto stretch = args[2].toInt();
+               if (axis.compare("row", Qt::CaseInsensitive) == 0) {
+                  grid->setRowStretch(index, stretch);
+                  return;
+               }
+               if (axis.compare("col", Qt::CaseInsensitive) == 0 || axis.compare("column", Qt::CaseInsensitive) == 0) {
+                  grid->setColumnStretch(index, stretch);
+                  return;
+               }
+               error.text = "axis name \"%s\" is unrecognized";
+               error.bad  = axis.toUtf8();
+               return;
+            }
+            if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
+               if (!cobb::lua::qt_variant_is_int(args[0])) {
+                  error.arg  = 2;
+                  error.text = "index (integer) expected";
+                  return;
+               }
+               if (!cobb::lua::qt_variant_is_int(args[1])) {
+                  error.arg = 3;
+                  error.text = "stretch (integer) expected";
+                  return;
+               }
+               auto index   = args[0].toInt() - 1;
+               auto stretch = args[1].toInt();
+               box->setStretch(index, stretch);
+               return;
+            }
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         if (error.text) {
+            if (error.arg)
+               luaL_argcheck(L, false, error.arg, error.text);
+            luaL_error(L, error.text, error.bad);
          }
          return 0;
       }
@@ -367,6 +456,7 @@ namespace editor_script::wrappers::ui {
       { "on",                    &_methods::on },
       { "remove_event_listener", &_methods::remove_event_listener },
       { "set_layout",            &_methods::set_layout },
+      { "set_layout_margins",    &_methods::set_layout_margins },
       { "set_layout_stretch_at", &_methods::set_layout_stretch_at },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {

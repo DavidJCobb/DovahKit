@@ -768,10 +768,10 @@
     <ClCompile Include="helpers\lua\isempty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers\lua\push_qt_variant.cpp">
+    <ClCompile Include="editor\scripting\cross_thread_tasks\m2s\ui_event.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\scripting\cross_thread_tasks\m2s\ui_event.cpp">
+    <ClCompile Include="helpers\lua\qt_variant.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1574,10 +1574,10 @@
     <ClInclude Include="helpers\lua\isempty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\lua\push_qt_variant.h">
+    <ClInclude Include="editor\scripting\cross_thread_tasks\m2s\ui_event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\scripting\cross_thread_tasks\m2s\ui_event.h">
+    <ClInclude Include="helpers\lua\qt_variant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

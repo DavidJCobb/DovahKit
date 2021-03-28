@@ -15,36 +15,42 @@ local REF_TYPES = {
 
 local window = ui.window.new()
 window.title = "Count persistent refs"
-window:set_layout("grid")
+window:set_layout("v")
 
 local caption = ui.text.new("Counting persistent references. Please wait...")
 caption.alignment = "center center"
-window:add_child(caption, 1, 1, 1, 2)
+window:add_child(caption)
 
 local progress = ui.progress_bar.new()
 progress.alignment = "center center"
 progress.format    = "%p% (%v/%m)"
 progress.minimum   = 0
 progress.maximum   = 0
-window:add_child(progress, 2, 1, 1, 2)
+window:add_child(progress)
 
 local text_value_esm
 local text_value_esp
 do
+   local grid = ui.widget.new()
+   grid:set_layout("grid")
+   grid:set_layout_margins(0)
+   window:add_child(grid)
+
    local label = ui.text.new("Refs flagged as persistent:")
-   window:add_child(label, 3, 1)
+   grid:add_child(label, 1, 1)
    label = ui.text.new("Refs made persistent by ESP files:")
-   window:add_child(label, 4, 1)
-   --
+   grid:add_child(label, 2, 1)
+   
    text_value_esm = ui.text.new("0")
    text_value_esp = ui.text.new("0")
    text_value_esm.alignment = "right"
    text_value_esp.alignment = "right"
-   window:add_child(text_value_esm, 3, 2)
-   window:add_child(text_value_esp, 4, 2)
+   grid:add_child(text_value_esm, 1, 2)
+   grid:add_child(text_value_esp, 2, 2)
+
+   grid:set_layout_stretch_at("col", 1, 1) -- have to do this after the columns exist
+   grid:set_layout_stretch_at("col", 2, 0)
 end
-window:set_layout_stretch_at("col", 1, 1)
-window:set_layout_stretch_at("col", 2, 0)
 
 window:show()
 
