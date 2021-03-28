@@ -26,6 +26,7 @@ namespace editor_script {
             define_wrapper_metatable<ui::button>(L);
             define_wrapper_metatable<ui::progress_bar>(L);
             define_wrapper_metatable<ui::text>(L);
+            define_wrapper_metatable<ui::textbox>(L);
             define_wrapper_metatable<ui::window>(L);
       #pragma endregion
    }

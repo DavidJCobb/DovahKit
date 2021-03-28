@@ -327,20 +327,6 @@ void DovahKitScriptVM::_run_queued_functions() {
          lua_geti(this->lua_vm, -1, i + 1);
          editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
       }
-      /*
-      if (cobb::lua::isempty(this->lua_vm, -1)) {
-         lua_settop(this->lua_vm, start);
-         return;
-      }
-      assert(lua_type(this->lua_vm, index_list) == LUA_TTABLE);
-      //
-      // Execute each individual function in the list.
-      //
-      lua_pushnil(this->lua_vm);
-      while (lua_next(this->lua_vm, index_list) != 0) {
-         editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
-      }
-      */
    }
    lua_settop(this->lua_vm, start);
 }
