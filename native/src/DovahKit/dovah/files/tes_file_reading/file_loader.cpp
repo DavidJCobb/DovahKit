@@ -102,6 +102,21 @@ namespace dovah::tes_file_reading {
       return this->path.filename().string();
    }
 
+   bool file_loader::is_light() const noexcept {
+      if (this->header.is_light())
+         return true;
+      if (_stricmp(this->path.extension().string().data(), ".esl") == 0)
+         return true;
+      return false;
+   }
+   bool file_loader::is_master() const noexcept {
+      if (this->header.is_master())
+         return true;
+      if (_stricmp(this->path.extension().string().data(), ".esm") == 0)
+         return true;
+      return false;
+   }
+
    bool file_loader::load(const std::filesystem::path& new_path) {
       if (!new_path.empty())
          this->path = new_path;

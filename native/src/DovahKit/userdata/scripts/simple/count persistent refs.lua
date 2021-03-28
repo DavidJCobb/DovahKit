@@ -15,24 +15,44 @@ local REF_TYPES = {
 
 local window = ui.window.new()
 window.title = "Count persistent refs"
-window:set_layout("v")
+window:set_layout("grid")
 
 local caption = ui.text.new("Counting persistent references. Please wait...")
 caption.alignment = "center center"
-window:add_child(caption)
+window:add_child(caption, 1, 1, 1, 2)
 
 local progress = ui.progress_bar.new()
 progress.alignment = "center center"
 progress.format    = "%p% (%v/%m)"
 progress.minimum   = 0
 progress.maximum   = 0
-window:add_child(progress, 2, 0)
+window:add_child(progress, 2, 1, 1, 2)
+
+local text_value_esm
+local text_value_esp
+do
+   local label = ui.text.new("Refs flagged as persistent:")
+   window:add_child(label, 3, 1)
+   label = ui.text.new("Refs made persistent by ESP files:")
+   window:add_child(label, 4, 1)
+   --
+   text_value_esm = ui.text.new("0")
+   text_value_esp = ui.text.new("0")
+   text_value_esm.alignment = "right"
+   text_value_esp.alignment = "right"
+   window:add_child(text_value_esm, 3, 2)
+   window:add_child(text_value_esp, 4, 2)
+end
+window:set_layout_stretch_at("col", 1, 1)
+window:set_layout_stretch_at("col", 2, 0)
 
 window:show()
 
 --
 
-local count = 0
+local total     = 0
+local count_esm = 0
+local count_esp = 0
 local seen  = 0
 
 do
@@ -46,10 +66,28 @@ end
 function counter(form)
    seen = seen + 1
    if (form.flags & 0x400) ~= 0 then
-      count = count + 1
+      total     = total + 1
+      count_esm = count_esm + 1
+   else
+      local file = form:get_last_source_file()
+      if file then
+         if not file.is_master then
+            total     = total + 1
+            count_esp = count_esp + 1
+         end
+      else
+         --
+         -- Refs in hardcoded files should always be persistent, as there's only 
+         -- one: the player.
+         --
+         total     = total + 1
+         count_esm = count_esm + 1
+      end
    end
    if seen % 100 == 0 then
       progress.value = seen
+      text_value_esm.text = count_esm
+      text_value_esp.text = count_esp
    end
 end
 
@@ -57,6 +95,8 @@ for _, v in pairs(REF_TYPES) do
    dovah.for_each_form_of_type(v, counter)
 end
 progress.value = progress.maximum
+text_value_esm.text = count_esm
+text_value_esp.text = count_esp
 
 dovah.log_message("Done!")
-dovah.log_message("Persistent refs: %d / %d", count, seen)
+dovah.log_message("Persistent refs: %d / %d", total, seen)

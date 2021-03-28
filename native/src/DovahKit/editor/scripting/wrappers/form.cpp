@@ -10,10 +10,29 @@
 #include "../cross_thread_tasks/s2m/duplicate_form.h"
 #include "../cross_thread_tasks/s2m/renumber_form.h"
 
+#include "../../../dovah/files/tes_file_reading/file_loader.h"
+
 #include "papyrus/root.h"
 
 namespace {
    using namespace editor_script;
+   //
+   bool _stub_source_file_to_table(lua_State* L, const dovah::form_stub::owner_file_t* file) {
+      if (file->header.details & dovah::tes_file_header::detail_flag::is_hardcoded_dummy)
+         return false;
+      if (file->header.details & dovah::tes_file_header::detail_flag::is_none_stub_dummy)
+         return false;
+      lua_createtable(L, 0, 0);
+      //
+      lua_pushstring (L, file->get_filename().c_str());
+      lua_setfield   (L, -2, "filename");
+      lua_pushboolean(L, file->is_master());
+      lua_setfield   (L, -2, "is_master");
+      lua_pushboolean(L, file->is_light());
+      lua_setfield   (L, -2, "is_light");
+      //
+      return true;
+   }
    //
    namespace _methods {
       luastackchange_t delete_(lua_State* L) {
@@ -115,6 +134,41 @@ namespace {
          if (!self.stub)
             return 0;
          editor_script::push_form_type_to_stack(L, self.stub->formType);
+         return 1;
+      }
+      luastackchange_t get_last_source_file(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub) {
+            lua_pushnil(L);
+            return 1;
+         }
+         auto* stub = self.stub;
+         auto* file = stub->get_file_at_index(-1);
+         if (!file) {
+            lua_pushnil(L);
+            return 1;
+         }
+         if (_stub_source_file_to_table(L, file))
+            return 1;
+         lua_pushnil(L);
+         return 1;
+      }
+      luastackchange_t get_source_file_list(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
+         if (!self.stub)
+            return 0;
+         auto* stub = self.stub;
+         auto  size = stub->source_file_count();
+         lua_createtable(L, size, 0);
+         auto  tbli = lua_gettop(L);
+         int   j    = 0;
+         for (decltype(size) i = 0; i < size; ++i) {
+            const auto* file = stub->get_file_at_index(i);
+            if (_stub_source_file_to_table(L, file)) {
+               lua_rawseti(L, tbli, j);
+               ++j;
+            }
+         }
          return 1;
       }
       luastackchange_t get_user_forms(lua_State* L) {
@@ -230,11 +284,13 @@ namespace {
 
 namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_methods = {
-      { "delete",            &_methods::delete_ },
-      { "duplicate",         &_methods::duplicate },
-      { "form_id_to_string", &_methods::form_id_to_string },
-      { "get_form_type",     &_methods::get_form_type },
-      { "get_user_forms",    &_methods::get_user_forms },
+      { "delete",               &_methods::delete_ },
+      { "duplicate",            &_methods::duplicate },
+      { "form_id_to_string",    &_methods::form_id_to_string },
+      { "get_form_type",        &_methods::get_form_type },
+      { "get_last_source_file", &_methods::get_last_source_file },
+      { "get_source_file_list", &_methods::get_source_file_list },
+      { "get_user_forms",       &_methods::get_user_forms },
    };
    /*static*/ const std::initializer_list<luaL_Reg> form::metatable_getters = {
       { "editor_id", &_getters::editor_id },

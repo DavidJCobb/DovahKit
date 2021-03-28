@@ -42,7 +42,8 @@ namespace dovah::tes_file_reading {
          //
          inline bool is_aborted() const noexcept { return this->aborted; }
          //
-         inline bool is_light() const noexcept { return this->header.is_light(); }
+         bool is_light() const noexcept;  // checks header and file extension
+         bool is_master() const noexcept; // checks header and file extension
          inline bool uses_string_table() const noexcept { return this->header.flags & flag::localized_string_table; }
          //
          bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any). calling this while a load is already in progress is undefined behavior

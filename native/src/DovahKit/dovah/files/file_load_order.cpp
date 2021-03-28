@@ -2471,7 +2471,7 @@ namespace dovah {
       //
       auto old_active_file_prefix = this->file_prefix_for(*this->active_file);
       bool was_originally_light   = this->active_file->is_light();
-      bool save_as_light_plugin   = cfg.file_flags & tes_file_flag::light;
+      bool save_as_light_plugin   = (cfg.file_flags & tes_file_flag::light) || _stricmp(desired_filename.extension().string().data(), ".esl") == 0;
       if (cfg.output_game != game::skyrim_special)
          save_as_light_plugin = false;
       if (save_as_light_plugin && !was_originally_light) {
