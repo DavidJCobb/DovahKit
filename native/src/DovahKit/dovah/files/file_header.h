@@ -18,6 +18,8 @@ namespace dovah {
             has_onam = 0x0004,
             is_hardcoded_dummy = 0x0008, // used by file_reader
             is_none_stub_dummy = 0x0010, // used by file_reader
+            file_extension_forces_light  = 0x0020,
+            file_extension_forces_master = 0x0040,
          };
       };
       using detail_flag_t = std::underlying_type_t<detail_flag::type>;
@@ -25,7 +27,7 @@ namespace dovah {
       using flag = tes_file_flag;
       //
       uint32_t      flags   = 0;
-      detail_flag_t details = 0;
+      detail_flag_t details = 0; // application-/backend-specific flags; these are not part of a saved file
       uint16_t      record_version = 0;
       float         file_version   = 0.94F;
       uint32_t      record_and_group_count = 0;
@@ -39,7 +41,15 @@ namespace dovah {
       uint32_t subINCC;
       // TODO: SCRN
       //
-      inline bool is_light() const noexcept { return this->flags & flag::light; }
-      inline bool is_master() const noexcept { return this->flags & flag::master; }
+      inline bool is_light() const noexcept {
+         if (this->flags & flag::light)
+            return true;
+         return this->details & detail_flag::file_extension_forces_light;
+      }
+      inline bool is_master() const noexcept {
+         if (this->flags & flag::master)
+            return true;
+         return this->details & detail_flag::file_extension_forces_master;
+      }
    };
 }

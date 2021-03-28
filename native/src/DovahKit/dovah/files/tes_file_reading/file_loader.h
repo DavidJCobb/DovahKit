@@ -42,8 +42,8 @@ namespace dovah::tes_file_reading {
          //
          inline bool is_aborted() const noexcept { return this->aborted; }
          //
-         bool is_light() const noexcept;  // checks header and file extension
-         bool is_master() const noexcept; // checks header and file extension
+         inline bool is_light()  const noexcept { return this->header.is_light(); }
+         inline bool is_master() const noexcept { return this->header.is_master(); }
          inline bool uses_string_table() const noexcept { return this->header.flags & flag::localized_string_table; }
          //
          bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any). calling this while a load is already in progress is undefined behavior
@@ -53,11 +53,17 @@ namespace dovah::tes_file_reading {
       protected:
          std::filesystem::path path;
          cobb::mapped_file     file;
+         struct {
+            bool light  = false;
+            bool master = false;
+         } effective_flags;
          std::vector<file_threaded_part_loader_base*> threads; // array elements should never be nullptr after the instance is constructed.
          bool aborted = false; // TODO: make atomic?
          //
          bool _open_mapped_file();
          bool _load_header();
+         //
+         void _set_filename(const std::filesystem::path& desired, const std::filesystem::path& actual);
          //
          void _start_threads();
          void _wait_for_threads();
@@ -85,7 +91,7 @@ namespace dovah::tes_file_reading {
                inline const void* data_at(std::ptrdiff_t o) const noexcept {
                   return this->wrapped.file.data_at(o);
                }
-               void update_path(const std::filesystem::path&) const noexcept;
+               void update_path(const std::filesystem::path& desired, const std::filesystem::path& actual) const noexcept;
          };
          save_interface get_save_interface(const tes_file_writing::file_writer&) noexcept { return save_interface(*this); }
          interface_t    get_load_interface(const file_or_file_part_loader&) noexcept { return this->load_interface; }

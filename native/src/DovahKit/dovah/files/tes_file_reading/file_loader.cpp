@@ -56,6 +56,26 @@ namespace dovah::tes_file_reading {
       return total / count;
    }
    //
+   void file_loader::_set_filename(const std::filesystem::path& desired, const std::filesystem::path& actual) {
+      //
+      // The "actual" path is the path the file is loading from, while the "desired" path is where we want 
+      // the file to be. When we're loading a new file, these are the same path. However, when we save a 
+      // file, we save it to a temporary file and then rename it to the desired path; if the rename fails, 
+      // then the desired and actual paths differ.
+      //
+      // A file's name can influence whether it is treated as a light or master file. For the purposes of 
+      // handling that behavior, we should use the file's desired name to track that status.
+      //
+      this->path = actual;
+      //
+      this->header.details &= ~(tes_file_header::detail_flag::file_extension_forces_light | tes_file_header::detail_flag::file_extension_forces_master);
+      auto ext = desired.extension().string();
+      if (_stricmp(ext.data(), "esl") == 0)
+         this->header.details |= tes_file_header::detail_flag::file_extension_forces_light | tes_file_header::detail_flag::file_extension_forces_master;
+      else if (_stricmp(ext.data(), "esm") == 0)
+         this->header.details |= tes_file_header::detail_flag::file_extension_forces_master;
+   }
+   //
    void file_loader::_start_threads() {
       for (auto* thread : this->threads)
          thread->start();
@@ -102,24 +122,9 @@ namespace dovah::tes_file_reading {
       return this->path.filename().string();
    }
 
-   bool file_loader::is_light() const noexcept {
-      if (this->header.is_light())
-         return true;
-      if (_stricmp(this->path.extension().string().data(), ".esl") == 0)
-         return true;
-      return false;
-   }
-   bool file_loader::is_master() const noexcept {
-      if (this->header.is_master())
-         return true;
-      if (_stricmp(this->path.extension().string().data(), ".esm") == 0)
-         return true;
-      return false;
-   }
-
    bool file_loader::load(const std::filesystem::path& new_path) {
       if (!new_path.empty())
-         this->path = new_path;
+         this->_set_filename(new_path, new_path);
       else if (this->path.empty()) {
          detailed_notice error;
          error.code = notice_code::no_filename_specified;
@@ -511,8 +516,8 @@ namespace dovah::tes_file_reading {
    }
 
    #pragma region Save interface
-   void file_loader::save_interface::update_path(const std::filesystem::path& p) const noexcept {
-      this->wrapped.path = p;
+   void file_loader::save_interface::update_path(const std::filesystem::path& desired, const std::filesystem::path& actual) const noexcept {
+      this->wrapped._set_filename(desired, actual);
    }
    #pragma endregion
 }

@@ -685,7 +685,7 @@ namespace dovah::tes_file_writing {
       if (!code) {
          this->path = desired;
       }
-      this->source.get_save_interface(*this).update_path(this->path); // if the rename fails, then we want to set the saved file's path to the file path used when saving
+      this->source.get_save_interface(*this).update_path(desired, this->path); // if the rename fails, then we want to set the saved file's path to the file path used when saving
       return !code;
    }
 
