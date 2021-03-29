@@ -8,8 +8,8 @@ namespace cobb::lua {
       lua_pushnil(L);  // key; popped by next call
       if (lua_next(L, table_index) != 0) {
          lua_settop(L, pos); // two pushes if next was non-zero
-         return true;
+         return false;
       }
-      return false;
+      return true;
    }
 }

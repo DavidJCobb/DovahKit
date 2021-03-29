@@ -49,6 +49,8 @@ class DovahKitScriptVM : public QObject {
       // event listener, so that the scripted UI isn't blocked from updating by the task.
       static constexpr char* queued_function_registry_key = "dovah.internals.deferred_execution_queue";
 
+      enum class ui_lock_override_state { unchanged, yes, no };
+
    protected:
       DovahKitScriptVM();
       ~DovahKitScriptVM();
@@ -101,6 +103,7 @@ class DovahKitScriptVM : public QObject {
       struct {
          std::vector<QDialog*> windows;
          std::vector<QWidget*> orphans;
+         std::unordered_map<QWidget*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection;
       } widgets;
       struct {
          _task_queue read;
@@ -117,6 +120,7 @@ class DovahKitScriptVM : public QObject {
       std::thread thread;
       QTimer      main_thread_tick_timer;
       std::atomic<unsigned int> pending_ui_event_count = 0;
+      ui_lock_override_state    ui_lock_override = ui_lock_override_state::unchanged;
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }
@@ -267,7 +271,26 @@ class DovahKitScriptUIListenerInterface {
       void remove_all_listeners(QWidget&);
 
       // The script thread calls this in response to the main thread firing an evnet.
-      void fire_event(QWidget&, const char* event_name, const std::vector<QVariant> params);
+      void fire_event(QWidget&, const char* event_name, const char* listener_name, const std::vector<QVariant> params);
 
-      void receive_event_from_main_thread(QWidget&, const char* event_name, const std::vector<QVariant> params);
+      void receive_event_from_main_thread(QWidget&, const char* event_name, const char* listener_name, const std::vector<QVariant> params);
+
+   protected:
+      // Helper function for forwarding the arguments of a Qt signal into Lua verbatim. There are a limited 
+      // number of cases where the templates don't resolve properly for unknown reasons, and this can result 
+      // in arguments not being forwarded, so if you see that happening you'll just have to specify the 
+      // template arguments manually.
+      template<typename widget_t, typename signal_t, typename... Args> void _connect_event(widget_t& widget, signal_t signal, const char* event_name, const char* listener_name) {
+         auto& vm    = this->vm;
+         auto& entry = vm.widgets.connections[(QWidget*)&widget][event_name][listener_name];
+         QObject::disconnect(entry);
+         entry = QObject::connect(&widget, signal, &vm, _event_forwarding_lambda<Args...>(widget, event_name, listener_name));
+      }
+
+      // Helper function for wiring a Qt signal into Lua, if you've set up the QObject connection yourself. 
+      // Doing it yourself allows you to specify custom arguments for Lua.
+      void _connect_event(QMetaObject::Connection connection, QWidget&, const char* event_name, const char* listener_name);
+
+      // Basically a glorified switch-case pyramid, to call (_connect_event) with the right Qt signal.
+      void _register_event(QWidget& widget, const char* event_name, const char* listener_name);
 };

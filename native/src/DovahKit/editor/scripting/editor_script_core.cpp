@@ -327,12 +327,14 @@ void DovahKitScriptVM::_run_queued_functions() {
       for (int i = 0; i < count; ++i) {
          lua_geti(this->lua_vm, -1, i + 1);
          editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
+         this->ui_lock_override = ui_lock_override_state::unchanged;
       }
    }
    lua_settop(this->lua_vm, start);
 }
 void DovahKitScriptVM::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
+   this->ui_lock_override = ui_lock_override_state::unchanged;
    //
    do {
       this->task_queues.s2m.wait_until_empty(); // these can be non-blocking + fire-and-forget
@@ -473,6 +475,8 @@ void DovahKitScriptVM::mainThreadLoop() {
 }
 
 bool DovahKitScriptVM::eventFilter(QObject* object, QEvent* event) {
+   if (this->ui_lock_override != ui_lock_override_state::unchanged)
+      return this->ui_lock_override == ui_lock_override_state::no;
    if (!this->pending_ui_event_count)
       return false;
    return true;
@@ -811,72 +815,106 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
 //
 
 namespace {
-   const char* signal_name_for_event(const QWidget& widget, const char* event_name) {
-      if (qobject_cast<const QPushButton*>(&widget)) {
-         if (_stricmp(event_name, "OnActivate") == 0)
-            return SIGNAL("clicked");
-         if (_stricmp(event_name, "OnCheckStateChange") == 0)
-            return SIGNAL("toggled");
+   struct _event_widget {
+      const QMetaObject* const meta;
+      std::vector<const char*> events;
+      //
+      _event_widget(const QMetaObject* const m, std::initializer_list<const char*> e) : meta(m), events(e) {}
+   };
+   std::array _events_by_widget = {
+      _event_widget(&QPushButton::staticMetaObject,
+         {
+            "OnActivate",         // The button was clicked (or interacted with analogously via another input device).
+            "OnCheckStateChange", // The button is checkable and its check state changed.
+         }
+      ),
+      _event_widget(&QLineEdit::staticMetaObject,
+         {
+            "OnChanged",    // The textbox's value was previously altered, and the user hit Enter or moved focus away from the textbox.
+            "OnKeyPressed", // The textbox's value was altered by a keypress.
+         }
+      ),
+   };
+
+   bool event_name_is_valid(const QWidget& widget, const char* event_name) {
+      for (auto& entry : _events_by_widget) {
+         if (!entry.meta->inherits(widget.metaObject()))
+            continue;
+         for (auto* name : entry.events) {
+            if (_stricmp(event_name, name) == 0)
+               return true;
+         }
+         return false;
       }
-      return nullptr;
+      return false;
    }
 
+   // Custom lambda struct, used as the slot handler for the Qt signal/slot connections we create 
+   // when routing Qt events into Lua.
    template<typename... Args> struct _event_forwarding_lambda {
-      _event_forwarding_lambda(QWidget& w, const char* n) : widget(w), event_name(n) {}
+      _event_forwarding_lambda(QWidget& w, const char* n, const char* l) : widget(w), event_name(n), listener_name(l) {}
 
       QWidget& widget;
       const std::string event_name;
+      const std::string listener_name;
 
       void operator()(Args&&... args) {
          //
          // Runs on the main thread.
          //
-         DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(this->widget, this->event_name.c_str(), { std::forward<Args>(args)... });
+         DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(this->widget, this->event_name.c_str(), this->listener_name.c_str(), { std::forward<Args>(args)... });
       }
    };
-
-   void _register_event(QWidget& widget, const char* event_name) {
-      //
-      // Runs on the script thread.
-      //
-      auto& vm = DovahKitScriptVM::get();
-      if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
-         if (_stricmp(event_name, "OnActivate") == 0) {
-            QObject::connect(casted, &QPushButton::clicked, &vm, _event_forwarding_lambda(widget, event_name), Qt::ConnectionType::UniqueConnection);
-            return;
-         }
-         if (_stricmp(event_name, "OnCheckStateChange") == 0) {
-            QObject::connect(casted, &QPushButton::toggled, &vm, _event_forwarding_lambda(widget, event_name), Qt::ConnectionType::UniqueConnection);
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QLineEdit*>(&widget)) {
-         if (_stricmp(event_name, "OnChanged") == 0) {
-            QObject::connect(
-               casted,
-               &QLineEdit::editingFinished,
-               &vm,
-               [casted]() {
-                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnChanged", { casted->text() });
-               },
-               Qt::ConnectionType::UniqueConnection
-            );
-            return;
-         }
-         if (_stricmp(event_name, "OnInputRejected") == 0) {
-            QObject::connect(casted, &QLineEdit::inputRejected, &vm, _event_forwarding_lambda(widget, event_name), Qt::ConnectionType::UniqueConnection);
-            return;
-         }
-         if (_stricmp(event_name, "OnKeyPressed") == 0) {
-            // gotta manually specify the template args. guess it doesn't like const references for some reason.
-            QObject::connect(casted, &QLineEdit::textEdited, &vm, _event_forwarding_lambda<const QString&>(widget, event_name), Qt::ConnectionType::UniqueConnection);
-            return;
-         }
+}
+void DovahKitScriptUIListenerInterface::_connect_event(QMetaObject::Connection connection, QWidget& widget, const char* event_name, const char* listener_name) {
+   auto& vm    = DovahKitScriptVM::get();
+   auto& entry = vm.widgets.connections[&widget][event_name][listener_name];
+   QObject::disconnect(entry);
+   entry = connection;
+}
+void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const char* event_name, const char* listener_name) {
+   //
+   // Runs on the script thread.
+   //
+   auto& vm = DovahKitScriptVM::get();
+   if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
+      if (_stricmp(event_name, "OnActivate") == 0) {
+         this->_connect_event(*casted, &QPushButton::clicked, event_name, listener_name);
+         return;
+      }
+      if (_stricmp(event_name, "OnCheckStateChange") == 0) {
+         this->_connect_event(*casted, &QPushButton::toggled, event_name, listener_name);
+         return;
+      }
+   } else if (auto* casted = qobject_cast<QLineEdit*>(&widget)) {
+      if (_stricmp(event_name, "OnChanged") == 0) {
+         std::string ln;
+         this->_connect_event(
+            QObject::connect(casted, &QLineEdit::editingFinished, &vm,
+               [casted, ln]() {
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { casted->text() });
+               }
+            ),
+            widget, event_name, listener_name
+         );
+         return;
+      }
+      if (_stricmp(event_name, "OnInputRejected") == 0) {
+         this->_connect_event(*casted, &QLineEdit::inputRejected, event_name, listener_name);
+         return;
+      }
+      if (_stricmp(event_name, "OnKeyPressed") == 0) {
+         // gotta manually specify the template args. guess it doesn't like const references for some reason.
+         //this->_connect_event(*casted, &QLineEdit::textEdited, event_name, listener_name);
+         this->_connect_event<QLineEdit&, decltype(&QLineEdit::textEdited), const QString&>(*casted, &QLineEdit::textEdited, event_name, listener_name);
+         return;
       }
    }
 }
 
 void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char* event_name, const char* listener_name, int listener_index) {
-   auto* signal_name = signal_name_for_event(widget, event_name);
+   if (!event_name_is_valid(widget, event_name))
+      return;
    //
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
@@ -905,14 +943,14 @@ void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char
    if (empty) {
       lua_pop(L, 1);
       lua_createtable(L, 0, 1);
-      lua_pushstring(L, event_name);
-      lua_pushvalue(L, si_funcs);
+      lua_pushstring (L, event_name);
+      lua_pushvalue  (L, si_funcs);
       lua_rawset(L, si_events);
       //
-      _register_event(widget, event_name);
+      this->_register_event(widget, event_name, listener_name);
    }
    lua_pushstring(L, listener_name);
-   lua_pushvalue(L, listener_index);
+   lua_pushvalue (L, listener_index);
    lua_rawset(L, si_funcs);
    //
    lua_settop(L, start);
@@ -946,9 +984,15 @@ void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const c
       lua_pushnil(L);
       lua_setfield(L, si_storage, event_name);
       //
-      auto* signal_name = signal_name_for_event(widget, event_name);
-      if (signal_name)
-         widget.disconnect(signal_name);
+      // Disconnect the signal:
+      //
+      auto& events = vm.widgets.connections[&widget][event_name];
+      #pragma warning(suppress: 6387) // listener_name should never be nullptr, so don't bother me about it
+      auto  it     = events.find(listener_name);
+      if (it != events.end()) {
+         QObject::disconnect(it->second);
+         events.erase(it);
+      }
    }
    //
    lua_settop(L, start);
@@ -966,8 +1010,9 @@ void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
    //
    lua_settop(L, start);
 }
-void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const std::vector<QVariant> params) {
-   auto* signal_name = signal_name_for_event(widget, event_name);
+void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant> params) {
+   if (!event_name_is_valid(widget, event_name))
+      return;
    //
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
@@ -1002,16 +1047,17 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       for (auto& p : params)
          argcount += cobb::lua::push_qt_variant(L, p);
       editor_script::util::safe_call(L, argcount, 0); // pops (nv), since that's the function
+      this->vm.ui_lock_override = DovahKitScriptVM::ui_lock_override_state::unchanged;
    }
    --this->vm.pending_ui_event_count;
 }
 
-void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& widget, const char* event_name, const std::vector<QVariant> params) {
+void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant> params) {
    ++this->vm.pending_ui_event_count;
    //
    // Called by the main thread; sends a message to the script thread.
    //
-   auto* task  = new editor_script::tasks::m2s::ui_event(widget, event_name, params);
+   auto* task  = new editor_script::tasks::m2s::ui_event(widget, event_name, listener_name, params);
    //
    auto& tq    = DovahKitScriptVM::get().task_queues.m2s.normal;
    auto  guard = std::lock_guard(tq.lock);

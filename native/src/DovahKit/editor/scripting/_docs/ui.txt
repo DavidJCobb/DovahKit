@@ -37,7 +37,7 @@ can avoid  any visual changes  to the scripted  UI when we're locking  it down,
 whereas if we just did  (window:setEnabled(false)),  the windows would grey out
 seemingly at random.
 
-There's one more layer that goes into this, though.
+There's another layer that goes into this, though.
 
 Consider a basic script that counts all of the persistent ObjectReference forms 
 in the loaded content: the instant it's run, it creates a dialog box containing 
@@ -72,3 +72,21 @@ be done  instantly), and defer the lengthy operation until after our  listener.
 That way, the  scripted UI doesn't  wait on the  lengthy operation  itself: the 
 button disables properly, but the window itself (and any other controls that we 
 want to be usable) remains interactable.
+
+However, if you use this to perform UI tasks while the UI isn't blocked, how do 
+we prevent other race conditions? Consider something like this:
+
+   button:on("OnActivated", "first", function()
+      dovah.log_message("First listener!")
+   end)
+
+   dovah.queue_deferred_function(function()
+      button.enabled = false
+      button:on("OnActivated", "second", function()
+         dovah.log_message("Second listener!")
+      end)
+   end)
+   
+If the user clicks the button at some point before the "enabled" field actually 
+gets handled, we want to make sure that only the first listener actually fires. 
+We can do this by using a different Qt connection for each listener.
