@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QWidget>
 #include "cross_thread_tasks/base.h"
+#include "ui/event.h"
 #include "wrapper.h"
 
 namespace dovah {
@@ -95,8 +96,7 @@ class DovahKitScriptVM : public QObject {
       struct {
          _task_queue s2m; // script-to-main
          struct { // main-to-script
-            _task_queue urgent; // urgent messages MUST NOT trigger Lua code to execute!
-            _task_queue normal; // TODO: UI signals should feed into this queue to trigger Lua code, or we should make a separate queue to replace this
+            _task_queue urgent; // urgent messages. these MUST NOT trigger Lua code to execute!
          } m2s;
       } task_queues;
       //
@@ -106,9 +106,9 @@ class DovahKitScriptVM : public QObject {
          std::unordered_map<QWidget*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection;
       } widgets;
       struct {
-         _task_queue read;   // script-to-main; always blocks
-         _task_queue write;  // script-to-main; may block
-         _task_queue events; // main-to-script
+         _task_queue read;  // script-to-main; always blocks
+         _task_queue write; // script-to-main; may block
+         editor_script::ui_event_queue events; // main-to-script
       } ui_queues;
       
    public:
@@ -121,7 +121,7 @@ class DovahKitScriptVM : public QObject {
       std::thread thread;
       QTimer      main_thread_tick_timer;
       std::atomic<unsigned int> pending_ui_event_count = 0;
-      ui_lock_override_state    ui_lock_override = ui_lock_override_state::unchanged;
+      ui_lock_override_state    ui_lock_override       = ui_lock_override_state::unchanged;
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }

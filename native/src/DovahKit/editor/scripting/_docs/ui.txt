@@ -1,92 +1,165 @@
 
-UI scripting relies on  two message queues: one for  "read" operations, and one 
-for "write" operations. Read operations  always block the calling script, since 
-the script needs to  actually receive the values it asked  for before execution 
-can resume;  but write operations can be non-blocking. If, however,  the script 
-attempts a read operation  while any  write operations  are pending, the script 
-will then be blocked until all write operations  and the read operation finish. 
-This means that "write" operations block the script as little as possible.
+DovahKit's scripting API allows Lua scripts to create UI windows and manipulate 
+them, in order to  display information  and ask for input.  How does this work? 
+What challenges did we run into when implementing it>?
 
-But that just applies to when scripts access data on their own prerogative, and 
-there's another  layer to everything: UI events. Scripts must be  able to react 
-to events like button  presses and form control state changes.  How do we allow 
-for that when the script is running on a separate thread from the UI?
 
-We're quite lucky that QObject::connect  is thread-safe; that allows the script 
-VM internals to attach event listeners to widgets from the script thread. We do 
-still end  up actually having those listeners fire on the main thread,  so what 
-we do is send a main-to-script-thread task to forward the event into Lua. Since 
-Lua executes  asynchronously from the  main thread, however,  how do we prevent 
-the script itself from being vulnerable to race conditions?
+=== THE BASICS OF COMMUNICATION ===============================================
 
-Consider the case of a scripted dialog box where a button triggers some complex 
-and lengthy operation. Clicking the button should disable it, perform the task, 
-and then enable  the button again. However, if we don't  implement engine-level 
-safeguards, then it can be possible for a user to mash the button and send more 
-than one press through before the script is able to disable the button.
+There are three  different message queues for the UI: two via  which the script 
+sends requests to the main  thread, and one via which  the main thread sends UI 
+events to the script thread.
 
-We're quite lucky  that Qt gives us a way to deal with this:  we can use "event 
-filters"  to intercept all UI events  that hit a given QObject. The VM  core is 
-already a QObject, so we can  register it as the  event filter for all scripted 
-widgets and windows. If we keep track of how many UI events are pending -- that 
-is, how many  events were sent from the  main thread to the script  thread, but 
-haven't finished  executing all of their Lua handlers -- then we  can block all 
-events and consequently all  user interaction with  the scripted UI whenever an 
-event is still being responded to. A nice bonus to doing things this way is, we 
-can avoid  any visual changes  to the scripted  UI when we're locking  it down, 
-whereas if we just did  (window:setEnabled(false)),  the windows would grey out
-seemingly at random.
+The "read" queue allows the script  thread to request information from the main 
+thread; this is  used for all getter operations. All tasks in  this queue block 
+the sender, as you might  expect: if the script is  asking for a value, then it 
+must wait to receive a response.
 
-There's another layer that goes into this, though.
+The "write" queue allows the script  thread to modify UI state in some way. The 
+tasks in this queue can decide whether or not to block their senders. They will 
+typically block the sender under the following conditions:
 
-Consider a basic script that counts all of the persistent ObjectReference forms 
-in the loaded content: the instant it's run, it creates a dialog box containing 
-a progress bar, and it animates the progress bar as it runs. Because the script 
-runs off the main thread, it's not capable of hanging or lagging the editor; it 
-can run at full tilt  and blindly write to the progress bar,  without having to 
-worry about editor stability. (This is in opposition to things like JavaScript, 
-where scripts have to use setTimeout  and other mechanisms to "take breaks" and 
-avoid hanging a web page.)
+ - The operation  returns a result, so  the script thread  must spin until that 
+   result is ready. Creating widgets would be one common example.
 
-The problem, however,  is that if we trigger a lengthy  operation from within a 
-UI event listener, we'll end up locking  the entire UI for the duration of that 
-operation. The solution is to give Lua a means to defer the execution of one of 
-its functions until after all listeners  have finished firing. We offer this in 
-the form of the (dovah.queue_deferred_function) API. The typical pattern, then, 
-would be something like this:
+ - The operation  may throw Lua errors  depending on UI state,  which cannot be 
+   checked  in advance  from the script thread and must  be checked in the main 
+   thread. For that reason, the script  thread must spin until the operation is 
+   complete and it knows whether to throw an error.
 
-   function some_long_operation()
-      --
-      -- ...
-      --
-      button.enabled = true
-   end
+"Write" tasks  should generally  avoid accessing  any UI state  from the script 
+thread. For example, if the behavior of a Lua API varies depending on UI state, 
+that variation should  occur entirely within the main-thread  code for the API.
+
+Finally, we have  the "event" queue, which the main thread uses  to send events 
+to the script thread.  This queue has  some special  considerations. The script 
+thread  cannot simply process tasks *in* the queue. Rather, it must  move these 
+tasks out of the queue and *then* process them. This is because each thread has 
+to hit a mutex while working with the queue; if the script thread processes the 
+"event" tasks while they're in the queue,  then it has to keep the queue locked 
+for the entire  time that the Lua-side event listeners are  running... and that 
+means that if the main thread tries  to send another event during that time, it 
+will hit the locked mutex and grind to a halt, such that the Lua script freezes 
+the program -- exactly what our threading  model is intended to prevent. We can 
+solve this problem instantly and  effortlessly by just having the script thread 
+lock only long enough to transfer tasks  out of the queue, and then unlock, and 
+then process those tasks locally.
+
+
+=== UI LOCKING ================================================================
+
+Here's a nasty  edge-case that we want to avoid. Suppose a script  has a button 
+that, when pressed, triggers  some long-running  operation. The script wants to 
+disable  the button the instant it's pressed in order to prevent the  user from 
+double-clicking and  queuing this long-running operation to  run multiple times 
+in a row. The code for that, then, might look like this:
 
    button:on("OnActivated", "", function()
       button.enabled = false
-      dovah.queue_deferred_function(some_long_operation)
-   end)
-    
-So we disable the button  immediately (and we can do  anything else that has to 
-be done  instantly), and defer the lengthy operation until after our  listener. 
-That way, the  scripted UI doesn't  wait on the  lengthy operation  itself: the 
-button disables properly, but the window itself (and any other controls that we 
-want to be usable) remains interactable.
+      
+      -- some long operation ...
 
-However, if you use this to perform UI tasks while the UI isn't blocked, how do 
-we prevent other race conditions? Consider something like this:
-
-   button:on("OnActivated", "first", function()
-      dovah.log_message("First listener!")
+      button.enabled = true
    end)
 
-   dovah.queue_deferred_function(function()
+If we don't have some way to lock the UI down while events are processing, then 
+the script  is vulnerable  to a race condition: if  the user mashes  the button 
+quickly enough, they may be able to  sneak in a second OnActivated event before 
+the Lua event  listener can disable  the button  in response to  the first such 
+event. So, we have to lock down the UI.
+
+Fortunately, Qt  offers a facility for this: QObject::eventFilter.  Any QObject 
+can register itself  to serve as an "event filter" for any  other QObject, with 
+this allowing the "filter" object  to screen all  QEvents inbound to the target 
+object. QEvents are used internally to  trigger large swaths of the built-in UI 
+behaviors, so  blocking these allows us to effectively lock down  individual UI 
+windows and  controls from  all input,  without having  to disable  them (which 
+would make them display as greyed out).
+
+The naive  approach, then,  is to lock down the scripted  UI windows  while any 
+event listener is running. However, that exposes us to another problem. Looking 
+back at the code sample above, we see that a long-running operation is executed 
+inside of the button's OnActivated event listener. This means that the script's 
+UI will be fully locked for the duration of that operation: basic interactions, 
+like minimizing or moving the window, still work, which is fortunate, but other 
+interactions (like viewing tooltips on widgets) will not. That's not ideal.
+
+The optimal way to address this would be to allow the script to decide when the 
+UI is locked or unlocked. We can have  the UI be locked by default within event 
+listeners, but we  can allow the script to  manually lock  or unlock the UI. We 
+treat that as an "override" on the normal lock state, and we clear the override 
+whenever we return back from Lua to C++. Applying that to the code sample above 
+gives us this:
+
+   button:on("OnActivated", "", function()
       button.enabled = false
-      button:on("OnActivated", "second", function()
-         dovah.log_message("Second listener!")
-      end)
+      ui.unlock()
+
+      -- some long operation ...
+
+      ui.lock()
+      button.enabled = true
    end)
-   
-If the user clicks the button at some point before the "enabled" field actually 
-gets handled, we want to make sure that only the first listener actually fires. 
-We can do this by using a different Qt connection for each listener.
+
+(It's marginally more complicated than just "locking the UI within event listen-
+ers." We lock the UI while any event is unprocessed -- so, from the moment that 
+the main  thread sends  an event to the script thread,  to the moment  that the 
+script thread has fully processed  that event,  including running Lua listeners 
+to completion if appropriate. This is needed to ensure that events process in a 
+sequential manner; a script that wants  to mutate a textbox's value in response 
+to keypress events, for example, will typically need to be able to fully do its 
+job in response to one  keypress before another  keypress is possible. Wherever 
+this is not the case, a listener can manually unlock the UI.)
+
+There are a few  considerations that go into this. Lua  is single-threaded, and 
+we don't do anything to  work around this. That  means that Lua event listeners 
+will still be delayed until the long-running operation finishes: the UI remains 
+responsive, but the script has to wait. If, for example, you had a textbox that 
+with an OnKeyPressed listener, that listener  *would* respond to every keypress 
+performed by the user while the UI is  unlocked... but only after the very long 
+script operation  finishes. The script's reaction to those  keypresses would be 
+delayed. This is something that script authors need to be aware of.
+
+There's a backend  consideration here as  well. When the UI  is unlocked from a 
+Lua event  listener, it becomes possible for the main thread to send  events to 
+the script thread *while* the script thread is already processing other events. 
+This is the source of the  mutex woes we talked about in  the previous section, 
+which we worked around by making the  "event" queue behave differently from the 
+other UI queues.
+
+There's one last little catch to all of  this. If we block *every* QEvent, then 
+the UI may not  fully update in response to state changes  triggered by scripts 
+while the UI is locked.  For example,  if we block the  "QEvent::EnabledChange" 
+event type,  then running the above  script snippet would result  in the button 
+appearing to be disabled even after the code finishes, because the Qt internals 
+won't have  properly reacted to the enable  state changing from  false to true. 
+Our QObject::eventFilter function needs  to avoid blocking events that Qt needs 
+to properly maintain state, but it also needs to block all events that can lead 
+to a Lua event listener being fired.  As far as I know, these two categories do 
+not overlap.
+
+To recap the stuff that's important for script authors:
+
+ - The UI is locked by  default during a scripted event  listener (and whenever 
+   any UI event is yet to be processed.)
+
+ - The UI's lock state can be temporarily overridden by the script.
+
+ - The script does not need to reset the lock state; we'll do that for it if we 
+   need to.
+
+ - When the UI is unlocked, it can generate more events for Lua to handle, even 
+   if Lua is busy. The events will just  be handled later. Tasks that influence 
+   whether events fire may be subject to race conditions if performed while the 
+   UI is unlocked;  for example, disabling  a control while  the UI is unlocked 
+   may allow a few rogue events to slip through.
+
+ - When the UI  is locked, all (important)  user interactions  will be ignored: 
+   mouse clicks will be ignored, focus  changes will not occur, keypresses will 
+   be eaten, and so on.
+
+ - The engine is  designed to prevent a script from freezing  the hardcoded UI, 
+   no matter how many bad things that script  may do. The user should always be 
+   able to access the root script-editing dialog and click a button to forcibly 
+   kill a rogue script.
+

@@ -16,6 +16,7 @@
 #include "../../helpers/lua/qt_variant.h"
 #include "../../helpers/lua/set_top_on_exit.h"
 
+#include <QEvent>
 #include <QLineEdit>
 #include <QPushButton>
 
@@ -155,7 +156,7 @@ DovahKitScriptVM::DovahKitScriptVM() {
       // Delete script-to-main tasks in the case of a script being terminated early, and delete 
       // main-to-script tasks when a script finishes execution for any reason.
       //
-      this->task_queues.m2s.normal.clear();
+      this->ui_queues.events.clear();
       this->task_queues.m2s.urgent.clear();
       this->task_queues.s2m.clear();
       //
@@ -343,7 +344,7 @@ void DovahKitScriptVM::_script_thread_loop() {
       this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
       this->_run_queued_functions();
       this->task_queues.m2s.urgent.process();
-      this->task_queues.m2s.normal.process();
+      this->ui_queues.events.process();
    } while (this->_should_keep_running());
    //
    this->running = false;
@@ -477,6 +478,52 @@ void DovahKitScriptVM::mainThreadLoop() {
 }
 
 bool DovahKitScriptVM::eventFilter(QObject* object, QEvent* event) {
+   switch (event->type()) { // events that we don't want to ever block (and we can get away with that because we also don't send these to Lua)
+      //
+      // Blocking some of these events can cause the UI to fail to react to them properly; 
+      // for example, if the script sets a widget's enable state while we're blocking the 
+      // EnabledChange event, then the widget won't visually update until the user does 
+      // something to update it (e.g. mouseover). We don't want that.
+      //
+      // Not sure which of these events actually cause things like that to happen, versus 
+      // which are just bare notifications. Not sure I need to care, either.
+      //
+      case QEvent::ChildAdded:
+      case QEvent::ChildRemoved:
+      case QEvent::Close:
+      case QEvent::CursorChange:          // a widget's desired cursor graphic has changed
+      case QEvent::DeferredDelete:
+      case QEvent::EnabledChange:         // a widget's enable state has changed
+      case QEvent::Expose:
+      case QEvent::FontChange:            // a widget's font has changed
+      case QEvent::Hide:                  // a widget was hidden
+      case QEvent::LanguageChange:        // the program's translation changed
+      case QEvent::LayoutDirectionChange: // layout update
+      case QEvent::LayoutRequest:         // layout update
+      case QEvent::LocaleChange:          // the system locale has changed
+      case QEvent::OrientationChange:     // the screen orientation has changed
+      case QEvent::Paint:                 // screen repaint needed
+      case QEvent::PaletteChange:         // a widget's palette has changed
+      case QEvent::ParentAboutToChange:   // a widget is about to be repainted
+      case QEvent::ParentChange:          // a widget has been repainted
+      case QEvent::ReadOnlyChange:        // a widget's read-only state has changed
+      case QEvent::ScrollPrepare:
+      case QEvent::Show:                  // a widget was shown
+      case QEvent::ShowToParent:          // a child widget was shown
+      case QEvent::StatusTip:             // a status bar tip was shown
+      case QEvent::StyleChange:           // a widget's style has changed
+      case QEvent::ThreadChange:          // a widget was moved across threads
+      case QEvent::ToolTip:               // a widget's tooltip was shown
+      case QEvent::ToolTipChange:         // a widget's tooltip changed
+      case QEvent::UpdateLater:
+      case QEvent::UpdateRequest:         // a widget needs to be repainted
+      case QEvent::WindowDeactivate:      // a window was deactivated
+      case QEvent::WindowStateChange:     // a window was minimized or maximized
+      case QEvent::WindowTitleChange:     // a window's title changed
+      case QEvent::WinIdChange:
+      case QEvent::ZOrderChange:
+         return false;
+   }
    if (this->ui_lock_override != ui_lock_override_state::unchanged)
       return this->ui_lock_override == ui_lock_override_state::locked;
    if (!this->pending_ui_event_count)
@@ -1018,9 +1065,6 @@ void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
    lua_settop(L, start);
 }
 void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant> params) {
-   if (!event_name_is_valid(widget, event_name))
-      return;
-   //
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    auto  guard = cobb::lua::set_top_on_exit(L, start);
@@ -1064,10 +1108,7 @@ void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& 
    //
    // Called by the main thread; sends a message to the script thread.
    //
-   auto* task  = new editor_script::tasks::m2s::ui_event(widget, event_name, listener_name, params);
-   //
-   auto& tq    = DovahKitScriptVM::get().task_queues.m2s.normal;
-   auto  guard = std::lock_guard(tq.lock);
-   tq.list.push_back(task);
+   auto* task  = new editor_script::ui_event(widget, event_name, listener_name, params);
+   DovahKitScriptVM::get().ui_queues.events.push_back(task);
 }
 #pragma endregion
