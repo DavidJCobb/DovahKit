@@ -21,6 +21,39 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t redo(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         lua_settop(L, 1);
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget]() { widget->redo(); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t select_all(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         lua_settop(L, 1);
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget]() { widget->selectAll(); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t undo(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         lua_settop(L, 1);
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget]() { widget->undo(); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
    }
    namespace _getters {
       luastackchange_t alignment(lua_State* L) {
@@ -380,7 +413,10 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "clear", &_methods::clear },
+      { "clear",      &_methods::clear },
+      { "redo",       &_methods::redo },
+      { "select_all", &_methods::select_all },
+      { "undo",       &_methods::undo },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "alignment",       &_getters::alignment },

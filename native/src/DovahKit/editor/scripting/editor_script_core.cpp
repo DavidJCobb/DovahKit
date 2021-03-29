@@ -16,6 +16,7 @@
 #include "../../helpers/lua/qt_variant.h"
 #include "../../helpers/lua/set_top_on_exit.h"
 
+#include <QLineEdit>
 #include <QPushButton>
 
 #include "api/namespaces/dovah.h"
@@ -442,6 +443,9 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
       this->thread = std::thread(&DovahKitScriptVM::_script_thread_loop, this);
       return;
    }
+   //
+   // If something went wrong:
+   //
    switch (result) {
       case LUA_ERRMEM:
       case LUA_ERRSYNTAX:
@@ -823,7 +827,7 @@ namespace {
       QWidget& widget;
       const std::string event_name;
 
-      void operator()(Args&&... a) {
+      void operator()(Args&&... args) {
          //
          // Runs on the main thread.
          //
@@ -843,6 +847,28 @@ namespace {
          }
          if (_stricmp(event_name, "OnCheckStateChange") == 0) {
             QObject::connect(casted, &QPushButton::toggled, &vm, _event_forwarding_lambda(widget, event_name), Qt::ConnectionType::UniqueConnection);
+            return;
+         }
+      } else if (auto* casted = qobject_cast<QLineEdit*>(&widget)) {
+         if (_stricmp(event_name, "OnChanged") == 0) {
+            QObject::connect(
+               casted,
+               &QLineEdit::editingFinished,
+               &vm,
+               [casted]() {
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnChanged", { casted->text() });
+               },
+               Qt::ConnectionType::UniqueConnection
+            );
+            return;
+         }
+         if (_stricmp(event_name, "OnInputRejected") == 0) {
+            QObject::connect(casted, &QLineEdit::inputRejected, &vm, _event_forwarding_lambda(widget, event_name), Qt::ConnectionType::UniqueConnection);
+            return;
+         }
+         if (_stricmp(event_name, "OnKeyPressed") == 0) {
+            // gotta manually specify the template args. guess it doesn't like const references for some reason.
+            QObject::connect(casted, &QLineEdit::textEdited, &vm, _event_forwarding_lambda<const QString&>(widget, event_name), Qt::ConnectionType::UniqueConnection);
             return;
          }
       }
