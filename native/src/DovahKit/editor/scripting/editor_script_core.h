@@ -49,7 +49,7 @@ class DovahKitScriptVM : public QObject {
       // event listener, so that the scripted UI isn't blocked from updating by the task.
       static constexpr char* queued_function_registry_key = "dovah.internals.deferred_execution_queue";
 
-      enum class ui_lock_override_state { unchanged, yes, no };
+      enum class ui_lock_override_state { unchanged, locked, unlocked };
 
    protected:
       DovahKitScriptVM();
@@ -106,8 +106,9 @@ class DovahKitScriptVM : public QObject {
          std::unordered_map<QWidget*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection;
       } widgets;
       struct {
-         _task_queue read;
-         _task_queue write;
+         _task_queue read;   // script-to-main; always blocks
+         _task_queue write;  // script-to-main; may block
+         _task_queue events; // main-to-script
       } ui_queues;
       
    public:
@@ -197,6 +198,8 @@ class DovahKitScriptVMUITaskConduit {
 
       inline bool is_aborted() const noexcept { return vm.aborted; }
       inline bool is_running() const noexcept { return vm.running; }
+
+      void set_ui_lock_state_override(bool) const noexcept;
 };
 
 class DovahKitScriptVMPermissionInterface {

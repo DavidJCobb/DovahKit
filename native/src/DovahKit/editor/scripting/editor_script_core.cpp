@@ -20,6 +20,7 @@
 #include <QPushButton>
 
 #include "api/namespaces/dovah.h"
+#include "api/namespaces/ui.h"
 
 namespace {
    constexpr char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
@@ -272,6 +273,7 @@ void DovahKitScriptVM::_setup_lua_vm() {
    }
    {  // ui
       lua_newtable(this->lua_vm);
+      editor_script::namespace_setup::ui(this->lua_vm);
       editor_script::build_all_ui_wrapper_singletons(this->lua_vm);
       lua_setglobal(this->lua_vm, "ui");
    }
@@ -476,7 +478,7 @@ void DovahKitScriptVM::mainThreadLoop() {
 
 bool DovahKitScriptVM::eventFilter(QObject* object, QEvent* event) {
    if (this->ui_lock_override != ui_lock_override_state::unchanged)
-      return this->ui_lock_override == ui_lock_override_state::no;
+      return this->ui_lock_override == ui_lock_override_state::locked;
    if (!this->pending_ui_event_count)
       return false;
    return true;
@@ -548,6 +550,10 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
          __assume(0); // luaL_error performs a jump and so does not return
       }
    }
+}
+
+void DovahKitScriptVMUITaskConduit::set_ui_lock_state_override(bool state) const noexcept {
+   this->vm.ui_lock_override = (state) ? DovahKitScriptVM::ui_lock_override_state::locked : DovahKitScriptVM::ui_lock_override_state::unlocked;
 }
 #pragma endregion
 
@@ -824,14 +830,15 @@ namespace {
    std::array _events_by_widget = {
       _event_widget(&QPushButton::staticMetaObject,
          {
-            "OnActivate",         // The button was clicked (or interacted with analogously via another input device).
-            "OnCheckStateChange", // The button is checkable and its check state changed.
+            "OnActivated",         // The button was clicked (or interacted with analogously via another input device).
+            "OnCheckStateChanged", // The button is checkable and its check state changed.
          }
       ),
       _event_widget(&QLineEdit::staticMetaObject,
          {
-            "OnChanged",    // The textbox's value was previously altered, and the user hit Enter or moved focus away from the textbox.
-            "OnKeyPressed", // The textbox's value was altered by a keypress.
+            "OnChanged",       // The textbox's value was previously altered, and the user hit Enter or moved focus away from the textbox.
+            "OnInputRejected", // The textbox rejected input because it didn't validate or the max length would've been exceeded.
+            "OnKeyPressed",    // The textbox's value was altered by a keypress.
          }
       ),
    };
@@ -878,11 +885,11 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
    //
    auto& vm = DovahKitScriptVM::get();
    if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
-      if (_stricmp(event_name, "OnActivate") == 0) {
+      if (_stricmp(event_name, "OnActivated") == 0) {
          this->_connect_event(*casted, &QPushButton::clicked, event_name, listener_name);
          return;
       }
-      if (_stricmp(event_name, "OnCheckStateChange") == 0) {
+      if (_stricmp(event_name, "OnCheckStateChanged") == 0) {
          this->_connect_event(*casted, &QPushButton::toggled, event_name, listener_name);
          return;
       }

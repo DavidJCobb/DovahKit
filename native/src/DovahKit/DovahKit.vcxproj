@@ -231,6 +231,7 @@
     <ClCompile Include="editor\scripting\api\allowed_standard_apis.cpp" />
     <ClCompile Include="editor\scripting\api\form_type_values.cpp" />
     <ClCompile Include="editor\scripting\api\namespaces\dovah.cpp" />
+    <ClCompile Include="editor\scripting\api\namespaces\ui.cpp" />
     <ClCompile Include="editor\scripting\classes.cpp" />
     <ClCompile Include="editor\scripting\classes\benchmark.cpp" />
     <ClCompile Include="editor\scripting\classes\euler.cpp" />
@@ -529,6 +530,7 @@
     <ClInclude Include="editor\scripting\api\allowed_standard_apis.h" />
     <ClInclude Include="editor\scripting\api\form_type_values.h" />
     <ClInclude Include="editor\scripting\api\namespaces\dovah.h" />
+    <ClInclude Include="editor\scripting\api\namespaces\ui.h" />
     <ClInclude Include="editor\scripting\classes.h" />
     <ClInclude Include="editor\scripting\classes\benchmark.h" />
     <ClInclude Include="editor\scripting\classes\euler.h" />
