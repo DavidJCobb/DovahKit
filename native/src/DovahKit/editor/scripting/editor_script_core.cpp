@@ -312,6 +312,13 @@ void DovahKitScriptVM::_teardown_lua_vm() {
       widget->deleteLater();
    }
    this->widgets.orphans.clear();
+   for (auto* widget : this->widgets.pending_deletion) { // needed if the script ran from start to finish without event listeners, etc., and it orphaned widgets in the process
+      if (!widget)
+         continue;
+      QObject::disconnect(widget);
+      widget->deleteLater();
+   }
+   this->widgets.pending_deletion.clear();
    //
    this->pending_ui_event_count = 0;
 }
@@ -360,6 +367,13 @@ void DovahKitScriptVM::_script_thread_loop() {
       this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
       this->task_queues.m2s.urgent.process();
       this->_run_queued_functions(false);
+      {
+         for (auto* widget : this->widgets.pending_deletion) {
+            this->ui_queues.events.forget_about(*widget); // gotta do this before events are processed. since we sever a widget's signals when we mark it for deletion, we don't have to worry about it generating more events later
+            widget->deleteLater();
+         }
+         this->widgets.pending_deletion.clear();
+      }
       this->ui_queues.events.process();
       this->_run_queued_functions(true);
    } while (this->_should_keep_running());
@@ -435,7 +449,8 @@ void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
    auto& list = this->widgets.orphans;
    for (auto it = list.begin(); it != list.end(); ++it) {
       if (*it == widget) {
-         widget->deleteLater();
+         QObject::disconnect(widget); // sever all signal/slot connections to the condemned widget
+         this->widgets.pending_deletion.push_back(widget); // we can't use QWidget::deleteLater immediately, because there may be already-received UI events pertaining to this widget that are about to execute
          list.erase(it);
          return;
       }

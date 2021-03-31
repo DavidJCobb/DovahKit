@@ -151,6 +151,40 @@ namespace {
          DovahKitScriptUIListenerInterface::get().add_listener(*self.widget, lua_tostring(L, 2), lua_tostring(L, 3), 4);
          return 0;
       }
+      luastackchange_t remove_child(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* arg  = wrapper_from_stack<cls>(L, 2);
+         luaL_argcheck(L, arg != nullptr, 2, "child (widget) expected");
+         __assume(arg != nullptr);
+         if (!self.widget)
+            return 0;
+         if (arg->widget == self.widget)
+            luaL_error(L, "cannot remove a widget from itself; a widget cannot be its own child");
+         if (!_can_have_layout(*self.widget))
+            luaL_error(L, "this widget cannot have a layout and so cannot have children either");
+         if (!arg->widget)
+            return 0;
+         //
+         auto* widget = self.widget;
+         auto* child  = arg->widget;
+         auto* task   = new tasks::s2m::lambda(true); // blocking
+         bool  is_not_a_child = false;
+         task->handler = [widget, child, &is_not_a_child]() {
+            if (child->parentWidget() != widget) {
+               is_not_a_child = true;
+               return;
+            }
+            child->setParent(nullptr);
+            DovahKitScriptVM::get().accept_new_orphaned_widget(child);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         if (is_not_a_child)
+            luaL_error(L, "the argument widget isn't a child of this widget");
+         //
+         return 0;
+      }
       luastackchange_t remove_event_listener(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "event name (string) expected");
@@ -610,6 +644,7 @@ namespace editor_script::wrappers::ui {
       { "can_have_layout",       &_methods::can_have_layout },
       { "get_layout_stretch_at", &_methods::get_layout_stretch_at },
       { "on",                    &_methods::on },
+      { "remove_child",          &_methods::remove_child },
       { "remove_event_listener", &_methods::remove_event_listener },
       { "set_layout",            &_methods::set_layout },
       { "set_layout_stretch_at", &_methods::set_layout_stretch_at },

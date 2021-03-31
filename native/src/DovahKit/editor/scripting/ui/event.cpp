@@ -39,4 +39,19 @@ namespace editor_script {
       auto guard = std::lock_guard(this->lock);
       this->list.push_back(e);
    }
+
+   void ui_event_queue::forget_about(QWidget& widget) {
+      auto  guard = std::lock_guard(this->lock);
+      auto& list  = this->list;
+      list.erase(
+         std::remove_if(
+            list.begin(),
+            list.end(),
+            [&widget](const ui_event* entry) {
+               return (&entry->widget == &widget);
+            }
+         ),
+         list.end()
+      );
+   }
 }

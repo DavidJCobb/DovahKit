@@ -24,5 +24,7 @@ namespace editor_script {
          void clear();              // script thread should call this when doing cleanup
          void process();            // script thread should call this to process pending events
          void push_back(ui_event*); // main thread should call this to send events to lua
+
+         void forget_about(QWidget&);
    };
 }
