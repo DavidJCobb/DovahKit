@@ -27,7 +27,13 @@ namespace {
    constexpr char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
    constexpr char* wrapper_weakmap_metatable_key = "__weakmap_mode_metatable";
 
+   // Storage in the Lua registry for all Lua event listeners registered on a widget.
    constexpr char* ui_listener_registry_key = "dovah.internals.ui_listeners"; // registry[key][widget_pointer][event_name][listener_name]
+
+   // Storage in the Lua registry for functions that have been queued by the script to execute 
+   // when the UI is later locked or unlocked.
+   static constexpr char* ui_locked_queue_registry_key   = "dovah.internals.run_when_ui_locked_queue";
+   static constexpr char* ui_unlocked_queue_registry_key = "dovah.internals.run_when_ui_unlocked_queue";
 
    constexpr int max_script_windows = 10;
 }
@@ -243,7 +249,9 @@ void DovahKitScriptVM::_setup_lua_vm() {
    //
    #pragma region Queued functions
       lua_newtable(this->lua_vm);
-      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, ui_locked_queue_registry_key);
+      lua_newtable(this->lua_vm);
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, ui_unlocked_queue_registry_key);
    #pragma endregion
    #pragma region Wrapper and listener storage tables
       lua_newtable(this->lua_vm);
@@ -279,6 +287,7 @@ void DovahKitScriptVM::_setup_lua_vm() {
       lua_setglobal(this->lua_vm, "ui");
    }
    this->pending_ui_event_count = 0;
+   this->ui_lock_override       = ui_lock_override_state::unchanged;
 }
 void DovahKitScriptVM::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->exec_lock);
@@ -307,44 +316,52 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    this->pending_ui_event_count = 0;
 }
 
-void DovahKitScriptVM::_run_queued_functions() {
+void DovahKitScriptVM::_run_queued_functions(bool ui_locked) {
    auto start      = lua_gettop(this->lua_vm);
    auto index_list = start + 1;
    auto index_nk   = start + 2;
    auto index_nv   = start + 3;
-   if (lua_getfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key) == LUA_TTABLE) {
-      int count = lua_rawlen(this->lua_vm, -1);
-      if (!count) {
-         lua_settop(this->lua_vm, start);
-         return;
-      }
-      //
-      // Clear the list out of the registry (replace it with a blank table), leaving the original list 
-      // on the stack for us to use here.
-      //
-      lua_createtable(this->lua_vm, 0, 0);
-      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, DovahKitScriptVM::queued_function_registry_key);
-      //
-      // Execute each individual function in the list.
-      //
-      for (int i = 0; i < count; ++i) {
-         lua_geti(this->lua_vm, -1, i + 1);
-         editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the value
-         this->ui_lock_override = ui_lock_override_state::unchanged;
+   //
+   this->ui_lock_override = ui_locked ? ui_lock_override_state::locked : ui_lock_override_state::unlocked;
+   //
+   auto* key = ui_locked ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
+   auto* L   = this->lua_vm;
+   if (lua_getfield(L, LUA_REGISTRYINDEX, key) == LUA_TTABLE) {
+      int count = lua_rawlen(L, -1);
+      if (count) {
+         //
+         // Clear the list out of the registry (replace it with a blank table), leaving the original list 
+         // on the stack for us to use here.
+         //
+         lua_createtable(L, 0, 0);
+         lua_setfield(L, LUA_REGISTRYINDEX, key);
+         //
+         // Execute each individual function in the list.
+         //
+         for (int i = 0; i < count; ++i) {
+            lua_geti(L, -1, i + 1); // get the function
+            if (ui_locked)
+               ++this->pending_ui_event_count;
+            editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the function
+            if (ui_locked)
+               --this->pending_ui_event_count;
+         }
       }
    }
    lua_settop(this->lua_vm, start);
+   //
+   this->ui_lock_override = DovahKitScriptVM::ui_lock_override_state::unchanged;
 }
 void DovahKitScriptVM::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
-   this->ui_lock_override = ui_lock_override_state::unchanged;
    //
    do {
       this->task_queues.s2m.wait_until_empty(); // these can be non-blocking + fire-and-forget
       this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
-      this->_run_queued_functions();
       this->task_queues.m2s.urgent.process();
+      this->_run_queued_functions(false);
       this->ui_queues.events.process();
+      this->_run_queued_functions(true);
    } while (this->_should_keep_running());
    //
    this->running = false;
@@ -423,6 +440,22 @@ void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
          return;
       }
    }
+}
+
+void DovahKitScriptVM::queue_lua_function(int stack_pos, bool lock_ui_for_function) {
+   auto* L   = this->lua_vm;
+   auto* key = lock_ui_for_function ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
+   //
+   stack_pos = lua_absindex(L, stack_pos);
+   lua_getfield(L, LUA_REGISTRYINDEX, key);
+   auto storage = lua_gettop(L);
+   assert(lua_type(L, -1) == LUA_TTABLE);
+   //
+   lua_pushinteger(L, lua_rawlen(L, storage) + 1); // key to write to
+   lua_pushvalue(L, stack_pos);
+   lua_rawset(L, storage); // pops value and key
+   //
+   lua_pop(L, 1); // pop storage
 }
 
 void DovahKitScriptVM::abort() {
@@ -597,10 +630,6 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
          __assume(0); // luaL_error performs a jump and so does not return
       }
    }
-}
-
-void DovahKitScriptVMUITaskConduit::set_ui_lock_state_override(bool state) const noexcept {
-   this->vm.ui_lock_override = (state) ? DovahKitScriptVM::ui_lock_override_state::locked : DovahKitScriptVM::ui_lock_override_state::unlocked;
 }
 #pragma endregion
 
@@ -1098,7 +1127,6 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       for (auto& p : params)
          argcount += cobb::lua::push_qt_variant(L, p);
       editor_script::util::safe_call(L, argcount, 0); // pops (nv), since that's the function
-      this->vm.ui_lock_override = DovahKitScriptVM::ui_lock_override_state::unchanged;
    }
    --this->vm.pending_ui_event_count;
 }

@@ -85,20 +85,20 @@ like minimizing or moving the window, still work, which is fortunate, but other
 interactions (like viewing tooltips on widgets) will not. That's not ideal.
 
 The optimal way to address this would be to allow the script to decide when the 
-UI is locked or unlocked. We can have  the UI be locked by default within event 
-listeners, but we  can allow the script to  manually lock  or unlock the UI. We 
-treat that as an "override" on the normal lock state, and we clear the override 
-whenever we return back from Lua to C++. Applying that to the code sample above 
-gives us this:
+UI is locked or unlocked. The UI will be locked within event listeners, and the 
+script can queue a Lua function to run later, with the UI locked or unlocked as 
+desired. Applying that to the code sample above gives us this:
 
    button:on("OnActivated", "", function()
       button.enabled = false
-      ui.unlock()
+      ui.run_when_unlocked(function()
 
-      -- some long operation ...
+         -- some long operation...
 
-      ui.lock()
-      button.enabled = true
+         ui.run_when_locked(function()
+            button.enabled = true
+         end)
+      end)
    end)
 
 (It's marginally more complicated than just "locking the UI within event listen-
@@ -111,48 +111,82 @@ to keypress events, for example, will typically need to be able to fully do its
 job in response to one  keypress before another  keypress is possible. Wherever 
 this is not the case, a listener can manually unlock the UI.)
 
-There are a few  considerations that go into this. Lua  is single-threaded, and 
-we don't do anything to  work around this. That  means that Lua event listeners 
-will still be delayed until the long-running operation finishes: the UI remains 
-responsive, but the script has to wait. If, for example, you had a textbox that 
-with an OnKeyPressed listener, that listener  *would* respond to every keypress 
-performed by the user while the UI is  unlocked... but only after the very long 
-script operation  finishes. The script's reaction to those  keypresses would be 
-delayed. This is something that script authors need to be aware of.
+There are a few considerations that need to be made here.
 
-There's a backend  consideration here as  well. When the UI  is unlocked from a 
-Lua event  listener, it becomes possible for the main thread to send  events to 
-the script thread *while* the script thread is already processing other events. 
-This is the source of the  mutex woes we talked about in  the previous section, 
-which we worked around by making the  "event" queue behave differently from the 
-other UI queues.
 
-There's one last little catch to all of  this. If we block *every* QEvent, then 
-the UI may not  fully update in response to state changes  triggered by scripts 
-while the UI is locked.  For example,  if we block the  "QEvent::EnabledChange" 
-event type,  then running the above  script snippet would result  in the button 
-appearing to be disabled even after the code finishes, because the Qt internals 
-won't have  properly reacted to the enable  state changing from  false to true. 
-Our QObject::eventFilter function needs  to avoid blocking events that Qt needs 
-to properly maintain state, but it also needs to block all events that can lead 
-to a Lua event listener being fired.  As far as I know, these two categories do 
-not overlap.
+   EXECUTION ORDER WHEN ASKING TO RUN CODE WITH THE UI LOCKED
+
+   When a Lua script queues a function to  run when the UI is locked, UI events 
+   can be detected by the main thread and sent to the script thread at any time 
+   between the function being queued and it actually running. That said, the VM 
+   always processes UI events after queued non-UI-locked functions run and just 
+   before queued  UI-locked functions run.  What this means is that  you can at 
+   least be certain that should a  UI event listener  run after a UI-locked Lua 
+   function, that listener  is responding to an event that  was generated after 
+   the UI-locked function.
+
+
+   DELAYED EVENTS
+
+   Lua is single-threaded. This means that if a UI event is sent to Lua while a 
+   long-running Lua function is executing, then the event will not be responded 
+   to until after that long-running function finishes: the UI stays functional, 
+   but the script's event listeners  execute with a delay. If, for example, you 
+   had a textbox  with an OnKeyPressed listener, that listener  *would* respond 
+   to every keypress performed by the user while the UI is unlocked... but only 
+   after the very long script operation finishes.
+
+
+   QEVENT NUANCES
+
+   If we block *every* QEvent, then the UI  may not fully update in response to 
+   state changes  triggered by scripts while the UI is locked.  For example, if 
+   we block the QEvent::EnabledChange  event type,  then enabling a disabled UI 
+   widget while the UI is locked would produce no visual change, at least until 
+   the user  takes some action that causes  a visual update (e.g. mousing  over 
+   the widget). This problem occurs  because the Qt internals rely, at least in 
+   part, on some of  these QEvents, so we  need to be a little  selective about 
+   which ones we block from our QObject::eventFilter function.
+
+   We need to avoid blocking events that  Qt relies on for properly maintaining 
+   state, but we can't avoid blocking  an event if that event could conceivably 
+   result in  Lua event listeners being  triggered. Fortunately, it  seems that 
+   these two categories do not overlap.
+
+   
+=== A RECAP OF WHAT SCRIPT AUTHORS NEED TO KNOW ===============================
 
 To recap the stuff that's important for script authors:
 
  - The UI is locked by  default during a scripted event  listener (and whenever 
    any UI event is yet to be processed.)
 
- - The UI's lock state can be temporarily overridden by the script.
+ - Scripts can queue a function to run  later in the same tick, and the UI will 
+   be locked or unlocked as desired during this function. If multiple functions 
+   are queued  at the same  time, the ones that need  the UI unlocked  will run 
+   before the ones that need the UI locked.
 
- - The script does not need to reset the lock state; we'll do that for it if we 
-   need to.
+ - When UI-unlocked  code queues a  function to run  with the UI  locked, it is 
+   possible for UI event listeners to trigger after that function is queued but 
+   before it actually executes. However, the script engine guarantees that a UI 
+   event that was detected before the  UI-locked function runs will execute its 
+   listeners before the UI-locked function runs.
+
+   Broadly, the execution order for Lua code at any given moment is:
+   
+      1) Functions that were queued to execute with the UI unlocked.
+
+      2) Event listeners for any detected events.
+
+      3) Functions that were queued to execute with the UI locked.
 
  - When the UI is unlocked, it can generate more events for Lua to handle, even 
-   if Lua is busy. The events will just  be handled later. Tasks that influence 
-   whether events fire may be subject to race conditions if performed while the 
-   UI is unlocked;  for example, disabling  a control while  the UI is unlocked 
-   may allow a few rogue events to slip through.
+   if Lua  code is currently running. These  events will be handled as  soon as 
+   possible after the  currently-executing Lua code finishes,  as per the order 
+   above.  Tasks that influence whether events can fire may be subject  to race 
+   conditions  if performed while the UI is unlocked; for example,  disabling a 
+   control while the UI is  unlocked may allow a few  rogue event calls to slip 
+   through.
 
  - When the UI  is locked, all (important)  user interactions  will be ignored: 
    mouse clicks will be ignored, focus  changes will not occur, keypresses will 
@@ -161,5 +195,6 @@ To recap the stuff that's important for script authors:
  - The engine is  designed to prevent a script from freezing  the hardcoded UI, 
    no matter how many bad things that script  may do. The user should always be 
    able to access the root script-editing dialog and click a button to forcibly 
-   kill a rogue script.
+   kill a rogue script. The script's decision to lock or unlock the UI does not 
+   affect this.
 

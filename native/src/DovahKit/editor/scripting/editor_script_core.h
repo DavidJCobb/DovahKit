@@ -44,12 +44,6 @@ class DovahKitScriptVM : public QObject {
       // access it even if the Lua script tries to monkeypatch or replace its own copy.
       static constexpr char* string_format_registry_key   = "cached:string.format";
 
-      // Storage in the Lua registry for functions that have been queued by the script to execute 
-      // after all listeners have completed. If a user script needs to trigger some lengthy task  
-      // in response to a UI event listener, it should queue that task to run outside of that UI 
-      // event listener, so that the scripted UI isn't blocked from updating by the task.
-      static constexpr char* queued_function_registry_key = "dovah.internals.deferred_execution_queue";
-
       enum class ui_lock_override_state { unchanged, locked, unlocked };
 
    protected:
@@ -78,7 +72,7 @@ class DovahKitScriptVM : public QObject {
       void _setup_lua_vm();
       void _teardown_lua_vm(); // can only safely run on the main thread, since it tears down Qt objects now too
 
-      void _run_queued_functions();
+      void _run_queued_functions(bool ui_locked);
       void _script_thread_loop();
 
       //
@@ -129,10 +123,12 @@ class DovahKitScriptVM : public QObject {
       inline QWidget* get_ui_parent_widget() const noexcept { return this->ui_parent; }
 
       QDialog* try_spawn_script_window() noexcept;
-      void set_up_new_scripted_widget(QWidget*);
-      void accept_new_orphaned_widget(QWidget*);
-      void widget_no_longer_orphaned(QWidget*);
-      void widget_no_longer_referenced(QWidget*);
+      void set_up_new_scripted_widget(QWidget*);  // Lua functions that create widgets must call this
+      void accept_new_orphaned_widget(QWidget*);  // Lua functions that orphan widgets from a window must call this
+      void widget_no_longer_orphaned(QWidget*);   // Lua functions that insert widgets into a window must call this
+      void widget_no_longer_referenced(QWidget*); // called by wrapper internals when a widget is unreferenced
+
+      void queue_lua_function(int stack_pos, bool lock_ui_for_function); // made available for Lua APIs
       
    signals:
       void messageLogged(const QString&);
@@ -198,8 +194,6 @@ class DovahKitScriptVMUITaskConduit {
 
       inline bool is_aborted() const noexcept { return vm.aborted; }
       inline bool is_running() const noexcept { return vm.running; }
-
-      void set_ui_lock_state_override(bool) const noexcept;
 };
 
 class DovahKitScriptVMPermissionInterface {

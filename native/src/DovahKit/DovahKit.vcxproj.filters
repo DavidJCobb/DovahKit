@@ -1894,5 +1894,6 @@
     <None Include="dovah\forms\impl\form_subclass_components.txt">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="userdata\scripts\simple\count persistent refs.lua" />
   </ItemGroup>
 </Project>

@@ -709,6 +709,13 @@
 //          still require the script to actually get the user's permission to run any 
 //          particular program by way of a hardcoded confirmation prompt, but I don't 
 //          know for sure how practical that'd be.
+//
+//        - [[clipboard]]: The script will be able to access the user's keyboard, to 
+//          copy and paste data.
+//
+//           - QLineEdit::copy
+//           - QLineEdit::cut
+//           - QLineEdit::paste
 //       
 //       Options that grant access to advanced or dangerous functionality should result 
 //       in the user being shown a confirmation message in the script selection window, 

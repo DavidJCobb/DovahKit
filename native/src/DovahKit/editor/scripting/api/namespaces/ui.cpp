@@ -5,25 +5,23 @@ namespace {
    using namespace editor_script;
 
    namespace _definitions {
-      luastackchange_t lock(lua_State* L) {
-         DovahKitScriptVMUITaskConduit::get().set_ui_lock_state_override(true);
+      luastackchange_t run_when_locked(lua_State* L) {
+         luaL_argcheck(L, lua_isfunction(L, 1), 1, "function expected");
+         lua_settop(L, 1);
+         DovahKitScriptVM::get().queue_lua_function(1, true);
          return 0;
       }
-      luastackchange_t unlock(lua_State* L) {
-         DovahKitScriptVMUITaskConduit::get().set_ui_lock_state_override(false);
-         return 0;
-      }
-      luastackchange_t set_lock_state(lua_State* L) {
-         luaL_argcheck(L, lua_isboolean(L, 1), 1, "boolean expected");
-         DovahKitScriptVMUITaskConduit::get().set_ui_lock_state_override(lua_toboolean(L, 1));
+      luastackchange_t run_when_unlocked(lua_State* L) {
+         luaL_argcheck(L, lua_isfunction(L, 1), 1, "function expected");
+         lua_settop(L, 1);
+         DovahKitScriptVM::get().queue_lua_function(1, false);
          return 0;
       }
    }
 
    std::array _functions = {
-      luaL_Reg{ "lock",           &_definitions::lock },
-      luaL_Reg{ "unlock",         &_definitions::unlock },
-      luaL_Reg{ "set_lock_state", &_definitions::set_lock_state },
+      luaL_Reg{ "run_when_locked",   &_definitions::run_when_locked },
+      luaL_Reg{ "run_when_unlocked", &_definitions::run_when_unlocked },
    };
 }
 namespace editor_script::namespace_setup {
