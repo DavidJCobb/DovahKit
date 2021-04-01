@@ -27,6 +27,8 @@
 #include "../ui/form_windows/_base.h"
 #include <QDebug>
 
+#include "form_stub_meta_type.h"
+
 namespace {
    void _on_form_created(dovah::form_stub* stub) {
       if (stub)
@@ -64,6 +66,7 @@ namespace {
 }
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
+   qRegisterMetaType<dovah::form_stub*>();
    //
    this->load_order = new dovah::file_load_order;
    this->_configure_load_order();

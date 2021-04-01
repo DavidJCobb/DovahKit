@@ -309,6 +309,7 @@
     <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
+    <ClCompile Include="ui\generic\FormPicker.cpp" />
     <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -517,6 +518,7 @@
     <ClInclude Include="dovah\utils\loose_enum.h" />
     <QtMoc Include="editor\form_data_cache.h" />
     <ClInclude Include="editor\form_data_cache_internals\threaded_builder.h" />
+    <ClInclude Include="editor\form_stub_meta_type.h" />
     <ClInclude Include="editor\get_condition_description.h" />
     <ClInclude Include="editor\get_default_object_info.h" />
     <ClInclude Include="editor\get_game_setting_description.h" />
@@ -616,6 +618,7 @@
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
+    <QtMoc Include="ui\generic\FormPicker.h" />
     <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />

@@ -2,6 +2,7 @@
 #include <QStandardItemModel>
 #include "../../dovah/form_stub.h"
 #include "../../editor/core.h"
+#include "../../editor/form_stub_meta_type.h"
 #include "impl/_FormsOfTypeComboboxProxy.h"
 
 //
