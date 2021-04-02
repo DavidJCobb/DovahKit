@@ -783,6 +783,12 @@
     <ClCompile Include="ui\generic\FormPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\generic\impl\FormPickerImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\form_picker_debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1598,6 +1604,9 @@
     <ClInclude Include="editor\form_stub_meta_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\form_picker_debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1864,6 +1873,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\FormPicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\impl\FormPickerImpl.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -1,7 +1,8 @@
 #include "FormPicker.h"
-#include "impl/_FormsOfTypeComboboxProxy.h"
+#include "impl/FormPickerImpl.h"
 #include <QBoxLayout>
 #include <QEvent>
+#include <QListView>
 #include <QStandardItemModel>
 #include "../../dovah/form_stub.h"
 #include "../../editor/core.h"
@@ -58,8 +59,28 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
    
    this->subwidgets.form = new QComboBox(this);
    this->subwidgets.type = new QComboBox(this);
-   this->subwidgets.form->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
-   this->subwidgets.type->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+   this->subwidgets.form->setDisabled(true);
+   layout->addWidget(this->subwidgets.type, 0);
+   layout->addWidget(this->subwidgets.form, 1);
+   layout->setMargin(0);
+
+   //
+   // Make preparations for performance with massive comboboxes:
+   //
+   {
+      auto* combobox = this->subwidgets.form;
+      combobox->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+      //
+      // When dealing with especially massive comboxes (thousands of elements, as in the case of STAT 
+      // forms), even the above is not enough...
+      //
+      auto* view = qobject_cast<QListView*>(combobox->view());
+      if (view) { // just in case the library internals change later
+         view->setUniformItemSizes(true);
+         view->setLayoutMode(QListView::Batched);
+         view->setBatchSize(50);
+      }
+   }
 
    QObject::connect(this->subwidgets.type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
       if (auto* stub = this->formStub())
@@ -69,15 +90,15 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
    });
    {  // Set up form-combobox models
       auto* widget = this->subwidgets.form;
-      auto* model  = new QStandardItemModel(widget);
-      auto* proxy  = new _FormsOfTypeComboboxProxy(widget);
-      proxy->setSortCaseSensitivity(Qt::CaseInsensitive);
-      proxy->setSourceModel(model);
-      widget->setModel(proxy);
-      proxy->sort(0);
+      auto* model  = new FormPickerImpl::FormPickerProxyModel(widget);
+      widget->setModel(model);
+      QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this]() {
+         this->subwidgets.form->setEnabled(this->subwidgets.form->count() > 0);
+      });
+      QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this]() {
+         this->subwidgets.form->setEnabled(this->subwidgets.form->count() > 0);
+      });
    }
-
-   this->setDisabled(true);
 
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
@@ -90,91 +111,14 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
       const auto blocker1 = QSignalBlocker(this->subwidgets.type);
       this->setDisabled(true);
       this->subwidgets.type->clear();
-      this->subwidgets.form->clear();
-      //
       this->_prior_selections.clear();
-      auto& prior = this->pre_activate_value;
-      prior.id    = 0;
-      prior.stub  = nullptr;
-   });
-   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) {
-      if (!this->_activated) {
-         auto& prior = this->pre_activate_value;
-         if (prior.id == stub->formID)
-            prior.id   = 0;
-         if (prior.stub == stub)
-            prior.stub = nullptr;
-         return;
-      }
-      {
-         auto& ps = this->_prior_selections;
-         auto  it = ps.find(stub->formType);
-         if (it != ps.end())
-            this->_prior_selections.erase(it);
-      }
-      auto* c_form = this->subwidgets.form;
-      int   index  = c_form->findData(stub->formID);
-      if (index < 0)
-         return;
-      int si = c_form->currentIndex();
-      c_form->removeItem(index);
-      if (index == si && this->allowNone())
-         c_form->setCurrentIndex(0);
-   });
-   QObject::connect(&editor, &DovahKitCore::formCreated, this, [this](dovah::form_stub* stub) {
-      if (!this->_activated)
-         return;
-      const auto blocker = QSignalBlocker(this);
-      if (_should_exclude_form(stub))
-         return;
-      if (!this->allowsFormType(stub->formType))
-         return;
-      auto* model = this->_rawModel();
-      int   index = this->subwidgets.form->findData(stub->formID);
-      if (index >= 0)
-         return;
-      auto* item = new QStandardItem(QString::fromStdString(stub->get_editor_id()));
-      item->setData(stub->formID, FormIDRole);
-      item->setData(QVariant::fromValue((void*)stub), FormStubRole);
-      model->appendRow(item);
-   });
-   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-      if (!this->_activated)
-         return;
-      if (!this->allowsFormType(stub->formType))
-         return;
-      const auto blocker = QSignalBlocker(this);
-      auto* c_form = this->subwidgets.form;
-      int   index  = c_form->findData(stub->formID);
-      if (index < 0)
-         return;
-      c_form->setItemText(index, stub->get_editor_id());
    });
    QObject::connect(&editor, &DovahKitCore::formRenumbered, this, [this](dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
-      if (!this->_activated) {
-         auto& prior = this->pre_activate_value;
-         if (prior.id == oldID)
-            prior.id = newID;
-         return;
-      }
-      if (!this->allowsFormType(stub->formType))
-         return;
-      //
-      {
-         auto& ps = this->_prior_selections;
-         auto  it = ps.find(stub->formType);
-         if (it != ps.end()) {
-            if (oldID == *it)
-               *it = newID;
-         }
-      }
-      //
-      const auto blocker = QSignalBlocker(this);
-      auto* c_form = this->subwidgets.form;
-      int   index  = c_form->findData(QVariant::fromValue((void*)stub), FormStubRole);
-      if (index < 0)
-         return;
-      c_form->setItemData(index, newID, FormIDRole);
+      auto& ps = this->_prior_selections;
+      auto  it = ps.find(stub->formType);
+      if (it != ps.end())
+         if (oldID == it->second)
+            it->second = newID;
    });
 }
 
@@ -201,16 +145,8 @@ void FormPicker::addFormType(dovah::form_type_t ft) {
    //
    const auto blocker0 = QSignalBlocker(this->subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->subwidgets.form);
-   bool split = this->_shouldSplitTypes();
-   if (split) {
-      if (!this->isSplittingTypes()) {
-         this->_startSplittingTypes();
-         return;
-      }
-      this->_updateTypes();
-   } else {
-      this->_addFormsOfType(ft);
-   }
+   this->_setIsSplittingTypes(this->_shouldSplitTypes());
+   this->_updateForms();
 }
 void FormPicker::setAllowedFormTypes(QVector<dovah::form_type_t> t) noexcept {
    this->_formTypes = t;
@@ -221,68 +157,26 @@ void FormPicker::setAllowedFormTypes(QVector<dovah::form_type_t> t) noexcept {
    //
    const auto blocker0 = QSignalBlocker(this->subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->subwidgets.form);
-   bool split = this->_shouldSplitTypes();
-   if (split) {
-      if (!this->isSplittingTypes()) {
-         this->_startSplittingTypes();
-         return;
-      }
-      this->_updateTypes();
-   }
+   this->_setIsSplittingTypes(this->_shouldSplitTypes());
    this->_updateForms();
 }
 void FormPicker::setSplitTypesWhenMany(bool b) noexcept {
    this->_splitTypesWhenMany = b;
    bool now    = this->isSplittingTypes();
    bool should = this->_shouldSplitTypes();
-   if (now != should) {
-      if (should)
-         this->_startSplittingTypes();
-      else
-         ; // TODO
-   }
+   if (now != should)
+      this->_setIsSplittingTypes(should);
 }
 
 void FormPicker::setAllowNone(bool b) noexcept {
    if (b == this->allowNone())
       return;
    this->_allowNone = b;
-   if (b) {
-      QString text = this->_noneLabel;
-      if (text.isEmpty())
-         text = tr("NONE");
-      this->subwidgets.form->addItem(text, 0);
-   } else {
-      auto* stub = this->formStub();
-      int   i    = this->subwidgets.form->findData(0, FormIDRole);
-      if (i >= 0)
-         this->subwidgets.form->removeItem(i);
-      if (!stub) {
-         //
-         // TODO: select default stub
-         //
-      }
-   }
-}
-void FormPicker::setNoneLabel(const QString& n) noexcept {
-   this->_noneLabel = n;
-   if (!this->allowNone())
-      return;
-   int index = this->subwidgets.form->findData(0, FormIDRole);
-   if (index >= 0)
-      this->subwidgets.form->setItemText(index, this->_noneLabel);
+   this->_updateForms();
 }
 
 void FormPicker::setFormByID(dovah::bare_form_id_t id) noexcept {
-   if (id == 0) {
-      if (!this->allowNone())
-         return;
-   }
-   int index = this->subwidgets.form->findData(id, FormIDRole);
-   if (index >= 0) {
-      this->_prior_selections.clear();
-      this->subwidgets.form->setCurrentIndex(index);
-   }
+   this->setFormStub(DovahKitCore::get().get_form(id));
 }
 void FormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    if (!stub) {
@@ -309,13 +203,16 @@ void FormPicker::changeEvent(QEvent* event) {
       return;
    this->_activate();
 }
+void FormPicker::showEvent(QShowEvent* event) {
+   if (this->_activated)
+      return;
+   this->_activate();
+}
 
-QStandardItemModel* FormPicker::_rawModel() const noexcept {
-   auto* proxy = (_FormsOfTypeComboboxProxy*) this->subwidgets.form->model();
+FormPickerImpl::FormPickerProxyModel* FormPicker::_rawModel() const noexcept {
+   auto* proxy = (FormPickerImpl::FormPickerProxyModel*) this->subwidgets.form->model();
    assert(proxy);
-   auto* model = (QStandardItemModel*) proxy->sourceModel();
-   assert(model);
-   return model;
+   return proxy;
 }
 
 void FormPicker::_activate() {
@@ -326,38 +223,15 @@ void FormPicker::_activate() {
    const auto blocker0 = QSignalBlocker(this->subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->subwidgets.form);
    //
-   this->_updateTypes();
+   this->_updateTypePicker();
    this->_updateForms();
-   //
-   auto& prior = this->pre_activate_value;
-   if (prior.id || prior.stub) {
-      if (prior.id)
-         this->setFormByID(prior.id);
-      else if (prior.stub)
-         this->setFormStub(prior.stub);
-      prior.id = 0;
-      prior.stub = nullptr;
-      //
-      auto* c_type = this->subwidgets.type;
-      if (c_type->isVisible()) {
-         if (auto* stub = this->formStub()) {
-            auto index = c_type->findData(stub->formType);
-            if (index >= 0)
-               c_type->setCurrentIndex(index);
-         }
-      }
-   }
-   //
-   this->setDisabled(this->_rawModel()->rowCount() == 0);
 }
-void FormPicker::_addFormsOfType(dovah::form_type_t ft) noexcept {
-   auto* model = this->_rawModel();
-   DovahKitCore::get().for_each_form_of_type(ft, [model](dovah::form_stub* stub) {
-      if (_should_exclude_form(stub))
-         return false; // continue
-      model->appendRow(_make_form_item(stub));
-      return false; // continue
-   });
+void FormPicker::_setIsSplittingTypes(bool s) noexcept {
+   this->subwidgets.type->setVisible(s);
+   if (s)
+      this->_updateTypePicker();
+   else
+      this->_updateForms();
 }
 bool FormPicker::_shouldSplitTypes() const noexcept {
    if (!this->_splitTypesWhenMany)
@@ -374,66 +248,22 @@ bool FormPicker::_shouldSplitTypes() const noexcept {
       return true;
    return false;
 }
-void FormPicker::_startSplittingTypes() noexcept {
-   if (this->isSplittingTypes())
-      return;
-   auto* stub = this->formStub();
-   this->_updateTypes();
-   this->subwidgets.type->setVisible(true);
-   this->_updateForms();
-}
 void FormPicker::_updateForms() {
-   auto& editor = DovahKitCore::get();
-   auto* c_form = this->subwidgets.form;
-   auto* c_type = this->subwidgets.type;
-   auto* model  = (QStandardItemModel*) c_form->model();
-   //
-   auto* prior  = this->formStub();
-   //
-   const auto blocker = QSignalBlocker(this->subwidgets.form);
    if (this->isSplittingTypes()) {
-      auto ft = (dovah::form_type_t)c_type->currentData().toInt();
-      //
-      c_form->clear();
-      this->_addFormsOfType(ft);
-      //
-      if (!prior || prior->formType != ft) {
-         dovah::bare_form_id_t id = 0;
-         auto it = this->_prior_selections.find(ft);
-         if (it != this->_prior_selections.end())
-            prior = DovahKitCore::get().get_form(*it);
-      }
+      auto ft = (dovah::form_type_t) this->subwidgets.type->currentData().toInt();
+      this->_rawModel()->updateParameters(this->_allowNone, { ft });
    } else {
-      c_form->clear();
-      for (auto ft : this->_formTypes)
-         this->_addFormsOfType(ft);
-   }
-   if (this->_allowNone) {
-      QString text = this->_noneLabel;
-      if (text.isEmpty())
-         text = tr("NONE");
-      auto* item = new QStandardItem(text);
-      item->setData(0, FormIDRole);
-      item->setData(QVariant::fromValue<dovah::form_stub*>(nullptr), FormStubRole);
-      model->appendRow(item);
-   }
-   //
-   // Re-select prior:
-   //
-   int index = c_form->findData(QVariant::fromValue(prior), FormStubRole);
-   if (index >= 0) {
-      c_form->setCurrentIndex(index);
-   } else {
-      c_form->setCurrentIndex(0);
+      this->_rawModel()->updateParameters(this->_allowNone, this->_formTypes);
    }
 }
-void FormPicker::_updateTypes() {
+void FormPicker::_updateTypePicker() {
    const auto blocker0 = QSignalBlocker(this->subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->subwidgets.form);
    //
    auto* c_type = this->subwidgets.type;
    auto* model  = c_type->model();
    auto  prior  = c_type->currentData().toInt();
+   auto* stub   = this->formStub();
    //
    c_type->clear();
    if (this->_formTypes.isEmpty()) {
@@ -446,8 +276,12 @@ void FormPicker::_updateTypes() {
          c_type->addItem(cobb::qt::four_cc_to_string(type.signature), type.formType);
       }
    }
-   int index = c_type->findData(prior);
-   if (index >= 0) {
-      c_type->setCurrentIndex(index);
-   }
+   int index;
+   if (stub)
+      index = c_type->findData(stub->formType);
+   else
+      index = c_type->findData(prior);
+   if (index < 0)
+      index = 0;
+   c_type->setCurrentIndex(index);
 }

@@ -31,6 +31,7 @@
 #include "main_window/_debug_hooks/compiled_papyrus_script_tests.h"
 #include "main_window/_debug_hooks/debug_target_form.h"
 #include "main_window/_debug_hooks/debug_target_form_papyrus.h"
+#include "main_window/_debug_hooks/form_picker_debug.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -326,6 +327,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(this->ui.actionDebugBreakOnFormPapyrus, &QAction::triggered, this, [this]() {
       DovahKitDebug::debug_target_form_papyrus(this);
+   });
+   QObject::connect(this->ui.actionDebugFormPicker, &QAction::triggered, this, [this]() {
+      DovahKitDebug::debug_form_picker(this);
    });
    #pragma endregion
 }

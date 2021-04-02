@@ -68,6 +68,7 @@
     <addaction name="actionDebugCompiledPapyrusScriptTests"/>
     <addaction name="actionDebugBreakOnForm"/>
     <addaction name="actionDebugBreakOnFormPapyrus"/>
+    <addaction name="actionDebugFormPicker"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -220,6 +221,11 @@
   <action name="actionDebugBreakOnFormPapyrus">
    <property name="text">
     <string>Debugbreak on form Papyrus data</string>
+   </property>
+  </action>
+  <action name="actionDebugFormPicker">
+   <property name="text">
+    <string>Debug FormPicker</string>
    </property>
   </action>
  </widget>
