@@ -15,6 +15,7 @@
 #include "../../helpers/lua/isempty.h"
 #include "../../helpers/lua/qt_variant.h"
 #include "../../helpers/lua/set_top_on_exit.h"
+#include "wrapper_util.h"
 
 #include <QEvent>
 #include <QLineEdit>
@@ -1134,13 +1135,22 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       --this->vm.pending_ui_event_count;
       return;
    }
+   auto& userdata_intfc = DovahKitScriptVMUserdataInterface::get();
    // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name] ] +
    lua_pushnil(L); // nk
    while (lua_next(L, si_funcs) != 0) {
       // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name], key, value ] +
       int argcount = 0;
-      for (auto& p : params)
+      for (auto& p : params) {
+         if (p.type() == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
+            using namespace editor_script;
+            wrapper out;
+            auto*   mt = wrap_form(out, p.value<dovah::form_stub*>());
+            argcount += userdata_intfc.push(L, out, mt);
+            continue;
+         }
          argcount += cobb::lua::push_qt_variant(L, p);
+      }
       editor_script::util::safe_call(L, argcount, 0); // pops (nv), since that's the function
    }
    --this->vm.pending_ui_event_count;
