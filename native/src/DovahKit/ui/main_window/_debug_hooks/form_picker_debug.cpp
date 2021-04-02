@@ -1,5 +1,6 @@
 #include "form_picker_debug.h"
 #include "../../generic/FormPicker.h"
+#include <QCheckBox>
 #include <QDialog>
 #include <QGridLayout>
 
@@ -49,12 +50,19 @@ namespace DovahKitDebug {
             dovah::form_type::formlist,
          });
          layout->addWidget(picker, 0, 0);
+         //
+         auto* button = new QCheckBox("Can split by type");
+         button->setChecked(true);
+         QObject::connect(button, &QCheckBox::stateChanged, picker, [picker](int state) {
+            picker->setSplitTypesWhenMany(state == Qt::CheckState::Checked);
+         });
+         layout->addWidget(button, 0, 1);
       }
       {
          auto* picker = new FormPicker(dialog);
          picker->setAllowedFormTypes({ dovah::form_type::cell });
          picker->setAllowNone(false);
-         layout->addWidget(picker, 1, 0);
+         layout->addWidget(picker, 1, 0, 1, 2);
       }
       //
       dialog->show();

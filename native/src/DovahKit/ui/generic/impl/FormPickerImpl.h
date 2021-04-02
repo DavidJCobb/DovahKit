@@ -12,10 +12,20 @@ namespace FormPickerImpl {
       public:
          static constexpr int FormIDRole   = Qt::UserRole + 0;
          static constexpr int FormStubRole = Qt::UserRole + 1;
+
+         struct item {
+            dovah::form_stub*  stub = nullptr;
+            dovah::form_type_t type = dovah::form_type::none;
+            QString editorID;
+         };
+
       protected:
          FormPickerSharedUnderlyingModel();
 
-         QVector<dovah::form_stub*> all_stubs = { nullptr }; // always include a "NONE" item
+         QVector<item*> forms; // always include a "NONE" item
+
+      protected slots:
+         void rebuild();
 
       public:
          static FormPickerSharedUnderlyingModel& get() {
@@ -30,21 +40,35 @@ namespace FormPickerImpl {
          Qt::ItemFlags flags(const QModelIndex& index) const override;
          QVariant data(const QModelIndex& index, int role) const override;
 
-         inline const QVector<dovah::form_stub*>& getRawStubList() const noexcept { return this->all_stubs; }
+         const item* itemAtRow(int) const noexcept;
+
+      signals:
+         void allDataCleared();
+         void editorIDChanged(const item*, const QString& prior);
    };
 
    class FormPickerIterativeModel : public QAbstractItemModel {
+      Q_OBJECT;
+      public:
+         using item      = FormPickerSharedUnderlyingModel::item;
+         using item_list = QVector<const item*>;
+         using iterator  = item_list::iterator;
       protected:
-         QVector<dovah::form_stub*> stubs;
+         item_list stubs;
          struct {
             bool filling    = true;
+            bool sorting    = false;
             int  progress   = 0;
             bool allow_none = false;
             QVector<dovah::form_type_t> form_types;
+            item_list unsorted;
             QTimer timer;
          } ongoing_fill;
 
          inline bool _isFilling() const noexcept { return this->ongoing_fill.filling; }
+
+         bool _fillGrabMore(); // returns true if done
+         bool _fillSortMore(); // returns true if done
 
       public:
          FormPickerIterativeModel(QObject* parent);
@@ -60,27 +84,11 @@ namespace FormPickerImpl {
          virtual QVariant data(const QModelIndex& index, int role) const override;
 
          void refill(bool allow_none, const QVector<dovah::form_type_t>& form_types);
-   };
-
-   class FormPickerProxyModel : public QSortFilterProxyModel {
-      Q_OBJECT;
-      protected:
-         bool _allowNone = true;
-         QVector<dovah::form_type_t> _formTypes;
-      public:
-         FormPickerProxyModel(QObject* parent = nullptr);
-
-         inline bool allowNone() const noexcept { return this->_allowNone; }
-         inline const QVector<dovah::form_type_t>& allowedFormTypes() const noexcept { return this->_formTypes; }
-
-         void setAllowedFormTypes(const QVector<dovah::form_type_t>&);
-         void setAllowNone(bool);
          void updateParameters(bool allow_none, const QVector<dovah::form_type_t>& form_types);
 
-         inline bool isEmpty() const noexcept { return this->rowCount() > 0; }
+         int indexOf(const dovah::form_stub*) const noexcept;
 
-         virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
-         virtual bool lessThan(const QModelIndex& left, const QModelIndex& right) const override;
-         virtual void setSourceModel(QAbstractItemModel* sourceModel) override {}
+      signals:
+         void filled();
    };
 }

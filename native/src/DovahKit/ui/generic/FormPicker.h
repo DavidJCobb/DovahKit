@@ -5,6 +5,7 @@
 #include "../../dovah/core.h"
 
 namespace FormPickerImpl {
+   class FormPickerIterativeModel;
    class FormPickerProxyModel;
 }
 
@@ -15,13 +16,11 @@ class FormPicker : public QWidget {
       
       inline const QVector<dovah::form_type_t>& allowedFormTypes() const noexcept { return this->_formTypes; }
       inline bool allowNone() const noexcept { return this->_allowNone; }
+      inline bool isSplittingTypes() const noexcept { return this->_isSplittingTypes; }
       inline bool splitTypesWhenMany() const noexcept { return this->_splitTypesWhenMany; }
 
       inline bool allowsFormType(dovah::form_type_t ft) const noexcept {
          return this->_formTypes.contains(ft);
-      }
-      inline bool isSplittingTypes() const noexcept {
-         return this->subwidgets.type->isVisible();
       }
 
       dovah::bare_form_id_t formID() const noexcept;
@@ -46,22 +45,19 @@ class FormPicker : public QWidget {
       };
 
       QVector<dovah::form_type_t> _formTypes;
-      bool    _activated = false;
-      bool    _allowNone = false;
-      bool    _splitTypesWhenMany = true;
+      bool _allowNone          = false;
+      bool _isSplittingTypes   = false;
+      bool _splitTypesWhenMany = true;
       struct {
          QComboBox* form = nullptr;
          QComboBox* type = nullptr;
       } subwidgets;
       std::map<dovah::form_type_t, dovah::bare_form_id_t> _prior_selections;
 
-      virtual void changeEvent(QEvent* event) override;
-      virtual void showEvent(QShowEvent* event) override;
+      FormPickerImpl::FormPickerIterativeModel* _rawModel() const noexcept;
 
-      FormPickerImpl::FormPickerProxyModel* _rawModel() const noexcept;
-
-      void _activate();
       void _setIsSplittingTypes(bool) noexcept;
+      void _setSubwidgetEnableState(bool);
       bool _shouldSplitTypes() const noexcept;
       void _updateForms();
       void _updateTypePicker();
