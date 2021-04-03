@@ -8,6 +8,7 @@
 #include "class_killer.h"
 
 #include "../core.h" // needed for DovahKitCore signals
+#include "../form_stub_meta_type.h" // needed for QVariants of form stub pointers
 #include "../../dovah/forms/Form.h" // needed for any loaded_form_ptr
 #include "api/form_type_values.h"
 #include "classes/_all.h"

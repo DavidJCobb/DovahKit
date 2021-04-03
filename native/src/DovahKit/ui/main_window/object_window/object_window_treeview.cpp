@@ -108,6 +108,16 @@ void ObjectWindowTreeItem::sort() {
 #pragma endregion
 
 #pragma region ObjectWindowFilterInfo
+bool ObjectWindowFilterInfo::empty() const noexcept {
+   if (!this->form_types.empty())
+      return false;
+   if (!this->filters.quests.empty())
+      return false;
+   if (!this->filters.statics.empty())
+      return false;
+   return true;
+}
+
 bool ObjectWindowFilterInfo::operator==(const ObjectWindowFilterInfo& other) const noexcept {
    if (this->filters.quests.size() != other.filters.quests.size())
       return false;
@@ -531,12 +541,9 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
    }
    QVector<dovah::form_type_t> ObjectWindowTreeModel::formTypesFor(const QModelIndexList& qmil) const noexcept {
       QVector<dovah::form_type_t> out;
-      for (auto& qmi : qmil) {
-         auto* item = this->_itemFromIndex(qmi);
-         if (item) {
-            item->gatherFormTypes(out);
-         }
-      }
+      for (auto* child : this->_nodes.root->children)
+         if (child->form_type != dovah::form_type::none)
+            child->gatherFormTypes(out);
       return out;
    }
    ObjectWindowFilterInfo ObjectWindowTreeModel::getFilterInfoFor(const QModelIndexList& qmil) const noexcept {
@@ -791,6 +798,10 @@ ObjectWindowTree::ObjectWindowTree(QWidget* parent) : QLinedTreeView(parent) {
       sel->select(model->indexOfAllCategory(), QItemSelectionModel::ClearAndSelect);
    }
    this->expandAll();
+}
+QVector<dovah::form_type_t> ObjectWindowTree::allPrimaryFormTypes() const noexcept {
+   auto* model = (model_type*) this->model();
+   return model->formTypesFor({ model->indexOfAllCategory() });
 }
 ObjectWindowFilterInfo ObjectWindowTree::filterInfo() const noexcept {
    auto* sm    = this->selectionModel();

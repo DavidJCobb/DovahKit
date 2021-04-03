@@ -82,6 +82,8 @@ class FormTableModel : public QAbstractTableModel {
       void rebuild();
       void rebuild(const ObjectWindowFilterInfo&);
       void setFilterInfo(const ObjectWindowFilterInfo&);
+      //
+      const item_type* dataAtRow(int) const noexcept;
 };
 
 class FormTableModelProxy : public QSortFilterProxyModel {
@@ -94,6 +96,15 @@ class FormTableModelProxy : public QSortFilterProxyModel {
          this->setSortCaseSensitivity(Qt::CaseInsensitive);
          this->setSortRole(Qt::UserRole);
       }
+
+      inline const ObjectWindowFilterInfo& filterInfo() const noexcept { return this->form_filter_info; }
+      void setFilterInfo(const ObjectWindowFilterInfo&);
+
+   protected:
+      ObjectWindowFilterInfo form_filter_info;
+
+      bool filterAcceptsStub(const dovah::form_stub* stub) const noexcept;
+      virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
 };
 
 class FormTable : public QTableView {
@@ -107,6 +118,9 @@ class FormTable : public QTableView {
       inline model_type* unwrappedModel() const noexcept {
          auto wrapper = (QSortFilterProxyModel*)this->model();
          return wrapper ? (model_type*)wrapper->sourceModel() : nullptr;
+      }
+      inline proxy_type* proxyModel() const noexcept {
+         return (proxy_type*) this->model();
       }
       //
       void setFilter(QLineEdit*);

@@ -71,6 +71,8 @@ class ObjectWindowFilterInfo {
          filter_list_t statics;
          filter_list_t quests;
       } filters;
+
+      bool empty() const noexcept;
    
       bool operator==(const ObjectWindowFilterInfo& other) const noexcept;
 
@@ -137,5 +139,6 @@ class ObjectWindowTree : public QLinedTreeView {
       ObjectWindowTree(QWidget* parent);
       using model_type = ObjectWindowTreeModel;
       //
+      QVector<dovah::form_type_t> allPrimaryFormTypes() const noexcept;
       ObjectWindowFilterInfo filterInfo() const noexcept;
 };

@@ -383,6 +383,46 @@ void FormTableModel::setFilterInfo(const ObjectWindowFilterInfo& list) {
       return;
    this->rebuild(list);
 }
+
+const FormTableModel::item_type* FormTableModel::dataAtRow(int row) const noexcept {
+   if (row < 0)
+      return nullptr;
+   if (row >= this->children.size())
+      return nullptr;
+   return this->children[row];
+}
+#pragma endregion
+
+#pragma region FormTableModelProxy
+void FormTableModelProxy::setFilterInfo(const ObjectWindowFilterInfo& fi) {
+   auto& prior = this->form_filter_info;
+   if (prior == fi)
+      return;
+   prior = fi;
+   this->invalidateFilter();
+}
+
+bool FormTableModelProxy::filterAcceptsStub(const dovah::form_stub* stub) const noexcept {
+   if (!stub)
+      return false;
+   auto ft = stub->formType;
+   if (!this->form_filter_info.form_types.empty() && !this->form_filter_info.form_types.contains(ft))
+      return false;
+   if (stub->formType == dovah::form_type::none)
+      return stub->is_none_stub();
+   return this->form_filter_info.testFormStubFilter(stub);
+}
+bool FormTableModelProxy::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const {
+   if (!this->form_filter_info.empty()) {
+      if (auto* model = qobject_cast<FormTableModel*>(this->sourceModel())) {
+         if (auto* item = model->dataAtRow(source_row)) {
+            if (!this->filterAcceptsStub(item->stub))
+               return false;
+         }
+      }
+   }
+   return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+}
 #pragma endregion
 
 #pragma region FormTable
@@ -420,7 +460,7 @@ FormTable::FormTable(QWidget* parent) : QTableView(parent) {
 void FormTable::recheckFormTypes() {
    if (!this->_source)
       return;
-   auto* model = this->unwrappedModel();
+   auto* model = this->proxyModel();
    if (!model)
       return;
    model->setFilterInfo(this->_source->filterInfo());
@@ -483,6 +523,11 @@ void FormTable::setSource(ObjectWindowTree* tree) {
    this->_source = tree;
    if (!tree)
       return;
+   //
+   ObjectWindowFilterInfo fi;
+   fi.form_types = tree->allPrimaryFormTypes();
+   this->unwrappedModel()->rebuild(fi);
+   //
    QObject::connect(tree->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormTable::recheckFormTypes);
    this->recheckFormTypes();
 }
