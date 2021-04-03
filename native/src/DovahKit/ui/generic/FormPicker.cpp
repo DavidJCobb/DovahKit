@@ -86,6 +86,9 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
       //
       this->_updateForms();
    });
+   QObject::connect(this->subwidgets.form, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+      emit formChanged(this->formStub());
+   });
    {  // Set up form-combobox models
       auto* widget = this->subwidgets.form;
       auto* model  = new FormPickerImpl::FormPickerIterativeModel(widget);
@@ -95,6 +98,31 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
       });
       QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this]() {
          this->subwidgets.form->setEnabled(this->subwidgets.form->count() > 0);
+      });
+      QObject::connect(model, &FormPickerImpl::FormPickerIterativeModel::filled, this, [this]() {
+         auto* model = this->_rawModel();
+         auto* stub  = this->_value;
+         int   i     = model->indexOf(stub);
+         if (this->isSplittingTypes()) {
+            auto data = this->subwidgets.type->currentData();
+            if (data.isValid()) {
+               auto ft = (dovah::form_type_t) data.toInt();
+               if (!stub || stub->formType != ft) {
+                  auto it = this->_prior_selections.find(ft);
+                  if (it != this->_prior_selections.end()) {
+                     i = model->indexOfFormID(it->second);
+                  }
+               }
+            }
+         }
+         if (i >= 0)
+            this->subwidgets.form->setCurrentIndex(i);
+         this->_value = this->subwidgets.form->currentData(FormStubRole).value<dovah::form_stub*>();
+         this->_setSubwidgetEnableState(model->rowCount(QModelIndex()) != 0);
+         //
+         if (this->_value != stub) {
+            emit formChanged(this->_value);
+         }
       });
    }
 
@@ -125,17 +153,16 @@ dovah::bare_form_id_t FormPicker::formID() const noexcept {
       return stub->formID;
    return 0;
 }
-dovah::form_stub* FormPicker::formStub() const noexcept {
-   auto data = this->subwidgets.form->currentData(FormStubRole);
-   if (data.isValid())
-      return (dovah::form_stub*)this->subwidgets.form->currentData(FormStubRole).value<dovah::form_stub*>();
-   return nullptr;
-}
 
 void FormPicker::addFormType(dovah::form_type_t ft) {
    if (this->_formTypes.contains(ft))
       return;
    this->_formTypes.push_back(ft);
+   if (this->_formTypes.empty()) {
+      this->_prior_selections.clear();
+      if (this->_value && this->_value->formType != ft)
+         this->_value = nullptr;
+   }
    //
    const auto blocker0 = QSignalBlocker(this->subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->subwidgets.form);
@@ -173,18 +200,19 @@ void FormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    if (!stub) {
       if (!this->allowNone())
          return;
-      this->_prior_selections.clear();
-      int index = this->subwidgets.form->findData(0);
-      if (index >= 0)
-         this->subwidgets.form->setCurrentIndex(index);
-      return;
+   } else {
+      if (!this->_formTypes.contains(stub->formType))
+         return;
    }
-   if (!this->_formTypes.contains(stub->formType))
-      return;
+   this->_value = stub;
    this->_prior_selections.clear();
-   int index = this->subwidgets.form->findData(QVariant::fromValue(stub), FormStubRole);
-   if (index >= 0)
-      this->subwidgets.form->setCurrentIndex(index);
+   //
+   auto* subwidget = this->subwidgets.form;
+   int   index     = subwidget->findData(QVariant::fromValue(stub), FormStubRole);
+   if (index >= 0) {
+      const auto blocker = QSignalBlocker(subwidget);
+      subwidget->setCurrentIndex(index);
+   }
 }
 
 FormPickerImpl::FormPickerIterativeModel* FormPicker::_rawModel() const noexcept {
@@ -226,14 +254,6 @@ void FormPicker::_updateForms() {
    auto* model  = this->_rawModel();
    //
    const auto blocker = QSignalBlocker(c_form);
-   QObject::connect(model, &FormPickerImpl::FormPickerIterativeModel::filled, this, [this, stub]() {
-      auto* model = this->_rawModel();
-      int   i     = model->indexOf(stub);
-      QObject::disconnect(model, &FormPickerImpl::FormPickerIterativeModel::filled, this, nullptr);
-      if (i >= 0)
-         this->subwidgets.form->setCurrentIndex(i);
-      this->_setSubwidgetEnableState(model->rowCount(QModelIndex()) != 0);
-   });
    if (this->isSplittingTypes()) {
       auto ftd = this->subwidgets.type->currentData();
       if (!ftd.isValid()) {

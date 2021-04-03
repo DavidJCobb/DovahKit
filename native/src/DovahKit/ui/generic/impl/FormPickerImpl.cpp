@@ -1,6 +1,7 @@
 #include "FormPickerImpl.h"
 #include "../../../editor/core.h"
 #include "../../../editor/form_stub_meta_type.h"
+#include <QElapsedTimer>
 
 /*
 
@@ -32,6 +33,11 @@ namespace {
 
    constexpr int make_per_tick = 1500;
    constexpr int sort_per_tick = 1500;
+   #if _DEBUG
+      constexpr bool do_fill_diagnostics = true;
+   #else
+      constexpr bool do_fill_diagnostics = false;
+   #endif
 }
 
 namespace FormPickerImpl {
@@ -292,18 +298,30 @@ namespace FormPickerImpl {
       });
    }
 
+   void FormPickerIterativeModel::_resetFillDiagnostics() {
+      if (do_fill_diagnostics) {
+         this->fill_diagnostics.ticks_to_grab = 0;
+         this->fill_diagnostics.ticks_to_sort = 0;
+      }
+   }
    bool FormPickerIterativeModel::_fillGrabMore() {
       if (!this->ongoing_fill.filling)
          return false;
       auto& unsorted = this->ongoing_fill.unsorted;
-      //
-      auto& source = FormPickerSharedUnderlyingModel::get();
-      auto  start  = this->ongoing_fill.progress;
-      auto  max    = source.rowCount(QModelIndex());
-      auto  end    = std::min(start + make_per_tick, max);
-      int   added  = 0;
+      auto& source   = FormPickerSharedUnderlyingModel::get();
+      auto  start    = this->ongoing_fill.progress;
+      auto  max      = source.rowCount(QModelIndex());
+      //auto  end    = std::min(start + make_per_tick, max);
+      if (do_fill_diagnostics) {
+         ++this->fill_diagnostics.ticks_to_grab;
+      }
+      QElapsedTimer elapsed_time;
+      elapsed_time.start();
       unsorted.reserve(unsorted.size() + make_per_tick);
-      for (int i = start; i < end; ++i) {
+      for (int i = start; i < max; ++i) {
+         if (elapsed_time.elapsed() > 33)
+            break;
+         ++this->ongoing_fill.progress;
          auto* entry = source.itemAtRow(i);
          if (!entry)
             continue;
@@ -317,21 +335,30 @@ namespace FormPickerImpl {
          }
          unsorted.push_back(entry);
       }
-      this->ongoing_fill.progress = end;
-      return (end == max);
+      return (this->ongoing_fill.progress == max);
    }
    bool FormPickerIterativeModel::_fillSortMore() {
       if (!this->ongoing_fill.filling)
          return false;
       auto& unsorted = this->ongoing_fill.unsorted;
       auto& sorted   = this->stubs;
+      //int cap = std::min(sort_per_tick, unsorted.size());
+      int cap = unsorted.size();
+      if (do_fill_diagnostics) {
+         ++this->fill_diagnostics.ticks_to_sort;
+      }
+      QElapsedTimer elapsed_time;
+      elapsed_time.start();
       if (sorted.empty())
          sorted.reserve(unsorted.size());
-      int cap = std::min(sort_per_tick, unsorted.size());
+      int sorted_this_time = 0;
       for (int i = 0; i < cap; ++i) {
+         if (elapsed_time.elapsed() > 33)
+            break;
+         ++sorted_this_time;
          auto* entry = unsorted[i];
          if (!entry->stub) { // "NONE" special-case
-            unsorted.prepend(entry);
+            sorted.prepend(entry);
             continue;
          }
          auto it = std::upper_bound(sorted.begin(), sorted.end(), entry, [](const item* a, const item* b) {
@@ -343,7 +370,8 @@ namespace FormPickerImpl {
          });
          sorted.insert(it, entry);
       }
-      unsorted.remove(0, cap);
+      //unsorted.remove(0, cap);
+      unsorted.remove(0, sorted_this_time);
       return unsorted.empty();
    }
 
@@ -361,6 +389,7 @@ namespace FormPickerImpl {
                this->endInsertRows();
             }
             emit filled();
+            this->_resetFillDiagnostics();
          }
       } else {
          if (this->_fillGrabMore())
@@ -379,6 +408,7 @@ namespace FormPickerImpl {
       this->ongoing_fill.progress   = 0;
       this->ongoing_fill.unsorted.clear();
       this->ongoing_fill.timer.start();
+      this->_resetFillDiagnostics();
    }
    void FormPickerIterativeModel::updateParameters(bool allow_none, const QVector<dovah::form_type_t>& form_types) {
       this->refill(allow_none, form_types);
@@ -438,6 +468,17 @@ namespace FormPickerImpl {
       for (int i = 0; i < size; ++i)
          if (this->stubs[i]->stub == stub)
             return i;
+      return -1;
+   }
+   int FormPickerIterativeModel::indexOfFormID(dovah::bare_form_id_t id) const noexcept {
+      int size = this->stubs.size();
+      for (int i = 0; i < size; ++i) {
+         auto* stub = this->stubs[i]->stub;
+         if (id == 0 && !stub)
+            return i;
+         if (stub && stub->formID == id)
+            return i;
+      }
       return -1;
    }
    #pragma endregion

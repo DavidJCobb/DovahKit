@@ -34,13 +34,7 @@
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
-     <property name="buddy">
-      <cstring>word</cstring>
-     </property>
     </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="FormsOfTypeCombobox" name="word"/>
    </item>
    <item row="1" column="0">
     <widget class="QLabel" name="label_2">
@@ -50,13 +44,7 @@
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
-     <property name="buddy">
-      <cstring>spell</cstring>
-     </property>
     </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="FormsOfTypeCombobox" name="spell"/>
    </item>
    <item row="2" column="0">
     <widget class="QLabel" name="label_3">
@@ -74,13 +62,20 @@
    <item row="2" column="1">
     <widget class="QDoubleSpinBox" name="recoveryTime"/>
    </item>
+   <item row="0" column="1">
+    <widget class="FormPicker" name="word" native="true"/>
+   </item>
+   <item row="1" column="1">
+    <widget class="FormPicker" name="spell" native="true"/>
+   </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>FormsOfTypeCombobox</class>
-   <extends>QComboBox</extends>
-   <header>../../generic/FormsOfTypeCombobox.h</header>
+   <class>FormPicker</class>
+   <extends>QWidget</extends>
+   <header>../../generic/FormPicker.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

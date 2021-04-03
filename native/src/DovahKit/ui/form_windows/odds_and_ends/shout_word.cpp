@@ -24,9 +24,7 @@ void FormShoutWordEditor::initialize() {
    this->ui.spell->addFormType(dovah::form_type::spell);
    this->ui.spell->setAllowNone(true);
    //
-   this->ui.word->populate();
    this->ui.word->setFormByID(0);
-   this->ui.spell->populate();
    this->ui.spell->setFormByID(0);
 }
 void FormShoutWordEditor::load() {

@@ -9,7 +9,6 @@ FormDialogShout::FormDialogShout(dovah::form_stub* stub, QWidget* parent) : Form
    //
    this->ui.menuDisplayObject->addFormType(dovah::form_type::statik);
    this->ui.menuDisplayObject->setAllowNone(true);
-   this->ui.menuDisplayObject->populate();
    //
    this->load();
 }

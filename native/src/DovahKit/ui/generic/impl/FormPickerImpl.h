@@ -64,9 +64,14 @@ namespace FormPickerImpl {
             item_list unsorted;
             QTimer timer;
          } ongoing_fill;
+         struct {
+            int ticks_to_grab = 0;
+            int ticks_to_sort = 0;
+         } fill_diagnostics;
 
          inline bool _isFilling() const noexcept { return this->ongoing_fill.filling; }
 
+         void _resetFillDiagnostics();
          bool _fillGrabMore(); // returns true if done
          bool _fillSortMore(); // returns true if done
 
@@ -87,6 +92,7 @@ namespace FormPickerImpl {
          void updateParameters(bool allow_none, const QVector<dovah::form_type_t>& form_types);
 
          int indexOf(const dovah::form_stub*) const noexcept;
+         int indexOfFormID(dovah::bare_form_id_t) const noexcept;
 
       signals:
          void filled();

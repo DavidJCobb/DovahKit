@@ -14,8 +14,8 @@ class FormShoutWordEditor : public QWidget {
       void initialize();
       void load();
       void save();
-      inline FormsOfTypeCombobox* spellCombobox() const noexcept { return this->ui.spell; }
-      inline FormsOfTypeCombobox* wordCombobox() const noexcept { return this->ui.word; }
+      inline FormPicker* spellCombobox() const noexcept { return this->ui.spell; }
+      inline FormPicker* wordCombobox() const noexcept { return this->ui.word; }
       //
    private slots:
       //

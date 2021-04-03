@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QStackedWidget>
 #include <QWidget>
+#include "../../generic/FormPicker.h"
 #include "../../generic/FormsOfTypeCombobox.h"
 #include "../../generic/RefPickerButton.h"
 #include "../../../dovah/data/conditions.h"
@@ -45,7 +46,7 @@ class ConditionParameterEditor : public QWidget {
          QComboBox*           combobox = nullptr;
          QLineEdit*           textbox  = nullptr;
          QDoubleSpinBox*      spinbox  = nullptr;
-         FormsOfTypeCombobox* form     = nullptr;
+         FormPicker*          form     = nullptr;
          RefPickerButton*     ref      = nullptr;
       } subwidgets;
 

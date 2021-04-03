@@ -73,7 +73,7 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
    lambda(this->subwidgets.combobox = new QComboBox);
    lambda(this->subwidgets.textbox  = new QLineEdit);
    lambda(this->subwidgets.spinbox  = new QDoubleSpinBox);
-   lambda(this->subwidgets.form     = new FormsOfTypeCombobox);
+   lambda(this->subwidgets.form     = new FormPicker);
    lambda(this->subwidgets.ref      = new RefPickerButton);
    //
    this->subwidgets.spinbox->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
@@ -152,9 +152,7 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
       }
       emit this->valueChanged();
    });
-   QObject::connect(this->subwidgets.form, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
-      auto* stub = this->subwidgets.form->formStub();
-      //
+   QObject::connect(this->subwidgets.form, &FormPicker::formChanged, this, [this](dovah::form_stub* stub) {
       if (this->_is_event_parameter()) {
          if (this->parameter_index == 2) {
             this->working.event_parameters.form = stub;
@@ -369,7 +367,6 @@ void ConditionParameterEditor::rebuild() {
                }
                w->setAllowedFormTypes(al);
                w->setAllowNone(true);
-               w->populate();
                //
                dovah::bare_form_id_t id = 0;
                if (auto* stub = param.form)
@@ -577,7 +574,6 @@ void ConditionParameterEditor::_rebuildForEvents() {
                this->_setCurrentWidget(this->subwidgets.form);
                auto* w = this->subwidgets.form;
                w->setAllowedFormTypes(allowed);
-               w->populate();
                //
                dovah::bare_form_id_t id = 0;
                if (auto* stub = this->working.event_parameters.form)

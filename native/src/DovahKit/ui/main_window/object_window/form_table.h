@@ -43,7 +43,7 @@ class FormTableModel : public QAbstractTableModel {
       using form_type_set = QVector<dovah::form_type_t>;
       //
    protected:
-      ObjectWindowFilterInfo last_used_filter_info;
+      form_type_set       form_types; // list of all form types that the Object Window should be capable of displaying under any circumstance
       QVector<item_type*> children;
       QVector<item_type*> pending_additions;
       QVector<form_stub*> forms_pending_use_info_update;
@@ -80,8 +80,7 @@ class FormTableModel : public QAbstractTableModel {
       virtual QStringList mimeTypes() const override;
       //
       void rebuild();
-      void rebuild(const ObjectWindowFilterInfo&);
-      void setFilterInfo(const ObjectWindowFilterInfo&);
+      void setBaseFormTypes(const form_type_set&);
       //
       const item_type* dataAtRow(int) const noexcept;
 };

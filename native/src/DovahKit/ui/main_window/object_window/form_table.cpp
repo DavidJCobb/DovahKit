@@ -6,6 +6,14 @@
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/files/common.h"
 
+//
+// KNOWN DEFECTS:
+//
+//  - QSortFilterProxyModel has internal mappings that it needs to build; this causes a 
+//    lag spike when the user changes the Object Window's filter for the first time after 
+//    files are loaded
+//
+
 FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
    this->stub = stub;
    this->update();
@@ -43,10 +51,7 @@ FormTableModel::FormTableModel(QObject* parent) : QAbstractTableModel(parent) {
 }
 
 void FormTableModel::formCreated(dovah::form_stub* stub) {
-   auto& fi = this->last_used_filter_info;
-   if (!fi.form_types.contains(stub->formType))
-      return;
-   if (!fi.testFormStubFilter(stub))
+   if (!this->form_types.contains(stub->formType))
       return;
    this->insertItem(stub, false);
 }
@@ -322,47 +327,37 @@ void FormTableModel::clear() {
    this->forms_pending_use_info_update.clear();
    this->endResetModel();
 }
-void FormTableModel::rebuild(const ObjectWindowFilterInfo& fi) {
-   this->last_used_filter_info = fi;
-   this->rebuild();
-}
 void FormTableModel::rebuild() {
    this->clear();
    //
-   auto& fi = this->last_used_filter_info;
-   if (fi.form_types.empty())
+   if (this->form_types.empty())
       return;
-   //
    auto& editor = DovahKitCore::get();
    if (!editor.has_data())
       return;
    //
-   uint32_t total = 0;
-   for (auto ft : fi.form_types)
-      total += editor.count_forms_of_type(ft);
-   if (!total)
-      return;
-   for (auto ft : fi.form_types) {
+   {
+      bool any = false;
+      for(auto ft : this->form_types)
+         if (editor.count_forms_of_type(ft)) {
+            any = true;
+            break;
+         }
+      if (!any)
+         return;
+   }
+   for (auto ft : this->form_types) {
       if (ft == dovah::form_type::none)
          editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) {
             if (stub->is_none_stub())
                this->insertItem(stub, true);
             return false;
          });
-      else {
-         if (fi.filterListFor(ft)) {
-            editor.for_each_form_of_type(ft, [this, &fi](dovah::form_stub* stub) {
-               if (fi.testFormStubFilter(stub))
-                  this->insertItem(stub, true);
-               return false;
-            });
-         } else {
-            editor.for_each_form_of_type(ft, [this, &fi](dovah::form_stub* stub) {
-               this->insertItem(stub, true);
-               return false;
-            });
-         }
-      }
+      else
+         editor.for_each_form_of_type(ft, [this](dovah::form_stub* stub) {
+            this->insertItem(stub, true);
+            return false;
+         });
    }
    //
    auto count = this->pending_additions.size();
@@ -377,11 +372,8 @@ void FormTableModel::rebuild() {
    this->pending_additions.clear();
    this->endInsertRows();
 }
-void FormTableModel::setFilterInfo(const ObjectWindowFilterInfo& list) {
-   auto& prior = this->last_used_filter_info;
-   if (prior == list)
-      return;
-   this->rebuild(list);
+void FormTableModel::setBaseFormTypes(const form_type_set& types) {
+   this->form_types = types;
 }
 
 const FormTableModel::item_type* FormTableModel::dataAtRow(int row) const noexcept {
@@ -461,19 +453,19 @@ void FormTable::recheckFormTypes() {
    if (!this->_source)
       return;
    auto* model = this->proxyModel();
-   if (!model)
-      return;
+   assert(model);
    model->setFilterInfo(this->_source->filterInfo());
 }
 void FormTable::rebuildModel() {
-   if (auto* model = this->unwrappedModel())
-      model->rebuild();
+   auto* proxy = this->proxyModel();
+   auto* model = this->unwrappedModel();
+   assert(model);
+   model->rebuild();
 }
 void FormTable::refilterModel(const QString& text) {
-   auto wrapper = (QSortFilterProxyModel*)this->model();
-   if (!wrapper)
-      return;
-   wrapper->setFilterFixedString(text);
+   auto* proxy = this->proxyModel();
+   assert(proxy);
+   proxy->setFilterFixedString(text);
 }
 void FormTable::filterChanged() {
    auto& timer = *this->_filterThrottle;
@@ -487,16 +479,15 @@ void FormTable::filterFinished() {
       this->refilterModel(this->_filter->text());
 }
 void FormTable::clear() {
-   if (auto* model = this->unwrappedModel())
-      model->clear();
+   auto* model = this->unwrappedModel();
+   assert(model);
+   model->clear();
 }
 void FormTable::select(dovah::form_stub* stub) {
    auto* proxy = (proxy_type*)this->model();
-   if (!proxy)
-      return;
+   assert(proxy);
    auto* model = (model_type*)proxy->sourceModel();
-   if (!model)
-      return;
+   assert(model);
    auto  index  = model->index(stub);
    auto  mapped = proxy->mapFromSource(index);
    auto* select_model = this->selectionModel();
@@ -523,11 +514,7 @@ void FormTable::setSource(ObjectWindowTree* tree) {
    this->_source = tree;
    if (!tree)
       return;
-   //
-   ObjectWindowFilterInfo fi;
-   fi.form_types = tree->allPrimaryFormTypes();
-   this->unwrappedModel()->rebuild(fi);
-   //
+   this->unwrappedModel()->setBaseFormTypes(tree->allPrimaryFormTypes());
    QObject::connect(tree->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormTable::recheckFormTypes);
    this->recheckFormTypes();
 }

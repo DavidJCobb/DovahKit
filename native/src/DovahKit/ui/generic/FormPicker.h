@@ -24,7 +24,7 @@ class FormPicker : public QWidget {
       }
 
       dovah::bare_form_id_t formID() const noexcept;
-      dovah::form_stub* formStub() const noexcept;
+      inline dovah::form_stub* formStub() const noexcept { return this->_value; }
 
       void addFormType(dovah::form_type_t);
       inline void allowAllFormTypes() noexcept { this->setAllowedFormTypes({}); }
@@ -44,6 +44,7 @@ class FormPicker : public QWidget {
          dovah::bare_form_id_t formID = 0;
       };
 
+      dovah::form_stub* _value = nullptr;
       QVector<dovah::form_type_t> _formTypes;
       bool _allowNone          = false;
       bool _isSplittingTypes   = false;
