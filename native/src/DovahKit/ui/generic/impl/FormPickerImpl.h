@@ -3,6 +3,7 @@
 #include "../../../editor/core.h"
 #include <QAbstractItemModel>
 #include <QAbstractProxyModel>
+#include <QElapsedTimer>
 #include <QSortFilterProxyModel>
 #include <QTimer>
 
@@ -63,10 +64,12 @@ namespace FormPickerImpl {
             QVector<dovah::form_type_t> form_types;
             item_list unsorted;
             QTimer timer;
+            QElapsedTimer ticker;
          } ongoing_fill;
          struct {
-            int ticks_to_grab = 0;
-            int ticks_to_sort = 0;
+            int  ticks_to_grab = 0;
+            int  ticks_to_sort = 0;
+            bool ticks_overlap = false;
          } fill_diagnostics;
 
          inline bool _isFilling() const noexcept { return this->ongoing_fill.filling; }

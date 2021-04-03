@@ -31,12 +31,13 @@ namespace {
       return false;
    }
 
-   constexpr int make_per_tick = 1500;
-   constexpr int sort_per_tick = 1500;
+   constexpr int max_fill_tick_duration = 33; // milliseconds
    #if _DEBUG
       constexpr bool do_fill_diagnostics = true;
+      constexpr int  estimated_items_possible_in_one_tick = 1000; // budget for less-async fills. per control, and some windows have several FormPickers, so keep it low.
    #else
       constexpr bool do_fill_diagnostics = false;
+      constexpr int  estimated_items_possible_in_one_tick = 2000; // budget for less-async fills. per control, and some windows have several FormPickers, so keep it low.
    #endif
 }
 
@@ -307,19 +308,16 @@ namespace FormPickerImpl {
    bool FormPickerIterativeModel::_fillGrabMore() {
       if (!this->ongoing_fill.filling)
          return false;
+      if (do_fill_diagnostics) {
+         ++this->fill_diagnostics.ticks_to_grab;
+      }
       auto& unsorted = this->ongoing_fill.unsorted;
       auto& source   = FormPickerSharedUnderlyingModel::get();
       auto  start    = this->ongoing_fill.progress;
       auto  max      = source.rowCount(QModelIndex());
-      //auto  end    = std::min(start + make_per_tick, max);
-      if (do_fill_diagnostics) {
-         ++this->fill_diagnostics.ticks_to_grab;
-      }
-      QElapsedTimer elapsed_time;
-      elapsed_time.start();
-      unsorted.reserve(unsorted.size() + make_per_tick);
+      unsorted.reserve(unsorted.size() + 500);
       for (int i = start; i < max; ++i) {
-         if (elapsed_time.elapsed() > 33)
+         if (this->ongoing_fill.ticker.elapsed() > max_fill_tick_duration)
             break;
          ++this->ongoing_fill.progress;
          auto* entry = source.itemAtRow(i);
@@ -340,20 +338,17 @@ namespace FormPickerImpl {
    bool FormPickerIterativeModel::_fillSortMore() {
       if (!this->ongoing_fill.filling)
          return false;
-      auto& unsorted = this->ongoing_fill.unsorted;
-      auto& sorted   = this->stubs;
-      //int cap = std::min(sort_per_tick, unsorted.size());
-      int cap = unsorted.size();
       if (do_fill_diagnostics) {
          ++this->fill_diagnostics.ticks_to_sort;
       }
-      QElapsedTimer elapsed_time;
-      elapsed_time.start();
+      auto& unsorted = this->ongoing_fill.unsorted;
+      auto& sorted   = this->stubs;
+      int   cap      = unsorted.size();
       if (sorted.empty())
-         sorted.reserve(unsorted.size());
+         sorted.reserve(cap);
       int sorted_this_time = 0;
       for (int i = 0; i < cap; ++i) {
-         if (elapsed_time.elapsed() > 33)
+         if (this->ongoing_fill.ticker.elapsed() > max_fill_tick_duration)
             break;
          ++sorted_this_time;
          auto* entry = unsorted[i];
@@ -378,22 +373,27 @@ namespace FormPickerImpl {
    void FormPickerIterativeModel::fetchMore(const QModelIndex& parent) {
       if (!this->ongoing_fill.filling)
          return;
-      if (this->ongoing_fill.sorting) {
-         if (this->_fillSortMore()) {
-            this->ongoing_fill.timer.stop();
-            this->ongoing_fill.filling  = false;
-            this->ongoing_fill.sorting  = false;
-            this->ongoing_fill.progress = 0;
-            if (auto size = this->stubs.size()) {
-               this->beginInsertRows(parent, 0, size - 1);
-               this->endInsertRows();
-            }
-            emit filled();
-            this->_resetFillDiagnostics();
-         }
-      } else {
+      this->ongoing_fill.ticker.restart();
+      if (!this->ongoing_fill.sorting) {
          if (this->_fillGrabMore())
             this->ongoing_fill.sorting = true;
+         if (this->ongoing_fill.ticker.elapsed() >= max_fill_tick_duration)
+            return;
+         if (do_fill_diagnostics) {
+            this->fill_diagnostics.ticks_overlap = true;
+         }
+      }
+      if (this->_fillSortMore()) {
+         this->ongoing_fill.timer.stop();
+         this->ongoing_fill.filling = false;
+         this->ongoing_fill.sorting = false;
+         this->ongoing_fill.progress = 0;
+         if (auto size = this->stubs.size()) {
+            this->beginInsertRows(parent, 0, size - 1);
+            this->endInsertRows();
+         }
+         emit filled();
+         this->_resetFillDiagnostics();
       }
    }
    bool FormPickerIterativeModel::canFetchMore(const QModelIndex& parent) const {
@@ -407,8 +407,26 @@ namespace FormPickerImpl {
       this->ongoing_fill.form_types = form_types;
       this->ongoing_fill.progress   = 0;
       this->ongoing_fill.unsorted.clear();
-      this->ongoing_fill.timer.start();
       this->_resetFillDiagnostics();
+      //
+      auto&    editor = DovahKitCore::get();
+      uint32_t total  = 0;
+      for (auto ft : form_types)
+         total += editor.count_forms_of_type(ft);
+      if (total < estimated_items_possible_in_one_tick) {
+         //
+         // We *think* we can get this task done in just one tick, so let's not even bother 
+         // deferring to the timer.
+         //
+         QModelIndex dummy;
+         this->fetchMore(dummy);
+         if (!this->ongoing_fill.filling) { // And we were right!
+            this->ongoing_fill.timer.stop(); // stop the timer, in case we're interrupting a previous fill operation
+            return;
+         }
+      }
+      //
+      this->ongoing_fill.timer.start();
    }
    void FormPickerIterativeModel::updateParameters(bool allow_none, const QVector<dovah::form_type_t>& form_types) {
       this->refill(allow_none, form_types);
