@@ -39,11 +39,6 @@ class FormPicker : public QWidget {
       void setDefaultFormID(dovah::bare_form_id_t) noexcept; // used if you call setFormByID(0) and allow-none is false
       
    protected:
-      struct _last_selection {
-         dovah::form_type_t    type;
-         dovah::bare_form_id_t formID = 0;
-      };
-
       dovah::form_stub* _value = nullptr;
       QVector<dovah::form_type_t> _formTypes;
       bool _allowNone          = false;
@@ -53,7 +48,8 @@ class FormPicker : public QWidget {
          QComboBox* form = nullptr;
          QComboBox* type = nullptr;
       } subwidgets;
-      std::map<dovah::form_type_t, dovah::bare_form_id_t> _prior_selections;
+      std::map<dovah::form_type_t, dovah::form_stub*> _prior_selections;
+      dovah::bare_form_id_t _defaultFormID = 0;
 
       FormPickerImpl::FormPickerIterativeModel* _rawModel() const noexcept;
 

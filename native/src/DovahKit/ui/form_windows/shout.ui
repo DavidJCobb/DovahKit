@@ -72,6 +72,9 @@
        <property name="text">
         <string>Menu Display Object</string>
        </property>
+       <property name="buddy">
+        <cstring>menuDisplayObject</cstring>
+       </property>
       </widget>
      </item>
      <item row="0" column="0" colspan="2">

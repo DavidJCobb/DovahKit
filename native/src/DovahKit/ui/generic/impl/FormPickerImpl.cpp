@@ -385,15 +385,17 @@ namespace FormPickerImpl {
       }
       if (this->_fillSortMore()) {
          this->ongoing_fill.timer.stop();
-         this->ongoing_fill.filling = false;
-         this->ongoing_fill.sorting = false;
-         this->ongoing_fill.progress = 0;
+         this->ongoing_fill.filling   = false;
+         this->ongoing_fill.post_fill = true;
+         this->ongoing_fill.sorting   = false;
+         this->ongoing_fill.progress  = 0;
          if (auto size = this->stubs.size()) {
             this->beginInsertRows(parent, 0, size - 1);
             this->endInsertRows();
          }
+         emit beforeFilled();
          emit filled();
-         this->_resetFillDiagnostics();
+         QTimer::singleShot(0, [this]() { this->ongoing_fill.post_fill = false; });
       }
    }
    bool FormPickerIterativeModel::canFetchMore(const QModelIndex& parent) const {

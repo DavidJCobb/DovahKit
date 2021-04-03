@@ -29,7 +29,7 @@ namespace {
       using namespace dovah::loaded_forms::components::extra;
    }
 
-   template<class ec, extra_data_type et> void _load_extra_formID(FormsOfTypeCombobox* widget, dovah::loaded_forms::components::extra_data_list& extra) {
+   template<class ec, extra_data_type et, class widget_t> void _load_extra_formID(widget_t* widget, dovah::loaded_forms::components::extra_data_list& extra) {
       if (auto* data = extra.lookup<ec>(et)) {
          widget->setFormByID(data->form.formID());
       } else {
@@ -89,22 +89,15 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDi
    this->ui.location->setAllowNone(true);
    this->ui.acousticSpace->setAllowNone(true);
    this->ui.imagespace->setAllowNone(true);
-   this->ui.imagespace->setNoneLabel(tr("DEFAULT", "cell imagespace"));
+   //this->ui.imagespace->setNoneLabel(tr("DEFAULT", "cell imagespace"));
    this->ui.musicType->setAllowNone(true);
-   this->ui.musicType->setNoneLabel(tr("DEFAULT", "cell music"));
+   //this->ui.musicType->setNoneLabel(tr("DEFAULT", "cell music"));
    this->ui.waterType->setDefaultFormID(dovah::hardcoded_form_ids::DefaultWater);
-   this->ui.location->populate();
-   this->ui.acousticSpace->populate();
-   this->ui.imagespace->populate();
-   this->ui.musicType->populate();
-   this->ui.waterType->populate();
    //
    this->ui.lightingTemplate->addFormType(dovah::form_type::lighting_template);
    this->ui.lightingTemplate->setAllowNone(true);
    this->ui.skyRegion->addFormType(dovah::form_type::region);
    this->ui.skyRegion->setAllowNone(true);
-   this->ui.lightingTemplate->populate();
-   this->ui.skyRegion->populate();
    //
    this->ui.encounterZone->addFormType(dovah::form_type::encounter_zone);
    this->ui.ownerNPC->addFormType(dovah::form_type::actor_base);
@@ -115,16 +108,12 @@ FormDialogCell::FormDialogCell(dovah::form_stub* stub, QWidget* parent) : FormDi
    this->ui.ownerNPC->setAllowNone(true);
    this->ui.ownerFaction->setAllowNone(true);
    this->ui.interiorLockList->setAllowNone(true);
-   this->ui.encounterZone->populate();
-   this->ui.ownerNPC->populate();
-   this->ui.ownerFaction->populate();
-   this->ui.interiorLockList->populate();
-   QObject::connect(this->ui.ownerFaction, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+   QObject::connect(this->ui.ownerFaction, &FormPicker::formChanged, this, [this]() {
       auto& editor = DovahKitCore::get();
       this->working_ownership.form = this->ui.ownerFaction->formStub();
       this->_update_ownership_widgets();
    });
-   QObject::connect(this->ui.ownerNPC, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+   QObject::connect(this->ui.ownerNPC, &FormPicker::formChanged, this, [this]() {
       auto& editor = DovahKitCore::get();
       this->working_ownership.form = this->ui.ownerNPC->formStub();
       this->_update_ownership_widgets();
@@ -146,18 +135,11 @@ void FormDialogCell::_update_ownership_widgets() {
    this->ui.ownerFaction->setEnabled(true);
    this->ui.ownerNPC->setEnabled(true);
    this->ui.ownerFactionRequiredRank->setEnabled(true);
-   this->ui.ownerFaction->setFormByID(0);
-   this->ui.ownerNPC->setFormByID(0);
-   if (auto stub = this->working_ownership.form) {
-      if (stub->formType == dovah::form_type::actor_base) {
-         this->ui.ownerNPC->setFormByID(stub->formID);
-      } else if (stub->formType == dovah::form_type::faction) {
+   this->ui.ownerFaction->setFormStub(this->working_ownership.form); // the control will filter for us
+   this->ui.ownerNPC->setFormStub(this->working_ownership.form); // the control will filter for us
+   if (auto* stub = this->working_ownership.form) {
+      if (stub->formType == dovah::form_type::faction)
          faction_stub = stub;
-         this->ui.ownerFaction->setFormByID(stub->formID);
-      }
-      //
-      // TODO: faction rank
-      //
    }
    //
    {
@@ -166,7 +148,10 @@ void FormDialogCell::_update_ownership_widgets() {
          prior_stub = &this->working_ownership.loaded_faction->stub;
       //
       if (prior_stub != faction_stub) {
-         this->working_ownership.loaded_faction = faction_stub->load().ptr_cast<dovah::loaded_forms::Faction>();
+         if (faction_stub)
+            this->working_ownership.loaded_faction = faction_stub->load().ptr_cast<dovah::loaded_forms::Faction>();
+         else
+            this->working_ownership.loaded_faction = nullptr;
          this->_update_rank_picker();
       }
    }
@@ -174,7 +159,7 @@ void FormDialogCell::_update_ownership_widgets() {
    if (this->ui.ownerFaction->formID()) {
       this->ui.ownerNPC->setEnabled(false);
    } else {
-      //this->ui.ownerFactionRequiredRank->setEnabled(false);
+      this->ui.ownerFactionRequiredRank->setEnabled(false);
       if (this->ui.ownerNPC->formID())
          this->ui.ownerFaction->setEnabled(false);
    }
@@ -222,7 +207,7 @@ void FormDialogCell::_load_impl() {
       if (auto* data = extra.lookup<extra::cell_music_override>(extra_data_type::cell_music_override)) {
          this->ui.musicType->setFormByID(data->form.formID());
       } else {
-         this->ui.musicType->setToUndefined();
+         this->ui.musicType->setFormByID(0);
       }
       if (!is_exterior) {
          this->ui.waterEnabled->setChecked(this->form->cell_flags & cell_flag::has_water);

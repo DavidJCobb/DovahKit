@@ -10,8 +10,8 @@
 #include "../../helpers/qt/strings.h"
 
 namespace {
-   static constexpr Qt::ItemDataRole FormIDRole    = (Qt::ItemDataRole)Qt::UserRole;
-   static constexpr Qt::ItemDataRole FormStubRole  = (Qt::ItemDataRole)(Qt::UserRole + 1);
+   static constexpr Qt::ItemDataRole FormIDRole    = FormPickerImpl::FormPickerSharedUnderlyingModel::FormIDRole;
+   static constexpr Qt::ItemDataRole FormStubRole  = FormPickerImpl::FormPickerSharedUnderlyingModel::FormStubRole;
 
    bool _should_exclude_form(const dovah::form_stub* stub) {
       if (stub->formType == dovah::form_type::cell)
@@ -82,11 +82,14 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
 
    QObject::connect(this->subwidgets.type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
       if (auto* stub = this->formStub())
-         this->_prior_selections[stub->formType] = stub->formID;
+         this->_prior_selections[stub->formType] = stub;
       //
       this->_updateForms();
    });
    QObject::connect(this->subwidgets.form, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+      if (this->_rawModel()->isFilling()) // the QComboBox changes its value when the model fills, which can happen async -- and before we have a chance to make it select our (_value).
+         return;
+      this->_value = this->subwidgets.form->currentData(FormStubRole).value<dovah::form_stub*>();
       emit formChanged(this->formStub());
    });
    {  // Set up form-combobox models
@@ -101,6 +104,7 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
       });
       QObject::connect(model, &FormPickerImpl::FormPickerIterativeModel::filled, this, [this]() {
          auto* model = this->_rawModel();
+         auto* prior = this->_value;
          auto* stub  = this->_value;
          int   i     = model->indexOf(stub);
          if (this->isSplittingTypes()) {
@@ -110,7 +114,8 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
                if (!stub || stub->formType != ft) {
                   auto it = this->_prior_selections.find(ft);
                   if (it != this->_prior_selections.end()) {
-                     i = model->indexOfFormID(it->second);
+                     stub = it->second;
+                     i    = model->indexOf(stub);
                   }
                }
             }
@@ -120,7 +125,7 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
          this->_value = this->subwidgets.form->currentData(FormStubRole).value<dovah::form_stub*>();
          this->_setSubwidgetEnableState(model->rowCount(QModelIndex()) != 0);
          //
-         if (this->_value != stub) {
+         if (this->_value != prior) {
             emit formChanged(this->_value);
          }
       });
@@ -137,13 +142,6 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
       this->_setSubwidgetEnableState(false);
       this->subwidgets.type->clear();
       this->_prior_selections.clear();
-   });
-   QObject::connect(&editor, &DovahKitCore::formRenumbered, this, [this](dovah::form_stub* stub, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID) {
-      auto& ps = this->_prior_selections;
-      auto  it = ps.find(stub->formType);
-      if (it != ps.end())
-         if (oldID == it->second)
-            it->second = newID;
    });
 }
 
@@ -198,8 +196,14 @@ void FormPicker::setFormByID(dovah::bare_form_id_t id) noexcept {
 }
 void FormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    if (!stub) {
-      if (!this->allowNone())
+      if (!this->allowNone()) {
+         if (this->_defaultFormID) {
+            stub = DovahKitCore::get().get_form(this->_defaultFormID);
+            if (stub)
+               this->setFormStub(stub);
+         }
          return;
+      }
    } else {
       if (!this->_formTypes.contains(stub->formType))
          return;
@@ -213,6 +217,9 @@ void FormPicker::setFormStub(dovah::form_stub* stub) noexcept {
       const auto blocker = QSignalBlocker(subwidget);
       subwidget->setCurrentIndex(index);
    }
+}
+void FormPicker::setDefaultFormID(dovah::bare_form_id_t id) noexcept {
+   this->_defaultFormID = id;
 }
 
 FormPickerImpl::FormPickerIterativeModel* FormPicker::_rawModel() const noexcept {

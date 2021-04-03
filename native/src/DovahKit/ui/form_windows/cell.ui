@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -31,9 +31,6 @@
            <property name="text">
             <string>Location</string>
            </property>
-           <property name="buddy">
-            <cstring>location</cstring>
-           </property>
           </widget>
          </item>
          <item row="3" column="0" colspan="2">
@@ -42,9 +39,6 @@
             <string>Hand-Changed</string>
            </property>
           </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="FormsOfTypeCombobox" name="location"/>
          </item>
          <item row="2" column="0" colspan="2">
           <widget class="QCheckBox" name="flagCantTravel">
@@ -66,6 +60,9 @@
          <item row="0" column="1">
           <widget class="QLineEdit" name="editorID"/>
          </item>
+         <item row="1" column="1">
+          <widget class="FormPicker" name="location" native="true"/>
+         </item>
         </layout>
        </item>
        <item row="2" column="0">
@@ -73,7 +70,7 @@
          <property name="title">
           <string>Water</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_5">
+         <layout class="QGridLayout" name="gridLayout_5" columnstretch="1,1">
           <item row="0" column="0" colspan="2">
            <widget class="QCheckBox" name="waterEnabled">
             <property name="text">
@@ -182,13 +179,7 @@
             <property name="text">
              <string>Type</string>
             </property>
-            <property name="buddy">
-             <cstring>waterType</cstring>
-            </property>
            </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="FormsOfTypeCombobox" name="waterType"/>
           </item>
           <item row="3" column="1">
            <widget class="QDoubleSpinBox" name="waterHeight">
@@ -220,6 +211,9 @@
             </property>
            </widget>
           </item>
+          <item row="2" column="1">
+           <widget class="FormPicker" name="waterType" native="true"/>
+          </item>
          </layout>
         </widget>
        </item>
@@ -228,7 +222,7 @@
          <property name="title">
           <string>Ambiance</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_4">
+         <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,1">
           <item row="1" column="0">
            <widget class="QLabel" name="label_3">
             <property name="text">
@@ -249,9 +243,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="FormsOfTypeCombobox" name="acousticSpace"/>
-          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_4">
             <property name="text">
@@ -262,11 +253,14 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="1">
+           <widget class="FormPicker" name="acousticSpace" native="true"/>
+          </item>
           <item row="1" column="1">
-           <widget class="FormsOfTypeCombobox" name="imagespace"/>
+           <widget class="FormPicker" name="imagespace" native="true"/>
           </item>
           <item row="2" column="1">
-           <widget class="FormsOfTypeCombobox" name="musicType"/>
+           <widget class="FormPicker" name="musicType" native="true"/>
           </item>
          </layout>
         </widget>
@@ -356,7 +350,7 @@
       <attribute name="title">
        <string>Lighting</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_8">
+      <layout class="QGridLayout" name="gridLayout_8" columnstretch="1,1">
        <item row="2" column="1">
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
@@ -430,17 +424,11 @@
            <property name="title">
             <string>Sky</string>
            </property>
-           <layout class="QGridLayout" name="gridLayout_10">
-            <item row="2" column="1">
-             <widget class="FormsOfTypeCombobox" name="skyRegion"/>
-            </item>
+           <layout class="QGridLayout" name="gridLayout_10" columnstretch="1,1">
             <item row="2" column="0">
              <widget class="QLabel" name="label_14">
               <property name="text">
                <string>Region</string>
-              </property>
-              <property name="buddy">
-               <cstring>skyRegion</cstring>
               </property>
              </widget>
             </item>
@@ -457,6 +445,9 @@
                <string>Use Sky Lighting</string>
               </property>
              </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="FormPicker" name="skyRegion" native="true"/>
             </item>
            </layout>
           </widget>
@@ -599,9 +590,9 @@
         </widget>
        </item>
        <item row="0" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,2">
          <item>
-          <widget class="QLabel" name="label_13">
+          <widget class="QLabel" name="labelLightingTemplate">
            <property name="text">
             <string>Lighting Template</string>
            </property>
@@ -611,7 +602,7 @@
           </widget>
          </item>
          <item>
-          <widget class="FormsOfTypeCombobox" name="lightingTemplate"/>
+          <widget class="FormPicker" name="lightingTemplate" native="true"/>
          </item>
         </layout>
        </item>
@@ -988,9 +979,6 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="FormsOfTypeCombobox" name="encounterZone"/>
-       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_29">
          <property name="text">
@@ -1043,16 +1031,7 @@
          <property name="title">
           <string>Ownership</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_16">
-          <item row="1" column="1">
-           <widget class="FormsOfTypeCombobox" name="ownerFaction"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QComboBox" name="ownerFactionRequiredRank"/>
-          </item>
-          <item row="0" column="1">
-           <widget class="FormsOfTypeCombobox" name="ownerNPC"/>
-          </item>
+         <layout class="QGridLayout" name="gridLayout_16" columnstretch="1,1">
           <item row="2" column="0">
            <widget class="QLabel" name="label_32">
             <property name="text">
@@ -1066,28 +1045,11 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_40">
-            <property name="text">
-             <string>Lock List</string>
-            </property>
-            <property name="buddy">
-             <cstring>interiorLockList</cstring>
-            </property>
-           </widget>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="ownerFactionRequiredRank"/>
           </item>
-          <item row="3" column="1">
-           <widget class="FormsOfTypeCombobox" name="interiorLockList"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_41">
-            <property name="text">
-             <string>NPC</string>
-            </property>
-            <property name="buddy">
-             <cstring>ownerNPC</cstring>
-            </property>
-           </widget>
+          <item row="0" column="1">
+           <widget class="FormPicker" name="ownerNPC" native="true"/>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_42">
@@ -1099,6 +1061,32 @@
             </property>
            </widget>
           </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_40">
+            <property name="text">
+             <string>Lock List</string>
+            </property>
+            <property name="buddy">
+             <cstring>interiorLockList</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_41">
+            <property name="text">
+             <string>NPC</string>
+            </property>
+            <property name="buddy">
+             <cstring>ownerNPC</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="FormPicker" name="ownerFaction" native="true"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="FormPicker" name="interiorLockList" native="true"/>
+          </item>
          </layout>
         </widget>
        </item>
@@ -1108,6 +1096,9 @@
           <string>Player Can't Wait Here</string>
          </property>
         </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="FormPicker" name="encounterZone" native="true"/>
        </item>
       </layout>
      </widget>
@@ -1148,11 +1139,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>FormsOfTypeCombobox</class>
-   <extends>QComboBox</extends>
-   <header>../generic/FormsOfTypeCombobox.h</header>
-  </customwidget>
-  <customwidget>
    <class>ColorPickerButton</class>
    <extends>QPushButton</extends>
    <header>../generic/ColorPickerButton.h</header>
@@ -1163,19 +1149,20 @@
    <header>../generic/TESFilePicker.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>FormPicker</class>
+   <extends>QWidget</extends>
+   <header>../generic/FormPicker.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>tabs</tabstop>
   <tabstop>editorID</tabstop>
-  <tabstop>location</tabstop>
   <tabstop>flagCantTravel</tabstop>
   <tabstop>flagHandChanged</tabstop>
-  <tabstop>acousticSpace</tabstop>
-  <tabstop>imagespace</tabstop>
-  <tabstop>musicType</tabstop>
   <tabstop>waterEnabled</tabstop>
   <tabstop>flagNoLODWater</tabstop>
-  <tabstop>waterType</tabstop>
   <tabstop>waterHeight</tabstop>
   <tabstop>waterLinearVelocityX</tabstop>
   <tabstop>waterLinearVelocityY</tabstop>
@@ -1187,7 +1174,6 @@
   <tabstop>hideLandQuad2</tabstop>
   <tabstop>hideLandQuad3</tabstop>
   <tabstop>hideLandQuad4</tabstop>
-  <tabstop>lightingTemplate</tabstop>
   <tabstop>inheritAmbient</tabstop>
   <tabstop>inheritDirectionalColor</tabstop>
   <tabstop>inheritDirectionalRot</tabstop>
@@ -1212,7 +1198,6 @@
   <tabstop>lightingDirectionalRotationZ</tabstop>
   <tabstop>skyVisible</tabstop>
   <tabstop>skyLighting</tabstop>
-  <tabstop>skyRegion</tabstop>
   <tabstop>lightingFadeDistanceStart</tabstop>
   <tabstop>lightingFadeDistanceEnd</tabstop>
   <tabstop>directionalAmbColorXPos</tabstop>
@@ -1223,12 +1208,8 @@
   <tabstop>directionalAmbColorZNeg</tabstop>
   <tabstop>directionalAmbientSetFromAmbient</tabstop>
   <tabstop>name</tabstop>
-  <tabstop>encounterZone</tabstop>
   <tabstop>waterEnvironmentMap</tabstop>
-  <tabstop>ownerNPC</tabstop>
-  <tabstop>ownerFaction</tabstop>
   <tabstop>ownerFactionRequiredRank</tabstop>
-  <tabstop>interiorLockList</tabstop>
   <tabstop>flagPublicArea</tabstop>
   <tabstop>flagOffLimits</tabstop>
   <tabstop>flagCantWait</tabstop>

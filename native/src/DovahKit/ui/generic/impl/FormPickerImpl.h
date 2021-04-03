@@ -11,8 +11,8 @@ namespace FormPickerImpl {
    class FormPickerSharedUnderlyingModel : public QAbstractItemModel {
       Q_OBJECT;
       public:
-         static constexpr int FormIDRole   = Qt::UserRole + 0;
-         static constexpr int FormStubRole = Qt::UserRole + 1;
+         static constexpr Qt::ItemDataRole FormIDRole   = (Qt::ItemDataRole)(Qt::UserRole + 0);
+         static constexpr Qt::ItemDataRole FormStubRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
 
          struct item {
             dovah::form_stub*  stub = nullptr;
@@ -61,6 +61,7 @@ namespace FormPickerImpl {
             bool sorting    = false;
             int  progress   = 0;
             bool allow_none = false;
+            bool post_fill  = false; // this exists so that we can delay the public (isFilling) until after signals are emitted, yet also have canFetchMore behave properly
             QVector<dovah::form_type_t> form_types;
             item_list unsorted;
             QTimer timer;
@@ -97,7 +98,10 @@ namespace FormPickerImpl {
          int indexOf(const dovah::form_stub*) const noexcept;
          int indexOfFormID(dovah::bare_form_id_t) const noexcept;
 
+         inline bool isFilling() const noexcept { return this->ongoing_fill.filling || this->ongoing_fill.post_fill; }
+
       signals:
+         void beforeFilled();
          void filled();
    };
 }
