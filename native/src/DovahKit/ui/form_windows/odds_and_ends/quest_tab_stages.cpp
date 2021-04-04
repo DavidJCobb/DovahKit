@@ -248,8 +248,7 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       #pragma region Entry settings
       this->ui.logEntryNextQuest->setAllowedFormType(dovah::form_type::quest);
       this->ui.logEntryNextQuest->setAllowNone(true);
-      this->ui.logEntryNextQuest->populate();
-      QObject::connect(this->ui.logEntryNextQuest, &FormsOfTypeCombobox::formChanged, this, [this](dovah::form_stub* selected) {
+      QObject::connect(this->ui.logEntryNextQuest, &FormPicker::formChanged, this, [this](dovah::form_stub* selected) {
          if (auto* entry = this->_get_log_entry())
             entry->next_quest_id.set(this->form, selected);
       });

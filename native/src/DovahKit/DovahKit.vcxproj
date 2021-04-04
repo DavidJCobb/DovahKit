@@ -764,6 +764,7 @@
     <Text Include="editor\scripting\_docs\native classes.txt" />
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
+    <Text Include="ui\_docs\FormPicker.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt" />

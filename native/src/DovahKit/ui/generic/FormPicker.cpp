@@ -231,6 +231,7 @@ FormPickerImpl::FormPickerIterativeModel* FormPicker::_rawModel() const noexcept
 void FormPicker::_setIsSplittingTypes(bool s) noexcept {
    this->_isSplittingTypes = s;
    this->subwidgets.type->setVisible(s);
+   this->setFocusProxy(s ? this->subwidgets.type : this->subwidgets.form); // needed to prevent tabbing from breaking when the "type" subwidget is hidden
    if (s)
       this->_updateTypePicker();
    else

@@ -17,6 +17,8 @@ FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
          this->stub = nullptr;
       }
    });
+   //
+   this->setFocusProxy(this->ui.word);
 }
 void FormShoutWordEditor::initialize() {
    this->ui.word->addFormType(dovah::form_type::word_of_power);

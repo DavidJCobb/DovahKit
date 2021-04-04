@@ -22,6 +22,7 @@ namespace {
 
 PapyrusFragmentEditor::PapyrusFragmentEditor(QWidget* parent) : QWidget(parent) {
    this->ui.setupUi(this);
+   this->setFocusProxy(this->ui.scriptname);
    //
    QObject::connect(this->ui.scriptname, &QComboBox::currentTextChanged, this, [this](const QString& name) {
       auto* widget = this->ui.function;

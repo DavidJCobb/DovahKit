@@ -1,0 +1,115 @@
+
+The FormPicker is a generic widget used to allow the user to choose a form from 
+among one of a set of  allowed form types. By default,  it displays as a single 
+dropdown  menu (QComboBox), but  if the widget  predicts (based on  the allowed 
+form types) that it  will have to display a large number of  forms, then it can 
+split into two comboboxes:  one to filter  by form  type, and another to pick a 
+form.
+
+FormPickers are designed to be able to display massive numbers of forms without 
+lagging the program.  They accomplish this by performing  filtering and sorting 
+asynchronously. The underlying FormPickerSharedUnderlyingModel singleton builds 
+and stores data items for all forms that can ever be displayed in a FormPicker, 
+and each FormPicker's form combobox has its own FormPickerIterativeModel, which 
+shares items (by pointer) from the underlying model, performing its sorting and 
+filtering over time. The underlying model stores items in a flat list, which it 
+never reorders, and this means that the per-widget models can iterate over part 
+of the underlying form list and continue where they left off. If the per-widget 
+models want to  filter X forms per tick,  and have been filtering  for Y ticks, 
+then they can easily continue from the (X * Y)-th tick.
+
+The key parts of this system are:
+
+
+   FormPickerSharedUnderlyingModel
+
+   A singleton model  which is shared  by all FormPickers.  Every form that can 
+   ever be shown in a FormPicker will have an item created for it inside of the 
+   shared model,  and these are heap-allocated, with pointers stored  in a flat 
+   list that never gets sorted.  This makes it possible  for a per-widget model 
+   to iterate over the list in batches.
+
+
+   FormPickerIterativeModel
+
+   The model used by each FormPicker's form  combobox. This model filters items 
+   from the underlying singleton model,  and sorts them, performing these tasks 
+   over time: it will gather as many items as it can within 33 milliseconds and 
+   if any remain, it will queue to gather  more on the next tick; sorting works 
+   similarly. This process is referred to as "filling."
+
+
+Gathering forms over time introduces  some complications, which the widget must 
+be built to handle. These include:
+
+   a) The values currently present in the form combobox don't always correspond 
+      with the values that the widget as a whole should allow. The combobox may 
+      not yet be filled, or may just be  finishing up its fill process. Because 
+      of this, the widget has to track its current value on its own, instead of 
+      simply relying on the combobox's current selection.
+
+   b) Similarly, the form combobox operates fairly independently of the widget, 
+      and can have  its value cleared or  set unpredictably as a  result of its 
+      model's fill process:  the value will be  automatically  cleared when the 
+      model needs  to refilter, and  automatically set when the model  finishes 
+      filtering. If we blindly react to the  combobox's state changing, we will 
+      mistake these uncontrolled, automatic value changes for user interaction.
+
+   c) The widget's current value can be  set programmatically before the widget 
+      is actually ready to receive input or  display its value. When the widget 
+      the widget fills, it must honor that set value instead of losing it.
+
+Certain measures have to be taken to accommodate each of these complications...
+
+   a) As mentioned, the FormPicker as a  whole must track its current selection 
+      without simply relying on the form combobox subwidget's selection.
+
+   b) The FormPicker must ignore any combobox changes that occur after the form 
+      combobox subwidget begins filling but before the FormPicker has responded 
+      to the form combobox subwidget finishing the fill process.
+
+   c) This is handled by the FormPicker  tracking its current selection without 
+      relying on the form combobox subwidget. Two birds, one stone.
+
+
+== MISCELLANEOUS CONSIDERATIONS ===============================================
+
+In theory, we could have the models store  flat lists of form stub pointers. In 
+practice, it's  actually much more efficient to have full "item"  structs, with 
+the form type and editor ID as members.  Retaining the former means that we can 
+take advantage of CPU prefetching:  if we're starting at an item, then we don't 
+have to go all the way out to the pointed-to  form stub to check the form type. 
+Retaining the latter means  that we don't have to convert  the editor ID into a 
+QString every individual time we want to  read it; with Skyrim.esm loaded, this 
+is tantamount to avoiding the copying  of probably dozens of megabytes within a 
+sort operation  (with the editor IDs for two forms having to be  copied in full 
+every time we compare any two items -- yikes!).
+
+Fortunately, we're only storing forms that can appear in a FormPicker. Exterior 
+cells and  references are notably not  included, and the latter  constitute the 
+overwhelming  majority of Skyrim.esm's forms. We're probably  using more memory 
+per form stub for  at least  some of these items,  but it's  still only a small 
+fraction  of the memory used for all  form stubs in the loaded files.  The fact 
+that every FormPicker shares the same items adds to the savings.
+
+FormPicker is capable of checking whether  it's likely to be able to filter and 
+sort all eligible forms within a single  tick, and if so, it will avoid relying 
+on its  internal QTimer.  This means that it's able  to begin (and  potentially 
+complete) its  fill process immediately  when asked, instead  of having to wait 
+until when Qt next processes the event loop (i.e. the next tick) to begin. This 
+is of limited benefit,  however, since the FormPicker relies  on a Qt signal to 
+react to  the fill  process completing and so the widget  still takes  an extra 
+tick to become ready.
+
+This design avoids  much of the overhead of  QSortFilterProxyModel, at the cost 
+of having our  own models become less flexible. QSortFilterProxyModels  have to 
+build source-to-proxy mappings of each row and each column, to make it possible 
+to convert a  QModelIndex between the source and proxy models;  this in turn is 
+needed in order to perform tasks on the  underlying source model (e.g. take the 
+QModelIndexes of  the selected elements from  the proxy model,  and then remove 
+those elements from the source model, by index). Building these mappings incurs 
+a large amount of  work, and it's work that  is wholly unnecessary  for our use 
+case here:  we never need to refer to items within our underlying shared  model 
+from the "outside world,"  as it were. Any  changes made to  forms will be made 
+through the DovahKit backend, and  the underlying  shared model can catch those 
+changes and forward them outward as appropriate.

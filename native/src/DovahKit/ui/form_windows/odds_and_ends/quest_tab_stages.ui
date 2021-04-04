@@ -154,9 +154,6 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="FormsOfTypeCombobox" name="logEntryNextQuest"/>
-          </item>
           <item row="1" column="0" colspan="2">
            <widget class="QPlainTextEdit" name="logEntryText"/>
           </item>
@@ -175,20 +172,32 @@
             <property name="text">
              <string>Next quest (unused):</string>
             </property>
-            <property name="buddy">
-             <cstring>logEntryNextQuest</cstring>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="FormPicker" name="logEntryNextQuest" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <widget class="PapyrusFragmentEditor" name="logEntryFragment" native="true"/>
+         <widget class="PapyrusFragmentEditor" name="logEntryFragment" native="true">
+          <property name="focusPolicy">
+           <enum>Qt::TabFocus</enum>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
       <item row="2" column="0">
-       <widget class="ConditionList" name="logEntryConditions" native="true"/>
+       <widget class="ConditionList" name="logEntryConditions" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_3">
@@ -213,14 +222,15 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>FormsOfTypeCombobox</class>
-   <extends>QComboBox</extends>
-   <header>../../generic/FormsOfTypeCombobox.h</header>
-  </customwidget>
-  <customwidget>
    <class>PapyrusFragmentEditor</class>
    <extends>QWidget</extends>
    <header>../../generic/PapyrusFragmentEditor.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FormPicker</class>
+   <extends>QWidget</extends>
+   <header>../../generic/FormPicker.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
@@ -234,6 +244,8 @@
   <tabstop>logEntryFlagComplete</tabstop>
   <tabstop>logEntryFlagFail</tabstop>
   <tabstop>logEntryNextQuest</tabstop>
+  <tabstop>logEntryFragment</tabstop>
+  <tabstop>logEntryConditions</tabstop>
  </tabstops>
  <resources/>
  <connections/>

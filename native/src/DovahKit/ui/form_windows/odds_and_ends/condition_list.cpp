@@ -472,6 +472,7 @@ ConditionListModel::condition* ConditionListModel::getCondition(const QModelInde
 #pragma region ConditionList
 ConditionList::ConditionList(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
+   this->setFocusProxy(this->ui.list);
    //
    {
       auto* list = this->ui.list;

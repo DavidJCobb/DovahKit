@@ -229,18 +229,24 @@ namespace FormPickerImpl {
             }
             return;
          }
+         QModelIndex dummy;
          for (int i = start; i < end; ++i) {
             auto* entry = source.itemAtRow(i);
             auto it = std::upper_bound(sorted.begin(), sorted.end(), entry, [](const item* a, const item* b) {
                return a->editorID < b->editorID;
             });
+            int pos = it - sorted.begin();
+            if (!this->ongoing_fill.filling)
+               this->beginInsertRows(dummy, pos, pos); // handles persistent model indexes for us
             sorted.insert(it, entry);
+            if (!this->ongoing_fill.filling)
+               this->endInsertRows(); // handles persistent model indexes for us
          }
       });
       QObject::connect(&source, &QAbstractItemModel::rowsAboutToBeRemoved, this, [this](const QModelIndex& parent, int first, int last) {
          auto& sorted   = this->stubs;
          auto& unsorted = this->ongoing_fill.unsorted;
-         if (sorted.empty() && unsorted.empty())
+         if (sorted.empty() && unsorted.empty()) // this check, in conjunction with the allDataCleared signal, means we don't need to do any advanced processing for unloading all data
             return;
          auto& source   = FormPickerSharedUnderlyingModel::get();
          //
@@ -260,7 +266,7 @@ namespace FormPickerImpl {
             if (entry) {
                int index = sorted.indexOf(entry);
                if (index >= 0) {
-                  this->beginRemoveRows(parent, index, index);
+                  this->beginRemoveRows(parent, index, index); // handles persistent model indexes for us
                   sorted.remove(index);
                   this->endRemoveRows();
                }
@@ -270,31 +276,42 @@ namespace FormPickerImpl {
       QObject::connect(&source, &FormPickerSharedUnderlyingModel::allDataCleared, this, [this]() {
          this->stubs.clear();
          this->ongoing_fill.unsorted.clear();
-         this->ongoing_fill.filling  = false;
-         this->ongoing_fill.sorting  = false;
-         this->ongoing_fill.progress = 0;
+         this->ongoing_fill.filling   = false;
+         this->ongoing_fill.sorting   = false;
+         this->ongoing_fill.post_fill = false;
+         this->ongoing_fill.progress  = 0;
          this->ongoing_fill.timer.stop();
+         this->_resetFillDiagnostics();
       });
       QObject::connect(&source, &FormPickerSharedUnderlyingModel::editorIDChanged, this, [this](const item* entry, const QString& prior) {
          auto& source = FormPickerSharedUnderlyingModel::get();
          auto& sorted = this->stubs;
          //
-         int      i = sorted.indexOf(entry);
-         iterator it;
+         if (this->ongoing_fill.filling && !this->ongoing_fill.sorting)
+            return;
+         int i = sorted.indexOf(entry);
+         if (i < 0)
+            return;
+         iterator    it;
+         QModelIndex parent;
          if (entry->editorID < prior) { // moving it to a spot higher in the list
             it = std::upper_bound(sorted.begin(), sorted.end(), entry, [](const item* a, const item* b) {
                return a->editorID < b->editorID;
             });
             int to = it - sorted.begin();
+            this->beginMoveRows(parent, i, i, parent, to); // when moving items anywhere except down in the same parent, the last arg is the destination index
             sorted.remove(i);
             sorted.insert(to, entry);
+            this->endMoveRows(); // handles persistent model indexes for us
          } else { // moving it to a spot later in the list
             it = std::upper_bound(sorted.begin(), sorted.end(), entry, [](const item* a, const item* b) {
                return a->editorID < b->editorID;
             });
             int to = it - sorted.begin() - 1;
+            this->beginMoveRows(parent, i, i, parent, to + 1); // when moving items down in the same parent, the last arg is the spot AFTER the destination index, because this API is cursed
             sorted.remove(i);
             sorted.insert(to, entry);
+            this->endMoveRows(); // handles persistent model indexes for us
          }
       });
    }

@@ -24,7 +24,11 @@
        <number>4</number>
       </property>
       <item row="0" column="0">
-       <widget class="FormShoutWordEditor" name="word2" native="true"/>
+       <widget class="FormShoutWordEditor" name="word2" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -85,7 +89,11 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="FormPicker" name="menuDisplayObject" native="true"/>
+      <widget class="FormPicker" name="menuDisplayObject" native="true">
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -99,7 +107,11 @@
        <number>4</number>
       </property>
       <item row="0" column="0">
-       <widget class="FormShoutWordEditor" name="word0" native="true"/>
+       <widget class="FormShoutWordEditor" name="word0" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -114,7 +126,11 @@
        <number>4</number>
       </property>
       <item row="0" column="0">
-       <widget class="FormShoutWordEditor" name="word1" native="true"/>
+       <widget class="FormShoutWordEditor" name="word1" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -162,7 +178,11 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QPlainTextEdit" name="description"/>
+      <widget class="QPlainTextEdit" name="description">
+       <property name="tabChangesFocus">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -182,6 +202,18 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>treatAsPower</tabstop>
+  <tabstop>menuDisplayObject</tabstop>
+  <tabstop>word0</tabstop>
+  <tabstop>word1</tabstop>
+  <tabstop>word2</tabstop>
+  <tabstop>description</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

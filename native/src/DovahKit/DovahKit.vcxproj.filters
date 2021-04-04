@@ -1910,6 +1910,7 @@
     <Text Include="dovah\_docs\use info build process - extra data.txt" />
     <Text Include="dovah\_docs\extra data.txt" />
     <Text Include="editor\scripting\_docs\ui.txt" />
+    <Text Include="ui\_docs\FormPicker.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt">

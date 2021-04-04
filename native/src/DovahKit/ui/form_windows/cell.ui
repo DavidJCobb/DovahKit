@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -61,7 +61,11 @@
           <widget class="QLineEdit" name="editorID"/>
          </item>
          <item row="1" column="1">
-          <widget class="FormPicker" name="location" native="true"/>
+          <widget class="FormPicker" name="location" native="true">
+           <property name="focusPolicy">
+            <enum>Qt::TabFocus</enum>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -212,7 +216,11 @@
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="FormPicker" name="waterType" native="true"/>
+           <widget class="FormPicker" name="waterType" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -254,13 +262,25 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="FormPicker" name="acousticSpace" native="true"/>
+           <widget class="FormPicker" name="acousticSpace" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1">
-           <widget class="FormPicker" name="imagespace" native="true"/>
+           <widget class="FormPicker" name="imagespace" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+           </widget>
           </item>
           <item row="2" column="1">
-           <widget class="FormPicker" name="musicType" native="true"/>
+           <widget class="FormPicker" name="musicType" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -447,7 +467,11 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="FormPicker" name="skyRegion" native="true"/>
+             <widget class="FormPicker" name="skyRegion" native="true">
+              <property name="focusPolicy">
+               <enum>Qt::TabFocus</enum>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -602,7 +626,11 @@
           </widget>
          </item>
          <item>
-          <widget class="FormPicker" name="lightingTemplate" native="true"/>
+          <widget class="FormPicker" name="lightingTemplate" native="true">
+           <property name="focusPolicy">
+            <enum>Qt::TabFocus</enum>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -1049,7 +1077,11 @@
            <widget class="QComboBox" name="ownerFactionRequiredRank"/>
           </item>
           <item row="0" column="1">
-           <widget class="FormPicker" name="ownerNPC" native="true"/>
+           <widget class="FormPicker" name="ownerNPC" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_42">
@@ -1082,10 +1114,18 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="FormPicker" name="ownerFaction" native="true"/>
+           <widget class="FormPicker" name="ownerFaction" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+           </widget>
           </item>
           <item row="3" column="1">
-           <widget class="FormPicker" name="interiorLockList" native="true"/>
+           <widget class="FormPicker" name="interiorLockList" native="true">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1098,7 +1138,11 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="FormPicker" name="encounterZone" native="true"/>
+        <widget class="FormPicker" name="encounterZone" native="true">
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -1159,10 +1203,15 @@
  <tabstops>
   <tabstop>tabs</tabstop>
   <tabstop>editorID</tabstop>
+  <tabstop>location</tabstop>
   <tabstop>flagCantTravel</tabstop>
   <tabstop>flagHandChanged</tabstop>
+  <tabstop>acousticSpace</tabstop>
+  <tabstop>imagespace</tabstop>
+  <tabstop>musicType</tabstop>
   <tabstop>waterEnabled</tabstop>
   <tabstop>flagNoLODWater</tabstop>
+  <tabstop>waterType</tabstop>
   <tabstop>waterHeight</tabstop>
   <tabstop>waterLinearVelocityX</tabstop>
   <tabstop>waterLinearVelocityY</tabstop>
@@ -1174,6 +1223,7 @@
   <tabstop>hideLandQuad2</tabstop>
   <tabstop>hideLandQuad3</tabstop>
   <tabstop>hideLandQuad4</tabstop>
+  <tabstop>lightingTemplate</tabstop>
   <tabstop>inheritAmbient</tabstop>
   <tabstop>inheritDirectionalColor</tabstop>
   <tabstop>inheritDirectionalRot</tabstop>
@@ -1198,6 +1248,7 @@
   <tabstop>lightingDirectionalRotationZ</tabstop>
   <tabstop>skyVisible</tabstop>
   <tabstop>skyLighting</tabstop>
+  <tabstop>skyRegion</tabstop>
   <tabstop>lightingFadeDistanceStart</tabstop>
   <tabstop>lightingFadeDistanceEnd</tabstop>
   <tabstop>directionalAmbColorXPos</tabstop>
@@ -1208,8 +1259,12 @@
   <tabstop>directionalAmbColorZNeg</tabstop>
   <tabstop>directionalAmbientSetFromAmbient</tabstop>
   <tabstop>name</tabstop>
+  <tabstop>encounterZone</tabstop>
   <tabstop>waterEnvironmentMap</tabstop>
+  <tabstop>ownerNPC</tabstop>
+  <tabstop>ownerFaction</tabstop>
   <tabstop>ownerFactionRequiredRank</tabstop>
+  <tabstop>interiorLockList</tabstop>
   <tabstop>flagPublicArea</tabstop>
   <tabstop>flagOffLimits</tabstop>
   <tabstop>flagCantWait</tabstop>

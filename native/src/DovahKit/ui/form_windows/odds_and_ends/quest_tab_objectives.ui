@@ -132,7 +132,11 @@
        </layout>
       </item>
       <item row="1" column="0">
-       <widget class="ConditionList" name="targetConditions" native="true"/>
+       <widget class="ConditionList" name="targetConditions" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

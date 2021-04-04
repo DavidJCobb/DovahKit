@@ -9,6 +9,11 @@ namespace FormPickerImpl {
    class FormPickerProxyModel;
 }
 
+//
+// Generic widget for picking a single form. Designed for heavy-duty amounts of forms. 
+// When placing these in Qt Designer, you need to set the focusPolicy to "TabFocus" to 
+// allow Qt Designer to let you add them to the tab order.
+//
 class FormPicker : public QWidget {
    Q_OBJECT
    public:
