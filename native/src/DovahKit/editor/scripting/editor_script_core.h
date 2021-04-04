@@ -135,6 +135,7 @@ class DovahKitScriptVM : public QObject {
       void messageLogged(const QString&);
       void scriptStarted();
       void scriptEnded(bool error);
+      void userClickedLink(const QString& url, QWidget* opener);
       //
    public slots:
       void abort();
@@ -210,6 +211,8 @@ class DovahKitScriptVMPermissionInterface {
 
       static void verify_form_write_permissions();
       static void verify_ui_permissions();
+
+      static bool check_ui_html_permissions();
 };
 
 class DovahKitScriptVMUserdataInterface {

@@ -252,6 +252,7 @@
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\test_call_and_response.cpp" />
     <ClCompile Include="editor\scripting\editor_script_core.cpp" />
     <ClCompile Include="editor\scripting\ui\event.cpp" />
+    <ClCompile Include="editor\scripting\ui\util\alignment.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
@@ -350,6 +351,7 @@
     <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp" />
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\script_window.cpp" />
+    <ClCompile Include="ui\main_window\script_window\hyperlink_confirm.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp" />
@@ -560,6 +562,7 @@
     <ClInclude Include="editor\scripting\cross_thread_tasks\s2m\_all.h" />
     <ClInclude Include="editor\scripting\cross_thread_tasks\_all.h" />
     <ClInclude Include="editor\scripting\ui\event.h" />
+    <ClInclude Include="editor\scripting\ui\util\alignment.h" />
     <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
@@ -626,6 +629,7 @@
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
+    <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h" />

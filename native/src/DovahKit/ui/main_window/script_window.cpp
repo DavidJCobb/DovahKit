@@ -1,5 +1,6 @@
 #include "script_window.h"
 #include "../../editor/scripting/editor_script_core.h"
+#include "script_window/hyperlink_confirm.h"
 #include <QMessageBox>
 
 EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
@@ -66,6 +67,10 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
       auto  index  = widget->rowCount();
       widget->insertRow(index);
       widget->setItem(index, 0, new QTableWidgetItem(text));
+   });
+   QObject::connect(&vm, &DovahKitScriptVM::userClickedLink, this, [this](const QString& text, QWidget* opener) {
+      auto* confirm = new ScriptWindowHyperlinkConfirmDialog(text, opener ? opener : this);
+      confirm->open();
    });
    //
    // TODO: Closing the window should pop a confirmation prompt asking the user whether they want to terminate any currently-running script.

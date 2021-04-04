@@ -3,6 +3,11 @@
 #include "../../wrapper_util.h"
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
+#include "../../ui/util/alignment.h"
+
+namespace {
+   Qt::TextInteractionFlags flags_for_allow_selection = Qt::TextInteractionFlag::TextSelectableByKeyboard | Qt::TextInteractionFlag::TextSelectableByMouse;
+}
 
 namespace {
    using namespace editor_script;
@@ -34,41 +39,27 @@ namespace {
             auto* task   = new tasks::s2m::ui_read_lambda();
             task->handler = [widget, &result]() {
                auto align = widget->alignment();
-               if (align & Qt::AlignJustify)
-                  result = "justify";
-               else if (align & Qt::AlignHCenter)
-                  result = "center";
-               else if (align & Qt::AlignAbsolute) {
-                  if (align & Qt::AlignLeft)
-                     result = "left";
-                  else if (align & Qt::AlignRight)
-                     result = "right";
-               } else {
-                  if (align & Qt::AlignLeft)
-                     result = "start";
-                  else if (align & Qt::AlignRight)
-                     result = "end";
-               }
-               if (result.empty())
-                  result = "unchanged";
-               //
-               result += ' ';
-               //
-               if (align & Qt::AlignTop)
-                  result += "top";
-               else if (align & Qt::AlignBottom)
-                  result += "bottom";
-               else if (align & Qt::AlignVCenter)
-                  result += "center";
-               else if (align & Qt::AlignBaseline)
-                  result += "baseline";
-               else
-                  result += "unchanged";
+               editor_script::util::ui::alignment_to_string(align, result);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
          lua_pushstring(L, result.c_str());
+         return 1;
+      }
+      luastackchange_t allow_selection(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result;
+         {
+            auto* widget  = (wrapped_type*) self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = (widget->textInteractionFlags() & flags_for_allow_selection) != 0; };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushboolean(L, result);
          return 1;
       }
       luastackchange_t text(lua_State* L) {
@@ -113,60 +104,20 @@ namespace {
          {
             std::string h;
             std::string v;
-            {
-               auto*  value  = lua_tostring(L, 2);
-               bool   second = false;
-               size_t i = 0;
-               char   c = value[i];
-               do {
-                  if (!c)
-                     break;
-                  if (c == ' ') {
-                     if (second)
-                        break;
-                     if (!h.empty())
-                        second = true;
-                     continue;
-                  }
-                  c = tolower(c);
-                  if (second)
-                     v += c;
-                  else
-                     h += c;
-               } while (c = value[++i]);
-            }
-            if (h == "left")
-               align |= Qt::AlignLeft | Qt::AlignAbsolute;
-            else if (h == "right")
-               align |= Qt::AlignRight | Qt::AlignAbsolute;
-            else if (h == "start")
-               align |= Qt::AlignLeft;
-            else if (h == "end")
-               align |= Qt::AlignRight;
-            else if (h == "justify")
-               align |= Qt::AlignJustify;
-            else if (h == "center")
-               align |= Qt::AlignHCenter;
-            else if (!h.empty() && h != "unchanged") {
+            bool h_recognized;
+            bool v_recognized;
+            align = editor_script::util::ui::alignment_from_string(lua_tostring(L, 2), h, v, h_recognized, v_recognized);
+            if (!h_recognized) {
                lua_warning(L, h.c_str(), 1);
                lua_warning(L, " is not a recognized horizontal alignment", 0);
             }
-            //
-            if (v == "top")
-               align |= Qt::AlignTop;
-            else if (v == "bottom")
-               align |= Qt::AlignBottom;
-            else if (v == "baseline")
-               align |= Qt::AlignBaseline;
-            else if (v == "center")
-               align |= Qt::AlignVCenter;
-            else if (!v.empty() && v != "unchanged") {
+            if (!v_recognized) {
                lua_warning(L, v.c_str(), 1);
                lua_warning(L, " is not a recognized vertical alignment", 0);
             }
          }
-         auto* widget = (wrapped_type*)self.widget;
-         auto* task  = new tasks::s2m::lambda(false);
+         auto* widget  = (wrapped_type*)self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
          task->handler = [widget, align]() {
             Qt::Alignment after = align;
             Qt::Alignment prior = widget->alignment();
@@ -183,15 +134,35 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t allow_selection(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         //
+         Qt::TextInteractionFlags flags;
+         if (lua_toboolean(L, 2))
+            flags = flags_for_allow_selection;
+         //
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget, flags]() { widget->setTextInteractionFlags(flags); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
          if (!self.widget)
             return 0;
+         bool  html    = DovahKitScriptVMPermissionInterface::check_ui_html_permissions();
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setText(value); };
+         task->handler = [widget, value, html]() {
+            widget->setTextFormat(html ? Qt::TextFormat::AutoText : Qt::TextFormat::PlainText);
+            widget->setText(value);
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -245,14 +216,16 @@ namespace editor_script::wrappers::ui {
       { "clear", &_methods::clear },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "alignment", &_getters::alignment },
-      { "text",      &_getters::text },
-      { "word_wrap", &_getters::word_wrap },
+      { "alignment",       &_getters::alignment },
+      { "allow_selection", &_getters::allow_selection },
+      { "text",            &_getters::text },
+      { "word_wrap",       &_getters::word_wrap },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "alignment", &_setters::alignment },
-      { "text",      &_setters::text },
-      { "word_wrap", &_setters::word_wrap },
+      { "alignment",       &_setters::alignment },
+      { "allow_selection", &_setters::allow_selection },
+      { "text",            &_setters::text },
+      { "word_wrap",       &_setters::word_wrap },
    };
 
    /*static*/ void cls::setup(lua_State* L) {

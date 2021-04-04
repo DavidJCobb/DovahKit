@@ -19,6 +19,7 @@
 #include "wrapper_util.h"
 
 #include <QEvent>
+#include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 
@@ -419,6 +420,11 @@ QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
 }
 void DovahKitScriptVM::set_up_new_scripted_widget(QWidget* widget) {
    widget->installEventFilter(this);
+   if (auto* label = qobject_cast<QLabel*>(widget)) {
+      QObject::connect(label, &QLabel::linkActivated, this, [this](const QString& url) {
+         emit this->userClickedLink(url, qobject_cast<QWidget*>(sender())->window());
+      });
+   }
    if (!widget->parentWidget())
       this->accept_new_orphaned_widget(widget);
 }
@@ -664,6 +670,9 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
       luaL_error(intfc.vm.lua_vm, "The script does not have permission to use APIs related to the UI.");
       __assume(0);
    }
+}
+/*static*/ bool DovahKitScriptVMPermissionInterface::check_ui_html_permissions() {
+   return true; // TODO: permission check, when we implement those
 }
 #pragma endregion
 

@@ -789,6 +789,12 @@
     <ClCompile Include="ui\main_window\_debug_hooks\form_picker_debug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\ui\util\alignment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\script_window\hyperlink_confirm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1607,6 +1613,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\form_picker_debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\ui\util\alignment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1876,6 +1885,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\impl\FormPickerImpl.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
