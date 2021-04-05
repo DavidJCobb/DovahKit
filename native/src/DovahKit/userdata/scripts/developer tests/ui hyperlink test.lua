@@ -1,0 +1,17 @@
+local window = ui.window.new()
+local text0  = ui.text.new("<a href='https://example.com/'>Example</a>")
+local text1  = ui.text.new("<a href='https://www.nexusmods.com/fallout4/mods/12630/?tab=posts'>Posts</a>")
+local text1a = ui.text.new("<a href='https://www.nexusmods.com/fallout4/mods/12630/?tab=posts&foo'>Posts, sus</a>")
+local text2  = ui.text.new("<a href='https://www.nexusmods.com/fallout4/mods/12630'>Base</a>")
+local text3  = ui.text.new("<a href='nxm://game_name/mods/116/files/1658'>NXM</a>")
+local text3a = ui.text.new("<a href='nxm://game_name/mods/116/files/1658?abc'>NXM, sus</a>")
+
+window:set_layout("down")
+window:add_child(text0)
+window:add_child(text1)
+window:add_child(text1a)
+window:add_child(text2)
+window:add_child(text3)
+window:add_child(text3a)
+
+window:show()

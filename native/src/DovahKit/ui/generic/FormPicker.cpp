@@ -106,6 +106,8 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
          auto* model = this->_rawModel();
          auto* prior = this->_value;
          auto* stub  = this->_value;
+         if (!stub && !this->allowNone())
+            stub = this->defaultForm();
          int   i     = model->indexOf(stub);
          if (this->isSplittingTypes()) {
             auto data = this->subwidgets.type->currentData();
@@ -197,11 +199,8 @@ void FormPicker::setFormByID(dovah::bare_form_id_t id) noexcept {
 void FormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    if (!stub) {
       if (!this->allowNone()) {
-         if (this->_defaultFormID) {
-            stub = DovahKitCore::get().get_form(this->_defaultFormID);
-            if (stub)
-               this->setFormStub(stub);
-         }
+         if (this->_default)
+            this->setFormStub(this->_default);
          return;
       }
    } else {
@@ -218,8 +217,11 @@ void FormPicker::setFormStub(dovah::form_stub* stub) noexcept {
       subwidget->setCurrentIndex(index);
    }
 }
+void FormPicker::setDefaultForm(dovah::form_stub* stub) noexcept {
+   this->_default = stub;
+}
 void FormPicker::setDefaultFormID(dovah::bare_form_id_t id) noexcept {
-   this->_defaultFormID = id;
+   this->setDefaultForm(DovahKitCore::get().get_form(id));
 }
 
 FormPickerImpl::FormPickerIterativeModel* FormPicker::_rawModel() const noexcept {
@@ -304,4 +306,14 @@ void FormPicker::_updateTypePicker() {
    if (index < 0)
       index = 0;
    c_type->setCurrentIndex(index);
+}
+
+void FormPicker::clear() {
+   dovah::form_stub* stub = nullptr;
+   if (!this->allowNone()) {
+      stub = this->defaultForm();
+      if (!stub)
+         return;
+   }
+   this->setFormStub(stub);
 }

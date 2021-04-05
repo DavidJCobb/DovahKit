@@ -21,6 +21,7 @@ class FormPicker : public QWidget {
       
       inline const QVector<dovah::form_type_t>& allowedFormTypes() const noexcept { return this->_formTypes; }
       inline bool allowNone() const noexcept { return this->_allowNone; }
+      inline dovah::form_stub* defaultForm() const noexcept { return this->_default; }
       inline bool isSplittingTypes() const noexcept { return this->_isSplittingTypes; }
       inline bool splitTypesWhenMany() const noexcept { return this->_splitTypesWhenMany; }
 
@@ -41,12 +42,14 @@ class FormPicker : public QWidget {
       
       void setFormByID(dovah::bare_form_id_t) noexcept;
       void setFormStub(dovah::form_stub*) noexcept;
+      void setDefaultForm(dovah::form_stub*) noexcept;
       void setDefaultFormID(dovah::bare_form_id_t) noexcept; // used if you call setFormByID(0) and allow-none is false
       
    protected:
-      dovah::form_stub* _value = nullptr;
+      dovah::form_stub* _value   = nullptr;
+      dovah::form_stub* _default = nullptr;
       QVector<dovah::form_type_t> _formTypes;
-      bool _allowNone          = false;
+      bool _allowNone          = true;
       bool _isSplittingTypes   = false;
       bool _splitTypesWhenMany = true;
       struct {
@@ -54,7 +57,6 @@ class FormPicker : public QWidget {
          QComboBox* type = nullptr;
       } subwidgets;
       std::map<dovah::form_type_t, dovah::form_stub*> _prior_selections;
-      dovah::bare_form_id_t _defaultFormID = 0;
 
       FormPickerImpl::FormPickerIterativeModel* _rawModel() const noexcept;
 
@@ -67,4 +69,7 @@ class FormPicker : public QWidget {
    signals:
       void formChanged(dovah::form_stub*);
       void populated();
+
+   public slots:
+      void clear();
 };

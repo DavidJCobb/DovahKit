@@ -24,6 +24,7 @@ namespace editor_script {
       #pragma region UI
          define_wrapper_metatable<ui::widget>(L);
             define_wrapper_metatable<ui::button>(L);
+            define_wrapper_metatable<ui::formpicker>(L);
             define_wrapper_metatable<ui::progress_bar>(L);
             define_wrapper_metatable<ui::text>(L);
             define_wrapper_metatable<ui::textbox>(L);

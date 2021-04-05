@@ -19,6 +19,9 @@
 #include "wrapper_util.h"
 
 #include <QEvent>
+
+// Widget type includes, needed for dispatching events
+#include "../../ui/generic/FormPicker.h"
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -930,6 +933,11 @@ namespace {
       _event_widget(const QMetaObject* const m, std::initializer_list<const char*> e) : meta(m), events(e) {}
    };
    std::array _events_by_widget = {
+      _event_widget(&FormPicker::staticMetaObject,
+         {
+            "OnChanged",
+         }
+      ),
       _event_widget(&QPushButton::staticMetaObject,
          {
             "OnActivated",         // The button was clicked (or interacted with analogously via another input device).
@@ -967,11 +975,11 @@ namespace {
       const std::string event_name;
       const std::string listener_name;
 
-      void operator()(Args&&... args) {
+      void operator()(Args... args) {
          //
          // Runs on the main thread.
          //
-         DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(this->widget, this->event_name.c_str(), this->listener_name.c_str(), { std::forward<Args>(args)... });
+         DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(this->widget, this->event_name.c_str(), this->listener_name.c_str(), { QVariant::fromValue<Args>(args)... });
       }
    };
 }
@@ -986,7 +994,13 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
    // Runs on the script thread.
    //
    auto& vm = DovahKitScriptVM::get();
-   if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
+   if (auto* casted = qobject_cast<FormPicker*>(&widget)) {
+      if (_stricmp(event_name, "OnChanged") == 0) {
+         // gotta manually specify the template args. guess it doesn't like const references for some reason.
+         this->_connect_event<FormPicker&, decltype(&FormPicker::formChanged), dovah::form_stub*>(*casted, &FormPicker::formChanged, event_name, listener_name);
+         return;
+      }
+   } else if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
       if (_stricmp(event_name, "OnActivated") == 0) {
          this->_connect_event(*casted, &QPushButton::clicked, event_name, listener_name);
          return;
@@ -1152,7 +1166,7 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name], key, value ] +
       int argcount = 0;
       for (auto& p : params) {
-         if (p.type() == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
+         if (p.userType() == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
             using namespace editor_script;
             wrapper out;
             auto*   mt = wrap_form(out, p.value<dovah::form_stub*>());

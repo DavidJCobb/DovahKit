@@ -34,6 +34,8 @@ namespace editor_script {
             return wrappers::ui::progress_bar::metatable_key;
          if (qobject_cast<QPushButton*>(widget))
             return wrappers::ui::button::metatable_key;
+         if (qobject_cast<FormPicker*>(widget))
+            return wrappers::ui::formpicker::metatable_key;
       }
       return wrappers::ui::widget::metatable_key; // TODO: use a generic widget metatable
    }
