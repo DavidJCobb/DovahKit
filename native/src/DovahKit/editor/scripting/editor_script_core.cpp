@@ -996,8 +996,7 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
    auto& vm = DovahKitScriptVM::get();
    if (auto* casted = qobject_cast<FormPicker*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
-         // gotta manually specify the template args. guess it doesn't like const references for some reason.
-         this->_connect_event<FormPicker&, decltype(&FormPicker::formChanged), dovah::form_stub*>(*casted, &FormPicker::formChanged, event_name, listener_name);
+         this->_connect_event(*casted, &FormPicker::formChanged, event_name, listener_name);
          return;
       }
    } else if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
@@ -1027,9 +1026,7 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
          return;
       }
       if (_stricmp(event_name, "OnKeyPressed") == 0) {
-         // gotta manually specify the template args. guess it doesn't like const references for some reason.
-         //this->_connect_event(*casted, &QLineEdit::textEdited, event_name, listener_name);
-         this->_connect_event<QLineEdit&, decltype(&QLineEdit::textEdited), const QString&>(*casted, &QLineEdit::textEdited, event_name, listener_name);
+         this->_connect_event(*casted, &QLineEdit::textEdited, event_name, listener_name);
          return;
       }
    }
@@ -1133,7 +1130,9 @@ void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
    //
    lua_settop(L, start);
 }
-void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant> params) {
+void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
+   constexpr bool double_check_stack = false;
+   //
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    auto  guard = cobb::lua::set_top_on_exit(L, start);
@@ -1146,15 +1145,19 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
    //
    lua_getfield(L, LUA_REGISTRYINDEX, ui_listener_registry_key);
    // STACK: - [ ..., storage ] +
-   assert(lua_gettop(L)   == si_storage);
-   assert(lua_type(L, -1) == LUA_TTABLE);
+   if (double_check_stack) {
+      assert(lua_gettop(L)   == si_storage);
+      assert(lua_type(L, -1) == LUA_TTABLE);
+   }
    lua_pushlightuserdata(L, &widget);
-   if (lua_rawget(L, si_storage) != LUA_TTABLE) {
+   if (lua_rawget(L, si_storage) != LUA_TTABLE) { // no listeners for this widget
       --this->vm.pending_ui_event_count;
       return;
    }
    // STACK: - [ ..., storage, storage[&widget] ] +
-   assert(lua_gettop(L) == si_events);
+   if (double_check_stack) {
+      assert(lua_gettop(L) == si_events);
+   }
    if (lua_getfield(L, si_events, event_name) != LUA_TTABLE) {
       --this->vm.pending_ui_event_count;
       return;
@@ -1180,7 +1183,7 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
    --this->vm.pending_ui_event_count;
 }
 
-void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant> params) {
+void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
    ++this->vm.pending_ui_event_count;
    //
    // Called by the main thread; sends a message to the script thread.
