@@ -6,6 +6,7 @@
 #include "_common.h"
 #include "components/bounds.h"
 #include "components/conditions.h"
+#include "components/legacy_script.h"
 #include "components/papyrus.h"
 
 namespace dovah::loaded_forms {
@@ -86,12 +87,12 @@ namespace dovah::loaded_forms {
             uint32_t unused;
             uint8_t  response_number;
             // 3 padding bytes here
-            form_reference_t sound;
+            form_reference_t sound; // plays instead of any normal voice line, if set
             flags_t flags = 0;
             // 3 padding bytes here
-            localized_string text;
-            localized_string script_notes;
-            localized_string edits;
+            localized_string text         = localized_string(localized_string_type::info);
+            localized_string script_notes = localized_string(localized_string_type::info);
+            localized_string edits        = localized_string(localized_string_type::info);
             struct {
                form_reference_t speaker;
                form_reference_t listener;
@@ -167,6 +168,7 @@ namespace dovah::loaded_forms {
          localized_string override_topic_text; // RNAM (Prompt)
          components::object_bounds object_bounds; // OBND. recognized, but probably discarded at run-time.
          components::papyrus_attachment_data script_data; // VMAD
+         std::vector<components::legacy_script> legacy_scripts;
 
          // PNAM is not stored here; we handle it during the initial stub build
 

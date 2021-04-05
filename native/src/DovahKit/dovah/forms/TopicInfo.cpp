@@ -108,6 +108,7 @@ namespace dovah::loaded_forms {
          intfc.log_load_warning(warning);
       };
       //
+      bool move_to_next_legacy_script = true;
       form_reference_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -131,7 +132,7 @@ namespace dovah::loaded_forms {
                   this->days_until_reset = (float)time_until_reset / 0xFFFF;
                }
                break;
-            case 'TLCT':
+            case 'TCLT':
                if (subrecord.read(formID)) {
                   auto& list = partial ? this->link_to.locked : this->link_to.normal;
                   list.push_back(formID);
@@ -139,6 +140,9 @@ namespace dovah::loaded_forms {
                      detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::topic, this->stub, formID)
                   );
                }
+               break;
+            case 'CNAM':
+               subrecord.read(this->favor_level);
                break;
             case 'DNAM':
                if (subrecord.read(this->use_shared_info)) {
@@ -270,6 +274,22 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
+            case 'SCHR':
+            case 'SCDA':
+            case 'SCTX':
+            case 'QNAM':
+            case 'SCRO':
+            case 'SCRV':
+               if (move_to_next_legacy_script || this->legacy_scripts.empty())
+                  this->legacy_scripts.emplace_back();
+               {
+                  auto& ls = this->legacy_scripts.back();
+                  ls.load(subrecord, intfc);
+               }
+               break;
+            case 'NEXT':
+               move_to_next_legacy_script = true;
+               break;
             default:
                intfc.log_load_warning(
                   detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
@@ -283,6 +303,8 @@ namespace dovah::loaded_forms {
          uib.clear_all_prior_use_info();
       }
       //
+      bool move_to_next_legacy_script = true;
+      //
       form_id_t formID;
       form_id_t sharedinfo;
       form_id_t speaker;
@@ -291,6 +313,8 @@ namespace dovah::loaded_forms {
       bool      seen_any_response_header = false;
       form_id_t response_idle_for_listener;
       form_id_t response_idle_for_speaker;
+      form_id_t legacy_script_quest;
+      //
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'VMAD':
@@ -319,13 +343,6 @@ namespace dovah::loaded_forms {
             case 'DATA': // metadata (old)
             case 'ENAM': // metadata (new)
             case 'CNAM': // favor level
-            case 'SCHR': // DEPRECATED: ObScript header
-            case 'SCDA': // DEPRECATED: ObScript compiled code
-            case 'SCTX': // DEPRECATED: ObScript source code
-            case 'SCRO': // DEPRECATED: ObScript ObjectReference
-            case 'SCRV': // DEPRECATED: ObScript ObjectReference variable
-            case 'QNAM': // DEPRECATED: ObScript
-            case 'NEXT': // ObScript separator
             case 'RNAM': // override topic text
                break;
             //
@@ -360,6 +377,31 @@ namespace dovah::loaded_forms {
                   break;
                if (subrecord.read(formID))
                   uib.add_outbound_reference(formID);
+               break;
+            case 'SCHR':
+            case 'SCDA':
+            case 'SCTX':
+               break;
+            case 'QNAM':
+               if (!uib.is_final_file())
+                  break;
+               subrecord.read(legacy_script_quest);
+               break;
+            case 'SCRO':
+               if (!uib.is_final_file())
+                  break;
+               if (subrecord.read(formID))
+                  uib.add_outbound_reference(formID);
+               break;
+            case 'SCRV':
+               if (!uib.is_final_file())
+                  break;
+               //
+               // TODO
+               //
+               break;
+            case 'NEXT':
+               uib.add_outbound_reference(legacy_script_quest);
                break;
          }
       }
@@ -456,6 +498,8 @@ namespace dovah::loaded_forms {
       //
       for (auto& cnd : this->conditions.normal)
          cnd.save(record, intfc);
+      for (auto& l : this->legacy_scripts)
+         l.save(record, intfc);
       if (!this->override_topic_text.empty()) {
          auto& RNAM = record.open_next_subrecord('RNAM');
          RNAM.write(this->override_topic_text);
@@ -486,6 +530,8 @@ namespace dovah::loaded_forms {
          r.sever_outbound_references_to(*this, other);
       //
       this->script_data.sever_outbound_references_to(other, *this);
+      for (auto& s : this->legacy_scripts)
+         s.sever_outbound_references_to(other, *this);
    }
    /*virtual*/ void TopicInfo::_clear_impl() noexcept {
       this->info_flags = 0;
@@ -528,6 +574,8 @@ namespace dovah::loaded_forms {
          r.clear(*this);
       this->responses.clear();
       //
+      for (auto& l : this->legacy_scripts)
+         l.clear(*this);
       this->override_topic_text.reset();
       this->object_bounds.clear();
       this->script_data.clear(*this);

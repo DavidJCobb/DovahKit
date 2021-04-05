@@ -1,30 +1,36 @@
-local window = ui.window.new()
-local form01 = ui.formpicker.new()
-local form02 = ui.formpicker.new()
-local form03 = ui.formpicker.new()
-local text   = ui.text.new("...")
-form02.form_types = form_types.actor_base
-form03.form_types = { form_types.light, form_types.container }
-
-form01.allow_none = true
-form02.allow_none = true
-form03.allow_none = true
-
+local window   = ui.window.new()
+local picker01 = ui.formpicker.new()
+local picker02 = ui.formpicker.new()
+local picker03 = ui.formpicker.new()
+local lineedit = ui.textbox.new()
 window:set_layout("grid")
-window:add_child(form01)
-window:add_child(form02)
-window:add_child(form03)
+window:add_child(picker01)
+window:add_child(picker02)
+window:add_child(picker03)
+window:add_child(lineedit)
+
+picker02.form_types = form_types.actor_base
+picker03.form_types = { form_types.light, form_types.ammo }
+
+local text = ui.text.new("[last change here]")
 window:add_child(text)
 
 function _handler(form)
    if form then
       text.text = form.editor_id
    else
-      text.text = "NONE"
+      text.text = "[no form]"
    end
 end
-form01:on("OnChanged", "readout", _handler)
-form02:on("OnChanged", "readout", _handler)
-form03:on("OnChanged", "readout", _handler)
+picker01:on("OnChanged", "readout", _handler)
+picker02:on("OnChanged", "readout", _handler)
+picker03:on("OnChanged", "readout", _handler)
+
+function _edithandler(t)
+   ui.run_when_unlocked(function()
+      text.text = lineedit.text
+   end)
+end
+lineedit:on("OnKeyPressed", "readout", _edithandler)
 
 window:show()

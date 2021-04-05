@@ -59,7 +59,7 @@ class DovahKitScriptVM : public QObject {
          //
          // The receiving thread should use this function to execute tasks.
          //
-         void process();
+         void process(int cap = std::numeric_limits<int>::max());
 
          //
          // Suitable only for use by the sending thread.

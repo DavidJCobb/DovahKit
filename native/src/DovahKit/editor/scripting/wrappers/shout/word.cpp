@@ -15,7 +15,7 @@ namespace {
 namespace {
    namespace _getters {
       luastackchange_t word_of_power(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrappers::shout_word>(L);
+         auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word = wrappers::shout_word::unwrap(self);
          if (word == nullptr)
             luaL_error(L, "shout_word wrapper has no underlying object (deleted?)");
@@ -25,7 +25,7 @@ namespace {
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t spell(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrappers::shout_word>(L);
+         auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word = wrappers::shout_word::unwrap(self);
          if (word == nullptr)
             luaL_error(L, "shout_word wrapper has no underlying object (deleted?)");
@@ -35,7 +35,7 @@ namespace {
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t cooldown(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrappers::shout_word>(L);
+         auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word = wrappers::shout_word::unwrap(self);
          if (word == nullptr)
             luaL_error(L, "shout_word wrapper has no underlying object (deleted?)");

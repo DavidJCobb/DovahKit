@@ -4,5 +4,7 @@
 #include "formlist.h"
 #include "shout.h"
    #include "shout/word.h"
+#include "topic_info.h"
+   #include "topic_info/response.h"
 #include "voicetype.h"
 #include "word_of_power.h"

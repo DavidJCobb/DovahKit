@@ -300,6 +300,7 @@ namespace {
          auto* task    = new tasks::s2m::lambda(false);
          int   value   = lua_tointeger(L, 2);
          task->handler = [widget, value]() { widget->setValue(value); };
+         task->collapse_key = cobb::eight_cc("UIProgVa");
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }

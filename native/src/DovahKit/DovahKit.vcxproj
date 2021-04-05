@@ -57,6 +57,9 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
+    <Link>
+      <Profile>true</Profile>
+    </Link>
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.12.5 MSVC2017 x64</QtInstall>
@@ -177,6 +180,7 @@
     <ClCompile Include="dovah\forms\components\extra_data\_use_info.cpp" />
     <ClCompile Include="dovah\forms\components\interior_lighting.cpp" />
     <ClCompile Include="dovah\forms\components\keyword_list.cpp" />
+    <ClCompile Include="dovah\forms\components\legacy_script.cpp" />
     <ClCompile Include="dovah\forms\components\model.cpp" />
     <ClCompile Include="dovah\forms\components\package_event_dialogue.cpp" />
     <ClCompile Include="dovah\forms\components\package_location.cpp" />
@@ -262,6 +266,8 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\topic_info.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\topic_info\response.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\formpicker.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
@@ -472,6 +478,7 @@
     <ClInclude Include="dovah\forms\components\extra_data\_use_info.h" />
     <ClInclude Include="dovah\forms\components\interior_lighting.h" />
     <ClInclude Include="dovah\forms\components\keyword_list.h" />
+    <ClInclude Include="dovah\forms\components\legacy_script.h" />
     <ClInclude Include="dovah\forms\components\package_location.h" />
     <ClInclude Include="dovah\forms\components\package_event_dialogue.h" />
     <ClInclude Include="dovah\data\story_manager.h" />
@@ -574,6 +581,8 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
+    <ClInclude Include="editor\scripting\wrappers\topic_info.h" />
+    <ClInclude Include="editor\scripting\wrappers\topic_info\response.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\formpicker.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />

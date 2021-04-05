@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "../../../helpers/eight_cc.h"
 
 namespace editor_script {
    class cross_thread_task {
@@ -17,6 +18,7 @@ namespace editor_script {
       //
       public:
          bool seen = false; // has this message been received and acknowledged by its recipient?
+         cobb::eight_cc collapse_key;
          //
       protected:
          virtual void _exec_impl() = 0;

@@ -163,6 +163,7 @@ namespace {
             widget->setTextFormat(html ? Qt::TextFormat::AutoText : Qt::TextFormat::PlainText);
             widget->setText(value);
          };
+         task->collapse_key = cobb::eight_cc("UITextTx");
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }

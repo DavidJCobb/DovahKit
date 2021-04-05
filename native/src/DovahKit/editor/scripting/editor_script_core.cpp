@@ -42,6 +42,12 @@ namespace {
    static constexpr char* ui_unlocked_queue_registry_key = "dovah.internals.run_when_ui_unlocked_queue";
 
    constexpr int max_script_windows = 10;
+
+   // If we expect certain cross-thread tasks to be sent in large quantities, and if later tasks of a 
+   // given type make earlier tasks redundant, then we can use the tasks' "collapse keys" to delete 
+   // the older tasks when a newer task is received, if the task queue has a large number of items in 
+   // it. This hasn't yet been needed, though.
+   constexpr bool use_task_collapse_keys = false;
 }
 
 namespace {
@@ -123,17 +129,20 @@ namespace {
    }
 }
 
-void DovahKitScriptVM::_task_queue::process() {
+void DovahKitScriptVM::_task_queue::process(int cap) {
    auto  guard = std::lock_guard(this->lock);
    auto& list  = this->list;
    //
+   int count = 0;
    for (auto* task : list) {
       bool blocking = task->is_blocking();
       task->execute();
       if (!blocking && task->is_fire_and_forget())
          delete task;
+      if (++count >= cap)
+         break;
    }
-   list.clear();
+   list.erase(list.begin(), list.begin() + count);
 }
 void DovahKitScriptVM::_task_queue::wait_until_empty() {
    auto& list = this->list;
@@ -486,8 +495,12 @@ void DovahKitScriptVM::queue_lua_function(int stack_pos, bool lock_ui_for_functi
 
 void DovahKitScriptVM::abort() {
    auto guard = std::lock_guard(this->exec_lock);
-   if (this->running)
+   if (this->running) {
       this->aborted = true;
+      this->task_queues.s2m.clear();
+      this->ui_queues.read.clear();
+      this->ui_queues.write.clear();
+   }
 }
 void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    auto guard = std::lock_guard(this->exec_lock);
@@ -642,6 +655,23 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
    {
       auto  guard = std::lock_guard(vm.ui_queues.write.lock);
       auto& list = vm.ui_queues.write.list;
+      //
+      if (use_task_collapse_keys && !blocking && task.collapse_key && list.size() > 1000) {
+         std::vector<size_t> remove;
+         //
+         auto size = list.size();
+         for (size_t i = 0; i < size; ++i) {
+            auto*& t = list[i];
+            assert(t);
+            if (t->collapse_key == task.collapse_key) {
+               if (!t->is_blocking() && t->is_fire_and_forget())
+                  delete t;
+               t = nullptr;
+            }
+         }
+         list.erase(std::remove(list.begin(), list.end(), nullptr), list.end());
+      }
+      //
       list.push_back(&task);
    }
    if (blocking) {
