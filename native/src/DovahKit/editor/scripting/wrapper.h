@@ -117,6 +117,8 @@ namespace editor_script {
             }
             return nullptr;
          }
+         int8_t depth_of(const cobb::eight_cc&) const noexcept;
+         bool is_collection_at_depth(uint8_t) const noexcept;
    };
 
    struct wrapper_metatable {

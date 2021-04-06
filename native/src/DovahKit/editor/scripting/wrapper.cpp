@@ -164,4 +164,16 @@ namespace editor_script {
       if (this->stub)
          luaL_argcheck(L, this->stub->formType == ft, arg_index, "incorrect form type");
    }
+
+   int8_t wrapper::depth_of(const cobb::eight_cc& code) const noexcept {
+      for (int8_t i = 0; i < part_count; ++i)
+         if (this->parts[i].signature == code)
+            return i;
+      return -1;
+   }
+   bool wrapper::is_collection_at_depth(uint8_t d) const noexcept {
+      if (this->depth != d + 1)
+         return false;
+      return this->is_collection;
+   }
 }

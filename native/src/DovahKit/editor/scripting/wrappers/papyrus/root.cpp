@@ -6,13 +6,15 @@
 #include "../../collections.h"
 
 #include "../../../../dovah/forms/Form.h"
+#include "../quest/alias.h"
 #include "script.h"
 
 namespace {
    using namespace editor_script;
+   using wrapper_t = wrappers::papyrus_root;
 
    wrappers::papyrus_root::wrapped_t& _unwrap(lua_State* L, wrapper& w) {
-      auto* data = wrappers::papyrus_root::unwrap(w);
+      auto* data = wrappers::papyrus_root::unwrap(w, true);
       if (!data)
          luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", wrappers::papyrus_root::metatable_key);
       __assume(data != nullptr);
@@ -35,8 +37,12 @@ namespace {
 
       luastackchange_t get_collection_length(lua_State* L) {
          auto& self = get_collection_wrapper(L);
-         auto& root = _unwrap(L, self);
-         lua_pushinteger(L, root.scripts.size());
+         auto* root = wrapper_t::unwrap(self, false);
+         if (!root) {
+            lua_pushinteger(L, 0);
+            return 1;
+         }
+         lua_pushinteger(L, root->scripts.size());
          return 1;
       }
       luastackchange_t lookup_item_by_name(lua_State* L) {
@@ -44,19 +50,19 @@ namespace {
          // args: wrapper<papyrus_root>, name
          //
          auto& self = get_collection_wrapper(L);
-         auto& root = _unwrap(L, self);
+         auto* root = wrapper_t::unwrap(self, false);
+         if (!root)
+            luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::script_collection_key);
          const char* name = lua_tostring(L, 2);
          if (!name)
             return 0;
-         auto& list = root.scripts;
+         auto& list = root->scripts;
          auto  size = list.size();
          for (size_t i = 0; i < size; ++i) {
             auto& script = list[i];
             if (stricmp(script.name.c_str(), name) == 0) {
                wrapper out = self;
                assert(out.is_collection);
-               assert(out.parts[0].signature == cobb::eight_cc("PapyRoot"));
-               assert(out.parts[1].signature == cobb::eight_cc("PapyScri"));
                out.into_collection(i);
                return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_script::metatable_key);
             }
@@ -65,23 +71,25 @@ namespace {
       }
       luastackchange_t lookup_item_by_index(lua_State* L) {
          auto& self = get_collection_wrapper(L);
-         auto& root = _unwrap(L, self);
+         auto* root = wrapper_t::unwrap(self, false);
+         if (!root)
+            luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::script_collection_key);
          auto  i    = lua_tointeger(L, 2);
-         auto& list = root.scripts;
+         auto& list = root->scripts;
          if (i > list.size() || i <= 0)
             return 0;
          --i;
          wrapper out = self;
          assert(out.is_collection);
-         assert(out.parts[0].signature == cobb::eight_cc("PapyRoot"));
-         assert(out.parts[1].signature == cobb::eight_cc("PapyScri"));
          out.into_collection(i);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_script::metatable_key);
       }
       luastackchange_t get_all_item_names(lua_State* L) {
          auto& self = get_collection_wrapper(L);
-         auto& root = _unwrap(L, self);
-         auto& list = root.scripts;
+         auto* root = wrapper_t::unwrap(self, false);
+         if (!root)
+            luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::script_collection_key);
+         auto& list = root->scripts;
          //
          lua_createtable(L, 0, list.size());
          auto index_tbl = lua_gettop(L);
@@ -175,7 +183,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
          auto& root = _unwrap(L, self);
          wrapper out = self;
-         out.append_part(cobb::eight_cc("PapyScri"));
+         out.append_part(wrapper_part_types::papyrus_script);
          out.is_collection = true;
          return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_root::script_collection_key);
       }
@@ -205,15 +213,27 @@ namespace editor_script::wrappers {
       );
    }
 
-   /*static*/ papyrus_root::wrapped_t* papyrus_root::unwrap(wrapper& w) {
-      //
-      // TODO: If we decide to use the same metatable for quest alias scripts, then we'll need to 
-      // check whether this script data is attached to an alias and if so, return that alias.
-      //
-      if (w.parts[0].signature != cobb::eight_cc("PapyRoot"))
+   /*static*/ papyrus_root::wrapped_t* papyrus_root::unwrap(wrapper& w, bool must_be_end) {
+      uint8_t dummy;
+      return papyrus_root::unwrap(w, must_be_end, dummy);
+   }
+   /*static*/ papyrus_root::wrapped_t* papyrus_root::unwrap(wrapper& w, bool must_be_end, uint8_t& next_depth) {
+      next_depth = 0;
+      if (auto* alias = quest_alias::unwrap(w)) {
+         if (w.parts[1].signature != wrapper_part_types::papyrus_root)
+            return nullptr;
+         next_depth = 2;
+         if (must_be_end && w.depth != next_depth)
+            return nullptr;
+         return &alias->script_data;
+      }
+      if (w.parts[0].signature != wrapper_part_types::papyrus_root)
          return nullptr;
       auto* form = w.get_loaded_form_data<dovah::loaded_forms::Form>();
       if (!form)
+         return nullptr;
+      next_depth = 1;
+      if (must_be_end && w.depth != next_depth)
          return nullptr;
       return form->get_papyrus_data();
    }

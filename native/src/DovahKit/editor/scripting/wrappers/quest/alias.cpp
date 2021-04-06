@@ -7,6 +7,7 @@
 
 #include "../../../../dovah/forms/Quest.h"
 #include "../quest.h"
+#include "../papyrus/root.h"
 
 namespace {
    using namespace editor_script;
@@ -32,6 +33,16 @@ namespace {
             //
             lua_pushstring(L, alias->name.c_str());
             return 1;
+         }
+         luastackchange_t papyrus(lua_State* L) {
+            auto& self  = get_wrapper_for_thiscall<wrappers::quest_alias>(L);
+            auto* alias = wrappers::quest_alias::unwrap(self);
+            if (alias == nullptr)
+               luaL_error(L, "alias wrapper has no underlying object (deleted?)");
+            __assume(alias != nullptr);
+            wrapper out = self;
+            out.append_part(wrapper_part_types::papyrus_root);
+            return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_root::metatable_key);
          }
          luastackchange_t parent(lua_State* L) {
             auto& self  = get_wrapper_for_thiscall<wrappers::quest_alias>(L);
@@ -122,10 +133,11 @@ namespace editor_script::wrappers {
    #pragma region Quest alias base members
    /*static*/ const std::initializer_list<luaL_Reg> quest_alias::metatable_methods = no_functions;
    /*static*/ const std::initializer_list<luaL_Reg> quest_alias::metatable_getters = {
-      { "id",     &_base::getters::id },
-      { "name",   &_base::getters::name },
-      { "parent", &_base::getters::parent },
-      { "type",   &_base::getters::type },
+      { "id",      &_base::getters::id },
+      { "name",    &_base::getters::name },
+      { "parent",  &_base::getters::parent },
+      { "papyrus", &_base::getters::papyrus },
+      { "type",    &_base::getters::type },
    };
    /*static*/ const std::initializer_list<luaL_Reg> quest_alias::metatable_setters = {
       { "name", &_base::setters::name },
@@ -149,18 +161,18 @@ namespace editor_script::wrappers {
    #pragma endregion
 
    /*static*/ quest_alias::wrapped_t* quest_alias::unwrap(wrapper& w) {
-      if (w.is_collection)
+      if (w.depth <= 1 && w.is_collection)
          return nullptr;
       auto* form = w.get_loaded_form_data<dovah::loaded_forms::Quest>();
       if (!form)
          return nullptr;
       auto index = w.parts[0].index;
       switch (w.parts[0].signature) {
-         case cobb::eight_cc("QstAlias"):
+         case wrapper_part_types::quest_alias:
             if (index >= form->aliases.size())
                return nullptr;
             return form->aliases[index];
-         case cobb::eight_cc("QstAlsID"):
+         case wrapper_part_types::quest_alias_by_id:
             return form->lookup_alias_by_id(index);
       }
       return nullptr;
@@ -200,8 +212,8 @@ namespace editor_script::wrappers {
    /*static*/ luastackchange_t quest_alias::wrap(lua_State* L, const wrapper& collection, const wrapped_t* alias) {
       wrapper out = collection;
       assert(out.is_collection);
-      assert(out.parts[0].signature == cobb::eight_cc("QstAlsID") || out.parts[0].signature == cobb::eight_cc("QstAlias"));
-      out.parts[0].signature = cobb::eight_cc("QstAlsID"); // force non-ID access to ID access
+      assert(out.parts[0].signature == wrapper_part_types::quest_alias_by_id || out.parts[0].signature == wrapper_part_types::quest_alias);
+      out.parts[0].signature = wrapper_part_types::quest_alias_by_id; // force non-ID access to ID access
       out.into_collection(alias->id);
       out.last_part().noncontiguous = true;
       //

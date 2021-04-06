@@ -7,7 +7,7 @@
 #include "../../collections.h"
 
 #include "../../../../dovah/forms/Form.h"
-#include "root.h"
+#include "script.h"
 
 #include "../quest/alias.h"
 
@@ -29,7 +29,7 @@ namespace {
 
       luastackchange_t get_collection_length(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
-         auto* prop = wrappers::papyrus_property::unwrap(self);
+         auto* prop = wrappers::papyrus_property::unwrap(self, false);
          if (!prop) {
             lua_pushinteger(L, 0);
             return 1;
@@ -56,7 +56,7 @@ namespace {
       }
       luastackchange_t lookup_item_by_index(lua_State* L) {
          auto& self = get_collection_wrapper(L);
-         auto* prop = wrappers::papyrus_property::unwrap(self);
+         auto* prop = wrappers::papyrus_property::unwrap(self, false);
          if (!prop)
             return 0;
          auto  i    = lua_tointeger(L, 2);
@@ -106,7 +106,7 @@ namespace {
    namespace _getters {
       luastackchange_t name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
-         auto* prop = wrappers::papyrus_property::unwrap(self);
+         auto* prop = wrappers::papyrus_property::unwrap(self, true);
          if (prop == nullptr)
             luaL_error(L, "script property wrapper has no underlying object (deleted?)");
          __assume(prop != nullptr);
@@ -116,7 +116,7 @@ namespace {
       }
       luastackchange_t value(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
-         auto* prop = wrappers::papyrus_property::unwrap(self);
+         auto* prop = wrappers::papyrus_property::unwrap(self, true);
          if (prop == nullptr)
             luaL_error(L, "script property wrapper has no underlying object (deleted?)");
          __assume(prop != nullptr);
@@ -171,7 +171,7 @@ namespace {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
-         auto* prop = wrappers::papyrus_property::unwrap(self);
+         auto* prop = wrappers::papyrus_property::unwrap(self, true);
          if (prop == nullptr)
             luaL_error(L, "script property wrapper has no underlying object (deleted?)");
          __assume(prop != nullptr);
@@ -194,26 +194,27 @@ namespace editor_script::wrappers {
       { "name", &_setters::name },
    };
 
-   /*static*/ wrapper_t::wrapped_t* wrapper_t::unwrap(wrapper& w) {
-      if (w.parts[1].signature != cobb::eight_cc("PapyScri"))
+   /*static*/ wrapper_t::wrapped_t* wrapper_t::unwrap(wrapper& w, bool must_be_end) {
+      uint8_t next;
+      return wrapper_t::unwrap(w, must_be_end, next);
+   }
+   /*static*/ wrapper_t::wrapped_t* wrapper_t::unwrap(wrapper& w, bool must_be_end, uint8_t& next_depth) {
+      uint8_t next;
+      auto*   script = papyrus_script::unwrap(w, false, next);
+      next_depth = next;
+      if (!script)
          return nullptr;
-      if (w.parts[2].signature != cobb::eight_cc("PapyProp"))
+      if (w.parts[next].signature != wrapper_part_types::papyrus_property)
          return nullptr;
-      if (w.depth == 3) // if w.parts[2] is the last part
-         if (w.is_collection)
-            return nullptr;
-      auto* root = papyrus_root::unwrap(w);
-      if (!root)
+      if (w.is_collection_at_depth(next))
+         return false;
+      auto i = w.parts[next].index;
+      if (i >= script->properties.size())
          return nullptr;
-      auto& list = root->scripts;
-      auto  i    = w.parts[1].index;
-      if (i >= list.size())
+      ++next_depth;
+      if (must_be_end && w.depth != next_depth)
          return nullptr;
-      auto& scr = list[i];
-      i = w.parts[2].index;
-      if (i >= scr.properties.size())
-         return nullptr;
-      return &scr.properties[i];
+      return &script->properties[i];
    }
 
    /*static*/ void wrapper_t::build_collection_metatables(lua_State* L) {
