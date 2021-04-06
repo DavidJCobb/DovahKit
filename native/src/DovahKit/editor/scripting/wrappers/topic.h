@@ -1,0 +1,14 @@
+#pragma once
+#include "form.h"
+
+#include "../../../dovah/forms/Topic.h"
+
+namespace editor_script::wrappers {
+   struct topic : public form {
+      static constexpr char* superclass_key = metatable_key;
+      static constexpr char* metatable_key  = "dovah.classes.topic";
+      static std::initializer_list<luaL_Reg> metatable_methods;
+      static std::initializer_list<luaL_Reg> metatable_getters;
+      static std::initializer_list<luaL_Reg> metatable_setters;
+   };
+}

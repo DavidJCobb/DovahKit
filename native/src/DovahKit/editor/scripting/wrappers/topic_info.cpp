@@ -50,7 +50,7 @@ namespace {
 }
 #pragma endregion
 
-#pragma region shout
+#pragma region form
 namespace {
    namespace _getters {
       luastackchange_t hours_until_reset(lua_State* L) {
@@ -78,6 +78,21 @@ namespace {
             p = nullptr;
          wrapper out;
          auto* mt = wrap_form(out, p);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+      }
+      luastackchange_t parent_quest(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
+         if (!self.stub)
+            return 0;
+         dovah::form_stub* parent = self.stub->get_parent_form();
+         dovah::form_stub* quest  = nullptr;
+         if (parent->formType == dovah::form_type::topic) {
+            quest = parent->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
+            if (quest->formType != dovah::form_type::quest)
+               quest = nullptr;
+         }
+         wrapper out;
+         auto* mt = wrap_form(out, quest);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t responses(lua_State* L) {
@@ -174,6 +189,8 @@ namespace editor_script::wrappers {
       { "hours_until_reset",   &_getters::hours_until_reset },
       { "override_topic_text", &_getters::override_topic_text },
       { "parent",              &_getters::parent },
+      { "parent_quest",        &_getters::parent_quest },
+      { "parent_topic",        &_getters::parent },
       { "responses",           &_getters::responses }, // collection
       { "speaker",             &_getters::speaker },
       { "walk_away_topic",     &_getters::walk_away_topic },

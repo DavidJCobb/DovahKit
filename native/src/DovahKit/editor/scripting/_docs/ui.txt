@@ -126,6 +126,22 @@ There are a few considerations that need to be made here.
    the UI-locked function.
 
 
+   INDIVIDUAL SIGNAL/SLOT CONNECTIONS FOR EACH LUA LISTENER
+
+   We need to use individual signal/slot  connections for each Lua listener, in 
+   order to prevent event listeners from receiving events that were sent to Lua 
+   prior to the listeners being added. If we had all Lua listeners for the same 
+   event on the same widget share a  single connection, then a script might add 
+   an event listener  after an event has  been received but  before it has been 
+   processed.
+
+   Instead, then, we use a single signal/slot  connection for each listener. We 
+   use a custom struct, akin to a lambda, to retain the event name and listener 
+   name and send them into Lua. However,  we can't attach data directly to a Qt 
+   connection, so in order  to disconnect a signal/slot  connection by listener 
+   name, we must maintain a map of QMetaObject::Connection handles.
+
+
    DELAYED EVENTS
 
    Lua is single-threaded. This means that if a UI event is sent to Lua while a 

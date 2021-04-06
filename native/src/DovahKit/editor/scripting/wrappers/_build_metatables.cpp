@@ -18,6 +18,7 @@ namespace editor_script {
          define_wrapper_metatable<shout>(L);
             shout::build_collection_metatables(L);
             define_wrapper_metatable<shout_word>(L);
+         define_wrapper_metatable<topic>(L);
          define_wrapper_metatable<topic_info>(L);
             topic_info::build_collection_metatables(L);
             define_wrapper_metatable<topic_info_response>(L);

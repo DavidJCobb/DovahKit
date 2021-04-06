@@ -825,7 +825,7 @@ namespace dovah {
    }
    #pragma endregion
 
-   bool form_stub::is_any_descendant_form_edited() const noexcept {
+   [[nodiscard]] bool form_stub::is_any_descendant_form_edited() const noexcept {
       if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
          return false;
       }
@@ -839,7 +839,7 @@ namespace dovah {
       }
       return false;
    }
-   bool form_stub::does_descendant_form_need_save() const noexcept {
+   [[nodiscard]] bool form_stub::does_descendant_form_need_save() const noexcept {
       if (!(form_type_info::lookup(this->formType).flags & form_type_info::flag::can_have_children)) {
          return false;
       }
@@ -856,7 +856,7 @@ namespace dovah {
       }
       return false;
    }
-   bool form_stub::needs_save() const noexcept {
+   [[nodiscard]] bool form_stub::needs_save() const noexcept {
       if (this->is_edited())
          return true;
       auto& owner = this->_get_load_order();
@@ -865,7 +865,7 @@ namespace dovah {
       return this->does_descendant_form_need_save();
    }
 
-   bool form_stub::is_exterior_cell() const noexcept {
+   [[nodiscard]] bool form_stub::is_exterior_cell() const noexcept {
       if (this->formType != form_type::cell)
          return false;
       return this->get_parent_form() != nullptr;
@@ -879,7 +879,7 @@ namespace dovah {
          uint32_t merged; // 0xXXXXYYYY, but since it's in little-endian, the words are reversed above
       };
    }
-   uint32_t form_stub::get_cell_block() const noexcept {
+   [[nodiscard]] uint32_t form_stub::get_cell_block() const noexcept {
       if (this->formType != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
@@ -893,7 +893,7 @@ namespace dovah {
       }
       return (this->formID % 10);
    }
-   uint32_t form_stub::get_cell_sub_block() const noexcept {
+   [[nodiscard]] uint32_t form_stub::get_cell_sub_block() const noexcept {
       if (this->formType != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
@@ -906,6 +906,13 @@ namespace dovah {
          return value.merged;
       }
       return (this->formID % 100) / 10;
+   }
+   [[nodiscard]] form_stub* form_stub::get_outbound_use_with_flag(use_info_entry::flags_t f) const noexcept {
+      assert(f && "This function is meaningless without a flag specified.");
+      for (auto& pair : this->outbound)
+         if (pair.second.flags & f)
+            return pair.second.other;
+      return nullptr;
    }
 
    #pragma region Functions for modifying use info

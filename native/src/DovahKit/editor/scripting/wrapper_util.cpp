@@ -12,6 +12,8 @@ namespace editor_script {
                return wrappers::formlist::metatable_key;
             case dovah::form_type::shout:
                return wrappers::shout::metatable_key;
+            case dovah::form_type::topic:
+               return wrappers::topic::metatable_key;
             case dovah::form_type::topic_info:
                return wrappers::topic_info::metatable_key;
             case dovah::form_type::voicetype:

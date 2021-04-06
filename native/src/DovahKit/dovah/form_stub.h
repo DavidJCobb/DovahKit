@@ -372,13 +372,15 @@ namespace dovah {
          void set_parent_form(form_stub* p) noexcept;
          #pragma endregion
 
-         bool is_any_descendant_form_edited() const noexcept;
-         bool does_descendant_form_need_save() const noexcept;
-         bool needs_save() const noexcept;
+         [[nodiscard]] bool is_any_descendant_form_edited() const noexcept;
+         [[nodiscard]] bool does_descendant_form_need_save() const noexcept;
+         [[nodiscard]] bool needs_save() const noexcept;
          //
-         bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
-         uint32_t get_cell_block() const noexcept;
-         uint32_t get_cell_sub_block() const noexcept;
+         [[nodiscard]] bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
+         [[nodiscard]] uint32_t get_cell_block() const noexcept;
+         [[nodiscard]] uint32_t get_cell_sub_block() const noexcept;
+         //
+         [[nodiscard]] form_stub* get_outbound_use_with_flag(use_info_entry::flags_t) const noexcept;
          
          #pragma region Functions for modifying use info
          void revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags = 0);

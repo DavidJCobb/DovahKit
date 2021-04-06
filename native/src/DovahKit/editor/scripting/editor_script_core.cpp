@@ -1170,8 +1170,9 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
    auto  si_storage = start + 1;
    auto  si_events  = start + 2;
    auto  si_funcs   = start + 3;
-   auto  si_nk      = start + 4;
-   auto  si_nv      = start + 5;
+   auto  si_temp    = start + 4;
+   auto  si_nk      = start + 5;
+   auto  si_nv      = start + 6;
    //
    lua_getfield(L, LUA_REGISTRYINDEX, ui_listener_registry_key);
    // STACK: - [ ..., storage ] +
@@ -1192,11 +1193,34 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       --this->vm.pending_ui_event_count;
       return;
    }
+   //
+   // Let's create a temporary table to hold the listener functions we want to execute. Why? 
+   // Because the player could potentially register more listeners *from* a listener, and if 
+   // we're just directly executing listeners as we iterate over them with lua_next, then 
+   // their doing so will break lua_next. Instead, we'll iterate to grab the listeners by 
+   // name, and stuff them into an array.
+   //
+   lua_createtable(L, 0, 0);
+   if (double_check_stack) {
+      assert(lua_gettop(L) == si_temp);
+   }
+   int count = 0;
+   //
    auto& userdata_intfc = DovahKitScriptVMUserdataInterface::get();
    // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name] ] +
    lua_pushnil(L); // nk
    while (lua_next(L, si_funcs) != 0) {
       // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name], key, value ] +
+      lua_pushinteger(L, ++count);
+      lua_rotate(L, -2, 1);   // STACK: - [ ..., funcs, temp, key, count, value ] +
+      lua_rawset(L, si_temp); // STACK: - [ ..., funcs, temp, key ] +
+   }
+   // STACK: - [ ..., funcs, temp ] +
+   //
+   // Now let's execute the listeners.
+   //
+   for (int i = 0; i < count; ++i) {
+      lua_rawgeti(L, si_temp, i + 1);
       int argcount = 0;
       for (auto& p : params) {
          if (p.userType() == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
@@ -1208,7 +1232,7 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
          }
          argcount += cobb::lua::push_qt_variant(L, p);
       }
-      editor_script::util::safe_call(L, argcount, 0); // pops (nv), since that's the function
+      editor_script::util::safe_call(L, argcount, 0); // pops the called function
    }
    --this->vm.pending_ui_event_count;
 }

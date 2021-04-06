@@ -29,7 +29,7 @@ end
 
 local search_parameters = {
    speaker   = nil, -- NOT IMPLEMENTED
-   quest     = nil, -- NOT IMPLEMENTED
+   quest     = nil,
    substring = "",
 }
 
@@ -44,7 +44,12 @@ function on_match_found(info)
    --
    -- TODO: have a table view and display results in there
    --
-   local text = "[INFO:" .. info:form_id_to_string() .. "]"
+   local text  = ""
+   local quest = info.parent_quest
+   if quest then
+      text = "[QUST:" .. quest:form_id_to_string() .. "]"
+   end
+   text = text .. "[INFO:" .. info:form_id_to_string() .. "]"
    for _, response in ipairs(info.responses) do
       text = text .. " " .. response.text
    end
@@ -55,10 +60,17 @@ function search()
    progress.maximum = dovah.count_forms_of_type(form_types.topic_info)
    progress.value   = 0
    --
+   if object_is_zombie(search_parameters.quest) then
+      search_parameters.quest = nil
+   end
+   --
    local count = 0
    dovah.for_each_form_of_type(form_types.topic_info, function(info)
       count = count + 1
       progress.value = count
+      if search_parameters.quest and info.parent_quest ~= search_parameters.quest then
+         return
+      end
       for i, response in ipairs(info.responses) do
          if string.find(response.text, search_parameters.substring, 1, true) then
             on_match_found(info)

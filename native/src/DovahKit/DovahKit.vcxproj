@@ -266,6 +266,7 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\topic.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic_info.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic_info\response.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
@@ -581,6 +582,7 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
+    <ClInclude Include="editor\scripting\wrappers\topic.h" />
     <ClInclude Include="editor\scripting\wrappers\topic_info.h" />
     <ClInclude Include="editor\scripting\wrappers\topic_info\response.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
@@ -784,6 +786,7 @@
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
+    <None Include="userdata\scripts\simple\dialogue search.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
