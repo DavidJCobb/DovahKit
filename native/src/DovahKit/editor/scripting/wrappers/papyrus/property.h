@@ -2,6 +2,10 @@
 #include "../../wrapper.h"
 #include "../../../../dovah/forms/components/papyrus.h"
 
+namespace editor_script::wrapper_part_types {
+   inline constexpr cobb::eight_cc papyrus_property_array_value = "PapyArrV";
+}
+
 namespace editor_script::wrappers {
    struct papyrus_property : public wrapper_metatable {
       static constexpr char* superclass_key = metatable_key;
@@ -12,5 +16,8 @@ namespace editor_script::wrappers {
 
       using wrapped_t = dovah::loaded_forms::components::papyrus::script_data::property;
       static wrapped_t* unwrap(wrapper& w);
+
+      static constexpr char* array_collection_key = "collection<dovah.classes.papyrus_property[n]>";
+      static void build_collection_metatables(lua_State* L);
    };
 }

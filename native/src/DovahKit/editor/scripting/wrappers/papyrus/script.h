@@ -12,5 +12,8 @@ namespace editor_script::wrappers {
 
       using wrapped_t = dovah::loaded_forms::components::papyrus::script_data::script;
       static wrapped_t* unwrap(wrapper& w);
+
+      static constexpr char* property_collection_key = "collection<dovah.classes.scripts.properties>";
+      static void build_collection_metatables(lua_State* L);
    };
 }

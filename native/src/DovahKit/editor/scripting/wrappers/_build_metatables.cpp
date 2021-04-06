@@ -10,7 +10,10 @@ namespace editor_script {
       #pragma region Common form components
          define_wrapper_metatable<papyrus_root>(L);
          papyrus_root::build_collection_metatables(L);
-         define_wrapper_metatable<papyrus_script>(L);
+            define_wrapper_metatable<papyrus_script>(L);
+            papyrus_script::build_collection_metatables(L);
+               define_wrapper_metatable<papyrus_property>(L);
+               papyrus_property::build_collection_metatables(L);
       #pragma endregion
       #pragma region Form types
          define_wrapper_metatable<formlist>(L);

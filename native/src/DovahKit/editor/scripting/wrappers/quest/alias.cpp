@@ -178,6 +178,25 @@ namespace editor_script::wrappers {
       return (wrapped_t*)alias;
    }
 
+   /*static*/ luastackchange_t quest_alias::wrap(lua_State* L, dovah::form_stub* quest, uint32_t aliasID) {
+      if (!quest)
+         return 0;
+      wrapper out;
+      wrap_form(out, quest);
+      out.append_part(editor_script::wrapper_part_types::quest_alias);
+      out.is_collection = true;
+      auto* loaded = out.get_loaded_form_data<dovah::loaded_forms::Quest>();
+      return wrap(L, out, loaded->lookup_alias_by_id(aliasID));
+   }
+   /*static*/ luastackchange_t quest_alias::wrap(lua_State* L, dovah::form_stub* quest, const wrapped_t* alias) {
+      if (!quest || !alias)
+         return 0;
+      wrapper out;
+      wrap_form(out, quest);
+      out.append_part(editor_script::wrapper_part_types::quest_alias);
+      out.is_collection = true;
+      return wrap(L, out, alias);
+   }
    /*static*/ luastackchange_t quest_alias::wrap(lua_State* L, const wrapper& collection, const wrapped_t* alias) {
       wrapper out = collection;
       assert(out.is_collection);

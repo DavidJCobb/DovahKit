@@ -13,6 +13,8 @@ namespace editor_script::wrappers {
       using wrapped_t = dovah::loaded_forms::Alias;
       static wrapped_t* unwrap(wrapper& w);
 
+      static luastackchange_t wrap(lua_State* L, dovah::form_stub* quest, uint32_t aliasID);
+      static luastackchange_t wrap(lua_State* L, dovah::form_stub* quest, const wrapped_t* alias);
       static luastackchange_t wrap(lua_State* L, const wrapper& collection, const wrapped_t* alias);
    };
    

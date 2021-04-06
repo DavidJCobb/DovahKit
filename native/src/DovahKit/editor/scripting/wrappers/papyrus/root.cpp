@@ -36,7 +36,7 @@ namespace {
       luastackchange_t get_collection_length(lua_State* L) {
          auto& self = get_collection_wrapper(L);
          auto& root = _unwrap(L, self);
-         lua_pushnumber(L, root.scripts.size());
+         lua_pushinteger(L, root.scripts.size());
          return 1;
       }
       luastackchange_t lookup_item_by_name(lua_State* L) {
