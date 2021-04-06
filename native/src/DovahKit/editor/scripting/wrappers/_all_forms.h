@@ -2,6 +2,8 @@
 #include "papyrus/_all.h"
 #include "form.h"
 #include "formlist.h"
+#include "quest.h"
+   #include "quest/alias.h"
 #include "shout.h"
    #include "shout/word.h"
 #include "topic.h"

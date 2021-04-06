@@ -264,6 +264,8 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\property.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\quest.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\quest\alias.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic.cpp" />
@@ -580,6 +582,8 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\script.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
+    <ClInclude Include="editor\scripting\wrappers\quest.h" />
+    <ClInclude Include="editor\scripting\wrappers\quest\alias.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
     <ClInclude Include="editor\scripting\wrappers\topic.h" />

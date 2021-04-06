@@ -762,12 +762,14 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
       if (!other || other->lua_key == instance.lua_key)
          continue;
       if (instance.is_in_same_collection(*other)) {
-         auto& o_last = other->last_part();
-         if (index < o_last.index)
-            //
-            // reduce (other), as a previous sibling has been deleted.
-            //
-            --o_last.index;
+         if (!instance.last_part().noncontiguous) {
+            auto& o_last = other->last_part();
+            if (index < o_last.index)
+               //
+               // reduce (other), as a previous sibling has been deleted.
+               //
+               --o_last.index;
+         }
       } else if (other->is_descendant_of(instance)) {
          refs_to_sever.push_back(other->lua_key);
       }

@@ -18,6 +18,11 @@ namespace editor_script {
          define_wrapper_metatable<shout>(L);
             shout::build_collection_metatables(L);
             define_wrapper_metatable<shout_word>(L);
+         define_wrapper_metatable<quest>(L);
+            quest::build_collection_metatables(L);
+            define_wrapper_metatable<quest_alias>(L);
+            define_wrapper_metatable<quest_loc_alias>(L);
+            define_wrapper_metatable<quest_ref_alias>(L);
          define_wrapper_metatable<topic>(L);
          define_wrapper_metatable<topic_info>(L);
             topic_info::build_collection_metatables(L);

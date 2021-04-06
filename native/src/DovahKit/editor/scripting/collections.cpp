@@ -19,6 +19,11 @@ namespace {
       lua_tolstring(L, -1, nullptr);
    }
 
+   luastackchange_t _return_nil(lua_State* L) {
+      lua_pushnil(L);
+      return 1;
+   }
+
    #pragma region Collection iterator metamethods
       luastackchange_t __pairs_call(lua_State* L) {
          /*
@@ -75,7 +80,7 @@ namespace {
          auto index_key  = 3;
          auto index_meta = 4;
          //
-         lua_pushnumber(L, 1.0F);
+         lua_pushinteger(L, 1);
          lua_arith(L, LUA_OPADD); // key += 1
          //
          lua_getfield(L, index_self, "meta");
@@ -330,7 +335,7 @@ namespace {
       lua_setfield(L, index_iter, "meta");
       luaL_setmetatable(L, iterator_mt_ipairs);
       lua_pushvalue(L, index_self);
-      lua_pushnumber(L, 0.0);
+      lua_pushinteger(L, 0);
       return 3;
    }
    #pragma endregion
@@ -382,8 +387,10 @@ namespace editor_script {
       //
       if (lookup_item_by_index) {
          lua_pushcfunction(L, lookup_item_by_index);
-         lua_setfield(L, index_mt, "lookup_item_by_index");
+      } else {
+         lua_pushcfunction(L, &_return_nil); // needed, or ipairs will error on the missing function and throw
       }
+      lua_setfield(L, index_mt, "lookup_item_by_index");
       //
       if (get_all_item_names) {
          lua_pushcfunction(L, get_all_item_names);

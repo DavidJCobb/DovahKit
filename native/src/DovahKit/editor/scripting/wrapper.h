@@ -37,6 +37,7 @@ namespace editor_script {
          struct part {
             part_type_t signature = 0;
             uint32_t    index     = 0;
+            bool        noncontiguous = false;
             //
             bool operator==(const part& other) const noexcept;
             inline bool operator!=(const part& other) const noexcept { return !(*this == other); }
