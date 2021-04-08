@@ -203,59 +203,61 @@ namespace dovah::loaded_forms {
                break;
             case 'AIDT':
                {
+                  uint8_t aggression;
+                  uint8_t assistance;
+                  uint8_t confidence;
                   if (subrecord.is_in_bounds(0x14)) {
-                     subrecord.read(this->ai.aggression);
-                     subrecord.read(this->ai.confidence);
-                     subrecord.read(this->ai.energy_level);
-                     subrecord.read(this->ai.morality);
-                     subrecord.read(this->ai.mood);
-                     subrecord.read(this->ai.assistance);
-                     subrecord.read(this->ai.aggression);
-                     subrecord.read(this->ai.aggro.use_radius);
-                     subrecord.skip_bytes(1);
-                     subrecord.read(this->ai.aggro.warn);
+                     subrecord.read(aggression);                // 00
+                     subrecord.read(confidence);                // 01
+                     subrecord.read(this->ai.energy_level);     // 02
+                     subrecord.read(this->ai.morality);         // 03
+                     subrecord.read(this->ai.mood);             // 04
+                     subrecord.read(assistance);                // 05
+                     subrecord.read(this->ai.aggro.use_radius); // 06
+                     subrecord.skip_bytes(1);                   // 07
+                     subrecord.read(this->ai.aggro.warn);       // 08
                      if (record.version() < 0x1D) {
                         uint32_t unused;
-                        subrecord.read(unused);
-                        subrecord.read(this->ai.aggro.attack);
+                        subrecord.read(unused);                 // 0C
+                        subrecord.read(this->ai.aggro.attack);  // 10
                      } else {
-                        subrecord.read(this->ai.aggro.warn_attack);
-                        subrecord.read(this->ai.aggro.attack);
+                        subrecord.read(this->ai.aggro.warn_attack); // 0C
+                        subrecord.read(this->ai.aggro.attack);      // 10
                      }
                   }
                   //
                   if (record.version() < 4) {
-                     if (this->ai.aggression > 1)
-                        ++this->ai.aggression;
+                     if (aggression > 1)
+                        ++aggression;
                   }
                   if (record.version() < 6) {
-                     switch ((uint8_t)this->ai.aggression) { // wait... is this a one-based version of the confidence enum?
+                     switch (aggression) { // wait... is this a one-based version of the confidence enum?
                         case 0:
                            break;
                         case 1:
-                           this->ai.aggression = aggression::unaggressive;
-                           this->ai.assistance = assistance::helps_allies;
+                           aggression = (uint8_t)aggression::unaggressive;
+                           assistance = (uint8_t)assistance::helps_allies;
                            break;
                         case 2:
-                           this->ai.aggression = aggression::aggressive;
-                           this->ai.assistance = assistance::helps_allies;
+                           aggression = (uint8_t)aggression::aggressive;
+                           assistance = (uint8_t)assistance::helps_allies;
                            break;
                         case 3:
-                           this->ai.aggression = aggression::aggressive;
-                           this->ai.assistance = assistance::helps_friends_and_allies;
+                           aggression = (uint8_t)aggression::aggressive;
+                           assistance = (uint8_t)assistance::helps_friends_and_allies;
                            break;
                         case 4:
-                           this->ai.aggression = aggression::very_aggressive;
-                           this->ai.assistance = assistance::helps_friends_and_allies;
+                           aggression = (uint8_t)aggression::very_aggressive;
+                           assistance = (uint8_t)assistance::helps_friends_and_allies;
                            break;
                         case 5:
-                           this->ai.aggression = aggression::frenzied;
-                           this->ai.assistance = assistance::helps_nobody;
+                           aggression = (uint8_t)aggression::frenzied;
+                           assistance = (uint8_t)assistance::helps_nobody;
                            break;
                      }
                   }
                   if (record.version() < 7) {
-                     this->ai.confidence = 4 - this->ai.confidence;
+                     confidence = 4 - confidence;
                   }
                   if (record.version() < 0x21) {
                      auto val = this->ai.aggro.warn;
@@ -263,6 +265,9 @@ namespace dovah::loaded_forms {
                      this->ai.aggro.warn_attack = val;
                      this->ai.aggro.attack      = val >> 2;
                   }
+                  this->ai.aggression = (ActorBase::aggression)aggression;
+                  this->ai.assistance = (ActorBase::assistance)assistance;
+                  this->ai.confidence = (ActorBase::confidence)confidence;
                }
                break;
             case 'ANAM':
@@ -356,9 +361,9 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'DOFT':
-               if (subrecord.read(this->outfits.default)) {
+               if (subrecord.read(this->outfits.normal)) {
                   intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::outfit, this->stub, this->outfits.default)
+                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::outfit, this->stub, this->outfits.normal)
                   );
                }
                break;
@@ -490,7 +495,7 @@ namespace dovah::loaded_forms {
       form_id_t far_away_model;
       form_id_t gift_filter;
       struct {
-         form_id_t default;
+         form_id_t normal; // default
          form_id_t sleeping;
       } outfits;
       form_id_t race;
@@ -631,7 +636,7 @@ namespace dovah::loaded_forms {
                subrecord.read(crime_faction);
                break;
             case 'DOFT':
-               subrecord.read(outfits.default);
+               subrecord.read(outfits.normal);
                break;
             case 'SOFT':
                subrecord.read(outfits.sleeping);

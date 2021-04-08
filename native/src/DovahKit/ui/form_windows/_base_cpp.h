@@ -2,6 +2,7 @@
 #include "_base.h"
 #include "../../dovah/form_stub.h"
 #include "../../editor/core.h"
+#include <QPushButton>
 
 namespace form_dialog_helpers {
    template<class _dialog_t, typename loaded_form_t> void initialize(_dialog_t& dialog, dovah::form_stub* stub) {

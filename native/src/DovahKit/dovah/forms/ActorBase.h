@@ -11,7 +11,6 @@
 #include "components/destruction.h"
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
-#include "../utils/loose_enum.h"
 
 namespace dovah::loaded_forms {
    class ActorBase : public Form {
@@ -182,12 +181,12 @@ namespace dovah::loaded_forms {
             //
             // Data below is from AIDT, the TESAIDataForm content.
             //
-            loose_enum<aggression> aggression   = aggression::unaggressive;
-            loose_enum<confidence> confidence   = confidence::average;
-            uint8_t                energy_level = 0;
-            loose_enum<morality>   morality     = morality::any_crime;
-            mood                   mood         = mood::neutral;
-            loose_enum<assistance> assistance   = assistance::helps_friends_and_allies;
+            aggression aggression   = aggression::unaggressive;
+            confidence confidence   = confidence::average;
+            uint8_t    energy_level = 0;
+            morality   morality     = morality::any_crime;
+            mood       mood         = mood::neutral;
+            assistance assistance   = assistance::helps_friends_and_allies;
             struct {
                bool     use_radius = false;
                uint32_t warn;        // warn targets while they're in this radius                        // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
@@ -248,7 +247,7 @@ namespace dovah::loaded_forms {
             std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
          } head;
          struct {
-            form_reference_t default;
+            form_reference_t normal; // default
             form_reference_t sleeping;
          } outfits;
          struct {

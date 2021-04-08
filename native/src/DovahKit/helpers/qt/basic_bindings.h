@@ -1,5 +1,6 @@
 #pragma once
 #include "../bitwise.h"
+#include "../miscellaneous.h"
 #include <string>
 #include <QCheckBox>
 #include <QComboBox>

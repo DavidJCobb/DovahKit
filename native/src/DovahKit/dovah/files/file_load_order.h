@@ -598,7 +598,7 @@ namespace dovah {
 
             // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 
             // called blindly to create and return warnings that only have a code if there's an actual problem.
-            void log_load_warning(detailed_notice&);
+            void log_load_warning(const detailed_notice&);
 
             inline bool is_active_file() const noexcept {
                if (!this->current_file)

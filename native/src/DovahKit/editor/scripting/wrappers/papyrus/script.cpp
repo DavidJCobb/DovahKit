@@ -166,7 +166,7 @@ namespace editor_script::wrappers {
       if (w.parts[next].signature != wrapper_part_types::papyrus_script)
          return nullptr;
       if (w.is_collection_at_depth(next))
-         return false;
+         return nullptr;
       auto& list = root->scripts;
       auto  i    = w.parts[next].index;
       if (i >= list.size())

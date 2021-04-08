@@ -8,28 +8,6 @@
 
 FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormDialogWorkingCopyBase(dovah::form_type::quest, stub, parent) {
    form_dialog_helpers::initialize(*this);
-   this->load(); // this creates the working copy. we need that on hand before we create our tab-body widgets
-   //
-   this->ui.tabWidget->setCurrentIndex(0);
-   this->ui.dialogueTabbox->setCurrentIndex(0);
-   //
-   #pragma region Create tabs
-   {
-      auto* tabbox  = this->ui.tabWidget;
-      auto  _insert = [tabbox](int i, QWidget* body) {
-         auto* page   = tabbox->widget(i);
-         auto* layout = new QGridLayout;
-         assert(page);
-         layout->addWidget(body);
-         page->setLayout(layout);
-      };
-      //
-      auto& quest = *(form_t*)this->clone;
-      //
-      _insert(1, (this->tabs.stages     = new QuestTabStages(*stub, quest)));
-      _insert(2, (this->tabs.objectives = new QuestTabObjectives(*stub, quest)));
-   }
-   #pragma endregion
    //
    {
       auto* widget = this->ui.textDisplayGlobals;
@@ -92,7 +70,28 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
    }
    this->ui.priority->setRange(0, 255);
    //
-   auto& editor = DovahKitCore::get();
+   this->load(); // this creates the working copy. we need that on hand before we create our tab-body widgets
+   //
+   this->ui.tabWidget->setCurrentIndex(0);
+   this->ui.dialogueTabbox->setCurrentIndex(0);
+   //
+   #pragma region Create tabs
+   {
+      auto* tabbox  = this->ui.tabWidget;
+      auto  _insert = [tabbox](int i, QWidget* body) {
+         auto* page   = tabbox->widget(i);
+         auto* layout = new QGridLayout;
+         assert(page);
+         layout->addWidget(body);
+         page->setLayout(layout);
+      };
+      //
+      auto& quest = *(form_t*)this->clone;
+      //
+      _insert(1, (this->tabs.stages     = new QuestTabStages(*stub, quest)));
+      _insert(2, (this->tabs.objectives = new QuestTabObjectives(*stub, quest)));
+   }
+   #pragma endregion
 }
 void FormDialogQuest::_load_impl() {
    auto& editor  = DovahKitCore::get();

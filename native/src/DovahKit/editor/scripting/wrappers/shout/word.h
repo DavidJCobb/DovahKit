@@ -5,8 +5,8 @@
 
 namespace editor_script::wrappers {
    struct shout_word : public wrapper_metatable {
-      static constexpr char* superclass_key = metatable_key;
-      static constexpr char* metatable_key  = "dovah.classes.shout_word";
+      static constexpr const char* superclass_key = metatable_key;
+      static constexpr const char* metatable_key  = "dovah.classes.shout_word";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;

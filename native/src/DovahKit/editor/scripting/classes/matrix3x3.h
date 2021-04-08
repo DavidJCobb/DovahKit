@@ -6,8 +6,8 @@
 namespace editor_script::classes {
    class matrix3x3 {
       public:
-         static constexpr char* global_name   = "matrix3x3";
-         static constexpr char* metatable_key = "dovah.classes.matrix3x3";
+         static constexpr const char* global_name   = "matrix3x3";
+         static constexpr const char* metatable_key = "dovah.classes.matrix3x3";
          static std::initializer_list<luaL_Reg> metatable_methods;
 
          inline static bool check_arg_type(lua_State* L, int i) {

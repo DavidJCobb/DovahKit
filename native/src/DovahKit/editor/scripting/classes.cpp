@@ -27,7 +27,7 @@ namespace editor_script {
    }
 
    namespace __pairs_iterators { // code for __pairs iterators
-      constexpr char* metatable_key = "-cobb-class-helpers:pairs-iterator";
+      constexpr const char* metatable_key = "-cobb-class-helpers:pairs-iterator";
       //
       static luastackchange_t __call(lua_State* L) {
          /*

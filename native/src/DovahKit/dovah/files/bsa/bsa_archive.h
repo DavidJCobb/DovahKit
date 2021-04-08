@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "../../../helpers/endianness.h"
 #include "../../../helpers/files.h"
 #include "../../bs_hash.h"
 

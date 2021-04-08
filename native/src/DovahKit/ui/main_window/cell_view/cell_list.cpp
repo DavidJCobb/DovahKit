@@ -399,7 +399,7 @@ CellList::model_item_type* CellList::_getCurrentItem() const noexcept {
    auto select = this->selectionModel()->selection().indexes();
    if (select.size() <= 0)
       return nullptr;
-   auto& idx = proxy->mapToSource(select[0]);
+   auto idx = proxy->mapToSource(select[0]);
    return (model_item_type*)idx.internalPointer();
 }
 #pragma endregion

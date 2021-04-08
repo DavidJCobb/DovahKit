@@ -151,6 +151,10 @@ namespace dovah {
       //
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
+
+   loaded_form_ptr<loaded_forms::Form> form_stub::load() {
+      return this->_load();
+   }
    loaded_form_ptr<loaded_forms::Form> form_stub::get_content_if_loaded() {
       return loaded_form_ptr<loaded_forms::Form>(this);
    }

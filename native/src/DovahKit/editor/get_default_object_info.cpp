@@ -4,8 +4,8 @@
 #include <QString>
 
 namespace {
-   constexpr char* dis_n = "DOBJ name";
-   constexpr char* dis_d = "DOBJ description";
+   const char* dis_n = "DOBJ name";
+   const char* dis_d = "DOBJ description";
 
    struct _info {
       uint32_t signature = 0;

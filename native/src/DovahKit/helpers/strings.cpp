@@ -224,76 +224,22 @@ namespace cobb {
       return haystack.compare(h - s, std::string::npos, suffix, 0, std::string::npos) == 0;
    }
 
-   std::string& ltrim(std::string& subject) {
-      subject.erase(
-         subject.begin(),
-         std::find_if(
-            subject.begin(),
-            subject.end(),
-            [](int c) { return !std::isspace(c); }
-         )
-      );
-      return subject;
+   std::string ltrim(std::string& subject) {
+      return std::string(find_first_non_whitespace(subject), subject.cend());
    };
-   std::string& rtrim(std::string& subject) {
-      subject.erase(
-         std::find_if(
-            subject.rbegin(),
-            subject.rend(),
-            [](int c) { return !std::isspace(c); }
-         ).base(),
-         subject.end()
-      );
-      return subject;
+   std::string rtrim(std::string& subject) {
+      return std::string(subject.cbegin(), find_last_non_whitespace(subject));
    };
-   std::string& trim(std::string& subject) {
-      auto left =std::find_if(
-         subject.begin(),
-         subject.end(),
-         [](int c) { return !std::isspace(c); }
-      );
-      auto right = std::find_if(
-         subject.rbegin(),
-         subject.rend(),
-         [](int c) { return !std::isspace(c); }
-      ).base();
-      subject = std::string(left, right);
-      return subject;
+   std::string trim(const std::string& subject) {
+      return std::string(find_first_non_whitespace(subject), find_last_non_whitespace(subject));
    };
-   std::wstring& ltrim(std::wstring& subject) {
-      subject.erase(
-         subject.begin(),
-         std::find_if(
-            subject.begin(),
-            subject.end(),
-            [](int c) { return !std::isspace(c); }
-         )
-      );
-      return subject;
+   std::wstring ltrim(std::wstring& subject) {
+      return std::wstring(find_first_non_whitespace(subject), subject.cend());
    };
-   std::wstring& rtrim(std::wstring& subject) {
-      subject.erase(
-         std::find_if(
-            subject.rbegin(),
-            subject.rend(),
-            [](int c) { return !std::isspace(c); }
-         ).base(),
-         subject.end()
-      );
-      return subject;
+   std::wstring rtrim(std::wstring& subject) {
+      return std::wstring(subject.cbegin(), find_last_non_whitespace(subject));
    };
-   std::wstring& trim(std::wstring& subject) {
-      auto left = std::find_if(
-         subject.begin(),
-         subject.end(),
-         [](int c) { return !std::isspace(c); }
-      );
-      auto right = std::find_if(
-         subject.rbegin(),
-         subject.rend(),
-         [](int c) { return !std::isspace(c); }
-      ).base();
-      subject = std::wstring(left, right);
-      return subject;
+   std::wstring trim(const std::wstring& subject) {
+      return std::wstring(find_first_non_whitespace(subject), find_last_non_whitespace(subject));
    }
 }

@@ -6,8 +6,8 @@
 namespace editor_script::classes {
    class quaternion {
       public:
-         static constexpr char* global_name   = "quaternion";
-         static constexpr char* metatable_key = "dovah.classes.quaternion";
+         static constexpr const char* global_name   = "quaternion";
+         static constexpr const char* metatable_key = "dovah.classes.quaternion";
          static std::initializer_list<luaL_Reg> metatable_methods;
 
          inline static bool check_arg_type(lua_State* L, int i) {

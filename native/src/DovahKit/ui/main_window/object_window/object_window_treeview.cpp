@@ -210,7 +210,7 @@ bool ObjectWindowFilterInfo::testFormStubFilter(const dovah::form_stub* stub) co
       //
       this->beginResetModel();
       #pragma region Build contents
-      constexpr char* disambig = "object window";
+      constexpr const char* disambig = "object window";
       //
       #pragma region Build notable nodes
          this->_nodes.all    = &item_type::make_form_type(tr("All", disambig), item_type::no_form_type_filter);

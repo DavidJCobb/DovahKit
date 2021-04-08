@@ -14,7 +14,7 @@ namespace cobb::qt {
    void bind(QLineEdit* widget, std::string& target) {
       widget->setText(QString::fromUtf8(target.c_str()));
       QObject::connect(widget, &QLineEdit::textChanged, widget, [&target](const QString& value) {
-         target = value.toUtf8();
+         target = value.toUtf8().data();
       });
    }
    void unbind(QLineEdit* widget) {

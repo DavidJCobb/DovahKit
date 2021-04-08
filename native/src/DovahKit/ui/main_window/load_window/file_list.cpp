@@ -57,7 +57,7 @@ Qt::ItemFlags LoadOrderFileListModel::flags(const QModelIndex& index) const {
       // fine. We mainly just lose out on greying out the checkbox.
       //
    }
-   return flags;
+   return Qt::ItemFlags(QFlag(flags));
 }
 QVariant LoadOrderFileListModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())

@@ -30,16 +30,16 @@
 #include "api/namespaces/ui.h"
 
 namespace {
-   constexpr char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
-   constexpr char* wrapper_weakmap_metatable_key = "__weakmap_mode_metatable";
+   constexpr const char* wrapper_storage_registry_key  = "dovah.internals.extant_wrappers";
+   constexpr const char* wrapper_weakmap_metatable_key = "__weakmap_mode_metatable";
 
    // Storage in the Lua registry for all Lua event listeners registered on a widget.
-   constexpr char* ui_listener_registry_key = "dovah.internals.ui_listeners"; // registry[key][widget_pointer][event_name][listener_name]
+   constexpr const char* ui_listener_registry_key = "dovah.internals.ui_listeners"; // registry[key][widget_pointer][event_name][listener_name]
 
    // Storage in the Lua registry for functions that have been queued by the script to execute 
    // when the UI is later locked or unlocked.
-   static constexpr char* ui_locked_queue_registry_key   = "dovah.internals.run_when_ui_locked_queue";
-   static constexpr char* ui_unlocked_queue_registry_key = "dovah.internals.run_when_ui_unlocked_queue";
+   static constexpr const char* ui_locked_queue_registry_key   = "dovah.internals.run_when_ui_locked_queue";
+   static constexpr const char* ui_unlocked_queue_registry_key = "dovah.internals.run_when_ui_unlocked_queue";
 
    constexpr int max_script_windows = 10;
 

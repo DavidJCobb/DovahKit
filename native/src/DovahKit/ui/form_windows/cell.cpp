@@ -178,7 +178,7 @@ void FormDialogCell::_update_rank_picker() {
          //
          QString text = fem;
          if (masc != fem) {
-            text = tr(u8"%1 (\x2640) / %2 (\x2642)", "ownership required rank").arg(fem).arg(masc);
+            text = trUtf8((const char*)u8"%1 (\x2640) / %2 (\x2642)", "ownership required rank").arg(fem).arg(masc);
          }
          widget->addItem(text, rank.id);
       }

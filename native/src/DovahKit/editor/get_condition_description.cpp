@@ -11,8 +11,8 @@ namespace {
       _condition_desc(uint16_t i, const char* n, const char* d) : id(i), name(n), desc(QObject::tr(d, "condition function description")) {}
    };
 
-   constexpr char* text_returns_immediately = "This condition is a no-op, does nothing, and cannot be expected to return a meaningful or consistent result.";
-   constexpr char* text_returns_zero        = "This function is a no-op and always returns 0.";
+   const char* text_returns_immediately = "This condition is a no-op, does nothing, and cannot be expected to return a meaningful or consistent result.";
+   const char* text_returns_zero        = "This function is a no-op and always returns 0.";
 
    std::array _descriptions = {
       _condition_desc(0, "GetWantBlocking",   ""),

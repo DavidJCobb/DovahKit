@@ -46,10 +46,24 @@ namespace cobb {
    //
    extern bool string_ends_with(const std::string& haystack, const std::string& suffix) noexcept;
 
-   extern std::string& ltrim(std::string& subject);
-   extern std::string& rtrim(std::string& subject);
-   extern std::string& trim(std::string& subject);
-   extern std::wstring& ltrim(std::wstring& subject);
-   extern std::wstring& rtrim(std::wstring& subject);
-   extern std::wstring& trim(std::wstring& subject);
+   template<typename T> typename T::const_iterator find_first_non_whitespace(const T& subject) {
+      return std::find_if(
+         subject.cbegin(),
+         subject.cend(),
+         [](int c) { return !std::isspace(c); }
+      );
+   };
+   template<typename T> typename T::const_iterator find_last_non_whitespace(const T& subject) {
+      return std::find_if(
+         subject.crbegin(),
+         subject.crend(),
+         [](int c) { return !std::isspace(c); }
+      ).base();
+   };
+   extern std::string ltrim(std::string& subject);
+   extern std::string rtrim(std::string& subject);
+   extern std::string trim(const std::string& subject);
+   extern std::wstring ltrim(std::wstring& subject);
+   extern std::wstring rtrim(std::wstring& subject);
+   extern std::wstring trim(const std::wstring& subject);
 }

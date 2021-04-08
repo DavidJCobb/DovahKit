@@ -20,7 +20,7 @@ namespace {
       //
       auto prior = lua_gettop(L);
       auto guard = cobb::lua::set_top_on_exit(L, prior);
-      constexpr char* warning_text = "quaternion operator overload given a non-quaternion-like table operand";
+      constexpr const char* warning_text = "quaternion operator overload given a non-quaternion-like table operand";
       //
       lua_getfield(L, stack_pos, "w");
       if (!lua_isnumber(L, -1)) {

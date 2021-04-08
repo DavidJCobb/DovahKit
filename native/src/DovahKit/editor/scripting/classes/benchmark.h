@@ -8,7 +8,7 @@
 namespace editor_script::classes {
    class benchmark final {
       public:
-         static constexpr char* metatable_key = "dovah.classes.benchmark";
+         static constexpr const char* metatable_key = "dovah.classes.benchmark";
          static std::initializer_list<luaL_Reg> metatable_methods;
 
          benchmark();

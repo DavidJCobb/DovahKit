@@ -6,6 +6,7 @@
 #include <QtWinExtras/QWinTaskbarProgress.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "../helpers/qt/strings.h"
 #include "../editor/core.h"
+#include "../editor/open_window_for_form.h"
 #include "../dovah/files/file_load_order.h"
 #include "main_window/load_window.h"
 #include "main_window/save_window.h"

@@ -17,6 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <cstdint>
 #include <limits>
+#include <type_traits>
 
 namespace cobb {
    template<typename T> constexpr T bitswap(T value, int bitcount) noexcept {

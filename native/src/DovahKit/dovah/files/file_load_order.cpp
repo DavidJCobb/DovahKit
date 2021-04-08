@@ -3142,7 +3142,10 @@ namespace dovah {
             results->error = error;
       }
 
-      void form_load::log_load_warning(detailed_notice& warning) {
+      void form_load::log_load_warning(const detailed_notice& input) {
+         if (!input.is_defined())
+            return;
+         detailed_notice warning = input;
          warning.type    = detailed_notice::notice_type::warning;
          warning.context = detailed_notice::notice_context::on_demand_form_load;
          warning.modify_flag(detailed_notice::flag::is_winning_record, this->is_winning_record);

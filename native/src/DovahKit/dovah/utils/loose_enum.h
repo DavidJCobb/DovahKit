@@ -2,6 +2,10 @@
 #include <type_traits>
 
 namespace dovah {
+   //
+   // TODO: Currently non-functional. The conversion operators cause comparisons, math, etc., to be 
+   // ambiguous.
+   //
    template<typename T, typename U = std::underlying_type_t<T>> class loose_enum {
       public:
          using value_type      = T;

@@ -42,7 +42,7 @@ class DovahKitScriptVM : public QObject {
       // Storage in the Lua registry for a cached copy of (string.format), which we place there 
       // when we start up the VM, to ensure that hardcoded functions that need that behavior can 
       // access it even if the Lua script tries to monkeypatch or replace its own copy.
-      static constexpr char* string_format_registry_key   = "cached:string.format";
+      static constexpr const char* string_format_registry_key   = "cached:string.format";
 
       enum class ui_lock_override_state { unchanged, locked, unlocked };
 

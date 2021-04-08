@@ -2,6 +2,7 @@
 #include <QHeaderView>
 #include "../../../helpers/qt/strings.h"
 #include "../../../editor/core.h"
+#include "../../../editor/open_window_for_form.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/form_stub_helpers.h"
 
@@ -387,11 +388,11 @@ void CellRefList::clear() {
    m->clear();
 }
 CellRefList::model_item_type* CellRefList::_getCurrentItem() const noexcept {
-   auto proxy = (proxy_type*)this->model();
+   auto proxy  = (proxy_type*)this->model();
    auto select = this->selectionModel()->selection().indexes();
    if (select.size() <= 0)
       return nullptr;
-   auto& idx = proxy->mapToSource(select[0]);
+   auto idx = proxy->mapToSource(select[0]);
    return (model_item_type*)idx.internalPointer();
 }
 #pragma endregion

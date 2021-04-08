@@ -576,7 +576,7 @@ namespace {
       );
    }
    QString _stringify_game_setting_renumber_error(dovah::notice_code_t code) {
-      constexpr char* disambig = "game setting renumber errors";
+      const char* disambig = "game setting renumber errors";
       //
       switch (code) {
          case dovah::notice_code::form_id_unavailable_for_game_setting:
@@ -834,7 +834,7 @@ void DovahKitCore::assign_localized_string(dovah::localized_string& s, const QSt
       codec = QTextCodec::codecForName(this->encoding.c_str());
    if (!codec)
       codec = QTextCodec::codecForName("Windows-1252");
-   s.value     = codec->fromUnicode(value);
+   s.value     = codec->fromUnicode(value).data();
    s.localized = dovah::localization_language::none;
 }
 

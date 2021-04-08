@@ -6,8 +6,8 @@
 namespace {
    using namespace editor_script;
    //
-   constexpr char* iterator_mt_pairs  = "-dovah-collection-helpers:pairs-iterator";
-   constexpr char* iterator_mt_ipairs = "-dovah-collection-helpers:ipairs-iterator";
+   constexpr const char* iterator_mt_pairs  = "-dovah-collection-helpers:pairs-iterator";
+   constexpr const char* iterator_mt_ipairs = "-dovah-collection-helpers:ipairs-iterator";
 
    void _stringify_and_push_number(lua_State* L, int index) {
       lua_Number f = lua_tonumber(L, index);
