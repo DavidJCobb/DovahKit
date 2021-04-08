@@ -124,17 +124,22 @@ namespace {
    luastackchange_t __index(lua_State* L) {
       /*
       function(self, k)
-         local meta  = getmetatable(self)
-         local named = meta.items_are_named
-         local kt    = type(k)
+         local meta        = getmetatable(self)
+         local named       = meta.items_are_named
+         local has_members = type(meta.members) == "table"
+         local kt          = type(k)
          if kt == "number" then
             local v = meta.lookup_item_by_index(self, k)
-            if v == nil and named then
-               v = meta.lookup_item_by_name(self, k)
+            if v == nil then
+               if named then
+                  v = meta.lookup_item_by_name(self, k)
+               elseif has_members then
+                  v = meta.members[k]
+               end
             end
             return v
          end
-         if named then
+         if named or has_members then
             if kt == "table" or kt == "userdata" then
                k  = luaL_callmeta(k, "__tostring")
                kt = type(k)
@@ -148,8 +153,12 @@ namespace {
             if named then
                v = meta.lookup_item_by_name(self, k)
             end
-            if v == nil and tonumber(k) ~= nil then
-               v = meta.lookup_item_by_index(self, k)
+            if v == nil then
+               if tonumber(k) ~= nil then
+                  v = meta.lookup_item_by_index(self, k)
+               elseif has_members then
+                  v = meta.members[k]
+               end
             end
             return v
          end
@@ -161,6 +170,7 @@ namespace {
       lua_getmetatable(L, index_self);
       //
       lua_getfield(L, index_meta, "items_are_named");
+      bool has_members     = lua_getfield(L, index_meta, "members") == LUA_TTABLE;
       bool items_are_named = lua_toboolean(L, 4);
       lua_settop(L, index_meta);
       //
@@ -170,15 +180,21 @@ namespace {
          lua_pushvalue(L, index_self);
          lua_pushvalue(L, index_key);
          lua_call(L, 2, 1);
-         if (items_are_named && lua_isnil(L, 4)) {
-            lua_getfield (L, index_meta, "lookup_item_by_name");
-            lua_pushvalue(L, index_self);
-            _stringify_and_push_number(L, index_key);
-            lua_call(L, 2, 1);
+         if (lua_isnil(L, 4)) {
+            if (items_are_named) {
+               lua_getfield (L, index_meta, "lookup_item_by_name");
+               lua_pushvalue(L, index_self);
+               _stringify_and_push_number(L, index_key);
+               lua_call(L, 2, 1);
+            } else if (has_members) {
+               lua_getfield(L, index_meta, "members");
+               lua_pushvalue(L, index_key);
+               lua_rawget(L, -2);
+            }
          }
          return 1;
       }
-      if (items_are_named) {
+      if (items_are_named || has_members) {
          //
          // If the key is a table or userdata, see if it has a __tostring metamethod 
          // that we can use to convert it to a string.
@@ -208,6 +224,12 @@ namespace {
                lua_pushvalue(L, index_key);
                lua_call(L, 2, 1);
             } else {
+               if (has_members) {
+                  lua_getfield(L, index_meta, "members");
+                  lua_pushvalue(L, index_key);
+                  lua_rawget(L, -2);
+                  return 1;
+               }
                return 0;
             }
          }
@@ -399,6 +421,67 @@ namespace editor_script {
       if (set_item) {
          lua_pushcfunction(L, set_item);
          lua_setfield(L, index_mt, "set_item");
+      }
+      //
+      lua_pop(L, 1); // pop metatable
+   }
+
+   extern void define_collection_metatable(lua_State* L, const collection_definition_params& params) {
+      _define_collection_iterator_metatables(L);
+      //
+      luaL_newmetatable(L, params.registry_key); // STACK: [newmeta]
+      auto index_mt = lua_gettop(L);
+      //
+      lua_pushcfunction(L, &__index);
+      lua_setfield(L, index_mt, "__index");
+      lua_pushcfunction(L, &__newindex);
+      lua_setfield(L, index_mt, "__newindex");
+      lua_pushcfunction(L, &__pairs);
+      lua_setfield(L, index_mt, "__pairs");
+      lua_pushcfunction(L, &__ipairs);
+      lua_setfield(L, index_mt, "__ipairs");
+      //
+      if (params.garbage_collection) {
+         lua_pushcfunction(L, params.garbage_collection);
+         lua_setfield(L, index_mt, "__gc");
+      }
+      //
+      lua_pushboolean(L, params.items_are_named);
+      lua_setfield(L, index_mt, "items_are_named");
+      //
+      if (params.get_collection_length) {
+         lua_pushcfunction(L, params.get_collection_length);
+         lua_setfield(L, index_mt, "__len");
+      }
+      //
+      if (params.lookup_item_by_name) {
+         lua_pushcfunction(L, params.lookup_item_by_name);
+         lua_setfield(L, index_mt, "lookup_item_by_name");
+      }
+      //
+      if (params.lookup_item_by_index) {
+         lua_pushcfunction(L, params.lookup_item_by_index);
+      } else {
+         lua_pushcfunction(L, &_return_nil); // needed, or ipairs will error on the missing function and throw
+      }
+      lua_setfield(L, index_mt, "lookup_item_by_index");
+      //
+      if (params.get_all_item_names) {
+         lua_pushcfunction(L, params.get_all_item_names);
+         lua_setfield(L, index_mt, "get_all_item_names");
+      }
+      if (params.set_item) {
+         lua_pushcfunction(L, params.set_item);
+         lua_setfield(L, index_mt, "set_item");
+      }
+      //
+      if (params.member_function_insert || params.member_function_remove) {
+         lua_createtable(L, 0, 2);
+         lua_pushcfunction(L, params.member_function_insert);
+         lua_setfield     (L, -2, "insert");
+         lua_pushcfunction(L, params.member_function_remove);
+         lua_setfield     (L, -2, "remove");
+         lua_setfield(L, index_mt, "members");
       }
       //
       lua_pop(L, 1); // pop metatable
