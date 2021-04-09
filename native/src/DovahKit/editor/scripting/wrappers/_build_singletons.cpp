@@ -8,6 +8,7 @@ namespace editor_script {
       ui::button::setup(L);
       ui::formpicker::setup(L);
       ui::progress_bar::setup(L);
+      ui::spinbox::setup(L);
       ui::text::setup(L);
       ui::textbox::setup(L);
       ui::widget::setup(L);

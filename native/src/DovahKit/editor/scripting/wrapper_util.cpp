@@ -32,6 +32,8 @@ namespace editor_script {
       if (widget) {
          if (qobject_cast<QDialog*>(widget))
             return wrappers::ui::window::metatable_key;
+         if (qobject_cast<QDoubleSpinBox*>(widget))
+            return wrappers::ui::spinbox::metatable_key;
          if (qobject_cast<QLabel*>(widget))
             return wrappers::ui::text::metatable_key;
          if (qobject_cast<QLineEdit*>(widget))

@@ -274,6 +274,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\formpicker.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\spinbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\text.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\textbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\widget.cpp" />
@@ -592,6 +593,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\formpicker.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\text.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\textbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\widget.h" />

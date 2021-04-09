@@ -46,6 +46,75 @@ namespace {
          auto* mt = wrap_form(out, list[i].get_form_stub());
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
+      luastackchange_t member_function_insert(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self  = get_collection_wrapper(L);
+         auto* form  = self.get_loaded_form_data<_loaded_form_t>();
+         //
+         int  pos_value = 2;
+         bool has_index = false;
+         //
+         if (lua_gettop(L) >= 3) {
+            has_index = true;
+            pos_value = 3;
+            luaL_argcheck(L, lua_isinteger(L, 2), 2, "provided index is not an integer");
+         }
+         dovah::form_stub* target = nullptr;
+         if (!lua_isnoneornil(L, pos_value)) {
+            auto* w = wrapper_from_stack<wrappers::form>(L, pos_value);
+            if (!w)
+               return luaL_error(L, "you can only insert forms or nil into a formlist");
+            target = w->stub;
+         }
+         //
+         if (!form)
+            return 0;
+         auto& list = form->contents;
+         auto  size = list.size();
+         int   i    = size + 1;
+         if (has_index) {
+            i = lua_tointeger(L, 2);
+            if (i < 1)
+               return luaL_error(L, "indices below 1, such as %d, are not allowed", i);
+            --i;
+         }
+         if (i >= size) {
+            if (i > size) {
+               lua_warning(L, "index ", 1);
+               lua_warning(L, std::to_string(i).c_str(), 1);
+               lua_warning(L, " is out of bounds; nil elements will be created between the end of the list and the new element", 0);
+            }
+            list.resize(i + 1);
+         } else {
+            list.emplace(list.begin() + i);
+         }
+         self.before_edit();
+         list[i].set(*form, target);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t member_function_remove(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_collection_wrapper(L);
+         auto* form = self.get_loaded_form_data<_loaded_form_t>();
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected an integer index");
+         int isnum;
+         int i = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "expected an integer index");
+         if (!form)
+            return 0;
+         auto& list = form->contents;
+         if (i > list.size() || i <= 0)
+            return 0;
+         --i;
+         self.before_edit();
+         list[i].set(*form, nullptr);
+         list.erase(list.begin() + i);
+         self.after_edit();
+         return 0;
+      }
       luastackchange_t set_item(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
@@ -64,12 +133,12 @@ namespace {
          auto* form = self.get_loaded_form_data<_loaded_form_t>();
          if (!form)
             return 0;
-         int  v = 0;
-         auto i = lua_tointegerx(L, index_key, &v);
+         int v = 0;
+         int i = lua_tointegerx(L, index_key, &v);
          if (!v)
             return luaL_error(L, "indices in a formlist's entry list must be integers");
          if (i < 1)
-            return luaL_error(L, "index %d is out of bounds", i);
+            return luaL_error(L, "indices below 1, such as %d, are not allowed", i);
          --i;
          //
          auto& list = form->contents;
@@ -85,13 +154,6 @@ namespace {
          }
          self.before_edit();
          list[i].set(*form, target);
-         if (!target && i == size - 1) {
-            //
-            // TODO: Setting a FormList entry to (nil) should remove the entry, shortening the 
-            //       list. We can define a special (no_form) constant (a userdata) for scripts 
-            //       to use to actually insert [NONE:00000000] into list indices.
-            //
-         }
          self.after_edit();
          return 0;
       }
@@ -99,7 +161,7 @@ namespace {
 }
 #pragma endregion
 
-#pragma region shout
+#pragma region form
 namespace {
    namespace _getters {
       luastackchange_t entries(lua_State* L) {
@@ -124,17 +186,16 @@ namespace editor_script::wrappers {
    /*static*/ std::initializer_list<luaL_Reg> _wrapper_t::metatable_setters = no_functions;
 
    /*static*/ void _wrapper_t::build_collection_metatables(lua_State* L) {
-      define_collection_metatable(
-         L,
-         _wrapper_t::entry_collection_key,
-         &wrapper::__gc,
-         false,
-         &_collections::entries::get_collection_length, // args: wrapper;        return: number
-         nullptr,
-         &_collections::entries::lookup_item_by_index,  // args: wrapper, index; return: wrapper or nil
-         nullptr,
-         &_collections::entries::set_item
-      );
+      define_collection_metatable(L, {
+         .registry_key          = _wrapper_t::entry_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::entries::get_collection_length,
+         .lookup_item_by_index   = &_collections::entries::lookup_item_by_index,
+         .member_function_insert = &_collections::entries::member_function_insert,
+         .member_function_remove = &_collections::entries::member_function_remove,
+         .set_item               = &_collections::entries::set_item,
+      });
    }
 }
 #pragma endregion
