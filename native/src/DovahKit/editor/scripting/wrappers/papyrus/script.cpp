@@ -178,15 +178,15 @@ namespace editor_script::wrappers {
    }
 
    /*static*/ void wrapper_t::build_collection_metatables(lua_State* L) {
-      define_collection_metatable(
-         L,
-         wrapper_t::property_collection_key,
-         &wrapper::__gc,
-         true,
-         &_collections::properties::get_collection_length, // args: wrapper;        return: number
-         &_collections::properties::lookup_item_by_name,
-         &_collections::properties::lookup_item_by_index,  // args: wrapper, index; return: wrapper or nil
-         &_collections::properties::get_all_item_names
-      );
+      define_collection_metatable(L, {
+         .registry_key          = wrapper_t::property_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_all_item_names     = &_collections::properties::get_all_item_names,
+         .get_collection_length  = &_collections::properties::get_collection_length,
+         .items_are_named        = true,
+         .lookup_item_by_name    = &_collections::properties::lookup_item_by_name,
+         .lookup_item_by_index   = &_collections::properties::lookup_item_by_index,
+      });
    }
 }

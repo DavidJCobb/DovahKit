@@ -42,7 +42,7 @@ namespace editor_script {
       lua_CFunction lookup_item_by_name    = nullptr;
 
       // Receives the wrapper  and an index as an  argument, and returns a  collection element or 
-      // nil. Required. An ipairs iterator will start  at 1 and stop on the first nil, so this is 
+      // nil. Optional. An ipairs iterator will start  at 1 and stop on the first nil, so this is 
       // not suitable for collections with noncontiguous indices, or for collections that require 
       // zero-based indices. The index received will always  be a number, but may not actually be 
       // stored as one (e.g. "5").
@@ -65,18 +65,6 @@ namespace editor_script {
       // manner a script author would expect.
       lua_CFunction set_item               = nullptr;
    };
-
-   extern void define_collection_metatable(
-      lua_State* L,
-      const char* registry_key,
-      lua_CFunction garbage_collection,    // __gc metamethod (optional)
-      bool items_are_named,
-      lua_CFunction get_collection_length, // args: wrapper;             return: number
-      lua_CFunction lookup_item_by_name,   // args: wrapper, name;       return: wrapper or nil
-      lua_CFunction lookup_item_by_index,  // args: wrapper, index;      return: wrapper or nil // ipairs iterators start at 1 and will stop on the first nil, so this is not suitable for noncontiguous or zero-based indices
-      lua_CFunction get_all_item_names,    // args: wrapper;             return: table of names
-      lua_CFunction set_item = nullptr     // args: wrapper, key, value; return: nothing
-   );
 
    extern void define_collection_metatable(lua_State* L, const collection_definition_params&);
 }

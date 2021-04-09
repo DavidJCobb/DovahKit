@@ -364,68 +364,6 @@ namespace {
 }
 
 namespace editor_script {
-   extern void define_collection_metatable(
-      lua_State* L,
-      const char* registry_key,
-      lua_CFunction garbage_collection,    // __gc metamethod (optional)
-      bool items_are_named,
-      lua_CFunction get_collection_length, // args: wrapper;        return: number
-      lua_CFunction lookup_item_by_name,   // args: wrapper, name;  return: wrapper or nil
-      lua_CFunction lookup_item_by_index,  // args: wrapper, index; return: wrapper or nil
-      lua_CFunction get_all_item_names,    // args: wrapper;        return: table of names
-      lua_CFunction set_item               // args: wrapper, key, value; return: nothing
-   ) {
-      _define_collection_iterator_metatables(L);
-      //
-      luaL_newmetatable(L, registry_key); // STACK: [newmeta]
-      auto index_mt = lua_gettop(L);
-      //
-      lua_pushcfunction(L, &__index);
-      lua_setfield(L, index_mt, "__index");
-      lua_pushcfunction(L, &__newindex);
-      lua_setfield(L, index_mt, "__newindex");
-      lua_pushcfunction(L, &__pairs);
-      lua_setfield(L, index_mt, "__pairs");
-      lua_pushcfunction(L, &__ipairs);
-      lua_setfield(L, index_mt, "__ipairs");
-      //
-      if (garbage_collection) {
-         lua_pushcfunction(L, garbage_collection);
-         lua_setfield(L, index_mt, "__gc");
-      }
-      //
-      lua_pushboolean(L, items_are_named);
-      lua_setfield(L, index_mt, "items_are_named");
-      //
-      if (get_collection_length) {
-         lua_pushcfunction(L, get_collection_length);
-         lua_setfield(L, index_mt, "__len");
-      }
-      //
-      if (lookup_item_by_name) {
-         lua_pushcfunction(L, lookup_item_by_name);
-         lua_setfield(L, index_mt, "lookup_item_by_name");
-      }
-      //
-      if (lookup_item_by_index) {
-         lua_pushcfunction(L, lookup_item_by_index);
-      } else {
-         lua_pushcfunction(L, &_return_nil); // needed, or ipairs will error on the missing function and throw
-      }
-      lua_setfield(L, index_mt, "lookup_item_by_index");
-      //
-      if (get_all_item_names) {
-         lua_pushcfunction(L, get_all_item_names);
-         lua_setfield(L, index_mt, "get_all_item_names");
-      }
-      if (set_item) {
-         lua_pushcfunction(L, set_item);
-         lua_setfield(L, index_mt, "set_item");
-      }
-      //
-      lua_pop(L, 1); // pop metatable
-   }
-
    extern void define_collection_metatable(lua_State* L, const collection_definition_params& params) {
       _define_collection_iterator_metatables(L);
       //

@@ -218,15 +218,15 @@ namespace editor_script::wrappers {
    }
 
    /*static*/ void wrapper_t::build_collection_metatables(lua_State* L) {
-      define_collection_metatable(
-         L,
-         wrapper_t::array_collection_key,
-         &wrapper::__gc,
-         false,
-         &_collections::_array_values::get_collection_length, // args: wrapper;        return: number
-         nullptr,
-         &_collections::_array_values::lookup_item_by_index,  // args: wrapper, index; return: wrapper or nil
-         nullptr
-      );
+      define_collection_metatable(L, {
+         .registry_key          = wrapper_t::array_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::_array_values::get_collection_length,
+         .lookup_item_by_index   = &_collections::_array_values::lookup_item_by_index,
+         //.member_function_insert = &_collections::_array_values::member_function_insert, // TODO
+         //.member_function_remove = &_collections::_array_values::member_function_remove, // TODO
+         //.set_item               = &_collections::_array_values::set_item,               // TODO
+      });
    }
 }

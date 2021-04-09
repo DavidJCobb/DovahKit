@@ -201,16 +201,16 @@ namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_setters = no_functions;
 
    /*static*/ void papyrus_root::build_collection_metatables(lua_State* L) {
-      define_collection_metatable(
-         L,
-         wrappers::papyrus_root::script_collection_key,
-         &wrapper::__gc,
-         true,
-         &_collections::scripts::get_collection_length, // args: wrapper;        return: number
-         &_collections::scripts::lookup_item_by_name,   // args: wrapper, name;  return: wrapper or nil
-         &_collections::scripts::lookup_item_by_index,  // args: wrapper, index; return: wrapper or nil
-         &_collections::scripts::get_all_item_names     // args: wrapper;        return: table of names
-      );
+      define_collection_metatable(L, {
+         .registry_key          = wrapper_t::script_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_all_item_names     = &_collections::scripts::get_all_item_names,
+         .get_collection_length  = &_collections::scripts::get_collection_length,
+         .items_are_named        = true,
+         .lookup_item_by_name    = &_collections::scripts::lookup_item_by_name,
+         .lookup_item_by_index   = &_collections::scripts::lookup_item_by_index,
+      });
    }
 
    /*static*/ papyrus_root::wrapped_t* papyrus_root::unwrap(wrapper& w, bool must_be_end) {
