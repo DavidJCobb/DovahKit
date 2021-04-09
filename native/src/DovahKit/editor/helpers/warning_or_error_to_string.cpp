@@ -940,6 +940,18 @@ namespace editor_helpers {
                text = text.arg(form).arg(subrecord).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
             }
             break;
+         case notice_code::too_many_destruction_stages_to_save:
+            {
+               text = QObject::tr("Form %1 contained too many destruction stages to save (%2 stages out of %3 allowed).", "notice_code::too_many_destruction_stages_to_save");
+               //
+               QString form = QObject::tr("<unknown form>",      "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:

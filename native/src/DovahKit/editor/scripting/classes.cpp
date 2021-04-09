@@ -24,6 +24,10 @@ namespace editor_script {
          }
          return false;
       }
+      int _push_zero(lua_State* L) {
+         lua_pushinteger(L, 0);
+         return 1;
+      }
    }
 
    namespace __pairs_iterators { // code for __pairs iterators
@@ -507,7 +511,9 @@ namespace editor_script {
       //    local meta = {}
       //    registry[className] = meta
       //    --
-      //    meta.__index = __index -- CFunction
+      //    meta.__index = __index    -- CFunction
+      //    meta.__pairs = __pairs    -- CFunction
+      //    meta.__len   = _push_zero -- CFunction -- #{} == 0, but #userdata == error by default
       //    --
       //    if superclassName then
       //       meta.__superclass = registry[superclassName]
@@ -550,6 +556,9 @@ namespace editor_script {
       lua_pushstring   (luaVM, "__pairs"); // STACK: ["__index", newmeta]
       lua_pushcfunction(luaVM, &__pairs);  // STACK: [CFunction:__index, "__index", newmeta]
       lua_settable     (luaVM, index_mt);  // STACK: [newmeta]
+      lua_pushstring   (luaVM, "__len");
+      lua_pushcfunction(luaVM, &_push_zero);
+      lua_settable     (luaVM, index_mt);
       //
       if (superclassName) {
          luaL_getmetatable(luaVM, superclassName); // STACK: [supermeta, newmeta]

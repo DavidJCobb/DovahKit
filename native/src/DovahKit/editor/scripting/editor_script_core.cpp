@@ -20,6 +20,8 @@
 
 #include <QEvent>
 
+#include "wrappers/form.h" // for the object_is_form function
+
 // Widget type includes, needed for dispatching events
 #include "../../ui/generic/FormPicker.h"
 #include <QDoubleSpinBox>
@@ -122,6 +124,15 @@ namespace {
       //
       DovahKitScriptVMMessenger::get().send_message(m);
       return 0;
+   }
+   int _wrapper_is_form(lua_State* L) {
+      lua_settop(L, 1);
+      bool value = false;
+      if (lua_type(L, 1) == LUA_TUSERDATA) {
+         value = editor_script::cast_to_class(L, 1, editor_script::wrappers::form::metatable_key) != nullptr;
+      }
+      lua_pushboolean(L, value);
+      return 1;
    }
    int _wrapper_is_zombie(lua_State* L) {
       lua_settop(L, 1);
@@ -234,6 +245,12 @@ void DovahKitScriptVM::_setup_lua_vm() {
       auto ti = lua_gettop(this->lua_vm);
       lua_pushstring   (this->lua_vm, "print");
       lua_pushcfunction(this->lua_vm, &_shimmed_print);
+      lua_rawset       (this->lua_vm, ti);
+   }
+   {  // object_is_form
+      auto ti = lua_gettop(this->lua_vm);
+      lua_pushstring   (this->lua_vm, "object_is_form");
+      lua_pushcfunction(this->lua_vm, &_wrapper_is_form);
       lua_rawset       (this->lua_vm, ti);
    }
    {  // object_is_zombie

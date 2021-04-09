@@ -141,7 +141,7 @@ namespace {
                   auto* quest = value.form.get_form_stub();
                   //
                   if (quest) {
-                     if (value.aliasID != -1) {
+                     if (value.aliasID != (decltype(value.aliasID))dovah::loaded_forms::Alias::none_id) {
                         return wrappers::quest_alias::wrap(L, quest, value.aliasID);
                      } else {
                         wrapper out;

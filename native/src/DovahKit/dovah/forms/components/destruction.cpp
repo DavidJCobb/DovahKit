@@ -1,10 +1,11 @@
 #include "destruction.h"
 #include "../_common_cpp.h"
 #include "../Form.h" // for LOAD_NAIVELY_WHEN_THE_GAME_DOES directive
+#include "../../notice_code_list.h"
 
 namespace dovah::loaded_forms::components {
    void destruction_stage_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
-      uint32_t stageCount = 0;
+      uint8_t stageCount = 0;
       #if LOAD_NAIVELY_WHEN_THE_GAME_DOES == 1
          auto& record = subrecord.get_containing_record();
          for (; subrecord.exists() && subrecord.signature() != 'DSTF'; record.next_subrecord()) {
@@ -119,9 +120,18 @@ namespace dovah::loaded_forms::components {
       }
    }
    void destruction_stage_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      auto stage_count = this->stages.size();
+      if (stage_count > std::numeric_limits<uint8_t>::max()) {
+         detailed_notice error;
+         error.code = notice_code::too_many_destruction_stages_to_save;
+         error.extra_integers[0] = stage_count;
+         error.extra_integers[1] = std::numeric_limits<uint8_t>::max();
+         intfc.set_save_error(error);
+         return;
+      }
       auto& DEST = record.open_next_subrecord('DEST');
       DEST.write(this->health);
-      DEST.write(uint32_t(this->stages.size()));
+      DEST.write(uint8_t(stage_count));
       DEST.write(this->flags);
       DEST.skip_bytes(2);
       DEST.close();

@@ -27,6 +27,8 @@ namespace dovah {
          using data_flags_t  = std::underlying_type_t<data_flag::type>;
          using stage_flags_t = std::underlying_type_t<stage_flag::type>;
 
+         static constexpr int max_stage_count = std::numeric_limits<uint8_t>::max();
+
          struct Stage {
             uint16_t         healthPercent;
             uint8_t          damageStage;

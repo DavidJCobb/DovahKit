@@ -1441,6 +1441,8 @@ namespace dovah::loaded_forms {
    }
 
    Alias* Quest::lookup_alias_by_id(uint32_t id) const noexcept {
+      if (id == Alias::none_id)
+         return nullptr;
       for (auto* alias : this->aliases)
          if (alias && alias->id == id)
             return alias;
