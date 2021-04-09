@@ -22,6 +22,7 @@
 
 // Widget type includes, needed for dispatching events
 #include "../../ui/generic/FormPicker.h"
+#include <QDoubleSpinBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -970,6 +971,11 @@ namespace {
             "OnChanged",
          }
       ),
+      _event_widget(&QDoubleSpinBox::staticMetaObject,
+         {
+            "OnChanged", // The spinbox's value has been altered by the user. Fires instantly for increment/decrement buttons; for typing, works like the textbox OnChanged event.
+         }
+      ),
       _event_widget(&QPushButton::staticMetaObject,
          {
             "OnActivated",         // The button was clicked (or interacted with analogously via another input device).
@@ -1029,6 +1035,11 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
    if (auto* casted = qobject_cast<FormPicker*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
          this->_connect_event(*casted, &FormPicker::formChanged, event_name, listener_name);
+         return;
+      }
+   } else if (auto* casted = qobject_cast<QDoubleSpinBox*>(&widget)) {
+      if (_stricmp(event_name, "OnChanged") == 0) {
+         this->_connect_event(*casted, QOverload<double>::of(&QDoubleSpinBox::valueChanged), event_name, listener_name);
          return;
       }
    } else if (auto* casted = qobject_cast<QPushButton*>(&widget)) {

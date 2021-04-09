@@ -3,6 +3,7 @@
 #include "../../wrapper_util.h"
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
+#include "../../ui/util/alignment.h"
 
 namespace {
    using namespace editor_script;
@@ -34,36 +35,7 @@ namespace {
             auto* task   = new tasks::s2m::ui_read_lambda();
             task->handler = [widget, &result]() {
                auto align = widget->alignment();
-               if (align & Qt::AlignJustify)
-                  result = "justify";
-               else if (align & Qt::AlignHCenter)
-                  result = "center";
-               else if (align & Qt::AlignAbsolute) {
-                  if (align & Qt::AlignLeft)
-                     result = "left";
-                  else if (align & Qt::AlignRight)
-                     result = "right";
-               } else {
-                  if (align & Qt::AlignLeft)
-                     result = "start";
-                  else if (align & Qt::AlignRight)
-                     result = "end";
-               }
-               if (result.empty())
-                  result = "unchanged";
-               //
-               result += ' ';
-               //
-               if (align & Qt::AlignTop)
-                  result += "top";
-               else if (align & Qt::AlignBottom)
-                  result += "bottom";
-               else if (align & Qt::AlignVCenter)
-                  result += "center";
-               else if (align & Qt::AlignBaseline)
-                  result += "baseline";
-               else
-                  result += "unchanged";
+               editor_script::util::ui::alignment_to_string(align, result);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
@@ -173,60 +145,20 @@ namespace {
          {
             std::string h;
             std::string v;
-            {
-               auto*  value  = lua_tostring(L, 2);
-               bool   second = false;
-               size_t i = 0;
-               char   c = value[i];
-               do {
-                  if (!c)
-                     break;
-                  if (c == ' ') {
-                     if (second)
-                        break;
-                     if (!h.empty())
-                        second = true;
-                     continue;
-                  }
-                  c = tolower(c);
-                  if (second)
-                     v += c;
-                  else
-                     h += c;
-               } while (c = value[++i]);
-            }
-            if (h == "left")
-               align |= Qt::AlignLeft | Qt::AlignAbsolute;
-            else if (h == "right")
-               align |= Qt::AlignRight | Qt::AlignAbsolute;
-            else if (h == "start")
-               align |= Qt::AlignLeft;
-            else if (h == "end")
-               align |= Qt::AlignRight;
-            else if (h == "justify")
-               align |= Qt::AlignJustify;
-            else if (h == "center")
-               align |= Qt::AlignHCenter;
-            else if (!h.empty() && h != "unchanged") {
+            bool h_recognized;
+            bool v_recognized;
+            align = editor_script::util::ui::alignment_from_string(lua_tostring(L, 2), h, v, h_recognized, v_recognized);
+            if (!h_recognized) {
                lua_warning(L, h.c_str(), 1);
                lua_warning(L, " is not a recognized horizontal alignment", 0);
             }
-            //
-            if (v == "top")
-               align |= Qt::AlignTop;
-            else if (v == "bottom")
-               align |= Qt::AlignBottom;
-            else if (v == "baseline")
-               align |= Qt::AlignBaseline;
-            else if (v == "center")
-               align |= Qt::AlignVCenter;
-            else if (!v.empty() && v != "unchanged") {
+            if (!v_recognized) {
                lua_warning(L, v.c_str(), 1);
                lua_warning(L, " is not a recognized vertical alignment", 0);
             }
          }
-         auto* widget = (wrapped_type*)self.widget;
-         auto* task  = new tasks::s2m::lambda(false);
+         auto* widget  = (wrapped_type*)self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
          task->handler = [widget, align]() {
             Qt::Alignment after = align;
             Qt::Alignment prior = widget->alignment();

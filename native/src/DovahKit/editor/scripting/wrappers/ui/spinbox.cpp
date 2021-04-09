@@ -3,6 +3,7 @@
 #include "../../wrapper_util.h"
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
+#include "../../ui/util/alignment.h"
 
 namespace {
    using namespace editor_script;
@@ -10,8 +11,38 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
+      luastackchange_t step_by(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         int   steps = lua_tonumber(L, 2);
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget, steps]() { widget->stepBy(steps); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
    }
    namespace _getters {
+      luastackchange_t alignment(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         std::string result;
+         result.reserve(17); // "justify baseline"
+         {
+            auto* widget = (wrapped_type*)self.widget;
+            auto* task   = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() {
+               auto align = widget->alignment();
+               editor_script::util::ui::alignment_to_string(align, result);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushstring(L, result.c_str());
+         return 1;
+      }
       luastackchange_t decimals(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -72,6 +103,21 @@ namespace {
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
+      luastackchange_t read_only(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result;
+         {
+            auto* widget  = (wrapped_type*)self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->isReadOnly(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushboolean(L, result);
+         return 1;
+      }
       luastackchange_t step(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -117,8 +163,63 @@ namespace {
          lua_pushinteger(L, result);
          return 1;
       }
+      luastackchange_t wraparound(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result;
+         {
+            auto* widget  = (wrapped_type*)self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() { result = widget->wrapping(); };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushboolean(L, result);
+         return 1;
+      }
    }
    namespace _setters {
+      luastackchange_t alignment(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
+         if (!self.widget)
+            return 0;
+         //
+         Qt::Alignment align;
+         {
+            std::string h;
+            std::string v;
+            bool h_recognized;
+            bool v_recognized;
+            align = editor_script::util::ui::alignment_from_string(lua_tostring(L, 2), h, v, h_recognized, v_recognized);
+            if (!h_recognized) {
+               lua_warning(L, h.c_str(), 1);
+               lua_warning(L, " is not a recognized horizontal alignment", 0);
+            }
+            if (!v_recognized) {
+               lua_warning(L, v.c_str(), 1);
+               lua_warning(L, " is not a recognized vertical alignment", 0);
+            }
+         }
+         auto* widget  = (wrapped_type*)self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget, align]() {
+            Qt::Alignment after = align;
+            Qt::Alignment prior = widget->alignment();
+            auto ph = prior & (Qt::AlignLeft | Qt::AlignRight | Qt::AlignHCenter | Qt::AlignJustify | Qt::AlignAbsolute);
+            auto pv = prior & (Qt::AlignTop | Qt::AlignBottom | Qt::AlignVCenter | Qt::AlignBaseline);
+            auto ah = after & (Qt::AlignLeft | Qt::AlignRight | Qt::AlignHCenter | Qt::AlignJustify | Qt::AlignAbsolute);
+            auto av = after & (Qt::AlignTop | Qt::AlignBottom | Qt::AlignVCenter | Qt::AlignBaseline);
+            if (!ah)
+               after |= ph;
+            if (!av)
+               after |= pv;
+            widget->setAlignment(align);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t decimals(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isinteger(L, 2), 2, "integer expected");
@@ -127,7 +228,10 @@ namespace {
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          bool  value   = lua_tointeger(L, 2);
-         task->handler = [widget, value]() { widget->setDecimals(value); };
+         task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
+            widget->setDecimals(value);
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -139,7 +243,10 @@ namespace {
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() { widget->setMaximum(value); };
+         task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
+            widget->setMaximum(value);
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -151,7 +258,10 @@ namespace {
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() { widget->setMinimum(value); };
+         task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
+            widget->setMinimum(value);
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -167,6 +277,18 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t read_only(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         auto* widget = (wrapped_type*)self.widget;
+         auto* task   = new tasks::s2m::lambda(false);
+         auto  value  = lua_toboolean(L, 2);
+         task->handler = [widget, value]() { widget->setReadOnly(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t step(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
@@ -175,7 +297,10 @@ namespace {
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() { widget->setSingleStep(value); };
+         task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
+            widget->setSingleStep(value);
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -199,7 +324,22 @@ namespace {
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() { widget->setValue(value); };
+         task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
+            widget->setValue(value);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t wraparound(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         auto* widget = (wrapped_type*)self.widget;
+         auto* task   = new tasks::s2m::lambda(false);
+         auto  value  = lua_toboolean(L, 2);
+         task->handler = [widget, value]() { widget->setWrapping(value); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -216,6 +356,7 @@ namespace {
          auto*         task    = new tasks::s2m::lambda(true);
          task->handler = [&created]() {
             created = new wrapped_type();
+            created->setKeyboardTracking(false); // only emit valueChanged (i.e. our Lua OnChanged) on Enter, blur, or arrow buttons
             DovahKitScriptVM::get().set_up_new_scripted_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -235,24 +376,31 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "step_by", &_methods::step_by },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "decimals", &_getters::decimals },
-      { "maximum",  &_getters::maximum },
-      { "minimum",  &_getters::minimum },
-      { "prefix",   &_getters::prefix },
-      { "step",     &_getters::step },
-      { "suffix",   &_getters::suffix },
-      { "value",    &_getters::value },
+      { "alignment",  &_getters::alignment },
+      { "decimals",   &_getters::decimals },
+      { "maximum",    &_getters::maximum },
+      { "minimum",    &_getters::minimum },
+      { "prefix",     &_getters::prefix },
+      { "read_only",  &_getters::read_only },
+      { "step",       &_getters::step },
+      { "suffix",     &_getters::suffix },
+      { "value",      &_getters::value },
+      { "wraparound", &_getters::wraparound },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "decimals", &_setters::decimals },
-      { "maximum",  &_setters::maximum },
-      { "minimum",  &_setters::minimum },
-      { "prefix",   &_setters::prefix },
-      { "step",     &_setters::step },
-      { "suffix",   &_setters::suffix },
-      { "value",    &_setters::value },
+      { "alignment",  &_setters::alignment },
+      { "decimals",   &_setters::decimals },
+      { "maximum",    &_setters::maximum },
+      { "minimum",    &_setters::minimum },
+      { "prefix",     &_setters::prefix },
+      { "read_only",  &_setters::read_only },
+      { "step",       &_setters::step },
+      { "suffix",     &_setters::suffix },
+      { "value",      &_setters::value },
+      { "wraparound", &_setters::wraparound },
    };
 
    /*static*/ void cls::setup(lua_State* L) {
