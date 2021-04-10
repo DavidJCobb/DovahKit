@@ -259,11 +259,15 @@ namespace dovah {
                   return this->skip_bytes(length);
                return false;
             }
-            //
+            
             void back_to_start() {
                this->get_containing_record().go_to_offset(this->pos);
             }
-            //
+            void seek(size_t s) {
+               this->get_containing_record().go_to_offset(this->pos + s);
+            }
+            uint32_t current_pos() const noexcept;
+            
             form_stub* lookup_form_by_id(bare_form_id_t) const noexcept;
             //
             bool form_id_can_survive_redundant_fixup(bare_form_id_t) const noexcept;

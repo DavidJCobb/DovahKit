@@ -3,6 +3,8 @@
 #include "../../logging.h"
 #include <cassert>
 
+#include "../../../helpers/unordered_map.h"
+
 namespace dovah::loaded_forms::components::papyrus {
    bool script_data_header::load(tes_subrecord_reader& subrecord) {
       if (subrecord.read(this->version))
@@ -634,6 +636,10 @@ namespace dovah::loaded_forms::components::papyrus {
    #pragma endregion
 
    #pragma region Use info
+   /*static*/ void script_data::script::extract_name(const script_data_header& header, tes_subrecord_reader& subrecord, std::string& out) {
+      subrecord.read_length_prefixed_string<2>(out);
+      script::skip_use_info(subrecord, true);
+   }
    /*static*/ void script_data::script::generate_use_info(const script_data_header& header, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib, bool already_read_name) {
       form_id_t formID;
       //
@@ -769,6 +775,7 @@ namespace dovah::loaded_forms::components::papyrus {
       // If a form contains multiple instances of the same script, the last-loaded one overrides 
       // the others in full; the previously loaded script data is cleared.
       //
+      auto pos_before_scripts = subrecord.current_pos();
       std::unordered_map<std::string, uint32_t> script_counts;
       for (uint16_t i = 0; i < count; ++i) {
          std::string key;
@@ -776,9 +783,8 @@ namespace dovah::loaded_forms::components::papyrus {
          std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
          ++script_counts[key];
       }
-      subrecord.back_to_start();
-      script_data_header::skip(subrecord);
-      subrecord.skip_bytes(sizeof(count));
+      subrecord.seek(pos_before_scripts); // can't just reset to the start of the subrecord; that breaks for scripts on aliases
+      assert(subrecord.current_pos() == pos_before_scripts);
       //
       for (uint16_t i = 0; i < count; ++i) {
          std::string key;

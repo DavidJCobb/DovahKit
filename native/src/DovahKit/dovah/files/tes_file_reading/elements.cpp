@@ -242,6 +242,11 @@ namespace dovah {
          }
          return this->to_string(field.value);
       }
+
+      uint32_t subrecord::current_pos() const noexcept {
+         const auto& record = this->get_containing_record();
+         return record.offset + record.body_pos - this->pos;
+      }
       
       form_stub* subrecord::lookup_form_by_id(bare_form_id_t id) const noexcept {
          auto* file = this->owner.loader;

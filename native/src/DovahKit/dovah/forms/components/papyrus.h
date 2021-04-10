@@ -160,6 +160,18 @@ namespace dovah::loaded_forms::components {
                   static void extract_name(const script_data_header& header, tes_subrecord_reader&, std::string&);
                   static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&, bool already_read_name);
                   static void skip_use_info(tes_subrecord_reader&, bool already_read_name);
+
+                  //
+                  // NOTE:
+                  //
+                  //  - If we define an operator= that affects use info, then we'll break script_data::load unless 
+                  //    and until we change it to pre-extract script names and load only the last script with each 
+                  //    name (akin to what's done for use info). Ditto for if we define a destructor that tries to 
+                  //    sever use info. Fortunately, it's not currently possible to do that, since form components 
+                  //    aren't aware of their containing forms and there's no way to pass that information into an 
+                  //    assignment statement or destructor; however,  if the situation changes, we should remember 
+                  //    these limits.
+                  //
             };
       };
       
