@@ -176,8 +176,15 @@ namespace {
             luaL_error(L, "script property wrapper has no underlying object (deleted?)");
          __assume(prop != nullptr);
          //
+         auto* name   = lua_tolstring(L, 2, nullptr);
+         auto* script = wrappers::papyrus_script::unwrap(self, false);
+         assert(script);
+         for (auto& p : script->properties)
+            if (&p != prop && _stricmp(p.name.c_str(), name) == 0)
+               luaL_error(L, "the containing script already has a property named \"%s\"", name);
+         //
          self.before_edit();
-         prop->name = lua_tolstring(L, 2, nullptr);
+         prop->name = name;
          self.after_edit();
          return 0;
       }
