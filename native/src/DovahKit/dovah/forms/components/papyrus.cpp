@@ -10,6 +10,9 @@ namespace dovah::loaded_forms::components::papyrus {
             return true;
       return false;
    }
+   void script_data_header::skip(tes_subrecord_reader& subrecord) {
+      subrecord.skip_bytes(sizeof(version) + sizeof(object_format));
+   }
    void script_data_header::save(tes_subrecord_writer& subrecord) const {
       subrecord.write(this->version);
       subrecord.write(this->object_format);
@@ -22,22 +25,37 @@ namespace dovah::loaded_forms::components::papyrus {
             break;
       }
    }
+   script_data::script* script_data::lookup_script(const std::string& name) {
+      auto& list = this->scripts;
+      for (auto& script : list)
+         if (_stricmp(script.name.c_str(), name.c_str()) == 0)
+            return &script;
+      return nullptr;
+   }
    //
    bool script_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (!this->header.load(subrecord))
          return false;
-      {
-         uint16_t count;
-         if (!subrecord.read(count))
+      uint16_t count;
+      if (!subrecord.read(count))
+         return false;
+      size_t size = this->scripts.size();
+      this->scripts.reserve(size + count);
+      for (uint16_t i = 0; i < count; i++) {
+         //
+         // If a form contains multiple instances of the same script, the last-loaded one overrides 
+         // the others in full; the previously loaded script data is cleared.
+         //
+         script current;
+         if (!current.load(this->header, subrecord))
             return false;
-         size_t size = this->scripts.size();
-         this->scripts.reserve(size + count);
-         for (uint16_t i = 0; i < count; i++) {
-            auto& script = this->scripts.emplace_back();
-            if (!script.load(this->header, subrecord))
-               return false;
+         if (auto* prior = this->lookup_script(current.name)) {
+            *prior = current;
+         } else {
+            this->scripts.push_back(current);
          }
       }
+      //
       if (subrecord.is_at_end()) // fragment data is optional
          return true;
       if (!subrecord.is_in_bounds())
@@ -616,10 +634,12 @@ namespace dovah::loaded_forms::components::papyrus {
    #pragma endregion
 
    #pragma region Use info
-   /*static*/ void script_data::script::generate_use_info(const script_data_header& header, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
+   /*static*/ void script_data::script::generate_use_info(const script_data_header& header, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib, bool already_read_name) {
       form_id_t formID;
       //
-      subrecord.skip_length_prefixed_string<2>();
+      if (!already_read_name) {
+         subrecord.skip_length_prefixed_string<2>();
+      }
       subrecord.skip_bytes(1); // script status
       uint16_t prop_count;
       if (!subrecord.read(prop_count))
@@ -684,10 +704,12 @@ namespace dovah::loaded_forms::components::papyrus {
          }
       }
    }
-   /*static*/ void script_data::script::skip_use_info(tes_subrecord_reader& subrecord) {
+   /*static*/ void script_data::script::skip_use_info(tes_subrecord_reader& subrecord, bool already_read_name) {
       form_id_t formID;
       //
-      subrecord.skip_length_prefixed_string<2>();
+      if (!already_read_name) {
+         subrecord.skip_length_prefixed_string<2>();
+      }
       subrecord.skip_bytes(1); // script status
       uint16_t prop_count;
       if (!subrecord.read(prop_count))
@@ -743,105 +765,40 @@ namespace dovah::loaded_forms::components::papyrus {
          return header;
       if (!subrecord.read(count))
          return header;
-      for (uint16_t i = 0; i < count; i++) // scripts
-         script::generate_use_info(header, subrecord, uib);
+      //
+      // If a form contains multiple instances of the same script, the last-loaded one overrides 
+      // the others in full; the previously loaded script data is cleared.
+      //
+      std::unordered_map<std::string, uint32_t> script_counts;
+      for (uint16_t i = 0; i < count; ++i) {
+         std::string key;
+         script::extract_name(header, subrecord, key);
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         ++script_counts[key];
+      }
+      subrecord.back_to_start();
+      script_data_header::skip(subrecord);
+      subrecord.skip_bytes(sizeof(count));
+      //
+      for (uint16_t i = 0; i < count; ++i) {
+         std::string key;
+         subrecord.read_length_prefixed_string<2>(key);
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         auto& remaining = script_counts[key];
+         assert(remaining > 0);
+         if (--remaining == 0) {
+            script::generate_use_info(header, subrecord, uib, true);
+         } else {
+            script::skip_use_info(subrecord, true);
+         }
+      }
+      //
       if (subrecord.is_at_end() || !subrecord.is_in_bounds()) // fragment data is optional
          return header;
-      #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
-         uint8_t flags;
-      #endif
-      switch (subrecord.containing_record_signature()) {
-         case 'INFO': // should match topic_info_fragment_data::load
-            #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
-               {
-                  using Flags = topic_info_fragment_data::fragment_flag;
-                  //
-                  subrecord.skip_bytes(1);
-                  subrecord.unchecked_read(flags);
-                  subrecord.skip_length_prefixed_string<2>();
-                  if (flags & Flags::has_begin_fragment) {
-                     subrecord.skip_bytes(1);
-                     subrecord.skip_length_prefixed_string<2>();
-                     subrecord.skip_length_prefixed_string<2>();
-                  }
-                  if (flags & Flags::has_end_fragment) {
-                     subrecord.skip_bytes(1);
-                     subrecord.skip_length_prefixed_string<2>();
-                     subrecord.skip_length_prefixed_string<2>();
-                  }
-               }
-            #endif
-            break;
-         case 'PACK': // should match package_fragment_data::load
-            #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
-               {
-                  using Flags = package_fragment_data::fragment_flag;
-                  //
-                  subrecord.skip_bytes(1);
-                  subrecord.unchecked_read(flags);
-                  subrecord.skip_length_prefixed_string<2>();
-                  if (flags & Flags::has_begin_fragment) {
-                     subrecord.skip_bytes(1);
-                     subrecord.skip_length_prefixed_string<2>();
-                     subrecord.skip_length_prefixed_string<2>();
-                  }
-                  if (flags & Flags::has_end_fragment) {
-                     subrecord.skip_bytes(1);
-                     subrecord.skip_length_prefixed_string<2>();
-                     subrecord.skip_length_prefixed_string<2>();
-                  }
-                  if (flags & Flags::has_change_fragment) {
-                     subrecord.skip_bytes(1);
-                     subrecord.skip_length_prefixed_string<2>();
-                     subrecord.skip_length_prefixed_string<2>();
-                  }
-               }
-            #endif
-            break;
-         case 'PERK': // should match perk_fragment_data::load
-            #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
-               {
-                  subrecord.skip_bytes(1);
-                  subrecord.skip_length_prefixed_string<2>();
-                  if (subrecord.read(count)) {
-                     for (uint16_t i = 0; i < count; i++) {
-                        subrecord.skip_bytes(5);
-                        subrecord.skip_length_prefixed_string<2>();
-                        subrecord.skip_length_prefixed_string<2>();
-                     }
-                  }
-               }
-            #endif
-            break;
-         case 'SCEN': // should match scene_fragment_data::load
-            #if PAPYRUS_FRAGMENT_DATA_IS_ALWAYS_AT_THE_END_OF_VMAD != 1
-               {
-                  using Flags = scene_fragment_data::fragment_flag;
-                  //
-                  subrecord.skip_bytes(1);
-                  subrecord.unchecked_read(flags);
-                  subrecord.skip_length_prefixed_string<2>();
-                  if (flags & Flags::has_begin_fragment) {
-                     subrecord.skip_bytes(1);
-                     subrecord.skip_length_prefixed_string<2>();
-                     subrecord.skip_length_prefixed_string<2>();
-                  }
-                  if (flags & Flags::has_end_fragment) {
-                     subrecord.skip_bytes(1);
-                     subrecord.skip_length_prefixed_string<2>();
-                     subrecord.skip_length_prefixed_string<2>();
-                  }
-                  if (subrecord.read(count)) {
-                     for (uint16_t i = 0; i < count; i++) {
-                        subrecord.skip_bytes(6);
-                        subrecord.skip_length_prefixed_string<2>();
-                        subrecord.skip_length_prefixed_string<2>();
-                     }
-                  }
-               }
-            #endif
-            break;
-      }
+      //
+      // None of the fragment data types handled by the Papyrus loader can have use info. 
+      // Quest fragments can, but those are handled in the Quest loader.
+      //
       return header;
    }
    /*static*/ void script_data::skip_use_info(tes_subrecord_reader& subrecord) {
@@ -852,7 +809,7 @@ namespace dovah::loaded_forms::components::papyrus {
       if (!subrecord.read(count))
          return;
       for (uint16_t i = 0; i < count; ++i)
-         script::skip_use_info(subrecord);
+         script::skip_use_info(subrecord, false);
    }
    #pragma endregion
 }

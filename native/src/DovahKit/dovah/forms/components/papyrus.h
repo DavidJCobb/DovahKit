@@ -61,6 +61,7 @@ namespace dovah::loaded_forms::components {
          int16_t object_format = 2; // format of "object" property values
          //
          bool load(tes_subrecord_reader&);
+         static void skip(tes_subrecord_reader&);
          void save(tes_subrecord_writer&) const;
       };
 
@@ -88,6 +89,7 @@ namespace dovah::loaded_forms::components {
             //
             inline bool empty() const noexcept { return this->scripts.empty(); }
             void for_each_script(std::function<bool(script*)>); // return true to stop iterating early
+            script* lookup_script(const std::string& name); // case-insensitive
             //
          public:
             enum class script_status : uint8_t {
@@ -155,8 +157,9 @@ namespace dovah::loaded_forms::components {
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
                   void clear(loaded_forms::Form& my_owner) noexcept;
                   //
-                  static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&);
-                  static void skip_use_info(tes_subrecord_reader&);
+                  static void extract_name(const script_data_header& header, tes_subrecord_reader&, std::string&);
+                  static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&, bool already_read_name);
+                  static void skip_use_info(tes_subrecord_reader&, bool already_read_name);
             };
       };
       

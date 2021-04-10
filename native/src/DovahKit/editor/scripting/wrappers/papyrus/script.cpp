@@ -135,8 +135,15 @@ namespace {
             luaL_error(L, "script wrapper has no underlying object (deleted?)");
          __assume(script != nullptr);
          //
+         auto* name = lua_tolstring(L, 2, nullptr);
+         auto* root = wrappers::papyrus_root::unwrap(self, false);
+         assert(root && "How did we manage to access a Papyrus script-object if we didn't manage to access its containing Papyrus root?");
+         if (auto* prior = root->lookup_script(name))
+            if (prior != script)
+               luaL_error(L, "the containing form already has a Papyrus script named \"%s\"", name);
+         //
          self.before_edit();
-         script->name = lua_tolstring(L, 2, nullptr);
+         script->name = name;
          self.after_edit();
          return 0;
       }
@@ -179,8 +186,8 @@ namespace editor_script::wrappers {
 
    /*static*/ void wrapper_t::build_collection_metatables(lua_State* L) {
       define_collection_metatable(L, {
-         .registry_key          = wrapper_t::property_collection_key,
-         .garbage_collection    = &wrapper::__gc,
+         .registry_key           = wrapper_t::property_collection_key,
+         .garbage_collection     = &wrapper::__gc,
          //
          .get_all_item_names     = &_collections::properties::get_all_item_names,
          .get_collection_length  = &_collections::properties::get_collection_length,

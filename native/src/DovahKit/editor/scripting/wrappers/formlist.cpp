@@ -187,8 +187,8 @@ namespace editor_script::wrappers {
 
    /*static*/ void _wrapper_t::build_collection_metatables(lua_State* L) {
       define_collection_metatable(L, {
-         .registry_key          = _wrapper_t::entry_collection_key,
-         .garbage_collection    = &wrapper::__gc,
+         .registry_key           = _wrapper_t::entry_collection_key,
+         .garbage_collection     = &wrapper::__gc,
          //
          .get_collection_length  = &_collections::entries::get_collection_length,
          .lookup_item_by_index   = &_collections::entries::lookup_item_by_index,

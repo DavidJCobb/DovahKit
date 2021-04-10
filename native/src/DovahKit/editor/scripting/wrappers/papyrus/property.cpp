@@ -178,7 +178,7 @@ namespace {
          //
          auto* name   = lua_tolstring(L, 2, nullptr);
          auto* script = wrappers::papyrus_script::unwrap(self, false);
-         assert(script);
+         assert(script && "How did we manage to access a Papyrus property if we didn't manage to access its containing Papyrus script-object?");
          for (auto& p : script->properties)
             if (&p != prop && _stricmp(p.name.c_str(), name) == 0)
                luaL_error(L, "the containing script already has a property named \"%s\"", name);
@@ -226,8 +226,8 @@ namespace editor_script::wrappers {
 
    /*static*/ void wrapper_t::build_collection_metatables(lua_State* L) {
       define_collection_metatable(L, {
-         .registry_key          = wrapper_t::array_collection_key,
-         .garbage_collection    = &wrapper::__gc,
+         .registry_key           = wrapper_t::array_collection_key,
+         .garbage_collection     = &wrapper::__gc,
          //
          .get_collection_length  = &_collections::_array_values::get_collection_length,
          .lookup_item_by_index   = &_collections::_array_values::lookup_item_by_index,
