@@ -819,6 +819,12 @@
     <ClCompile Include="editor\scripting\wrappers\ui\spinbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\dropdown.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\ui\util\lua_item_model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1664,6 +1670,9 @@
     <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\dropdown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -1936,6 +1945,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\scripting\ui\util\lua_item_model.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -17,7 +17,7 @@ namespace {
    namespace _collections::items {
       using cls        = wrappers::ui::dropdown;
       using model_t    = ObservableStandardItemModel;
-      using observer_t = DovahKitScriptVMItemModelObserver;
+      using observer_t = ObservableStandardItemModelObserver;
 
       wrapper& get_collection_wrapper(lua_State* L) {
          auto* self = (wrapper*)editor_script::cast_to_class(L, 1, cls::item_collection_key);
@@ -70,7 +70,8 @@ namespace {
          if (!observer)
             return 0;
          //
-         wrapper iw = self;
+         wrapper iw;
+         iw.type = wrapper_type::ui_model_item;
          iw.model_observer = observer;
          return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::dropdown_item::metatable_key);
       }
@@ -93,6 +94,26 @@ namespace widget_lua {
    }
 
    namespace _methods {
+      luastackchange_t append_item(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QString text;
+         if (lua_gettop(L) >= 2)
+            text = QString::fromUtf8(lua_tostring(L, 2));
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget, &text]() {
+            auto* proxy = (QSortFilterProxyModel*) widget->model();
+            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+            auto* item = new QStandardItem(text);
+            model->appendRow(item);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         return 0;
+      }
    }
    namespace _getters {
       luastackchange_t items(lua_State* L) {
@@ -123,7 +144,7 @@ namespace widget_lua {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         DovahKitScriptVMItemModelObserver* result = nullptr;
+         ObservableStandardItemModelObserver* result = nullptr;
          {
             auto* widget  = (wrapped_type*) self.widget;
             auto* task    = new tasks::s2m::ui_read_lambda();
@@ -149,7 +170,8 @@ namespace widget_lua {
          if (!result)
             return 0;
          //
-         wrapper iw = self;
+         wrapper iw;
+         iw.type = wrapper_type::ui_model_item;
          iw.model_observer = result;
          return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::dropdown_item::metatable_key);
       }
@@ -238,6 +260,7 @@ namespace widget_lua {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_methods = {
+      { "append_item", &widget_lua::_methods::append_item },
    };
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_getters = {
       { "items",          &widget_lua::_getters::items },

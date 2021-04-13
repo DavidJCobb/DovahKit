@@ -8,13 +8,14 @@
 #include "classes.h"
 #include "util.h"
 
-class DovahKitScriptVMItemModelObserver;
+class ObservableStandardItemModelObserver;
 
 namespace editor_script {
    enum class wrapper_type {
       generic,
       form_data, // a form    or some object within a form
       ui,        // a QWidget or some data   within a QWidget
+      ui_model_item,
    };
 
    using part_type_t = cobb::eight_cc; // signature, e.g. 'FormRoot'
@@ -25,9 +26,18 @@ namespace editor_script {
    class wrapper final {
       public:
          static constexpr int part_count = 5;
-         //
+         
          static luastackchange_t __gc(lua_State* L);
+         
+      protected:
          //
+         // Teardown tasks should be performed here, not in the destructor. The wrapper system works by 
+         // having Lua APIs create a wrapper on the stack and pass it to the VM to then be copied into 
+         // the VM internals; the wrapper on the stack is then destroyed, but it's the wrapper in the VM 
+         // that actually matters, and it's only the latter that should run teardown tasks.
+         //
+         void teardown();
+
       public:
          //
          // ONLY use these when CREATING a wrapper:
@@ -51,14 +61,6 @@ namespace editor_script {
             this->lua_key = LUA_NOREF;
          }
          ~wrapper();
-
-         //
-         // Teardown tasks should be performed here, not in the destructor. The wrapper system works by 
-         // having Lua APIs create a wrapper on the stack and pass it to the VM to then be copied into 
-         // the VM internals; the wrapper on the stack is then destroyed, but it's the wrapper in the VM 
-         // that actually matters, and it's only the latter that should run teardown tasks.
-         //
-         void teardown();
 
          //
          // There are certain objects that we actually *don't* want to provide to scripts, like none-stubs 
@@ -110,7 +112,8 @@ namespace editor_script {
          std::array<part, part_count> parts;
          //
          QWidget* widget = nullptr;
-         DovahKitScriptVMItemModelObserver* model_observer = nullptr;
+         //
+         ObservableStandardItemModelObserver* model_observer = nullptr;
          
          inline part& last_part() noexcept {
             if (!this->depth)
@@ -125,6 +128,8 @@ namespace editor_script {
                   return this->stub;
                case wrapper_type::ui:
                   return this->widget;
+               case wrapper_type::ui_model_item:
+                  return this->model_observer;
             }
             return nullptr;
          }

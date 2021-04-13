@@ -25,10 +25,6 @@ class DovahKitScriptVMPermissionInterface;
 class DovahKitScriptVMUserdataInterface;
 class DovahKitScriptUIListenerInterface;
 
-struct DovahKitScriptVMItemModelObserver : public ObservableStandardItemModelObserver {
-   std::atomic<int> refcount = 0;
-};
-
 class DovahKitScriptVM : public QObject {
    Q_OBJECT
    //
@@ -91,7 +87,7 @@ class DovahKitScriptVM : public QObject {
       std::atomic<bool> aborted = false; // main thread can set this to kill the script
       std::atomic<bool> running = false;
       struct {
-         std::vector<ObservableStandardItemModelObserver*> pointers;
+         std::vector<ObservableStandardItemModelObserver*> pointers; // these vectors must be kept in synch
          std::vector<int> refcounts;
       } ui_model_observers;
       QWidget* ui_parent = nullptr;

@@ -32,10 +32,11 @@ namespace editor_script {
       // Flag widgets as unreferenced when they are.
       //
       if (this->type == wrapper_type::ui) {
-         auto& vm = DovahKitScriptVM::get();
-         vm.widget_no_longer_referenced(this->widget);
-         vm.model_observer_reference_lost(this->model_observer);
-         this->widget         = nullptr;
+         DovahKitScriptVM::get().widget_no_longer_referenced(this->widget);
+         this->widget = nullptr;
+      }
+      if (this->type == wrapper_type::ui_model_item) {
+         DovahKitScriptVM::get().model_observer_reference_lost(this->model_observer);
          this->model_observer = nullptr;
       }
    }
@@ -76,6 +77,11 @@ namespace editor_script {
             return false;
          if (stub->is_none_stub())
             return false;
+      } else if (this->type == wrapper_type::ui_model_item) {
+         if (!this->model_observer)
+            return false;
+         if (!this->model_observer->isValid())
+            return false;
       }
       return true;
    }
@@ -101,15 +107,21 @@ namespace editor_script {
    bool wrapper::is_equal(const wrapper* other) const noexcept {
       if (this->type != other->type)
          return false;
-      if (this->type == wrapper_type::form_data) {
-         if (this->stub != other->stub)
-            return false;
-      } else if (this->type == wrapper_type::ui) {
-         if (this->widget != other->widget)
-            return false;
-         if (this->model_observer != other->model_observer)
-            return false;
+      switch (this->type) {
+         case wrapper_type::form_data:
+            if (this->stub != other->stub)
+               return false;
+            break;
+         case wrapper_type::ui:
+            if (this->widget != other->widget)
+               return false;
+            break;
+         case wrapper_type::ui_model_item:
+            if (this->model_observer != other->model_observer)
+               return false;
+            break;
       }
+      //
       if (this->depth != other->depth)
          return false;
       if (this->is_collection != other->is_collection)

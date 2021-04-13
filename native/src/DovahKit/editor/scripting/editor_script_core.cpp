@@ -987,6 +987,9 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    if (!instance.should_expose_to_script())
       return 0;
    //
+   if (instance.type == editor_script::wrapper_type::ui_model_item)
+      DovahKitScriptVM::get().model_observer_reference_gained(instance.model_observer);
+   //
    auto  start = lua_gettop(L);
    lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
    auto  table = lua_gettop(L);
