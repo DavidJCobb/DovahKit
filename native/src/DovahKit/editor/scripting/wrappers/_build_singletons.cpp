@@ -6,6 +6,7 @@ namespace editor_script {
       using namespace wrappers;
       //
       ui::button::setup(L);
+      ui::dropdown::setup(L);
       ui::formpicker::setup(L);
       ui::progress_bar::setup(L);
       ui::spinbox::setup(L);

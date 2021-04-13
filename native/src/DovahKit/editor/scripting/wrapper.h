@@ -100,6 +100,10 @@ namespace editor_script {
          std::array<part, part_count> parts;
          //
          QWidget* widget = nullptr;
+         struct {
+            int row = -1;
+            int col = -1;
+         } model_pos;
          
          inline part& last_part() noexcept {
             if (!this->depth)
