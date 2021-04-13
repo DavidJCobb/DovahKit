@@ -1,220 +1,5 @@
 #include "lua_item_model.h"
 
-#pragma region DovahKitLuaPersistentIndexRange
-   #pragma region Data
-      DovahKitLuaPersistentIndexRange::Data::~Data() {
-         auto* a = qobject_cast<DovahKitLuaCompatibleItemModel*>(this->range_start.model());
-         auto* b = qobject_cast<DovahKitLuaCompatibleItemModel*>(this->range_end.model());
-         if (a) {
-            a->_range_starts.remove(this->range_start, this);
-            a->_range_ends.remove(this->range_end, this);
-            a->_ranges.removeAll(this);
-         }
-         if (b && b != a) {
-            b->_range_starts.remove(this->range_start, this);
-            b->_range_ends.remove(this->range_end, this);
-            b->_ranges.removeAll(this);
-         }
-      }
-
-      bool DovahKitLuaPersistentIndexRange::Data::operator==(const DovahKitLuaPersistentIndexRange::Data& other) const noexcept {
-         return (this->range_start == other.range_start) && (this->range_end == other.range_end);
-      }
-      bool DovahKitLuaPersistentIndexRange::Data::operator!=(const DovahKitLuaPersistentIndexRange::Data& other) const noexcept {
-         return (this->range_start != other.range_start) && (this->range_end != other.range_end);
-      }
-
-      /*static*/ DovahKitLuaPersistentIndexRange::Data* DovahKitLuaPersistentIndexRange::Data::_getOrCreate(const QModelIndex& start, const QModelIndex& end) {
-         if (!start.isValid() || !end.isValid())
-            return nullptr;
-         auto* model = qobject_cast<DovahKitLuaCompatibleItemModel*>(start.model());
-         if (!model)
-            return nullptr;
-         if (model != end.model())
-            return nullptr;
-         if (start.parent() != end.parent())
-            return nullptr;
-         //
-         // Range seems valid. Let's commit it.
-         //
-         auto sit = model->_range_starts.constFind(start);
-         auto eit = model->_range_ends.constFind(end);
-         if (sit != model->_range_starts.cend())
-            if (eit != model->_range_ends.cend())
-               if (*sit == *eit)
-                  return *sit; // this exact range already exists, so just share it
-         auto* instance = new Data;
-         instance->range_start = start;
-         instance->range_end   = end;
-         model->_range_starts.insert(start, instance);
-         model->_range_ends.insert(end, instance);
-         model->_ranges.push_back(instance);
-         return instance;
-      }
-   #pragma endregion
-
-   void DovahKitLuaPersistentIndexRange::_clear() {
-      if (auto* d = this->_data)
-         if (--d->refcount == 0)
-            delete d;
-      this->_data = nullptr;
-   }
-
-   DovahKitLuaPersistentIndexRange::DovahKitLuaPersistentIndexRange(Data* d) {
-      ++d->refcount;
-      this->_data = d;
-      assert(d);
-   }
-
-   DovahKitLuaPersistentIndexRange::DovahKitLuaPersistentIndexRange() {
-   }
-   DovahKitLuaPersistentIndexRange::DovahKitLuaPersistentIndexRange(const QModelIndex& start, const QModelIndex& end) {
-      if (this->_data = Data::_getOrCreate(start, end))
-         ++this->_data->refcount;
-   }
-   DovahKitLuaPersistentIndexRange::DovahKitLuaPersistentIndexRange(DovahKitLuaPersistentIndexRange&& other) {
-      *this = other;
-   }
-   DovahKitLuaPersistentIndexRange::~DovahKitLuaPersistentIndexRange() {
-      this->_clear();
-   }
-
-   DovahKitLuaPersistentIndexRange& DovahKitLuaPersistentIndexRange::operator=(DovahKitLuaPersistentIndexRange&& other) {
-      this->_clear();
-      this->_data = other._data;
-      other._data = nullptr;
-   }
-   DovahKitLuaPersistentIndexRange& DovahKitLuaPersistentIndexRange::operator=(const DovahKitLuaPersistentIndexRange& other) {
-      this->_clear();
-      if (this->_data = other._data)
-         ++this->_data->refcount;
-   }
-
-   bool DovahKitLuaPersistentIndexRange::operator==(const DovahKitLuaPersistentIndexRange& other) const noexcept {
-      auto* a = this->_data;
-      auto* b = other._data;
-      if (a && b)
-         if (*a == *b)
-            return true;
-      return a == b;
-   }
-   bool DovahKitLuaPersistentIndexRange::operator!=(const DovahKitLuaPersistentIndexRange& other) const noexcept {
-      auto* a = this->_data;
-      auto* b = other._data;
-      if (a && b)
-         if (*a != *b)
-            return true;
-      return a != b;
-   }
-
-   int DovahKitLuaPersistentIndexRange::columnAt(int i) const {
-      if (!this->_data)
-         return -1;
-      const auto& s = this->_data->range_start;
-      const auto& e = this->_data->range_end;
-      i += s.column();
-      if (i > e.column())
-         return -1;
-      return i;
-   }
-   int DovahKitLuaPersistentIndexRange::columnCount() const {
-      if (!this->isValid())
-         return 0;
-      const auto& s = this->_data->range_start;
-      const auto& e = this->_data->range_end;
-      return e.column() - s.column() + 1;
-   }
-   int DovahKitLuaPersistentIndexRange::columnFirst() const {
-      if (!this->isValid())
-         return -1;
-      return this->_data->range_start.column();
-   }
-   int DovahKitLuaPersistentIndexRange::columnLast() const {
-      if (!this->isValid())
-         return -1;
-      return this->_data->range_end.column();
-   }
-   QModelIndex DovahKitLuaPersistentIndexRange::indexAt(int relativeRow, int relativeColumn) const {
-      auto* model = this->model();
-      if (!model)
-         return QModelIndex();
-      const auto& s = this->_data->range_start;
-      const auto& e = this->_data->range_end;
-      int row = relativeRow    + s.row();
-      int col = relativeColumn + s.column();
-      if (row > e.row() || col > e.column())
-         return QModelIndex();
-      return model->index(row, col, this->parent());
-   }
-   bool DovahKitLuaPersistentIndexRange::isValid() const {
-      if (!this->_data)
-         return false;
-      auto& d = *this->_data;
-      if (!d.range_start.isValid())
-         return false;
-      if (!d.range_end.isValid())
-         return false;
-      if (d.range_start.model() != d.range_end.model())
-         return false;
-      return true;
-   }
-   int DovahKitLuaPersistentIndexRange::rowAt(int i) const {
-      if (!this->_data)
-         return -1;
-      const auto& s = this->_data->range_start;
-      const auto& e = this->_data->range_end;
-      i += s.row();
-      if (i > e.row())
-         return -1;
-      return i;
-   }
-   int DovahKitLuaPersistentIndexRange::rowCount() const {
-      if (!this->isValid())
-         return 0;
-      const auto& s = this->_data->range_start;
-      const auto& e = this->_data->range_end;
-      return e.row() - s.row() + 1;
-   }
-   int DovahKitLuaPersistentIndexRange::rowFirst() const {
-      if (!this->isValid())
-         return -1;
-      return this->_data->range_start.row();
-   }
-   int DovahKitLuaPersistentIndexRange::rowLast() const {
-      if (!this->isValid())
-         return -1;
-      return this->_data->range_end.row();
-   }
-
-   QVariant DovahKitLuaPersistentIndexRange::dataAt(int relativeRow, int relativeColumn, int role) const {
-      auto qmi = this->indexAt(relativeRow, relativeColumn);
-      if (qmi.isValid())
-         return this->model()->data(qmi, role);
-      return QVariant();
-   }
-   Qt::ItemFlags DovahKitLuaPersistentIndexRange::flagsAt(int relativeRow, int relativeColumn) const {
-      auto qmi = this->indexAt(relativeRow, relativeColumn);
-      if (qmi.isValid())
-         return this->model()->flags(qmi);
-      return Qt::ItemFlags();
-   }
-   const DovahKitLuaCompatibleItemModel* DovahKitLuaPersistentIndexRange::model() const {
-      if (!this->isValid())
-         return nullptr;
-      return qobject_cast<DovahKitLuaCompatibleItemModel*>(this->_data->range_start.model());
-   }
-   QModelIndex DovahKitLuaPersistentIndexRange::parent() const {
-      auto* model = this->model();
-      if (!model)
-         return QModelIndex();
-      return model->parent(this->_data->range_start);
-   }
-
-   void DovahKitLuaPersistentIndexRange::swap(DovahKitLuaPersistentIndexRange& other) {
-      std::swap(this->_data, other._data);
-   }
-#pragma endregion
-
 #pragma region DovahKitLuaCompatibleItem
 void DovahKitLuaCompatibleItem::_addColumns(int at, int count) {
    if (!count)
@@ -728,41 +513,360 @@ DovahKitLuaCompatibleItem* DovahKitLuaCompatibleItemModel::itemFromIndex(const Q
    return parent->child(index.row(), index.column());
 }
 
-static_assert(false, "These should call-super to handle QPersistentModelIndex, and then have special handling for our persistent index ranges.");
 void DovahKitLuaCompatibleItemModel::beginInsertColumns(const QModelIndex& parent, int first, int last) {
    QAbstractItemModel::beginInsertColumns(parent, first, last);
    this->_changes.push_back({ parent, first, last });
 }
-void DovahKitLuaCompatibleItemModel::endInsertColumns();
+void DovahKitLuaCompatibleItemModel::endInsertColumns() {
+   QAbstractItemModel::endInsertColumns();
+   auto change = this->_changes.pop();
+   int  count  = change.last - change.first + 1;
+   for (auto* observer : this->_observers) {
+      auto& o = *observer;
+      if (o.col < 0) // proceed only if this is a col or cell observer
+         continue;
+      if (o.col > change.first) // proceed only if the new cols were inserted before the observed col
+         continue;
+      if (o.parent != change.parent)
+         continue;
+      o.col += count;
+   }
+}
 void DovahKitLuaCompatibleItemModel::beginInsertRows(const QModelIndex& parent, int first, int last) {
    QAbstractItemModel::beginInsertRows(parent, first, last);
    this->_changes.push_back({ parent, first, last });
 }
-void DovahKitLuaCompatibleItemModel::endInsertRows();
-bool DovahKitLuaCompatibleItemModel::beginMoveColumns(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
-void DovahKitLuaCompatibleItemModel::endMoveColumns();
-bool DovahKitLuaCompatibleItemModel::beginMoveRows(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
-void DovahKitLuaCompatibleItemModel::endMoveRows();
+void DovahKitLuaCompatibleItemModel::endInsertRows() {
+   QAbstractItemModel::endInsertRows();
+   auto change = this->_changes.pop();
+   int  count  = change.last - change.first + 1;
+   for (auto* observer : this->_observers) {
+      auto& o = *observer;
+      if (o.row < 0) // proceed only if this is a row or cell observer
+         continue;
+      if (o.row > change.first) // proceed only if the new rows were inserted before the observed row
+         continue;
+      if (o.parent != change.parent)
+         continue;
+      o.row += count;
+   }
+}
+bool DovahKitLuaCompatibleItemModel::beginMoveColumns(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild) {
+   if (!QAbstractItemModel::beginMoveColumns(sourceParent, sourceFirst, sourceLast, destinationParent, destinationChild))
+      return false;
+   this->_changes.push_back({ sourceParent, sourceFirst, sourceLast, destinationParent, destinationChild });
+   return true;
+}
+void DovahKitLuaCompatibleItemModel::endMoveColumns() {
+   //
+   // This function works basically the same way as endMoveRows.
+   //
+   auto change = this->_changes.pop();
+   //
+   bool fixup_source      = change.parent.parent() == change.destination.parent; // fixup bools for moves across parents
+   bool fixup_destination = change.destination.parent.parent() == change.parent; // fixup bools for moves across parents
+   QAbstractItemModel::endMoveColumns();
+   //
+   int F = change.first;
+   int L = change.last;
+   int D = change.destination.at;
+   int items_moved = L - F + 1;
+   if (change.parent == change.destination.parent) {
+      //
+      // Moving within the same parent.
+      //
+      // If I move the range [F, L] down to before D, inside of a list of N items, then:
+      //
+      //   - The range is moved to D - L - 1 + F.
+      //   - The range is moved by D - L - 1.
+      //   - The range [0, F) remains unchanged.
+      //   - The range [F, L] moves down by D - L - 1.
+      //   - The range (L, D) moves up by L - F + 1.
+      //   - The range [D, N] remains unchanged.
+      //
+      // If I move the range [F, L] up to D, inside of a list of N items, then:
+      //
+      //   - The range [0, D) remains unchanged.
+      //   - The range [D, F) moves down by L - F + 1.
+      //   - The range [F, L] moves up by F - D.
+      //   - The range (L, N] remains unchanged.
+      //
+      if (change.first < D) {
+         //
+         // Moved down.
+         //
+         for (auto* observer : this->_observers) {
+            auto& o = *observer;
+            if (o.col < 0) // not a col or cell observer
+               continue;
+            if (o.parent != change.parent) // in irrelevant parent
+               continue;
+            if (o.col >= F && o.col <= L) {
+               o.col += D - L - 1;
+            } else if (o.col > L && o.col < D) {
+               o.col -= items_moved;
+            }
+         }
+      } else {
+         //
+         // Moved up.
+         //
+         for (auto* observer : this->_observers) {
+            auto& o = *observer;
+            if (o.col < 0) // not a col or cell observer
+               continue;
+            if (o.parent != change.parent) // in irrelevant parent
+               continue;
+            if (o.col >= D && o.col < F) {
+               o.col -= F - D;
+            } else if (o.col >= F && o.col <= L) {
+               o.col += items_moved;
+            }
+         }
+      }
+   } else {
+      //
+      // Moving from one parent to another.
+      //
+      // Moving items between parents can actually cause the parents themselves to change. Consider 
+      // the following list:
+      //
+      //  - A
+      //  - B
+      //  - C
+      //     - D
+      //     - E
+      //     - F
+      //  - G
+      //
+      // If B is moved to above E, then C (which is change.destination.parent) will be displaced 
+      // upward by one. The (fixup_destination) bool above tracks this.
+      //
+      // Conversely, if E is moved to above C, then C (which in this case is change.parent) will 
+      // be displaced downward by one. The (fixup_source) bool above tracks this.
+      //
+      QModelIndex fixed_from = change.parent;
+      QModelIndex fixed_to   = change.destination.parent;
+      if (fixup_source) {
+         fixed_from = this->createIndex(fixed_from.row(), fixed_from.column() + items_moved, fixed_from.internalPointer());
+      }
+      if (fixup_destination) {
+         fixed_to = this->createIndex(fixed_to.row(), fixed_to.column() - items_moved, fixed_to.internalPointer());
+      }
+      for (auto* observer : this->_observers) {
+         auto& o = *observer;
+         if (o.col < 0) // not a row or cell observer
+            continue;
+         if (o.parent == change.parent) {
+            //
+            // Items were removed from this container, possibly including the observed row/cell.
+            //
+            o.parent = fixed_from;
+            if (o.col >= change.first && o.col <= change.last) {
+               o.parent = change.destination.parent;
+               o.col -= change.first;
+               o.col += change.destination.at;
+            } else if (o.col > change.last) {
+               o.col -= items_moved;
+            }
+         } else if (o.parent == change.destination.parent) {
+            //
+            // Items were inserted into this container, possibly including the observed row/cell.
+            //
+            o.parent = fixed_to;
+            if (o.col >= change.destination.at) {
+               o.col += items_moved;
+            }
+         }
+      }
+   }
+}
+bool DovahKitLuaCompatibleItemModel::beginMoveRows(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild) {
+   if (!QAbstractItemModel::beginMoveRows(sourceParent, sourceFirst, sourceLast, destinationParent, destinationChild))
+      return false;
+   this->_changes.push_back({ sourceParent, sourceFirst, sourceLast, destinationParent, destinationChild });
+   return true;
+}
+void DovahKitLuaCompatibleItemModel::endMoveRows() {
+   auto change = this->_changes.pop();
+   //
+   bool fixup_source      = change.parent.parent() == change.destination.parent; // fixup bools for moves across parents
+   bool fixup_destination = change.destination.parent.parent() == change.parent; // fixup bools for moves across parents
+   QAbstractItemModel::endMoveRows();
+   //
+   int F = change.first;
+   int L = change.last;
+   int D = change.destination.at;
+   int items_moved = L - F + 1;
+   if (change.parent == change.destination.parent) {
+      //
+      // Moving within the same parent.
+      //
+      // If I move the range [F, L] down to before D, inside of a list of N items, then:
+      //
+      //   - The range is moved to D - L - 1 + F.
+      //   - The range is moved by D - L - 1.
+      //   - The range [0, F) remains unchanged.
+      //   - The range [F, L] moves down by D - L - 1.
+      //   - The range (L, D) moves up by L - F + 1.
+      //   - The range [D, N] remains unchanged.
+      //
+      // If I move the range [F, L] up to D, inside of a list of N items, then:
+      //
+      //   - The range [0, D) remains unchanged.
+      //   - The range [D, F) moves down by L - F + 1.
+      //   - The range [F, L] moves up by F - D.
+      //   - The range (L, N] remains unchanged.
+      //
+      if (change.first < D) {
+         //
+         // Moved down.
+         //
+         for (auto* observer : this->_observers) {
+            auto& o = *observer;
+            if (o.row < 0) // not a row or cell observer
+               continue;
+            if (o.parent != change.parent) // in irrelevant parent
+               continue;
+            if (o.row >= F && o.row <= L) {
+               o.row += D - L - 1;
+            } else if (o.row > L && o.row < D) {
+               o.row -= items_moved;
+            }
+         }
+      } else {
+         //
+         // Moved up.
+         //
+         for (auto* observer : this->_observers) {
+            auto& o = *observer;
+            if (o.row < 0) // not a row or cell observer
+               continue;
+            if (o.parent != change.parent) // in irrelevant parent
+               continue;
+            if (o.row >= D && o.row < F) {
+               o.row -= F - D;
+            } else if (o.row >= F && o.row <= L) {
+               o.row += items_moved;
+            }
+         }
+      }
+   } else {
+      //
+      // Moving from one parent to another.
+      //
+      // Moving items between parents can actually cause the parents themselves to change. Consider 
+      // the following list:
+      //
+      //  - A
+      //  - B
+      //  - C
+      //     - D
+      //     - E
+      //     - F
+      //  - G
+      //
+      // If B is moved to above E, then C (which is change.destination.parent) will be displaced 
+      // upward by one. The (fixup_destination) bool above tracks this.
+      //
+      // Conversely, if E is moved to above C, then C (which in this case is change.parent) will 
+      // be displaced downward by one. The (fixup_source) bool above tracks this.
+      //
+      QModelIndex fixed_from = change.parent;
+      QModelIndex fixed_to   = change.destination.parent;
+      if (fixup_source) {
+         fixed_from = this->createIndex(fixed_from.row() + items_moved, fixed_from.column(), fixed_from.internalPointer());
+      }
+      if (fixup_destination) {
+         fixed_to = this->createIndex(fixed_to.row() - items_moved, fixed_to.column(), fixed_to.internalPointer());
+      }
+      for (auto* observer : this->_observers) {
+         auto& o = *observer;
+         if (o.row < 0) // not a row or cell observer
+            continue;
+         if (o.parent == change.parent) {
+            //
+            // Items were removed from this container, possibly including the observed row/cell.
+            //
+            o.parent = fixed_from;
+            if (o.row >= change.first && o.row <= change.last) {
+               o.parent = change.destination.parent;
+               o.row -= change.first;
+               o.row += change.destination.at;
+            } else if (o.row > change.last) {
+               o.row -= items_moved;
+            }
+         } else if (o.parent == change.destination.parent) {
+            //
+            // Items were inserted into this container, possibly including the observed row/cell.
+            //
+            o.parent = fixed_to;
+            if (o.row >= change.destination.at) {
+               o.row += items_moved;
+            }
+         }
+      }
+   }
+}
 void DovahKitLuaCompatibleItemModel::beginRemoveColumns(const QModelIndex& parent, int first, int last) {
    QAbstractItemModel::beginRemoveColumns(parent, first, last);
    this->_changes.push_back({ parent, first, last });
 }
-void DovahKitLuaCompatibleItemModel::endRemoveColumns();
+void DovahKitLuaCompatibleItemModel::endRemoveColumns() {
+   QAbstractItemModel::endRemoveColumns();
+   auto change = this->_changes.pop();
+   int  count  = change.last - change.first + 1;
+   for (auto* observer : this->_observers) {
+      auto& o = *observer;
+      if (o.col < 0) // proceed only if this is a col or cell observer
+         continue;
+      if (o.col >= change.first && o.col <= change.last) { // invalidate removed columns
+         o.parent = QModelIndex();
+         o.row   = -1;
+         o.col   = -1;
+         continue;
+      }
+      if (o.col > change.first) // proceed only if the new cols were removed from before the observed col
+         continue;
+      if (o.parent != change.parent)
+         continue;
+      o.col -= count;
+   }
+}
 void DovahKitLuaCompatibleItemModel::beginRemoveRows(const QModelIndex& parent, int first, int last) {
    QAbstractItemModel::beginRemoveRows(parent, first, last);
    this->_changes.push_back({ parent, first, last });
 }
-void DovahKitLuaCompatibleItemModel::endRemoveRows();
-void DovahKitLuaCompatibleItemModel::beginResetModel();
-void DovahKitLuaCompatibleItemModel::endResetModel();
-QList<DovahKitLuaPersistentIndexRange> DovahKitLuaCompatibleItemModel::persistentRangeList() {
-   QList<DovahKitLuaPersistentIndexRange> ranges;
-   for (auto* r : this->_ranges) {
-      ranges.push_back(r);
+void DovahKitLuaCompatibleItemModel::endRemoveRows() {
+   QAbstractItemModel::endRemoveRows();
+   auto change = this->_changes.pop();
+   int  count  = change.last - change.first + 1;
+   for (auto* observer : this->_observers) {
+      auto& o = *observer;
+      if (o.row < 0) // proceed only if this is a row or cell observer
+         continue;
+      if (o.row >= change.first && o.row <= change.last) { // invalidate removed rows
+         o.parent = QModelIndex();
+         o.row   = -1;
+         o.col   = -1;
+         continue;
+      }
+      if (o.row > change.first) // proceed only if the new rows were removed from before the observed row
+         continue;
+      if (o.parent != change.parent)
+         continue;
+      o.row -= count;
    }
-   return ranges;
 }
-QList<DovahKitLuaPersistentIndexRange> DovahKitLuaCompatibleItemModel::persistentRangesIn(const QModelIndex& parent);
-void DovahKitLuaCompatibleItemModel::invalidatePersistentRange(const DovahKitLuaPersistentIndexRange&);
-void DovahKitLuaCompatibleItemModel::setPersistentRangeBounds(const DovahKitLuaPersistentIndexRange&, const QModelIndex& begin, const QModelIndex& end);
+void DovahKitLuaCompatibleItemModel::beginResetModel() {
+   QAbstractItemModel::beginResetModel();
+}
+void DovahKitLuaCompatibleItemModel::endResetModel() {
+   QAbstractItemModel::endResetModel();
+   for (auto* observer : this->_observers) { // invalidate all observers
+      observer->parent = QModelIndex();
+      observer->row    = -1;
+      observer->col    = -1;
+   }
+}
 #pragma endregion
