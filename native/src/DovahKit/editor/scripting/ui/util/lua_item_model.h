@@ -2,17 +2,6 @@
 #include <QStack>
 #include <QStandardItemModel>
 
-static_assert(false, "creating and destroying ObservableStandardItemModelObserver is not thread-safe, and in order to keep them in the script thread, we need it to be");
-//
-// The script VM already has a main thread loop. Could we have the index-ranges be stored 
-// in the script VM, with the Lua wrappers referring to them obliquely (e.g. a vector of 
-// index-ranges, and the wrappers refer to positions in the vector)?
-//
-// We could potentially have a singleton take responsibility for creating and destroying 
-// these things, always on the main thread, and just try to rig it up so that all threads 
-// ask that singleton to perform those tasks.
-//
-
 class ObservableStandardItemModel;
 
 struct ObservableStandardItemModelObserver {

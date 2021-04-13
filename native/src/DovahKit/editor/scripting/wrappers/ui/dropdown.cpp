@@ -103,14 +103,13 @@ namespace widget_lua {
             text = QString::fromUtf8(lua_tostring(L, 2));
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [widget, &text]() {
+         task->handler = [widget, text]() { // do NOT pass (text) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             auto* item = new QStandardItem(text);
             model->appendRow(item);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         delete task;
          //
          return 0;
       }
@@ -181,13 +180,31 @@ namespace widget_lua {
             return 0;
          QString result;
          {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
+            auto* widget  = (wrapped_type*)self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
             task->handler = [widget, &result]() { result = widget->currentText(); };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
          lua_pushstring(L, result.toUtf8());
+         return 1;
+      }
+      luastackchange_t sorted(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result;
+         {
+            auto* widget  = (wrapped_type*)self.widget;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [widget, &result]() {
+               auto* proxy = (QSortFilterProxyModel*)widget->model();
+               result = proxy->sortColumn() >= 0;
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushboolean(L, result);
          return 1;
       }
    }
@@ -219,6 +236,21 @@ namespace widget_lua {
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = QString::fromUtf8(lua_tostring(L, 2));
          task->handler = [widget, value]() { widget->setCurrentText(value); };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t sorted(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         auto  value   = lua_toboolean(L, 2);
+         task->handler = [widget, value]() {
+            auto* proxy = (QSortFilterProxyModel*)widget->model();
+            proxy->sort(value ? 0 : -1); // using column -1 should restore default order
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -266,10 +298,12 @@ namespace editor_script::wrappers::ui {
       { "items",          &widget_lua::_getters::items },
       { "selected_index", &widget_lua::_getters::selected_index },
       { "selected_text",  &widget_lua::_getters::selected_text },
+      { "sorted",         &widget_lua::_getters::sorted },
    };
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_setters = {
       { "selected_index", &widget_lua::_setters::selected_index },
       { "selected_text",  &widget_lua::_setters::selected_text },
+      { "sorted",         &widget_lua::_setters::sorted },
    };
 
    /*static*/ void widget_lua::cls::setup(lua_State* L) {

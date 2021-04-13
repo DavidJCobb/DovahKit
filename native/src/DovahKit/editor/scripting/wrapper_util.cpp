@@ -30,6 +30,8 @@ namespace editor_script {
       out.widget = widget;
       out.type   = wrapper_type::ui;
       if (widget) {
+         if (qobject_cast<QComboBox*>(widget))
+            return wrappers::ui::dropdown::metatable_key;
          if (qobject_cast<QDialog*>(widget))
             return wrappers::ui::window::metatable_key;
          if (qobject_cast<QDoubleSpinBox*>(widget))

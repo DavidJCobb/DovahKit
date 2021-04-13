@@ -647,7 +647,7 @@ void DovahKitScriptVM::mainThreadLoop() {
       size_t size = c_list.size();
       size_t read = 0;
       size_t next = 0;
-      for (; read < size - 1; ++read) {
+      for (; read < size; ++read) {
          if (c_list[read]) {
             if (read != next) {
                c_list[next] = c_list[read];

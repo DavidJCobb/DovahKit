@@ -2,6 +2,7 @@
 #include "../../wrapper.h"
 #include "widget.h"
 #include <QComboBox>
+#include <QStandardItemModel>
 
 namespace editor_script::wrapper_part_types {
    inline constexpr cobb::eight_cc ui_dropdown_items = "DpdnItem"; // only used for the collection
