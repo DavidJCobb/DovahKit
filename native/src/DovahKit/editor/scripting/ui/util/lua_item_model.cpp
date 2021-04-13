@@ -2,6 +2,21 @@
 
 #pragma region DovahKitLuaPersistentIndexRange
    #pragma region Data
+      DovahKitLuaPersistentIndexRange::Data::~Data() {
+         auto* a = qobject_cast<DovahKitLuaCompatibleItemModel*>(this->range_start.model());
+         auto* b = qobject_cast<DovahKitLuaCompatibleItemModel*>(this->range_end.model());
+         if (a) {
+            a->_range_starts.remove(this->range_start, this);
+            a->_range_ends.remove(this->range_end, this);
+            a->_ranges.removeAll(this);
+         }
+         if (b && b != a) {
+            b->_range_starts.remove(this->range_start, this);
+            b->_range_ends.remove(this->range_end, this);
+            b->_ranges.removeAll(this);
+         }
+      }
+
       bool DovahKitLuaPersistentIndexRange::Data::operator==(const DovahKitLuaPersistentIndexRange::Data& other) const noexcept {
          return (this->range_start == other.range_start) && (this->range_end == other.range_end);
       }
@@ -33,9 +48,23 @@
          instance->range_end   = end;
          model->_range_starts.insert(start, instance);
          model->_range_ends.insert(end, instance);
+         model->_ranges.push_back(instance);
          return instance;
       }
    #pragma endregion
+
+   void DovahKitLuaPersistentIndexRange::_clear() {
+      if (auto* d = this->_data)
+         if (--d->refcount == 0)
+            delete d;
+      this->_data = nullptr;
+   }
+
+   DovahKitLuaPersistentIndexRange::DovahKitLuaPersistentIndexRange(Data* d) {
+      ++d->refcount;
+      this->_data = d;
+      assert(d);
+   }
 
    DovahKitLuaPersistentIndexRange::DovahKitLuaPersistentIndexRange() {
    }
@@ -46,18 +75,17 @@
    DovahKitLuaPersistentIndexRange::DovahKitLuaPersistentIndexRange(DovahKitLuaPersistentIndexRange&& other) {
       *this = other;
    }
+   DovahKitLuaPersistentIndexRange::~DovahKitLuaPersistentIndexRange() {
+      this->_clear();
+   }
 
    DovahKitLuaPersistentIndexRange& DovahKitLuaPersistentIndexRange::operator=(DovahKitLuaPersistentIndexRange&& other) {
-      if (auto* d = this->_data)
-         if (--d->refcount == 0)
-            delete d;
+      this->_clear();
       this->_data = other._data;
       other._data = nullptr;
    }
    DovahKitLuaPersistentIndexRange& DovahKitLuaPersistentIndexRange::operator=(const DovahKitLuaPersistentIndexRange& other) {
-      if (auto* d = this->_data)
-         if (--d->refcount == 0)
-            delete d;
+      this->_clear();
       if (this->_data = other._data)
          ++this->_data->refcount;
    }
@@ -699,4 +727,42 @@ DovahKitLuaCompatibleItem* DovahKitLuaCompatibleItemModel::itemFromIndex(const Q
       return nullptr;
    return parent->child(index.row(), index.column());
 }
+
+static_assert(false, "These should call-super to handle QPersistentModelIndex, and then have special handling for our persistent index ranges.");
+void DovahKitLuaCompatibleItemModel::beginInsertColumns(const QModelIndex& parent, int first, int last) {
+   QAbstractItemModel::beginInsertColumns(parent, first, last);
+   this->_changes.push_back({ parent, first, last });
+}
+void DovahKitLuaCompatibleItemModel::endInsertColumns();
+void DovahKitLuaCompatibleItemModel::beginInsertRows(const QModelIndex& parent, int first, int last) {
+   QAbstractItemModel::beginInsertRows(parent, first, last);
+   this->_changes.push_back({ parent, first, last });
+}
+void DovahKitLuaCompatibleItemModel::endInsertRows();
+bool DovahKitLuaCompatibleItemModel::beginMoveColumns(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
+void DovahKitLuaCompatibleItemModel::endMoveColumns();
+bool DovahKitLuaCompatibleItemModel::beginMoveRows(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
+void DovahKitLuaCompatibleItemModel::endMoveRows();
+void DovahKitLuaCompatibleItemModel::beginRemoveColumns(const QModelIndex& parent, int first, int last) {
+   QAbstractItemModel::beginRemoveColumns(parent, first, last);
+   this->_changes.push_back({ parent, first, last });
+}
+void DovahKitLuaCompatibleItemModel::endRemoveColumns();
+void DovahKitLuaCompatibleItemModel::beginRemoveRows(const QModelIndex& parent, int first, int last) {
+   QAbstractItemModel::beginRemoveRows(parent, first, last);
+   this->_changes.push_back({ parent, first, last });
+}
+void DovahKitLuaCompatibleItemModel::endRemoveRows();
+void DovahKitLuaCompatibleItemModel::beginResetModel();
+void DovahKitLuaCompatibleItemModel::endResetModel();
+QList<DovahKitLuaPersistentIndexRange> DovahKitLuaCompatibleItemModel::persistentRangeList() {
+   QList<DovahKitLuaPersistentIndexRange> ranges;
+   for (auto* r : this->_ranges) {
+      ranges.push_back(r);
+   }
+   return ranges;
+}
+QList<DovahKitLuaPersistentIndexRange> DovahKitLuaCompatibleItemModel::persistentRangesIn(const QModelIndex& parent);
+void DovahKitLuaCompatibleItemModel::invalidatePersistentRange(const DovahKitLuaPersistentIndexRange&);
+void DovahKitLuaCompatibleItemModel::setPersistentRangeBounds(const DovahKitLuaPersistentIndexRange&, const QModelIndex& begin, const QModelIndex& end);
 #pragma endregion

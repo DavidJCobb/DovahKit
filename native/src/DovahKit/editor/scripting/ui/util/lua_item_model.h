@@ -1,9 +1,30 @@
 #pragma once
 #include <atomic>
 #include <QAbstractItemModel>
+#include <QStack>
 #include <QStandardItemModel>
 
 class DovahKitLuaCompatibleItemModel;
+
+static_assert(false, "change of plans; see comment");
+//
+// - Replace DovahKitLuaPersistentIndexRange with DovahKitLuaPersistentTableSpanReference. 
+//   What we want is to store a single QModelIndex for the parent, and ints for the row and 
+//   column numbers (where either or both must be >= 0); we want to be able to refer to a 
+//   single cell or to an entire row or entire column, but we don't need arbitrary ranges, 
+//   and the model-side behaviors for arbitrary ranges are too damn complicated.
+//
+
+static_assert(false, "creating and destroying DovahKitLuaPersistentIndexRanges is not thread-safe, and in order to keep them in the script thread, we need it to be");
+//
+// The script VM already has a main thread loop. Could we have the index-ranges be stored 
+// in the script VM, with the Lua wrappers referring to them obliquely (e.g. a vector of 
+// index-ranges, and the wrappers refer to positions in the vector)?
+//
+// We could potentially have a singleton take responsibility for creating and destroying 
+// these things, always on the main thread, and just try to rig it up so that all threads 
+// ask that singleton to perform those tasks.
+//
 
 class DovahKitLuaPersistentIndexRange {
    //
@@ -32,6 +53,8 @@ class DovahKitLuaPersistentIndexRange {
    //    items in the range prior to the move becomes noncontiguous within the table, then 
    //    the range becomes invalid.
    //
+   //     - This includes moving items in the range into different parents from one another.
+   //
    //  - If any item within the range is moved to another spot within the range, such that 
    //    the list of items in the range prior to the move remains contiguous, then the 
    //    range remains valid, with its start- and end-indices changing as necessary.
@@ -50,6 +73,8 @@ class DovahKitLuaPersistentIndexRange {
          QModelIndex range_start; // top-left
          QModelIndex range_end;   // bottom-right
 
+         ~Data();
+
          bool operator==(const Data&) const noexcept;
          bool operator!=(const Data&) const noexcept;
 
@@ -57,11 +82,16 @@ class DovahKitLuaPersistentIndexRange {
       };
 
       Data* _data = nullptr;
+
+      void _clear();
+
+      DovahKitLuaPersistentIndexRange(Data*);
       
    public:
       DovahKitLuaPersistentIndexRange();
       DovahKitLuaPersistentIndexRange(const QModelIndex& start, const QModelIndex& end);
       DovahKitLuaPersistentIndexRange(DovahKitLuaPersistentIndexRange&&);
+      ~DovahKitLuaPersistentIndexRange();
 
       DovahKitLuaPersistentIndexRange& operator=(DovahKitLuaPersistentIndexRange&&);
       DovahKitLuaPersistentIndexRange& operator=(const DovahKitLuaPersistentIndexRange&);
@@ -190,8 +220,20 @@ class DovahKitLuaCompatibleItemModel : public QAbstractItemModel {
    friend struct DovahKitLuaPersistentIndexRange::Data;
    friend class  DovahKitLuaCompatibleItem;
    protected:
+      struct Change {
+         QModelIndex parent;
+         int first;
+         int last;
+         struct {
+            QModelIndex parent;
+            int at;
+         } destination; // applicable for moves only
+      };
+      
       QMultiHash<QModelIndex, DovahKitLuaPersistentIndexRange::Data*> _range_starts;
       QMultiHash<QModelIndex, DovahKitLuaPersistentIndexRange::Data*> _range_ends;
+      QList<DovahKitLuaPersistentIndexRange::Data*> _ranges;
+      QStack<Change> _changes;
 
       DovahKitLuaCompatibleItem* root = nullptr;
       struct {
@@ -222,27 +264,32 @@ class DovahKitLuaCompatibleItemModel : public QAbstractItemModel {
       QModelIndex	indexFromItem(const DovahKitLuaCompatibleItem* item) const;
       DovahKitLuaCompatibleItem* itemFromIndex(const QModelIndex& index) const;
 
+      static_assert(false, "we need data and setData overrides");
+      static_assert(false, "we need headerData and setHeaderData overrides");
+
       inline int sortRole() const noexcept { return this->_sortRole; }
       inline void setSortRole(int r) noexcept { this->_sortRole = r; }
 
    protected:
       static_assert(false, "We need to define all of these, with custom handling for QPersistentModelIndex and DovahKitLuaPersistentIndexRange.");
       void beginInsertColumns(const QModelIndex& parent, int first, int last);
-      void beginInsertRows(const QModelIndex& parent, int first, int last);
-      bool beginMoveColumns(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
-      bool beginMoveRows(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
-      void beginRemoveColumns(const QModelIndex& parent, int first, int last);
-      void beginRemoveRows(const QModelIndex& parent, int first, int last);
-      void beginResetModel();
-      void changePersistentIndex(const QModelIndex& from, const QModelIndex& to);
-      void changePersistentIndexList(const QModelIndexList& from, const QModelIndexList& to);
       void endInsertColumns();
+      void beginInsertRows(const QModelIndex& parent, int first, int last);
       void endInsertRows();
+      bool beginMoveColumns(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
       void endMoveColumns();
+      bool beginMoveRows(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
       void endMoveRows();
+      void beginRemoveColumns(const QModelIndex& parent, int first, int last);
       void endRemoveColumns();
+      void beginRemoveRows(const QModelIndex& parent, int first, int last);
       void endRemoveRows();
+      void beginResetModel();
       void endResetModel();
+      QList<DovahKitLuaPersistentIndexRange> persistentRangeList();
+      QList<DovahKitLuaPersistentIndexRange> persistentRangesIn(const QModelIndex& parent);
+      void invalidatePersistentRange(const DovahKitLuaPersistentIndexRange&);
+      void setPersistentRangeBounds(const DovahKitLuaPersistentIndexRange&, const QModelIndex& begin, const QModelIndex& end);
 
    signals:
       void itemChanged(DovahKitLuaCompatibleItem*);
