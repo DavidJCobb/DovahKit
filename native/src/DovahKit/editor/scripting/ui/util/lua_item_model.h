@@ -26,6 +26,23 @@ class DovahKitLuaPersistentIndexRange {
    // Of course, the model must actually maintain this object, which is why we've created the 
    // DovahKitLuaCompatibleItemModel class as a counterpart to QStandardItemModel.
    //
+   // Behaviors include:
+   //
+   //  - If any item within the range is moved outside of the range, such that the list of 
+   //    items in the range prior to the move becomes noncontiguous within the table, then 
+   //    the range becomes invalid.
+   //
+   //  - If any item within the range is moved to another spot within the range, such that 
+   //    the list of items in the range prior to the move remains contiguous, then the 
+   //    range remains valid, with its start- and end-indices changing as necessary.
+   //
+   //  - If either of the range's "endcaps" are deleted, then the range shrinks inward.
+   //
+   //  - If any element between the range's "endcaps" is deleted, then the range remains 
+   //    as is.
+   //
+   // These behaviors are not possible with QPersistentModelIndex alone.
+   //
    friend class DovahKitLuaCompatibleItemModel;
    protected:
       struct Data {
@@ -207,6 +224,25 @@ class DovahKitLuaCompatibleItemModel : public QAbstractItemModel {
 
       inline int sortRole() const noexcept { return this->_sortRole; }
       inline void setSortRole(int r) noexcept { this->_sortRole = r; }
+
+   protected:
+      static_assert(false, "We need to define all of these, with custom handling for QPersistentModelIndex and DovahKitLuaPersistentIndexRange.");
+      void beginInsertColumns(const QModelIndex& parent, int first, int last);
+      void beginInsertRows(const QModelIndex& parent, int first, int last);
+      bool beginMoveColumns(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
+      bool beginMoveRows(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
+      void beginRemoveColumns(const QModelIndex& parent, int first, int last);
+      void beginRemoveRows(const QModelIndex& parent, int first, int last);
+      void beginResetModel();
+      void changePersistentIndex(const QModelIndex& from, const QModelIndex& to);
+      void changePersistentIndexList(const QModelIndexList& from, const QModelIndexList& to);
+      void endInsertColumns();
+      void endInsertRows();
+      void endMoveColumns();
+      void endMoveRows();
+      void endRemoveColumns();
+      void endRemoveRows();
+      void endResetModel();
 
    signals:
       void itemChanged(DovahKitLuaCompatibleItem*);
