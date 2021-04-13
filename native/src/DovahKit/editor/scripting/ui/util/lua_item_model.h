@@ -4,9 +4,7 @@
 #include <QStack>
 #include <QStandardItemModel>
 
-class DovahKitLuaCompatibleItemModel;
-
-static_assert(false, "creating and destroying DovahKitLuaPersistentIndexRanges is not thread-safe, and in order to keep them in the script thread, we need it to be");
+static_assert(false, "creating and destroying DovahKitLuaPersistentTableObserver is not thread-safe, and in order to keep them in the script thread, we need it to be");
 //
 // The script VM already has a main thread loop. Could we have the index-ranges be stored 
 // in the script VM, with the Lua wrappers referring to them obliquely (e.g. a vector of 
@@ -21,108 +19,33 @@ struct DovahKitLuaPersistentTableObserver {
    QModelIndex parent;
    int row = -1;
    int col = -1;
+
+   inline const int axis(Qt::Orientation o) const noexcept {
+      if (o == Qt::Orientation::Horizontal)
+         return this->col;
+      return this->row;
+   }
+   inline void setAxis(Qt::Orientation o, int i) noexcept {
+      if (o == Qt::Orientation::Horizontal)
+         this->col = i;
+      else
+         this->row = i;
+   }
+
+   inline void invalidate() noexcept {
+      this->parent = QModelIndex();
+      this->row = this->col = -1;
+   }
+   inline bool isValid() const noexcept {
+      if (this->row < 0)
+         if (this->col < 0)
+            return false;
+      return this->parent.isValid();
+   }
 };
 
-// Analogue to QStandardItem.
-class DovahKitLuaCompatibleItem {
-   friend class DovahKitLuaCompatibleItemModel;
-   protected:
-      struct _Data {
-         int      role = -1;
-         QVariant value;
-      };
-
-      QVector<_Data> _data;
-      QVector<DovahKitLuaCompatibleItem*> _children; // 2D array represented as 1D
-      DovahKitLuaCompatibleItem*      _parent = nullptr;
-      DovahKitLuaCompatibleItemModel* _model  = nullptr;
-      int _rows = 0;
-      int _cols = 0;
-      Qt::ItemFlags _itemFlags;
-      struct {
-         bool tooltipIsDisplay = false;
-      } _featureFlags;
-
-      inline int _childIndex(int row, int column) const noexcept {
-         if (row < 0 || column < 0)
-            return -1;
-         if (row > this->rowCount())
-            return -1;
-         int cc = this->columnCount();
-         if (column > cc)
-            return -1;
-         return column + (row * cc);
-      }
-
-      // These functions restructure our local table, but do not interact with the containing model.
-      void _addColumns(int at, int count);
-      void _addRows(int at, int count);
-      void _deleteColumns(int at, int count);
-      void _deleteRows(int at, int count);
-
-      std::pair<int, int> _coordinates() const noexcept; // { row, col }
-
-      void _sortChildren(int column, Qt::SortOrder order, bool isTopLevel);
-
-   public:
-      ~DovahKitLuaCompatibleItem();
-
-      bool operator<(const DovahKitLuaCompatibleItem& other) const;
-
-      void sortChildren(int column, Qt::SortOrder order = Qt::AscendingOrder);
-
-      inline bool hasChildren() const noexcept { return this->rowCount() + this->columnCount() > 0; }
-
-      inline int row() const noexcept { return this->_coordinates().first; }
-      inline int column() const noexcept { return this->_coordinates().second; }
-
-      inline int columnCount() const noexcept { return this->_cols; }
-      inline int rowCount() const noexcept { return this->_rows; }
-      void setColumnCount(int);
-      void setRowCount(int);
-
-      void appendColumn(const QList<DovahKitLuaCompatibleItem*>& items, bool clampRowCount = false);
-      void appendRow(const QList<DovahKitLuaCompatibleItem*>& items, bool clampColumnCount = false);
-      void appendRow(DovahKitLuaCompatibleItem* item);
-
-      void insertColumn(int column, const QList<DovahKitLuaCompatibleItem*>& items, bool clampRowCount = false);
-      void insertColumns(int column, int count);
-      void insertRow(int row, const QList<DovahKitLuaCompatibleItem*>& items, bool clampColumnCount = false);
-      void insertRows(int row, int count);
-
-      void removeColumn(int column);
-      void removeColumns(int column, int count);
-      void removeRow(int row);
-      void removeRows(int row, int count);
-
-      DovahKitLuaCompatibleItem* takeChild(int row, int column = 0) noexcept;
-      QList<DovahKitLuaCompatibleItem*> takeColumn(int column) noexcept;
-      QList<DovahKitLuaCompatibleItem*> takeRow(int row) noexcept;
-
-      virtual QVariant data(int role = Qt::UserRole + 1) const;
-      virtual void setData(const QVariant& value, int role = Qt::UserRole + 1);
-      void clearData();
-
-      inline Qt::ItemFlags flags() const noexcept { return this->_itemFlags; }
-      inline void setFlags(Qt::ItemFlags f) noexcept { this->_itemFlags = f; }
-
-      QModelIndex index() const noexcept;
-
-      DovahKitLuaCompatibleItem* child(int row, int column) const noexcept;
-      inline DovahKitLuaCompatibleItem* parent() const noexcept { return this->_parent; }
-      inline DovahKitLuaCompatibleItemModel* model() const noexcept { return this->_model; }
-
-      inline bool tooltipsDefaultToDisplay() const noexcept { return this->_featureFlags.tooltipIsDisplay; };
-      inline void setTooltipsDefaultToDisplay(bool b) noexcept { this->_featureFlags.tooltipIsDisplay = b; };
-
-   protected:
-      void emitDataChanged(const QVector<int>& roles);
-};
-
-// Analogue to QStandardItemModel.
-class DovahKitLuaCompatibleItemModel : public QAbstractItemModel {
+class ObservableStandardItemModel : public QStandardItemModel {
    Q_OBJECT;
-   friend class DovahKitLuaCompatibleItem;
    protected:
       struct Change {
          QModelIndex parent;
@@ -132,65 +55,57 @@ class DovahKitLuaCompatibleItemModel : public QAbstractItemModel {
             QModelIndex parent;
             int at;
          } destination; // applicable for moves only
+         struct {
+            bool source      = false;
+            bool destination = false;
+         } fixup; // applicable for moves only
+      };
+
+      // Struct for coping with layoutChanged.
+      struct ObserverCacheEntry {
+         QStandardItem* parent = nullptr;
+         QStandardItem* row    = nullptr; // leftmost entry in row
+         QStandardItem* col    = nullptr; // topmost entry in col
+         //
+         #if _DEBUG
+         struct {
+            int parent_row_count = -1;
+            int parent_col_count = -1;
+         } debug;
+         #endif
       };
       
       QVector<DovahKitLuaPersistentTableObserver*> _observers;
+      QVector<ObserverCacheEntry> _observer_cache;
       QStack<Change> _changes;
 
-      DovahKitLuaCompatibleItem* root = nullptr;
-      struct {
-         std::vector<DovahKitLuaCompatibleItem*> horizontal;
-         std::vector<DovahKitLuaCompatibleItem*> vertical;
-      } headerItems;
-      int _sortRole = Qt::DisplayRole;
-
-      void _onItemChanged(DovahKitLuaCompatibleItem*, const QVector<int>& roles);
-
    public:
-      DovahKitLuaCompatibleItemModel(QObject* parent = nullptr);
-      ~DovahKitLuaCompatibleItemModel();
-
-      inline DovahKitLuaCompatibleItem* invisibleRootItem() const noexcept { return this->root; }
-
-      void appendColumn(const QList<DovahKitLuaCompatibleItem*>& items);
-      void appendRow(const QList<DovahKitLuaCompatibleItem*>& items);
-      void appendRow(DovahKitLuaCompatibleItem* item);
-
-      void insertColumn(int column, const QList<DovahKitLuaCompatibleItem*>& items);
-      bool insertColumn(int column, const QModelIndex& parent = QModelIndex());
-      void insertRow(int row, const QList<DovahKitLuaCompatibleItem*>& items);
-      void insertRow(int row, DovahKitLuaCompatibleItem* item);
-      bool insertRow(int row, const QModelIndex& parent = QModelIndex());
-
-      DovahKitLuaCompatibleItem* item(int row, int column = 0) const noexcept;
-      QModelIndex	indexFromItem(const DovahKitLuaCompatibleItem* item) const;
-      DovahKitLuaCompatibleItem* itemFromIndex(const QModelIndex& index) const;
-
-      static_assert(false, "we need data and setData overrides");
-      static_assert(false, "we need headerData and setHeaderData overrides");
-
-      inline int sortRole() const noexcept { return this->_sortRole; }
-      inline void setSortRole(int r) noexcept { this->_sortRole = r; }
+      ObservableStandardItemModel(QObject* parent = nullptr);
 
       void registerObserver(DovahKitLuaPersistentTableObserver*);
       void unregisterObserver(DovahKitLuaPersistentTableObserver*);
 
    protected:
-      void beginInsertColumns(const QModelIndex& parent, int first, int last);
-      void endInsertColumns();
-      void beginInsertRows(const QModelIndex& parent, int first, int last);
-      void endInsertRows();
-      bool beginMoveColumns(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
-      void endMoveColumns();
-      bool beginMoveRows(const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationChild);
-      void endMoveRows();
-      void beginRemoveColumns(const QModelIndex& parent, int first, int last);
-      void endRemoveColumns();
-      void beginRemoveRows(const QModelIndex& parent, int first, int last);
-      void endRemoveRows();
-      void beginResetModel();
-      void endResetModel();
+      void afterInsertion(Qt::Orientation, const QModelIndex& parent, int first, int last);
+      void afterRemoval(Qt::Orientation, const QModelIndex& parent, int first, int last);
+      void beforeMove(Qt::Orientation, const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationAt);
+      void afterMove(Qt::Orientation, const QModelIndex& fixedSourceParent, const QModelIndex& fixedDestinationParent);
+      void afterReset();
 
-   signals:
-      void itemChanged(DovahKitLuaCompatibleItem*);
+      // QAbstractItemModel::layoutChanged is used by:
+      //
+      //  - QStandardItem::setChild
+      //     - QStandardItemModel::dropMimeData, both directly and in a private helper function called there
+      //     - QStandardItemModel::itemFromIndex, if the index is valid but no item is there
+      //     - QStandardItemModel::setItem
+      //  - QStandardItem::sortChildren
+      //
+      // Neither of the above functions delete a child. If you orphan a child with setChild(r, c, nullptr), 
+      // the orphaned child simply remains in memory (and leaks, if you weren't tracking it elsewhere).
+      //
+      // We can handle layoutChanged signals if and only if they do not involve the deletion of children 
+      // from the model.
+      //
+      void beforeLayoutChange();
+      void afterLayoutChange();
 };
