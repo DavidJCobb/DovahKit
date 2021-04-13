@@ -12,6 +12,7 @@
 #include <QWidget>
 #include "cross_thread_tasks/base.h"
 #include "ui/event.h"
+#include "ui/util/lua_item_model.h"
 #include "wrapper.h"
 
 namespace dovah {
@@ -23,6 +24,10 @@ class DovahKitScriptVMUITaskConduit;
 class DovahKitScriptVMPermissionInterface;
 class DovahKitScriptVMUserdataInterface;
 class DovahKitScriptUIListenerInterface;
+
+struct DovahKitScriptVMItemModelObserver : public ObservableStandardItemModelObserver {
+   std::atomic<int> refcount = 0;
+};
 
 class DovahKitScriptVM : public QObject {
    Q_OBJECT
@@ -85,6 +90,10 @@ class DovahKitScriptVM : public QObject {
       std::recursive_mutex exec_lock;
       std::atomic<bool> aborted = false; // main thread can set this to kill the script
       std::atomic<bool> running = false;
+      struct {
+         std::vector<ObservableStandardItemModelObserver*> pointers;
+         std::vector<int> refcounts;
+      } ui_model_observers;
       QWidget* ui_parent = nullptr;
       //
       struct {
@@ -129,7 +138,13 @@ class DovahKitScriptVM : public QObject {
       void widget_no_longer_orphaned(QWidget*);   // Lua functions that insert widgets into a window must call this
       void widget_no_longer_referenced(QWidget*); // called by wrapper internals when a widget is unreferenced
 
+      void model_observer_reference_gained(ObservableStandardItemModelObserver*);
+      void model_observer_reference_lost(ObservableStandardItemModelObserver*);
+
       void queue_lua_function(int stack_pos, bool lock_ui_for_function); // made available for Lua APIs
+
+      int push_to_lua(const QVariant&);
+      QVariant variant_from_lua(int stack_pos);
       
    signals:
       void messageLogged(const QString&);

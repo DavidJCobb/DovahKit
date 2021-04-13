@@ -8,17 +8,7 @@
 namespace editor_script {
    /*static*/ luastackchange_t wrapper::__gc(lua_State* L) {
       auto* userdata = (wrapper*)lua_touserdata(L, 1);
-      //
-      // Flag widgets as unreferenced when they are. We don't want to do this in the wrapper 
-      // destructor, because that'll fire as a false-positive for local wrappers on the stack 
-      // (we create wrappers on the stack and then copy them into Lua, so the originals get 
-      // destroyed early).
-      //
-      if (userdata->type == wrapper_type::ui) {
-         DovahKitScriptVM::get().widget_no_longer_referenced(userdata->widget);
-         userdata->widget = nullptr;
-      }
-      //
+      userdata->teardown();
       userdata->~wrapper();
       lua_pushnil(L);
       lua_setmetatable(L, 1); // Lua can't guarantee that __gc will only be called once, so make sure there *is* no __gc to call a second time
@@ -36,6 +26,18 @@ namespace editor_script { // base metatable
 
 namespace editor_script {
    wrapper::~wrapper() {
+   }
+   void wrapper::teardown() {
+      //
+      // Flag widgets as unreferenced when they are.
+      //
+      if (this->type == wrapper_type::ui) {
+         auto& vm = DovahKitScriptVM::get();
+         vm.widget_no_longer_referenced(this->widget);
+         vm.model_observer_reference_lost(this->model_observer);
+         this->widget         = nullptr;
+         this->model_observer = nullptr;
+      }
    }
 
    void wrapper::append_part(part_type_t signature, uint32_t index) {
@@ -101,6 +103,11 @@ namespace editor_script {
          return false;
       if (this->type == wrapper_type::form_data) {
          if (this->stub != other->stub)
+            return false;
+      } else if (this->type == wrapper_type::ui) {
+         if (this->widget != other->widget)
+            return false;
+         if (this->model_observer != other->model_observer)
             return false;
       }
       if (this->depth != other->depth)

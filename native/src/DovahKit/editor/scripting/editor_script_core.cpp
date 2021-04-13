@@ -20,7 +20,8 @@
 
 #include <QEvent>
 
-#include "wrappers/form.h" // for the object_is_form function
+#include "wrappers/form.h" // for the object_is_form function and for internal variant_from_lua
+#include "wrappers/ui/widget.h" // for internal variant_from_lua
 
 // Widget type includes, needed for dispatching events
 #include "../../ui/generic/FormPicker.h"
@@ -495,6 +496,44 @@ void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
    }
 }
 
+void DovahKitScriptVM::model_observer_reference_gained(ObservableStandardItemModelObserver* observer) {
+   if (!observer)
+      return;
+   auto& store = this->ui_model_observers;
+   auto& p_list = store.pointers;
+   auto& c_list = store.refcounts;
+   //
+   auto it = std::find(p_list.begin(), p_list.end(), observer);
+   if (it != p_list.end()) {
+      auto i = it - p_list.begin();
+      ++c_list[i];
+      return;
+   }
+   //
+   p_list.push_back(observer);
+   c_list.push_back(1);
+}
+void DovahKitScriptVM::model_observer_reference_lost(ObservableStandardItemModelObserver* observer) {
+   if (!observer)
+      return;
+   auto& store  = this->ui_model_observers;
+   auto& p_list = store.pointers;
+   auto& c_list = store.refcounts;
+   //
+   auto it = std::find(p_list.begin(), p_list.end(), observer);
+   assert(it != p_list.end());
+   auto i = it - p_list.begin();
+   //
+   if (--c_list[i] > 0)
+      return;
+   assert(c_list[i] == 0 && "How is the refcount negative?!");
+   //
+   // You'd expect that we'd destroy an unreferenced observer now, right? But nah. See, this 
+   // function runs on the script thread, but we can only safely (un)register observers on 
+   // the main thread. We'll prune zero-refcount observers on the main thread.
+   //
+}
+
 void DovahKitScriptVM::queue_lua_function(int stack_pos, bool lock_ui_for_function) {
    auto* L   = this->lua_vm;
    auto* key = lock_ui_for_function ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
@@ -509,6 +548,42 @@ void DovahKitScriptVM::queue_lua_function(int stack_pos, bool lock_ui_for_functi
    lua_rawset(L, storage); // pops value and key
    //
    lua_pop(L, 1); // pop storage
+}
+
+int DovahKitScriptVM::push_to_lua(const QVariant& p) {
+   auto* L  = this->lua_vm;
+   auto  ut = p.userType();
+   if (ut == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
+      editor_script::wrapper out;
+      auto* mt = wrap_form(out, p.value<dovah::form_stub*>());
+      return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+   } else if (ut == QMetaType::QObjectStar) {
+      if (auto* widget = qobject_cast<QWidget*>(p.value<QObject*>())) {
+         editor_script::wrapper out;
+         auto* mt = wrap_widget(out, widget);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+      }
+      return 0;
+   }
+   return cobb::lua::push_qt_variant(L, p);
+}
+QVariant DovahKitScriptVM::variant_from_lua(int stack_pos) {
+   auto* L = this->lua_vm;
+   if (lua_gettop(L) < stack_pos)
+      return QVariant();
+   if (lua_type(L, stack_pos) != LUA_TUSERDATA)
+      return cobb::lua::to_qt_variant(L, stack_pos);
+   //
+   if (auto* w = (editor_script::wrapper*) editor_script::cast_to_class(L, stack_pos, editor_script::wrappers::form::metatable_key)) {
+      if (w->depth == 0 && !w->is_collection)
+         return QVariant::fromValue<dovah::form_stub*>(w->stub);
+      return QVariant();
+   }
+   if (auto* w = (editor_script::wrapper*) editor_script::cast_to_class(L, stack_pos, editor_script::wrappers::ui::widget::metatable_key)) {
+      return QVariant::fromValue<QObject*>(w->widget);
+   }
+   //
+   return QVariant();
 }
 
 void DovahKitScriptVM::abort() {
@@ -562,6 +637,31 @@ void DovahKitScriptVM::setUIParentWidget(QWidget* widget) {
 }
 
 void DovahKitScriptVM::mainThreadLoop() {
+   {
+      auto& store  = this->ui_model_observers;
+      auto& p_list = store.pointers;
+      auto& c_list = store.refcounts;
+      //
+      // Code here is basically mimicking the erase-remove idiom:
+      //
+      size_t size = c_list.size();
+      size_t read = 0;
+      size_t next = 0;
+      for (; read < size - 1; ++read) {
+         if (c_list[read]) {
+            if (read != next) {
+               c_list[next] = c_list[read];
+               p_list[next] = std::move(p_list[read]);
+            }
+            ++next;
+         } else {
+            delete p_list[read];
+            p_list[read] = nullptr;
+         }
+      }
+      c_list.resize(next);
+      p_list.resize(next);
+   }
    this->task_queues.s2m.process();
    this->ui_queues.read.process();
    this->ui_queues.write.process();

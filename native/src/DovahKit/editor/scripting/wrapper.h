@@ -8,6 +8,8 @@
 #include "classes.h"
 #include "util.h"
 
+class DovahKitScriptVMItemModelObserver;
+
 namespace editor_script {
    enum class wrapper_type {
       generic,
@@ -49,6 +51,14 @@ namespace editor_script {
             this->lua_key = LUA_NOREF;
          }
          ~wrapper();
+
+         //
+         // Teardown tasks should be performed here, not in the destructor. The wrapper system works by 
+         // having Lua APIs create a wrapper on the stack and pass it to the VM to then be copied into 
+         // the VM internals; the wrapper on the stack is then destroyed, but it's the wrapper in the VM 
+         // that actually matters, and it's only the latter that should run teardown tasks.
+         //
+         void teardown();
 
          //
          // There are certain objects that we actually *don't* want to provide to scripts, like none-stubs 
@@ -100,10 +110,7 @@ namespace editor_script {
          std::array<part, part_count> parts;
          //
          QWidget* widget = nullptr;
-         struct {
-            int row = -1;
-            int col = -1;
-         } model_pos;
+         DovahKitScriptVMItemModelObserver* model_observer = nullptr;
          
          inline part& last_part() noexcept {
             if (!this->depth)

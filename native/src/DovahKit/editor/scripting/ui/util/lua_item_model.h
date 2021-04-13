@@ -1,10 +1,8 @@
 #pragma once
-#include <atomic>
-#include <QAbstractItemModel>
 #include <QStack>
 #include <QStandardItemModel>
 
-static_assert(false, "creating and destroying DovahKitLuaPersistentTableObserver is not thread-safe, and in order to keep them in the script thread, we need it to be");
+static_assert(false, "creating and destroying ObservableStandardItemModelObserver is not thread-safe, and in order to keep them in the script thread, we need it to be");
 //
 // The script VM already has a main thread loop. Could we have the index-ranges be stored 
 // in the script VM, with the Lua wrappers referring to them obliquely (e.g. a vector of 
@@ -15,10 +13,15 @@ static_assert(false, "creating and destroying DovahKitLuaPersistentTableObserver
 // ask that singleton to perform those tasks.
 //
 
-struct DovahKitLuaPersistentTableObserver {
-   QModelIndex parent;
+class ObservableStandardItemModel;
+
+struct ObservableStandardItemModelObserver {
+   ObservableStandardItemModel* model = nullptr;
+   QModelIndex parent; // allowed to be invalid, as that's needed to refer to top-level items in the model
    int row = -1;
    int col = -1;
+
+   ~ObservableStandardItemModelObserver();
 
    inline const int axis(Qt::Orientation o) const noexcept {
       if (o == Qt::Orientation::Horizontal)
@@ -33,15 +36,36 @@ struct DovahKitLuaPersistentTableObserver {
    }
 
    inline void invalidate() noexcept {
+      this->model  = nullptr;
       this->parent = QModelIndex();
       this->row = this->col = -1;
    }
    inline bool isValid() const noexcept {
+      if (!this->model)
+         return false;
       if (this->row < 0)
          if (this->col < 0)
             return false;
-      return this->parent.isValid();
+      return true;
    }
+
+   inline bool isRow() const noexcept {
+      return this->row >= 0 && this->col < 0;
+   }
+   inline bool isColumn() const noexcept {
+      return this->col >= 0 && this->row < 0;
+   }
+   inline bool isCell() const noexcept {
+      return this->col >= 0 && this->row >= 0;
+   }
+
+   QStandardItem* item(int offset = 0) const noexcept;
+   QModelIndex itemIndex(int offset = 0) const noexcept;
+
+   void unregister();
+
+   static constexpr auto rowOrientation = Qt::Orientation::Vertical;
+   static constexpr auto colOrientation = Qt::Orientation::Horizontal;
 };
 
 class ObservableStandardItemModel : public QStandardItemModel {
@@ -75,15 +99,17 @@ class ObservableStandardItemModel : public QStandardItemModel {
          #endif
       };
       
-      QVector<DovahKitLuaPersistentTableObserver*> _observers;
+      QVector<ObservableStandardItemModelObserver*> _observers;
       QVector<ObserverCacheEntry> _observer_cache;
       QStack<Change> _changes;
 
    public:
       ObservableStandardItemModel(QObject* parent = nullptr);
 
-      void registerObserver(DovahKitLuaPersistentTableObserver*);
-      void unregisterObserver(DovahKitLuaPersistentTableObserver*);
+      ObservableStandardItemModelObserver* getOrCreateRegisteredObserver(const QModelIndex& cell);
+      ObservableStandardItemModelObserver* getOrCreateRegisteredObserver(const QModelIndex& parent, Qt::Orientation, int offset);
+      void registerObserver(ObservableStandardItemModelObserver*);
+      void unregisterObserver(ObservableStandardItemModelObserver*);
 
    protected:
       void afterInsertion(Qt::Orientation, const QModelIndex& parent, int first, int last);

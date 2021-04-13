@@ -1,5 +1,42 @@
 #include "lua_item_model.h"
 
+#pragma region ObservableStandardItemModelObserver
+ObservableStandardItemModelObserver::~ObservableStandardItemModelObserver() {
+   this->unregister();
+}
+
+QStandardItem* ObservableStandardItemModelObserver::item(int offset) const noexcept {
+   if (!this->model)
+      return nullptr;
+   int r = this->row;
+   int c = this->col;
+   if (r < 0) {
+      if (c < 0)
+         return nullptr;
+      r = offset;
+   } else if (c < 0)
+      c = offset;
+   auto* parent = this->model->invisibleRootItem();
+   if (this->parent.isValid())
+      parent = this->model->itemFromIndex(this->parent);
+   return parent->child(r, c);
+}
+QModelIndex ObservableStandardItemModelObserver::itemIndex(int offset) const noexcept {
+   auto* item = this->item(offset);
+   if (item)
+      return this->model->indexFromItem(item);
+   return QModelIndex();
+}
+
+void ObservableStandardItemModelObserver::unregister() {
+   auto* model = this->model;
+   this->invalidate();
+   if (!model)
+      return;
+   model->unregisterObserver(this);
+}
+#pragma endregion
+
 #pragma region ObservableStandardItemModel
 ObservableStandardItemModel::ObservableStandardItemModel(QObject* parent) : QStandardItemModel(parent) {
    #pragma region rows
@@ -35,14 +72,75 @@ ObservableStandardItemModel::ObservableStandardItemModel(QObject* parent) : QSta
    QObject::connect(this, &QStandardItemModel::layoutChanged, this, &ObservableStandardItemModel::afterLayoutChange);
 }
 
-void ObservableStandardItemModel::registerObserver(DovahKitLuaPersistentTableObserver* observer) {
+ObservableStandardItemModelObserver* ObservableStandardItemModel::getOrCreateRegisteredObserver(const QModelIndex& cell) {
+   if (!cell.isValid())
+      return nullptr;
+   auto* item = this->itemFromIndex(cell);
+   for (auto* o : this->_observers)
+      if (o->isCell())
+         if (o->item() == item)
+            return o;
+   //
+   // There is no existing and registered observer for this cell. Create one.
+   //
+   auto* o = new ObservableStandardItemModelObserver;
+   o->model  = this;
+   o->parent = cell.parent();
+   o->row    = item->row();
+   o->col    = item->column();
+   this->_observers.push_back(o);
+   return o;
+}
+ObservableStandardItemModelObserver* ObservableStandardItemModel::getOrCreateRegisteredObserver(const QModelIndex& parent, Qt::Orientation main, int offset) {
+   if (offset < 0)
+      return nullptr;
+   {
+      auto* parentItem = parent.isValid() ? this->itemFromIndex(parent) : this->invisibleRootItem();
+      if (!parentItem)
+         return nullptr;
+      int bound;
+      if (main == Qt::Orientation::Horizontal)
+         bound = parentItem->rowCount();
+      else
+         bound = parentItem->columnCount();
+      if (bound <= offset)
+         return nullptr;
+   }
+   auto cross = (main == Qt::Orientation::Horizontal) ? Qt::Orientation::Vertical : Qt::Orientation::Horizontal;
+   for (auto* o : this->_observers) {
+      int m = o->axis(main);
+      int c = o->axis(cross);
+      if (c >= 0) // cell or cross-axis
+         continue;
+      if (m != offset)
+         continue;
+      bool valid = o->parent.isValid();
+      if (valid != parent.isValid())
+         continue;
+      if (valid && o->parent != parent)
+         continue;
+      return o;
+   }
+   //
+   // There is no existing and registered observer for this cell. Create one, if the 
+   // desired offset is in-bounds.
+   //
+   auto* o = new ObservableStandardItemModelObserver;
+   o->model  = this;
+   o->parent = parent;
+   o->setAxis(main, offset);
+   this->_observers.push_back(o);
+   return o;
+
+}
+void ObservableStandardItemModel::registerObserver(ObservableStandardItemModelObserver* observer) {
    if (!observer)
       return;
    if (this->_observers.indexOf(observer) >= 0)
       return;
    this->_observers.push_back(observer);
 }
-void ObservableStandardItemModel::unregisterObserver(DovahKitLuaPersistentTableObserver* observer) {
+void ObservableStandardItemModel::unregisterObserver(ObservableStandardItemModelObserver* observer) {
    if (!observer)
       return;
    this->_observers.removeOne(observer);
