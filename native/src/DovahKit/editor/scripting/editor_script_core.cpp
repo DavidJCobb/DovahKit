@@ -29,6 +29,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include "../../helpers/qt/combobox.h" // for events
 
 #include "api/namespaces/dovah.h"
 #include "api/namespaces/ui.h"
@@ -1091,6 +1092,11 @@ namespace {
             "OnChanged",
          }
       ),
+      _event_widget(&QComboBox::staticMetaObject,
+         {
+            "OnChanged", // The dropdown's selected index was changed by the user.
+         }
+      ),
       _event_widget(&QDoubleSpinBox::staticMetaObject,
          {
             "OnChanged", // The spinbox's value has been altered by the user. Fires instantly for increment/decrement buttons; for typing, works like the textbox OnChanged event.
@@ -1157,6 +1163,22 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
          this->_connect_event(*casted, &FormPicker::formChanged, event_name, listener_name);
          return;
       }
+   } else if (auto* casted = qobject_cast<QComboBox*>(&widget)) {
+      if (_stricmp(event_name, "OnChanged") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted, QOverload<int>::of(&QComboBox::currentIndexChanged), &vm,
+               [casted, ln](int index) {
+                  auto* proxy   = casted->model();
+                  int   logical = cobb::qt::map_combobox_index_from_proxy(casted, index); // map proxy combobox index to logical combobox index
+                  ++logical; // Lua is one-indexed, not zero-indexed
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { logical });
+               }
+            ),
+            widget, event_name, listener_name
+         );
+         return;
+      }
    } else if (auto* casted = qobject_cast<QDoubleSpinBox*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
          this->_connect_event(*casted, QOverload<double>::of(&QDoubleSpinBox::valueChanged), event_name, listener_name);
@@ -1173,7 +1195,7 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
       }
    } else if (auto* casted = qobject_cast<QLineEdit*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
-         std::string ln;
+         std::string ln = listener_name;
          this->_connect_event(
             QObject::connect(casted, &QLineEdit::editingFinished, &vm,
                [casted, ln]() {

@@ -298,6 +298,7 @@
     <ClCompile Include="helpers\lua\setfuncs.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
+    <ClCompile Include="helpers\qt\combobox.cpp" />
     <ClCompile Include="helpers\qt\strings.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
     <ClCompile Include="helpers\rotation.cpp" />
@@ -622,6 +623,7 @@
     <ClInclude Include="helpers\math.h" />
     <ClInclude Include="helpers\matrix.h" />
     <ClInclude Include="helpers\qt\basic_bindings.h" />
+    <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\rotation.h" />
     <ClInclude Include="helpers\vector.h" />
     <ClInclude Include="helpers\windows_environment.h" />

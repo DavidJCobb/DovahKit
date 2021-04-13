@@ -8,7 +8,8 @@
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
-#include "../../../helpers/lua/qt_variant.h"
+#include "../../../../helpers/qt/combobox.h"
+#include "../../../../helpers/lua/qt_variant.h"
 
 #pragma region Collection: "items"
 namespace {
@@ -132,11 +133,16 @@ namespace widget_lua {
          {
             auto* widget  = (wrapped_type*) self.widget;
             auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->currentIndex(); };
+            task->handler = [widget, &result]() {
+               result = cobb::qt::map_combobox_index_from_proxy(widget, widget->currentIndex());
+            };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
-         lua_pushinteger(L, result);
+         if (result < 0)
+            lua_pushnil(L);
+         else
+            lua_pushinteger(L, result + 1); // Lua is one-indexed, not zero-indexed, so increment it
          return 1;
       }
       luastackchange_t selected_item(lua_State* L) {
@@ -148,17 +154,15 @@ namespace widget_lua {
             auto* widget  = (wrapped_type*) self.widget;
             auto* task    = new tasks::s2m::ui_read_lambda();
             task->handler = [widget, &result]() {
-               int   pos   = widget->currentIndex();
+               int pos   = widget->currentIndex();
+               int logic = cobb::qt::map_combobox_index_from_proxy(widget, pos);
+               if (logic < 0)
+                  return;
+               //
                auto* proxy = (QSortFilterProxyModel*) widget->model();
                auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
                auto* root  = model->invisibleRootItem();
-               //
-               auto  r_qmi = root->index(); // returns an invalid index
-               auto  p_qmi = proxy->mapFromSource(r_qmi);
-               auto  i_qmi = proxy->index(pos, 0, p_qmi);
-               auto  m_qmi = proxy->mapToSource(i_qmi);
-               //
-               auto* item  = root->child(m_qmi.row());
+               auto* item  = root->child(logic);
                if (!item)
                   return;
                result = model->getOrCreateRegisteredObserver(model->indexFromItem(item));
@@ -213,12 +217,19 @@ namespace widget_lua {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          int   isnum;
          int   value = lua_tointegerx(L, 2, &isnum);
-         luaL_argcheck(L, isnum, 2, "integer expected");
+         if (!isnum) {
+            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            value = 0;
+         } else {
+            luaL_argcheck(L, value > 0, 2, "combobox indices cannot be zero or negative; to clear the selection, pass nil");
+         }
+         --value;
          if (!self.widget)
             return 0;
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
             if (value >= widget->count())
                widget->setCurrentIndex(-1);
             else
@@ -235,7 +246,10 @@ namespace widget_lua {
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setCurrentText(value); };
+         task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
+            widget->setCurrentText(value);
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -248,6 +262,7 @@ namespace widget_lua {
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = lua_toboolean(L, 2);
          task->handler = [widget, value]() {
+            const auto blocker = QSignalBlocker(widget);
             auto* proxy = (QSortFilterProxyModel*)widget->model();
             proxy->sort(value ? 0 : -1); // using column -1 should restore default order
          };
