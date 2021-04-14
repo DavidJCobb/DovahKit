@@ -1094,7 +1094,7 @@ namespace {
       ),
       _event_widget(&QComboBox::staticMetaObject,
          {
-            "OnChanged", // The dropdown's selected index was changed by the user.
+            "OnChanged", // The dropdown's selected logical index was changed through some cause other than the script directly setting it or the selected text.
          }
       ),
       _event_widget(&QDoubleSpinBox::staticMetaObject,

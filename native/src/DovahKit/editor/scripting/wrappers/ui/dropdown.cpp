@@ -11,6 +11,33 @@
 #include "../../../../helpers/qt/combobox.h"
 #include "../../../../helpers/lua/qt_variant.h"
 
+/*
+   
+   The dropdowns that we provide to scripts support sorting by way of a QSortFilterProxyModel. 
+   Scripts always work with and see dropdown items' "logical indices," not their "proxied indices." 
+   For example, given the following unsorted list:
+
+      1  Ari
+      2  Chris
+      3  Brianna
+      4  Quigley
+      5  Lucrezia
+
+   If the list were to be sorted via the proxy model, the proxied indices would become:
+
+      1  Ari
+      2  Brianna
+      3  Chris
+      4  Lucrezia
+      5  Quigley
+
+   However, Lucrezia's logical index would remain 5, and if she were selected, the script would be 
+   told that the selected index is 5.
+
+   We therefore need to translate indices from proxied to logical whenever we return them to Lua.
+
+*/
+
 #pragma region Collection: "items"
 namespace {
    using namespace editor_script;
@@ -107,10 +134,81 @@ namespace widget_lua {
          task->handler = [widget, text]() { // do NOT pass (text) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
-            auto* item = new QStandardItem(text);
+            auto* item  = new QStandardItem(text);
             model->appendRow(item);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         //
+         return 0;
+      }
+      luastackchange_t remove_item(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         //
+         // Allow the script to pass in a numeric logical index or a userdata-wrapper for a 
+         // dropdown item.
+         //
+         int index = -1;
+         ObservableStandardItemModelObserver* observer = nullptr;
+         if (lua_type(L, 2) == LUA_TUSERDATA) {
+            auto* w = wrapper_from_stack<wrappers::ui::dropdown_item>(L, 2);
+            luaL_argcheck(L, w, 2, "integer index or item expected");
+            observer = w->model_observer;
+         } else {
+            int isnum;
+            index = lua_tointegerx(L, 2, &isnum);
+            luaL_argcheck(L, isnum, 2, "integer index or item expected");
+            luaL_argcheck(L, index > 0, 2, "indices must be greater than zero");
+            --index;
+         }
+         //
+         if (!self.widget)
+            return 0;
+         auto* widget = (wrapped_type*)self.widget;
+         auto* task   = new tasks::s2m::lambda(true); // removals must block
+         task->handler = [widget, index, observer]() {
+            auto* proxy = (QSortFilterProxyModel*)widget->model();
+            auto* model = (ObservableStandardItemModel*)proxy->sourceModel();
+            //
+            int row = index;
+            QStandardItem* item = nullptr;
+            if (observer) {
+               item = observer->item();
+               if (!item)
+                  return;
+               row = item->row();
+            } else {
+               item = model->item(row);
+            }
+            if (!item)
+               return;
+            auto* parent = item->parent();
+            if (!parent) {
+               parent = model->invisibleRootItem();
+               assert(parent);
+            }
+            //
+            // Before we remove the item, we need to block signals so that QComboBox::currentIndexChanged 
+            // does not fire. I haven't been able to figure out exactly why, but QSortFilterProxyModel's 
+            // mapToSource function doesn't work properly during the process of removing something from a 
+            // combobox model. It works just fine before and after the removal, but not during. I checked 
+            // its source code and the most I can grasp is that it listens for the source model's signals, 
+            // including rowsAboutToBeRemoved and rowsRemoved; it does work to update its mappings in both 
+            // signals, but when it catches rowsAboutToBeRemoved, it emits its own rowsRemoved; so perhaps 
+            // when it's used in a QComboBox, the combobox updates in response to the QSFPM tasks being 
+            // only partway done. Dunno.
+            //
+            // Anyway, if we allow a signal to be emitted naturally, then we'll convert the proxied index 
+            // to a logical index incorrectly due to the unknown defect in mapToSource, and we'll then 
+            // pass that incorrect logical index to Lua. Not good!
+            //
+            {
+               const auto blocker = QSignalBlocker(widget);
+               parent->removeRow(row);
+            }
+            emit widget->currentIndexChanged(widget->currentIndex()); // disgusting hack: emit the signal ourselves, after the removal, so that the Lua-facing event fires with correct info
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
          //
          return 0;
       }
@@ -121,8 +219,8 @@ namespace widget_lua {
          if (!self.widget)
             return 0;
          wrapper out = self;
+         out.parts[0].signature = wrapper_part_types::ui_dropdown_items;
          out.is_collection = true;
-         out.into_collection(wrapper_part_types::ui_dropdown_items);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::item_collection_key);
       }
       luastackchange_t selected_index(lua_State* L) {
@@ -262,7 +360,7 @@ namespace widget_lua {
          auto* task    = new tasks::s2m::lambda(false);
          auto  value   = lua_toboolean(L, 2);
          task->handler = [widget, value]() {
-            const auto blocker = QSignalBlocker(widget);
+            const auto blocker = QSignalBlocker(widget); // prevent QComboBox::currentIndexChanged, as we only want Lua to be notified when the logical selection changes, not the proxied selection
             auto* proxy = (QSortFilterProxyModel*)widget->model();
             proxy->sort(value ? 0 : -1); // using column -1 should restore default order
          };
@@ -308,10 +406,12 @@ namespace widget_lua {
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_methods = {
       { "append_item", &widget_lua::_methods::append_item },
+      { "remove_item", &widget_lua::_methods::remove_item },
    };
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_getters = {
       { "items",          &widget_lua::_getters::items },
       { "selected_index", &widget_lua::_getters::selected_index },
+      { "selected_item",  &widget_lua::_getters::selected_item },
       { "selected_text",  &widget_lua::_getters::selected_text },
       { "sorted",         &widget_lua::_getters::sorted },
    };
@@ -398,6 +498,9 @@ namespace item_lua {
       luastackchange_t data(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          auto& vm    = DovahKitScriptVM::get();
+         if (lua_type(L, 2) == LUA_TTABLE) {
+            luaL_error(L, "storing a table as a dropdown item's data member is not supported");
+         }
          auto  value = vm.variant_from_lua(2);
          if (!value.isValid() && !lua_isnoneornil(L, 2)) {
             luaL_error(L, "the provided value cannot be stored as a dropdown item's data member");
@@ -443,11 +546,11 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_methods = {
    };
    /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_getters = {
-      { "data", &item_lua::_getters::data },
+      { "data", &item_lua::_getters::data }, // an arbitrary scalar value that can be associated with any dropdown item; uses Qt::UserRole
       { "text", &item_lua::_getters::text },
    };
    /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_setters = {
-      { "data",  &item_lua::_setters::data },
+      { "data",  &item_lua::_setters::data }, // an arbitrary scalar value that can be associated with any dropdown item; uses Qt::UserRole
       { "text",  &item_lua::_setters::text },
    };
 
