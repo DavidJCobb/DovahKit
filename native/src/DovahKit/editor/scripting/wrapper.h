@@ -12,7 +12,7 @@ class ObservableStandardItemModelObserver;
 
 namespace editor_script {
    enum class wrapper_type {
-      generic,
+      undefined,
       form_data, // a form    or some object within a form
       ui,        // a QWidget or some data   within a QWidget
       ui_model_item,
@@ -102,7 +102,7 @@ namespace editor_script {
             return (c*)(dovah::loaded_forms::Form*)this->form;
          }
 
-         wrapper_type type = wrapper_type::generic;
+         wrapper_type type = wrapper_type::undefined;
          int lua_key = LUA_NOREF;
          //
          dovah::form_stub* stub = nullptr;
@@ -120,10 +120,15 @@ namespace editor_script {
                return this->parts[0];
             return this->parts[this->depth - 1];
          }
+
+         //
+         // Gets the pertinent pointer for the wrapper. Lua can use this pointer as a "light userdata," 
+         // to serve as a unique key for the wrapper. This, of course, means that the pointer should 
+         // never be used if it's nullptr.
+         //
          inline void* get_pertinent_pointer() const noexcept {
+            assert(this->type != wrapper_type::undefined && "Why are you trying to get the pertinent pointer for a wrapper before it's been properly configured?");
             switch (this->type) {
-               case wrapper_type::generic:
-                  break;
                case wrapper_type::form_data:
                   return this->stub;
                case wrapper_type::ui:
@@ -133,6 +138,7 @@ namespace editor_script {
             }
             return nullptr;
          }
+
          int8_t depth_of(const cobb::eight_cc&) const noexcept;
          bool is_collection_at_depth(uint8_t) const noexcept;
    };

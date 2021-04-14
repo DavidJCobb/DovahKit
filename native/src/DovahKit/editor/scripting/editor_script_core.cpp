@@ -533,6 +533,20 @@ void DovahKitScriptVM::model_observer_reference_lost(ObservableStandardItemModel
    // function runs on the script thread, but we can only safely (un)register observers on 
    // the main thread. We'll prune zero-refcount observers on the main thread.
    //
+   // As a bonus, we don't have to worry about invalidating iterators if, say, we loop over 
+   // model observers elsewhere and do some task (e.g. zombifying some of them) that causes 
+   // some of them to become unreferenced within Lua.
+   //
+}
+void DovahKitScriptVM::zombify_all_invalid_model_observers() {
+   auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
+   for (auto* o : this->ui_model_observers.pointers) {
+      if (!o)
+         continue;
+      if (o->isValid())
+         continue;
+      ud_brain.remove_model_observer(*o);
+   }
 }
 
 void DovahKitScriptVM::queue_lua_function(int stack_pos, bool lock_ui_for_function) {
@@ -984,6 +998,63 @@ void DovahKitScriptVMUserdataInterface::remove_form(dovah::form_stub& stub) {
    lua_settop(L, start);
 }
 
+void DovahKitScriptVMUserdataInterface::remove_model_observer(ObservableStandardItemModelObserver& observer) {
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   //
+   auto si_storage = start + 1;
+   auto si_nk      = start + 2;
+   auto si_nv      = start + 3;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+   lua_pushlightuserdata(L, &observer);
+   lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[light] ] +
+   if (!lua_istable(L, -1)) {
+      lua_settop(L, start);
+      return;
+   }
+   lua_copy  (L, -1, si_storage);
+   lua_settop(L, si_storage); // STACK: - [ ..., storage_root[light] ] +
+   //
+   // Zombify all wrappers for this form and its parts.
+   //
+   lua_pushnil(L); // nk
+   while (lua_next(L, si_storage) != 0) {
+      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
+         //
+         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
+         // manually ignore it.
+         //
+         lua_settop(L, si_nk);
+         continue;
+      }
+      //
+      editor_script::wrapper* other = nullptr;
+      if (lua_type(L, si_nv) == LUA_TUSERDATA) {
+         if (auto* target = (editor_script::wrapper*) lua_touserdata(L, si_nv)) {
+            assert(target->model_observer == &observer);
+            target->lua_key = LUA_NOREF;
+            // Don't clear the model-observer pointer from the wrapper here; let the __gc metamethod's call to wrapper::teardown handle that (and the observer's refcount) instead.
+            //
+            lua_pushcfunction(L, &editor_script::zombify_userdata);
+            lua_pushvalue    (L, si_nv);
+            lua_call(L, 1, 0);
+         }
+      }
+      //
+      lua_settop(L, si_nk);
+   }
+   //
+   // Erase the table for this form.
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_pushlightuserdata(L, &observer);
+   lua_pushnil(L);
+   lua_rawset(L, -3);
+   //
+   lua_settop(L, start);
+}
+
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
    if (!instance.should_expose_to_script())
       return 0;
@@ -1001,6 +1072,7 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    auto si_created = si_storage + 1;
    //
    void* light = instance.get_pertinent_pointer();
+   assert(light != nullptr && "Why does a wrapper have a nullptr pertinent pointer? These need to be unique among top-level wrapped objects (e.g. entire forms as opposed to form parts) so that they can be used as keys. Configure the wrapper properly before pushing it!");
    {  // Get the list of wrappers for this pointer
       lua_pushlightuserdata(L, light); // push 1
       lua_rawget(L, table);            // push 0 // STACK: - [ ..., storage_root, storage_root[light] ] +

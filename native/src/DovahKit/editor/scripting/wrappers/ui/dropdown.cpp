@@ -210,6 +210,8 @@ namespace widget_lua {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
          //
+         DovahKitScriptVM::get().zombify_all_invalid_model_observers();
+         //
          return 0;
       }
    }

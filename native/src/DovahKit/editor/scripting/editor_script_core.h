@@ -134,8 +134,24 @@ class DovahKitScriptVM : public QObject {
       void widget_no_longer_orphaned(QWidget*);   // Lua functions that insert widgets into a window must call this
       void widget_no_longer_referenced(QWidget*); // called by wrapper internals when a widget is unreferenced
 
-      void model_observer_reference_gained(ObservableStandardItemModelObserver*);
-      void model_observer_reference_lost(ObservableStandardItemModelObserver*);
+      void model_observer_reference_gained(ObservableStandardItemModelObserver*); // called by userdata-interface internals when a new observer wrapper is created
+      void model_observer_reference_lost(ObservableStandardItemModelObserver*);   // called by wrapper internals when an observer wrapper is unreferenced
+
+      //
+      // Lua APIs that remove and delete items from a ObservableStandardItemModel should call 
+      // this function after the removal is complete and control has returned to the script 
+      // thread, in order to zombify any extant wrappers for the removed items.
+      //
+      // When removing a single item, it may be tempting to try and zombify just that one 
+      // item's wrapper, but you should be aware that removing a single item can invalidate 
+      // multiple observers (and thus require zombifying multiple wrappers): for example, if 
+      // you remove a cell from a table with only one column, then you are also removing a 
+      // row, and if Lua has accessed that row, it will have a separate observer and wrapper. 
+      // There's also just the possibility that I might screw up somewhere, in a way that 
+      // would allow a cell to have multiple observers/wrappers, and y'know, we should handle 
+      // that case gracefully too!
+      //
+      void zombify_all_invalid_model_observers();
 
       void queue_lua_function(int stack_pos, bool lock_ui_for_function); // made available for Lua APIs
 
@@ -250,6 +266,8 @@ class DovahKitScriptVMUserdataInterface {
       // Kills all wrappers for the given form and any of its parts.
       //
       void remove_form(dovah::form_stub&);
+
+      void remove_model_observer(ObservableStandardItemModelObserver&);
 
       //
       // Check if Lua already has an identical copy of the passed-in wrapper;  if so, push that copy 
