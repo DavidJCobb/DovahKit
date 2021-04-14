@@ -4,6 +4,7 @@ local button = ui.button.new("Toggle Sort")
 local append = ui.button.new("Append")
 local remove = ui.button.new("Remove Sel'd")
 local remove2 = ui.button.new("Remove by UD")
+local lookup = ui.button.new("Echo")
 
 local readout = ui.text.new()
 
@@ -53,7 +54,8 @@ end
 window:set_layout("grid")
 window:add_child(picker, 1, 1, 1, 2)
 window:add_child(button, 1, 3)
-window:add_child(readout, 2, 1, 1, 3)
+window:add_child(readout, 2, 1, 1, 2)
+window:add_child(lookup, 2, 3)
 window:add_child(append, 3, 1)
 window:add_child(remove, 3, 2)
 window:add_child(remove2, 3, 3)
@@ -91,6 +93,18 @@ remove2:on("OnActivated", "", function()
    if item and not object_is_zombie(item) then
       error("failed to zombify the wrapper?")
    end
+end)
+lookup:on("OnActivated", "", function()
+   local index = picker.selected_index
+   if not index then
+      dovah.log_message("<none>")
+      return
+   end
+   local item = picker.items[index]
+   if not item then
+      error("failed to retrieve selected item #" .. index)
+   end
+   dovah.log_message("selected item #" .. index .. " text: " .. item.text)
 end)
 
 

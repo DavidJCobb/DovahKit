@@ -74,14 +74,11 @@ namespace {
       luastackchange_t lookup_item_by_index(lua_State* L) {
          auto& self  = get_collection_wrapper(L);
          auto& model = get_model(self);
-         auto  row   = lua_tointeger(L, 2);
-         //
-         auto* root  = model.invisibleRootItem();
-         auto* item  = root->child(row);
-         if (!item)
+         auto  row   = lua_tointeger(L, 2) - 1; // lua indices start from one, not zero
+         if (row < 0)
             return 0;
-         observer_t* observer = nullptr;
          //
+         observer_t* observer = nullptr;
          {
             auto* task = new tasks::s2m::lambda(true);
             task->handler = [&self, row, &observer]() {
@@ -462,7 +459,7 @@ namespace item_lua {
    namespace _getters {
       luastackchange_t data(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.widget || !self.model_observer)
+         if (!self.model_observer)
             return 0;
          QVariant result;
          {
@@ -479,7 +476,7 @@ namespace item_lua {
       }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.widget || !self.model_observer)
+         if (!self.model_observer)
             return 0;
          QString result;
          {
@@ -507,7 +504,7 @@ namespace item_lua {
          if (!value.isValid() && !lua_isnoneornil(L, 2)) {
             luaL_error(L, "the provided value cannot be stored as a dropdown item's data member");
          }
-         if (!self.widget || !self.model_observer)
+         if (!self.model_observer)
             return 0;
          auto* observer = self.model_observer;
          auto* task     = new tasks::s2m::lambda(false);
@@ -521,7 +518,7 @@ namespace item_lua {
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
-         if (!self.widget || !self.model_observer)
+         if (!self.model_observer)
             return 0;
          auto* observer = self.model_observer;
          auto* task     = new tasks::s2m::lambda(false);
