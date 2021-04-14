@@ -71,6 +71,10 @@ ObservableStandardItemModel::ObservableStandardItemModel(QObject* parent) : QSta
    QObject::connect(this, &QStandardItemModel::layoutAboutToBeChanged, this, &ObservableStandardItemModel::beforeLayoutChange);
    QObject::connect(this, &QStandardItemModel::layoutChanged, this, &ObservableStandardItemModel::afterLayoutChange);
 }
+ObservableStandardItemModel::~ObservableStandardItemModel() {
+   for (auto* o : this->_observers)
+      o->invalidate();
+}
 
 ObservableStandardItemModelObserver* ObservableStandardItemModel::getOrCreateRegisteredObserver(const QModelIndex& cell) {
    if (!cell.isValid())

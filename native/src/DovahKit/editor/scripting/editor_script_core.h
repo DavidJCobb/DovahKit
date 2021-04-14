@@ -269,6 +269,8 @@ class DovahKitScriptVMUserdataInterface {
 
       void remove_model_observer(ObservableStandardItemModelObserver&);
 
+      bool wrapper_exists_for(void*);
+
       //
       // Check if Lua already has an identical copy of the passed-in wrapper;  if so, push that copy 
       // onto the Lua stack. Otherwise, copy the passed-in wrapper into Lua and push it onto the Lua 

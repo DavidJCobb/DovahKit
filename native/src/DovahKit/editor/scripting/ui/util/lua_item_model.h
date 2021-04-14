@@ -94,6 +94,7 @@ class ObservableStandardItemModel : public QStandardItemModel {
 
    public:
       ObservableStandardItemModel(QObject* parent = nullptr);
+      ~ObservableStandardItemModel();
 
       ObservableStandardItemModelObserver* getOrCreateRegisteredObserver(const QModelIndex& cell);
       ObservableStandardItemModelObserver* getOrCreateRegisteredObserver(const QModelIndex& parent, Qt::Orientation, int offset);

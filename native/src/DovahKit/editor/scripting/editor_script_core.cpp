@@ -16,6 +16,7 @@
 #include "../../helpers/lua/isempty.h"
 #include "../../helpers/lua/qt_variant.h"
 #include "../../helpers/lua/set_top_on_exit.h"
+#include "../../helpers/qt/traversal.h"
 #include "wrapper_util.h"
 
 #include <QEvent>
@@ -484,17 +485,80 @@ void DovahKitScriptVM::widget_no_longer_orphaned(QWidget* widget) {
 void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
    if (!widget)
       return;
-   if (widget->parentWidget() || qobject_cast<QDialog*>(widget))
+   if (auto* dialog = widget->window())
+      if (dialog->isVisible()) // visible windows and their contents should never be considered abandoned
+         return;
+   //
+   // In general, we want to delete widgets that have been abandoned by the script, and 
+   // we're notified when any single widget is no longer referred to by a script variable. 
+   // The naive approach, then, would be to queue a widget for deletion if, at the time 
+   // that it becomes unreferenced, it has no parent. However, doing things that way will 
+   // cause code like this to cause a crash --
+   //
+   //    local child = ui.button.new()
+   //    child.text = "Test!"
+   //    do
+   //       local parent = ui.parent.new()
+   //       parent:add_child(child)
+   //    end
+   //    collectgarbage("collect")
+   //    collectgarbage("collect") -- calling this twice in a row is deliberate
+   //
+   //    local window = ui.window.new()
+   //    local button = ui.button.new("Check child")
+   //    window:set_layout("grid")
+   //    window:add_child(button)
+   //    button:on("OnActivated", "", function()
+   //       dovah.log_message(child.text) -- crash here!
+   //    end)
+   //    window:show()
+   //
+   // -- because the "parent" widget will be deleted, causing its descendant widgets to 
+   // be deleted as well, such that the Lua wrapper for the "child" widget is left with 
+   // a dangling pointer. The solution to this is to delete widgets only when the entire 
+   // hierarchy to which they belong is unreferenced by Lua.
+   //
+   auto& ud_brain  = DovahKitScriptVMUserdataInterface::get();
+   auto* root      = cobb::qt::topmost_container_of(widget);
+   int   count     = 0;
+   bool  abandoned = true;
+   assert(root);
+   cobb::qt::for_each_widget_in_hierarchy(root, [widget, &count, &abandoned, &ud_brain](QWidget* current) {
+      ++count;
+      if (current == widget) // don't check for a wrapper, because we'll find the very wrapper we're destroying
+         return false;
+      if (ud_brain.wrapper_exists_for(current)) {
+         abandoned = false;
+         return true;
+      }
+      return false;
+   });
+   if (!abandoned)
       return;
+   //
    auto& list = this->widgets.orphans;
    for (auto it = list.begin(); it != list.end(); ++it) {
-      if (*it == widget) {
-         QObject::disconnect(widget); // sever all signal/slot connections to the condemned widget
-         this->widgets.pending_deletion.push_back(widget); // we can't use QWidget::deleteLater immediately, because there may be already-received UI events pertaining to this widget that are about to execute
+      if (*it == root) {
+         //
+         // Sever all signal/slot connections to the condemned widgets.
+         //
+         cobb::qt::for_each_widget_in_hierarchy(widget, [](QWidget* current) {
+            QObject::disconnect(current, nullptr, nullptr, nullptr); // these arguments are needed to distinguish a static function call from a call-super
+            return false;
+         });
+         //
+         // Queue the root widget for deletion. We can't use QWidget::deleteLater immediately, 
+         // because there may be already-received UI events pertaining to this widget that are 
+         // about to execute.
+         //
+         this->widgets.pending_deletion.push_back(root);
          list.erase(it);
          return;
       }
    }
+   #if _DEBUG
+      __debugbreak(); // why is there an orphaned top-level widget that wasn't in the list of orphaned widgets? it will leak!
+   #endif
 }
 
 void DovahKitScriptVM::model_observer_reference_gained(ObservableStandardItemModelObserver* observer) {
@@ -1053,6 +1117,21 @@ void DovahKitScriptVMUserdataInterface::remove_model_observer(ObservableStandard
    lua_rawset(L, -3);
    //
    lua_settop(L, start);
+}
+
+bool DovahKitScriptVMUserdataInterface::wrapper_exists_for(void* widget) {
+   auto* L      = this->vm.lua_vm;
+   auto  start  = lua_gettop(L);
+   bool  result = false;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+   lua_pushlightuserdata(L, widget);
+   lua_rawget(L, -2);
+   if (lua_istable(L, -1)) {
+      result = !cobb::lua::isempty(L, -1);
+   }
+   lua_settop(L, start);
+   return result;
 }
 
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
