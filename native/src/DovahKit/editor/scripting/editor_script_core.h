@@ -104,6 +104,7 @@ class DovahKitScriptVM : public QObject {
          std::vector<QWidget*> orphans;
          std::vector<QWidget*> pending_deletion;
          std::unordered_map<QWidget*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection;
+         int extant_widget_count = 0; // includes windows
       } widgets;
       struct {
          _task_queue read;  // script-to-main; always blocks

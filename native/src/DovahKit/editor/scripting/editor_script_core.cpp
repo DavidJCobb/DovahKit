@@ -224,6 +224,10 @@ DovahKitScriptVM::~DovahKitScriptVM() {
 }
 
 void DovahKitScriptVM::_setup_lua_vm() {
+   assert(this->ui_model_observers.pointers.empty());
+   assert(this->widgets.extant_widget_count == 0);
+   assert(this->pending_ui_event_count == 0);
+   //
    this->lua_vm = luaL_newstate();
    lua_sethook(this->lua_vm, &_lua_debug_hook, LUA_MASKCOUNT, 8);
    lua_setwarnf(this->lua_vm, &_lua_warning_function, nullptr);
@@ -328,9 +332,9 @@ void DovahKitScriptVM::_setup_lua_vm() {
 void DovahKitScriptVM::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->exec_lock);
    //
-   if (this->lua_vm) {
-      lua_close(this->lua_vm);
+   if (auto* L = this->lua_vm) {
       this->lua_vm = nullptr;
+      lua_close(L);
    }
    //
    for (auto* window : this->widgets.windows) {
@@ -356,6 +360,11 @@ void DovahKitScriptVM::_teardown_lua_vm() {
    }
    this->widgets.pending_deletion.clear();
    //
+   for (auto* o : this->ui_model_observers.pointers)
+      delete o;
+   this->ui_model_observers.pointers.clear();
+   this->ui_model_observers.refcounts.clear();
+   this->widgets.extant_widget_count = 0;
    this->pending_ui_event_count = 0;
 }
 
@@ -449,6 +458,7 @@ QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
    auto* dialog = new QDialog(this->ui_parent);
    dialog->installEventFilter(this);
    this->widgets.windows.push_back(dialog);
+   ++this->widgets.extant_widget_count;
    return dialog;
 }
 void DovahKitScriptVM::set_up_new_scripted_widget(QWidget* widget) {
@@ -458,6 +468,7 @@ void DovahKitScriptVM::set_up_new_scripted_widget(QWidget* widget) {
          emit this->userClickedLink(url, qobject_cast<QWidget*>(sender())->window());
       });
    }
+   ++this->widgets.extant_widget_count;
    if (!widget->parentWidget())
       this->accept_new_orphaned_widget(widget);
 }
@@ -484,6 +495,8 @@ void DovahKitScriptVM::widget_no_longer_orphaned(QWidget* widget) {
 }
 void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
    if (!widget)
+      return;
+   if (!this->lua_vm) // teardown in progress; we will delete everything as part of that process
       return;
    if (auto* dialog = widget->window())
       if (dialog->isVisible()) // visible windows and their contents should never be considered abandoned
@@ -553,6 +566,7 @@ void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
          //
          this->widgets.pending_deletion.push_back(root);
          list.erase(it);
+         this->widgets.extant_widget_count -= count;
          return;
       }
    }
