@@ -138,6 +138,24 @@ namespace widget_lua {
          //
          return 0;
       }
+      luastackchange_t clear(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(true);
+         task->handler = [widget]() {
+            auto* proxy = (QSortFilterProxyModel*) widget->model();
+            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+            model->removeRows(0, model->rowCount()); // QStandardItemModel::clear nukes headers; not relevant for comboboxes but significant for others, so best to make a habit of avoiding it
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         DovahKitScriptVM::get().zombify_all_invalid_model_observers();
+         //
+         return 0;
+      }
       luastackchange_t remove_item(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          //
@@ -383,6 +401,7 @@ namespace widget_lua {
             auto* model = new ObservableStandardItemModel(created);
             auto* proxy = new QSortFilterProxyModel(created);
             proxy->setSourceModel(model);
+            proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
             created->setModel(proxy);
             //
             DovahKitScriptVM::get().set_up_new_scripted_widget(created);
@@ -405,6 +424,7 @@ namespace widget_lua {
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_methods = {
       { "append_item", &widget_lua::_methods::append_item },
+      { "clear",       &widget_lua::_methods::clear },
       { "remove_item", &widget_lua::_methods::remove_item },
    };
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_getters = {
