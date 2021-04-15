@@ -5,6 +5,9 @@
 #include "wrapper_util.h"
 #include "../core.h"
 
+#include "systems/messaging.h"
+#include "cross_thread_tasks/s2m/lambda.h"
+
 namespace editor_script {
    /*static*/ luastackchange_t wrapper::__gc(lua_State* L) {
       auto* userdata = (wrapper*)lua_touserdata(L, 1);
@@ -184,13 +187,51 @@ namespace editor_script {
    void wrapper::before_edit() {
       if (!this->stub)
          return;
-      emit DovahKitCore::get().formModificationImminent(this->stub);
+      //
+      // We need to emit the form-modification-imminent signal, but to avoid race conditions 
+      // within the rest of the editor frontend and possibly even within the backend, we need 
+      // to ensure that we perform this operation in lockstep: script execution cannot be 
+      // allowed to continue until the signal is emitted and responded to.
+      //
+      // If we emit the signal on our own thread, then it will trigger a queued connection, 
+      // which means that the script thread may be able to modify the form before the signal 
+      // is responded to. There are a few systems that will break if this occurs; for example, 
+      // the Object Window will not be able to accurately maintain Use Info counts when one 
+      // form is modified to no longer use another, because in order to detect that case, it 
+      // has to pre-cache the former's outbound connections when form modification is imminent 
+      // (but, explicitly, before it has occurred) and then compare that to the outbound 
+      // connections that remain when the form modification is complete.
+      //
+      // If we emit the signal on the main thread, then it will trigger a direct connection, 
+      // calling any registered slots and handlers immediately and synchronously. If we wait 
+      // on this (e.g. by using our messaging system to effect it), then we, too, will block.
+      //
+      // Firing messages from within the wrapper internals feels like a disgusting hack and 
+      // a total failure of encapsulation. And it is! But if it works, it works.
+      //
+      auto* task    = new editor_script::tasks::s2m::lambda(true);
+      auto* stub    = this->stub;
+      task->handler = [stub]() {
+         emit DovahKitCore::get().formModificationImminent(stub);
+      };
+      DovahKitScriptVMMessenger::get().send_message(task);
+      delete task;
    }
    void wrapper::after_edit() {
       if (!this->stub)
          return;
       this->stub->set_edited(true);
-      emit DovahKitCore::get().formModified(this->stub);
+      //
+      // As with the form-modification-imminent signal, we should emit the form-modified 
+      // signal in lockstep for safety's sake.
+      //
+      auto* task    = new editor_script::tasks::s2m::lambda(true);
+      auto* stub    = this->stub;
+      task->handler = [stub]() {
+         emit DovahKitCore::get().formModified(stub);
+      };
+      DovahKitScriptVMMessenger::get().send_message(task);
+      delete task;
    }
 
    void wrapper::error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type_t ft, bool loose) {

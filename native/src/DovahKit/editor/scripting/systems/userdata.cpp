@@ -329,3 +329,72 @@ void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor
    assert(to_remove.depth && !to_remove.is_collection && "The (to_remove) argument must be an element in a sequential collection.");
    this->remove(to_remove);
 }
+
+void DovahKitScriptVMUserdataInterface::clear_entire_collection(editor_script::wrapper& w) {
+   DovahKitScriptVMCore::require_script_thread();
+   assert(w.depth && w.is_collection && "This function must be given a collection wrapper.");
+   auto* L = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   auto  index = w.last_part().index;
+   void* light = w.get_pertinent_pointer();
+   //
+   std::vector<int> refs_to_sever;
+   //
+   auto si_storage = start + 1;
+   auto si_nk      = start + 2;
+   auto si_nv      = start + 3;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_storage_registry_key); // push 1
+   lua_pushlightuserdata(L, light);
+   lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[light] ] +
+   assert(lua_istable(L, -1));
+   lua_copy  (L, -1, si_storage);
+   lua_settop(L, si_storage); // STACK: - [ ..., storage_root[light] ] +
+   //
+   // Identify and track the keys of any child/descendant wrappers.
+   //
+   lua_pushnil(L); // nk
+   while (lua_next(L, si_storage) != 0) {
+      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
+         //
+         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
+         // manually ignore it.
+         //
+         lua_settop(L, si_nk);
+         continue;
+      }
+      //
+      editor_script::wrapper* other = nullptr;
+      if (lua_type(L, si_nv) == LUA_TUSERDATA)
+         other = (editor_script::wrapper*) lua_touserdata(L, si_nv);
+      //
+      lua_settop(L, si_nk);
+      //
+      if (!other || other->lua_key == w.lua_key)
+         continue;
+      if (other->is_descendant_of(w)) {
+         refs_to_sever.push_back(other->lua_key);
+      }
+   }
+   //
+   // Zombify and forget the wrapper's descendants.
+   //
+   lua_settop(L, si_storage);
+   for (auto key : refs_to_sever) {
+      lua_pushcfunction(L, &editor_script::zombify_userdata); // prepare to make a Lua call...
+      lua_rawgeti      (L, si_storage, key);
+      //
+      auto* target = (editor_script::wrapper*) lua_touserdata(L, -1);
+      assert(target && target->lua_key == key);
+      target->lua_key = LUA_NOREF;
+      target->stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
+      target->form    = nullptr;
+      //
+      lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
+      //
+      luaL_unref(L, si_storage, key); // remove the target from storage.
+   }
+   //
+   lua_settop(L, start);
+
+}

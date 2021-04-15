@@ -107,6 +107,21 @@ namespace {
          out.into_collection(script->properties.size() - 1);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_property::metatable_key);
       }
+      luastackchange_t remove_all_properties(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
+         auto* script = wrappers::papyrus_script::unwrap(self, true);
+         if (script == nullptr)
+            luaL_error(L, "script wrapper has no underlying object (deleted?)");
+         //
+         self.before_edit();
+         DovahKitScriptVMUserdataInterface::get().clear_entire_collection(self);
+         script->clear_properties(*self.form);
+         self.after_edit();
+         //
+         return 0;
+      }
       luastackchange_t remove_property(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
@@ -209,20 +224,65 @@ namespace {
          self.after_edit();
          return 0;
       }
+      luastackchange_t properties(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self   = get_wrapper_for_thiscall<wrapper_t>(L);
+         auto* script = wrappers::papyrus_script::unwrap(self, true);
+         if (script == nullptr)
+            luaL_error(L, "script wrapper has no underlying object (deleted?)");
+         __assume(script != nullptr);
+         //
+         if (lua_isnoneornil(L, 2)) { // if the user is assigning nil, just clear all properties
+            self.before_edit();
+            {
+               wrapper temp = self;
+               temp.append_part(wrapper_part_types::papyrus_property);
+               temp.is_collection = true;
+               DovahKitScriptVMUserdataInterface::get().clear_entire_collection(temp);
+            }
+            script->clear_properties(*self.form);
+            self.after_edit();
+            return 0;
+         }
+         //
+         auto* arg    = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::property_collection_key);
+         luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus property collection");
+         auto* other  = wrapper_t::unwrap(*arg, false);
+         if (other == nullptr)
+            luaL_error(L, "script property collection wrapper has no underlying object (deleted?)");
+         if (script == other) // self-assignment
+            return 0;
+         __assume(other  != nullptr);
+         //
+         self.before_edit();
+         {
+            wrapper temp = self;
+            temp.append_part(wrapper_part_types::papyrus_property);
+            temp.is_collection = true;
+            DovahKitScriptVMUserdataInterface::get().clear_entire_collection(temp);
+         }
+         script->clear_properties(*self.form);
+         script->clone_properties(*self.form, *other);
+         self.after_edit();
+         return 0;
+      }
    }
 }
 
 namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_methods = {
-      { "add_property",    &_methods::add_property },
-      { "remove_property", &_methods::remove_property },
+      { "add_property",          &_methods::add_property },
+      { "remove_all_properties", &_methods::remove_all_properties },
+      { "remove_property",       &_methods::remove_property },
    };
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_getters = {
       { "name",       &_getters::name },
       { "properties", &_getters::properties },
    };
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_setters = {
-      { "name", &_setters::name },
+      { "name",       &_setters::name },
+      { "properties", &_setters::properties },
    };
 
    /*static*/ wrapper_t::wrapped_t* wrapper_t::unwrap(wrapper& w, bool must_be_end) {

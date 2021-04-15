@@ -222,15 +222,22 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   void script_data::script::clear_properties(loaded_forms::Form& owner) {
-      for (auto& prop : this->properties) {
-         if (prop.type == property_type::object || prop.type == property_type::array_of_object) {
-            for (auto& value : prop.values)
-               value.object.clear(owner);
-         }
-      }
+
+   void script_data::script::clear_properties(loaded_forms::Form& my_owner) {
+      for (auto& prop : this->properties)
+         prop.clear(my_owner);
       this->properties.clear();
    }
+   void script_data::script::clone_properties(loaded_forms::Form& my_owner, const script& other) {
+      auto& a = this->properties;
+      auto& b = other.properties;
+      a.reserve(a.size() + b.size());
+      for (auto& p : other.properties) {
+         auto& copy = a.emplace_back();
+         copy.clone_from(p, my_owner);
+      }
+   }
+
    void script_data::script::clone_from(const script& other, loaded_forms::Form& owner_of_clone) noexcept {
       this->name   = other.name;
       this->status = other.status;
@@ -247,8 +254,7 @@ namespace dovah::loaded_forms::components::papyrus {
          prop.sever_outbound_references_to(target, my_owner);
    }
    void script_data::script::clear(loaded_forms::Form& my_owner) noexcept {
-      for (auto& prop : this->properties)
-         prop.clear(my_owner);
+      this->clear_properties(my_owner);
    }
 
    bool script_data::property_object_value::load(const script_data_header& header, tes_subrecord_reader& subrecord) {

@@ -46,4 +46,11 @@ class DovahKitScriptVMUserdataInterface : cobb::singleton {
       }
 
       void remove_from_sequential_collection(editor_script::wrapper& to_remove);
+
+      //
+      // Zombifies the wrappers for all elements in a collection, and for all of their descendants, 
+      // without zombifying the wrapper for the collection itself. You would want to call this from 
+      // an API that clears a collection's contents.
+      //
+      void clear_entire_collection(editor_script::wrapper& collection_wrapper);
 };
