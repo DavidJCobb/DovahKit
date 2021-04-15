@@ -1,5 +1,9 @@
 #include "dovah.h"
-#include "../../editor_script_core.h"
+#include "../../systems/editor_script_inner_core.h"
+#include "../../systems/messaging.h"
+#include "../../systems/permissions.h"
+#include "../../systems/userdata.h"
+
 #include "../../util.h"
 #include "../../wrapper_util.h"
 #include "../../classes/benchmark.h"
@@ -182,7 +186,7 @@ namespace {
             lua_pop(L, 1);
          }
          //
-         lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVM::string_format_registry_key);
+         lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::string_format_registry_key);
          if (lua_isfunction(L, argcount + 1)) {
             lua_rotate(L, 1, 1); // move (string.format) ahead of the other stack elements
             lua_call  (L, argcount, 1);

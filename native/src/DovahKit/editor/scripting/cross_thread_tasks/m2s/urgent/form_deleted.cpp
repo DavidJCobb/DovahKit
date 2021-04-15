@@ -1,5 +1,5 @@
 #include "form_deleted.h"
-#include "../../../editor_script_core.h"
+#include "../../../systems/userdata.h"
 
 namespace editor_script::tasks::m2s {
    /*virtual*/ void form_deleted::_exec_impl() /*override*/ {

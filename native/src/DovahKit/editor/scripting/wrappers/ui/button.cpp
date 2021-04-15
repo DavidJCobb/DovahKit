@@ -1,4 +1,9 @@
 #include "button.h"
+#include "../../systems/editor_script_inner_core.h"
+#include "../../systems/messaging.h"
+#include "../../systems/permissions.h"
+#include "../../systems/userdata.h"
+
 #include "../../editor_script_core.h"
 #include "../../wrapper_util.h"
 
@@ -111,7 +116,7 @@ namespace {
          auto*         task    = new tasks::s2m::lambda(true);
          task->handler = [&created, &text]() {
             created = new wrapped_type(text);
-            DovahKitScriptVM::get().set_up_new_scripted_widget(created);
+            DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;

@@ -1,5 +1,10 @@
 #include "widget.h"
-#include "../../editor_script_core.h"
+#include "../../systems/editor_script_inner_core.h"
+#include "../../systems/messaging.h"
+#include "../../systems/permissions.h"
+#include "../../systems/ui_listeners.h"
+#include "../../systems/userdata.h"
+
 #include "../../wrapper_util.h"
 
 #include <QBoxLayout>
@@ -95,7 +100,7 @@ namespace {
                   box->addWidget(child);
                }
             }
-            DovahKitScriptVM::get().widget_no_longer_orphaned(child);
+            DovahKitScriptVMCore::get().widget_no_longer_orphaned(child);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
@@ -175,7 +180,7 @@ namespace {
                return;
             }
             child->setParent(nullptr);
-            DovahKitScriptVM::get().accept_new_orphaned_widget(child);
+            DovahKitScriptVMCore::get().accept_new_orphaned_widget(child);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
@@ -621,7 +626,7 @@ namespace {
          auto*         task    = new tasks::s2m::lambda(true);
          task->handler = [&created]() {
             created = new wrapped_type;
-            DovahKitScriptVM::get().set_up_new_scripted_widget(created);
+            DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;

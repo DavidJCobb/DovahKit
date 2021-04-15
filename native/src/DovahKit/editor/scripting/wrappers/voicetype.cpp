@@ -1,8 +1,11 @@
 #include "voicetype.h"
+#include "../systems/messaging.h"
+#include "../systems/permissions.h"
+#include "../systems/userdata.h"
+
 #include "../classes.h"
 #include "../util.h"
 #include "../../../dovah/forms/Voicetype.h"
-#include "../editor_script_core.h"
 
 namespace {
    using namespace editor_script;

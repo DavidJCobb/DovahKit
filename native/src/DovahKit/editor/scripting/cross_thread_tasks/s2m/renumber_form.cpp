@@ -1,5 +1,4 @@
 #include "renumber_form.h"
-#include "../../editor_script_core.h"
 #include "../../../core.h"
 #include "../../../../dovah/files/file_load_order.h"
 #include "../../../../dovah/notice_code_list.h"

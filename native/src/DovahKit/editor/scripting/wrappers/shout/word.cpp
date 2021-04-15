@@ -1,7 +1,9 @@
 #include "word.h"
+#include "../../systems/permissions.h"
+#include "../../systems/userdata.h"
+
 #include "../../classes.h"
 #include "../../util.h"
-#include "../../editor_script_core.h"
 #include "../../wrapper_util.h"
 #include "../../collections.h"
 

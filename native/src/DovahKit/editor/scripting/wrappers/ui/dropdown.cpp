@@ -1,5 +1,9 @@
 #include "dropdown.h"
-#include "../../editor_script_core.h"
+#include "../../systems/editor_script_inner_core.h"
+#include "../../systems/messaging.h"
+#include "../../systems/permissions.h"
+#include "../../systems/userdata.h"
+
 #include "../../wrapper_util.h"
 #include "../../collections.h"
 
@@ -152,7 +156,7 @@ namespace widget_lua {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
          //
-         DovahKitScriptVM::get().zombify_all_invalid_model_observers();
+         DovahKitScriptVMCore::get().zombify_all_invalid_model_observers();
          //
          return 0;
       }
@@ -225,7 +229,7 @@ namespace widget_lua {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
          //
-         DovahKitScriptVM::get().zombify_all_invalid_model_observers();
+         DovahKitScriptVMCore::get().zombify_all_invalid_model_observers();
          //
          return 0;
       }
@@ -404,7 +408,7 @@ namespace widget_lua {
             proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
             created->setModel(proxy);
             //
-            DovahKitScriptVM::get().set_up_new_scripted_widget(created);
+            DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
@@ -492,7 +496,7 @@ namespace item_lua {
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
-         return DovahKitScriptVM::get().push_to_lua(result);
+         return DovahKitScriptVMCore::get().push_to_lua(result);
       }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -516,7 +520,7 @@ namespace item_lua {
    namespace _setters {
       luastackchange_t data(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
-         auto& vm    = DovahKitScriptVM::get();
+         auto& vm    = DovahKitScriptVMCore::get();
          if (lua_type(L, 2) == LUA_TTABLE) {
             luaL_error(L, "storing a table as a dropdown item's data member is not supported");
          }

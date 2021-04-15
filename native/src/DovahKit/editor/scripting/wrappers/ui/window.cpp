@@ -1,5 +1,9 @@
 #include "window.h"
-#include "../../editor_script_core.h"
+#include "../../systems/editor_script_inner_core.h"
+#include "../../systems/messaging.h"
+#include "../../systems/permissions.h"
+#include "../../systems/userdata.h"
+
 #include "../../wrapper_util.h"
 
 #include "../../cross_thread_tasks/s2m/lambda.h"

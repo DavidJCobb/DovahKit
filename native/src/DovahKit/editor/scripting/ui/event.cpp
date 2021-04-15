@@ -1,5 +1,5 @@
 #include "event.h"
-#include "../editor_script_core.h"
+#include "../systems/ui_listeners.h"
 
 namespace editor_script {
    void ui_event_queue::clear() {

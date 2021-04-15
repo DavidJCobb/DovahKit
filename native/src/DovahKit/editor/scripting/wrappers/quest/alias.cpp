@@ -1,8 +1,10 @@
 #include "alias.h"
+#include "../../systems/permissions.h"
+#include "../../systems/userdata.h"
+
 #include "../../classes.h"
 #include "../../util.h"
 #include "../../../../dovah/form_stub.h"
-#include "../../editor_script_core.h"
 #include "../../wrapper_util.h"
 
 #include "../../../../dovah/forms/Quest.h"

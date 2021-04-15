@@ -1,5 +1,5 @@
 #include "ui.h"
-#include "../../editor_script_core.h"
+#include "../../systems/editor_script_inner_core.h"
 
 namespace {
    using namespace editor_script;
@@ -8,13 +8,13 @@ namespace {
       luastackchange_t run_when_locked(lua_State* L) {
          luaL_argcheck(L, lua_isfunction(L, 1), 1, "function expected");
          lua_settop(L, 1);
-         DovahKitScriptVM::get().queue_lua_function(1, true);
+         DovahKitScriptVMCore::get().queue_lua_function(1, true);
          return 0;
       }
       luastackchange_t run_when_unlocked(lua_State* L) {
          luaL_argcheck(L, lua_isfunction(L, 1), 1, "function expected");
          lua_settop(L, 1);
-         DovahKitScriptVM::get().queue_lua_function(1, false);
+         DovahKitScriptVMCore::get().queue_lua_function(1, false);
          return 0;
       }
    }

@@ -1,6 +1,6 @@
 #include "wrapper.h"
 #include <cassert>
-#include "editor_script_core.h"
+#include "systems/editor_script_inner_core.h"
 #include "util.h"
 #include "wrapper_util.h"
 #include "../core.h"
@@ -32,11 +32,11 @@ namespace editor_script {
       // Flag widgets as unreferenced when they are.
       //
       if (this->type == wrapper_type::ui) {
-         DovahKitScriptVM::get().widget_no_longer_referenced(this->widget);
+         DovahKitScriptVMCore::get().widget_no_longer_referenced(this->widget);
          this->widget = nullptr;
       }
       if (this->type == wrapper_type::ui_model_item) {
-         DovahKitScriptVM::get().model_observer_reference_lost(this->model_observer);
+         DovahKitScriptVMCore::get().model_observer_reference_lost(this->model_observer);
          this->model_observer = nullptr;
       }
    }
