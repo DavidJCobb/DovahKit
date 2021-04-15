@@ -14,4 +14,6 @@ class EditorScriptWindow : public QDialog {
       Ui::EditorScriptWindow ui;
       //
       void _onScriptStartStop(bool script_running);
+
+      virtual void closeEvent(QCloseEvent* event) override;
 };

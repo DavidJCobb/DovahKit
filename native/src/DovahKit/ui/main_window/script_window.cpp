@@ -55,10 +55,12 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
       QMessageBox::information(this, tr("Script started!", "script (debug)"), tr("The script has started."));
    });
    QObject::connect(&vm, &DovahKitScriptVM::scriptEnded, this, [this](bool error) {
-      if (error) {
-         QMessageBox::information(this, tr("Script error!", "editor script"), tr("The script encountered an error."));
-      } else {
-         QMessageBox::information(this, tr("Script complete!", "editor script"), tr("The script ran to completion."));
+      if (this->isVisible()) {
+         if (error) {
+            QMessageBox::information(this, tr("Script error!", "editor script"), tr("The script encountered an error."));
+         } else {
+            QMessageBox::information(this, tr("Script complete!", "editor script"), tr("The script ran to completion."));
+         }
       }
       this->_onScriptStartStop(false);
    });
@@ -84,4 +86,16 @@ void EditorScriptWindow::_onScriptStartStop(bool script_running) {
    this->ui.buttonRun->setDisabled(script_running);
    this->ui.buttonForceKill->setDisabled(!script_running);
    this->ui.script->setDisabled(script_running);
+}
+
+void EditorScriptWindow::closeEvent(QCloseEvent* event) {
+   //
+   // TODO: Confirmation dialog before closing; call event->ignore() if the 
+   // user decides not to close
+   //
+   // TODO: Investigate pausing the script while that confirmation dialog 
+   // is open
+   //
+   DovahKitScriptVM::get().abort();
+   event->accept();
 }
