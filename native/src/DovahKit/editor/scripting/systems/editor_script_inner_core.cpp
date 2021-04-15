@@ -202,7 +202,7 @@ DovahKitScriptVMCore::~DovahKitScriptVMCore() {
 }
 
 void DovahKitScriptVMCore::_setup_lua_vm() {
-   assert(this->ui_model_observers.pointers.empty());
+   assert(this->ui_model_observers.empty());
    assert(this->widgets.extant_widget_count == 0);
    assert(this->pending_ui_event_count == 0);
    //
@@ -343,10 +343,9 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
    _teardown_list_helper(this->widgets.pending_deletion.button_groups);
    this->widgets.extant_widget_count = 0;
    
-   for (auto* o : this->ui_model_observers.pointers)
-      delete o;
-   this->ui_model_observers.pointers.clear();
-   this->ui_model_observers.refcounts.clear();
+   for (auto& o : this->ui_model_observers)
+      delete o.pointer;
+   this->ui_model_observers.clear();
    this->pending_ui_event_count = 0;
 }
 
@@ -766,35 +765,28 @@ void DovahKitScriptVMCore::model_observer_reference_gained(ObservableStandardIte
    DovahKitScriptVMCore::require_script_thread();
    if (!observer)
       return;
-   auto& store = this->ui_model_observers;
-   auto& p_list = store.pointers;
-   auto& c_list = store.refcounts;
-   //
-   auto it = std::find(p_list.begin(), p_list.end(), observer);
-   if (it != p_list.end()) {
-      auto i = it - p_list.begin();
-      ++c_list[i];
-      return;
+   auto& list = this->ui_model_observers;
+   for (auto& e : list) {
+      if (e.pointer == observer) {
+         ++e.refcount;
+         return;
+      }
    }
-   //
-   p_list.push_back(observer);
-   c_list.push_back(1);
+   list.emplace_back(observer, 1);
 }
 void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemModelObserver* observer) {
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
    if (!observer)
       return;
-   auto& store  = this->ui_model_observers;
-   auto& p_list = store.pointers;
-   auto& c_list = store.refcounts;
-   //
-   auto it = std::find(p_list.begin(), p_list.end(), observer);
-   assert(it != p_list.end());
-   auto i = it - p_list.begin();
-   //
-   if (--c_list[i] > 0)
+   auto& list = this->ui_model_observers;
+   for (auto& e : list) {
+      if (e.pointer != observer)
+         continue;
+      if (--e.refcount > 0)
+         return;
+      assert(e.refcount == 0 && "How is the refcount negative?");
       return;
-   assert(c_list[i] == 0 && "How is the refcount negative?!");
+   }
    //
    // You'd expect that we'd destroy an unreferenced observer now, right? But nah. See, this 
    // function runs on the script thread, but we can only safely (un)register observers on 
@@ -808,7 +800,8 @@ void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemM
 void DovahKitScriptVMCore::zombify_all_invalid_model_observers() {
    DovahKitScriptVMCore::require_script_thread();
    auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
-   for (auto* o : this->ui_model_observers.pointers) {
+   for (auto& e : this->ui_model_observers) {
+      auto* o = e.pointer;
       if (!o)
          continue;
       if (o->isValid())
@@ -933,29 +926,18 @@ void DovahKitScriptVMCore::mainThreadLoop() {
       }
    }
    {
-      auto& store  = this->ui_model_observers;
-      auto& p_list = store.pointers;
-      auto& c_list = store.refcounts;
-      //
-      // Code here is basically mimicking the erase-remove idiom:
-      //
-      size_t size = c_list.size();
-      size_t read = 0;
-      size_t next = 0;
-      for (; read < size; ++read) {
-         if (c_list[read]) {
-            if (read != next) {
-               c_list[next] = c_list[read];
-               p_list[next] = std::move(p_list[read]);
-            }
-            ++next;
-         } else {
-            delete p_list[read];
-            p_list[read] = nullptr;
+      auto& list = this->ui_model_observers;
+      for (auto& e : list) {
+         if (!e.refcount) {
+            delete e.pointer;
+            e.pointer = nullptr;
          }
       }
-      c_list.resize(next);
-      p_list.resize(next);
+      list.erase(
+         std::remove_if(list.begin(), list.end(), [](const _model_observer& e) {
+            return e.pointer == nullptr;
+         }), list.end()
+      );
    }
    this->task_queues.s2m.process();
    this->ui_queues.read.process();

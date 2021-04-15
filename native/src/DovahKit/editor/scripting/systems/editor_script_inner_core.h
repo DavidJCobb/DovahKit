@@ -85,6 +85,14 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
 
          void clear();
       };
+
+      struct _model_observer {
+         ObservableStandardItemModelObserver* pointer = nullptr;
+         int refcount = 0;
+
+         _model_observer() {}
+         _model_observer(ObservableStandardItemModelObserver* p, int i) : pointer(p), refcount(i) {}
+      };
       
       void _setup_lua_vm();
       void _teardown_lua_vm(); // can only safely run on the main thread, since it tears down Qt objects now too
@@ -101,10 +109,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       
       std::atomic<bool>   aborted = false; // main thread can set this to kill the script
       cobb::lockable_bool running = false;
-      struct {
-         std::vector<ObservableStandardItemModelObserver*> pointers; // these vectors must be kept in synch
-         std::vector<int> refcounts;
-      } ui_model_observers;
+      std::vector<_model_observer> ui_model_observers;
       QWidget* ui_parent = nullptr;
       //
       struct {
