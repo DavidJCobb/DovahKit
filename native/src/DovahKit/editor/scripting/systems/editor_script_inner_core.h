@@ -132,6 +132,22 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
          _task_queue write; // script-to-main; may block
          editor_script::ui_event_queue events; // main-to-script
       } ui_queues;
+
+      //
+      // The eventFilter that we use to lock UI interaction can also prevent repaints from occurring 
+      // under yet-to-be-determined conditions (I'm not keen on digging through miles of Qt source 
+      // code to understand the specifics). If we blindly allow repaint events while the UI is locked, 
+      // then we get flickering widgets and other glitchy visual artifacts. Instead, we'll just keep 
+      // track of whether we've blocked a repaint, and if so, we'll force one on the main thread as 
+      // soon as possible after the UI is unlocked.
+      //
+      bool repaint_requested_while_ui_locked = false;
+
+      //
+      // Whether to override the current UI lock state. Used when we execute functions that Lua has 
+      // asked us to run with a particular lock state.
+      //
+      ui_lock_override_state ui_lock_override = ui_lock_override_state::unchanged;
       
    public:
       static DovahKitScriptVMCore& get() {
@@ -143,7 +159,6 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       std::thread thread;
       QTimer      main_thread_tick_timer;
       std::atomic<unsigned int> pending_ui_event_count = 0;
-      ui_lock_override_state    ui_lock_override       = ui_lock_override_state::unchanged;
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }

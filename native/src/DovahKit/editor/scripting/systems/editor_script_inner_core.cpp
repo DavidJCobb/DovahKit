@@ -925,6 +925,13 @@ void DovahKitScriptVMCore::setUIParentWidget(QWidget* widget) {
 }
 
 void DovahKitScriptVMCore::mainThreadLoop() {
+   if (this->repaint_requested_while_ui_locked) {
+      if (!this->pending_ui_event_count) {
+         this->repaint_requested_while_ui_locked = false;
+         for (auto* w : this->widgets.windows)
+            w->update();
+      }
+   }
    {
       auto& store  = this->ui_model_observers;
       auto& p_list = store.pointers;
@@ -969,27 +976,22 @@ bool DovahKitScriptVMCore::eventFilter(QObject* object, QEvent* event) {
       case QEvent::ChildAdded:
       case QEvent::ChildRemoved:
       case QEvent::Close:
-      case QEvent::CursorChange:          // a widget's desired cursor graphic has changed
       case QEvent::DeferredDelete:
       case QEvent::EnabledChange:         // a widget's enable state has changed
       case QEvent::Expose:
-      case QEvent::FontChange:            // a widget's font has changed
       case QEvent::Hide:                  // a widget was hidden
       case QEvent::LanguageChange:        // the program's translation changed
       case QEvent::LayoutDirectionChange: // layout update
       case QEvent::LayoutRequest:         // layout update
       case QEvent::LocaleChange:          // the system locale has changed
       case QEvent::OrientationChange:     // the screen orientation has changed
-      case QEvent::Paint:                 // screen repaint needed
-      case QEvent::PaletteChange:         // a widget's palette has changed
-      case QEvent::ParentAboutToChange:   // a widget is about to be repainted
-      case QEvent::ParentChange:          // a widget has been repainted
+      case QEvent::ParentAboutToChange:   // a widget is about to be reparented
+      case QEvent::ParentChange:          // a widget has been reparented
       case QEvent::ReadOnlyChange:        // a widget's read-only state has changed
       case QEvent::ScrollPrepare:
       case QEvent::Show:                  // a widget was shown
       case QEvent::ShowToParent:          // a child widget was shown
       case QEvent::StatusTip:             // a status bar tip was shown
-      case QEvent::StyleChange:           // a widget's style has changed
       case QEvent::ThreadChange:          // a widget was moved across threads
       case QEvent::ToolTip:               // a widget's tooltip was shown
       case QEvent::ToolTipChange:         // a widget's tooltip changed
@@ -1000,6 +1002,13 @@ bool DovahKitScriptVMCore::eventFilter(QObject* object, QEvent* event) {
       case QEvent::WindowTitleChange:     // a window's title changed
       case QEvent::WinIdChange:
       case QEvent::ZOrderChange:
+         return false;
+      case QEvent::CursorChange:          // a widget's desired cursor graphic has changed
+      case QEvent::FontChange:            // a widget's font has changed
+      case QEvent::Paint:                 // screen repaint needed
+      case QEvent::PaletteChange:         // a widget's palette has changed
+      case QEvent::StyleChange:           // a widget's style has changed
+         this->repaint_requested_while_ui_locked = true;
          return false;
    }
    if (this->ui_lock_override != ui_lock_override_state::unchanged)
