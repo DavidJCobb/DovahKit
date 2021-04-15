@@ -30,7 +30,7 @@ namespace {
       }
 
       luastackchange_t get_collection_length(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
+         auto& self = get_collection_wrapper(L);
          auto* prop = wrappers::papyrus_property::unwrap(self, false);
          if (!prop) {
             lua_pushinteger(L, 0);
@@ -69,25 +69,25 @@ namespace {
          //
          using pt = dovah::loaded_forms::components::papyrus::property_type;
          switch (prop->type) {
-            case pt::boolean:
+            case pt::array_of_boolean:
                lua_pushboolean(L, prop->values[i].boolean);
                return 1;
-            case pt::float32:
+            case pt::array_of_float32:
                lua_pushnumber(L, prop->values[i].float32);
                return 1;
-            case pt::string:
+            case pt::array_of_string:
                lua_pushstring(L, prop->values[i].string.c_str());
                return 1;
-            case pt::integer:
+            case pt::array_of_integer:
                lua_pushinteger(L, prop->values[i].integer);
                return 1;
-            case pt::object:
+            case pt::array_of_object:
                {
                   auto& value = prop->values[i].object;
                   auto* quest = value.form.get_form_stub();
                   //
                   if (quest) {
-                     if (value.aliasID != -1) {
+                     if (value.aliasID != (decltype(value.aliasID))dovah::loaded_forms::Alias::none_id) {
                         return wrappers::quest_alias::wrap(L, quest, value.aliasID);
                      } else {
                         wrapper out;
@@ -106,6 +106,36 @@ namespace {
 
 namespace {
    namespace _getters {
+      luastackchange_t is_array(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
+         auto* prop = wrappers::papyrus_property::unwrap(self, true);
+         if (prop == nullptr) {
+            lua_pushnil(L);
+            return 1;
+         }
+         //
+         using pt = dovah::loaded_forms::components::papyrus::property_type;
+         switch (prop->type) {
+            case pt::boolean:
+            case pt::float32:
+            case pt::string:
+            case pt::integer:
+            case pt::object:
+               lua_pushboolean(L, false);
+               return 1;
+               //
+            case pt::array_of_boolean:
+            case pt::array_of_float32:
+            case pt::array_of_string:
+            case pt::array_of_integer:
+            case pt::array_of_object:
+               lua_pushboolean(L, true);
+               return 1;
+         }
+         //
+         lua_pushnil(L);
+         return 1;
+      }
       luastackchange_t name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
          auto* prop = wrappers::papyrus_property::unwrap(self, true);
@@ -114,6 +144,51 @@ namespace {
          __assume(prop != nullptr);
          //
          lua_pushstring(L, prop->name.c_str());
+         return 1;
+      }
+      luastackchange_t type(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
+         auto* prop = wrappers::papyrus_property::unwrap(self, true);
+         if (prop == nullptr)
+            luaL_error(L, "script property wrapper has no underlying object (deleted?)");
+         __assume(prop != nullptr);
+         //
+         using pt = dovah::loaded_forms::components::papyrus::property_type;
+         switch (prop->type) {
+            case pt::boolean:
+               lua_pushstring(L, "Bool");
+               return 1;
+            case pt::float32:
+               lua_pushstring(L, "Float");
+               return 1;
+            case pt::string:
+               lua_pushstring(L, "String");
+               return 1;
+            case pt::integer:
+               lua_pushstring(L, "Int");
+               return 1;
+            case pt::object:
+               lua_pushstring(L, "FormOrAlias");
+               return 1;
+               //
+            case pt::array_of_boolean:
+               lua_pushstring(L, "Bool[]");
+               return 1;
+            case pt::array_of_float32:
+               lua_pushstring(L, "Float[]");
+               return 1;
+            case pt::array_of_string:
+               lua_pushstring(L, "String[]");
+               return 1;
+            case pt::array_of_integer:
+               lua_pushstring(L, "Int[]");
+               return 1;
+            case pt::array_of_object:
+               lua_pushstring(L, "FormOrAlias[]");
+               return 1;
+         }
+         //
+         lua_pushstring(L, "Invalid");
          return 1;
       }
       luastackchange_t value(lua_State* L) {
@@ -196,8 +271,10 @@ namespace {
 namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_methods = no_functions;
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_getters = {
-      { "name",  &_getters::name },
-      { "value", &_getters::value },
+      { "is_array", &_getters::is_array },
+      { "name",     &_getters::name },
+      { "type",     &_getters::type },
+      { "value",    &_getters::value },
    };
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_setters = {
       { "name", &_setters::name },

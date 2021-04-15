@@ -418,6 +418,7 @@ namespace editor_script {
       //    end
       //    return userdata
       //
+      stackPos = lua_absindex(luaVM, stackPos);
       lua_checkstack(luaVM, 3);
       auto top = lua_gettop(luaVM);
       //

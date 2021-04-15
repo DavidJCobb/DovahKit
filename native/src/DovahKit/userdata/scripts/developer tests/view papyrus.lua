@@ -95,33 +95,31 @@ function rebuild_value()
       return
    end
    local value = prop.value
-   if type(value) == "userdata" and not object_is_form(value) then
+   if prop.is_array then
       ap.enabled = true
       ap.maximum = #value
-      local item = value[ap.value]
-      if not item then
-         ap.value = 1
-         item = value[1]
-      end
-      if item then
-         al.text = tostring(item)
-      end
+      value = value[ap.value]
    else
       ap.value = 1
-      if object_is_form(value) then
-         al.text = "[FORM:" .. value:form_id_to_string() .. "]" .. value.editor_id
-      else
-         al.text = tostring(value)
-      end
+   end
+   if object_is_form(value) then
+      al.text = "[FORM:" .. value:form_id_to_string() .. "]" .. value.editor_id
+   else
+      al.text = tostring(value)
    end
 end
 
 fp:on("OnChanged", "", function(form)
+   sp.selected_index = nil -- needed to avoid a bunch of events colliding with each other
+   pp.selected_index = nil -- 
    rebuild_script_picker()
    rebuild_property_picker()
+   sp.selected_index = 1
+   pp.selected_index = 1
    rebuild_value()
 end)
 sp:on("OnChanged", "", function(index)
+   pp.selected_index = nil
    rebuild_property_picker()
    rebuild_value()
 end)
