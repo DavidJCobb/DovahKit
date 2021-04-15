@@ -9,6 +9,8 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../ui/util/alignment.h"
 
+#include "helpers/widget_properties.h"
+
 namespace {
    using namespace editor_script;
    using cls = wrappers::ui::textbox;
@@ -84,14 +86,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result;
-         {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->maxLength(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLineEdit::maxLength);
          lua_pushnumber(L, result);
          return 1;
       }
@@ -99,14 +94,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->placeholderText(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLineEdit::placeholderText);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -114,14 +102,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->isReadOnly(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLineEdit::isReadOnly);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -129,14 +110,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->text(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLineEdit::text);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -144,14 +118,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->inputMask(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLineEdit::inputMask);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -159,14 +126,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QLineEdit::EchoMode visibility;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &visibility]() { visibility = widget->echoMode(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QLineEdit::EchoMode visibility = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLineEdit::echoMode);
          switch (visibility) {
             case QLineEdit::EchoMode::Normal:
                lua_pushstring(L, "normal");
@@ -233,11 +193,7 @@ namespace {
          luaL_argcheck(L, lua_isinteger(L, 2), 2, "max length (integer) expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*)self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = lua_tointeger(L, 2);
-         task->handler = [widget, value]() { widget->setMaxLength(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setMaxLength, lua_tointeger(L, 2));
          return 0;
       }
       luastackchange_t placeholder(lua_State* L) {
@@ -245,11 +201,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "placeholder (string) expected");
          if (!self.widget)
             return 0;
-         auto* widget = (wrapped_type*)self.widget;
-         auto* task = new tasks::s2m::lambda(false);
-         auto  value = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setPlaceholderText(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setPlaceholderText, value);
          return 0;
       }
       luastackchange_t read_only(lua_State* L) {
@@ -257,11 +210,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto* widget = (wrapped_type*)self.widget;
-         auto* task   = new tasks::s2m::lambda(false);
-         auto  value  = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setReadOnly(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setReadOnly, value);
          return 0;
       }
       luastackchange_t text(lua_State* L) {
@@ -269,11 +219,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setText(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setText, value);
          return 0;
       }
       luastackchange_t validation_mask(lua_State* L) {
@@ -281,11 +228,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "mask (string) expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setInputMask(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setInputMask, value);
          return 0;
       }
       luastackchange_t value_visibility(lua_State* L) {
@@ -307,11 +251,7 @@ namespace {
             else
                luaL_error(L, "string \"%s\" is not a recognized visibility type", vis);
          }
-         auto* widget  = (wrapped_type*)self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, echo]() { widget->setEchoMode(echo); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLineEdit::setEchoMode, echo);
          return 0;
       }
    }

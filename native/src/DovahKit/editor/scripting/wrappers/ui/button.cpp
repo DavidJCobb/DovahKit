@@ -9,6 +9,8 @@
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
+#include "helpers/widget_properties.h"
+
 namespace {
    using namespace editor_script;
    using cls = wrappers::ui::button;
@@ -21,14 +23,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->autoDefault(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QPushButton::autoDefault);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -36,14 +31,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->isFlat(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QPushButton::isFlat);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -51,14 +39,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->text(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QPushButton::text);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -69,11 +50,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         bool  value   = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setAutoDefault(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QPushButton::setAutoDefault, value);
          return 0;
       }
       luastackchange_t flat(lua_State* L) {
@@ -81,11 +59,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         bool  value   = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setFlat(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QPushButton::setFlat, value);
          return 0;
       }
       luastackchange_t text(lua_State* L) {
@@ -93,11 +68,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setText(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QPushButton::setText, value);
          return 0;
       }
    }
