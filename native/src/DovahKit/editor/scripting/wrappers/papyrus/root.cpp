@@ -37,16 +37,6 @@ namespace {
          return *self;
       }
 
-      luastackchange_t get_collection_length(lua_State* L) {
-         auto& self = get_collection_wrapper(L);
-         auto* root = wrapper_t::unwrap(self, false);
-         if (!root) {
-            lua_pushinteger(L, 0);
-            return 1;
-         }
-         lua_pushinteger(L, root->scripts.size());
-         return 1;
-      }
       luastackchange_t lookup_item_by_name(lua_State* L) {
          //
          // args: wrapper<papyrus_root>, name
@@ -70,21 +60,6 @@ namespace {
             }
          }
          return 0;
-      }
-      luastackchange_t lookup_item_by_index(lua_State* L) {
-         auto& self = get_collection_wrapper(L);
-         auto* root = wrapper_t::unwrap(self, false);
-         if (!root)
-            luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::script_collection_key);
-         auto  i    = lua_tointeger(L, 2);
-         auto& list = root->scripts;
-         if (i > list.size() || i <= 0)
-            return 0;
-         --i;
-         wrapper out = self;
-         assert(out.is_collection);
-         out.into_collection(i);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_script::metatable_key);
       }
       luastackchange_t get_all_item_names(lua_State* L) {
          auto& self = get_collection_wrapper(L);
@@ -208,10 +183,8 @@ namespace editor_script::wrappers {
          .garbage_collection    = &wrapper::__gc,
          //
          .get_all_item_names     = &_collections::scripts::get_all_item_names,
-         .get_collection_length  = &_collections::scripts::get_collection_length,
          .items_are_named        = true,
          .lookup_item_by_name    = &_collections::scripts::lookup_item_by_name,
-         .lookup_item_by_index   = &_collections::scripts::lookup_item_by_index,
       });
    }
 

@@ -100,6 +100,8 @@ namespace {
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
+         if (!result)
+            return 0;
          wrapper out;
          auto* mt = wrap_form(out, result);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
@@ -116,6 +118,8 @@ namespace {
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
+         if (!result)
+            return 0;
          wrapper out;
          auto* mt = wrap_form(out, result);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
@@ -156,26 +160,32 @@ namespace {
       }
       luastackchange_t default_form(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* arg  = wrapper_from_stack<wrappers::form>(L, 2);
-         luaL_argcheck(L, arg, 2, "form expected");
+         dovah::form_stub* value = nullptr;
+         if (!lua_isnoneornil(L, 2)) {
+            auto* arg = wrapper_from_stack<wrappers::form>(L, 2);
+            luaL_argcheck(L, arg, 2, "form expected");
+            value = arg->stub;
+         }
          if (!self.widget)
             return 0;
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         auto* value   = arg->stub;
          task->handler = [widget, value]() { widget->setDefaultForm(value); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
       luastackchange_t form(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* arg = wrapper_from_stack<wrappers::form>(L, 2);
-         luaL_argcheck(L, arg, 2, "form expected");
+         dovah::form_stub* value = nullptr;
+         if (!lua_isnoneornil(L, 2)) {
+            auto* arg = wrapper_from_stack<wrappers::form>(L, 2);
+            luaL_argcheck(L, arg, 2, "form expected");
+            value = arg->stub;
+         }
          if (!self.widget)
             return 0;
          auto* widget  = (wrapped_type*)self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         auto* value   = arg->stub;
          task->handler = [widget, value]() { widget->setFormStub(value); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;

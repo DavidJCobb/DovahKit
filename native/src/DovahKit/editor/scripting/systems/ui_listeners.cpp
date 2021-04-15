@@ -326,10 +326,16 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       int argcount = 0;
       for (auto& p : params) {
          if (p.userType() == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
-            using namespace editor_script;
-            wrapper out;
-            auto*   mt = wrap_form(out, p.value<dovah::form_stub*>());
-            argcount += userdata_intfc.push(L, out, mt);
+            auto* stub = p.value<dovah::form_stub*>();
+            if (stub) {
+               using namespace editor_script;
+               wrapper out;
+               auto* mt  = wrap_form(out, stub);
+               argcount += userdata_intfc.push(L, out, mt);
+            } else {
+               lua_pushnil(L);
+               ++argcount;
+            }
             continue;
          }
          argcount += cobb::lua::push_qt_variant(L, p);
