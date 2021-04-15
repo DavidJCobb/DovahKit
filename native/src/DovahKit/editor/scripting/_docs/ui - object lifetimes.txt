@@ -161,8 +161,14 @@ DovahKitScriptVMCore singleton and are:
 
    Called by the QWidget  userdata __gc metamethod, to  indicate that a QWidget 
    is no  longer Lua-referenced.  Uses  (find_abandoned_widgets_and_groups)  to 
-   check whether the widget's hierarchy is  abandoned and if so, marks the root 
-   widget for deletion.
+   check whether  the widget's  hierarchy is  abandoned  and if so,  passes the 
+   results to (mark_abandoned_hierarchy_for_delete).
+
+
+ - mark_abandoned_hierarchy_for_delete
+
+   Marks a collection of root widgets and QButtonGroups for deletion, and helps 
+   to keep track of how many scripted widgets remain.
 
 
  - widget_no_longer_orphaned
@@ -171,6 +177,28 @@ DovahKitScriptVMCore singleton and are:
    from the VM's orphan list, and  then checks whether the root of the widget's 
    containing hierarchy is marked for deletion; if so, the root is unmarked for 
    deletion and inserted back into the orphan list.
+
+
+ - button_group_lost_a_member
+
+   Called by any Lua APIs that remove a QAbstractButton from a QButtonGroup. If 
+   the QButtonGroup is unreferenced, this function will behave similarly to its 
+   widget counterpart,  (widget_no_longer_referenced): it will  mark the button 
+   group's containing hierarchy for deletion if the hierarchy is now abandoned.
+
+
+ - button_group_gained_a_member
+
+   Called by any Lua APIs that add a  QAbstractButton to a QButtonGroup. If the 
+   QButtonGroup was previously unreferenced  and had no buttons, and was marked 
+   for deletion for this reason, then it will be rescued from deletion.
+
+
+ - button_group_no_longer_referenced
+
+   Called by the  QButtonGroup userdata  __gc metamethod,  to indicate that the 
+   QButtonGroup is no longer Lua-referenced. Behaves pretty much identically to 
+   its widget counterpart, (widget_no_longer_referenced).
 
 
 Hopefully, this is more intuitive for you,  the reader, than it was for me when 
