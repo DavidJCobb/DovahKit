@@ -10,6 +10,9 @@
 #include <QString>
 #include <QTimer>
 #include <QWidget>
+#include "../../helpers/lockable_bool.h"
+#include "../../helpers/singleton.h"
+
 #include "cross_thread_tasks/base.h"
 #include "ui/event.h"
 #include "ui/util/lua_item_model.h"
@@ -25,7 +28,7 @@ class DovahKitScriptVMPermissionInterface;
 class DovahKitScriptVMUserdataInterface;
 class DovahKitScriptUIListenerInterface;
 
-class DovahKitScriptVM : public QObject {
+class DovahKitScriptVM : public QObject, cobb::singleton {
    Q_OBJECT
    //
    // This is the core singleton for editor scripting. It is intended to be accessed directly by 
@@ -83,9 +86,8 @@ class DovahKitScriptVM : public QObject {
       //
       bool _should_keep_running() const noexcept;
       
-      std::recursive_mutex exec_lock;
-      std::atomic<bool> aborted = false; // main thread can set this to kill the script
-      std::atomic<bool> running = false;
+      std::atomic<bool>   aborted = false; // main thread can set this to kill the script
+      cobb::lockable_bool running = false;
       struct {
          std::vector<ObservableStandardItemModelObserver*> pointers; // these vectors must be kept in synch
          std::vector<int> refcounts;
@@ -128,6 +130,10 @@ class DovahKitScriptVM : public QObject {
       inline bool is_running() const noexcept { return this->running; }
 
       inline QWidget* get_ui_parent_widget() const noexcept { return this->ui_parent; }
+
+      static void require_script_thread();
+      static void require_client_thread(); // actually just requires that it not be the script thread
+      static void require_wrapper_teardown_thread();
 
       QDialog* try_spawn_script_window() noexcept;
       void set_up_new_scripted_widget(QWidget*);  // Lua functions that create widgets must call this
@@ -179,20 +185,18 @@ class DovahKitScriptVM : public QObject {
       virtual bool eventFilter(QObject* object, QEvent* event) override;
 };
 
-class DovahKitScriptVMMessenger {
+class DovahKitScriptVMMessenger : cobb::singleton {
    //
    // This is an interface to DovahKitScriptVM, provided for the benefit of the Lua API functions 
    // themselves; it facilitates sending messages from the script thread to the main thread.
    //
    protected:
-      DovahKitScriptVMMessenger(DovahKitScriptVM& w) : vm(w) {}
+      DovahKitScriptVMMessenger() {}
    public:
       static DovahKitScriptVMMessenger& get() {
-         static DovahKitScriptVMMessenger instance(DovahKitScriptVM::get());
+         static DovahKitScriptVMMessenger instance;
          return instance;
       }
-      
-      DovahKitScriptVM& vm;
       
       //
       // Sends a cross-thread-task to the main thread to be executed. If the task indicates that it's 
@@ -203,30 +207,22 @@ class DovahKitScriptVMMessenger {
       // in an invalid state.
       //
       void send_message(editor_script::cross_thread_task* m);
-      
-      inline bool is_aborted() const noexcept { return vm.aborted; }
-      inline bool is_running() const noexcept { return vm.running; }
 };
 
-class DovahKitScriptVMUITaskConduit {
+class DovahKitScriptVMUITaskConduit : cobb::singleton {
    protected:
-      DovahKitScriptVMUITaskConduit(DovahKitScriptVM& w) : vm(w) {}
+      DovahKitScriptVMUITaskConduit() {}
    public:
       static DovahKitScriptVMUITaskConduit& get() {
-         static DovahKitScriptVMUITaskConduit instance(DovahKitScriptVM::get());
+         static DovahKitScriptVMUITaskConduit instance;
          return instance;
       }
 
-      DovahKitScriptVM& vm;
-
       void send_message(editor_script::ui_read_task&);
       void send_message(editor_script::cross_thread_task&);
-
-      inline bool is_aborted() const noexcept { return vm.aborted; }
-      inline bool is_running() const noexcept { return vm.running; }
 };
 
-class DovahKitScriptVMPermissionInterface {
+class DovahKitScriptVMPermissionInterface : cobb::singleton {
    protected:
       DovahKitScriptVMPermissionInterface(DovahKitScriptVM& w) : vm(w) {}
    public:
@@ -243,7 +239,7 @@ class DovahKitScriptVMPermissionInterface {
       static bool check_ui_html_permissions();
 };
 
-class DovahKitScriptVMUserdataInterface {
+class DovahKitScriptVMUserdataInterface : cobb::singleton {
    //
    // This is an interface to DovahKitScriptVM, provided for the benefit of our userdata internals.
    //
@@ -288,7 +284,7 @@ class DovahKitScriptVMUserdataInterface {
       void remove_from_sequential_collection(editor_script::wrapper& to_remove);
 };
 
-class DovahKitScriptUIListenerInterface {
+class DovahKitScriptUIListenerInterface : cobb::singleton {
    protected:
       DovahKitScriptUIListenerInterface(DovahKitScriptVM& w) : vm(w) {}
    public:

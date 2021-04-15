@@ -33,10 +33,6 @@ namespace editor_script::tasks::s2m {
                this->error_text = _explain_error_code(error);
                return false;
             }
-            //
-            auto forms = request.get_forms_pending_delete(false); // only include forms that we will erase from memory, not simply ones we'll slap the "deleted" flag on
-            for (auto* stub : forms)
-               DovahKitScriptVMUserdataInterface::get().remove_form(*stub);
             return true;
          },
          [](const dovah::form_deletion_request& request) {}

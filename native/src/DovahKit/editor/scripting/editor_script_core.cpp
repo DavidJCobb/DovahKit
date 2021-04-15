@@ -330,7 +330,7 @@ void DovahKitScriptVM::_setup_lua_vm() {
    this->ui_lock_override       = ui_lock_override_state::unchanged;
 }
 void DovahKitScriptVM::_teardown_lua_vm() {
-   auto guard = std::lock_guard(this->exec_lock);
+   auto guard = std::lock_guard(this->running);
    //
    if (auto* L = this->lua_vm) {
       this->lua_vm = nullptr;
@@ -392,11 +392,7 @@ void DovahKitScriptVM::_run_queued_functions(bool ui_locked) {
          //
          for (int i = 0; i < count; ++i) {
             lua_geti(L, -1, i + 1); // get the function
-            if (ui_locked)
-               ++this->pending_ui_event_count;
             editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the function
-            if (ui_locked)
-               --this->pending_ui_event_count;
          }
       }
    }
@@ -447,12 +443,33 @@ bool DovahKitScriptVM::_should_keep_running() const noexcept {
    return false;
 }
 
+/*static*/ void DovahKitScriptVM::require_script_thread() {
+   assert(std::this_thread::get_id() == DovahKitScriptVM::get().thread.get_id());
+}
+/*static*/ void DovahKitScriptVM::require_client_thread() {
+   assert(std::this_thread::get_id() != DovahKitScriptVM::get().thread.get_id());
+}
+/*static*/ void DovahKitScriptVM::require_wrapper_teardown_thread() {
+   //
+   // Wrappers should always be torn down on the script thread, UNLESS we are tearing down 
+   // the entire VM, which (by necessity) happens on the main thread. In the latter case, 
+   // the main thread basically "owns" the Lua VM.
+   //
+   // The very first part of the entire-VM-teardown process is to grab the Lua state pointer 
+   // locally and then write nullptr to the original pointer, so that nothing else can get 
+   // to the state. Conveniently, that's something we can check for here.
+   //
+   auto& d = DovahKitScriptVM::get();
+   if (d.lua_vm)
+      assert(std::this_thread::get_id() == d.thread.get_id());
+   else
+      assert(std::this_thread::get_id() != DovahKitScriptVM::get().thread.get_id());
+}
+
 QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
-   {
-      auto guard = std::lock_guard(this->exec_lock);
-      if (!this->running)
-         return nullptr;
-   }
+   DovahKitScriptVM::require_client_thread();
+   if (!this->running)
+      return nullptr;
    if (this->widgets.windows.size() >= max_script_windows)
       return nullptr;
    auto* dialog = new QDialog(this->ui_parent);
@@ -462,6 +479,7 @@ QDialog* DovahKitScriptVM::try_spawn_script_window() noexcept {
    return dialog;
 }
 void DovahKitScriptVM::set_up_new_scripted_widget(QWidget* widget) {
+   DovahKitScriptVM::require_client_thread();
    widget->installEventFilter(this);
    if (auto* label = qobject_cast<QLabel*>(widget)) {
       QObject::connect(label, &QLabel::linkActivated, this, [this](const QString& url) {
@@ -473,27 +491,24 @@ void DovahKitScriptVM::set_up_new_scripted_widget(QWidget* widget) {
       this->accept_new_orphaned_widget(widget);
 }
 void DovahKitScriptVM::accept_new_orphaned_widget(QWidget* widget) {
-   {
-      auto guard = std::lock_guard(this->exec_lock);
-      if (!this->running)
-         return;
-   }
+   DovahKitScriptVM::require_client_thread();
+   if (!this->running)
+      return;
    if (!widget)
       return;
    this->widgets.orphans.push_back(widget);
 }
 void DovahKitScriptVM::widget_no_longer_orphaned(QWidget* widget) {
-   {
-      auto guard = std::lock_guard(this->exec_lock);
-      if (!this->running)
-         return;
-   }
+   DovahKitScriptVM::require_client_thread();
+   if (!this->running)
+      return;
    if (!widget || !widget->parentWidget())
       return;
    auto& v = this->widgets.orphans;
    v.erase(std::remove(v.begin(), v.end(), widget), v.end());
 }
 void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
+   DovahKitScriptVM::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
    if (!widget)
       return;
    if (!this->lua_vm) // teardown in progress; we will delete everything as part of that process
@@ -576,6 +591,7 @@ void DovahKitScriptVM::widget_no_longer_referenced(QWidget* widget) {
 }
 
 void DovahKitScriptVM::model_observer_reference_gained(ObservableStandardItemModelObserver* observer) {
+   DovahKitScriptVM::require_script_thread();
    if (!observer)
       return;
    auto& store = this->ui_model_observers;
@@ -593,6 +609,7 @@ void DovahKitScriptVM::model_observer_reference_gained(ObservableStandardItemMod
    c_list.push_back(1);
 }
 void DovahKitScriptVM::model_observer_reference_lost(ObservableStandardItemModelObserver* observer) {
+   DovahKitScriptVM::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
    if (!observer)
       return;
    auto& store  = this->ui_model_observers;
@@ -617,6 +634,7 @@ void DovahKitScriptVM::model_observer_reference_lost(ObservableStandardItemModel
    //
 }
 void DovahKitScriptVM::zombify_all_invalid_model_observers() {
+   DovahKitScriptVM::require_script_thread();
    auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
    for (auto* o : this->ui_model_observers.pointers) {
       if (!o)
@@ -628,6 +646,7 @@ void DovahKitScriptVM::zombify_all_invalid_model_observers() {
 }
 
 void DovahKitScriptVM::queue_lua_function(int stack_pos, bool lock_ui_for_function) {
+   DovahKitScriptVM::require_script_thread();
    auto* L   = this->lua_vm;
    auto* key = lock_ui_for_function ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
    //
@@ -644,6 +663,7 @@ void DovahKitScriptVM::queue_lua_function(int stack_pos, bool lock_ui_for_functi
 }
 
 int DovahKitScriptVM::push_to_lua(const QVariant& p) {
+   DovahKitScriptVM::require_script_thread();
    auto* L  = this->lua_vm;
    auto  ut = p.userType();
    if (ut == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
@@ -661,6 +681,7 @@ int DovahKitScriptVM::push_to_lua(const QVariant& p) {
    return cobb::lua::push_qt_variant(L, p);
 }
 QVariant DovahKitScriptVM::variant_from_lua(int stack_pos) {
+   DovahKitScriptVM::require_script_thread();
    auto* L = this->lua_vm;
    if (lua_gettop(L) < stack_pos)
       return QVariant();
@@ -680,7 +701,7 @@ QVariant DovahKitScriptVM::variant_from_lua(int stack_pos) {
 }
 
 void DovahKitScriptVM::abort() {
-   auto guard = std::lock_guard(this->exec_lock);
+   auto guard = std::lock_guard(this->running);
    if (this->running) {
       this->aborted = true;
       this->task_queues.s2m.clear();
@@ -689,7 +710,7 @@ void DovahKitScriptVM::abort() {
    }
 }
 void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
-   auto guard = std::lock_guard(this->exec_lock);
+   auto guard = std::lock_guard(this->running);
    if (this->running)
       return;
    if (this->thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
@@ -723,10 +744,9 @@ void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
 }
 
 void DovahKitScriptVM::setUIParentWidget(QWidget* widget) {
-   auto guard = std::lock_guard(this->exec_lock);
-   if (this->running)
-      return;
-   this->ui_parent = widget;
+   auto guard = std::lock_guard(this->running);
+   if (!this->running)
+      this->ui_parent = widget;
 }
 
 void DovahKitScriptVM::mainThreadLoop() {
@@ -817,6 +837,7 @@ bool DovahKitScriptVM::eventFilter(QObject* object, QEvent* event) {
 
 #pragma region DovahKitScriptVMMessenger
 void DovahKitScriptVMMessenger::send_message(editor_script::cross_thread_task* m) {
+   DovahKitScriptVM::require_script_thread();
    auto& vm = DovahKitScriptVM::get();
    {
       auto  guard = std::lock_guard(vm.task_queues.s2m.lock);
@@ -840,6 +861,7 @@ void DovahKitScriptVMMessenger::send_message(editor_script::cross_thread_task* m
 
 #pragma region DovahKitScriptVMUITaskConduit
 void DovahKitScriptVMUITaskConduit::send_message(editor_script::ui_read_task& task) {
+   DovahKitScriptVM::require_script_thread();
    auto& vm = DovahKitScriptVM::get();
    vm.ui_queues.write.wait_until_empty();
    {
@@ -859,6 +881,7 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::ui_read_task& ta
    }
 }
 void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_task& task) {
+   DovahKitScriptVM::require_script_thread();
    auto& vm = DovahKitScriptVM::get();
    vm.ui_queues.read.wait_until_empty();
    //
@@ -902,6 +925,7 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
 
 #pragma region DovahKitScriptVMPermissionInterface
 /*static*/ void DovahKitScriptVMPermissionInterface::verify_form_write_permissions() {
+   DovahKitScriptVM::require_script_thread();
    auto& intfc = DovahKitScriptVMPermissionInterface::get();
    if (false) { // TODO: permission check, when we implement those
       luaL_error(intfc.vm.lua_vm, "The script does not have permission to use APIs that modify form data.");
@@ -909,6 +933,7 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
    }
 }
 /*static*/ void DovahKitScriptVMPermissionInterface::verify_ui_permissions() {
+   DovahKitScriptVM::require_script_thread();
    auto& intfc = DovahKitScriptVMPermissionInterface::get();
    if (false) { // TODO: permission check, when we implement those
       luaL_error(intfc.vm.lua_vm, "The script does not have permission to use APIs related to the UI.");
@@ -916,6 +941,7 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
    }
 }
 /*static*/ bool DovahKitScriptVMPermissionInterface::check_ui_html_permissions() {
+   DovahKitScriptVM::require_script_thread();
    return true; // TODO: permission check, when we implement those
 }
 #pragma endregion
@@ -930,6 +956,7 @@ void DovahKitScriptVMUITaskConduit::send_message(editor_script::cross_thread_tas
 //
 #pragma region DovahKitScriptVMUserdataInterface
 void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance) {
+   DovahKitScriptVM::require_script_thread();
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    auto  index = instance.last_part().index;
@@ -1019,6 +1046,7 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
 }
 
 void DovahKitScriptVMUserdataInterface::remove_form(dovah::form_stub& stub) {
+   DovahKitScriptVM::require_script_thread();
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    //
@@ -1077,6 +1105,7 @@ void DovahKitScriptVMUserdataInterface::remove_form(dovah::form_stub& stub) {
 }
 
 void DovahKitScriptVMUserdataInterface::remove_model_observer(ObservableStandardItemModelObserver& observer) {
+   DovahKitScriptVM::require_script_thread();
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    //
@@ -1134,6 +1163,7 @@ void DovahKitScriptVMUserdataInterface::remove_model_observer(ObservableStandard
 }
 
 bool DovahKitScriptVMUserdataInterface::wrapper_exists_for(void* widget) {
+   DovahKitScriptVM::require_script_thread();
    auto* L      = this->vm.lua_vm;
    auto  start  = lua_gettop(L);
    bool  result = false;
@@ -1149,6 +1179,7 @@ bool DovahKitScriptVMUserdataInterface::wrapper_exists_for(void* widget) {
 }
 
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
+   DovahKitScriptVM::require_script_thread();
    if (!instance.should_expose_to_script())
       return 0;
    //
@@ -1234,6 +1265,7 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
 }
 
 void DovahKitScriptVMUserdataInterface::remove_from_sequential_collection(editor_script::wrapper& to_remove) {
+   DovahKitScriptVM::require_script_thread();
    assert(to_remove.depth && !to_remove.is_collection && "The (to_remove) argument must be an element in a sequential collection.");
    this->remove(to_remove);
 }
@@ -1313,12 +1345,14 @@ namespace {
    };
 }
 void DovahKitScriptUIListenerInterface::_connect_event(QMetaObject::Connection connection, QWidget& widget, const char* event_name, const char* listener_name) {
+   DovahKitScriptVM::require_script_thread();
    auto& vm    = DovahKitScriptVM::get();
    auto& entry = vm.widgets.connections[&widget][event_name][listener_name];
-   QObject::disconnect(entry);
+   QObject::disconnect(entry); // replace the existing listener, if any
    entry = connection;
 }
 void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const char* event_name, const char* listener_name) {
+   DovahKitScriptVM::require_script_thread();
    //
    // Runs on the script thread.
    //
@@ -1383,6 +1417,7 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
 }
 
 void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char* event_name, const char* listener_name, int listener_index) {
+   DovahKitScriptVM::require_script_thread();
    if (!event_name_is_valid(widget, event_name))
       return;
    //
@@ -1426,6 +1461,7 @@ void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char
    lua_settop(L, start);
 }
 void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const char* event_name, const char* listener_name) {
+   DovahKitScriptVM::require_script_thread();
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    //
@@ -1468,6 +1504,7 @@ void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const c
    lua_settop(L, start);
 }
 void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
+   DovahKitScriptVM::require_script_thread();
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    //
@@ -1481,6 +1518,7 @@ void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
    lua_settop(L, start);
 }
 void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
+   DovahKitScriptVM::require_script_thread();
    constexpr bool double_check_stack = false;
    //
    auto* L     = this->vm.lua_vm;

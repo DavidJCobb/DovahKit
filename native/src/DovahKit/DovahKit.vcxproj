@@ -627,6 +627,8 @@
     <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\qt\traversal.h" />
     <ClInclude Include="helpers\rotation.h" />
+    <ClInclude Include="helpers\singleton.h" />
+    <ClInclude Include="helpers\lockable_bool.h" />
     <ClInclude Include="helpers\vector.h" />
     <ClInclude Include="helpers\windows_environment.h" />
     <ClInclude Include="helpers\windows_ini.h" />

@@ -1685,6 +1685,12 @@
     <ClInclude Include="helpers\qt\traversal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\singleton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\lockable_bool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
