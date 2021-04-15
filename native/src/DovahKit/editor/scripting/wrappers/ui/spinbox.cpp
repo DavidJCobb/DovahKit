@@ -9,6 +9,8 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../ui/util/alignment.h"
 
+#include "helpers/widget_properties.h"
+
 namespace {
    using namespace editor_script;
    using cls = wrappers::ui::spinbox;
@@ -51,14 +53,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->decimals(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::decimals);
          lua_pushinteger(L, result);
          return 1;
       }
@@ -66,14 +61,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         double result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->maximum(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         double result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::maximum);
          lua_pushnumber(L, result);
          return 1;
       }
@@ -81,14 +69,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         double result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->minimum(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         double result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::minimum);
          lua_pushnumber(L, result);
          return 1;
       }
@@ -96,14 +77,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->suffix(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::prefix);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -111,14 +85,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->isReadOnly(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::isReadOnly);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -126,29 +93,15 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         double result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->singleStep(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         lua_pushinteger(L, result);
+         double result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::singleStep);
+         lua_pushnumber(L, result);
          return 1;
       }
       luastackchange_t suffix(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->suffix(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::suffix);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -156,29 +109,15 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         double result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->value(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         lua_pushinteger(L, result);
+         double result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::value);
+         lua_pushnumber(L, result);
          return 1;
       }
       luastackchange_t wraparound(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->wrapping(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::wrapping);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -229,14 +168,8 @@ namespace {
          luaL_argcheck(L, lua_isinteger(L, 2), 2, "integer expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         bool  value   = lua_tointeger(L, 2);
-         task->handler = [widget, value]() {
-            const auto blocker = QSignalBlocker(widget);
-            widget->setDecimals(value);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_tointeger(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setDecimals, value);
          return 0;
       }
       luastackchange_t maximum(lua_State* L) {
@@ -244,14 +177,8 @@ namespace {
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() {
-            const auto blocker = QSignalBlocker(widget);
-            widget->setMaximum(value);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_tonumber(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setMaximum, value);
          return 0;
       }
       luastackchange_t minimum(lua_State* L) {
@@ -259,14 +186,8 @@ namespace {
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() {
-            const auto blocker = QSignalBlocker(widget);
-            widget->setMinimum(value);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_tonumber(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setMinimum, value);
          return 0;
       }
       luastackchange_t prefix(lua_State* L) {
@@ -274,11 +195,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setPrefix(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setPrefix, value);
          return 0;
       }
       luastackchange_t read_only(lua_State* L) {
@@ -286,11 +204,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto* widget = (wrapped_type*)self.widget;
-         auto* task   = new tasks::s2m::lambda(false);
-         auto  value  = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setReadOnly(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setReadOnly, value);
          return 0;
       }
       luastackchange_t step(lua_State* L) {
@@ -298,14 +213,8 @@ namespace {
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() {
-            const auto blocker = QSignalBlocker(widget);
-            widget->setSingleStep(value);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_tonumber(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setSingleStep, value);
          return 0;
       }
       luastackchange_t suffix(lua_State* L) {
@@ -313,11 +222,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setSuffix(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setSuffix, value);
          return 0;
       }
       luastackchange_t value(lua_State* L) {
@@ -325,14 +231,8 @@ namespace {
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = lua_tonumber(L, 2);
-         task->handler = [widget, value]() {
-            const auto blocker = QSignalBlocker(widget);
-            widget->setValue(value);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_tonumber(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setValue, value);
          return 0;
       }
       luastackchange_t wraparound(lua_State* L) {
@@ -340,11 +240,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto* widget = (wrapped_type*)self.widget;
-         auto* task   = new tasks::s2m::lambda(false);
-         auto  value  = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setWrapping(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QDoubleSpinBox::setWrapping, value);
          return 0;
       }
    }

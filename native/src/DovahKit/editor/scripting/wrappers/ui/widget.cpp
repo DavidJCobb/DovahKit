@@ -15,6 +15,8 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../../../helpers/lua/qt_variant.h"
 
+#include "helpers/widget_properties.h"
+
 namespace {
    using namespace editor_script;
    using cls = wrappers::ui::widget;
@@ -339,14 +341,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto* widget  = self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->isEnabled(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::isEnabled);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -403,14 +398,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->toolTip(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::toolTip);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -418,14 +406,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->whatsThis(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::whatsThis);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -436,11 +417,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         bool  value   = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setEnabled(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setEnabled, value);
          return 0;
       }
       luastackchange_t layout_margins(lua_State* L) {
@@ -594,11 +572,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "tooltip text (string) expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setToolTip(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setToolTip, value);
          return 0;
       }
       luastackchange_t whats_this(lua_State* L) {
@@ -606,11 +581,8 @@ namespace {
          luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         auto  value   = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler = [widget, value]() { widget->setWhatsThis(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setWhatsThis, value);
          return 0;
       }
    }

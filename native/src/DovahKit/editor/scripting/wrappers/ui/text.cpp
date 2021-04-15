@@ -9,6 +9,8 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../ui/util/alignment.h"
 
+#include "helpers/widget_properties.h"
+
 namespace {
    Qt::TextInteractionFlags flags_for_allow_selection = Qt::TextInteractionFlag::TextSelectableByKeyboard | Qt::TextInteractionFlag::TextSelectableByMouse;
 }
@@ -70,14 +72,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget = (wrapped_type*)self.widget;
-            auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->text(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLabel::text);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -85,14 +80,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result;
-         {
-            auto* widget  = (wrapped_type*) self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->wordWrap(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QLabel::wordWrap);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -148,10 +136,7 @@ namespace {
          if (lua_toboolean(L, 2))
             flags = flags_for_allow_selection;
          //
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [widget, flags]() { widget->setTextInteractionFlags(flags); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLabel::setTextInteractionFlags, flags);
          return 0;
       }
       luastackchange_t text(lua_State* L) {
@@ -176,11 +161,8 @@ namespace {
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
-         bool  value   = lua_toboolean(L, 2);
-         task->handler = [widget, value]() { widget->setWordWrap(value); };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLabel::setWordWrap, value);
          return 0;
       }
    }
