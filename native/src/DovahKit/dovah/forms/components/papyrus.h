@@ -132,6 +132,7 @@ namespace dovah::loaded_forms::components {
                      bool save(property_type, const script_data_header& header, tes_subrecord_writer&) const noexcept;
                      void clone_from(property_type, const value_t& source, loaded_forms::Form& owner_of_clone) noexcept;
                      //
+                     value_t() {}
                      explicit value_t(bool b) : boolean(b) {}
                      explicit value_t(float f) : float32(f) {}
                      explicit value_t(double d) : float32(d) {}
@@ -148,7 +149,7 @@ namespace dovah::loaded_forms::components {
                   std::vector<value_t> values;
                   //
                   bool load(const script_data_header& header, tes_subrecord_reader&);
-                  bool save(const script_data_header& header, tes_subrecord_writer&) const noexcept;
+                  bool save(const script_data_header& header, tes_subrecord_writer&, save_interface_t&) noexcept;
                   void clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
                   void clear(loaded_forms::Form& my_owner) noexcept;
@@ -161,7 +162,7 @@ namespace dovah::loaded_forms::components {
                   std::vector<property> properties;
                   //
                   bool load(const script_data_header& owner, tes_subrecord_reader&);
-                  bool save(const script_data_header& owner, tes_subrecord_writer&) const noexcept;
+                  bool save(const script_data_header& owner, tes_subrecord_writer&, save_interface_t&) noexcept;
                   void clear_properties(loaded_forms::Form& owner);
                   void clone_from(const script& source, loaded_forms::Form& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;

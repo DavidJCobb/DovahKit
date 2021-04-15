@@ -72,6 +72,7 @@ namespace dovah {
       uint32_t       winapi_error    = 0;
       std::vector<relevant_form> relevant_forms;
       std::vector<std::string>   relevant_files;
+      std::vector<std::string>   relevant_strings;
       std::array<uint32_t, 4>    extra_integers = {};
 
       void add_relevant_form(const form_stub&);

@@ -952,6 +952,30 @@ namespace editor_helpers {
                text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
             }
             break;
+         case notice_code::papyrus_property_has_multiple_scalar_values:
+            {
+               text = QObject::tr("A Papyrus property somewhere on form %1 was not an array, but had multiple values in-memory. DovahKit must've done something wrong...", "notice_code::papyrus_property_has_multiple_scalar_values");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form);
+            }
+            break;
+         case notice_code::papyrus_property_is_scalar_but_empty:
+            {
+               text = QObject::tr("A Papyrus property somewhere on form %1 was not an array, but had no value in-memory. DovahKit must've done something wrong... We saved it with a default value (zero, empty string, None, etc.).", "notice_code::papyrus_property_is_scalar_but_empty");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form);
+            }
+            break;
             //
          case notice_code::unknown_error:
          default:

@@ -1,6 +1,7 @@
 #include "papyrus.h"
 #include "../_common_cpp.h"
 #include "../../logging.h"
+#include "../../notice_code_list.h"
 #include <cassert>
 
 #include "../../../helpers/unordered_map.h"
@@ -130,7 +131,7 @@ namespace dovah::loaded_forms::components::papyrus {
          return false;
       subrecord.write(uint16_t(this->scripts.size()));
       for (auto& script : this->scripts) {
-         if (!script.save(this->header, subrecord))
+         if (!script.save(this->header, subrecord, intfc))
             return false;
       }
       if (this->fragment_data)
@@ -197,7 +198,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   bool script_data::script::save(const script_data_header& header, tes_subrecord_writer& subrecord) const noexcept {
+   bool script_data::script::save(const script_data_header& header, tes_subrecord_writer& subrecord, save_interface_t& intfc) noexcept {
       subrecord.write_length_prefixed_string<2>(this->name);
       uint16_t count = this->properties.size();
       if (this->properties.size() > std::numeric_limits<decltype(count)>::max()) {
@@ -208,7 +209,7 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.write(count);
       for (uint16_t i = 0; i < count; i++) {
          auto& prop = this->properties[i];
-         if (!prop.save(header, subrecord)) {
+         if (!prop.save(header, subrecord, intfc)) {
             dovah::logging::print_line("Problem encountered while saving property %d for script %s.", i, this->name.c_str());
             return false;
          }
@@ -392,7 +393,7 @@ namespace dovah::loaded_forms::components::papyrus {
       //
       return true;
    }
-   bool script_data::property::save(const script_data_header& header, tes_subrecord_writer& subrecord) const noexcept {
+   bool script_data::property::save(const script_data_header& header, tes_subrecord_writer& subrecord, save_interface_t& intfc) noexcept {
       subrecord.write_length_prefixed_string<2>(this->name);
       subrecord.write(this->type);
       subrecord.write(this->status);
@@ -400,7 +401,37 @@ namespace dovah::loaded_forms::components::papyrus {
          uint32_t count = this->values.size();
          subrecord.write(count);
       } else {
-         assert(this->values.size() == 1 && "A non-array Papyrus property should not have more than one value.");
+         auto s = this->values.size();
+         if (s == 0) {
+            dovah::detailed_notice warning;
+            warning.code = notice_code::papyrus_property_is_scalar_but_empty;
+            // TODO: Can we report the script and property name?
+            intfc.log_save_warning(warning);
+            //
+            switch (this->type) {
+               case property_type::boolean:
+                  this->values.emplace_back(false);
+                  break;
+               case property_type::float32:
+                  this->values.emplace_back(0.0F);
+                  break;
+               case property_type::integer:
+                  this->values.emplace_back(0);
+                  break;
+               case property_type::string:
+                  this->values.emplace_back("");
+                  break;
+               case property_type::object:
+                  this->values.emplace_back();
+                  break;
+            }
+         } else if (s != 1) {
+            dovah::detailed_notice error;
+            error.code = notice_code::papyrus_property_has_multiple_scalar_values;
+            // TODO: Can we report the script and property name?
+            intfc.set_save_error(error);
+            return false;
+         }
       }
       for (auto& value : this->values) {
          if (!value.save(this->type, header, subrecord)) {

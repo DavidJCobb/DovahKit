@@ -60,11 +60,3 @@ do -- force-value window
    picker.minimum = -(picker.maximum - 1)
    window:show()
 end
---
--- BUG: The above works properly, but sometimes, the radio buttons don't 
--- update visually until you mouseover them, focus their containing window, 
--- etc..
---
--- The above code runs with the UI locked, so I'm guessing we're filtering 
--- an event that we shouldn't be.
---

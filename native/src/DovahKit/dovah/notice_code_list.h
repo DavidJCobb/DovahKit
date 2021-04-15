@@ -104,6 +104,8 @@ namespace dovah {
          non_texture_note_includes_texture_path      = 0x0000005F, // A NOTE form included an XNAM subrecord but is not a texture note.
          length_prefixed_string_was_too_long_to_save = 0x00000060,
          too_many_destruction_stages_to_save         = 0x00000061,
+         papyrus_property_has_multiple_scalar_values = 0x00000062, // Cannot save a non-array Papyrus property when it has multiple values in-memory. Something edited the property incorrectly.
+         papyrus_property_is_scalar_but_empty        = 0x00000063, // Attempted to save a non-array Papyrus property that had no value. Something edited the property incorrectly. We saved it with a default.
       };
    };
 }

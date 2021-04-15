@@ -3161,12 +3161,21 @@ namespace dovah {
       void form_save::log_save_warning(detailed_notice& warning) {
          warning.type    = detailed_notice::notice_type::warning;
          warning.context = detailed_notice::notice_context::form_save;
+         if (!(warning.flags & detailed_notice::flag::has_file_offset)) {
+            warning.set_file_offset(this->writer.get_output_position());
+         }
          this->owner._log_save_warning(warning);
       }
       void form_save::set_save_error(const detailed_notice& error) {
          if (this->writer.error.is_defined())
             return;
-         this->writer.error = error;
+         auto& we = this->writer.error;
+         we = error;
+         we.type    = detailed_notice::notice_type::error;
+         we.context = detailed_notice::notice_context::form_save;
+         if (!(we.flags & detailed_notice::flag::has_file_offset)) {
+            we.set_file_offset(this->writer.get_output_position());
+         }
       }
    }
    #pragma endregion

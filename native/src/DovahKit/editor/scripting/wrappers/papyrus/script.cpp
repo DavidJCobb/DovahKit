@@ -83,19 +83,22 @@ namespace {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          lua_settop(L, 2);
          //
-         auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
             luaL_error(L, "script wrapper has no underlying object (deleted?)");
+         __assume(script != nullptr);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "script name (string) expected");
          std::string name = lua_tostring(L, 2);
          if (script->lookup_property(name) != nullptr) {
             luaL_error(L, "script %s already has a property named \"%s\"", script->name.c_str(), name.c_str());
          }
          self.before_edit();
-         auto& s = script->properties.emplace_back(0);
-         s.name = name;
-         s.type = dovah::loaded_forms::components::papyrus::property_type::integer;
+         auto& s  = script->properties.emplace_back();
+         s.name   = name;
+         s.type   = dovah::loaded_forms::components::papyrus::property_type::integer;
+         s.status = dovah::loaded_forms::components::papyrus::script_data::property_status::altered;
+         s.values.emplace_back(0);
          self.after_edit();
          //
          wrapper out = self;
@@ -107,7 +110,7 @@ namespace {
       luastackchange_t remove_property(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
-         auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
             luaL_error(L, "script wrapper has no underlying object (deleted?)");
