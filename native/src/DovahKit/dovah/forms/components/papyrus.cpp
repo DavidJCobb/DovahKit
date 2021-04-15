@@ -7,6 +7,7 @@
 #include "../../../helpers/unordered_map.h"
 
 namespace dovah::loaded_forms::components::papyrus {
+   #pragma region script_data_header
    bool script_data_header::load(tes_subrecord_reader& subrecord) {
       if (subrecord.read(this->version))
          if (subrecord.read(this->object_format))
@@ -20,6 +21,7 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.write(this->version);
       subrecord.write(this->object_format);
    }
+   #pragma endregion
 
    void script_data::for_each_script(std::function<bool(script_data::script*)> functor) {
       auto& list = this->scripts;
@@ -80,14 +82,14 @@ namespace dovah::loaded_forms::components::papyrus {
       list.erase(list.begin() + index);
    }
    
+   #pragma region Papyrus root serialization and boilerplate
    bool script_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (!this->header.load(subrecord))
          return false;
       uint16_t count;
       if (!subrecord.read(count))
          return false;
-      size_t size = this->scripts.size();
-      this->scripts.reserve(size + count);
+      this->scripts.reserve(this->scripts.size() + count);
       for (uint16_t i = 0; i < count; i++) {
          //
          // If a form contains multiple instances of the same script, the last-loaded one overrides 
@@ -179,6 +181,7 @@ namespace dovah::loaded_forms::components::papyrus {
       if (this->fragment_data)
          this->fragment_data->clear(my_owner);
    }
+   #pragma endregion
 
    #pragma region Script sub-objects loading
    bool script_data::script::load(const script_data_header& header, tes_subrecord_reader& subrecord) {
@@ -188,12 +191,15 @@ namespace dovah::loaded_forms::components::papyrus {
          return false;
       subrecord.unchecked_read(this->status);
       subrecord.unchecked_read(count);
-      this->properties.resize(count);
+      this->properties.reserve(this->properties.size() + count);
       for (uint16_t i = 0; i < count; i++) {
-         auto& prop = this->properties[i];
-         if (!prop.load(header, subrecord)) {
-            dovah::logging::print_line("Problem encountered while loading property %d for script %s.", i, this->name.c_str());
+         property prop;
+         if (!prop.load(header, subrecord))
             return false;
+         if (auto* prior = this->lookup_property(prop.name)) {
+            *prior = prop;
+         } else {
+            this->properties.push_back(prop);
          }
       }
       return true;
@@ -711,7 +717,123 @@ namespace dovah::loaded_forms::components::papyrus {
    #pragma endregion
 
    #pragma region Use info
-   /*static*/ void script_data::script::extract_name(const script_data_header& header, tes_subrecord_reader& subrecord, std::string& out) {
+   #pragma region property
+   /*static*/ void script_data::property::extract_name_and_skip_remainder(const script_data_header& header, tes_subrecord_reader& subrecord, std::string& out) {
+      subrecord.read_length_prefixed_string<2>(out);
+      property::skip_use_info(subrecord, true);
+   }
+   /*static*/ void script_data::property::generate_use_info(const script_data_header& header, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib, bool already_read_name) {
+      form_id_t formID;
+      //
+      if (!already_read_name) {
+         subrecord.skip_length_prefixed_string<2>();
+      }
+      //
+      property_type type;
+      subrecord.read(type);
+      subrecord.skip_bytes(1); // property status
+      uint32_t value_count = 1;
+      if (property_type_is_array(type)) {
+         if (!subrecord.read(value_count))
+            return;
+      }
+      switch (type) {
+         case property_type::object:
+            if (header.object_format == 2) {
+               subrecord.skip_bytes(4);
+               subrecord.read(formID);
+               uib.add_outbound_reference(formID);
+            } else {
+               subrecord.read(formID);
+               uib.add_outbound_reference(formID);
+               subrecord.skip_bytes(4);
+            }
+            break;
+         case property_type::string:
+            subrecord.skip_length_prefixed_string<2>();
+            break;
+         case property_type::integer:
+         case property_type::float32:
+            subrecord.skip_bytes(4);
+            break;
+         case property_type::boolean:
+            subrecord.skip_bytes(1);
+            break;
+         case property_type::array_of_object:
+            for (uint32_t k = 0; k < value_count; k++) {
+               if (header.object_format == 2) {
+                  subrecord.skip_bytes(4);
+                  subrecord.read(formID);
+                  uib.add_outbound_reference(formID);
+               } else {
+                  subrecord.read(formID);
+                  uib.add_outbound_reference(formID);
+                  subrecord.skip_bytes(4);
+               }
+            }
+            break;
+         case property_type::array_of_string:
+            for (uint32_t k = 0; k < value_count; k++)
+               subrecord.skip_length_prefixed_string<2>();
+            break;
+         case property_type::array_of_integer:
+         case property_type::array_of_float32:
+            subrecord.skip_bytes(4 * value_count);
+            break;
+         case property_type::array_of_boolean:
+            subrecord.skip_bytes(value_count);
+            break;
+      }
+   }
+   /*static*/ void script_data::property::skip_use_info(tes_subrecord_reader& subrecord, bool already_read_name) {
+      form_id_t formID;
+      //
+      if (!already_read_name) {
+         subrecord.skip_length_prefixed_string<2>();
+      }
+      //
+      property_type type;
+      subrecord.read(type);
+      subrecord.skip_bytes(1); // property status
+      uint32_t value_count = 1;
+      if (property_type_is_array(type)) {
+         if (!subrecord.read(value_count))
+            return;
+      }
+      switch (type) {
+         case property_type::object:
+            subrecord.skip_bytes(8);
+            break;
+         case property_type::string:
+            subrecord.skip_length_prefixed_string<2>();
+            break;
+         case property_type::integer:
+         case property_type::float32:
+            subrecord.skip_bytes(4);
+            break;
+         case property_type::boolean:
+            subrecord.skip_bytes(1);
+            break;
+         case property_type::array_of_object:
+            subrecord.skip_bytes(8 * value_count);
+            break;
+         case property_type::array_of_string:
+            for (uint32_t k = 0; k < value_count; k++)
+               subrecord.skip_length_prefixed_string<2>();
+            break;
+         case property_type::array_of_integer:
+         case property_type::array_of_float32:
+            subrecord.skip_bytes(4 * value_count);
+            break;
+         case property_type::array_of_boolean:
+            subrecord.skip_bytes(value_count);
+            break;
+      }
+   }
+   #pragma endregion
+
+   #pragma region script
+   /*static*/ void script_data::script::extract_name_and_skip_remainder(const script_data_header& header, tes_subrecord_reader& subrecord, std::string& out) {
       subrecord.read_length_prefixed_string<2>(out);
       script::skip_use_info(subrecord, true);
    }
@@ -725,63 +847,31 @@ namespace dovah::loaded_forms::components::papyrus {
       uint16_t prop_count;
       if (!subrecord.read(prop_count))
          return;
-      for (uint16_t j = 0; j < prop_count; j++) { // script properties
-         subrecord.skip_length_prefixed_string<2>();
-         //
-         property_type type;
-         subrecord.read(type);
-         subrecord.skip_bytes(1); // property status
-         uint32_t value_count = 1;
-         if (property_type_is_array(type)) {
-            if (!subrecord.read(value_count))
-               return;
-         }
-         switch (type) {
-            case property_type::object:
-               if (header.object_format == 2) {
-                  subrecord.skip_bytes(4);
-                  subrecord.read(formID);
-                  uib.add_outbound_reference(formID);
-               } else {
-                  subrecord.read(formID);
-                  uib.add_outbound_reference(formID);
-                  subrecord.skip_bytes(4);
-               }
-               break;
-            case property_type::string:
-               subrecord.skip_length_prefixed_string<2>();
-               break;
-            case property_type::integer:
-            case property_type::float32:
-               subrecord.skip_bytes(4);
-               break;
-            case property_type::boolean:
-               subrecord.skip_bytes(1);
-               break;
-            case property_type::array_of_object:
-               for (uint32_t k = 0; k < value_count; k++) {
-                  if (header.object_format == 2) {
-                     subrecord.skip_bytes(4);
-                     subrecord.read(formID);
-                     uib.add_outbound_reference(formID);
-                  } else {
-                     subrecord.read(formID);
-                     uib.add_outbound_reference(formID);
-                     subrecord.skip_bytes(4);
-                  }
-               }
-               break;
-            case property_type::array_of_string:
-               for (uint32_t k = 0; k < value_count; k++)
-                  subrecord.skip_length_prefixed_string<2>();
-               break;
-            case property_type::array_of_integer:
-            case property_type::array_of_float32:
-               subrecord.skip_bytes(4 * value_count);
-               break;
-            case property_type::array_of_boolean:
-               subrecord.skip_bytes(value_count);
-               break;
+      //
+      // If a script contains multiple instances of the same property, the last-loaded one 
+      // overrides the others in full.
+      //
+      auto pos_before_props = subrecord.current_pos();
+      std::unordered_map<std::string, uint32_t> prop_counts;
+      for (uint16_t i = 0; i < prop_count; ++i) {
+         std::string key;
+         property::extract_name_and_skip_remainder(header, subrecord, key);
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         ++prop_counts[key];
+      }
+      subrecord.seek(pos_before_props); // can't just reset to the start of the subrecord; that breaks for scripts on aliases
+      assert(subrecord.current_pos() == pos_before_props);
+      //
+      for (uint16_t i = 0; i < prop_count; ++i) {
+         std::string key;
+         subrecord.read_length_prefixed_string<2>(key);
+         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
+         auto& remaining = prop_counts[key];
+         assert(remaining > 0);
+         if (--remaining == 0) {
+            property::generate_use_info(header, subrecord, uib, true);
+         } else {
+            property::skip_use_info(subrecord, true);
          }
       }
    }
@@ -795,48 +885,11 @@ namespace dovah::loaded_forms::components::papyrus {
       uint16_t prop_count;
       if (!subrecord.read(prop_count))
          return;
-      for (uint16_t j = 0; j < prop_count; j++) { // script properties
-         subrecord.skip_length_prefixed_string<2>();
-         //
-         property_type type;
-         subrecord.read(type);
-         subrecord.skip_bytes(1); // property status
-         uint32_t value_count = 1;
-         if (property_type_is_array(type)) {
-            if (!subrecord.read(value_count))
-               return;
-         }
-         switch (type) {
-            case property_type::object:
-               subrecord.skip_bytes(property_object_value::serialized_size);
-               break;
-            case property_type::string:
-               subrecord.skip_length_prefixed_string<2>();
-               break;
-            case property_type::integer:
-            case property_type::float32:
-               subrecord.skip_bytes(4);
-               break;
-            case property_type::boolean:
-               subrecord.skip_bytes(1);
-               break;
-            case property_type::array_of_object:
-               subrecord.skip_bytes(value_count * property_object_value::serialized_size);
-               break;
-            case property_type::array_of_string:
-               for (uint32_t k = 0; k < value_count; k++)
-                  subrecord.skip_length_prefixed_string<2>();
-               break;
-            case property_type::array_of_integer:
-            case property_type::array_of_float32:
-               subrecord.skip_bytes(4 * value_count);
-               break;
-            case property_type::array_of_boolean:
-               subrecord.skip_bytes(value_count);
-               break;
-         }
-      }
+      for (uint16_t j = 0; j < prop_count; j++)
+         property::skip_use_info(subrecord, false);
    }
+   #pragma endregion
+
    /*static*/ script_data_header script_data::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
       //
@@ -854,7 +907,7 @@ namespace dovah::loaded_forms::components::papyrus {
       std::unordered_map<std::string, uint32_t> script_counts;
       for (uint16_t i = 0; i < count; ++i) {
          std::string key;
-         script::extract_name(header, subrecord, key);
+         script::extract_name_and_skip_remainder(header, subrecord, key);
          std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return std::tolower(c); });
          ++script_counts[key];
       }

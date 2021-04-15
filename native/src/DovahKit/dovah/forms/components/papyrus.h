@@ -153,6 +153,10 @@ namespace dovah::loaded_forms::components {
                   void clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
                   void clear(loaded_forms::Form& my_owner) noexcept;
+                  //
+                  static void extract_name_and_skip_remainder(const script_data_header& header, tes_subrecord_reader&, std::string&);
+                  static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&, bool already_read_name);
+                  static void skip_use_info(tes_subrecord_reader&, bool already_read_name);
             };
             class script {
                friend script_data;
@@ -168,7 +172,7 @@ namespace dovah::loaded_forms::components {
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
                   void clear(loaded_forms::Form& my_owner) noexcept;
                   //
-                  static void extract_name(const script_data_header& header, tes_subrecord_reader&, std::string&);
+                  static void extract_name_and_skip_remainder(const script_data_header& header, tes_subrecord_reader&, std::string&);
                   static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&, bool already_read_name);
                   static void skip_use_info(tes_subrecord_reader&, bool already_read_name);
 
