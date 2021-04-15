@@ -532,7 +532,7 @@ bool DovahKitScriptVMCore::find_abandoned_widgets_and_groups(QObject* basis, QLi
    } else if (auto* bg = qobject_cast<QButtonGroup*>(basis)) {
       gl = { bg };
    } else {
-      assert(false && "unsupported QObject type"));
+      assert(false && "unsupported QObject type");
    }
    while (!gl.isEmpty()) {
       QList<QButtonGroup*> next_pass;

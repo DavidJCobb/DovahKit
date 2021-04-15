@@ -34,12 +34,10 @@ namespace {
          if (!self.widget)
             return 0;
          auto* result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QRadioButton::group);
-         if (!result) {
-            lua_pushnil(L);
-            return 1;
-         }
+         if (!result)
+            return 0;
          wrapper out;
-         auto* mt = wrap_button_group(out, result);
+         auto* mt = wrap_button_group(out, *result);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t id(lua_State* L) {

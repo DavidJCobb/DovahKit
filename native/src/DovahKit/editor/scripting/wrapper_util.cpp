@@ -4,6 +4,7 @@
 
 namespace editor_script {
    extern const char* wrap_form(wrapper& out, dovah::form_stub* stub) {
+      assert(stub != nullptr && "Wrappers with null pertinent pointers are illegal! Push nil to Lua instead!");
       out.stub = stub;
       out.type = wrapper_type::form_data;
       if (stub) {
@@ -27,6 +28,7 @@ namespace editor_script {
       return wrappers::form::metatable_key;
    }
    extern const char* wrap_widget(wrapper& out, QWidget* widget) {
+      assert(widget != nullptr && "Wrappers with null pertinent pointers are illegal! Push nil to Lua instead!");
       out.widget = widget;
       out.type   = wrapper_type::ui;
       if (widget) {
@@ -44,13 +46,15 @@ namespace editor_script {
             return wrappers::ui::progress_bar::metatable_key;
          if (qobject_cast<QPushButton*>(widget))
             return wrappers::ui::button::metatable_key;
+         if (qobject_cast<QRadioButton*>(widget))
+            return wrappers::ui::radio_button::metatable_key;
          if (qobject_cast<FormPicker*>(widget))
             return wrappers::ui::formpicker::metatable_key;
       }
       return wrappers::ui::widget::metatable_key; // TODO: use a generic widget metatable
    }
-   extern const char* wrap_button_group(wrapper& out, QButtonGroup* group) {
-      out.button_group = group;
+   extern const char* wrap_button_group(wrapper& out, QButtonGroup& group) {
+      out.button_group = &group;
       out.type         = wrapper_type::ui_button_group;
       return wrappers::ui::radio_group::metatable_key;
    }

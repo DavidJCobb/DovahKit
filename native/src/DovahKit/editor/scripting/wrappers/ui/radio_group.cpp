@@ -50,6 +50,8 @@ namespace {
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
+         if (!result)
+            return 0;
          wrapper out;
          auto* mt = wrap_widget(out, result);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
@@ -66,7 +68,7 @@ namespace {
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
-         if (result < 0)
+         if (result == -1)
             lua_pushnil(L);
          else
             lua_pushinteger(L, result + 1);
@@ -147,8 +149,10 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
          //
+         if (!created)
+            return 0;
          wrapper out;
-         auto* mt = wrap_button_group(out, created);
+         auto* mt = wrap_button_group(out, *created);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t is(lua_State* L) {
