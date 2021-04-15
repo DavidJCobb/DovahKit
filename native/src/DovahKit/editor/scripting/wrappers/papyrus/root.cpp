@@ -85,13 +85,34 @@ namespace {
    using namespace editor_script;
    //
    namespace _methods {
+      luastackchange_t add_script(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         lua_settop(L, 2);
+         //
+         auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         auto& root = _unwrap(L, self);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "script name (string) expected");
+         std::string script_name = lua_tostring(L, 2);
+         if (root.lookup_script(script_name) != nullptr) {
+            // TODO: vary text for scripts on aliases
+            luaL_argcheck(L, false, 2, "a script with this name is already present");
+         }
+         self.before_edit();
+         auto& s = root.scripts.emplace_back();
+         s.name = script_name;
+         self.after_edit();
+         //
+         wrapper out = self;
+         out.append_part(wrapper_part_types::papyrus_script);
+         out.is_collection = true;
+         out.into_collection(root.scripts.size() - 1);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_script::metatable_key);
+      }
       luastackchange_t remove_script(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
          auto& root = _unwrap(L, self);
-         auto& list = root.scripts;
-         auto  size = list.size();
          //
          // The way this works is fairly simple. The first non-self argument can be a wrapped 
          // collection item, the name of a collection item, or the index of a collection item. 
@@ -132,11 +153,9 @@ namespace {
          if (!script->depth) // Didn't manage to build a usable wrapper for the search-and-remove. Exit early.
             return 0;
          auto index = script->last_part().index;
-         if (index >= size) // Invalid index on the search-and-remove wrapper. Exit early.
-            return 0;
          //
          self.before_edit();
-         list.erase(list.begin() + index); // remove the underlying wrapped object
+         root.remove_script(*self.form, index); // remove the underlying wrapped object
          self.after_edit();
          //
          DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(*script); // update sibling wrappers and kill the wrapper
@@ -169,6 +188,7 @@ namespace {
 
 namespace editor_script::wrappers {
    /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_methods = {
+      { "add_script",    &_methods::add_script },
       { "remove_script", &_methods::remove_script },
    };
    /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_getters = {

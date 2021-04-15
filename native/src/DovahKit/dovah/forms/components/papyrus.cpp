@@ -34,7 +34,51 @@ namespace dovah::loaded_forms::components::papyrus {
             return &script;
       return nullptr;
    }
-   //
+   void script_data::remove_script(loaded_forms::Form& owner, const std::string& name) {
+      auto& list = this->scripts;
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         auto& script = *it;
+         if (_stricmp(script.name.c_str(), name.c_str()) != 0)
+            continue;
+         script.clear(owner);
+         list.erase(it);
+         return;
+      }
+   }
+   void script_data::remove_script(loaded_forms::Form& owner, size_t index) {
+      auto& list = this->scripts;
+      if (index >= list.size())
+         return;
+      list[index].clear(owner);
+      list.erase(list.begin() + index);
+   }
+
+   script_data::property* script_data::script::lookup_property(const std::string& name) {
+      auto& list = this->properties;
+      for (auto& prop : list)
+         if (_stricmp(prop.name.c_str(), name.c_str()) == 0)
+            return &prop;
+      return nullptr;
+   }
+   void script_data::script::remove_property(loaded_forms::Form& owner, const std::string& name) {
+      auto& list = this->properties;
+      for (auto it = list.begin(); it != list.end(); ++it) {
+         auto& prop = *it;
+         if (_stricmp(prop.name.c_str(), name.c_str()) != 0)
+            continue;
+         prop.clear(owner);
+         list.erase(it);
+         return;
+      }
+   }
+   void script_data::script::remove_property(loaded_forms::Form& owner, size_t index) {
+      auto& list = this->properties;
+      if (index >= list.size())
+         return;
+      list[index].clear(owner);
+      list.erase(list.begin() + index);
+   }
+   
    bool script_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
       if (!this->header.load(subrecord))
          return false;

@@ -90,7 +90,9 @@ namespace dovah::loaded_forms::components {
             inline bool empty() const noexcept { return this->scripts.empty(); }
             void for_each_script(std::function<bool(script*)>); // return true to stop iterating early
             script* lookup_script(const std::string& name); // case-insensitive
-            //
+            void remove_script(loaded_forms::Form& owner, const std::string& name);
+            void remove_script(loaded_forms::Form& owner, size_t index);
+            
          public:
             enum class script_status : uint8_t {
                local   = 0,
@@ -129,6 +131,14 @@ namespace dovah::loaded_forms::components {
                      bool load(property_type, const script_data_header& header, tes_subrecord_reader&);
                      bool save(property_type, const script_data_header& header, tes_subrecord_writer&) const noexcept;
                      void clone_from(property_type, const value_t& source, loaded_forms::Form& owner_of_clone) noexcept;
+                     //
+                     explicit value_t(bool b) : boolean(b) {}
+                     explicit value_t(float f) : float32(f) {}
+                     explicit value_t(double d) : float32(d) {}
+                     value_t(int i) : integer(i) {}
+                     value_t(const std::string& s) : string(s) {}
+                     explicit value_t(const char* s) : string(s) {}
+                     explicit value_t(const char8_t* s) : string((const char*)s) {}
                   };
                   //
                public:
@@ -160,6 +170,10 @@ namespace dovah::loaded_forms::components {
                   static void extract_name(const script_data_header& header, tes_subrecord_reader&, std::string&);
                   static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&, bool already_read_name);
                   static void skip_use_info(tes_subrecord_reader&, bool already_read_name);
+
+                  property* lookup_property(const std::string& name); // case-insensitive
+                  void remove_property(loaded_forms::Form& owner, const std::string& name);
+                  void remove_property(loaded_forms::Form& owner, size_t index);
 
                   //
                   // NOTE:

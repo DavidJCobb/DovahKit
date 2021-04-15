@@ -78,6 +78,88 @@ namespace {
 namespace {
    using namespace editor_script;
    //
+   namespace _methods {
+      luastackchange_t add_property(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         lua_settop(L, 2);
+         //
+         auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         auto* script = wrappers::papyrus_script::unwrap(self, true);
+         if (script == nullptr)
+            luaL_error(L, "script wrapper has no underlying object (deleted?)");
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "script name (string) expected");
+         std::string name = lua_tostring(L, 2);
+         if (script->lookup_property(name) != nullptr) {
+            luaL_error(L, "script %s already has a property named \"%s\"", script->name.c_str(), name.c_str());
+         }
+         self.before_edit();
+         auto& s = script->properties.emplace_back(0);
+         s.name = name;
+         s.type = dovah::loaded_forms::components::papyrus::property_type::integer;
+         self.after_edit();
+         //
+         wrapper out = self;
+         out.append_part(wrapper_part_types::papyrus_property);
+         out.is_collection = true;
+         out.into_collection(script->properties.size() - 1);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_property::metatable_key);
+      }
+      luastackchange_t remove_property(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
+         auto* script = wrappers::papyrus_script::unwrap(self, true);
+         if (script == nullptr)
+            luaL_error(L, "script wrapper has no underlying object (deleted?)");
+         //
+         // The way this works is fairly simple. The first non-self argument can be a wrapped 
+         // collection item, the name of a collection item, or the index of a collection item. 
+         // How do we make use of this? Well, we need to remove the desired item from the 
+         // wrapped collection, and then we need to tell the VM to update all sibling wrappers. 
+         // Consider this collection:
+         //
+         //    A B C D E
+         //
+         // If the script sets a variable to the fourth collection item, then that variable 
+         // will point at "D." If the script then removes the second collection item, we want 
+         // to make sure that the script variable that points at "D" still does point at "D," 
+         // despite "D" no longer being the fourth item but rather now being the third item. 
+         // This means that when we delete items from wrapped sequential collections, we need 
+         // to also update the wrappers for all items in the collection that came after the 
+         // deleted item.
+         //
+         lua_settop(L, 2); // remove extra arguments
+         auto* prop = wrapper_from_stack<wrappers::papyrus_property>(L, 2);
+         if (!script) {
+            //
+            // We weren't given a wrapped script, so what we received was either an index, a 
+            // name, or an invalid argument. Pass it directly to the collection; that's the 
+            // easiest way to "convert it to a wrapper" while avoiding code duplication. 
+            // Essentially,
+            //
+            //    arg = self.scripts[arg]
+            //
+            lua_getfield(L, 1, "scripts"); // STACK: - [ self, arg, self.scripts ] +
+            lua_rotate  (L, 2, 1);         // STACK: - [ self, self.scripts, arg ] +
+            lua_gettable(L, 2);            // STACKL - [ self, self.scripts, self.scripts[arg] ] +
+            if (lua_isnoneornil(L, 3))
+               return 0;
+            prop = wrapper_from_stack<wrappers::papyrus_property>(L, 3);
+            if (!prop)
+               return 0;
+         }
+         if (!prop->depth) // Didn't manage to build a usable wrapper for the search-and-remove. Exit early.
+            return 0;
+         auto index = prop->last_part().index;
+         //
+         self.before_edit();
+         script->remove_property(*self.form, index); // remove the underlying wrapped object
+         self.after_edit();
+         //
+         DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(*prop); // update sibling wrappers and kill the wrapper
+         return 0;
+      }
+   }
    namespace _getters {
       luastackchange_t name(lua_State* L) {
          auto& self   = get_wrapper_for_thiscall<wrapper_t>(L);
@@ -128,7 +210,10 @@ namespace {
 }
 
 namespace editor_script::wrappers {
-   /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_methods = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_methods = {
+      { "add_property",    &_methods::add_property },
+      { "remove_property", &_methods::remove_property },
+   };
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_getters = {
       { "name",       &_getters::name },
       { "properties", &_getters::properties },
