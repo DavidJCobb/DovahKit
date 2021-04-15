@@ -281,6 +281,8 @@
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\formpicker.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\radio_group.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\spinbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\text.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\textbox.cpp" />
@@ -610,6 +612,8 @@
     <ClInclude Include="editor\scripting\wrappers\ui\formpicker.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\helpers\widget_properties.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\radio_button.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\radio_group.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\text.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\textbox.h" />
@@ -806,6 +810,7 @@
     <Text Include="editor\scripting\_docs\abstract.txt" />
     <Text Include="editor\scripting\_docs\case studies.txt" />
     <Text Include="editor\scripting\_docs\native classes.txt" />
+    <Text Include="editor\scripting\_docs\ui - object lifetimes.txt" />
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />

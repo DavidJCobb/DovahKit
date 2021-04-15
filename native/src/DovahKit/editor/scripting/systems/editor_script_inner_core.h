@@ -159,13 +159,20 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       // If any widget or button group is referenced by Lua, aborts immediately and returns empty 
       // lists; otherwise, provides a list of all hierarchy-root widgets and all button groups 
       // found.
-      bool find_abandoned_widgets_and_groups(QWidget* basis, QList<QWidget*>&, QList<QButtonGroup*>&, int& all_widgets_count);
+      bool find_abandoned_widgets_and_groups(QObject* basis, QList<QWidget*>&, QList<QButtonGroup*>&, int& all_widgets_count);
+
+      void mark_abandoned_hierarchy_for_delete(const QList<QWidget*>&, const QList<QButtonGroup*>&, int all_widgets_count);
 
       QDialog* try_spawn_script_window() noexcept;
       void set_up_new_scripted_widget(QWidget*);  // Lua functions that create widgets must call this
       void accept_new_orphaned_widget(QWidget*);  // Lua functions that orphan widgets from a window must call this
       void widget_no_longer_orphaned(QWidget*);   // Lua functions that insert widgets into a window must call this
       void widget_no_longer_referenced(QWidget*); // called by wrapper internals when a widget is unreferenced
+
+      QButtonGroup* try_spawn_button_group();
+      void button_group_gained_a_member(QButtonGroup*);
+      void button_group_lost_a_member(QButtonGroup*);
+      void button_group_no_longer_referenced(QButtonGroup*);
 
       void model_observer_reference_gained(ObservableStandardItemModelObserver*); // called by userdata-interface internals when a new observer wrapper is created
       void model_observer_reference_lost(ObservableStandardItemModelObserver*);   // called by wrapper internals when an observer wrapper is unreferenced

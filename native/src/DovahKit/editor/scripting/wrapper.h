@@ -9,6 +9,7 @@
 #include "util.h"
 
 class ObservableStandardItemModelObserver;
+class QButtonGroup;
 
 namespace editor_script {
    enum class wrapper_type {
@@ -16,6 +17,7 @@ namespace editor_script {
       form_data, // a form    or some object within a form
       ui,        // a QWidget or some data   within a QWidget
       ui_model_item,
+      ui_button_group,
    };
 
    using part_type_t = cobb::eight_cc; // signature, e.g. 'FormRoot'
@@ -45,6 +47,11 @@ namespace editor_script {
          void append_part(part_type_t signature, uint32_t index = 0);
          void remove_part();
          void into_collection(uint32_t index); // asserts if (is_collection) is false
+
+         //
+         // Should only be called by the internal userdata singleton.
+         //
+         void _on_pushed();
 
          struct part {
             part_type_t signature = 0;
@@ -114,6 +121,8 @@ namespace editor_script {
          QWidget* widget = nullptr;
          //
          ObservableStandardItemModelObserver* model_observer = nullptr;
+         //
+         QButtonGroup* button_group = nullptr;
          
          inline part& last_part() noexcept {
             if (!this->depth)
@@ -135,6 +144,8 @@ namespace editor_script {
                   return this->widget;
                case wrapper_type::ui_model_item:
                   return this->model_observer;
+               case wrapper_type::ui_button_group:
+                  return this->button_group;
             }
             return nullptr;
          }

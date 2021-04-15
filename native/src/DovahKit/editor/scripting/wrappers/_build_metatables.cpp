@@ -40,6 +40,8 @@ namespace editor_script {
                define_wrapper_metatable<ui::dropdown_item>(L);
             define_wrapper_metatable<ui::formpicker>(L);
             define_wrapper_metatable<ui::progress_bar>(L);
+            define_wrapper_metatable<ui::radio_button>(L);
+            define_wrapper_metatable<ui::radio_group>(L);
             define_wrapper_metatable<ui::spinbox>(L);
             define_wrapper_metatable<ui::text>(L);
             define_wrapper_metatable<ui::textbox>(L);

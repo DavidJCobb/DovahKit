@@ -518,7 +518,7 @@ namespace {
 // Given a basis widget, searches the widget's entire containing hierarchy as well as any 
 // containing hierarchies linked by a QButtonGroup, and returns true if all of the searched 
 // hierarchies are abandoned by Lua script.
-bool DovahKitScriptVMCore::find_abandoned_widgets_and_groups(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups, int& all_widgets_count) {
+bool DovahKitScriptVMCore::find_abandoned_widgets_and_groups(QObject* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups, int& all_widgets_count) {
    widgets.clear();
    groups.clear();
    all_widgets_count = 0; // number of all widgets in all found hierarchies, if the hierarchies are all abandoned
@@ -526,8 +526,14 @@ bool DovahKitScriptVMCore::find_abandoned_widgets_and_groups(QWidget* basis, QLi
    QList<QWidget*>      wl;
    QList<QButtonGroup*> gl;
    int found = 0;
-   if (!_find_abandoned_helper(basis, wl, gl, found))
-      return false;
+   if (auto* bw = qobject_cast<QWidget*>(basis)) {
+      if (!_find_abandoned_helper(bw, wl, gl, found))
+         return false;
+   } else if (auto* bg = qobject_cast<QButtonGroup*>(basis)) {
+      gl = { bg };
+   } else {
+      assert(false && "unsupported QObject type"));
+   }
    while (!gl.isEmpty()) {
       QList<QButtonGroup*> next_pass;
       for (auto* g : gl) {
@@ -543,6 +549,48 @@ bool DovahKitScriptVMCore::find_abandoned_widgets_and_groups(QWidget* basis, QLi
    groups  = gl;
    all_widgets_count = found;
    return true;
+}
+void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const QList<QWidget*>& abandoned_roots, const QList<QButtonGroup*>& abandoned_groups, int all_widgets_count) {
+   {
+      auto& orphans = this->widgets.orphans.widgets;
+      auto& pending = this->widgets.pending_deletion.widgets;
+      for (auto* root : abandoned_roots) {
+         int i = orphans.indexOf(root);
+         assert(i >= 0);
+         #if _DEBUG
+            int  children = root->children().size();
+            auto name     = root->objectName();
+            __debugbreak();
+         #endif
+         //
+         // Sever all signal/slot connections to the condemned widgets.
+         //
+         cobb::qt::for_each_widget_in_hierarchy(root, [](QWidget* current) {
+            QObject::disconnect(current, nullptr, nullptr, nullptr); // these arguments are needed to distinguish a static function call from a call-super
+            return false;
+         });
+         //
+         // Queue the root widget for deletion. We can't use QWidget::deleteLater immediately, 
+         // because there may be already-received UI events pertaining to this widget that are 
+         // about to execute.
+         //
+         pending.push_back(root);
+         orphans.remove(i);
+      }
+   }
+   this->widgets.extant_widget_count -= all_widgets_count;
+   {
+      auto& orphans = this->widgets.orphans.button_groups;
+      auto& pending = this->widgets.pending_deletion.button_groups;
+      for (auto* group : abandoned_groups) {
+         int i = orphans.indexOf(group);
+         assert(i >= 0);
+         //
+         QObject::disconnect(group, nullptr, nullptr, nullptr);
+         pending.push_back(group);
+         orphans.remove(i);
+      }
+   }
 }
 
 QDialog* DovahKitScriptVMCore::try_spawn_script_window() noexcept {
@@ -670,47 +718,48 @@ void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
    int count = 0;
    if (!this->find_abandoned_widgets_and_groups(widget, abandoned_roots, abandoned_groups, count))
       return;
-   //
-   {
-      auto& orphans = this->widgets.orphans.widgets;
-      auto& pending = this->widgets.pending_deletion.widgets;
-      for (auto* root : abandoned_roots) {
-         int i = orphans.indexOf(root);
-         assert(i >= 0);
-         #if _DEBUG
-            int  children = root->children().size();
-            auto name     = root->objectName();
-            __debugbreak();
-         #endif
-         //
-         // Sever all signal/slot connections to the condemned widgets.
-         //
-         cobb::qt::for_each_widget_in_hierarchy(root, [](QWidget* current) {
-            QObject::disconnect(current, nullptr, nullptr, nullptr); // these arguments are needed to distinguish a static function call from a call-super
-            return false;
-         });
-         //
-         // Queue the root widget for deletion. We can't use QWidget::deleteLater immediately, 
-         // because there may be already-received UI events pertaining to this widget that are 
-         // about to execute.
-         //
-         pending.push_back(root);
-         orphans.remove(i);
-      }
+   this->mark_abandoned_hierarchy_for_delete(abandoned_roots, abandoned_groups, count);
+}
+
+QButtonGroup* DovahKitScriptVMCore::try_spawn_button_group() {
+   DovahKitScriptVMCore::require_client_thread();
+   auto* group = new QButtonGroup(this);
+   this->widgets.orphans.button_groups.push_back(group);
+   return group;
+}
+void DovahKitScriptVMCore::button_group_lost_a_member(QButtonGroup* group) {
+   DovahKitScriptVMCore::require_script_thread();
+   if (DovahKitScriptVMUserdataInterface::get().wrapper_exists_for(group))
+      return;
+   QList<QWidget*>      abandoned_roots;
+   QList<QButtonGroup*> abandoned_groups;
+   int count = 0;
+   if (!this->find_abandoned_widgets_and_groups(group, abandoned_roots, abandoned_groups, count))
+      return;
+   this->mark_abandoned_hierarchy_for_delete(abandoned_roots, abandoned_groups, count);
+}
+void DovahKitScriptVMCore::button_group_gained_a_member(QButtonGroup* group) {
+   DovahKitScriptVMCore::require_script_thread();
+   auto& pd = this->widgets.pending_deletion.button_groups;
+   auto& og = this->widgets.orphans.button_groups;
+   int   i  = pd.indexOf(group);
+   if (i >= 0) {
+      pd.remove(i);
+      og.push_back(group);
    }
-   this->widgets.extant_widget_count -= count;
-   {
-      auto& orphans = this->widgets.orphans.button_groups;
-      auto& pending = this->widgets.pending_deletion.button_groups;
-      for (auto* group : abandoned_groups) {
-         int i = orphans.indexOf(group);
-         assert(i >= 0);
-         //
-         QObject::disconnect(group, nullptr, nullptr, nullptr);
-         pending.push_back(group);
-         orphans.remove(i);
-      }
-   }
+}
+void DovahKitScriptVMCore::button_group_no_longer_referenced(QButtonGroup* group) {
+   DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
+   if (!group)
+      return;
+   if (!this->lua_vm) // teardown in progress; we will delete everything as part of that process
+      return;
+   QList<QWidget*>      abandoned_roots;
+   QList<QButtonGroup*> abandoned_groups;
+   int count = 0;
+   if (!this->find_abandoned_widgets_and_groups(group, abandoned_roots, abandoned_groups, count))
+      return;
+   this->mark_abandoned_hierarchy_for_delete(abandoned_roots, abandoned_groups, count);
 }
 
 void DovahKitScriptVMCore::model_observer_reference_gained(ObservableStandardItemModelObserver* observer) {

@@ -49,4 +49,9 @@ namespace editor_script {
       }
       return wrappers::ui::widget::metatable_key; // TODO: use a generic widget metatable
    }
+   extern const char* wrap_button_group(wrapper& out, QButtonGroup* group) {
+      out.button_group = group;
+      out.type         = wrapper_type::ui_button_group;
+      return wrappers::ui::radio_group::metatable_key;
+   }
 }

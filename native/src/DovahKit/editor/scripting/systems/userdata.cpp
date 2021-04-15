@@ -245,9 +245,6 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    if (!instance.should_expose_to_script())
       return 0;
    //
-   if (instance.type == editor_script::wrapper_type::ui_model_item)
-      DovahKitScriptVMCore::get().model_observer_reference_gained(instance.model_observer);
-   //
    auto  start = lua_gettop(L);
    lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_storage_registry_key); // push 1
    auto  table = lua_gettop(L);
@@ -321,6 +318,7 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    //
    lua_pushvalue(L, si_created); // push 1 // push another reference to the wrapper onto the stack, as the next function will remove whichever reference it uses
    ptr->lua_key = luaL_ref(L, si_storage);
+   ptr->_on_pushed();
    //
    lua_remove(L, -2);
    return 1;

@@ -846,6 +846,12 @@
     <ClCompile Include="editor\scripting\systems\editor_script_inner_core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\radio_group.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1721,6 +1727,12 @@
     <ClInclude Include="editor\scripting\wrappers\ui\helpers\widget_properties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\radio_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\radio_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -2034,6 +2046,7 @@
     <Text Include="dovah\_docs\extra data.txt" />
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
+    <Text Include="editor\scripting\_docs\ui - object lifetimes.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt">

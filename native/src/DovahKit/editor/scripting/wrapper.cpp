@@ -39,6 +39,10 @@ namespace editor_script {
          DovahKitScriptVMCore::get().model_observer_reference_lost(this->model_observer);
          this->model_observer = nullptr;
       }
+      if (this->type == wrapper_type::ui_button_group) {
+         DovahKitScriptVMCore::get().button_group_no_longer_referenced(this->button_group);
+         this->button_group = nullptr;
+      }
    }
 
    void wrapper::append_part(part_type_t signature, uint32_t index) {
@@ -58,6 +62,14 @@ namespace editor_script {
       assert(this->is_collection);
       this->is_collection = false;
       this->parts[this->depth - 1].index = index;
+   }
+
+   void wrapper::_on_pushed() {
+      switch (this->type) {
+         case wrapper_type::ui_model_item:
+            DovahKitScriptVMCore::get().model_observer_reference_gained(this->model_observer);
+            return;
+      }
    }
 
    bool wrapper::part::operator==(const part& other) const noexcept {
@@ -118,6 +130,10 @@ namespace editor_script {
             break;
          case wrapper_type::ui_model_item:
             if (this->model_observer != other->model_observer)
+               return false;
+            break;
+         case wrapper_type::ui_button_group:
+            if (this->button_group != other->button_group)
                return false;
             break;
       }

@@ -3,6 +3,8 @@
 #include "ui/dropdown.h"
 #include "ui/formpicker.h"
 #include "ui/progress_bar.h"
+#include "ui/radio_button.h"
+#include "ui/radio_group.h"
 #include "ui/spinbox.h"
 #include "ui/text.h"
 #include "ui/textbox.h"
