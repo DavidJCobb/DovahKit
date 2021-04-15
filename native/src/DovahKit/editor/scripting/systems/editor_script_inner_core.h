@@ -22,6 +22,8 @@ namespace dovah {
    class form_stub;
 }
 
+class QButtonGroup;
+
 class DovahKitScriptVMMessenger;
 class DovahKitScriptVMUITaskConduit;
 class DovahKitScriptVMPermissionInterface;
@@ -113,9 +115,15 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       } task_queues;
       //
       struct {
-         std::vector<QDialog*> windows;
-         std::vector<QWidget*> orphans;
-         std::vector<QWidget*> pending_deletion;
+         QVector<QDialog*> windows;
+         struct {
+            QVector<QWidget*>      widgets;
+            QVector<QButtonGroup*> button_groups;
+         } orphans;
+         struct {
+            QVector<QWidget*>      widgets;
+            QVector<QButtonGroup*> button_groups;
+         } pending_deletion;
          std::unordered_map<QWidget*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection;
          int extant_widget_count = 0; // includes windows
       } widgets;
@@ -145,6 +153,13 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       static void require_script_thread();
       static void require_client_thread(); // actually just requires that it not be the script thread
       static void require_wrapper_teardown_thread();
+
+      // Given a basis widget, traverses the entire hierarchy containing that basis, as well as 
+      // any other widget hierarchy that is connected to that hierarchy by way of a QButtonGroup. 
+      // If any widget or button group is referenced by Lua, aborts immediately and returns empty 
+      // lists; otherwise, provides a list of all hierarchy-root widgets and all button groups 
+      // found.
+      bool find_abandoned_widgets_and_groups(QWidget* basis, QList<QWidget*>&, QList<QButtonGroup*>&, int& all_widgets_count);
 
       QDialog* try_spawn_script_window() noexcept;
       void set_up_new_scripted_widget(QWidget*);  // Lua functions that create widgets must call this

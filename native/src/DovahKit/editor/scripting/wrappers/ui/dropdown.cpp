@@ -15,6 +15,8 @@
 #include "../../../../helpers/qt/combobox.h"
 #include "../../../../helpers/lua/qt_variant.h"
 
+#include "helpers/widget_properties.h"
+
 /*
    
    The dropdowns that we provide to scripts support sorting by way of a QSortFilterProxyModel. 
@@ -301,14 +303,7 @@ namespace widget_lua {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result;
-         {
-            auto* widget  = (wrapped_type*)self.widget;
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [widget, &result]() { result = widget->currentText(); };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QComboBox::currentText);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }

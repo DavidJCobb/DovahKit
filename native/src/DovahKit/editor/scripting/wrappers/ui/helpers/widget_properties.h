@@ -16,7 +16,9 @@ namespace editor_script::helpers {
 
    template<class W, class Wx, class T> requires (std::is_base_of_v<Wx, W>) void set_widget_property(W* widget, void (Wx::* func)(const T&), const T& value) {
       auto* task = new tasks::s2m::lambda(false);
-      task->handler = [widget, value, func]() { (widget->*func)(value); };
+      task->handler = [widget, value, func]() {
+         (widget->*func)(value);
+      };
       DovahKitScriptVMUITaskConduit::get().send_message(*task);
    }
 

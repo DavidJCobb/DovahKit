@@ -394,6 +394,14 @@ namespace {
          //
          return 1;
       }
+      luastackchange_t name(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QString result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::objectName);
+         lua_pushstring(L, result.toUtf8());
+         return 1;
+      }
       luastackchange_t tooltip(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -567,6 +575,15 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t name(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         if (!self.widget)
+            return 0;
+         auto value = QString::fromUtf8(lua_tostring(L, 2));
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setObjectName, value);
+         return 0;
+      }
       luastackchange_t tooltip(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "tooltip text (string) expected");
@@ -629,12 +646,14 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "enabled",        &_getters::enabled },
       { "layout_margins", &_getters::layout_margins },
+      { "name",           &_getters::name },
       { "tooltip",        &_getters::tooltip },
       { "whats_this",     &_getters::whats_this },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "enabled",        &_setters::enabled },
       { "layout_margins", &_setters::layout_margins },
+      { "name",           &_setters::name },
       { "tooltip",        &_setters::tooltip },
       { "whats_this",     &_setters::whats_this },
    };

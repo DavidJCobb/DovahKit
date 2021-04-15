@@ -608,6 +608,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\formpicker.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\helpers\widget_properties.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\text.h" />

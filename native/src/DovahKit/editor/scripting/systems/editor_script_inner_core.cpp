@@ -20,6 +20,8 @@
 #include "../../../helpers/qt/traversal.h"
 #include "../wrapper_util.h"
 
+#include <QAbstractButton>
+#include <QButtonGroup>
 #include <QEvent>
 #include <QLabel>
 
@@ -305,42 +307,46 @@ void DovahKitScriptVMCore::_setup_lua_vm() {
    this->pending_ui_event_count = 0;
    this->ui_lock_override       = ui_lock_override_state::unchanged;
 }
+namespace {
+   template<typename T> requires std::is_base_of_v<QObject, T> static void _teardown_list_helper(QVector<T*>& list) {
+      for (auto* object : list) {
+         if (!object)
+            continue;
+         QObject::disconnect(object, nullptr, nullptr, nullptr);
+         if constexpr (std::is_same_v<QDialog, T>) {
+            object->done(-2);
+         }
+         object->deleteLater();
+      }
+      list.clear();
+   }
+}
 void DovahKitScriptVMCore::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->running);
-   //
+   
    if (auto* L = this->lua_vm) {
       this->lua_vm = nullptr;
       lua_close(L);
    }
+   
+   _teardown_list_helper(this->widgets.windows);
+   _teardown_list_helper(this->widgets.orphans.widgets);
+   _teardown_list_helper(this->widgets.orphans.button_groups);
    //
-   for (auto* window : this->widgets.windows) {
-      if (!window)
-         continue;
-      QObject::disconnect(window);
-      window->done(-2);
-      window->deleteLater();
-   }
-   this->widgets.windows.clear();
-   for (auto* widget : this->widgets.orphans) {
-      if (!widget)
-         continue;
-      QObject::disconnect(widget);
-      widget->deleteLater();
-   }
-   this->widgets.orphans.clear();
-   for (auto* widget : this->widgets.pending_deletion) { // needed if the script ran from start to finish without event listeners, etc., and it orphaned widgets in the process
-      if (!widget)
-         continue;
-      QObject::disconnect(widget);
-      widget->deleteLater();
-   }
-   this->widgets.pending_deletion.clear();
+   // The next two calls are needed if the script ran from start to finish: if a script shows a dialog box 
+   // and then reaches its end, then technically, any variables that aren't up-values for event listeners 
+   // will go out of scope, widgets included. The reason they're not summarily deleted is because we don't 
+   // delete unreferenced widgets if they're in a visible window... but if the script ended because the 
+   // user closed the last scripted window...
    //
+   _teardown_list_helper(this->widgets.pending_deletion.widgets);
+   _teardown_list_helper(this->widgets.pending_deletion.button_groups);
+   this->widgets.extant_widget_count = 0;
+   
    for (auto* o : this->ui_model_observers.pointers)
       delete o;
    this->ui_model_observers.pointers.clear();
    this->ui_model_observers.refcounts.clear();
-   this->widgets.extant_widget_count = 0;
    this->pending_ui_event_count = 0;
 }
 
@@ -385,11 +391,19 @@ void DovahKitScriptVMCore::_script_thread_loop() {
       this->task_queues.m2s.urgent.process();
       this->_run_queued_functions(false);
       {
-         for (auto* widget : this->widgets.pending_deletion) {
+         auto& pd = this->widgets.pending_deletion.widgets;
+         for (auto* widget : pd) {
             this->ui_queues.events.forget_about(*widget); // gotta do this before events are processed. since we sever a widget's signals when we mark it for deletion, we don't have to worry about it generating more events later
             widget->deleteLater();
          }
-         this->widgets.pending_deletion.clear();
+         pd.clear();
+      }
+      {
+         auto& pd = this->widgets.pending_deletion.button_groups;
+         for (auto* group : pd) {
+            group->deleteLater();
+         }
+         pd.clear();
       }
       this->ui_queues.events.process();
       this->_run_queued_functions(true);
@@ -443,6 +457,94 @@ bool DovahKitScriptVMCore::_should_keep_running() const noexcept {
       assert(std::this_thread::get_id() != DovahKitScriptVMCore::get().thread.get_id());
 }
 
+//
+// Widgets should be deleted when all of the following conditions are met:
+//
+//  - The widget, and all other widgets in its containing hierarchy, are no longer referred 
+//    to by any Lua script variables.
+//
+//  - If the widget is or is inside of a window, that window is hidden.
+//
+//  - If any of the widgets in the containing hierarchy are QAbstractButton instances, and 
+//    if any of those widgets are part of a QButtonGroup, then all of those QButtonGroups 
+//    must also no longer be referred to by any Lua script variable.
+//
+//  - If any of the widgets in the containing hierarchy are QAbstractButton instances, and 
+//    if any of those widgets are part of a QButtonGroup, then the above constraints must 
+//    also be met for every other button in all of those QButtonGroups.
+//
+// If those conditions are met, then the hierarchies and their contained widgets and button 
+// groups shall be considered "abandoned."
+//
+// Note that because many UI operations are fire-and-forget and do not block the script 
+// thread, it's possible for a widget to be "rescued" from deletion after it has been 
+// marked for deletion. Refer to (DovahKitScriptVMCore::widget_no_longer_orphaned) and its 
+// code comments for further information.
+//
+namespace {
+   // Returns false if it discovers that any widget or button group in the hierarchy being tested 
+   // is referenced by Lua.
+   bool _find_abandoned_helper(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups, int& all_widgets_count) {
+      auto* root = cobb::qt::topmost_container_of(basis);
+      if (auto* dialog = qobject_cast<QDialog*>(root)) // QWidget::parentWindow just traverses upward. no need to do it twice
+         if (dialog->isVisible()) // visible windows and their contents should never be considered abandoned
+            return false;
+      if (widgets.contains(root))
+         return true;
+      auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
+      //
+      int found = 0;
+      for (auto* o : root->children()) {
+         auto* w = qobject_cast<QWidget*>(o);
+         if (!w)
+            continue;
+         ++found;
+         if (auto* button = qobject_cast<QAbstractButton*>(w)) {
+            if (auto* g = button->group()) {
+               if (ud_brain.wrapper_exists_for(g))
+                  return false;
+               if (!groups.contains(g))
+                  groups.push_back(g);
+            }
+         }
+         if (ud_brain.wrapper_exists_for(w))
+            return false;
+      }
+      all_widgets_count += found;
+      widgets.push_back(root);
+      return true;
+   }
+}
+// Given a basis widget, searches the widget's entire containing hierarchy as well as any 
+// containing hierarchies linked by a QButtonGroup, and returns true if all of the searched 
+// hierarchies are abandoned by Lua script.
+bool DovahKitScriptVMCore::find_abandoned_widgets_and_groups(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups, int& all_widgets_count) {
+   widgets.clear();
+   groups.clear();
+   all_widgets_count = 0; // number of all widgets in all found hierarchies, if the hierarchies are all abandoned
+   //
+   QList<QWidget*>      wl;
+   QList<QButtonGroup*> gl;
+   int found = 0;
+   if (!_find_abandoned_helper(basis, wl, gl, found))
+      return false;
+   while (!gl.isEmpty()) {
+      QList<QButtonGroup*> next_pass;
+      for (auto* g : gl) {
+         for (auto* w : g->buttons()) {
+            if (!_find_abandoned_helper(w, wl, next_pass, found))
+               return false;
+         }
+      }
+      groups.append(gl);
+      gl = next_pass;
+   }
+   widgets = wl;
+   groups  = gl;
+   all_widgets_count = found;
+   return true;
+}
+
 QDialog* DovahKitScriptVMCore::try_spawn_script_window() noexcept {
    DovahKitScriptVMCore::require_client_thread();
    if (!this->running)
@@ -473,7 +575,7 @@ void DovahKitScriptVMCore::accept_new_orphaned_widget(QWidget* widget) {
       return;
    if (!widget)
       return;
-   this->widgets.orphans.push_back(widget);
+   this->widgets.orphans.widgets.push_back(widget);
 }
 void DovahKitScriptVMCore::widget_no_longer_orphaned(QWidget* widget) {
    DovahKitScriptVMCore::require_client_thread();
@@ -481,8 +583,48 @@ void DovahKitScriptVMCore::widget_no_longer_orphaned(QWidget* widget) {
       return;
    if (!widget || !widget->parentWidget())
       return;
-   auto& v = this->widgets.orphans;
+   auto& v = this->widgets.orphans.widgets;
    v.erase(std::remove(v.begin(), v.end(), widget), v.end());
+   //
+   // Consider the following code:
+   //
+   //    local child = ui.button.new()
+   //    do
+   //       local parent = ui.widget.new()
+   //       parent:add_child(child)
+   //    end
+   //    collectgarbage("collect")
+   //    collectgarbage("collect")
+   //
+   // Because most of our UI write operations are fire-and-forget and asynchronous (i.e. they 
+   // do not block the Lua script), it's possible for the above code snippet to force garbage 
+   // collection after (parent) goes out of scope, but before the (parent:add_child) call is 
+   // actually acted on. This will cause (DovahKitScriptVMCore::widget_no_longer_referenced) 
+   // to process the parent before the child element is added to the parent.
+   //
+   // Now, at that point, the parent belongs to a widget hierarchy consisting only of itself, 
+   // and the parent is unreferenced, so it will be queued for deletion. If everything was 
+   // happening one thing at a time, then the child widget would've been appended to the 
+   // parent and, by virtue of still being referred to by Lua, would've rescued the parent 
+   // from deletion; but since the child hasn't actually been appended yet, that doesn't 
+   // occur. Barring any further intervention, the parent will be marked for deletion before 
+   // the child is appended to it, and then deleted after the child is appended (due to the 
+   // order in which we process cross-thread tasks), which in turn results in the child being 
+   // deleted out from under Lua, causing a crash when it is next accessed.
+   //
+   // So let's intervene! We'll make it so that if a Lua widget ceases to be orphaned -- that 
+   // is, if it's appended to another widget hierarchy -- then it can rescue that hierarchy 
+   // from deletion:
+   //
+   auto* root = cobb::qt::topmost_container_of(widget);
+   assert(root && root != widget);
+   auto& pd = this->widgets.pending_deletion.widgets;
+   auto& ow = this->widgets.orphans.widgets;
+   int   i  = pd.indexOf(root);
+   if (i >= 0) {
+      pd.remove(i);
+      ow.push_back(root);
+   }
 }
 void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
@@ -490,9 +632,6 @@ void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
       return;
    if (!this->lua_vm) // teardown in progress; we will delete everything as part of that process
       return;
-   if (auto* dialog = widget->window())
-      if (dialog->isVisible()) // visible windows and their contents should never be considered abandoned
-         return;
    //
    // In general, we want to delete widgets that have been abandoned by the script, and 
    // we're notified when any single widget is no longer referred to by a script variable. 
@@ -523,31 +662,30 @@ void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
    // a dangling pointer. The solution to this is to delete widgets only when the entire 
    // hierarchy to which they belong is unreferenced by Lua.
    //
-   auto& ud_brain  = DovahKitScriptVMUserdataInterface::get();
-   auto* root      = cobb::qt::topmost_container_of(widget);
-   int   count     = 0;
-   bool  abandoned = true;
-   assert(root);
-   cobb::qt::for_each_widget_in_hierarchy(root, [widget, &count, &abandoned, &ud_brain](QWidget* current) {
-      ++count;
-      if (current == widget) // don't check for a wrapper, because we'll find the very wrapper we're destroying
-         return false;
-      if (ud_brain.wrapper_exists_for(current)) {
-         abandoned = false;
-         return true;
-      }
-      return false;
-   });
-   if (!abandoned)
+   // Refer to (DovahKitScriptVMCore::widget_no_longer_orphaned) to read about another 
+   // important dimension to this problem that we mitigate there.
+   //
+   QList<QWidget*>      abandoned_roots;
+   QList<QButtonGroup*> abandoned_groups;
+   int count = 0;
+   if (!this->find_abandoned_widgets_and_groups(widget, abandoned_roots, abandoned_groups, count))
       return;
    //
-   auto& list = this->widgets.orphans;
-   for (auto it = list.begin(); it != list.end(); ++it) {
-      if (*it == root) {
+   {
+      auto& orphans = this->widgets.orphans.widgets;
+      auto& pending = this->widgets.pending_deletion.widgets;
+      for (auto* root : abandoned_roots) {
+         int i = orphans.indexOf(root);
+         assert(i >= 0);
+         #if _DEBUG
+            int  children = root->children().size();
+            auto name     = root->objectName();
+            __debugbreak();
+         #endif
          //
          // Sever all signal/slot connections to the condemned widgets.
          //
-         cobb::qt::for_each_widget_in_hierarchy(widget, [](QWidget* current) {
+         cobb::qt::for_each_widget_in_hierarchy(root, [](QWidget* current) {
             QObject::disconnect(current, nullptr, nullptr, nullptr); // these arguments are needed to distinguish a static function call from a call-super
             return false;
          });
@@ -556,15 +694,23 @@ void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
          // because there may be already-received UI events pertaining to this widget that are 
          // about to execute.
          //
-         this->widgets.pending_deletion.push_back(root);
-         list.erase(it);
-         this->widgets.extant_widget_count -= count;
-         return;
+         pending.push_back(root);
+         orphans.remove(i);
       }
    }
-   #if _DEBUG
-      __debugbreak(); // why is there an orphaned top-level widget that wasn't in the list of orphaned widgets? it will leak!
-   #endif
+   this->widgets.extant_widget_count -= count;
+   {
+      auto& orphans = this->widgets.orphans.button_groups;
+      auto& pending = this->widgets.pending_deletion.button_groups;
+      for (auto* group : abandoned_groups) {
+         int i = orphans.indexOf(group);
+         assert(i >= 0);
+         //
+         QObject::disconnect(group, nullptr, nullptr, nullptr);
+         pending.push_back(group);
+         orphans.remove(i);
+      }
+   }
 }
 
 void DovahKitScriptVMCore::model_observer_reference_gained(ObservableStandardItemModelObserver* observer) {
