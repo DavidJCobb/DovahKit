@@ -9,6 +9,7 @@ namespace editor_script {
       ui::dropdown::setup(L);
          ui::dropdown_item::setup(L);
       ui::formpicker::setup(L);
+      ui::line::setup(L);
       ui::progress_bar::setup(L);
       ui::radio_button::setup(L);
       ui::radio_group::setup(L);

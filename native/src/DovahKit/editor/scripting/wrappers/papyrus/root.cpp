@@ -114,7 +114,7 @@ namespace {
                }
             }
          } else {
-            auto* arg = (wrapper*) editor_script::cast_to_class(L, index_value, wrapper_t::script_collection_key);
+            auto* arg = (wrapper*) editor_script::cast_to_class(L, index_value, wrappers::papyrus_script::metatable_key);
             if (!arg)
                luaL_error(L, "you can only overwrite a Papyrus script with nil or with another Papyrus script");
             auto* source = wrappers::papyrus_script::unwrap(*arg, true);
@@ -266,10 +266,13 @@ namespace {
             return 0;
          }
          //
-         auto* arg   = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::script_collection_key);
+         auto* arg = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::script_collection_key);
          luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus script collection or nil");
          __assume(arg != nullptr);
-         auto& other = _unwrap(L, *arg);
+         auto* coll = wrappers::papyrus_root::unwrap(*arg, false);
+         luaL_argcheck(L, coll != nullptr, 2, "provided Papyrus script collection wrapper has no underlying object (deleted?)");
+         __assume(coll != nullptr);
+         auto& other = *coll;
          if (&root == &other) // self-assignment
             return 0;
          //

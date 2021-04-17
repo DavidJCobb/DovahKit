@@ -216,5 +216,27 @@ do -- Form
    window:add_child(vp, 11, 1)
    window:add_child(button, 11, 2)
 end
+do
+   local button = ui.button.new("Set Mixed Table")
+   button:on("OnActivated", "", function()
+      local prop = get_focus_property()
+      if prop then
+         prop.value = { "A", 5 }
+      end
+   end)
+   --
+   window:add_child(button, 12, 1, 1, 2)
+end
+do
+   local button = ui.button.new("Set Int Table")
+   button:on("OnActivated", "", function()
+      local prop = get_focus_property()
+      if prop then
+         prop.value = { 0, 1, 2, 3, 4 }
+      end
+   end)
+   --
+   window:add_child(button, 13, 1, 1, 2)
+end
 
 window:show()

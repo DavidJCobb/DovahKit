@@ -2,6 +2,7 @@
 #include "ui/button.h"
 #include "ui/dropdown.h"
 #include "ui/formpicker.h"
+#include "ui/line.h"
 #include "ui/progress_bar.h"
 #include "ui/radio_button.h"
 #include "ui/radio_group.h"

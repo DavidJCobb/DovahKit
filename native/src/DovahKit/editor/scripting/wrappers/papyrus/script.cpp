@@ -107,7 +107,7 @@ namespace {
                }
             }
          } else {
-            auto* arg = (wrapper*)editor_script::cast_to_class(L, index_value, wrapper_t::property_collection_key);
+            auto* arg = (wrapper*)editor_script::cast_to_class(L, index_value, wrappers::papyrus_property::metatable_key);
             if (!arg)
                luaL_error(L, "you can only overwrite a Papyrus property with nil or with another Papyrus property");
             auto* source = wrappers::papyrus_property::unwrap(*arg, true);

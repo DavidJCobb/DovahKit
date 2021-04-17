@@ -280,6 +280,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\formpicker.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\line.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_group.cpp" />
@@ -611,6 +612,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\formpicker.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\helpers\widget_properties.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\line.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\radio_button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\radio_group.h" />
