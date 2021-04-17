@@ -184,6 +184,53 @@ namespace {
          return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::papyrus_root::script_collection_key);
       }
    }
+   namespace _setters {
+      luastackchange_t scripts(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
+         auto& root = _unwrap(L, self);
+         //
+         if (lua_isnoneornil(L, 2)) { // if the user is assigning nil, just clear all scripts
+            self.before_edit();
+            {
+               wrapper temp = self;
+               temp.append_part(wrapper_part_types::papyrus_script);
+               temp.is_collection = true;
+               DovahKitScriptVMUserdataInterface::get().clear_entire_collection(temp);
+            }
+            for (auto& s : root.scripts)
+               s.clear(*self.form);
+            root.scripts.clear();
+            self.after_edit();
+            return 0;
+         }
+         //
+         auto* arg   = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::script_collection_key);
+         luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus script collection or nil");
+         auto& other = _unwrap(L, *arg);
+         if (&root == &other) // self-assignment
+            return 0;
+         //
+         self.before_edit();
+         {
+            wrapper temp = self;
+            temp.append_part(wrapper_part_types::papyrus_script);
+            temp.is_collection = true;
+            DovahKitScriptVMUserdataInterface::get().clear_entire_collection(temp);
+         }
+         for (auto& s : root.scripts)
+            s.clear(*self.form);
+         size_t size = other.scripts.size();
+         root.scripts.clear();
+         root.scripts.resize(size);
+         for (size_t i = 0; i < size; ++i) {
+            root.scripts[i].clone_from(other.scripts[i], *self.form);
+         }
+         self.after_edit();
+         return 0;
+      }
+   }
 }
 
 namespace editor_script::wrappers {
@@ -195,7 +242,9 @@ namespace editor_script::wrappers {
       { "parent",  &_getters::parent },
       { "scripts", &_getters::scripts },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_setters = no_functions;
+   /*static*/ const std::initializer_list<luaL_Reg> papyrus_root::metatable_setters = {
+      { "scripts", &_setters::scripts },
+   };
 
    /*static*/ void papyrus_root::build_collection_metatables(lua_State* L) {
       define_collection_metatable(L, {

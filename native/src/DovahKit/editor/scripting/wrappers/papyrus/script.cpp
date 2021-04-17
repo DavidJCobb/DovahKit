@@ -70,6 +70,66 @@ namespace {
          }
          return 1;
       }
+      luastackchange_t set_item(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         constexpr auto index_self  = 1;
+         constexpr auto index_key   = 2;
+         constexpr auto index_value = 3;
+         //
+         auto& self   = get_collection_wrapper(L);
+         auto* script = wrapper_t::unwrap(self, false);
+         if (!script)
+            return 0;
+         if (!lua_isstring(L, index_key))
+            luaL_error(L, "the given key is not auto-convertible to a string and thus cannot be a Papyrus property name");
+         std::string name = lua_tostring(L, index_key);
+         //
+         if (lua_isnoneornil(L, index_value)) {
+            //
+            // Setting a property to nil should remove it.
+            //
+            auto& list = script->properties;
+            for (auto it = list.begin(); it != list.end(); ++it) {
+               auto& prop = *it;
+               if (_stricmp(prop.name.c_str(), name.c_str()) == 0) {
+                  self.before_edit();
+                  prop.clear(*self.form);
+                  {
+                     wrapper pw = self;
+                     assert(pw.is_collection);
+                     pw.into_collection(it - list.begin());
+                     DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(pw);
+                  }
+                  list.erase(it);
+                  self.after_edit();
+                  break;
+               }
+            }
+         } else {
+            auto* arg = (wrapper*)editor_script::cast_to_class(L, index_value, wrapper_t::property_collection_key);
+            if (!arg)
+               luaL_error(L, "you can only overwrite a Papyrus property with nil or with another Papyrus property");
+            auto* source = wrappers::papyrus_property::unwrap(*arg, true);
+            if (source == nullptr)
+               luaL_error(L, "the script property wrapper provided as a value to set has no underlying object (deleted?)");
+            __assume(source != nullptr);
+            //
+            self.before_edit();
+            if (auto* prior = script->lookup_property(name)) {
+               name = prior->name; // preserve case
+               prior->clear(*self.form);
+               prior->clone_from(*source, *self.form);
+               prior->name = name; // restore name (it may have been changed during the clone operation)
+            } else {
+               auto& prop = script->properties.emplace_back();
+               prop.clone_from(*source, *self.form);
+               prop.name = name; // set name after the cloning operation
+            }
+            self.after_edit();
+         }
+         return 0;
+      }
    }
 }
 #pragma endregion
@@ -148,18 +208,18 @@ namespace {
          //
          lua_settop(L, 2); // remove extra arguments
          auto* prop = wrapper_from_stack<wrappers::papyrus_property>(L, 2);
-         if (!script) {
+         if (!prop) {
             //
-            // We weren't given a wrapped script, so what we received was either an index, a 
-            // name, or an invalid argument. Pass it directly to the collection; that's the 
+            // We weren't given a wrapped property, so what we received was either an index, 
+            // a name, or an invalid argument. Pass it directly to the collection; that's the 
             // easiest way to "convert it to a wrapper" while avoiding code duplication. 
             // Essentially,
             //
             //    arg = self.scripts[arg]
             //
-            lua_getfield(L, 1, "scripts"); // STACK: - [ self, arg, self.scripts ] +
-            lua_rotate  (L, 2, 1);         // STACK: - [ self, self.scripts, arg ] +
-            lua_gettable(L, 2);            // STACKL - [ self, self.scripts, self.scripts[arg] ] +
+            lua_getfield(L, 1, "properties"); // STACK: - [ self, arg, self.scripts ] +
+            lua_rotate  (L, 2, 1);            // STACK: - [ self, self.scripts, arg ] +
+            lua_gettable(L, 2);               // STACKL - [ self, self.scripts, self.scripts[arg] ] +
             if (lua_isnoneornil(L, 3))
                return 0;
             prop = wrapper_from_stack<wrappers::papyrus_property>(L, 3);
@@ -247,7 +307,7 @@ namespace {
          }
          //
          auto* arg    = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::property_collection_key);
-         luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus property collection");
+         luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus property collection or nil");
          auto* other  = wrapper_t::unwrap(*arg, false);
          if (other == nullptr)
             luaL_error(L, "script property collection wrapper has no underlying object (deleted?)");
@@ -317,6 +377,7 @@ namespace editor_script::wrappers {
          .get_all_item_names     = &_collections::properties::get_all_item_names,
          .items_are_named        = true,
          .lookup_item_by_name    = &_collections::properties::lookup_item_by_name,
+         .set_item               = &_collections::properties::set_item,
       });
    }
 }
