@@ -102,9 +102,12 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       //
       // Used to determine when to delete objects that are no longer referenced or referenceable 
       // by Lua. Refer to our internal documentation on widget lifetimes for further information.
-      class _abandoned_hierarchy_finder {
+      class _hierarchy_finder {
          protected:
             QVector<ObservableStandardItemModel*> referenced_models; // models known in advance not to be abandoned
+            struct {
+               bool halt_and_clear_upon_non_abandoned = true;
+            } config;
             struct {
                int count = 0;
                //
@@ -112,13 +115,12 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
                QList<QButtonGroup*> button_groups;
             } abandoned;
 
-            // Returns false if it discovers that any widget or button group in the hierarchy being tested 
-            // is referenced by Lua.
+            // Returns false if it halts the search as per (config.halt_and_clear_upon_non_abandoned).
             bool _traverse_from_basis(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups);
 
             // Given a basis widget, searches the widget's entire containing hierarchy as well as any 
-            // containing hierarchies linked by a QButtonGroup, and returns true if all of the searched 
-            // hierarchies are abandoned by Lua script.
+            // containing hierarchies linked by a QButtonGroup. Returns false if it halts the search 
+            // as per (config.halt_and_clear_upon_non_abandoned).
             bool _start_from_basis(QObject*);
 
          public:
@@ -130,6 +132,15 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
             inline int abandoned_widget_count() const noexcept { return this->abandoned.count; }
             inline const QList<QWidget*>& abandoned_root_widgets() const noexcept { return this->abandoned.widgets; }
             inline const QList<QButtonGroup*>& abandoned_button_groups() const noexcept { return this->abandoned.button_groups; }
+
+            // Control whether the finder aborts, and clears its results, upon finding something that isn't 
+            // abandoned. The finder will abort-and-clear by default, as a useful optimization for when the 
+            // VM needs to decide what to delete.
+            //
+            // This option can only safely be used when running on the script thread.
+            inline void set_stop_on_referenced(bool b) noexcept {
+               this->config.halt_and_clear_upon_non_abandoned = b;
+            }
       };
       
       void _setup_lua_vm();
@@ -212,7 +223,8 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       static void require_client_thread(); // actually just requires that it not be the script thread
       static void require_wrapper_teardown_thread();
 
-      void mark_abandoned_hierarchy_for_delete(const _abandoned_hierarchy_finder&);
+      void mark_abandoned_hierarchy_for_delete(const _hierarchy_finder&);
+      void unmark_rescued_hierarchy_for_delete(const _hierarchy_finder&);
 
       QDialog* try_spawn_script_window() noexcept;
       void set_up_new_scripted_widget(QWidget*);  // Lua functions that create widgets must call this

@@ -27,7 +27,7 @@ struct ObservableStandardItemModelObserver {
    inline void invalidate() noexcept {
       this->model  = nullptr;
       this->parent = QModelIndex();
-      this->row = this->col = -1;
+      this->row    = this->col = -1;
    }
    inline bool isValid() const noexcept {
       if (!this->model)

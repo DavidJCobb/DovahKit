@@ -17,6 +17,7 @@
 #include "../classes/_all.h"
 #include "../../../helpers/lua/qt_variant.h"
 #include "../../../helpers/lua/set_top_on_exit.h"
+#include "../../../helpers/qt/get_model_of.h"
 #include "../../../helpers/qt/traversal.h"
 #include "../wrapper_util.h"
 
@@ -160,13 +161,18 @@ void DovahKitScriptVMCore::_task_queue::clear() {
 #pragma endregion
 
 #pragma region DovahKitScriptVM::_abandoned_hierarchy_finder
-bool DovahKitScriptVMCore::_abandoned_hierarchy_finder::_traverse_from_basis(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups) {
+bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups) {
+   bool result = true;
+   //
    auto* root = cobb::qt::topmost_container_of(basis);
-   if (auto* dialog = qobject_cast<QDialog*>(root)) // QWidget::parentWindow just traverses upward. no need to do it twice
-      if (dialog->isVisible()) // visible windows and their contents should never be considered abandoned
-         return false;
+   if (this->config.halt_and_clear_upon_non_abandoned) {
+      if (auto* dialog = qobject_cast<QDialog*>(root)) // QWidget::parentWindow just traverses upward. no need to do it twice
+         if (dialog->isVisible()) // visible windows and their contents should never be considered abandoned
+            return false;
+   }
    if (widgets.contains(root))
       return true;
+   //
    auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
    //
    int found = 0;
@@ -177,27 +183,35 @@ bool DovahKitScriptVMCore::_abandoned_hierarchy_finder::_traverse_from_basis(QWi
       ++found;
       if (auto* button = qobject_cast<QAbstractButton*>(w)) {
          if (auto* g = button->group()) {
-            if (ud_brain.wrapper_exists_for(g))
-               return false;
+            if (this->config.halt_and_clear_upon_non_abandoned)
+               if (ud_brain.wrapper_exists_for(g))
+                  return false;
             if (!groups.contains(g))
                groups.push_back(g);
          }
       }
-      if (ud_brain.wrapper_exists_for(w))
-         return false;
+      if (this->config.halt_and_clear_upon_non_abandoned) {
+         if (ud_brain.wrapper_exists_for(w))
+            return false;
+         if (auto* model = cobb::qt::get_model_of(w))
+            if (auto* lua_model = qobject_cast<ObservableStandardItemModel*>(model))
+               return false;
+      }
    }
+   //
    this->abandoned.count += found;
    widgets.push_back(root);
-   return true;
+   return result;
 }
-bool DovahKitScriptVMCore::_abandoned_hierarchy_finder::_start_from_basis(QObject* basis) {
+bool DovahKitScriptVMCore::_hierarchy_finder::_start_from_basis(QObject* basis) {
    this->abandoned.widgets.clear();
    this->abandoned.button_groups.clear();
    this->abandoned.count = 0; // number of all widgets in all found hierarchies, if the hierarchies are all abandoned
    //
    QList<QWidget*>      wl;
    QList<QButtonGroup*> gl;
-   int found = 0;
+   int  found  = 0;
+   bool result = true;
    if (auto* bw = qobject_cast<QWidget*>(basis)) {
       if (!this->_traverse_from_basis(bw, wl, gl))
          return false;
@@ -217,17 +231,17 @@ bool DovahKitScriptVMCore::_abandoned_hierarchy_finder::_start_from_basis(QObjec
    }
    this->abandoned.widgets = wl;
    this->abandoned.count   = found;
-   return true;
+   return result;
 }
 
-void DovahKitScriptVMCore::_abandoned_hierarchy_finder::submit_non_abandoned_model(ObservableStandardItemModel* model) noexcept {
+void DovahKitScriptVMCore::_hierarchy_finder::submit_non_abandoned_model(ObservableStandardItemModel* model) noexcept {
    if (!model)
       return;
    auto& list = this->referenced_models;
    if (!list.contains(model))
       list.push_back(model);
 }
-void DovahKitScriptVMCore::_abandoned_hierarchy_finder::import_non_abandoned_models(DovahKitScriptVMCore& core) noexcept {
+void DovahKitScriptVMCore::_hierarchy_finder::import_non_abandoned_models(DovahKitScriptVMCore& core) noexcept {
    for (auto& om : core.ui_model_observers) {
       auto* p = om.pointer;
       if (!p)
@@ -236,7 +250,15 @@ void DovahKitScriptVMCore::_abandoned_hierarchy_finder::import_non_abandoned_mod
    }
 }
 
-void DovahKitScriptVMCore::_abandoned_hierarchy_finder::gather_from(QObject* basis) noexcept {
+void DovahKitScriptVMCore::_hierarchy_finder::gather_from(QObject* basis) noexcept {
+   if (this->config.halt_and_clear_upon_non_abandoned) {
+      //
+      // This option can only be used while on the script thread, as we need to be able to 
+      // access Lua-side data in order to check whether an object is referenced (by virtue 
+      // of checking whether it has a Lua-side wrapper).
+      //
+      DovahKitScriptVMCore::require_script_thread();
+   }
    if (!this->_start_from_basis(basis)) {
       this->abandoned.widgets.clear();
       this->abandoned.button_groups.clear();
@@ -544,7 +566,7 @@ bool DovahKitScriptVMCore::_should_keep_running() const noexcept {
       assert(std::this_thread::get_id() != DovahKitScriptVMCore::get().thread.get_id());
 }
 
-void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _abandoned_hierarchy_finder& finder) {
+void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _hierarchy_finder& finder) {
    {
       auto& orphans = this->widgets.orphans.widgets;
       auto& pending = this->widgets.pending_deletion.widgets;
@@ -578,6 +600,30 @@ void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _abandoned_
          QObject::disconnect(group, nullptr, nullptr, nullptr);
          pending.push_back(group);
          orphans.remove(i);
+      }
+   }
+}
+void DovahKitScriptVMCore::unmark_rescued_hierarchy_for_delete(const _hierarchy_finder& finder) {
+   {
+      auto& pd = this->widgets.pending_deletion.widgets;
+      auto& ow = this->widgets.orphans.widgets;
+      for (auto* root : finder.abandoned_root_widgets()) {
+         int i = pd.indexOf(root);
+         if (i >= 0) {
+            pd.remove(i);
+            ow.push_back(root);
+         }
+      }
+   }
+   {
+      auto& pd = this->widgets.pending_deletion.button_groups;
+      auto& og = this->widgets.orphans.button_groups;
+      for (auto* group : finder.abandoned_button_groups()) {
+         int i = pd.indexOf(group);
+         if (i >= 0) {
+            pd.remove(i);
+            og.push_back(group);
+         }
       }
    }
 }
@@ -653,15 +699,11 @@ void DovahKitScriptVMCore::widget_no_longer_orphaned(QWidget* widget) {
    // is, if it's appended to another widget hierarchy -- then it can rescue that hierarchy 
    // from deletion:
    //
-   auto* root = cobb::qt::topmost_container_of(widget);
-   assert(root && root != widget);
-   auto& pd = this->widgets.pending_deletion.widgets;
-   auto& ow = this->widgets.orphans.widgets;
-   int   i  = pd.indexOf(root);
-   if (i >= 0) {
-      pd.remove(i);
-      ow.push_back(root);
-   }
+   _hierarchy_finder finder;
+   finder.set_stop_on_referenced(false);
+   finder.gather_from(widget);
+   //
+   this->unmark_rescued_hierarchy_for_delete(finder);
 }
 void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
@@ -702,7 +744,7 @@ void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
    // Refer to (DovahKitScriptVMCore::widget_no_longer_orphaned) to read about another 
    // important dimension to this problem that we mitigate there.
    //
-   _abandoned_hierarchy_finder finder;
+   _hierarchy_finder finder;
    finder.import_non_abandoned_models(*this);
    finder.gather_from(widget);
    this->mark_abandoned_hierarchy_for_delete(finder);
@@ -718,20 +760,19 @@ void DovahKitScriptVMCore::button_group_lost_a_member(QButtonGroup* group) {
    DovahKitScriptVMCore::require_script_thread();
    if (DovahKitScriptVMUserdataInterface::get().wrapper_exists_for(group))
       return;
-   _abandoned_hierarchy_finder finder;
+   _hierarchy_finder finder;
    finder.import_non_abandoned_models(*this);
    finder.gather_from(group);
    this->mark_abandoned_hierarchy_for_delete(finder);
 }
 void DovahKitScriptVMCore::button_group_gained_a_member(QButtonGroup* group) {
    DovahKitScriptVMCore::require_script_thread();
-   auto& pd = this->widgets.pending_deletion.button_groups;
-   auto& og = this->widgets.orphans.button_groups;
-   int   i  = pd.indexOf(group);
-   if (i >= 0) {
-      pd.remove(i);
-      og.push_back(group);
-   }
+   //
+   _hierarchy_finder finder;
+   finder.set_stop_on_referenced(false);
+   finder.gather_from(group);
+   //
+   this->unmark_rescued_hierarchy_for_delete(finder);
 }
 void DovahKitScriptVMCore::button_group_no_longer_referenced(QButtonGroup* group) {
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
@@ -739,7 +780,7 @@ void DovahKitScriptVMCore::button_group_no_longer_referenced(QButtonGroup* group
       return;
    if (!this->lua_vm) // teardown in progress; we will delete everything as part of that process
       return;
-   _abandoned_hierarchy_finder finder;
+   _hierarchy_finder finder;
    finder.import_non_abandoned_models(*this);
    finder.gather_from(group);
    this->mark_abandoned_hierarchy_for_delete(finder);
