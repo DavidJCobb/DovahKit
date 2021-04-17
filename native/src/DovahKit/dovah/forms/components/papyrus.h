@@ -36,6 +36,11 @@ namespace dovah::loaded_forms::components {
          array_of_boolean = 15,
       };
       inline bool property_type_is_array(property_type p) { return (int)p > 10; }
+      inline property_type scalar_property_type_for(property_type p) noexcept {
+         if (property_type_is_array(p))
+            return (property_type)((int)p - 10);
+         return p;
+      }
       
       class script_data;
       class perk_entry_fragment;
@@ -131,6 +136,7 @@ namespace dovah::loaded_forms::components {
                      bool load(property_type, const script_data_header& header, tes_subrecord_reader&);
                      bool save(property_type, const script_data_header& header, tes_subrecord_writer&) const noexcept;
                      void clone_from(property_type, const value_t& source, loaded_forms::Form& owner_of_clone) noexcept;
+                     void clear(loaded_forms::Form& my_owner) noexcept;
                      //
                      value_t() {}
                      explicit value_t(bool b) : boolean(b) {}
@@ -147,13 +153,18 @@ namespace dovah::loaded_forms::components {
                   property_type   type = property_type::integer;
                   property_status status;
                   std::vector<value_t> values;
-                  //
+
+                  inline bool is_array() const noexcept { return property_type_is_array(this->type); }
+                  inline property_type scalar_type() const noexcept { return scalar_property_type_for(this->type); }
+
+                  void set_type(loaded_forms::Form& my_owner, property_type);
+                  
                   bool load(const script_data_header& header, tes_subrecord_reader&);
                   bool save(const script_data_header& header, tes_subrecord_writer&, save_interface_t&) noexcept;
                   void clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept;
                   void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
                   void clear(loaded_forms::Form& my_owner) noexcept;
-                  //
+                  
                   static void extract_name_and_skip_remainder(const script_data_header& header, tes_subrecord_reader&, std::string&);
                   static void generate_use_info(const script_data_header& header, tes_subrecord_reader&, form_stub_use_info_builder&, bool already_read_name);
                   static void skip_use_info(tes_subrecord_reader&, bool already_read_name);

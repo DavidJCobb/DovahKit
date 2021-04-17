@@ -11,11 +11,103 @@
 #include "../../../../dovah/forms/Form.h"
 #include "script.h"
 
+#include "../../../../helpers/strings.h"
+
+#include "../form.h"
 #include "../quest/alias.h"
 
 namespace {
    using namespace editor_script;
    using wrapper_t = wrappers::papyrus_property;
+}
+
+namespace { // helpers
+   using papyrus_property_type = dovah::loaded_forms::components::papyrus::property_type;
+   std::array<std::pair<papyrus_property_type, const char*>, 10> papyrus_typenames = {{
+      { papyrus_property_type::boolean,          "Bool" },
+      { papyrus_property_type::float32,          "Float" },
+      { papyrus_property_type::string,           "String" },
+      { papyrus_property_type::integer,          "Int" },
+      { papyrus_property_type::object,           "FormOrAlias" },
+      { papyrus_property_type::array_of_boolean, "Bool[]" },
+      { papyrus_property_type::array_of_float32, "Float[]" },
+      { papyrus_property_type::array_of_string,  "String[]" },
+      { papyrus_property_type::array_of_integer, "Int[]" },
+      { papyrus_property_type::array_of_object,  "FormOrAlias[]" },
+   }};
+
+   bool property_scalar_value_typecheck(lua_State* L, int stack_pos, papyrus_property_type pt) {
+      pt = dovah::loaded_forms::components::papyrus::scalar_property_type_for(pt);
+      switch (pt) {
+         case papyrus_property_type::boolean:
+            return lua_isboolean(L, stack_pos);
+         case papyrus_property_type::float32:
+            return lua_isnumber(L, stack_pos);
+         case papyrus_property_type::integer:
+            {
+               int isnum;
+               lua_tointegerx(L, stack_pos, &isnum);
+               return isnum != 0;
+            }
+            break;
+         case papyrus_property_type::object:
+            {
+               if (lua_isnoneornil(L, stack_pos))
+                  return true;
+               stack_pos = lua_absindex(L, stack_pos);
+               if (auto* form = wrapper_from_stack<wrappers::form>(L, stack_pos))
+                  return true;
+               if (auto* alias = wrapper_from_stack<wrappers::quest_alias>(L, stack_pos))
+                  return true;
+               return false;
+            }
+            break;
+         case papyrus_property_type::string:
+            return lua_isstring(L, stack_pos);
+      }
+      return false;
+   }
+
+   void set_papyrus_property_value(lua_State* L, int stack_pos, wrapper& wrapper, wrapper_t::wrapped_t& prop, size_t index) {
+      auto& lf = *wrapper.form;
+      auto  st = prop.scalar_type();
+      auto& v  = prop.values[index];
+      prop.values[index].clear(lf);
+      switch (st) {
+         case papyrus_property_type::boolean:
+            v.boolean = lua_toboolean(L, stack_pos);
+            break;
+         case papyrus_property_type::float32:
+            v.float32 = lua_tonumber(L, stack_pos);
+            break;
+         case papyrus_property_type::integer:
+            {
+               int isnum;
+               int i = lua_tointegerx(L, stack_pos, &isnum);
+               assert(isnum); // we should already have checked this, above
+               v.integer = i;
+            }
+            break;
+         case papyrus_property_type::object:
+            if (lua_isnoneornil(L, stack_pos))
+               break;
+            if (auto* form = wrapper_from_stack<wrappers::form>(L, stack_pos)) {
+               v.object.form.set(lf, form->stub);
+               break;
+            }
+            if (auto* alias_wrapper = wrapper_from_stack<wrappers::quest_alias>(L, stack_pos)) {
+               if (auto* alias = wrappers::quest_alias::unwrap(*alias_wrapper)) {
+                  v.object.form.set(lf, alias_wrapper->stub);
+                  v.object.aliasID = alias->id;
+               }
+               break;
+            }
+            break;
+         case papyrus_property_type::string:
+            v.string = lua_tostring(L, stack_pos);
+            break;
+      }
+   }
 }
 
 #pragma region Collection: "array values"
@@ -153,41 +245,12 @@ namespace {
             luaL_error(L, "script property wrapper has no underlying object (deleted?)");
          __assume(prop != nullptr);
          //
-         using pt = dovah::loaded_forms::components::papyrus::property_type;
-         switch (prop->type) {
-            case pt::boolean:
-               lua_pushstring(L, "Bool");
+         for (auto& p : papyrus_typenames) {
+            if (p.first == prop->type) {
+               lua_pushstring(L, p.second);
                return 1;
-            case pt::float32:
-               lua_pushstring(L, "Float");
-               return 1;
-            case pt::string:
-               lua_pushstring(L, "String");
-               return 1;
-            case pt::integer:
-               lua_pushstring(L, "Int");
-               return 1;
-            case pt::object:
-               lua_pushstring(L, "FormOrAlias");
-               return 1;
-               //
-            case pt::array_of_boolean:
-               lua_pushstring(L, "Bool[]");
-               return 1;
-            case pt::array_of_float32:
-               lua_pushstring(L, "Float[]");
-               return 1;
-            case pt::array_of_string:
-               lua_pushstring(L, "String[]");
-               return 1;
-            case pt::array_of_integer:
-               lua_pushstring(L, "Int[]");
-               return 1;
-            case pt::array_of_object:
-               lua_pushstring(L, "FormOrAlias[]");
-               return 1;
+            }
          }
-         //
          lua_pushstring(L, "Invalid");
          return 1;
       }
@@ -265,6 +328,101 @@ namespace {
          self.after_edit();
          return 0;
       }
+      luastackchange_t type(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
+         auto* prop = wrappers::papyrus_property::unwrap(self, true);
+         if (prop == nullptr)
+            luaL_error(L, "script property wrapper has no underlying object (deleted?)");
+         __assume(prop != nullptr);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "type (string) expected");
+         //
+         std::string type = cobb::trim(lua_tostring(L, 2));
+         size_t      size = type.size();
+         if (size < 0)
+            luaL_error(L, "\"%s\" is not something Lua can recognize as a Papyrus typename", type.c_str());
+         //
+         auto typeval = papyrus_property_type::integer;
+         bool match   = false;
+         for (auto& e : papyrus_typenames) {
+            if (_stricmp(type.c_str(), e.second) == 0) {
+               typeval = e.first;
+               match = true;
+               break;
+            }
+         }
+         if (!match)
+            luaL_error(L, "\"%s\" is not something Lua can recognize as a Papyrus typename", type.c_str());
+         if (prop->type == typeval)
+            return 0;
+         //
+         self.before_edit();
+         prop->set_type(*self.form, typeval);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t value(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<wrapper_t>(L);
+         auto* prop = wrappers::papyrus_property::unwrap(self, true);
+         if (prop == nullptr)
+            luaL_error(L, "script property wrapper has no underlying object (deleted?)");
+         __assume(prop != nullptr);
+         //
+         int  isnum;
+         auto vt = lua_type(L, 2);
+         if (prop->is_array()) {
+            luaL_argcheck(L, vt == LUA_TUSERDATA || vt == LUA_TTABLE, 2, "attempted to set a Papyrus array property to the wrong type");
+            auto* other = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::array_collection_key);
+            if (other) {
+               if (self.is_equal(other)) // early-out on self-assignment
+                  return 0;
+               auto* source = wrappers::papyrus_property::unwrap(*other, false);
+               luaL_argcheck(L, source, 2, "the provided property-value wrapper has no underlying object (deleted?)");
+               self.before_edit();
+               auto& lf = *self.form;
+               prop->clear(lf);
+               prop->clone_from(*source, lf);
+               self.after_edit();
+               return 0;
+            }
+            //
+            // No way to adequately vet the type of the passed-in value, so just treat it as an array.
+            //
+            lua_len(L, 2);
+            int length = lua_tointegerx(L, -1, &isnum);
+            lua_pop(L, 1);
+            luaL_argcheck(L, isnum, 2, "provided table or userdata did not return a valid result for its __len operator");
+            for (int i = 1; i <= length; ++i) {
+               lua_geti(L, 2, i);
+               bool valid = property_scalar_value_typecheck(L, -1, prop->type);
+               lua_pop(L, 1);
+               if (!valid)
+                  luaL_error(L, "provided array has a value of the wrong type at index %d", i);
+            }
+            //
+            self.before_edit();
+            prop->clear(*self.form);
+            prop->values.resize(length);
+            for (int i = 1; i <= length; ++i) {
+               lua_geti(L, 2, i);
+               set_papyrus_property_value(L, -1, self, *prop, i - 1);
+               lua_pop(L, 1);
+            }
+            self.after_edit();
+         } else {
+            luaL_argcheck(L, property_scalar_value_typecheck(L, 2, prop->type), 2, "desired value is of the wrong type for this property");
+            //
+            self.before_edit();
+            prop->clear(*self.form);
+            prop->values.resize(1);
+            set_papyrus_property_value(L, 2, self, *prop, 0);
+            self.after_edit();
+         }
+         return 0;
+      }
    }
 }
 
@@ -277,7 +435,9 @@ namespace editor_script::wrappers {
       { "value",    &_getters::value },
    };
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_t::metatable_setters = {
-      { "name", &_setters::name },
+      { "name",  &_setters::name },
+      { "type",  &_setters::type },
+      { "value", &_setters::value },
    };
 
    /*static*/ wrapper_t::wrapped_t* wrapper_t::unwrap(wrapper& w, bool must_be_end) {

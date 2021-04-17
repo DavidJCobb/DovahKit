@@ -81,6 +81,30 @@ namespace dovah::loaded_forms::components::papyrus {
       list[index].clear(owner);
       list.erase(list.begin() + index);
    }
+
+   void script_data::property::set_type(loaded_forms::Form& my_owner, property_type pt) {
+      if (this->type == pt)
+         return;
+      this->clear(my_owner);
+      this->type = pt;
+      switch (pt) {
+         case property_type::boolean:
+            this->values.emplace_back(false);
+            break;
+         case property_type::float32:
+            this->values.emplace_back(0.0F);
+            break;
+         case property_type::integer:
+            this->values.emplace_back(0);
+            break;
+         case property_type::object:
+            this->values.emplace_back();
+            break;
+         case property_type::string:
+            this->values.emplace_back("");
+            break;
+      }
+   }
    
    #pragma region Papyrus root serialization and boilerplate
    bool script_data::load(tes_subrecord_reader& subrecord, load_interface_t& intfc) {
@@ -377,6 +401,11 @@ namespace dovah::loaded_forms::components::papyrus {
             assert(false && "Unable to clone Papyrus property value with an unrecognized type.");
       }
    }
+   void script_data::property::value_t::clear(loaded_forms::Form& my_owner) noexcept {
+      this->integer = 0;
+      this->string.clear();
+      this->object.clear(my_owner);
+   }
 
    bool script_data::property::load(const script_data_header& header, tes_subrecord_reader& subrecord) {
       subrecord.read_length_prefixed_string<2>(this->name);
@@ -488,10 +517,12 @@ namespace dovah::loaded_forms::components::papyrus {
          case property_type::array_of_object:
             break;
          default:
+            this->values.clear();
             return;
       }
       for (auto& value : this->values)
          value.object.clear(my_owner);
+      this->values.clear();
    }
    #pragma endregion
 
