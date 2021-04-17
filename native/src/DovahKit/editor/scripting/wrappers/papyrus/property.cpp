@@ -485,6 +485,7 @@ namespace {
                   return 0;
                auto* source = wrappers::papyrus_property::unwrap(*other, false);
                luaL_argcheck(L, source, 2, "the provided property-value wrapper has no underlying object (deleted?)");
+               __assume(source != nullptr);
                self.before_edit();
                auto& lf = *self.form;
                prop->clear(lf);

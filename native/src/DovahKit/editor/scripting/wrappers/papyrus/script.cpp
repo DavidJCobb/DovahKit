@@ -122,9 +122,9 @@ namespace {
                prior->clone_from(*source, *self.form);
                prior->name = name; // restore name (it may have been changed during the clone operation)
             } else {
-               auto& prop = script->properties.emplace_back();
-               prop.clone_from(*source, *self.form);
-               prop.name = name; // set name after the cloning operation
+               auto& added = script->properties.emplace_back();
+               added.clone_from(*source, *self.form);
+               added.name = name; // set name after the cloning operation
             }
             self.after_edit();
          }
@@ -308,12 +308,13 @@ namespace {
          //
          auto* arg    = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::property_collection_key);
          luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus property collection or nil");
+         __assume(arg != nullptr);
          auto* other  = wrapper_t::unwrap(*arg, false);
          if (other == nullptr)
             luaL_error(L, "script property collection wrapper has no underlying object (deleted?)");
          if (script == other) // self-assignment
             return 0;
-         __assume(other  != nullptr);
+         __assume(other != nullptr);
          //
          self.before_edit();
          {

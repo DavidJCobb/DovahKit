@@ -77,6 +77,66 @@ namespace {
          }
          return 1;
       }
+      luastackchange_t set_item(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         constexpr auto index_self  = 1;
+         constexpr auto index_key   = 2;
+         constexpr auto index_value = 3;
+         //
+         auto& self = get_collection_wrapper(L);
+         auto* root = wrapper_t::unwrap(self, false);
+         if (!root)
+            luaL_error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::script_collection_key);
+         if (!lua_isstring(L, index_key))
+            luaL_error(L, "the given key is not auto-convertible to a string and thus cannot be a Papyrus script name");
+         std::string name = lua_tostring(L, index_key);
+         //
+         if (lua_isnoneornil(L, index_value)) {
+            //
+            // Setting a script to nil should remove it.
+            //
+            auto& list = root->scripts;
+            for (auto it = list.begin(); it != list.end(); ++it) {
+               auto& script = *it;
+               if (_stricmp(script.name.c_str(), name.c_str()) == 0) {
+                  self.before_edit();
+                  script.clear(*self.form);
+                  {
+                     wrapper sw = self;
+                     assert(sw.is_collection);
+                     sw.into_collection(it - list.begin());
+                     DovahKitScriptVMUserdataInterface::get().remove_from_sequential_collection(sw);
+                  }
+                  list.erase(it);
+                  self.after_edit();
+                  break;
+               }
+            }
+         } else {
+            auto* arg = (wrapper*) editor_script::cast_to_class(L, index_value, wrapper_t::script_collection_key);
+            if (!arg)
+               luaL_error(L, "you can only overwrite a Papyrus script with nil or with another Papyrus script");
+            auto* source = wrappers::papyrus_script::unwrap(*arg, true);
+            if (source == nullptr)
+               luaL_error(L, "the script wrapper provided as a value to set has no underlying object (deleted?)");
+            __assume(source != nullptr);
+            //
+            self.before_edit();
+            if (auto* prior = root->lookup_script(name)) {
+               name = prior->name; // preserve case
+               prior->clear(*self.form);
+               prior->clone_from(*source, *self.form);
+               prior->name = name; // restore name (it may have been changed during the clone operation)
+            } else {
+               auto& added = root->scripts.emplace_back();
+               added.clone_from(*source, *self.form);
+               added.name = name; // set name after the cloning operation
+            }
+            self.after_edit();
+         }
+         return 0;
+      }
    }
 }
 #pragma endregion
@@ -208,6 +268,7 @@ namespace {
          //
          auto* arg   = (wrapper*) editor_script::cast_to_class(L, 2, wrapper_t::script_collection_key);
          luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus script collection or nil");
+         __assume(arg != nullptr);
          auto& other = _unwrap(L, *arg);
          if (&root == &other) // self-assignment
             return 0;
@@ -254,6 +315,7 @@ namespace editor_script::wrappers {
          .get_all_item_names     = &_collections::scripts::get_all_item_names,
          .items_are_named        = true,
          .lookup_item_by_name    = &_collections::scripts::lookup_item_by_name,
+         .set_item               = &_collections::scripts::set_item,
       });
    }
 
