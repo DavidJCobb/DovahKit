@@ -14,7 +14,7 @@
 namespace {
    using namespace editor_script;
    //
-   namespace _base {//
+   namespace _base {
       namespace getters {
          luastackchange_t id(lua_State* L) {
             auto& self  = get_wrapper_for_thiscall<wrappers::quest_alias>(L);
@@ -90,6 +90,34 @@ namespace {
             self.after_edit();
             return 0;
          }
+         luastackchange_t id(lua_State* L) {
+            auto& self  = get_wrapper_for_thiscall<wrappers::quest_alias>(L);
+            auto* alias = wrappers::quest_alias::unwrap(self);
+            if (alias == nullptr)
+               luaL_error(L, "alias wrapper has no underlying object (deleted?)");
+            __assume(alias != nullptr);
+            //
+            int  isnum;
+            auto id = lua_tointegerx(L, 2, &isnum);
+            luaL_argcheck(L, isnum,       2, "id (integer) expected");
+            luaL_argcheck(L, id >= 0,     2, "alias IDs cannot be negative");
+            luaL_argcheck(L, id < 0xFFFF, 2, "alias IDs cannot exceed 65534 without causing file format issues");
+            //
+            if (id == alias->id)
+               return 0;
+            auto* quest    = self.get_loaded_form_data<dovah::loaded_forms::Quest>();
+            auto* conflict = quest->lookup_alias_by_id(id);
+            if (conflict)
+               luaL_error(L, "alias ID %d is already in use by another alias on this quest", id);
+            //
+            self.before_edit();
+            alias->id = id;
+            if (quest->next_alias_id <= id)
+               quest->next_alias_id = id + 1;
+            self.after_edit();
+            //
+            return 0;
+         }
       }
    }//
    namespace _loc {
@@ -142,6 +170,7 @@ namespace editor_script::wrappers {
       { "type",    &_base::getters::type },
    };
    /*static*/ const std::initializer_list<luaL_Reg> quest_alias::metatable_setters = {
+      { "id",   &_base::setters::id },
       { "name", &_base::setters::name },
    };
    #pragma endregion
