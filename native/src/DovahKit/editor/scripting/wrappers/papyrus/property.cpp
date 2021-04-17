@@ -192,6 +192,110 @@ namespace {
          }
          return 0;
       }
+      luastackchange_t member_function_insert(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_collection_wrapper(L);
+         auto* prop = wrappers::papyrus_property::unwrap(self, false);
+         //
+         int  pos_value = 2;
+         bool has_index = false;
+         //
+         if (lua_gettop(L) >= 3) {
+            has_index = true;
+            pos_value = 3;
+            luaL_argcheck(L, lua_isinteger(L, 2), 2, "provided index is not an integer");
+         }
+         if (!property_scalar_value_typecheck(L, pos_value, prop->type))
+            luaL_error(L, "desired value is of the wrong type for this property");
+         //
+         if (!prop)
+            return 0;
+         auto& list = prop->values;
+         auto  size = list.size();
+         int   i    = size + 1;
+         if (has_index) {
+            i = lua_tointeger(L, 2);
+            if (i < 1)
+               return luaL_error(L, "indices below 1, such as %d, are not allowed", i);
+            --i;
+         }
+         if (i >= size) {
+            if (i > size) {
+               lua_warning(L, "index ", 1);
+               const char* tostr = lua_tolstring(L, 2, nullptr);
+               lua_warning(L, tostr, 1);
+               lua_warning(L, " is out of bounds; nil elements will be created between the end of the list and the new element", 0);
+            }
+            list.resize(i + 1);
+         } else {
+            list.emplace(list.begin() + i);
+         }
+         self.before_edit();
+         set_papyrus_property_value(L, pos_value, self, *prop, i);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t member_function_remove(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_collection_wrapper(L);
+         auto* prop = wrappers::papyrus_property::unwrap(self, false);
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected an integer index");
+         int isnum;
+         int i = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "expected an integer index");
+         if (!prop)
+            return 0;
+         auto& list = prop->values;
+         if (i > list.size() || i <= 0)
+            return 0;
+         --i;
+         self.before_edit();
+         list[i].clear(*self.form);
+         list.erase(list.begin() + i);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t set_item(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         constexpr auto index_self  = 1;
+         constexpr auto index_key   = 2;
+         constexpr auto index_value = 3;
+         //
+         int isnum;
+         int i = lua_tointegerx(L, index_key, &isnum);
+         if (!isnum)
+            luaL_error(L, "cannot use string keys or non-integer keys");
+         if (i < 1)
+            return luaL_error(L, "indices below 1, such as %d, are not allowed", i);
+         --i;
+         //
+         auto& self = get_collection_wrapper(L);
+         auto* prop = wrappers::papyrus_property::unwrap(self, false);
+         if (!prop)
+            return 0;
+         //
+         if (!property_scalar_value_typecheck(L, index_value, prop->type))
+            luaL_error(L, "desired value is of the wrong type for this property");
+         //
+         self.before_edit();
+         auto& list = prop->values;
+         auto  size = list.size();
+         if (i >= size) {
+            if (i > size) {
+               lua_warning(L, "index ", 1);
+               const char* tostr = lua_tolstring(L, index_key, nullptr);
+               lua_warning(L, tostr, 1);
+               lua_warning(L, " is out of bounds; nil elements will be created between the end of the list and the new element", 0);
+            }
+            list.resize(i + 1);
+         }
+         set_papyrus_property_value(L, index_value, self, *prop, i);
+         self.after_edit();
+         return 0;
+      }
    }
 }
 #pragma endregion
@@ -470,9 +574,9 @@ namespace editor_script::wrappers {
          //
          .get_collection_length  = &_collections::_array_values::get_collection_length,
          .lookup_item_by_index   = &_collections::_array_values::lookup_item_by_index,
-         //.member_function_insert = &_collections::_array_values::member_function_insert, // TODO
-         //.member_function_remove = &_collections::_array_values::member_function_remove, // TODO
-         //.set_item               = &_collections::_array_values::set_item,               // TODO
+         .member_function_insert = &_collections::_array_values::member_function_insert,
+         .member_function_remove = &_collections::_array_values::member_function_remove,
+         .set_item               = &_collections::_array_values::set_item,
       });
    }
 }

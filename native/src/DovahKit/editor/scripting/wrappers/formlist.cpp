@@ -85,7 +85,8 @@ namespace {
          if (i >= size) {
             if (i > size) {
                lua_warning(L, "index ", 1);
-               lua_warning(L, std::to_string(i).c_str(), 1);
+               const char* tostr = lua_tolstring(L, 2, nullptr);
+               lua_warning(L, tostr, 1);
                lua_warning(L, " is out of bounds; nil elements will be created between the end of the list and the new element", 0);
             }
             list.resize(i + 1);
