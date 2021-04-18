@@ -176,28 +176,33 @@ bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basi
    auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
    //
    int found = 0;
-   for (auto* o : root->children()) {
-      auto* w = qobject_cast<QWidget*>(o);
-      if (!w)
-         continue;
+   cobb::qt::for_each_widget_in_hierarchy(root, [this, &ud_brain, &found, &result, &groups](QWidget* w) {
+      result = false;
+      //
       ++found;
       if (auto* button = qobject_cast<QAbstractButton*>(w)) {
          if (auto* g = button->group()) {
             if (this->config.halt_and_clear_upon_non_abandoned)
                if (ud_brain.wrapper_exists_for(g))
-                  return false;
+                  return true;
             if (!groups.contains(g))
                groups.push_back(g);
          }
       }
       if (this->config.halt_and_clear_upon_non_abandoned) {
          if (ud_brain.wrapper_exists_for(w))
-            return false;
-         if (auto* model = cobb::qt::get_model_of(w))
+            return true;
+         if (auto* model = cobb::qt::get_underlying_model_of(w))
             if (auto* lua_model = qobject_cast<ObservableStandardItemModel*>(model))
-               return false;
+               if (this->referenced_models.contains(lua_model))
+                  return true;
       }
-   }
+      //
+      result = true;
+      return false;
+   });
+   if (!result)
+      return false;
    //
    this->abandoned.count += found;
    widgets.push_back(root);
@@ -257,6 +262,11 @@ void DovahKitScriptVMCore::_hierarchy_finder::gather_from(QObject* basis) noexce
       // access Lua-side data in order to check whether an object is referenced (by virtue 
       // of checking whether it has a Lua-side wrapper).
       //
+      // You cannot use this option when the Lua state is being torn down. You also should 
+      // not use this option when the Lua state is being torn down: you don't need to try 
+      // and find abandoned widgets/objects, to mark them for deletion, because the tear-
+      // down process is going to delete everything anyway.
+      //
       DovahKitScriptVMCore::require_script_thread();
    }
    if (!this->_start_from_basis(basis)) {
@@ -312,8 +322,15 @@ DovahKitScriptVMCore::~DovahKitScriptVMCore() {
 }
 
 void DovahKitScriptVMCore::_setup_lua_vm() {
+   assert(!this->in_teardown);
+   assert(this->lua_vm == nullptr);
    assert(this->ui_model_observers.empty());
    assert(this->widgets.extant_widget_count == 0);
+   assert(this->widgets.orphans.widgets.empty());
+   assert(this->widgets.orphans.button_groups.empty());
+   assert(this->widgets.pending_deletion.widgets.empty());
+   assert(this->widgets.pending_deletion.button_groups.empty());
+   assert(this->widgets.connections.empty());
    assert(this->pending_ui_event_count == 0);
    //
    this->lua_vm = luaL_newstate();
@@ -433,6 +450,7 @@ namespace {
 }
 void DovahKitScriptVMCore::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->running);
+   this->in_teardown = true;
    
    if (auto* L = this->lua_vm) {
       this->lua_vm = nullptr;
@@ -452,11 +470,14 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
    _teardown_list_helper(this->widgets.pending_deletion.widgets);
    _teardown_list_helper(this->widgets.pending_deletion.button_groups);
    this->widgets.extant_widget_count = 0;
+   this->widgets.connections.clear();
    
    for (auto& o : this->ui_model_observers)
       delete o.pointer;
    this->ui_model_observers.clear();
    this->pending_ui_event_count = 0;
+   //
+   this->in_teardown = false;
 }
 
 void DovahKitScriptVMCore::_run_queued_functions(bool ui_locked) {
@@ -543,6 +564,10 @@ bool DovahKitScriptVMCore::_should_keep_running() const noexcept {
    return false;
 }
 
+bool DovahKitScriptVMCore::teardown_in_progress() const noexcept {
+   return this->in_teardown;
+}
+
 /*static*/ void DovahKitScriptVMCore::require_script_thread() {
    assert(std::this_thread::get_id() == DovahKitScriptVMCore::get().thread.get_id());
 }
@@ -572,7 +597,10 @@ void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _hierarchy_
       auto& pending = this->widgets.pending_deletion.widgets;
       for (auto* root : finder.abandoned_root_widgets()) {
          int i = orphans.indexOf(root);
-         assert(i >= 0);
+         if (i < 0) {
+            assert(pending.indexOf(root) >= 0 && "Widget is neither orphaned nor pending deletion; why do we think this widget is abandoned?!");
+            continue;
+         }
          //
          // Sever all signal/slot connections to the condemned widgets.
          //
@@ -595,7 +623,10 @@ void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _hierarchy_
       auto& pending = this->widgets.pending_deletion.button_groups;
       for (auto* group : finder.abandoned_button_groups()) {
          int i = orphans.indexOf(group);
-         assert(i >= 0);
+         if (i < 0) {
+            assert(pending.indexOf(group) >= 0 && "Button group is neither orphaned nor pending deletion; why do we think this button group is abandoned?!");
+            continue;
+         }
          //
          QObject::disconnect(group, nullptr, nullptr, nullptr);
          pending.push_back(group);
@@ -709,7 +740,7 @@ void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
    if (!widget)
       return;
-   if (!this->lua_vm) // teardown in progress; we will delete everything as part of that process
+   if (this->teardown_in_progress()) // teardown in progress; we will delete everything as part of that process, and it may not be safe to check whether things are Lua-referenced during that process
       return;
    //
    // In general, we want to delete widgets that have been abandoned by the script, and 
@@ -778,7 +809,7 @@ void DovahKitScriptVMCore::button_group_no_longer_referenced(QButtonGroup* group
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
    if (!group)
       return;
-   if (!this->lua_vm) // teardown in progress; we will delete everything as part of that process
+   if (this->teardown_in_progress()) // teardown in progress; we will delete everything as part of that process, and it may not be safe to check whether things are Lua-referenced during that process
       return;
    _hierarchy_finder finder;
    finder.import_non_abandoned_models(*this);
@@ -790,28 +821,59 @@ void DovahKitScriptVMCore::model_observer_reference_gained(ObservableStandardIte
    DovahKitScriptVMCore::require_script_thread();
    if (!observer)
       return;
-   auto& list = this->ui_model_observers;
+   auto& list  = this->ui_model_observers;
+   bool  found = false;
    for (auto& e : list) {
       if (e.pointer == observer) {
          ++e.refcount;
-         return;
+         found = true;
+         break;
       }
    }
-   list.emplace_back(observer, 1);
+   if (!found)
+      list.emplace_back(observer, 1);
+   //
+   // Rescue widgets from deletion as needed:
+   //
+   for (auto* root : this->widgets.orphans.widgets) {
+      bool contains_any_referenced = false;
+      cobb::qt::for_each_widget_in_hierarchy(root, [observer, &contains_any_referenced](QWidget* widget) {
+         if (auto* model = cobb::qt::get_underlying_model_of(widget)) {
+            if (observer->model == model) {
+               contains_any_referenced = true;
+               return true;
+            }
+         }
+         return false;
+      });
+      if (contains_any_referenced) {
+         _hierarchy_finder finder;
+         finder.set_stop_on_referenced(false);
+         finder.gather_from(root);
+         //
+         this->unmark_rescued_hierarchy_for_delete(finder);
+      }
+   }
 }
 void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemModelObserver* observer) {
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
    if (!observer)
       return;
-   auto& list = this->ui_model_observers;
+   auto& list  = this->ui_model_observers;
+   bool  found = false;
    for (auto& e : list) {
       if (e.pointer != observer)
          continue;
+      found = true;
       if (--e.refcount > 0)
          return;
       assert(e.refcount == 0 && "How is the refcount negative?");
-      return;
+      break;
    }
+   if (!found)
+      return;
+   if (this->teardown_in_progress()) // teardown in progress; we will delete everything as part of that process, and it may not be safe to check whether things are Lua-referenced during that process
+      return;
    //
    // You'd expect that we'd destroy an unreferenced observer now, right? But nah. See, this 
    // function runs on the script thread, but we can only safely (un)register observers on 
@@ -821,6 +883,26 @@ void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemM
    // model observers elsewhere and do some task (e.g. zombifying some of them) that causes 
    // some of them to become unreferenced within Lua.
    //
+   // Anyway, let's mark any widgets for deletion as needed:
+   //
+   for (auto* root : this->widgets.orphans.widgets) {
+      bool contains_any_referenced = false;
+      cobb::qt::for_each_widget_in_hierarchy(root, [observer, &contains_any_referenced](QWidget* widget) {
+         if (auto* model = cobb::qt::get_underlying_model_of(widget)) {
+            if (observer->model == model) {
+               contains_any_referenced = true;
+               return true;
+            }
+         }
+         return false;
+      });
+      if (contains_any_referenced) {
+         _hierarchy_finder finder;
+         finder.import_non_abandoned_models(*this);
+         finder.gather_from(root);
+         this->mark_abandoned_hierarchy_for_delete(finder);
+      }
+   }
 }
 void DovahKitScriptVMCore::zombify_all_invalid_model_observers() {
    DovahKitScriptVMCore::require_script_thread();

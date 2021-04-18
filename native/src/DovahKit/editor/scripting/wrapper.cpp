@@ -168,7 +168,7 @@ namespace editor_script {
       }
       if (this->depth != other.depth)
          return false;
-      if (this->is_collection | other.is_collection)
+      if (this->is_collection || other.is_collection)
          return false;
       uint8_t i = 0;
       for (; i < (signed int)(this->depth) - 1; ++i)

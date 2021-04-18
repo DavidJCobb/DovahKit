@@ -137,7 +137,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
             // abandoned. The finder will abort-and-clear by default, as a useful optimization for when the 
             // VM needs to decide what to delete.
             //
-            // This option can only safely be used when running on the script thread.
+            // This option can only safely be used when running on the wrapper teardown thread.
             inline void set_stop_on_referenced(bool b) noexcept {
                this->config.halt_and_clear_upon_non_abandoned = b;
             }
@@ -158,6 +158,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       
       std::atomic<bool>   aborted = false; // main thread can set this to kill the script
       cobb::lockable_bool running = false;
+      bool in_teardown = false;
       std::vector<_model_observer> ui_model_observers;
       QWidget* ui_parent = nullptr;
       //
@@ -216,6 +217,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }
+      bool teardown_in_progress() const noexcept;
 
       inline QWidget* get_ui_parent_widget() const noexcept { return this->ui_parent; }
 
@@ -223,7 +225,12 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       static void require_client_thread(); // actually just requires that it not be the script thread
       static void require_wrapper_teardown_thread();
 
+      // Mark a hierarchy of abandoned widgets for deletion. You should use this after running a 
+      // _hierarchy_finder that was configured to halt-and-clear upon finding a non-abandoned 
+      // entity. This function doesn't check whether anything in the hierarchy finder is abandoned; 
+      // that's the job of the finder itself.
       void mark_abandoned_hierarchy_for_delete(const _hierarchy_finder&);
+
       void unmark_rescued_hierarchy_for_delete(const _hierarchy_finder&);
 
       QDialog* try_spawn_script_window() noexcept;
