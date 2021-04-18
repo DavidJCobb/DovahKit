@@ -6,9 +6,11 @@ namespace editor_script {
       using namespace wrappers;
       //
       ui::button::setup(L);
+      ui::checkbox::setup(L);
       ui::dropdown::setup(L);
          ui::dropdown_item::setup(L);
       ui::formpicker::setup(L);
+      ui::groupbox::setup(L);
       ui::line::setup(L);
       ui::progress_bar::setup(L);
       ui::radio_button::setup(L);

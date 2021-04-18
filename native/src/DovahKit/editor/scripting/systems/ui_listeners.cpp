@@ -10,10 +10,13 @@
 #include "../wrapper_util.h"
 
 #include "../../../ui/generic/FormPicker.h"
+#include <QCheckBox>
 #include <QDoubleSpinBox>
+#include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QRadioButton>
 #include "../../../helpers/qt/combobox.h" // for events
 
 //
@@ -33,6 +36,12 @@ namespace {
             "OnChanged",
          }
       ),
+      _event_widget(&QCheckBox::staticMetaObject,
+         {
+            "OnChanged",
+            "OnToggled", // The same as OnChanged, but the argument is a boolean indicating whether the checkbox is checked.
+         }
+      ),
       _event_widget(&QComboBox::staticMetaObject,
          {
             "OnChanged", // The dropdown's selected logical index was changed through some cause other than the script directly setting it or the selected text.
@@ -41,6 +50,11 @@ namespace {
       _event_widget(&QDoubleSpinBox::staticMetaObject,
          {
             "OnChanged", // The spinbox's value has been altered by the user. Fires instantly for increment/decrement buttons; for typing, works like the textbox OnChanged event.
+         }
+      ),
+      _event_widget(&QGroupBox::staticMetaObject,
+         {
+            "OnChanged",
          }
       ),
       _event_widget(&QPushButton::staticMetaObject,
@@ -106,6 +120,43 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
          this->_connect_event(*casted, &FormPicker::formChanged, event_name, listener_name);
          return;
       }
+   } else if (auto* casted = qobject_cast<QCheckBox*>(&widget)) {
+      if (_stricmp(event_name, "OnChanged") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted, &QCheckBox::stateChanged, &vm,
+               [casted, ln](int state) {
+                  QString s;
+                  switch (state) {
+                     case Qt::CheckState::Checked:
+                        s = "checked";
+                        break;
+                     case Qt::CheckState::PartiallyChecked:
+                        s = "indeterminate";
+                        break;
+                     case Qt::CheckState::Unchecked:
+                        s = "unchecked";
+                        break;
+                  }
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { s });
+               }
+            ),
+            widget, event_name, listener_name
+         );
+         return;
+      }
+      if (_stricmp(event_name, "OnToggled") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted, &QCheckBox::stateChanged, &vm,
+               [casted, ln](int state) {
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnToggled", ln.c_str(), { state == Qt::CheckState::Checked });
+               }
+            ),
+            widget, event_name, listener_name
+         );
+         return;
+      }
    } else if (auto* casted = qobject_cast<QComboBox*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
          std::string ln = listener_name;
@@ -125,6 +176,11 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
    } else if (auto* casted = qobject_cast<QDoubleSpinBox*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
          this->_connect_event(*casted, QOverload<double>::of(&QDoubleSpinBox::valueChanged), event_name, listener_name);
+         return;
+      }
+   } else if (auto* casted = qobject_cast<QGroupBox*>(&widget)) {
+      if (_stricmp(event_name, "OnChanged") == 0) {
+         this->_connect_event(*casted, &QGroupBox::toggled, event_name, listener_name);
          return;
       }
    } else if (auto* casted = qobject_cast<QPushButton*>(&widget)) {

@@ -1,0 +1,19 @@
+#pragma once
+#include "../../wrapper.h"
+#include "widget.h"
+#include <QCheckBox>
+
+namespace editor_script::wrappers::ui {
+   struct checkbox : public widget {
+      static constexpr const char* superclass_key = metatable_key;
+      static constexpr const char* metatable_key  = "dovah.classes.ui.checkbox";
+      static const std::initializer_list<luaL_Reg> metatable_methods;
+      static const std::initializer_list<luaL_Reg> metatable_getters;
+      static const std::initializer_list<luaL_Reg> metatable_setters;
+
+      static constexpr const char* global_name = "checkbox";
+      using wrapped_type = QCheckBox;
+
+      static void setup(lua_State*); // the "ui" table should be at the top of the stack
+   };
+}

@@ -11,6 +11,7 @@
 #include <QDialog>
 #include <QFrame>
 #include <QGridLayout>
+#include <QGroupBox>
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../../../helpers/lua/qt_variant.h"
@@ -28,6 +29,8 @@ namespace {
       if (qobject_cast<QDialog*>(&widget))
          return true;
       if (qobject_cast<QFrame*>(&widget))
+         return true;
+      if (qobject_cast<QGroupBox*>(&widget))
          return true;
       return false;
    }
