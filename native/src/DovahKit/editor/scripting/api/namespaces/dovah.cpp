@@ -164,7 +164,12 @@ namespace {
          auto& editor = DovahKitCore::get();
          if (!editor.has_data())
             return 0;
-         auto  id   = lua_tonumber(L, 1);
+         int  isnum;
+         auto id = lua_tointegerx(L, 1, &isnum);
+         if (!isnum)
+            return 0;
+         if (id < 0 || id > 0xFFFFFFFF)
+            return 0;
          auto* stub = editor.get_form(id);
          if (!stub)
             return 0;

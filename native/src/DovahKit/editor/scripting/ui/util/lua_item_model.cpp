@@ -103,14 +103,14 @@ ObservableStandardItemModelObserver* ObservableStandardItemModel::getOrCreateReg
       if (!parentItem)
          return nullptr;
       int bound;
-      if (main == Qt::Orientation::Horizontal)
+      if (main == rowOrientation)
          bound = parentItem->rowCount();
       else
          bound = parentItem->columnCount();
       if (bound <= offset)
          return nullptr;
    }
-   auto cross = (main == Qt::Orientation::Horizontal) ? Qt::Orientation::Vertical : Qt::Orientation::Horizontal;
+   auto cross = (main == rowOrientation) ? colOrientation : rowOrientation;
    for (auto* o : this->_observers) {
       int m = o->axis(main);
       int c = o->axis(cross);

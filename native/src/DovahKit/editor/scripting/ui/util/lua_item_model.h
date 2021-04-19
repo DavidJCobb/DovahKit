@@ -12,13 +12,16 @@ struct ObservableStandardItemModelObserver {
 
    ~ObservableStandardItemModelObserver();
 
+   static constexpr auto rowOrientation = Qt::Orientation::Vertical;
+   static constexpr auto colOrientation = Qt::Orientation::Horizontal;
+
    inline const int axis(Qt::Orientation o) const noexcept {
-      if (o == Qt::Orientation::Horizontal)
+      if (o == colOrientation)
          return this->col;
       return this->row;
    }
    inline void setAxis(Qt::Orientation o, int i) noexcept {
-      if (o == Qt::Orientation::Horizontal)
+      if (o == colOrientation)
          this->col = i;
       else
          this->row = i;
@@ -52,9 +55,6 @@ struct ObservableStandardItemModelObserver {
    QModelIndex itemIndex(int offset = 0) const noexcept;
 
    void unregister();
-
-   static constexpr auto rowOrientation = Qt::Orientation::Vertical;
-   static constexpr auto colOrientation = Qt::Orientation::Horizontal;
 };
 
 class ObservableStandardItemModel : public QStandardItemModel {
@@ -95,6 +95,9 @@ class ObservableStandardItemModel : public QStandardItemModel {
    public:
       ObservableStandardItemModel(QObject* parent = nullptr);
       ~ObservableStandardItemModel();
+
+      static constexpr auto rowOrientation = ObservableStandardItemModelObserver::rowOrientation;
+      static constexpr auto colOrientation = ObservableStandardItemModelObserver::colOrientation;
 
       ObservableStandardItemModelObserver* getOrCreateRegisteredObserver(const QModelIndex& cell);
       ObservableStandardItemModelObserver* getOrCreateRegisteredObserver(const QModelIndex& parent, Qt::Orientation, int offset);

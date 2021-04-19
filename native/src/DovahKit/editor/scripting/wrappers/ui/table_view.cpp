@@ -243,6 +243,31 @@ namespace {
          lua_pushboolean(L, result);
          return 1;
       }
+      luastackchange_t selection_mode(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         auto result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QTableView::selectionMode);
+         switch (result) {
+            case QAbstractItemView::SelectionMode::SingleSelection:
+               lua_pushstring(L, "single");
+               return 1;
+            case QAbstractItemView::SelectionMode::MultiSelection:
+               lua_pushstring(L, "toggle");
+               return 1;
+            case QAbstractItemView::SelectionMode::ExtendedSelection:
+               lua_pushstring(L, "multiple");
+               return 1;
+            case QAbstractItemView::SelectionMode::ContiguousSelection:
+               lua_pushstring(L, "contiguous");
+               return 1;
+            case QAbstractItemView::SelectionMode::NoSelection:
+               lua_pushstring(L, "disabled");
+               return 1;
+         }
+         lua_pushstring(L, "invalid");
+         return 1;
+      }
       luastackchange_t selection_type(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -391,6 +416,30 @@ namespace {
          editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QTableView::setCornerButtonEnabled, value);
          return 0;
       }
+      luastackchange_t selection_mode(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         if (!self.widget)
+            return 0;
+         QAbstractItemView::SelectionMode value;
+         {
+            auto* arg = lua_tostring(L, 2);
+            if (_stricmp(arg, "single") == 0)
+               value = QAbstractItemView::SelectionMode::SingleSelection;
+            else if (_stricmp(arg, "toggle") == 0)
+               value = QAbstractItemView::SelectionMode::MultiSelection;
+            else if (_stricmp(arg, "multiple") == 0)
+               value = QAbstractItemView::SelectionMode::ExtendedSelection;
+            else if (_stricmp(arg, "contiguous") == 0)
+               value = QAbstractItemView::SelectionMode::ContiguousSelection;
+            else if (_stricmp(arg, "disabled") == 0)
+               value = QAbstractItemView::SelectionMode::NoSelection;
+            else
+               luaL_error(L, "string `%s` is not a recognized selection type", arg);
+         }
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QTableView::setSelectionMode, value);
+         return 0;
+      }
       luastackchange_t selection_type(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
@@ -528,6 +577,7 @@ namespace editor_script::wrappers::ui {
       { "alternate_row_colors", &_getters::alternate_row_colors },
       { "column_headers",       &_getters::column_headers },
       { "has_corner_button",    &_getters::has_corner_button },
+      { "selection_mode",       &_getters::selection_mode },
       { "selection_type",       &_getters::selection_type },
       { "show_column_headers",  &_getters::show_column_headers },
       { "show_grid",            &_getters::show_grid },
@@ -539,6 +589,7 @@ namespace editor_script::wrappers::ui {
       { "alternate_row_colors", &_setters::alternate_row_colors },
       { "column_headers",       &_setters::column_headers },
       { "has_corner_button",    &_setters::has_corner_button },
+      { "selection_mode",       &_setters::selection_mode },
       { "selection_type",       &_setters::selection_type },
       { "show_column_headers",  &_setters::show_column_headers },
       { "show_grid",            &_setters::show_grid },

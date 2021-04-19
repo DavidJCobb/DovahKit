@@ -240,16 +240,18 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
                         case QAbstractItemView::SelectionBehavior::SelectRows:
                            for (auto& qmi : sm->selectedRows()) {
                               LuaModelObserverEventArgument arg;
-                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), Qt::Horizontal, qmi.row());
+                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::rowOrientation, qmi.row());
                               arg.metatable_key = editor_script::wrappers::ui::table_view_row::metatable_key;
+                              assert(arg.observer);
                               selections.push_back(QVariant::fromValue(arg));
                            }
                            break;
                         case QAbstractItemView::SelectionBehavior::SelectColumns:
                            for (auto& qmi : sm->selectedColumns()) {
                               LuaModelObserverEventArgument arg;
-                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), Qt::Vertical, qmi.column());
+                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::colOrientation, qmi.column());
                               arg.metatable_key = editor_script::wrappers::ui::table_view_col::metatable_key;
+                              assert(arg.observer);
                               selections.push_back(QVariant::fromValue(arg));
                            }
                            break;
@@ -258,6 +260,7 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
                               LuaModelObserverEventArgument arg;
                               arg.observer      = model->getOrCreateRegisteredObserver(qmi);
                               arg.metatable_key = editor_script::wrappers::ui::table_view_cell::metatable_key;
+                              assert(arg.observer);
                               selections.push_back(QVariant::fromValue(arg));
                            }
                            break;
@@ -439,7 +442,7 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       int argcount = 0;
       for (auto& p : params) {
          auto ut = p.userType();
-         if (ut == qMetaTypeId<LuaModelObserverEventArgument*>()) {
+         if (ut == qMetaTypeId<LuaModelObserverEventArgument>()) {
             using namespace editor_script;
             //
             auto arg = p.value<LuaModelObserverEventArgument>();

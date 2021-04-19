@@ -59,6 +59,7 @@ namespace {
          int isnum;
          int row = obs.row;
          int col = lua_tointegerx(L, 2, &isnum) - 1;
+         assert(row >= 0 && "This isn't actually a row. What went wrong?");
          if (!isnum)
             return 0;
          //
@@ -97,7 +98,7 @@ namespace {
    namespace _getters {
       luastackchange_t cells(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.widget)
+         if (!self.model_observer)
             return 0;
          wrapper out = self;
          out.parts[0].signature = wrapper_part_types::ui_table_view_span_cells;
@@ -155,5 +156,15 @@ namespace editor_script::wrappers::ui {
       //
       assert(lua_gettop(L) == pos + 1);
       lua_setfield(L, pos, cls::global_name);
+      //
+      // Set up collection:
+      //
+      editor_script::define_collection_metatable(L, {
+         .registry_key          = cls::cell_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::cells::get_collection_length,
+         .lookup_item_by_index   = &_collections::cells::lookup_item_by_index,
+      });
    }
 }

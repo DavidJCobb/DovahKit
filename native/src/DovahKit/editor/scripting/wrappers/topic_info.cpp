@@ -30,7 +30,13 @@ namespace {
       }
 
       luastackchange_t get_collection_length(lua_State* L) {
-         lua_pushnumber(L, 3);
+         auto& self = get_collection_wrapper(L);
+         auto* form = self.get_loaded_form_data<_loaded_form_t>();
+         if (!form) {
+            lua_pushinteger(L, 0);
+            return 1;
+         }
+         lua_pushinteger(L, form->responses.size());
          return 1;
       }
       luastackchange_t lookup_item_by_index(lua_State* L) {
