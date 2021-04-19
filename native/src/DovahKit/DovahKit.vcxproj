@@ -278,8 +278,10 @@
     <ClCompile Include="editor\scripting\wrappers\topic_info.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic_info\response.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\checkbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\formpicker.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\groupbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\line.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp" />
@@ -346,6 +348,7 @@
     <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QHeaderViewDKEx.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
+    <ClCompile Include="ui\generic\QLuaCheckBox.cpp" />
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QSpinBoxDKEx.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
@@ -610,8 +613,10 @@
     <ClInclude Include="editor\scripting\wrappers\topic_info.h" />
     <ClInclude Include="editor\scripting\wrappers\topic_info\response.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\checkbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\formpicker.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\groupbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\helpers\widget_properties.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\line.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
@@ -674,6 +679,7 @@
     <QtMoc Include="ui\generic\FormPicker.h" />
     <QtMoc Include="ui\generic\impl\FormPickerImpl.h" />
     <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
+    <QtMoc Include="ui\generic\QLuaCheckBox.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />

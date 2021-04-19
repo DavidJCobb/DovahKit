@@ -54,7 +54,7 @@ namespace {
       ),
       _event_widget(&QGroupBox::staticMetaObject,
          {
-            "OnChanged",
+            "OnToggled",
          }
       ),
       _event_widget(&QPushButton::staticMetaObject,
@@ -73,8 +73,9 @@ namespace {
    };
 
    bool event_name_is_valid(const QWidget& widget, const char* event_name) {
+      auto* mo = widget.metaObject();
       for (auto& entry : _events_by_widget) {
-         if (!entry.meta->inherits(widget.metaObject()))
+         if (!mo->inherits(entry.meta))
             continue;
          for (auto* name : entry.events) {
             if (_stricmp(event_name, name) == 0)
@@ -179,7 +180,7 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
          return;
       }
    } else if (auto* casted = qobject_cast<QGroupBox*>(&widget)) {
-      if (_stricmp(event_name, "OnChanged") == 0) {
+      if (_stricmp(event_name, "OnToggled") == 0) {
          this->_connect_event(*casted, &QGroupBox::toggled, event_name, listener_name);
          return;
       }

@@ -858,6 +858,15 @@
     <ClCompile Include="helpers\qt\get_model_of.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\groupbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\checkbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\generic\QLuaCheckBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1745,6 +1754,12 @@
     <ClInclude Include="helpers\qt\get_model_of.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\groupbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\checkbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -2023,6 +2038,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\scripting\systems\editor_script_inner_core.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\QLuaCheckBox.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

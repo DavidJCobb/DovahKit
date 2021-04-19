@@ -119,8 +119,7 @@ namespace {
          if (!self.widget)
             return 0;
          auto value = lua_toboolean(L, 2);
-         static_assert(false, "block signals");
-         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QGroupBox::setChecked, value);
+         editor_script::helpers::set_widget_property_and_block_signals((wrapped_type*)self.widget, &QGroupBox::setChecked, value);
          return 0;
       }
       luastackchange_t text(lua_State* L) {

@@ -102,6 +102,7 @@ namespace {
             created = new wrapped_type();
             created->setFrameShape(shape);
             created->setFrameShadow(QFrame::Sunken);
+            override_widget_metatable(created, cls::metatable_key);
             DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);

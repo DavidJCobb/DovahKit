@@ -62,8 +62,7 @@ namespace {
          if (!self.widget)
             return 0;
          auto value = lua_toboolean(L, 2);
-         static_assert(false, "block signals");
-         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QCheckBox::setChecked, value);
+         editor_script::helpers::set_widget_property_and_block_signals((wrapped_type*)self.widget, &QCheckBox::setChecked, value);
          return 0;
       }
       luastackchange_t state(lua_State* L) {
@@ -81,8 +80,7 @@ namespace {
             value = Qt::CheckState::PartiallyChecked;
          else
             luaL_error(L, "`%s` is not a recognized checkbox state", arg);
-         static_assert(false, "block signals");
-         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QCheckBox::setCheckState, value);
+         editor_script::helpers::set_widget_property_and_block_signals((wrapped_type*)self.widget, &QCheckBox::setCheckState, value);
          return 0;
       }
       luastackchange_t text(lua_State* L) {

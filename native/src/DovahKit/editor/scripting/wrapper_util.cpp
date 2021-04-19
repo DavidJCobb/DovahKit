@@ -31,31 +31,43 @@ namespace editor_script {
       assert(widget != nullptr && "Wrappers with null pertinent pointers are illegal! Push nil to Lua instead!");
       out.widget = widget;
       out.type   = wrapper_type::ui;
-      if (widget) {
-         if (qobject_cast<QComboBox*>(widget))
-            return wrappers::ui::dropdown::metatable_key;
-         if (qobject_cast<QDialog*>(widget))
-            return wrappers::ui::window::metatable_key;
-         if (qobject_cast<QDoubleSpinBox*>(widget))
-            return wrappers::ui::spinbox::metatable_key;
-         if (qobject_cast<QLabel*>(widget))
-            return wrappers::ui::text::metatable_key;
-         if (qobject_cast<QLineEdit*>(widget))
-            return wrappers::ui::textbox::metatable_key;
-         if (qobject_cast<QProgressBar*>(widget))
-            return wrappers::ui::progress_bar::metatable_key;
-         if (qobject_cast<QPushButton*>(widget))
-            return wrappers::ui::button::metatable_key;
-         if (qobject_cast<QRadioButton*>(widget))
-            return wrappers::ui::radio_button::metatable_key;
-         if (qobject_cast<FormPicker*>(widget))
-            return wrappers::ui::formpicker::metatable_key;
+      {
+         auto data = widget->property("Lua metatable override");
+         if (data.isValid())
+            return (const char*)data.value<void*>();
       }
+      if (qobject_cast<QCheckBox*>(widget))
+         return wrappers::ui::checkbox::metatable_key;
+      if (qobject_cast<QComboBox*>(widget))
+         return wrappers::ui::dropdown::metatable_key;
+      if (qobject_cast<QDialog*>(widget))
+         return wrappers::ui::window::metatable_key;
+      if (qobject_cast<QDoubleSpinBox*>(widget))
+         return wrappers::ui::spinbox::metatable_key;
+      if (qobject_cast<QGroupBox*>(widget))
+         return wrappers::ui::groupbox::metatable_key;
+      if (qobject_cast<QLabel*>(widget))
+         return wrappers::ui::text::metatable_key;
+      if (qobject_cast<QLineEdit*>(widget))
+         return wrappers::ui::textbox::metatable_key;
+      if (qobject_cast<QProgressBar*>(widget))
+         return wrappers::ui::progress_bar::metatable_key;
+      if (qobject_cast<QPushButton*>(widget))
+         return wrappers::ui::button::metatable_key;
+      if (qobject_cast<QRadioButton*>(widget))
+         return wrappers::ui::radio_button::metatable_key;
+      if (qobject_cast<FormPicker*>(widget))
+         return wrappers::ui::formpicker::metatable_key;
       return wrappers::ui::widget::metatable_key; // TODO: use a generic widget metatable
    }
    extern const char* wrap_button_group(wrapper& out, QButtonGroup& group) {
       out.button_group = &group;
       out.type         = wrapper_type::ui_button_group;
       return wrappers::ui::radio_group::metatable_key;
+   }
+
+   extern void override_widget_metatable(QWidget* widget, const char* mt) {
+      assert(widget && mt);
+      widget->setProperty("Lua metatable override", QVariant::fromValue<void*>((void*)mt));
    }
 }
