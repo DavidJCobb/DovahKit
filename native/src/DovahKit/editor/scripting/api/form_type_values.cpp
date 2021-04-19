@@ -1,5 +1,5 @@
 #include "form_type_values.h"
-#include "../../../Lua/lua.hpp"
+#include "../../lua.h"
 
 namespace editor_script {
    namespace {

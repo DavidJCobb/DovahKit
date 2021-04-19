@@ -82,13 +82,13 @@ namespace cobb {
             matrix<m, n> result;
             for (int i = 0; i < m; ++i)
                for (int j = 0; j < n; ++j)
-                  result.data[m][n] = this->data[m][n] * operand;
+                  result.data[i][j] = this->data[i][j] * operand;
             return result;
          }
          matrix<m, n>& operator*=(double operand) noexcept {
             for (int i = 0; i < m; ++i)
                for (int j = 0; j < n; ++j)
-                  this->data[m][n] *= operand;
+                  this->data[i][j] *= operand;
             return *this;
          }
          #pragma endregion

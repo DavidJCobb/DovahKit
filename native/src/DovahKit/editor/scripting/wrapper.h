@@ -4,7 +4,7 @@
 #include <QWidget>
 #include "../../helpers/eight_cc.h"
 #include "../../dovah/form_stub.h"
-#include "../../../Lua/lua.hpp"
+#include "../../lua.h"
 #include "classes.h"
 #include "util.h"
 

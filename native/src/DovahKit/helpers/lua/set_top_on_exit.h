@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../Lua/lua.hpp"
+#include "../../lua.h"
 
 namespace cobb::lua {
    class set_top_on_exit {

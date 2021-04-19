@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../../Lua/lua.hpp"
+#include "../../../lua.h"
 
 namespace editor_script::namespace_setup {
    //

@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <windows.h>
 #include "../../../helpers/intrusive_windows_defines.h"
-#include "../../../../Lua/lua.hpp"
+#include "../../../lua.h"
 #include "../classes.h"
 
 namespace editor_script::classes {

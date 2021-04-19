@@ -1,6 +1,6 @@
 #pragma once
 #include <initializer_list>
-#include "../../../Lua/lua.hpp"
+#include "../../lua.h"
 
 namespace editor_script {
    //

@@ -34,9 +34,10 @@ namespace {
          if (!self.widget)
             return 0;
          auto* widget  = (QDialog*) self.widget;
-         auto* task    = new tasks::s2m::lambda(false);
+         auto* task    = new tasks::s2m::lambda(true); // blocking task, just so that the VM doesn't teardown before this gets a chance to run
          task->handler = [widget]() { widget->open(); };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
          return 0;
       }
    }

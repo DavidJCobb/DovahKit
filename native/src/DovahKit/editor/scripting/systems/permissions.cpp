@@ -1,5 +1,5 @@
 #include "permissions.h"
-#include "../../../../Lua/lua.hpp"
+#include "../../../lua.h"
 #include "editor_script_inner_core.h"
 
 /*static*/ void DovahKitScriptVMPermissionInterface::verify_form_write_permissions() {

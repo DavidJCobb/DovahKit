@@ -1,6 +1,6 @@
 #pragma once
 #include <QVariant>
-#include "../../../Lua/lua.hpp"
+#include "../../lua.h"
 
 namespace cobb::lua {
    extern bool qt_variant_is_int(const QVariant&);

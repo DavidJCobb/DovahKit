@@ -1,6 +1,6 @@
 #include "messaging.h"
 #include "editor_script_inner_core.h"
-#include "../../../../Lua/lua.hpp"
+#include "../../../lua.h"
 
 namespace {
    // If we expect certain cross-thread tasks to be sent in large quantities, and if later tasks of a 
