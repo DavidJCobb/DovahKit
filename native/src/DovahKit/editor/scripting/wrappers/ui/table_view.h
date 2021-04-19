@@ -26,30 +26,4 @@ namespace editor_script::wrappers::ui {
 
       static void setup(lua_State*); // the "ui" table should be at the top of the stack
    };
-   
-   struct table_view_col : public wrapper_metatable {
-      static constexpr const char* superclass_key = metatable_key;
-      static constexpr const char* metatable_key  = "dovah.classes.ui.table_view_col";
-      static const std::initializer_list<luaL_Reg> metatable_methods;
-      static const std::initializer_list<luaL_Reg> metatable_getters;
-      static const std::initializer_list<luaL_Reg> metatable_setters;
-
-      static constexpr const char* global_name = "table_view_col";
-      using wrapped_type = QStandardItem;
-
-      static void setup(lua_State*); // the "ui" table should be at the top of the stack
-   };
-   
-   struct table_view_cell : public wrapper_metatable {
-      static constexpr const char* superclass_key = metatable_key;
-      static constexpr const char* metatable_key  = "dovah.classes.ui.table_view_cell";
-      static const std::initializer_list<luaL_Reg> metatable_methods;
-      static const std::initializer_list<luaL_Reg> metatable_getters;
-      static const std::initializer_list<luaL_Reg> metatable_setters;
-
-      static constexpr const char* global_name = "table_view_cell";
-      using wrapped_type = QStandardItem;
-
-      static void setup(lua_State*); // the "ui" table should be at the top of the stack
-   };
 }

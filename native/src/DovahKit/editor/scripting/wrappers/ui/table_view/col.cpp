@@ -1,4 +1,4 @@
-#include "row.h"
+#include "col.h"
 #include "../../../systems/editor_script_inner_core.h"
 #include "../../../systems/messaging.h"
 #include "../../../systems/permissions.h"
@@ -19,7 +19,7 @@ namespace {
    using namespace editor_script;
 
    namespace _collections::cells {
-      using cls        = wrappers::ui::table_view_row;
+      using cls        = wrappers::ui::table_view_col;
       using model_t    = ObservableStandardItemModel;
       using observer_t = ObservableStandardItemModelObserver;
 
@@ -48,7 +48,7 @@ namespace {
       luastackchange_t get_collection_length(lua_State* L) {
          auto& self  = get_collection_wrapper(L);
          auto& model = get_model(self);
-         lua_pushinteger(L, model.columnCount());
+         lua_pushinteger(L, model.rowCount());
          return 1;
       }
       luastackchange_t lookup_item_by_index(lua_State* L) {
@@ -57,8 +57,8 @@ namespace {
          auto& model = get_model(obs);
          //
          int isnum;
-         int row = obs.row;
-         int col = lua_tointegerx(L, 2, &isnum) - 1;
+         int row = lua_tointegerx(L, 2, &isnum) - 1;
+         int col = obs.col;
          if (!isnum)
             return 0;
          //
@@ -89,7 +89,7 @@ namespace {
 
 namespace {
    using namespace editor_script;
-   using cls = wrappers::ui::table_view_row;
+   using cls = wrappers::ui::table_view_col;
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
@@ -113,7 +113,7 @@ namespace {
             auto* observer = self.model_observer;
             auto* task     = new tasks::s2m::ui_read_lambda();
             task->handler  = [observer, &result]() {
-               result = observer->row;
+               result = observer->col;
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;

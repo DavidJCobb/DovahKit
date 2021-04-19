@@ -876,6 +876,12 @@
     <ClCompile Include="editor\scripting\wrappers\ui\table_view\row.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\table_view\cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\table_view\col.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1779,6 +1785,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\qt\set_model_of.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\table_view\cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\table_view\col.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,11 +1,20 @@
 #pragma once
 #include <vector>
+#include <QModelIndex>
 #include <QWidget>
 #include "editor_script_inner_core.h"
+#include "../ui/util/lua_item_model.h"
+
+struct LuaModelObserverEventArgument {
+   ObservableStandardItemModelObserver* observer = nullptr;
+   const char* metatable_key = nullptr;
+};
 
 class DovahKitScriptUIListenerInterface : cobb::singleton {
    protected:
-      DovahKitScriptUIListenerInterface(DovahKitScriptVMCore& w) : vm(w) {}
+      DovahKitScriptUIListenerInterface(DovahKitScriptVMCore& w) : vm(w) {
+         qRegisterMetaType<LuaModelObserverEventArgument>();
+      }
    public:
       static DovahKitScriptUIListenerInterface& get() {
          static DovahKitScriptUIListenerInterface instance(DovahKitScriptVMCore::get());
@@ -42,3 +51,7 @@ class DovahKitScriptUIListenerInterface : cobb::singleton {
       // Basically a glorified switch-case pyramid, to call (_connect_event) with the right Qt signal.
       void _register_event(QWidget& widget, const char* event_name, const char* listener_name);
 };
+
+// IntelliSense doesn't like Q_DECLARE_METATYPE; ignore errors here unless they're compiler errors:
+Q_DECLARE_METATYPE(LuaModelObserverEventArgument)
+// needed so that QObject::connect can pass these across threads (by copying them). refer to DovahKitCore's constructor as well.

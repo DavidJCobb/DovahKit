@@ -288,6 +288,8 @@
     <ClCompile Include="editor\scripting\wrappers\ui\radio_group.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\spinbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\table_view.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\table_view\cell.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\table_view\col.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\table_view\row.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\text.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\textbox.cpp" />
@@ -627,6 +629,8 @@
     <ClInclude Include="editor\scripting\wrappers\ui\radio_group.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\table_view.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\table_view\cell.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\table_view\col.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\table_view\row.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\text.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\textbox.h" />

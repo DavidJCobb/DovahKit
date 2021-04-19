@@ -17,11 +17,13 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QTableView>
 #include "../../../helpers/qt/combobox.h" // for events
 
-//
-// Event names within this system must be lowercase.
-//
+#include <QSortFilterProxyModel>
+#include "../wrappers/ui/table_view/cell.h"
+#include "../wrappers/ui/table_view/col.h"
+#include "../wrappers/ui/table_view/row.h"
 
 namespace {
    struct _event_widget {
@@ -57,17 +59,22 @@ namespace {
             "OnToggled",
          }
       ),
+      _event_widget(&QLineEdit::staticMetaObject,
+         {
+            "OnChanged",       // The textbox's value was previously altered, and the user hit Enter or moved focus away from the textbox.
+            "OnInputRejected", // The textbox rejected input because it didn't validate or the max length would've been exceeded.
+            "OnKeyPressed",    // The textbox's value was altered by a keypress.
+         }
+      ),
       _event_widget(&QPushButton::staticMetaObject,
          {
             "OnActivated",         // The button was clicked (or interacted with analogously via another input device).
             "OnCheckStateChanged", // The button is checkable and its check state changed.
          }
       ),
-      _event_widget(&QLineEdit::staticMetaObject,
+      _event_widget(&QTableView::staticMetaObject,
          {
-            "OnChanged",       // The textbox's value was previously altered, and the user hit Enter or moved focus away from the textbox.
-            "OnInputRejected", // The textbox rejected input because it didn't validate or the max length would've been exceeded.
-            "OnKeyPressed",    // The textbox's value was altered by a keypress.
+            "OnSelectionChanged",
          }
       ),
    };
@@ -184,15 +191,6 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
          this->_connect_event(*casted, &QGroupBox::toggled, event_name, listener_name);
          return;
       }
-   } else if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
-      if (_stricmp(event_name, "OnActivated") == 0) {
-         this->_connect_event(*casted, &QPushButton::clicked, event_name, listener_name);
-         return;
-      }
-      if (_stricmp(event_name, "OnCheckStateChanged") == 0) {
-         this->_connect_event(*casted, &QPushButton::toggled, event_name, listener_name);
-         return;
-      }
    } else if (auto* casted = qobject_cast<QLineEdit*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
          std::string ln = listener_name;
@@ -212,6 +210,64 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
       }
       if (_stricmp(event_name, "OnKeyPressed") == 0) {
          this->_connect_event(*casted, &QLineEdit::textEdited, event_name, listener_name);
+         return;
+      }
+   } else if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
+      if (_stricmp(event_name, "OnActivated") == 0) {
+         this->_connect_event(*casted, &QPushButton::clicked, event_name, listener_name);
+         return;
+      }
+      if (_stricmp(event_name, "OnCheckStateChanged") == 0) {
+         this->_connect_event(*casted, &QPushButton::toggled, event_name, listener_name);
+         return;
+      }
+   } else if (auto* casted = qobject_cast<QTableView*>(&widget)) {
+      if (_stricmp(event_name, "OnSelectionChanged") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted->selectionModel(), &QItemSelectionModel::selectionChanged, &vm,
+               [casted, ln]() {
+                  //
+                  // We can't easily tell from the signal alone whether the selection is supposed to be a row, 
+                  // a column, or a cell, so we'll just check the widget itself to find out.
+                  //
+                  std::vector<QVariant> selections;
+                  {
+                     auto* sm    = casted->selectionModel();
+                     auto* proxy = (QSortFilterProxyModel*) casted->model();
+                     auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+                     switch (casted->selectionBehavior()) {
+                        case QAbstractItemView::SelectionBehavior::SelectRows:
+                           for (auto& qmi : sm->selectedRows()) {
+                              LuaModelObserverEventArgument arg;
+                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), Qt::Horizontal, qmi.row());
+                              arg.metatable_key = editor_script::wrappers::ui::table_view_row::metatable_key;
+                              selections.push_back(QVariant::fromValue(arg));
+                           }
+                           break;
+                        case QAbstractItemView::SelectionBehavior::SelectColumns:
+                           for (auto& qmi : sm->selectedColumns()) {
+                              LuaModelObserverEventArgument arg;
+                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), Qt::Vertical, qmi.column());
+                              arg.metatable_key = editor_script::wrappers::ui::table_view_col::metatable_key;
+                              selections.push_back(QVariant::fromValue(arg));
+                           }
+                           break;
+                        case QAbstractItemView::SelectionBehavior::SelectItems:
+                           for (auto& qmi : sm->selectedIndexes()) {
+                              LuaModelObserverEventArgument arg;
+                              arg.observer      = model->getOrCreateRegisteredObserver(qmi);
+                              arg.metatable_key = editor_script::wrappers::ui::table_view_cell::metatable_key;
+                              selections.push_back(QVariant::fromValue(arg));
+                           }
+                           break;
+                     }
+                  }
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnSelectionChanged", ln.c_str(), selections);
+               }
+            ),
+            widget, event_name, listener_name
+         );
          return;
       }
    }
@@ -382,7 +438,20 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
       lua_rawgeti(L, si_temp, i + 1);
       int argcount = 0;
       for (auto& p : params) {
-         if (p.userType() == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
+         auto ut = p.userType();
+         if (ut == qMetaTypeId<LuaModelObserverEventArgument*>()) {
+            using namespace editor_script;
+            //
+            auto arg = p.value<LuaModelObserverEventArgument>();
+            assert(arg.observer);
+            assert(arg.metatable_key && arg.metatable_key[0]);
+            wrapper out;
+            out.type = wrapper_type::ui_model_item;
+            out.model_observer = arg.observer;
+            argcount += userdata_intfc.push(L, out, arg.metatable_key);
+            continue;
+         }
+         if (ut == qMetaTypeId<dovah::form_stub*>()) { // the generic helper functions can't handle any DovahKit-specific types
             auto* stub = p.value<dovah::form_stub*>();
             if (stub) {
                using namespace editor_script;

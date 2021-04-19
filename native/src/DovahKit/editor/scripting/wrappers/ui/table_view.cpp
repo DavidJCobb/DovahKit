@@ -16,6 +16,8 @@
 #include "helpers/widget_properties.h"
 
 #include "table_view/row.h"
+#include "table_view/col.h"
+#include "table_view/cell.h"
 
 namespace {
    // If a table has more than this many rows, then word-wrapping will no longer be allowed. This is 
@@ -495,7 +497,9 @@ namespace {
             created = new wrapped_type();
             created->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows); // sensible defaults
             created->setCornerButtonEnabled(false); // sensible defaults
-            created->verticalHeader()->setDefaultSectionSize(0); // get rid of weird padding
+            auto* vh = created->verticalHeader();
+            vh->setDefaultSectionSize(0); // get rid of weird padding
+            vh->setHidden(true); // sensible defaults
             //
             DovahKitScriptVMCore::get().set_up_widget_model(created);
             DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
