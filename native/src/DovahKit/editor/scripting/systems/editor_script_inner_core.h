@@ -235,6 +235,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
 
       QDialog* try_spawn_script_window() noexcept;
       void set_up_new_scripted_widget(QWidget*);  // Lua functions that create widgets must call this
+      void set_up_widget_model(QWidget*);         // Lua functions that create widgets should call this, if the widgets use a model and that model will be relevant for scripting
       void accept_new_orphaned_widget(QWidget*);  // Lua functions that orphan widgets from a window must call this
       void widget_no_longer_orphaned(QWidget*);   // Lua functions that insert widgets into a window must call this
       void widget_no_longer_referenced(QWidget*); // called by wrapper internals when a widget is unreferenced

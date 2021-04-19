@@ -18,6 +18,7 @@
 #include "../../../helpers/lua/qt_variant.h"
 #include "../../../helpers/lua/set_top_on_exit.h"
 #include "../../../helpers/qt/get_model_of.h"
+#include "../../../helpers/qt/set_model_of.h"
 #include "../../../helpers/qt/traversal.h"
 #include "../wrapper_util.h"
 
@@ -25,6 +26,7 @@
 #include <QButtonGroup>
 #include <QEvent>
 #include <QLabel>
+#include <QSortFilterProxyModel>
 
 #include "../wrappers/form.h" // for the object_is_form function and for internal variant_from_lua
 #include "../wrappers/ui/widget.h" // for internal variant_from_lua
@@ -682,6 +684,13 @@ void DovahKitScriptVMCore::set_up_new_scripted_widget(QWidget* widget) {
    ++this->widgets.extant_widget_count;
    if (!widget->parentWidget())
       this->accept_new_orphaned_widget(widget);
+}
+void DovahKitScriptVMCore::set_up_widget_model(QWidget* widget) {
+   auto* model = new ObservableStandardItemModel(widget);
+   auto* proxy = new QSortFilterProxyModel(widget);
+   proxy->setSourceModel(model);
+   proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
+   cobb::qt::set_model_of(widget, proxy);
 }
 void DovahKitScriptVMCore::accept_new_orphaned_widget(QWidget* widget) {
    DovahKitScriptVMCore::require_client_thread();

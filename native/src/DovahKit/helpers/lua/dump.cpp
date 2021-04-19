@@ -1,5 +1,5 @@
 #include "dump.h"
-#include "../../../Lua/lua.hpp"
+#include "../../lua.h"
 #include <algorithm>
 #include <functional>
 #include <string>

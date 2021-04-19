@@ -8,6 +8,7 @@
 #include <QThread>
 #include "../helpers/performance.h"
 #include "../helpers/windows_registry.h"
+#include "../helpers/qt/strings.h"
 #include "../dovah/detailed_notice.h"
 #include "../dovah/form_stub.h"
 #include "../dovah/notice_code_list.h"
@@ -64,9 +65,24 @@ namespace {
       DovahKitEditorInternals::detailed_notice_dispatcher::get().send(warning);
    }
 }
+
+namespace {
+   namespace _qmetatype_converters {
+      QString form_stub(dovah::form_stub* stub) {
+         if (!stub)
+            return "[NONE:00000000]";
+         return QString("[%1:%2]%3")
+            .arg(cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(stub->formType).signature))
+            .arg(QString("%1").arg(stub->formID, 8, 16, QChar('0')).toUpper())
+            .arg(stub->get_editor_id());
+      }
+   }
+}
+
 DovahKitCore::DovahKitCore() {
    qRegisterMetaType<file_load_stats>(); // needed so that QObject::connect can pass these across threads (by copying them)
    qRegisterMetaType<dovah::form_stub*>();
+   QMetaType::registerConverter<dovah::form_stub*, QString>(&_qmetatype_converters::form_stub);
    //
    this->load_order = new dovah::file_load_order;
    this->_configure_load_order();

@@ -9,6 +9,7 @@
 #include "ui/radio_button.h"
 #include "ui/radio_group.h"
 #include "ui/spinbox.h"
+#include "ui/table_view.h"
 #include "ui/text.h"
 #include "ui/textbox.h"
 #include "ui/widget.h"

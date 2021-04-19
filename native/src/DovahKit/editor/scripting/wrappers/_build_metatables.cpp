@@ -46,6 +46,7 @@ namespace editor_script {
             define_wrapper_metatable<ui::radio_button>(L);
             define_wrapper_metatable<ui::radio_group>(L);
             define_wrapper_metatable<ui::spinbox>(L);
+            define_wrapper_metatable<ui::table_view>(L);
             define_wrapper_metatable<ui::text>(L);
             define_wrapper_metatable<ui::textbox>(L);
             define_wrapper_metatable<ui::window>(L);
