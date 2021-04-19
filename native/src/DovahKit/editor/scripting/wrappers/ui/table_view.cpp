@@ -165,12 +165,12 @@ namespace {
             QList<QStandardItem*> to_append;
             to_append.reserve(size);
             for (int i = 0; i < size; ++i) {
-               if (items[i]) {
-                  to_append[i] = items[i];
-               } else {
-                  auto* current = to_append[i] = new QStandardItem();
-                  current->setData(args[i], Qt::DisplayRole);
+               auto* item = items[i];
+               if (!item) {
+                  item = new QStandardItem();
+                  item->setData(args[i], Qt::DisplayRole);
                }
+               to_append.push_back(item);
             }
             model->appendRow(to_append);
          };
@@ -197,6 +197,14 @@ namespace {
       }
    }
    namespace _getters {
+      luastackchange_t alternate_row_colors(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QTableView::alternatingRowColors);
+         lua_pushboolean(L, result);
+         return 1;
+      }
       luastackchange_t column_headers(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -233,11 +241,64 @@ namespace {
          lua_pushboolean(L, result);
          return 1;
       }
+      luastackchange_t selection_type(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         auto result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QTableView::selectionBehavior);
+         switch (result) {
+            case QAbstractItemView::SelectionBehavior::SelectRows:
+               lua_pushstring(L, "rows");
+               return 1;
+            case QAbstractItemView::SelectionBehavior::SelectColumns:
+               lua_pushstring(L, "columns");
+               return 1;
+            case QAbstractItemView::SelectionBehavior::SelectItems:
+               lua_pushstring(L, "cells");
+               return 1;
+         }
+         lua_pushstring(L, "invalid");
+         return 1;
+      }
+      luastackchange_t show_column_headers(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result;
+         {
+            auto* task = new tasks::s2m::ui_read_lambda();
+            auto* widget = (wrapped_type*)self.widget;
+            task->handler = [widget, &result]() {
+               result = !widget->horizontalHeader()->isHidden();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushboolean(L, result);
+         return 1;
+      }
       luastackchange_t show_grid(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
          bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QTableView::showGrid);
+         lua_pushboolean(L, result);
+         return 1;
+      }
+      luastackchange_t show_row_headers(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         bool result;
+         {
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* widget  = (wrapped_type*)self.widget;
+            task->handler = [widget, &result]() {
+               result = !widget->verticalHeader()->isHidden();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
          lua_pushboolean(L, result);
          return 1;
       }
@@ -279,6 +340,15 @@ namespace {
       }
    }
    namespace _setters {
+      luastackchange_t alternate_row_colors(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         auto value = lua_toboolean(L, 2);
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QTableView::setAlternatingRowColors, value);
+         return 0;
+      }
       luastackchange_t column_headers(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          int count = 0;
@@ -293,7 +363,7 @@ namespace {
             lua_pop(L, 1);
             luaL_argcheck(L, isnum, 2, "argument's length operator did not return an integer");
          }
-         QVector<QString> text;
+         QStringList text;
          text.reserve(count);
          for (int i = 1; i <= count; ++i) {
             lua_geti(L, 2, i);
@@ -305,12 +375,7 @@ namespace {
          task->handler = [widget, text]() {
             auto* proxy = (QSortFilterProxyModel*)widget->model();
             auto* model = (ObservableStandardItemModel*)proxy->sourceModel();
-            int   size  = text.size();
-            if (model->columnCount() < size)
-               model->setColumnCount(size);
-            for (int i = 0; i < size; ++i) {
-               model->setHeaderData(i, Qt::Horizontal, text[i], Qt::DisplayRole);
-            }
+            model->setHorizontalHeaderLabels(text);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
@@ -324,6 +389,40 @@ namespace {
          editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QTableView::setCornerButtonEnabled, value);
          return 0;
       }
+      luastackchange_t selection_type(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         if (!self.widget)
+            return 0;
+         QAbstractItemView::SelectionBehavior value;
+         {
+            auto* arg = lua_tostring(L, 2);
+            if (_stricmp(arg, "rows") == 0)
+               value = QAbstractItemView::SelectionBehavior::SelectRows;
+            else if (_stricmp(arg, "columns") == 0)
+               value = QAbstractItemView::SelectionBehavior::SelectColumns;
+            else if (_stricmp(arg, "cells") == 0)
+               value = QAbstractItemView::SelectionBehavior::SelectItems;
+            else
+               luaL_error(L, "string `%s` is not a recognized selection type", arg);
+         }
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QTableView::setSelectionBehavior, value);
+         return 0;
+      }
+      luastackchange_t show_column_headers(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         auto  value   = lua_toboolean(L, 2);
+         auto* task    = new tasks::s2m::lambda(false);
+         auto* widget  = (wrapped_type*) self.widget;
+         task->handler = [widget, value]() {
+            widget->horizontalHeader()->setHidden(!value);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t show_grid(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
@@ -331,6 +430,20 @@ namespace {
             return 0;
          auto value = lua_toboolean(L, 2);
          editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QTableView::setShowGrid, value);
+         return 0;
+      }
+      luastackchange_t show_row_headers(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+         if (!self.widget)
+            return 0;
+         auto  value   = lua_toboolean(L, 2);
+         auto* task    = new tasks::s2m::lambda(false);
+         auto* widget  = (wrapped_type*) self.widget;
+         task->handler = [widget, value]() {
+            widget->verticalHeader()->setHidden(!value);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
       luastackchange_t sortable(lua_State* L) {
@@ -357,7 +470,7 @@ namespace {
             else if (_stricmp(vis, "wrap") == 0)
                ww = _word_wrap_mode::wrap;
             else
-               luaL_error(L, "string \"%s\" is not a recognized word wrap type", vis);
+               luaL_error(L, "string `%s` is not a recognized word wrap type", vis);
          }
          auto* task    = new tasks::s2m::lambda(false);
          auto* widget  = (wrapped_type*)self.widget;
@@ -380,6 +493,10 @@ namespace {
          auto*         task    = new tasks::s2m::lambda(true);
          task->handler = [&created]() {
             created = new wrapped_type();
+            created->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows); // sensible defaults
+            created->setCornerButtonEnabled(false); // sensible defaults
+            created->verticalHeader()->setDefaultSectionSize(0); // get rid of weird padding
+            //
             DovahKitScriptVMCore::get().set_up_widget_model(created);
             DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
          };
@@ -404,18 +521,26 @@ namespace editor_script::wrappers::ui {
       { "clear",      &_methods::clear },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "column_headers",    &_getters::column_headers },
-      { "has_corner_button", &_getters::has_corner_button },
-      { "show_grid",         &_getters::show_grid },
-      { "sortable",          &_getters::sortable },
-      { "word_wrap",         &_getters::word_wrap },
+      { "alternate_row_colors", &_getters::alternate_row_colors },
+      { "column_headers",       &_getters::column_headers },
+      { "has_corner_button",    &_getters::has_corner_button },
+      { "selection_type",       &_getters::selection_type },
+      { "show_column_headers",  &_getters::show_column_headers },
+      { "show_grid",            &_getters::show_grid },
+      { "show_row_headers",     &_getters::show_row_headers },
+      { "sortable",             &_getters::sortable },
+      { "word_wrap",            &_getters::word_wrap },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "column_headers",    &_setters::column_headers },
-      { "has_corner_button", &_setters::has_corner_button },
-      { "show_grid",         &_setters::show_grid },
-      { "sortable",          &_setters::sortable },
-      { "word_wrap",         &_setters::word_wrap },
+      { "alternate_row_colors", &_setters::alternate_row_colors },
+      { "column_headers",       &_setters::column_headers },
+      { "has_corner_button",    &_setters::has_corner_button },
+      { "selection_type",       &_setters::selection_type },
+      { "show_column_headers",  &_setters::show_column_headers },
+      { "show_grid",            &_setters::show_grid },
+      { "show_row_headers",     &_setters::show_row_headers },
+      { "sortable",             &_setters::sortable },
+      { "word_wrap",            &_setters::word_wrap },
    };
 
    /*static*/ void cls::setup(lua_State* L) {

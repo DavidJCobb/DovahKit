@@ -287,6 +287,8 @@
     <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_group.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\spinbox.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\table_view.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\table_view\row.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\text.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\textbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\widget.cpp" />
@@ -310,6 +312,7 @@
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
     <ClCompile Include="helpers\qt\combobox.cpp" />
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
+    <ClCompile Include="helpers\qt\set_model_of.cpp" />
     <ClCompile Include="helpers\qt\strings.cpp" />
     <ClCompile Include="helpers\qt\traversal.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
@@ -623,6 +626,8 @@
     <ClInclude Include="editor\scripting\wrappers\ui\radio_button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\radio_group.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\table_view.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\table_view\row.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\text.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\textbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\widget.h" />
@@ -649,6 +654,7 @@
     <ClInclude Include="helpers\qt\basic_bindings.h" />
     <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\qt\get_model_of.h" />
+    <ClInclude Include="helpers\qt\set_model_of.h" />
     <ClInclude Include="helpers\qt\traversal.h" />
     <ClInclude Include="helpers\rotation.h" />
     <ClInclude Include="helpers\singleton.h" />
@@ -678,6 +684,7 @@
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
     <QtMoc Include="ui\generic\FormPicker.h" />
     <QtMoc Include="ui\generic\impl\FormPickerImpl.h" />
+    <ClInclude Include="lua.h" />
     <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
     <QtMoc Include="ui\generic\QLuaCheckBox.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
