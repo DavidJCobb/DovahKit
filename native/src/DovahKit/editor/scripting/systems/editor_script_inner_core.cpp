@@ -206,14 +206,14 @@ bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basi
    if (!result)
       return false;
    //
-   this->abandoned.count += found;
+   this->found.count += found;
    widgets.push_back(root);
    return result;
 }
 bool DovahKitScriptVMCore::_hierarchy_finder::_start_from_basis(QObject* basis) {
-   this->abandoned.widgets.clear();
-   this->abandoned.button_groups.clear();
-   this->abandoned.count = 0; // number of all widgets in all found hierarchies, if the hierarchies are all abandoned
+   this->found.widgets.clear();
+   this->found.button_groups.clear();
+   this->found.count = 0; // number of all widgets in all found hierarchies, if the hierarchies are all abandoned
    //
    QList<QWidget*>      wl;
    QList<QButtonGroup*> gl;
@@ -233,11 +233,11 @@ bool DovahKitScriptVMCore::_hierarchy_finder::_start_from_basis(QObject* basis) 
          for (auto* w : g->buttons())
             if (!this->_traverse_from_basis(w, wl, next_pass))
                return false;
-      this->abandoned.button_groups.append(gl);
+      this->found.button_groups.append(gl);
       gl = next_pass;
    }
-   this->abandoned.widgets = wl;
-   this->abandoned.count   = found;
+   this->found.widgets = wl;
+   this->found.count   = found;
    return result;
 }
 
@@ -248,10 +248,12 @@ void DovahKitScriptVMCore::_hierarchy_finder::submit_non_abandoned_model(Observa
    if (!list.contains(model))
       list.push_back(model);
 }
-void DovahKitScriptVMCore::_hierarchy_finder::import_non_abandoned_models(DovahKitScriptVMCore& core) noexcept {
+void DovahKitScriptVMCore::_hierarchy_finder::import_non_abandoned_models(DovahKitScriptVMCore& core, ObservableStandardItemModelObserver* exclude) noexcept {
    for (auto& om : core.ui_model_observers) {
       auto* p = om.pointer;
       if (!p)
+         continue;
+      if (exclude && p == exclude)
          continue;
       this->submit_non_abandoned_model(p->model);
    }
@@ -272,9 +274,9 @@ void DovahKitScriptVMCore::_hierarchy_finder::gather_from(QObject* basis) noexce
       DovahKitScriptVMCore::require_script_thread();
    }
    if (!this->_start_from_basis(basis)) {
-      this->abandoned.widgets.clear();
-      this->abandoned.button_groups.clear();
-      this->abandoned.count = 0;
+      this->found.widgets.clear();
+      this->found.button_groups.clear();
+      this->found.count = 0;
    }
 }
 #pragma endregion
@@ -597,7 +599,7 @@ void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _hierarchy_
    {
       auto& orphans = this->widgets.orphans.widgets;
       auto& pending = this->widgets.pending_deletion.widgets;
-      for (auto* root : finder.abandoned_root_widgets()) {
+      for (auto* root : finder.found_root_widgets()) {
          int i = orphans.indexOf(root);
          if (i < 0) {
             assert(pending.indexOf(root) >= 0 && "Widget is neither orphaned nor pending deletion; why do we think this widget is abandoned?!");
@@ -619,11 +621,11 @@ void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _hierarchy_
          orphans.remove(i);
       }
    }
-   this->widgets.extant_widget_count -= finder.abandoned_widget_count();
+   this->widgets.extant_widget_count -= finder.found_widget_count();
    {
       auto& orphans = this->widgets.orphans.button_groups;
       auto& pending = this->widgets.pending_deletion.button_groups;
-      for (auto* group : finder.abandoned_button_groups()) {
+      for (auto* group : finder.found_button_groups()) {
          int i = orphans.indexOf(group);
          if (i < 0) {
             assert(pending.indexOf(group) >= 0 && "Button group is neither orphaned nor pending deletion; why do we think this button group is abandoned?!");
@@ -640,7 +642,7 @@ void DovahKitScriptVMCore::unmark_rescued_hierarchy_for_delete(const _hierarchy_
    {
       auto& pd = this->widgets.pending_deletion.widgets;
       auto& ow = this->widgets.orphans.widgets;
-      for (auto* root : finder.abandoned_root_widgets()) {
+      for (auto* root : finder.found_root_widgets()) {
          int i = pd.indexOf(root);
          if (i >= 0) {
             pd.remove(i);
@@ -648,10 +650,11 @@ void DovahKitScriptVMCore::unmark_rescued_hierarchy_for_delete(const _hierarchy_
          }
       }
    }
+   this->widgets.extant_widget_count += finder.found_widget_count();
    {
       auto& pd = this->widgets.pending_deletion.button_groups;
       auto& og = this->widgets.orphans.button_groups;
-      for (auto* group : finder.abandoned_button_groups()) {
+      for (auto* group : finder.found_button_groups()) {
          int i = pd.indexOf(group);
          if (i >= 0) {
             pd.remove(i);
@@ -907,7 +910,7 @@ void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemM
       });
       if (contains_any_referenced) {
          _hierarchy_finder finder;
-         finder.import_non_abandoned_models(*this);
+         finder.import_non_abandoned_models(*this, observer);
          finder.gather_from(root);
          this->mark_abandoned_hierarchy_for_delete(finder);
       }

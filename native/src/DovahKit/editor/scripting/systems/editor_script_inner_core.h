@@ -113,7 +113,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
                //
                QList<QWidget*> widgets;
                QList<QButtonGroup*> button_groups;
-            } abandoned;
+            } found;
 
             // Returns false if it halts the search as per (config.halt_and_clear_upon_non_abandoned).
             bool _traverse_from_basis(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups);
@@ -125,13 +125,13 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
 
          public:
             void submit_non_abandoned_model(ObservableStandardItemModel*) noexcept;
-            void import_non_abandoned_models(DovahKitScriptVMCore&) noexcept;
+            void import_non_abandoned_models(DovahKitScriptVMCore&, ObservableStandardItemModelObserver* exclude = nullptr) noexcept;
 
             void gather_from(QObject*) noexcept;
 
-            inline int abandoned_widget_count() const noexcept { return this->abandoned.count; }
-            inline const QList<QWidget*>& abandoned_root_widgets() const noexcept { return this->abandoned.widgets; }
-            inline const QList<QButtonGroup*>& abandoned_button_groups() const noexcept { return this->abandoned.button_groups; }
+            inline int found_widget_count() const noexcept { return this->found.count; }
+            inline const QList<QWidget*>& found_root_widgets() const noexcept { return this->found.widgets; }
+            inline const QList<QButtonGroup*>& found_button_groups() const noexcept { return this->found.button_groups; }
 
             // Control whether the finder aborts, and clears its results, upon finding something that isn't 
             // abandoned. The finder will abort-and-clear by default, as a useful optimization for when the 
