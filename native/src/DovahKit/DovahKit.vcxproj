@@ -262,6 +262,7 @@
     <ClCompile Include="editor\scripting\systems\userdata.cpp" />
     <ClCompile Include="editor\scripting\ui\event.cpp" />
     <ClCompile Include="editor\scripting\ui\util\alignment.cpp" />
+    <ClCompile Include="editor\scripting\ui\util\color.cpp" />
     <ClCompile Include="editor\scripting\ui\util\lua_item_model.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
@@ -603,6 +604,7 @@
     <ClInclude Include="editor\scripting\ui\event.h" />
     <ClInclude Include="editor\scripting\ui\util\alignment.h" />
     <QtMoc Include="editor\scripting\ui\util\lua_item_model.h" />
+    <ClInclude Include="editor\scripting\ui\util\color.h" />
     <ClInclude Include="editor\scripting\util.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />

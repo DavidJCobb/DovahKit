@@ -239,8 +239,10 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
                      switch (casted->selectionBehavior()) {
                         case QAbstractItemView::SelectionBehavior::SelectRows:
                            for (auto& qmi : sm->selectedRows()) {
+                              auto remapped = proxy->mapToSource(qmi);
+                              //
                               LuaModelObserverEventArgument arg;
-                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::rowOrientation, qmi.row());
+                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::rowOrientation, remapped.row());
                               arg.metatable_key = editor_script::wrappers::ui::table_view_row::metatable_key;
                               assert(arg.observer);
                               selections.push_back(QVariant::fromValue(arg));
@@ -248,8 +250,10 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
                            break;
                         case QAbstractItemView::SelectionBehavior::SelectColumns:
                            for (auto& qmi : sm->selectedColumns()) {
+                              auto remapped = proxy->mapToSource(qmi);
+                              //
                               LuaModelObserverEventArgument arg;
-                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::colOrientation, qmi.column());
+                              arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::colOrientation, remapped.column());
                               arg.metatable_key = editor_script::wrappers::ui::table_view_col::metatable_key;
                               assert(arg.observer);
                               selections.push_back(QVariant::fromValue(arg));
@@ -257,8 +261,10 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
                            break;
                         case QAbstractItemView::SelectionBehavior::SelectItems:
                            for (auto& qmi : sm->selectedIndexes()) {
+                              auto remapped = proxy->mapToSource(qmi);
+                              //
                               LuaModelObserverEventArgument arg;
-                              arg.observer      = model->getOrCreateRegisteredObserver(qmi);
+                              arg.observer      = model->getOrCreateRegisteredObserver(remapped);
                               arg.metatable_key = editor_script::wrappers::ui::table_view_cell::metatable_key;
                               assert(arg.observer);
                               selections.push_back(QVariant::fromValue(arg));

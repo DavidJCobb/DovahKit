@@ -161,6 +161,23 @@ QVariant ObservableStandardItemModel::getDefaultDataForSpan(int role, Qt::Orient
    return QVariant();
 }
 void ObservableStandardItemModel::setDefaultDataForSpan(int role, Qt::Orientation orientation, int pos, QVariant data) {
+   QModelIndex qmi_tl;
+   QModelIndex qmi_br;
+   bool empty = true;
+   if (orientation == rowOrientation) {
+      int cross_count = this->columnCount();
+      qmi_tl = this->index(pos, 0);
+      qmi_br = this->index(pos, cross_count - 1);
+      if (cross_count > 0)
+         empty = false;
+   } else {
+      int cross_count = this->rowCount();
+      qmi_tl = this->index(0, pos);
+      qmi_br = this->index(cross_count - 1, pos);
+      if (cross_count > 0)
+         empty = false;
+   }
+   //
    auto it = this->_defaultsByRole.find((Qt::ItemDataRole)role);
    if (it == this->_defaultsByRole.end()) {
       if (!data.isValid())
@@ -176,10 +193,14 @@ void ObservableStandardItemModel::setDefaultDataForSpan(int role, Qt::Orientatio
          } else {
             list.erase(jt);
          }
+         if (!empty)
+            emit dataChanged(qmi_tl, qmi_br, { role });
          return;
       }
    }
    list.append({ pos, data });
+   if (!empty)
+      emit dataChanged(qmi_tl, qmi_br, { role });
 }
 
 QVariant ObservableStandardItemModel::data(const QModelIndex& index, int role) const {

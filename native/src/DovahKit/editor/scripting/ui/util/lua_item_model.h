@@ -72,7 +72,7 @@ class ObservableStandardItemModel : public QStandardItemModel {
             return QVariant();
          }
          inline QVariant forCol(int r) const noexcept {
-            for (auto& d : this->rows)
+            for (auto& d : this->cols)
                if (d.first == r)
                   return d.second;
             return QVariant();

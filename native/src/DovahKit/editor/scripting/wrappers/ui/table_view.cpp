@@ -80,18 +80,31 @@ namespace {
          }
          return *self;
       }
-      model_t& get_model(const wrapper& w) {
-         auto* proxy = (QSortFilterProxyModel*) ((cls::wrapped_type*)w.widget)->model();
+      model_t& get_model(cls::wrapped_type* widget) {
+         auto* proxy = (QSortFilterProxyModel*)widget->model();
          assert(proxy);
-         auto* model = (model_t*) proxy->sourceModel();
+         auto* model = (model_t*)proxy->sourceModel();
          assert(model);
          return *model;
       }
+      model_t& get_model(const wrapper& w) {
+         return get_model((cls::wrapped_type*)w.widget);
+      }
 
       luastackchange_t get_collection_length(lua_State* L) {
-         auto& self  = get_collection_wrapper(L);
-         auto& model = get_model(self);
-         lua_pushinteger(L, model.rowCount());
+         auto& self = get_collection_wrapper(L);
+         int   count;
+         {
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* widget  = (cls::wrapped_type*) self.widget;
+            task->handler = [widget, &count]() {
+               auto& model = get_model(widget);
+               count = model.rowCount();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushinteger(L, count);
          return 1;
       }
       luastackchange_t lookup_item_by_index(lua_State* L) {
@@ -103,14 +116,14 @@ namespace {
          //
          observer_t* observer = nullptr;
          {
-            auto* task = new tasks::s2m::lambda(true);
+            auto* task = new tasks::s2m::ui_read_lambda();
             task->handler = [&self, row, &observer]() {
                auto& model = get_model(self);
                auto* root  = model.invisibleRootItem();
                auto* item  = root->child(row);
                if (!item)
                   return;
-               observer = model.getOrCreateRegisteredObserver(QModelIndex(), Qt::Horizontal, row);
+               observer = model.getOrCreateRegisteredObserver(QModelIndex(), model_t::rowOrientation, row);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
@@ -122,6 +135,87 @@ namespace {
          iw.type = wrapper_type::ui_model_item;
          iw.model_observer = observer;
          return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::table_view_row::metatable_key);
+      }
+   }
+}
+#pragma endregion
+
+#pragma region Collection: "columns"
+namespace {
+   using namespace editor_script;
+
+   namespace _collections::cols {
+      using cls        = wrappers::ui::table_view;
+      using model_t    = ObservableStandardItemModel;
+      using observer_t = ObservableStandardItemModelObserver;
+
+      static constexpr auto collection_key = cls::col_collection_key;
+
+      wrapper& get_collection_wrapper(lua_State* L) {
+         auto* self = (wrapper*)editor_script::cast_to_class(L, 1, collection_key);
+         if (self == nullptr) {
+            luaL_error(L, "function called with bad self (expected %s)", collection_key);
+         }
+         if (self->widget == nullptr) {
+            luaL_error(L, "function called with zombie self (expected %s)", collection_key);
+         }
+         return *self;
+      }
+      model_t& get_model(cls::wrapped_type* widget) {
+         auto* proxy = (QSortFilterProxyModel*) widget->model();
+         assert(proxy);
+         auto* model = (model_t*) proxy->sourceModel();
+         assert(model);
+         return *model;
+      }
+      model_t& get_model(const wrapper& w) {
+         return get_model((cls::wrapped_type*)w.widget);
+      }
+
+      luastackchange_t get_collection_length(lua_State* L) {
+         auto& self = get_collection_wrapper(L);
+         int   count;
+         {
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* widget  = (cls::wrapped_type*) self.widget;
+            task->handler = [widget, &count]() {
+               auto& model = get_model(widget);
+               count = model.columnCount();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushinteger(L, count);
+         return 1;
+      }
+      luastackchange_t lookup_item_by_index(lua_State* L) {
+         auto& self  = get_collection_wrapper(L);
+         auto& model = get_model(self);
+         auto  col   = lua_tointeger(L, 2) - 1; // lua indices start from one, not zero
+         if (col < 0)
+            return 0;
+         //
+         observer_t* observer = nullptr;
+         {
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [&self, col, &observer]() {
+               auto& model = get_model(self);
+               auto* root  = model.invisibleRootItem();
+               auto* item  = root->child(col);
+               if (!item)
+                  return;
+               observer = model.getOrCreateRegisteredObserver(QModelIndex(), model_t::colOrientation, col);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!observer)
+            return 0;
+         //
+         wrapper iw;
+         iw.type = wrapper_type::ui_model_item;
+         iw.model_observer = observer;
+         return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::table_view_col::metatable_key);
       }
    }
 }
@@ -235,12 +329,92 @@ namespace {
          }
          return 1;
       }
+      luastackchange_t columns(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         wrapper out = self;
+         out.parts[0].signature = wrapper_part_types::ui_table_view_cols;
+         out.is_collection = true;
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::col_collection_key);
+      }
       luastackchange_t has_corner_button(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
          bool result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &QTableView::isCornerButtonEnabled);
          lua_pushboolean(L, result);
+         return 1;
+      }
+      luastackchange_t rows(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         wrapper out = self;
+         out.parts[0].signature = wrapper_part_types::ui_table_view_rows;
+         out.is_collection = true;
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::row_collection_key);
+      }
+      luastackchange_t selection(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         std::vector<ObservableStandardItemModelObserver*> observers;
+         const char* metatable_key = nullptr;
+         {
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* widget  = (wrapped_type*) self.widget;
+            task->handler = [widget, &observers, &metatable_key]() {
+               auto* proxy = (QSortFilterProxyModel*) widget->model();
+               auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+               auto* sm    = widget->selectionModel();
+               switch (widget->selectionBehavior()) {
+                  case QAbstractItemView::SelectionBehavior::SelectRows:
+                     metatable_key = editor_script::wrappers::ui::table_view_row::metatable_key;
+                     for (auto& qmi : sm->selectedRows()) {
+                        auto  remapped = proxy->mapToSource(qmi);
+                        auto* o        = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::rowOrientation, remapped.row());
+                        assert(o);
+                        observers.push_back(o);
+                     }
+                     break;
+                  case QAbstractItemView::SelectionBehavior::SelectColumns:
+                     metatable_key = editor_script::wrappers::ui::table_view_col::metatable_key;
+                     for (auto& qmi : sm->selectedColumns()) {
+                        auto  remapped = proxy->mapToSource(qmi);
+                        auto* o        = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::colOrientation, remapped.column());
+                        assert(o);
+                        observers.push_back(o);
+                     }
+                     break;
+                  case QAbstractItemView::SelectionBehavior::SelectItems:
+                     metatable_key = editor_script::wrappers::ui::table_view_cell::metatable_key;
+                     for (auto& qmi : sm->selectedIndexes()) {
+                        auto  remapped = proxy->mapToSource(qmi);
+                        auto* o        = model->getOrCreateRegisteredObserver(remapped);
+                        assert(o);
+                        observers.push_back(o);
+                     }
+                     break;
+               }
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         size_t size = observers.size();
+         lua_createtable(L, size, 0);
+         int tbl = lua_gettop(L);
+         for (size_t i = 0; i < size; ++i) {
+            wrapper iw;
+            iw.type = wrapper_type::ui_model_item;
+            iw.model_observer = observers[i];
+            int count = DovahKitScriptVMUserdataInterface::get().push(L, iw, metatable_key);
+            if (count) {
+               lua_rawseti(L, tbl, i + 1);
+               if (count > 1)
+                  lua_pop(L, count - 1);
+            }
+         }
          return 1;
       }
       luastackchange_t selection_mode(lua_State* L) {
@@ -576,7 +750,10 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "alternate_row_colors", &_getters::alternate_row_colors },
       { "column_headers",       &_getters::column_headers },
+      { "columns",              &_getters::columns },
       { "has_corner_button",    &_getters::has_corner_button },
+      { "rows",                 &_getters::rows },
+      { "selection",            &_getters::selection },
       { "selection_mode",       &_getters::selection_mode },
       { "selection_type",       &_getters::selection_type },
       { "show_column_headers",  &_getters::show_column_headers },
@@ -612,5 +789,22 @@ namespace editor_script::wrappers::ui {
       //
       assert(lua_gettop(L) == pos + 1);
       lua_setfield(L, pos, cls::global_name);
+      //
+      // Set up collection:
+      //
+      editor_script::define_collection_metatable(L, {
+         .registry_key          = cls::row_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::rows::get_collection_length,
+         .lookup_item_by_index   = &_collections::rows::lookup_item_by_index,
+      });
+      editor_script::define_collection_metatable(L, {
+         .registry_key          = cls::col_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::cols::get_collection_length,
+         .lookup_item_by_index   = &_collections::cols::lookup_item_by_index,
+      });
    }
 }

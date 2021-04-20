@@ -8,6 +8,7 @@
 #include "../../../collections.h"
 
 #include <QSortFilterProxyModel>
+#include "../../../ui/util/color.h"
 #include "../../../ui/util/lua_item_model.h"
 
 #include "../../../cross_thread_tasks/s2m/lambda.h"
@@ -37,7 +38,7 @@ namespace {
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
-         return DovahKitScriptVMCore::get().push_to_lua(result);
+         return DovahKitScriptVMCore::get().push_to_lua(result + 1); // Lua is one-indexed
       }
       luastackchange_t row(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -53,7 +54,7 @@ namespace {
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
          }
-         return DovahKitScriptVMCore::get().push_to_lua(result);
+         return DovahKitScriptVMCore::get().push_to_lua(result + 1); // Lua is one-indexed
       }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -92,16 +93,7 @@ namespace {
                return 1;
          }
          lua_settop(L, 1);
-         lua_createtable(L, 4, 4);
-         //
-         std::array names = { "r", "g", "b", "a" };
-         std::array parts = { color.red(), color.green(), color.blue(), color.alpha() };
-         for (int i = 0; i < names.size(); ++i) {
-            lua_pushinteger(L, parts[i]);
-            lua_seti(L, 2, i + 1);
-            lua_pushinteger(L, parts[i]);
-            lua_setfield(L, 2, names[i]);
-         }
+         util::ui::push_color(L, color);
          return 1;
       }
    }
@@ -136,50 +128,8 @@ namespace {
             case LUA_TNIL:
                helpers::set_model_items_data(self.model_observer, Qt::ForegroundRole, QVariant());
                return 0;
-            case LUA_TTABLE:
-            case LUA_TUSERDATA:
-               {
-                  int isnum;
-                  int value;
-                  std::array<int, 4> values = { 0, 0, 0, 255 };
-                  //
-                  constexpr std::array names = { "r", "g", "b" };
-                  for (int i = 1; i <= names.size(); ++i) {
-                     lua_getfield(L, 2, names[i - 1]);
-                     isnum;
-                     value = lua_tointegerx(L, 3, &isnum);
-                     lua_pop(L, 1);
-                     if (!isnum) {
-                        lua_geti(L, 2, i);
-                        value = lua_tointegerx(L, 3, &isnum);
-                        lua_pop(L, 1);
-                     }
-                     values[i - 1] = value;
-                  }
-                  color.setRgb(values[0], values[1], values[2]);
-                  //
-                  lua_getfield(L, 2, "a");
-                  value = lua_tointegerx(L, 3, &isnum);
-                  lua_pop(L, 1);
-                  if (isnum) {
-                     values[3] = value;
-                  } else {
-                     lua_geti(L, 2, 4);
-                     value = lua_tointegerx(L, 3, &isnum);
-                     lua_pop(L, 1);
-                     if (isnum)
-                        values[3] = value;
-                  }
-               }
-               break;
-            case LUA_TSTRING:
-               luaL_argerror(L, 2, "table or nil expected");
-               break;
-            case LUA_TNUMBER:
-            case LUA_TFUNCTION:
-            case LUA_TLIGHTUSERDATA:
-            case LUA_TBOOLEAN:
-               luaL_argerror(L, 2, "table or nil expected");
+            default:
+               color = util::ui::pull_color(L, 2);
                break;
          }
          helpers::set_model_items_data(self.model_observer, Qt::ForegroundRole, color);

@@ -13,7 +13,121 @@ table:append_row("A", "B", "C", "D")
 table:append_row("E", "F", "G", "H")
 table:append_row("I", "J")
 
-table:on("OnSelectionChanged", "", function(row, ...)
+do
+   local panel = ui.widget.new()
+   panel:set_layout("grid")
+   panel.layout_margins = 0
+   
+   do
+      local st = ui.dropdown.new()
+      st:append_item("Select Rows")
+      st:append_item("Select Columns")
+      st:append_item("Select Cells")
+      st:on("OnChanged", "", function(i)
+         if i == 1 then
+            table.selection_type = "rows"
+         elseif i == 2 then
+            table.selection_type = "columns"
+         elseif i == 3 then
+            table.selection_type = "cells"
+         end
+      end)
+      panel:add_child(st, 1, 1)
+   end
+   do
+      local button = ui.button.new("Access Selection")
+      button:on("OnActivated", "", function()
+         local sel = table.selection
+         if not sel then
+            dovah.log_message("No selection")
+            return
+         end
+         dovah.log_message("Selection: %s", tostring(sel))
+         local st = table.selection_type
+         if st == "rows" then
+            for _, v in ipairs(sel) do
+               local list = v.cells
+               dovah.log_message("Row %s containing %d cells", tostring(v), #list)
+               local text = nil
+               for i = 1, #list do
+                  local cell = list[i]
+                  local item = ""
+                  if cell then
+                     item = tostring(cell.text)
+                  else
+                     item = "nil"
+                  end
+                  if text then
+                     text = text .. " | " .. item
+                  else
+                     text = item
+                  end
+               end
+               dovah.log_message(" - Cells: " .. text)
+            end
+         elseif st == "columns" then
+            for _, v in ipairs(sel) do
+               local list = v.cells
+               dovah.log_message("Col %s containing %d cells", tostring(v), #list)
+               local text = nil
+               for i = 1, #list do
+                  local cell = list[i]
+                  local item = ""
+                  if cell then
+                     item = tostring(cell.text)
+                  else
+                     item = "nil"
+                  end
+                  if text then
+                     text = text .. " | " .. item
+                  else
+                     text = item
+                  end
+               end
+               dovah.log_message(" - Cells: " .. text)
+            end
+         elseif st == "cells" then
+            for _, v in ipairs(sel) do
+               dovah.log_message("Cell: %s", tostring(v))
+               local r = v.row
+               local c = v.column
+               --
+               local wr = table.rows[r]
+               local wc = table.columns[c]
+               dovah.log_message(" - Containing row: %s", tostring(wr))
+               dovah.log_message(" - Containing col: %s", tostring(wc))
+               if wr then
+                  local eq = wr.cells[r] == v
+                  dovah.log_message(" - Row[%d] == Cell? %s (%s)", r, tostring(eq), tostring(wr.cells[r]))
+               end
+               if wc then
+                  local eq = wc.cells[c] == v
+                  dovah.log_message(" - Col[%d] == Cell? %s (%s)", c, tostring(eq), tostring(wc.cells[c]))
+               end
+            end
+         end
+         dovah.log_message("Done printing selection")
+      end)
+      panel:add_child(button, 1, 2)
+   end
+   do
+      local button = ui.button.new("Color Selection")
+      button:on("OnActivated", "", function()
+         local sel = table.selection
+         if not sel then
+            return
+         end
+         for _, v in ipairs(sel) do
+            v.text_color = { 64, 192, 0 }
+         end
+      end)
+      panel:add_child(button, 2, 2)
+   end
+   
+   window:add_child(panel)
+end
+
+--[[table:on("OnSelectionChanged", "", function(row, ...)
    if not row then
       dovah.log_message("No row selected")
       return
@@ -27,6 +141,15 @@ table:on("OnSelectionChanged", "", function(row, ...)
    end
    dovah.log_message(cell)
    dovah.log_message("Cell text: %s", cell.text)
-end)
+   --
+   dovah.log_message(cell.text_color)
+   cell.text_color = { 64, 192, 0 }
+   local tc = cell.text_color
+   if tc then
+      dovah.log_message("R: %d | G: %d | B: %d | A: %d", tc.r, tc.g, tc.b, tc.a)
+   else
+      dovah.log_message(tc)
+   end
+end)--]]--
 
 window:show()

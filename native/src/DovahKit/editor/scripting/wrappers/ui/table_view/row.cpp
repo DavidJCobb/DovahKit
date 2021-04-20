@@ -8,9 +8,11 @@
 #include "../../../collections.h"
 
 #include <QSortFilterProxyModel>
+#include "../../../ui/util/color.h"
 #include "../../../ui/util/lua_item_model.h"
 
 #include "../../../cross_thread_tasks/s2m/lambda.h"
+#include "../helpers/model_observer_data.h"
 
 #include "cell.h"
 
@@ -121,8 +123,48 @@ namespace {
          }
          return DovahKitScriptVMCore::get().push_to_lua(result);
       }
+      luastackchange_t text_color(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.model_observer)
+            return 0;
+         QVariant result = helpers::get_model_items_data(self.model_observer, Qt::ForegroundRole);
+         QColor   color;
+         switch (result.type()) {
+            case QMetaType::QBrush:
+               color = result.value<QBrush>().color();
+               break;
+            case QMetaType::QColor:
+               color = result.value<QColor>();
+               break;
+            default:
+               lua_pushnil(L);
+               return 1;
+         }
+         lua_settop(L, 1);
+         util::ui::push_color(L, color);
+         return 1;
+      }
    }
    namespace _setters {
+      luastackchange_t text_color(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.model_observer)
+            return 0;
+         QColor color;
+         //
+         lua_settop(L, 2);
+         switch (lua_type(L, 2)) {
+            case LUA_TNONE:
+            case LUA_TNIL:
+               helpers::set_model_items_data(self.model_observer, Qt::ForegroundRole, QVariant());
+               return 0;
+            default:
+               color = util::ui::pull_color(L, 2);
+               break;
+         }
+         helpers::set_model_items_data(self.model_observer, Qt::ForegroundRole, color);
+         return 0;
+      }
    }
 
    namespace _singleton_functions {
@@ -138,10 +180,12 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "cells", &_getters::cells },
-      { "index", &_getters::index },
+      { "cells",      &_getters::cells },
+      { "index",      &_getters::index },
+      { "text_color", &_getters::text_color },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
+      { "text_color", &_setters::text_color },
    };
 
    /*static*/ void cls::setup(lua_State* L) {
