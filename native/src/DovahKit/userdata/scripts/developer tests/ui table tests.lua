@@ -111,7 +111,7 @@ do
       panel:add_child(button, 1, 2)
    end
    do
-      local button = ui.button.new("Color Selection")
+      local button = ui.button.new("Recolor Selection")
       button:on("OnActivated", "", function()
          local sel = table.selection
          if not sel then
@@ -123,33 +123,22 @@ do
       end)
       panel:add_child(button, 2, 2)
    end
+   do
+      local button = ui.button.new("Echo Selection Colors")
+      button:on("OnActivated", "", function()
+         local sel = table.selection
+         if not sel then
+            return
+         end
+         for _, v in ipairs(sel) do
+            local tc = v.text_color
+            dovah.log_message("R: %d | G: %d | B: %d | A: %d", tc.r, tc.g, tc.b, tc.a)
+         end
+      end)
+      panel:add_child(button, 3, 2)
+   end
    
    window:add_child(panel)
 end
-
---[[table:on("OnSelectionChanged", "", function(row, ...)
-   if not row then
-      dovah.log_message("No row selected")
-      return
-   end
-   dovah.log_message(row)
-   dovah.log_message(row.cells)
-   local cell = row.cells[2]
-   if not cell then
-      dovah.log_message("Cell is missing")
-      return
-   end
-   dovah.log_message(cell)
-   dovah.log_message("Cell text: %s", cell.text)
-   --
-   dovah.log_message(cell.text_color)
-   cell.text_color = { 64, 192, 0 }
-   local tc = cell.text_color
-   if tc then
-      dovah.log_message("R: %d | G: %d | B: %d | A: %d", tc.r, tc.g, tc.b, tc.a)
-   else
-      dovah.log_message(tc)
-   end
-end)--]]--
 
 window:show()
