@@ -60,6 +60,31 @@ struct ObservableStandardItemModelObserver {
 class ObservableStandardItemModel : public QStandardItemModel {
    Q_OBJECT;
    protected:
+      using  RoleDefault = std::pair<int, QVariant>;
+      struct RoleDefaultSet {
+         QVector<RoleDefault> rows;
+         QVector<RoleDefault> cols;
+
+         inline QVariant forRow(int r) const noexcept {
+            for (auto& d : this->rows)
+               if (d.first == r)
+                  return d.second;
+            return QVariant();
+         }
+         inline QVariant forCol(int r) const noexcept {
+            for (auto& d : this->rows)
+               if (d.first == r)
+                  return d.second;
+            return QVariant();
+         }
+         QVector<RoleDefault>& setByAxis(Qt::Orientation o) noexcept {
+            return (o == rowOrientation) ? rows : cols;
+         }
+         const QVector<RoleDefault>& setByAxis(Qt::Orientation o) const noexcept {
+            return (o == rowOrientation) ? rows : cols;
+         }
+      };
+
       struct Change {
          QModelIndex parent;
          int first;
@@ -91,6 +116,7 @@ class ObservableStandardItemModel : public QStandardItemModel {
       QVector<ObservableStandardItemModelObserver*> _observers;
       QVector<ObserverCacheEntry> _observer_cache;
       QStack<Change> _changes;
+      QMap<Qt::ItemDataRole, RoleDefaultSet> _defaultsByRole;
 
    public:
       ObservableStandardItemModel(QObject* parent = nullptr);
@@ -103,6 +129,12 @@ class ObservableStandardItemModel : public QStandardItemModel {
       ObservableStandardItemModelObserver* getOrCreateRegisteredObserver(const QModelIndex& parent, Qt::Orientation, int offset);
       void registerObserver(ObservableStandardItemModelObserver*);
       void unregisterObserver(ObservableStandardItemModelObserver*);
+
+      // top-level data only
+      QVariant getDefaultDataForSpan(int role, Qt::Orientation, int pos) const noexcept;
+      void setDefaultDataForSpan(int role, Qt::Orientation, int pos, QVariant data); // an invalid QVariant will clear any existing default for the span
+
+      virtual QVariant data(const QModelIndex& index, int role) const override;
 
    protected:
       void afterInsertion(Qt::Orientation, const QModelIndex& parent, int first, int last);

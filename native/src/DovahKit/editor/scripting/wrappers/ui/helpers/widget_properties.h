@@ -1,6 +1,7 @@
 #pragma once
 #include <type_traits>
 #include "../../../systems/messaging.h"
+#include "../../../cross_thread_tasks/s2m/lambda.h"
 
 namespace editor_script::helpers {
    template<class W, class Wx, typename R> requires (std::is_base_of_v<Wx, W>) R get_widget_property(const W* widget, R (Wx::* func)() const) {

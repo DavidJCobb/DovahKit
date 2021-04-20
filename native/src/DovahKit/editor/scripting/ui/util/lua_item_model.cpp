@@ -150,6 +150,56 @@ void ObservableStandardItemModel::unregisterObserver(ObservableStandardItemModel
    this->_observers.removeOne(observer);
 }
 
+QVariant ObservableStandardItemModel::getDefaultDataForSpan(int role, Qt::Orientation orientation, int pos) const noexcept {
+   auto it = this->_defaultsByRole.find((Qt::ItemDataRole)role);
+   if (it == this->_defaultsByRole.end())
+      return QVariant();
+   auto& list = it->setByAxis(orientation);
+   for (auto& pair : list)
+      if (pair.first == pos)
+         return pair.second;
+   return QVariant();
+}
+void ObservableStandardItemModel::setDefaultDataForSpan(int role, Qt::Orientation orientation, int pos, QVariant data) {
+   auto it = this->_defaultsByRole.find((Qt::ItemDataRole)role);
+   if (it == this->_defaultsByRole.end()) {
+      if (!data.isValid())
+         return;
+      it = this->_defaultsByRole.insert((Qt::ItemDataRole)role, RoleDefaultSet());
+   }
+   auto& list = it->setByAxis(orientation);
+   for (auto jt = list.begin(); jt != list.end(); ++jt) {
+      auto& pair = *jt;
+      if (pair.first == pos) {
+         if (data.isValid()) {
+            pair.second = data;
+         } else {
+            list.erase(jt);
+         }
+         return;
+      }
+   }
+   list.append({ pos, data });
+}
+
+QVariant ObservableStandardItemModel::data(const QModelIndex& index, int role) const {
+   auto value = QStandardItemModel::data(index, role);
+   if (!value.isValid()) {
+      if (index.isValid() && !index.parent().isValid()) { // top-level item
+         auto it = this->_defaultsByRole.find((Qt::ItemDataRole)role);
+         if (it != this->_defaultsByRole.end()) {
+            auto& entry = *it;
+            int   row   = index.row();
+            int   col   = index.column();
+            value = entry.forRow(row);
+            if (!value.isValid())
+               value = entry.forCol(col);
+         }
+      }
+   }
+   return value;
+}
+
 void ObservableStandardItemModel::afterInsertion(Qt::Orientation orientation, const QModelIndex& parent, int first, int last) {
    int count = last - first + 1;
    for (auto* observer : this->_observers) {
@@ -161,7 +211,16 @@ void ObservableStandardItemModel::afterInsertion(Qt::Orientation orientation, co
          continue;
       if (o.parent != parent)
          continue;
-      o.setAxis(orientation, p);
+      o.setAxis(orientation, p + count);
+   }
+   for (auto& dataset : this->_defaultsByRole) {
+      auto& list = dataset.setByAxis(orientation);
+      for (auto& pair : list) {
+         int p = pair.first;
+         if (p > first)
+            continue;
+         pair.first = p + count;
+      }
    }
 }
 void ObservableStandardItemModel::afterRemoval(Qt::Orientation orientation, const QModelIndex& parent, int first, int last) {
@@ -179,7 +238,16 @@ void ObservableStandardItemModel::afterRemoval(Qt::Orientation orientation, cons
          continue;
       if (o.parent != parent)
          continue;
-      o.setAxis(orientation, p);
+      o.setAxis(orientation, p - count);
+   }
+   for (auto& dataset : this->_defaultsByRole) {
+      auto& list = dataset.setByAxis(orientation);
+      for (auto& pair : list) {
+         int p = pair.first;
+         if (p > first)
+            continue;
+         pair.first = p - count;
+      }
    }
 }
 void ObservableStandardItemModel::beforeMove(Qt::Orientation, const QModelIndex& sourceParent, int sourceFirst, int sourceLast, const QModelIndex& destinationParent, int destinationAt) {
@@ -188,7 +256,7 @@ void ObservableStandardItemModel::beforeMove(Qt::Orientation, const QModelIndex&
    change.fixup.destination = change.destination.parent.parent() == change.parent; // fixup bools for moves across parents
    this->_changes.push(change);
 }
-void ObservableStandardItemModel::afterMove(Qt::Orientation, const QModelIndex& fixedSourceParent, const QModelIndex& fixedDestinationParent) {
+void ObservableStandardItemModel::afterMove(Qt::Orientation orientation, const QModelIndex& fixedSourceParent, const QModelIndex& fixedDestinationParent) {
    auto change = this->_changes.pop();
    //
    int F = change.first;
@@ -221,14 +289,30 @@ void ObservableStandardItemModel::afterMove(Qt::Orientation, const QModelIndex& 
          //
          for (auto* observer : this->_observers) {
             auto& o = *observer;
-            if (o.row < 0) // not a row or cell observer
+            int   p = o.axis(orientation);
+            if (p < 0) // not a row or cell observer
                continue;
             if (o.parent != change.parent) // in irrelevant parent
                continue;
-            if (o.row >= F && o.row <= L) {
-               o.row += D - L - 1;
-            } else if (o.row > L && o.row < D) {
-               o.row -= items_moved;
+            if (p >= F && p <= L) {
+               p += D - L - 1;
+            } else if (p > L && p < D) {
+               p -= items_moved;
+            }
+            o.setAxis(orientation, p);
+         }
+         if (!change.parent.isValid()) { // top-level elements
+            for (auto& dataset : this->_defaultsByRole) {
+               auto& list = dataset.setByAxis(orientation);
+               for (auto& pair : list) {
+                  int p = pair.first;
+                  if (p >= F && p <= L) {
+                     p += D - L - 1;
+                  } else if (p > L && p < D) {
+                     p -= items_moved;
+                  }
+                  pair.first = p;
+               }
             }
          }
       } else {
@@ -237,14 +321,30 @@ void ObservableStandardItemModel::afterMove(Qt::Orientation, const QModelIndex& 
          //
          for (auto* observer : this->_observers) {
             auto& o = *observer;
-            if (o.row < 0) // not a row or cell observer
+            int   p = o.axis(orientation);
+            if (p < 0) // not a row or cell observer
                continue;
             if (o.parent != change.parent) // in irrelevant parent
                continue;
-            if (o.row >= D && o.row < F) {
-               o.row -= F - D;
-            } else if (o.row >= F && o.row <= L) {
-               o.row += items_moved;
+            if (p >= D && p < F) {
+               p -= F - D;
+            } else if (p >= F && p <= L) {
+               p += items_moved;
+            }
+            o.setAxis(orientation, p);
+         }
+         if (!change.parent.isValid()) { // top-level elements
+            for (auto& dataset : this->_defaultsByRole) {
+               auto& list = dataset.setByAxis(orientation);
+               for (auto& pair : list) {
+                  int p = pair.first;
+                  if (p >= D && p < F) {
+                     p -= F - D;
+                  } else if (p >= F && p <= L) {
+                     p += items_moved;
+                  }
+                  pair.first = p;
+               }
             }
          }
       }
@@ -271,6 +371,7 @@ void ObservableStandardItemModel::afterMove(Qt::Orientation, const QModelIndex& 
       //
       for (auto* observer : this->_observers) {
          auto& o = *observer;
+         int   p = o.axis(orientation);
          if (o.row < 0) // not a row or cell observer
             continue;
          if (o.parent == change.parent) {
@@ -278,21 +379,38 @@ void ObservableStandardItemModel::afterMove(Qt::Orientation, const QModelIndex& 
             // Items were removed from this container, possibly including the observed row/cell.
             //
             o.parent = fixedSourceParent;
-            if (o.row >= change.first && o.row <= change.last) {
+            if (p >= change.first && p <= change.last) {
                o.parent = fixedDestinationParent;
-               o.row -= change.first;
-               o.row += change.destination.at;
-            } else if (o.row > change.last) {
-               o.row -= items_moved;
+               p -= change.first;
+               p += change.destination.at;
+            } else if (p > change.last) {
+               p -= items_moved;
             }
          } else if (o.parent == change.destination.parent) {
             //
             // Items were inserted into this container, possibly including the observed row/cell.
             //
             o.parent = fixedDestinationParent;
-            if (o.row >= change.destination.at) {
-               o.row += items_moved;
+            if (p >= change.destination.at) {
+               p += items_moved;
             }
+         }
+         o.setAxis(orientation, p);
+      }
+      if (!change.parent.isValid()) { // top-level element removal
+         for (auto& dataset : this->_defaultsByRole) {
+            auto& list = dataset.setByAxis(orientation);
+            for (auto& pair : list)
+               if (pair.first > change.last)
+                  pair.first -= items_moved;
+         }
+      }
+      if (!change.destination.parent.isValid()) { // top-level element addition
+         for (auto& dataset : this->_defaultsByRole) {
+            auto& list = dataset.setByAxis(orientation);
+            for (auto& pair : list)
+               if (pair.first >= change.destination.at)
+                  pair.first += items_moved;
          }
       }
    }
@@ -300,6 +418,7 @@ void ObservableStandardItemModel::afterMove(Qt::Orientation, const QModelIndex& 
 void ObservableStandardItemModel::afterReset() {
    for (auto* observer : this->_observers) // invalidate all observers
       observer->invalidate();
+   this->_defaultsByRole.clear();
 }
 void ObservableStandardItemModel::beforeLayoutChange() {
    auto& cache = this->_observer_cache;
@@ -334,5 +453,7 @@ void ObservableStandardItemModel::afterLayoutChange() {
       o.col    = c.col->column();
    }
    cache.clear();
+   //
+   this->_defaultsByRole.clear(); // TODO: figure out how to get this working
 }
 #pragma endregion
