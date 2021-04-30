@@ -156,9 +156,17 @@ namespace dovah::tes_file_writing {
          subrecord.write(uint32_t(this->source.header.subINTV));
          subrecord.close();
       }
-      if (this->source.header.details & tes_file_header::detail_flag::has_incc) {
+      {  // INCC
+         uint32_t count = 0;
+         this->owner.for_each_active_file_form_of_type(form_type::cell, [&count](dovah::form_stub* stub) {
+            if (!stub->is_exterior_cell())
+               ++count;
+            return false;
+         });
+         this->source.header.interior_cell_count = count;
+         //
          auto& subrecord = record.open_next_subrecord('INCC');
-         subrecord.write(uint32_t(this->source.header.subINCC));
+         subrecord.write(count);
          subrecord.close();
       }
       record._close();

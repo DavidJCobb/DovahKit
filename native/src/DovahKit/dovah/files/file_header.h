@@ -38,7 +38,7 @@ namespace dovah {
       // TODO: ONAM, a list of overridden records within temporary CELLs, of the following types: ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA
       // TODO: DELE
       uint32_t subINTV;
-      uint32_t subINCC;
+      uint32_t interior_cell_count; // INCC
       // TODO: SCRN
       //
       inline bool is_light() const noexcept {

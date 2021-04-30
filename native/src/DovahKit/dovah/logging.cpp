@@ -31,7 +31,7 @@ namespace dovah {
          return out;
       }
 
-      extern const char* file_error_code_to_string(errno_t code) {
+      extern const char* file_error_code_to_string(int code) {
          switch (code) {
             // Found a list of possible error codes for fopen: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fopen.html
             case ENFILE:

@@ -498,7 +498,7 @@ namespace dovah::tes_file_reading {
                this->header.details |= detail_flag::has_intv;
                break;
             case 'INCC':
-               if (!subrecord.read(this->header.subINCC)) {
+               if (!subrecord.read(this->header.interior_cell_count)) {
                   return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                }
                this->header.details |= detail_flag::has_incc;
