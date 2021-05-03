@@ -137,8 +137,12 @@ namespace cobb::qt {
                continue;
             minus = c == '-';
             match = c.isNumber();
-            if (minus || match)
+            if (minus)
                continue;
+            if (match) {
+               out = c.digitValue();
+               continue;
+            }
             break;
          }
          if (!c.isNumber())
