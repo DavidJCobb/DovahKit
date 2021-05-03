@@ -1,5 +1,6 @@
 #pragma once
 #include <initializer_list>
+#include <vector>
 #include "../../lua.h"
 
 namespace editor_script {
@@ -40,6 +41,14 @@ namespace editor_script {
       const std::initializer_list<luaL_Reg>& getters = {},
       const std::initializer_list<luaL_Reg>& setters = {},
       const char* class_name = nullptr // __name value for class metatable; defaults to (class_metatable_key) if not specified
+   );
+
+   extern void extend_class(
+      lua_State* luaVM,
+      const char* class_metatable_key,
+      const std::vector<luaL_Reg>& methods,
+      const std::vector<luaL_Reg>& getters,
+      const std::vector<luaL_Reg>& setters
    );
 
    //

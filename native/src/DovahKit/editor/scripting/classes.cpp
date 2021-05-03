@@ -617,6 +617,39 @@ namespace editor_script {
       lua_pop(luaVM, 1); // pop metatable from the stack
    }
 
+   extern void extend_class(
+      lua_State* L,
+      const char* class_metatable_key,
+      const std::vector<luaL_Reg>& methods,
+      const std::vector<luaL_Reg>& getters,
+      const std::vector<luaL_Reg>& setters
+   ) {
+      luaL_getmetatable(L, class_metatable_key);
+      int index_mt = lua_gettop(L);
+      if (lua_type(L, index_mt) != LUA_TTABLE) {
+         lua_pop(L, 1);
+         return;
+      }
+      //
+      if (methods.size()) {
+         cobb::lua::setfuncs(L, methods); // import functions into the metatable
+      }
+      if (getters.size()) {
+         lua_pushstring(L, "__getters");
+         lua_rawget(L, index_mt);
+         cobb::lua::setfuncs(L, getters);
+         lua_pop(L, 1);
+      }
+      if (setters.size()) {
+         lua_pushstring(L, "__setters");
+         lua_rawget(L, index_mt);
+         cobb::lua::setfuncs(L, setters);
+         lua_pop(L, 1);
+      }
+      //
+      lua_pop(L, 1);
+   }
+
    extern bool is_class_defined(lua_State* luaVM, const char* className) {
       bool result = luaL_getmetatable(luaVM, className) == LUA_TTABLE;
       lua_pop(luaVM, 1);
