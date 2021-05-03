@@ -3,7 +3,7 @@
 #include "../../../cross_thread_tasks/s2m/lambda.h"
 
 namespace editor_script::helpers {
-   extern QVariant get_model_items_data(ObservableStandardItemModelObserver* observer, int role) {
+   extern [[nodiscard]] QVariant get_model_items_data(ObservableStandardItemModelObserver* observer, int role) {
       QVariant result;
       //
       auto* task = new tasks::s2m::ui_read_lambda();
