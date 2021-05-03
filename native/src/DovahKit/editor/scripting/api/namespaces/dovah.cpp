@@ -211,6 +211,21 @@ namespace {
          DovahKitScriptVMMessenger::get().send_message(m);
          return 0;
       }
+      luastackchange_t type(lua_State* L) {
+         lua_settop(L, 1);
+         lua_checkstack(L, 3);
+         auto t = lua_type(L, 1);
+         if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
+            if (lua_getmetatable(L, 1)) {
+               lua_pushstring(L, "__name");
+               auto nt = lua_rawget(L, 2);
+               if (nt == LUA_TSTRING)
+                  return 1;
+            }
+         }
+         lua_pushstring(L, lua_typename(L, t));
+         return 1;
+      }
    }
 
    std::array _functions = {
@@ -222,6 +237,7 @@ namespace {
       luaL_Reg{ "get_form_by_id",         &_definitions::get_form_by_id },
       luaL_Reg{ "log_message",            &_definitions::log_message },
       luaL_Reg{ "test_call_and_response", &_definitions::test_call_and_response },
+      luaL_Reg{ "type",                   &_definitions::type },
    };
 }
 namespace editor_script::namespace_setup {
