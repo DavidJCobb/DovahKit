@@ -8,6 +8,7 @@ namespace editor_script::wrappers::ui {
    struct table_view_cell : public wrapper_metatable {
       static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.ui.table_view_cell";
+      static constexpr const char* class_name     = "table_view_cell";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;

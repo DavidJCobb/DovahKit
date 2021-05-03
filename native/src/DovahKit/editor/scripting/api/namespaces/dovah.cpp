@@ -206,6 +206,37 @@ namespace {
          DovahKitScriptVMMessenger::get().send_message(m);
          return 0;
       }
+      luastackchange_t object_is(lua_State* L) {
+         lua_settop(L, 2);
+         constexpr int index_obj = 1;
+         constexpr int index_req = 2;
+         constexpr int index_mt  = 3;
+         //
+         luaL_argcheck(L, lua_isstring(L, index_req), 2, "typename (string) expected");
+         auto  t   = lua_type    (L, index_obj);
+         auto* req = lua_tostring(L, index_req);
+         if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
+            lua_getmetatable(L, index_obj);
+            assert(lua_gettop(L) == index_mt);
+            while (lua_type(L, index_mt) == LUA_TTABLE) {
+               lua_pushstring(L, "__name");
+               if (lua_rawget(L, index_mt) == LUA_TSTRING) {
+                  auto* tn = lua_tostring(L, -1);
+                  if (strcmp(tn, req) == 0) {
+                     lua_pushboolean(L, true);
+                     return 1;
+                  }
+               }
+               lua_settop(L, index_mt);
+               lua_pushstring(L, "__superclass");
+               lua_rawget    (L, index_mt);
+               lua_replace(L, index_mt);
+            }
+         }
+         const char* tn  = lua_typename(L, t);
+         lua_pushboolean(L, strcmp(tn, req) == 0);
+         return 1;
+      }
       luastackchange_t test_call_and_response(lua_State* L) {
          auto* m = new editor_script::tasks::s2m::test_call_and_response();
          DovahKitScriptVMMessenger::get().send_message(m);
@@ -236,6 +267,7 @@ namespace {
       luaL_Reg{ "for_each_form_of_type",  &_definitions::for_each_form_of_type },
       luaL_Reg{ "get_form_by_id",         &_definitions::get_form_by_id },
       luaL_Reg{ "log_message",            &_definitions::log_message },
+      luaL_Reg{ "object_is",              &_definitions::object_is },
       luaL_Reg{ "test_call_and_response", &_definitions::test_call_and_response },
       luaL_Reg{ "type",                   &_definitions::type },
    };

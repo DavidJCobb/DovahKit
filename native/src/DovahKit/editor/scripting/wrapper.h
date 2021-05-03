@@ -162,7 +162,8 @@ namespace editor_script {
          wrapper_metatable() = delete;
       public:
          static constexpr const char* superclass_key = nullptr;
-         static constexpr const char* metatable_key  = "dovah.classes.!base";
+         static constexpr const char* metatable_key  = "dovah.classes.!base"; // subclasses must override this
+         static constexpr const char* class_name     = nullptr;               // subclasses must override this
          static const std::initializer_list<luaL_Reg> metatable_methods; // subclasses must override this even if they offer no methods
          static const std::initializer_list<luaL_Reg> metatable_getters; // subclasses must override this even if they offer no getters
          static const std::initializer_list<luaL_Reg> metatable_setters; // subclasses must override this even if they offer no setters
@@ -188,6 +189,6 @@ namespace editor_script {
          return;
       if (is_class_defined(L, T::metatable_key))
          return;
-      define_class(L, T::metatable_key, T::superclass_key, T::metatable_methods, T::metatable_getters, T::metatable_setters);
+      define_class(L, T::metatable_key, T::superclass_key, T::metatable_methods, T::metatable_getters, T::metatable_setters, T::class_name);
    }
 }

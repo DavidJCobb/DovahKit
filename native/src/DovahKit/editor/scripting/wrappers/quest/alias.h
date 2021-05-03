@@ -6,6 +6,7 @@ namespace editor_script::wrappers {
    struct quest_alias : public wrapper_metatable {
       static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.quest_alias";
+      static constexpr const char* class_name     = "quest_alias";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;
@@ -21,6 +22,7 @@ namespace editor_script::wrappers {
    struct quest_loc_alias : public quest_alias {
       static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.quest_loc_alias";
+      static constexpr const char* class_name     = "quest_loc_alias";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;
@@ -32,6 +34,7 @@ namespace editor_script::wrappers {
    struct quest_ref_alias : public quest_alias {
       static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.quest_ref_alias";
+      static constexpr const char* class_name     = "quest_ref_alias";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;

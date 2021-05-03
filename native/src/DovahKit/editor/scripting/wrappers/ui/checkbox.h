@@ -7,6 +7,7 @@ namespace editor_script::wrappers::ui {
    struct checkbox : public widget {
       static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.ui.checkbox";
+      static constexpr const char* class_name     = "checkbox";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;

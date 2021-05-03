@@ -10,6 +10,7 @@ namespace editor_script::wrappers {
    struct papyrus_script : public wrapper_metatable {
       static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.papyrus_script";
+      static constexpr const char* class_name     = "papyrus_script";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;

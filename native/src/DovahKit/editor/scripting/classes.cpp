@@ -506,7 +506,15 @@ namespace editor_script {
       return true;
    }
 
-   extern void define_class(lua_State* luaVM, const char* className, const char* superclassName, const std::initializer_list<luaL_Reg>& methods, const std::initializer_list<luaL_Reg>& getters, const std::initializer_list<luaL_Reg>& setters) {
+   extern void define_class(
+      lua_State* luaVM,
+      const char* class_metatable_key,
+      const char* super_metatable_key,
+      const std::initializer_list<luaL_Reg>& methods,
+      const std::initializer_list<luaL_Reg>& getters,
+      const std::initializer_list<luaL_Reg>& setters,
+      const char* class_name
+   ) {
       //
       // LUA:
       //    local meta = {}
@@ -544,12 +552,18 @@ namespace editor_script {
       //
       //
       __pairs_iterators::_define_metatable(luaVM); // needed for __pairs
-      if (superclassName)
-         assert(strcmp(className, superclassName) != 0 && "The superclass and subclass can't use the same registry key name."); // (assert) should be no-op in Release, so this is fine
+      if (super_metatable_key)
+         assert(strcmp(class_metatable_key, super_metatable_key) != 0 && "The superclass and subclass can't use the same registry key name."); // (assert) should be no-op in Release, so this is fine
       lua_checkstack(luaVM, 3);
       //
-      luaL_newmetatable(luaVM, className); // STACK: [newmeta]
+      luaL_newmetatable(luaVM, class_metatable_key); // STACK: [newmeta]
       auto index_mt = lua_gettop(luaVM);
+      //
+      if (class_name) {
+         lua_pushstring(luaVM, "__name");
+         lua_pushstring(luaVM, class_name);
+         lua_rawset(luaVM, index_mt);
+      }
       //
       lua_pushstring   (luaVM, "__index"); // STACK: ["__index", newmeta]
       lua_pushcfunction(luaVM, &__index);  // STACK: [CFunction:__index, "__index", newmeta]
@@ -561,8 +575,8 @@ namespace editor_script {
       lua_pushcfunction(luaVM, &_push_zero);
       lua_settable     (luaVM, index_mt);
       //
-      if (superclassName) {
-         luaL_getmetatable(luaVM, superclassName); // STACK: [supermeta, newmeta]
+      if (super_metatable_key) {
+         luaL_getmetatable(luaVM, super_metatable_key); // STACK: [supermeta, newmeta]
          assert(!lua_isnil(luaVM, -1) && "The desired superclass doesn't yet have a metatable set up. Are you setting up your classes in the wrong order?");
          lua_pushstring(luaVM, "__superclass"); // STACK: ["__superclass", supermeta, newmeta]
          lua_pushvalue (luaVM, -2); // STACK: [supermeta, "__superclass", supermeta, newmeta]
