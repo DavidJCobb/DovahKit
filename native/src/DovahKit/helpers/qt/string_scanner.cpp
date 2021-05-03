@@ -135,6 +135,10 @@ namespace cobb::qt {
          if (!match && !minus) {
             if (c.isSpace())
                continue;
+            if (c == '+') {
+               match = true;
+               continue;
+            }
             minus = c == '-';
             match = c.isNumber();
             if (minus)
