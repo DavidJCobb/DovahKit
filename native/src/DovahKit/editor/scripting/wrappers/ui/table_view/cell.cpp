@@ -65,85 +65,8 @@ namespace {
          }
          return DovahKitScriptVMCore::get().push_to_lua(result + 1); // Lua is one-indexed
       }
-      luastackchange_t text(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         QString result;
-         {
-            auto* observer = self.model_observer;
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [observer, &result]() {
-               auto* item = observer->item();
-               if (item)
-                  result = item->data(Qt::DisplayRole).toString();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         lua_pushstring(L, result.toUtf8());
-         return 1;
-      }
-      luastackchange_t text_color(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         QVariant result = helpers::get_model_items_data(self.model_observer, Qt::ForegroundRole);
-         QColor   color;
-         switch (result.type()) {
-            case QMetaType::QBrush:
-               color = result.value<QBrush>().color();
-               break;
-            case QMetaType::QColor:
-               color = result.value<QColor>();
-               break;
-            default:
-               lua_pushnil(L);
-               return 1;
-         }
-         lua_settop(L, 1);
-         util::ui::push_color(L, color);
-         return 1;
-      }
    }
    namespace _setters {
-      luastackchange_t text(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
-         QString value = lua_tostring(L, 2);
-         {
-            auto* observer = self.model_observer;
-            auto* task     = new tasks::s2m::lambda(false);
-            task->handler  = [observer, value]() {
-               auto* item = observer->item();
-               if (item)
-                  item->setData(value, Qt::DisplayRole);
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         }
-         return 0;
-      }
-      luastackchange_t text_color(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         QColor color;
-         //
-         lua_settop(L, 2);
-         switch (lua_type(L, 2)) {
-            case LUA_TNONE:
-            case LUA_TNIL:
-               helpers::set_model_items_data(self.model_observer, Qt::ForegroundRole, QVariant());
-               return 0;
-            default:
-               color = util::ui::pull_color(L, 2);
-               break;
-         }
-         helpers::set_model_items_data(self.model_observer, Qt::ForegroundRole, color);
-         return 0;
-      }
    }
 
    namespace _singleton_functions {
@@ -159,27 +82,27 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "column",     &_getters::column },
-      { "row",        &_getters::row },
-      //{ "text",       &_getters::text },
-      //{ "text_color", &_getters::text_color },
+      { "column", &_getters::column },
+      { "row",    &_getters::row },
+      //
+      // For fields that are handled as item-data (i.e. Qt::ItemDataRole), please use the 
+      // "model observer property handler" system. A list of MOPHs for this Lua class is 
+      // defined near the top of this file.
+      //
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      //{ "text",       &_setters::text },
-      //{ "text_color", &_setters::text_color },
+      //
+      // For fields that are handled as item-data (i.e. Qt::ItemDataRole), please use the 
+      // "model observer property handler" system. A list of MOPHs for this Lua class is 
+      // defined near the top of this file.
+      //
    };
    /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
       int index_class   = lua_absindex(L, -3);
       int index_getters = lua_absindex(L, -2);
       int index_setters = lua_absindex(L, -1);
       //
-      auto& list = _moph::handlers;
-      for (auto& moph : list) {
-         moph::push_getter<cls>(L, list, moph.name);
-         lua_setfield(L, index_getters, moph.name);
-         moph::push_setter<cls>(L, list, moph.name);
-         lua_setfield(L, index_setters, moph.name);
-      }
+      _moph::handlers.extend(L, cls::metatable_key, index_getters, index_setters);
    }
 
    /*static*/ void cls::setup(lua_State* L) {
