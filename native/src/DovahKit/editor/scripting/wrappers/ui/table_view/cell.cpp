@@ -21,6 +21,15 @@ namespace {
    using cls = wrappers::ui::table_view_cell;
    using wrapped_type = cls::wrapped_type;
 
+   namespace _moph {
+      using moph_t = moph::model_observer_property_handler;
+      
+      static const moph::handler_set handlers = {{
+         moph_t{ "text",       Qt::ItemDataRole::DisplayRole,    moph::push_string, moph::pull_string },
+         moph_t{ "text_color", Qt::ItemDataRole::ForegroundRole, moph::push_color,  moph::pull_color },
+      }};
+   }
+
    namespace _methods {
    }
    namespace _getters {
@@ -152,13 +161,26 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "column",     &_getters::column },
       { "row",        &_getters::row },
-      { "text",       &_getters::text },
-      { "text_color", &_getters::text_color },
+      //{ "text",       &_getters::text },
+      //{ "text_color", &_getters::text_color },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "text",       &_setters::text },
-      { "text_color", &_setters::text_color },
+      //{ "text",       &_setters::text },
+      //{ "text_color", &_setters::text_color },
    };
+   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+      int index_class   = lua_absindex(L, -3);
+      int index_getters = lua_absindex(L, -2);
+      int index_setters = lua_absindex(L, -1);
+      //
+      auto& list = _moph::handlers;
+      for (auto& moph : list) {
+         moph::push_getter<cls>(L, list, moph.name);
+         lua_setfield(L, index_getters, moph.name);
+         moph::push_setter<cls>(L, list, moph.name);
+         lua_setfield(L, index_setters, moph.name);
+      }
+   }
 
    /*static*/ void cls::setup(lua_State* L) {
       int pos = lua_gettop(L);

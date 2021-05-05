@@ -318,6 +318,7 @@
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
     <ClCompile Include="helpers\qt\set_model_of.cpp" />
     <ClCompile Include="helpers\qt\strings.cpp" />
+    <ClCompile Include="helpers\qt\string_scanner.cpp" />
     <ClCompile Include="helpers\qt\traversal.cpp" />
     <ClCompile Include="helpers\qt\vector3.cpp" />
     <ClCompile Include="helpers\rotation.cpp" />
@@ -663,6 +664,7 @@
     <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\qt\get_model_of.h" />
     <ClInclude Include="helpers\qt\set_model_of.h" />
+    <ClInclude Include="helpers\qt\string_scanner.h" />
     <ClInclude Include="helpers\qt\traversal.h" />
     <ClInclude Include="helpers\rotation.h" />
     <ClInclude Include="helpers\singleton.h" />

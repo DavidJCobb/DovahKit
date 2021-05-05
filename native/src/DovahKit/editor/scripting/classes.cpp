@@ -568,6 +568,9 @@ namespace editor_script {
       lua_pushstring   (luaVM, "__index"); // STACK: ["__index", newmeta]
       lua_pushcfunction(luaVM, &__index);  // STACK: [CFunction:__index, "__index", newmeta]
       lua_settable     (luaVM, index_mt);  // STACK: [newmeta]
+      lua_pushstring   (luaVM, "__newindex"); // push 1
+      lua_pushcfunction(luaVM, &__newindex);  // push 1
+      lua_settable     (luaVM, index_mt);     // pop  2
       lua_pushstring   (luaVM, "__pairs"); // STACK: ["__index", newmeta]
       lua_pushcfunction(luaVM, &__pairs);  // STACK: [CFunction:__index, "__index", newmeta]
       lua_settable     (luaVM, index_mt);  // STACK: [newmeta]
@@ -605,10 +608,6 @@ namespace editor_script {
          lua_settable   (luaVM, index_mt);    // pop  2
       }
       if (setters.size()) {
-         lua_pushstring   (luaVM, "__newindex"); // push 1
-         lua_pushcfunction(luaVM, &__newindex);  // push 1
-         lua_settable     (luaVM, -3);           // pop  2
-         //
          lua_pushstring (luaVM, "__setters"); // push 1
          lua_createtable(luaVM, 0, 0);        // push 1
          cobb::lua::setfuncs(luaVM, setters); // push 0
@@ -635,14 +634,12 @@ namespace editor_script {
          cobb::lua::setfuncs(L, methods); // import functions into the metatable
       }
       if (getters.size()) {
-         lua_pushstring(L, "__getters");
-         lua_rawget(L, index_mt);
+         luaL_getsubtable(L, index_mt, "__getters");
          cobb::lua::setfuncs(L, getters);
          lua_pop(L, 1);
       }
       if (setters.size()) {
-         lua_pushstring(L, "__setters");
-         lua_rawget(L, index_mt);
+         luaL_getsubtable(L, index_mt, "__setters");
          cobb::lua::setfuncs(L, setters);
          lua_pop(L, 1);
       }
@@ -650,8 +647,21 @@ namespace editor_script {
       lua_pop(L, 1);
    }
 
-   extern bool is_class_defined(lua_State* luaVM, const char* className) {
-      bool result = luaL_getmetatable(luaVM, className) == LUA_TTABLE;
+   extern int get_class_tables(lua_State* L, const char* class_metatable_key) {
+      lua_checkstack(L, 3);
+      bool exists = luaL_getmetatable(L, class_metatable_key) == LUA_TTABLE;
+      int  index  = lua_gettop(L);
+      if (!exists) {
+         lua_pop(L, 1);
+         return 0;
+      }
+      luaL_getsubtable(L, index, "__getters");
+      luaL_getsubtable(L, index, "__setters");
+      return 3;
+   }
+
+   extern bool is_class_defined(lua_State* luaVM, const char* class_metatable_key) {
+      bool result = luaL_getmetatable(luaVM, class_metatable_key) == LUA_TTABLE;
       lua_pop(luaVM, 1);
       return result;
    }

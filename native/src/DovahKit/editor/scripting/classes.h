@@ -51,6 +51,15 @@ namespace editor_script {
       const std::vector<luaL_Reg>& setters
    );
 
+   // Pushes the following tables to the Lua stack: the class metatable; the class's 
+   // getter list; and the class's setter list. If either of the latter two lists is 
+   // missing (which can happen if the class had no [gs]etters), they will be created. 
+   // Returns the number of values pushed to the Lua stack (0 in case of failure).
+   extern int get_class_tables(
+      lua_State* L,
+      const char* class_metatable_key
+   );
+
    //
    // Check registry key (class_internal_name) for a class metatable.
    //

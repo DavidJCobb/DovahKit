@@ -13,6 +13,9 @@ namespace editor_script::wrappers::ui {
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;
 
+      static constexpr bool has_extra_class_setup = true;
+      static void extra_class_setup(lua_State* L) noexcept;
+
       static constexpr const char* global_name = "table_view_cell";
       using wrapped_type = QStandardItem;
 
