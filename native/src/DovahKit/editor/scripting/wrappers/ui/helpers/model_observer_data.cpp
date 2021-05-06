@@ -70,11 +70,41 @@ namespace editor_script::helpers {
 }
 
 namespace editor_script::moph {
-   namespace util {
-      extern QVariant default_transform_function(const QVariant& prior, const QVariant& changes) {
-         return changes;
+   namespace {
+      int __pcall_moph_pull_helper(lua_State* L) {
+         auto* moph   = (model_observer_property_handler*) lua_touserdata(L, lua_upvalueindex(1));
+         auto* result = (QVariant*) lua_touserdata(L, lua_upvalueindex(2));
+         int top = lua_gettop(L);
+         assert(top >= 1);
+         //
+         *result = (moph->pull)(L, 1);
+         return 0;
       }
+      QVariant _pcall_moph_pull(lua_State* L, int stack_pos, const model_observer_property_handler& moph) {
+         QVariant result;
+         //
+         stack_pos = lua_absindex(L, stack_pos);
+         lua_pushlightuserdata(L, (void*)&moph);   // upvalue 1
+         lua_pushlightuserdata(L, (void*)&result); // upvalue 2
+         lua_pushcclosure(L, &__pcall_moph_pull_helper, 2);
+         lua_pushvalue(L, stack_pos);
+         if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+            lua_warning(L, "invalid value for property `", 1);
+            lua_warning(L, moph.name, 1);
+            if (lua_isstring(L, -1)) {
+               lua_warning(L, "`: ", 1);
+               lua_warning(L, lua_tostring(L, -1), 0);
+            } else {
+               lua_warning(L, "`", 0);
+            }
+            result = QVariant();
+         }
+         //
+         return result;
+      }
+   }
 
+   namespace util {
       extern int getter(lua_State* L) {
          // Upvalue 1: string:         class metatable key (used to type-check self and get a valid wrapper-object)
          // Upvalue 2: light userdata: the handler set
@@ -124,7 +154,7 @@ namespace editor_script::moph {
          if (!moph) {
             return luaL_error(L, "property `%1` is not available here", property_name);
          }
-         QVariant value = moph->pull(L, 2);
+         QVariant value = (moph->pull)(L, 2);
          if (!value.isValid()) {
             if (!moph->clear_if_invalid) {
                return luaL_error(L, "the value is invalid"); // TODO: can we report specific errors?
@@ -201,8 +231,12 @@ namespace editor_script::moph {
       //
       QMap<Qt::ItemDataRole, QVariant> out;
       for(auto& moph : *this) {
-         lua_getfield(L, table_pos, moph.name);
-         auto v = moph.pull(L, top + 1);
+         auto t = lua_getfield(L, table_pos, moph.name);
+         if (t == LUA_TNONE || t == LUA_TNIL) {
+            lua_settop(L, top);
+            continue;
+         }
+         auto v = _pcall_moph_pull(L, top + 1, moph);
          if (v.isValid())
             out[moph.role] = v;
          lua_settop(L, top);
@@ -217,22 +251,22 @@ namespace editor_script::moph {
       return 1;
    }
    extern QVariant pull_alignment(lua_State* L, int stack_pos) {
+      if (!lua_isstring(L, stack_pos)) {
+         luaL_error(L, "expected a string value for the text alignment");
+      }
       std::string h;
       std::string v;
       bool h_valid = false;
       bool v_valid = false;
       auto align   = editor_script::util::ui::alignment_from_string(lua_tostring(L, stack_pos), h, v, h_valid, v_valid);
       if (!h_valid && _stricmp(h.c_str(), "unchanged") != 0) {
-         // TODO: warn: unrecognized
+         lua_warning(L, h.c_str(), 1);
+         lua_warning(L, " is not a recognized horizontal text alignment keyword", 0);
       }
       if (!v_valid && _stricmp(v.c_str(), "unchanged") != 0) {
-         // TODO: warn: unrecognized
+         lua_warning(L, v.c_str(), 1);
+         lua_warning(L, " is not a recognized vertical text alignment keyword", 0);
       }
-      // 
-      // TODO: How do we report warnings or errors here? In this case, unrecognized alignment values should 
-      //       report an error. (Note that the above function does not recognize "unchanged" and this is by 
-      //       design.)
-      //
       return QVariant::fromValue<Qt::Alignment::Int>(align);
    }
    extern QVariant transform_alignment(const QVariant& existing, const QVariant& changes) {
@@ -288,8 +322,7 @@ namespace editor_script::moph {
       return 1;
    }
    extern QVariant pull_string(lua_State* L, int stack_pos) {
-      if (!lua_isstring(L, stack_pos))
-         return QVariant();
-      return QVariant::fromValue(QString::fromUtf8(lua_tostring(L, stack_pos)));
+      const char* s = luaL_tolstring(L, stack_pos, nullptr);
+      return QVariant::fromValue(QString::fromUtf8(s));
    }
 }

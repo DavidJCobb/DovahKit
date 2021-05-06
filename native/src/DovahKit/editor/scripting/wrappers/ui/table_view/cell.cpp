@@ -12,7 +12,6 @@
 #include "../../../ui/util/lua_item_model.h"
 
 #include "../../../cross_thread_tasks/s2m/lambda.h"
-#include "../helpers/model_observer_data.h"
 
 #include "cell.h"
 
@@ -24,11 +23,6 @@ namespace {
    namespace _moph {
       using moph_t = moph::model_observer_property_handler;
       
-      static const moph::handler_set handlers = {{
-         moph_t{ "alignment",  Qt::ItemDataRole::TextAlignmentRole, moph::push_alignment, moph::pull_alignment, moph::transform_alignment },
-         moph_t{ "text",       Qt::ItemDataRole::DisplayRole,       moph::push_string,    moph::pull_string },
-         moph_t{ "text_color", Qt::ItemDataRole::ForegroundRole,    moph::push_color,     moph::pull_color,     moph_t::default_transform, true },
-      }};
    }
 
    namespace _methods {
@@ -88,22 +82,29 @@ namespace editor_script::wrappers::ui {
       //
       // For fields that are handled as item-data (i.e. Qt::ItemDataRole), please use the 
       // "model observer property handler" system. A list of MOPHs for this Lua class is 
-      // defined near the top of this file.
+      // defined below.
       //
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       //
       // For fields that are handled as item-data (i.e. Qt::ItemDataRole), please use the 
       // "model observer property handler" system. A list of MOPHs for this Lua class is 
-      // defined near the top of this file.
+      // defined below.
       //
    };
+
+   /*static*/ const moph::handler_set cls::moph_handlers = {{
+      moph::model_observer_property_handler{ "alignment",  Qt::ItemDataRole::TextAlignmentRole, moph::push_alignment, moph::pull_alignment, moph::transform_alignment },
+      moph::model_observer_property_handler{ "text",       Qt::ItemDataRole::DisplayRole,       moph::push_string,    moph::pull_string },
+      moph::model_observer_property_handler{ "text_color", Qt::ItemDataRole::ForegroundRole,    moph::push_color,     moph::pull_color,     moph::model_observer_property_handler::default_transform, true },
+   }};
+
    /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
       int index_class   = lua_absindex(L, -3);
       int index_getters = lua_absindex(L, -2);
       int index_setters = lua_absindex(L, -1);
       //
-      _moph::handlers.extend(L, cls::metatable_key, index_getters, index_setters);
+      cls::moph_handlers.extend(L, cls::metatable_key, index_getters, index_setters);
    }
 
    /*static*/ void cls::setup(lua_State* L) {

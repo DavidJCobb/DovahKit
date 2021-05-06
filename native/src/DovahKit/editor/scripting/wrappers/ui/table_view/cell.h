@@ -4,6 +4,8 @@
 #include <QStandardItemModel>
 #include "../table_view.h"
 
+#include "../helpers/model_observer_data.h"
+
 namespace editor_script::wrappers::ui {
    struct table_view_cell : public wrapper_metatable {
       static constexpr const char* superclass_key = metatable_key;
@@ -12,6 +14,8 @@ namespace editor_script::wrappers::ui {
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;
+
+      static const moph::handler_set moph_handlers;
 
       static constexpr bool has_extra_class_setup = true;
       static void extra_class_setup(lua_State* L) noexcept;

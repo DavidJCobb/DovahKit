@@ -227,44 +227,73 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
+      using role_map_t = moph::handler_set::role_map_t;
+
       luastackchange_t append_row(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QVector<QVariant>       args;
+         //
+         // This function's arguments are the cells to add to the new row. Each argument can take 
+         // one of the following forms:
+         // 
+         //  - An already-existing table cell, possibly one which has been orphaned from the table 
+         //    view that originally created it.
+         // 
+         //  - A Lua table containing key/value pairs, to be processed by a model observer property 
+         //    handler set; this can be used to preconfigure any supported Qt::ItemDataRole on the 
+         //    newly-created cell.
+         // 
+         //  - Any other value, which will be used for the Qt::DisplayRole and likely coerced to a 
+         //    string in the process.
+         //
+         QVector<role_map_t>     roles;
          QVector<QStandardItem*> items;
          {
-            auto& core = DovahKitScriptVMCore::get();
-            int argcount = lua_gettop(L);
+            auto& core     = DovahKitScriptVMCore::get();
+            int   argcount = lua_gettop(L);
             for (int i = 2; i <= argcount; ++i) {
-               auto* ia = wrapper_from_stack<wrappers::ui::table_view_cell>(L, i);
-               if (ia) {
-                  args.push_back(QVariant());
+               if (auto* ia = wrapper_from_stack<wrappers::ui::table_view_cell>(L, i)) {
                   assert(ia->model_observer);
                   items.push_back(ia->model_observer->item());
-               } else {
-                  args.push_back(core.variant_from_lua(i));
-                  items.push_back(nullptr);
+                  roles.push_back(role_map_t());
+                  continue;
                }
+               auto type = lua_type(L, i);
+               if (type == LUA_TTABLE) {
+                  auto e = wrappers::ui::table_view_cell::moph_handlers.extract(L, i);
+                  roles.push_back(e);
+                  items.push_back(nullptr);
+                  continue;
+               }
+               role_map_t e;
+               e[Qt::DisplayRole] = core.variant_from_lua(i);
+               roles.push_back(e);
+               items.push_back(nullptr);
             }
          }
+         //
+         // We've extracted the Lua arguments. Now, let's pass them in.
+         //
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [widget, args, items]() { // do NOT pass (args) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         task->handler = [widget, roles, items]() { // do NOT pass (args) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
-            if (model->rowCount() >= max_wrappable_word_count)
+            if (model->rowCount() >= max_wrappable_word_count) // safety measure for large tables
                disable_word_wrap_without_changing_truncation(widget);
             //
-            assert(args.size() == items.size());
-            int size = args.size();
+            assert(roles.size() == items.size());
+            int size = roles.size();
             QList<QStandardItem*> to_append;
             to_append.reserve(size);
             for (int i = 0; i < size; ++i) {
                auto* item = items[i];
+               auto& data = roles[i];
                if (!item) {
                   item = new QStandardItem();
-                  item->setData(args[i], Qt::DisplayRole);
+                  for (auto it = data.begin(); it != data.end(); ++it)
+                     item->setData(it.value(), it.key());
                }
                to_append.push_back(item);
             }

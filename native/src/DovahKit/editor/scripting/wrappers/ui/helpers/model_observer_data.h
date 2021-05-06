@@ -11,16 +11,13 @@ namespace editor_script::helpers {
 
 namespace editor_script::moph {
    namespace util {
-      extern void default_apply_to_item_function(QStandardItem&, int role, const QVariant&);
-      extern void default_apply_to_span_function(ObservableStandardItemModel&, Qt::Orientation, int pos, int role, const QVariant&);
-
       extern int getter(lua_State* L);
       extern int setter(lua_State* L);
    }
 
    struct model_observer_property_handler {
       using push_function_t      = int(*)(lua_State*, const QVariant&); // return number of values pushed to the Lua stack
-      using pull_function_t      = QVariant(*)(lua_State*, int); // int argument is Lua stack pos
+      using pull_function_t      = QVariant(*)(lua_State*, int); // int argument is Lua stack pos. feel free to throw Lua errors
       using transform_function_t = QVariant(*)(const QVariant& prior, const QVariant& changes);
 
       const char*          name; // the field name we want to expose to Lua
@@ -38,6 +35,8 @@ namespace editor_script::moph {
 
    class handler_set : public std::vector<model_observer_property_handler> {
       public:
+         using role_map_t = QMap<Qt::ItemDataRole, QVariant>;
+      public:
          using std::vector<model_observer_property_handler>::vector;
 
          const model_observer_property_handler* lookup(const char* name) const noexcept {
@@ -49,7 +48,7 @@ namespace editor_script::moph {
 
          void extend(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const noexcept;
 
-         QMap<Qt::ItemDataRole, QVariant> extract(lua_State* L, int table_pos) const noexcept;
+         role_map_t extract(lua_State* L, int table_pos) const noexcept;
    };
 
    extern int push_alignment(lua_State*, const QVariant&);
