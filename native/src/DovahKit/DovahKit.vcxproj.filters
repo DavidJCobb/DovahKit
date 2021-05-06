@@ -2128,6 +2128,8 @@
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="ui\_docs\FormPicker.txt" />
     <Text Include="editor\scripting\_docs\ui - object lifetimes.txt" />
+    <Text Include="editor\scripting\_docs\ui - model observer property handlers.txt" />
+    <Text Include="editor\scripting\_docs\ui - model observers.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt">

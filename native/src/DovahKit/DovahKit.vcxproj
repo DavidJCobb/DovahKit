@@ -837,6 +837,8 @@
     <Text Include="editor\scripting\_docs\abstract.txt" />
     <Text Include="editor\scripting\_docs\case studies.txt" />
     <Text Include="editor\scripting\_docs\native classes.txt" />
+    <Text Include="editor\scripting\_docs\ui - model observer property handlers.txt" />
+    <Text Include="editor\scripting\_docs\ui - model observers.txt" />
     <Text Include="editor\scripting\_docs\ui - object lifetimes.txt" />
     <Text Include="editor\scripting\_docs\ui.txt" />
     <Text Include="editor\scripting\_docs\why wrappers aren%27t nested.txt" />

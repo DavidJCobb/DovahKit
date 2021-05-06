@@ -25,8 +25,9 @@ namespace {
       using moph_t = moph::model_observer_property_handler;
       
       static const moph::handler_set handlers = {{
-         moph_t{ "text",       Qt::ItemDataRole::DisplayRole,    moph::push_string, moph::pull_string },
-         moph_t{ "text_color", Qt::ItemDataRole::ForegroundRole, moph::push_color,  moph::pull_color },
+         moph_t{ "alignment",  Qt::ItemDataRole::TextAlignmentRole, moph::push_alignment, moph::pull_alignment, moph::transform_alignment },
+         moph_t{ "text",       Qt::ItemDataRole::DisplayRole,       moph::push_string,    moph::pull_string },
+         moph_t{ "text_color", Qt::ItemDataRole::ForegroundRole,    moph::push_color,     moph::pull_color,     moph_t::default_transform, true },
       }};
    }
 

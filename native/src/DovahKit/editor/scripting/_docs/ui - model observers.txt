@@ -66,7 +66,7 @@ table, you will be left with the range [?, 5].
 Moreover, if your goal  is to be able to track entire rows  and columns, then a 
 pair of QPMIs will fall short when new  rows or columns are inserted. If you're 
 working with a table view containing four rows and five columns, you can try to 
-track Row 2 by generating  a pair of QPMIs for [2, 1]  and [2, 5], but if a new 
+track Row 2 by generating  a pair of QPMIs for (2, 1)  and (2, 5), but if a new 
 column  is then appended or prepended outside  of that range, your  QPMIs won't 
 include it.
 

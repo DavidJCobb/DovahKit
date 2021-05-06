@@ -11,22 +11,29 @@ namespace editor_script::helpers {
 
 namespace editor_script::moph {
    namespace util {
+      extern void default_apply_to_item_function(QStandardItem&, int role, const QVariant&);
+      extern void default_apply_to_span_function(ObservableStandardItemModel&, Qt::Orientation, int pos, int role, const QVariant&);
+
       extern int getter(lua_State* L);
       extern int setter(lua_State* L);
    }
 
    struct model_observer_property_handler {
-      using push_function_t = int(*)(lua_State*, const QVariant&); // return number of values pushed to the Lua stack
-      using pull_function_t = QVariant(*)(lua_State*, int); // int argument is Lua stack pos
+      using push_function_t      = int(*)(lua_State*, const QVariant&); // return number of values pushed to the Lua stack
+      using pull_function_t      = QVariant(*)(lua_State*, int); // int argument is Lua stack pos
+      using transform_function_t = QVariant(*)(const QVariant& prior, const QVariant& changes);
 
-      const char*      name; // the field name we want to expose to Lua
-      Qt::ItemDataRole role;
-      push_function_t  push; // push a value into Lua
-      pull_function_t  pull; // pull a value from Lua
+      const char*          name; // the field name we want to expose to Lua
+      Qt::ItemDataRole     role;
+      push_function_t      push; // push a value into Lua
+      pull_function_t      pull; // pull a value from Lua
+      transform_function_t transform = nullptr; // optional function for if we want to modify an existing value rather than overwrite it
       //
       bool clear_if_invalid = false;
 
       inline constexpr bool is_valid() const noexcept { return this->name && (int)this->role >= 0; }
+
+      static constexpr const transform_function_t default_transform = nullptr;
    };
 
    class handler_set : public std::vector<model_observer_property_handler> {
@@ -47,6 +54,7 @@ namespace editor_script::moph {
 
    extern int push_alignment(lua_State*, const QVariant&);
    extern QVariant pull_alignment(lua_State*, int stack_pos);
+   extern QVariant transform_alignment(const QVariant& prior, const QVariant& changes);
 
    extern int push_color(lua_State*, const QVariant&);
    extern QVariant pull_color(lua_State*, int stack_pos);

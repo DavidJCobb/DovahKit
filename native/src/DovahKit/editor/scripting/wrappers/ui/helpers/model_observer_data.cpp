@@ -71,6 +71,10 @@ namespace editor_script::helpers {
 
 namespace editor_script::moph {
    namespace util {
+      extern QVariant default_transform_function(const QVariant& prior, const QVariant& changes) {
+         return changes;
+      }
+
       extern int getter(lua_State* L) {
          // Upvalue 1: string:         class metatable key (used to type-check self and get a valid wrapper-object)
          // Upvalue 2: light userdata: the handler set
@@ -116,7 +120,7 @@ namespace editor_script::moph {
          auto& self = *wrap;
          if (!self.model_observer)
             return 0;
-         auto* moph = class_handler_set->lookup(property_name);
+         const auto* moph = class_handler_set->lookup(property_name);
          if (!moph) {
             return luaL_error(L, "property `%1` is not available here", property_name);
          }
@@ -126,7 +130,46 @@ namespace editor_script::moph {
                return luaL_error(L, "the value is invalid"); // TODO: can we report specific errors?
             }
          }
-         helpers::set_model_items_data(self.model_observer, moph->role, value);
+         //
+         auto* task     = new tasks::s2m::lambda(false);
+         auto* observer = self.model_observer;
+         task->handler  = [observer, value, moph]() mutable {
+            int role = moph->role;
+            //
+            bool has_row = observer->row >= 0;
+            bool has_col = observer->col >= 0;
+            if (!has_row && !has_col)
+               return;
+            if (has_row && has_col) {
+               if (auto* item = observer->item()) {
+                  if (moph->transform) {
+                     auto prior = item->data(role);
+                     value = (moph->transform)(prior, value);
+                  }
+                  item->setData(value, role);
+               }
+               return;
+            }
+            auto* model = observer->model;
+            if (!model)
+               return;
+            Qt::Orientation orientation;
+            int pos;
+            if (has_row) {
+               pos = observer->row;
+               orientation = ObservableStandardItemModelObserver::rowOrientation;
+            } else {
+               pos = observer->col;
+               orientation = ObservableStandardItemModelObserver::colOrientation;
+            }
+            if (moph->transform) {
+               auto prior = model->getDefaultDataForSpan(role, orientation, pos);
+               value = (moph->transform)(prior, value);
+            }
+            model->setDefaultDataForSpan(role, orientation, pos, value);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         //
          return 0;
       }
    }
@@ -169,7 +212,7 @@ namespace editor_script::moph {
 
    extern int push_alignment(lua_State* L, const QVariant& v) {
       std::string out;
-      editor_script::util::ui::alignment_to_string(v.value<QFlags<Qt::AlignmentFlag>>(), out);
+      editor_script::util::ui::alignment_to_string((Qt::Alignment)v.value<Qt::Alignment::Int>(), out);
       lua_pushstring(L, out.c_str());
       return 1;
    }
@@ -179,14 +222,40 @@ namespace editor_script::moph {
       bool h_valid = false;
       bool v_valid = false;
       auto align   = editor_script::util::ui::alignment_from_string(lua_tostring(L, stack_pos), h, v, h_valid, v_valid);
-      //
-      // TODO: How do we support "unchanged" here?
+      if (!h_valid && _stricmp(h.c_str(), "unchanged") != 0) {
+         // TODO: warn: unrecognized
+      }
+      if (!v_valid && _stricmp(v.c_str(), "unchanged") != 0) {
+         // TODO: warn: unrecognized
+      }
       // 
       // TODO: How do we report warnings or errors here? In this case, unrecognized alignment values should 
       //       report an error. (Note that the above function does not recognize "unchanged" and this is by 
       //       design.)
       //
-      return QVariant::fromValue<QFlags<Qt::AlignmentFlag>>(align);
+      return QVariant::fromValue<Qt::Alignment::Int>(align);
+   }
+   extern QVariant transform_alignment(const QVariant& existing, const QVariant& changes) {
+      if (!existing.isValid() && !changes.isValid())
+         return QVariant();
+      Qt::Alignment prior = (Qt::Alignment) existing.value<Qt::Alignment::Int>();
+      Qt::Alignment after = (Qt::Alignment) changes.value<Qt::Alignment::Int>();
+      Qt::Alignment out = after;
+      auto ph = prior & Qt::AlignHorizontal_Mask;
+      auto pv = prior & Qt::AlignVertical_Mask;
+      auto ah = after & Qt::AlignHorizontal_Mask;
+      auto av = after & Qt::AlignVertical_Mask;
+      if (!ah)
+         out |= ph;
+      if (!av) {
+         out |= pv;
+         if (!pv && ah) // use a default, but not if the string was "unchanged unchanged"
+            out |= Qt::AlignVCenter; // this default is suitable for QTableView; don't know if it'll work for other model/view widgets
+      }
+      if (!out) {
+         return QVariant(); // handle "unchanged unchanged"
+      }
+      return QVariant::fromValue<Qt::Alignment::Int>(out);
    }
 
    extern int push_color(lua_State* L, const QVariant& v) {
