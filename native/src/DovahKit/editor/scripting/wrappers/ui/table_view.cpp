@@ -57,6 +57,33 @@ namespace {
       widget->verticalHeader()->setSectionResizeMode(QHeaderView::Interactive);
       widget->setProperty("Lua word wrap", false);
    }
+
+   void _extract_cell_arg_list(lua_State* L, int first, QVector<editor_script::moph::handler_set::role_map_t>& roles, QVector<QStandardItem*>& items) {
+      using namespace editor_script;
+
+      auto& core = DovahKitScriptVMCore::get();
+      int   argcount = lua_gettop(L);
+      for (int i = first; i <= argcount; ++i) {
+         if (auto* ia = wrapper_from_stack<wrappers::ui::table_view_cell>(L, i)) {
+            assert(ia->model_observer);
+            items.push_back(ia->model_observer->item());
+            roles.push_back(moph::handler_set::role_map_t());
+            continue;
+         }
+         auto type = lua_type(L, i);
+         if (type == LUA_TTABLE) {
+            auto e = wrappers::ui::table_view_cell::moph_handlers.extract(L, i);
+            roles.push_back(e);
+            items.push_back(nullptr);
+            continue;
+         }
+         moph::handler_set::role_map_t e;
+         e[Qt::DisplayRole] = core.variant_from_lua(i);
+         roles.push_back(e);
+         items.push_back(nullptr);
+      }
+      assert(roles.size() == items.size());
+   }
 }
 
 #pragma region Collection: "rows"
@@ -229,6 +256,43 @@ namespace {
    namespace _methods {
       using role_map_t = moph::handler_set::role_map_t;
 
+      luastackchange_t append_column(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         //
+         // This function is designed in mimicry of the append-row column.
+         //
+         QVector<role_map_t>     roles;
+         QVector<QStandardItem*> items;
+         _extract_cell_arg_list(L, 2, roles, items);
+         //
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget, roles, items]() { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+            auto* proxy = (QSortFilterProxyModel*) widget->model();
+            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+            //
+            assert(roles.size() == items.size());
+            int size = roles.size();
+            QList<QStandardItem*> to_append;
+            to_append.reserve(size);
+            for (int i = 0; i < size; ++i) {
+               auto* item = items[i];
+               auto& data = roles[i];
+               if (!item) {
+                  item = new QStandardItem();
+                  for (auto it = data.begin(); it != data.end(); ++it)
+                     item->setData(it.value(), it.key());
+               }
+               to_append.push_back(item);
+            }
+            model->appendColumn(to_append);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         //
+         return 0;
+      }
       luastackchange_t append_row(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -249,29 +313,7 @@ namespace {
          //
          QVector<role_map_t>     roles;
          QVector<QStandardItem*> items;
-         {
-            auto& core     = DovahKitScriptVMCore::get();
-            int   argcount = lua_gettop(L);
-            for (int i = 2; i <= argcount; ++i) {
-               if (auto* ia = wrapper_from_stack<wrappers::ui::table_view_cell>(L, i)) {
-                  assert(ia->model_observer);
-                  items.push_back(ia->model_observer->item());
-                  roles.push_back(role_map_t());
-                  continue;
-               }
-               auto type = lua_type(L, i);
-               if (type == LUA_TTABLE) {
-                  auto e = wrappers::ui::table_view_cell::moph_handlers.extract(L, i);
-                  roles.push_back(e);
-                  items.push_back(nullptr);
-                  continue;
-               }
-               role_map_t e;
-               e[Qt::DisplayRole] = core.variant_from_lua(i);
-               roles.push_back(e);
-               items.push_back(nullptr);
-            }
-         }
+         _extract_cell_arg_list(L, 2, roles, items);
          //
          // We've extracted the Lua arguments. Now, let's pass them in.
          //
@@ -318,6 +360,98 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
          DovahKitScriptVMCore::get().zombify_all_invalid_model_observers();
+         return 0;
+      }
+      luastackchange_t insert_column(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int isnum;
+         int insert_at = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "integer expected");
+         if (--insert_at < 0) {
+            luaL_argerror(L, 2, "column numbers start at 1");
+         }
+         //
+         QVector<role_map_t>     roles;
+         QVector<QStandardItem*> items;
+         _extract_cell_arg_list(L, 3, roles, items);
+         //
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(true);
+         task->handler = [widget, roles, items, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+            auto* proxy = (QSortFilterProxyModel*) widget->model();
+            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+            //
+            assert(roles.size() == items.size());
+            int size = roles.size();
+            QList<QStandardItem*> to_append;
+            to_append.reserve(size);
+            for (int i = 0; i < size; ++i) {
+               auto* item = items[i];
+               auto& data = roles[i];
+               if (!item) {
+                  item = new QStandardItem();
+                  for (auto it = data.begin(); it != data.end(); ++it)
+                     item->setData(it.value(), it.key());
+               }
+               to_append.push_back(item);
+            }
+            int cc = model->columnCount();
+            if (insert_at > cc)
+               insert_at = cc;
+            model->insertColumn(insert_at, to_append);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         return 0;
+      }
+      luastackchange_t insert_row(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int isnum;
+         int insert_at = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "integer expected");
+         if (--insert_at < 0) {
+            luaL_argerror(L, 2, "row numbers start at 1");
+         }
+         //
+         QVector<role_map_t>     roles;
+         QVector<QStandardItem*> items;
+         _extract_cell_arg_list(L, 3, roles, items);
+         //
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(true);
+         task->handler = [widget, roles, items, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+            auto* proxy = (QSortFilterProxyModel*) widget->model();
+            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+            if (model->rowCount() >= max_wrappable_word_count) // safety measure for large tables
+               disable_word_wrap_without_changing_truncation(widget);
+            //
+            assert(roles.size() == items.size());
+            int size = roles.size();
+            QList<QStandardItem*> to_append;
+            to_append.reserve(size);
+            for (int i = 0; i < size; ++i) {
+               auto* item = items[i];
+               auto& data = roles[i];
+               if (!item) {
+                  item = new QStandardItem();
+                  for (auto it = data.begin(); it != data.end(); ++it)
+                     item->setData(it.value(), it.key());
+               }
+               to_append.push_back(item);
+            }
+            int rc = model->rowCount();
+            if (insert_at > rc)
+               insert_at = rc;
+            model->insertRow(insert_at, to_append);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
          return 0;
       }
    }
@@ -773,8 +907,11 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "append_row", &_methods::append_row },
-      { "clear",      &_methods::clear },
+      { "append_column", &_methods::append_column },
+      { "append_row",    &_methods::append_row },
+      { "clear",         &_methods::clear },
+      { "insert_column", &_methods::insert_column },
+      { "insert_row",    &_methods::insert_row },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "alternate_row_colors", &_getters::alternate_row_colors },
