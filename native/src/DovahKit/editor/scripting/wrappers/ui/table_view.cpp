@@ -146,9 +146,7 @@ namespace {
             auto* task = new tasks::s2m::ui_read_lambda();
             task->handler = [&self, row, &observer]() {
                auto& model = get_model(self);
-               auto* root  = model.invisibleRootItem();
-               auto* item  = root->child(row);
-               if (!item)
+               if (row < 0 || row >= model.rowCount())
                   return;
                observer = model.getOrCreateRegisteredObserver(QModelIndex(), model_t::rowOrientation, row);
             };
@@ -227,9 +225,7 @@ namespace {
             auto* task = new tasks::s2m::ui_read_lambda();
             task->handler = [&self, col, &observer]() {
                auto& model = get_model(self);
-               auto* root  = model.invisibleRootItem();
-               auto* item  = root->child(col);
-               if (!item)
+               if (col < 0 || col >= model.columnCount())
                   return;
                observer = model.getOrCreateRegisteredObserver(QModelIndex(), model_t::colOrientation, col);
             };
@@ -881,6 +877,7 @@ namespace {
          auto*         task    = new tasks::s2m::lambda(true);
          task->handler = [&created]() {
             created = new wrapped_type();
+            created->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
             created->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows); // sensible defaults
             created->setCornerButtonEnabled(false); // sensible defaults
             auto* vh = created->verticalHeader();

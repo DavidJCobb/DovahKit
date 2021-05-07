@@ -74,10 +74,6 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
       auto* confirm = new ScriptWindowHyperlinkConfirmDialog(text, opener ? opener : this);
       confirm->open();
    });
-   //
-   // TODO: Closing the window should pop a confirmation prompt asking the user whether they want to terminate any currently-running script.
-   // Anything that force-closes the window should force-terminate the script.
-   //
    this->_onScriptStartStop(false);
 }
 void EditorScriptWindow::_onScriptStartStop(bool script_running) {
@@ -89,13 +85,21 @@ void EditorScriptWindow::_onScriptStartStop(bool script_running) {
 }
 
 void EditorScriptWindow::closeEvent(QCloseEvent* event) {
+   event->ignore();
    //
-   // TODO: Confirmation dialog before closing; call event->ignore() if the 
-   // user decides not to close
+   auto& vm = DovahKitScriptVM::get();
+   if (!vm.is_running()) {
+      event->accept();
+      return;
+   }
    //
-   // TODO: Investigate pausing the script while that confirmation dialog 
-   // is open
-   //
-   DovahKitScriptVM::get().abort();
-   event->accept();
+   auto confirm = QMessageBox::question(this, "Abort the script?", "A script is currently running. Do you want to force it to stop?", QMessageBox::Yes | QMessageBox::No);
+   if (confirm == QMessageBox::Yes) {
+      //
+      // TODO: Investigate pausing the script while this confirmation dialog 
+      // is open
+      //
+      DovahKitScriptVM::get().abort();
+      event->accept();
+   }
 }
