@@ -162,6 +162,64 @@ namespace widget_lua {
          //
          return 0;
       }
+      luastackchange_t map_logical_index_to_proxy(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int isnum;
+         int input = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "integer expected");
+         if (--input < 0)
+            luaL_argerror(L, 2, "items are numbered from 1");
+         //
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(true);
+         int   result  = 0;
+         task->handler = [widget, input, &result]() {
+            auto* proxy = (QSortFilterProxyModel*) widget->model();
+            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+            auto  qmi   = model->index(input, 0);
+            result = proxy->mapFromSource(qmi).row();
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         ++result;
+         if (result > 0)
+            lua_pushinteger(L, result);
+         else
+            lua_pushnil(L);
+         return 1;
+      }
+      luastackchange_t map_proxy_index_to_logical(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int isnum;
+         int input = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "integer expected");
+         if (--input < 0)
+            luaL_argerror(L, 2, "items are numbered from 1");
+         //
+         auto* widget  = (wrapped_type*) self.widget;
+         auto* task    = new tasks::s2m::lambda(true);
+         int   result  = 0;
+         task->handler = [widget, input, &result]() {
+            auto* proxy = (QSortFilterProxyModel*) widget->model();
+            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
+            auto  qmi   = proxy->index(input, 0);
+            result = proxy->mapToSource(qmi).row();
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         ++result;
+         if (result > 0)
+            lua_pushinteger(L, result);
+         else
+            lua_pushnil(L);
+         return 1;
+      }
       luastackchange_t remove_item(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          //
@@ -416,9 +474,11 @@ namespace widget_lua {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_methods = {
-      { "append_item", &widget_lua::_methods::append_item },
-      { "clear",       &widget_lua::_methods::clear },
-      { "remove_item", &widget_lua::_methods::remove_item },
+      { "append_item",                &widget_lua::_methods::append_item },
+      { "clear",                      &widget_lua::_methods::clear },
+      { "map_logical_index_to_proxy", &widget_lua::_methods::map_logical_index_to_proxy },
+      { "map_proxy_index_to_logical", &widget_lua::_methods::map_proxy_index_to_logical },
+      { "remove_item",                &widget_lua::_methods::remove_item },
    };
    /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_getters = {
       { "items",          &widget_lua::_getters::items },
