@@ -539,6 +539,29 @@ namespace {
          lua_pushboolean(L, result);
          return 1;
       }
+      luastackchange_t min_column_width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result = -1;
+         {
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* widget  = (wrapped_type*)self.widget;
+            task->handler = [widget, &result]() {
+               auto* header = widget->horizontalHeader();
+               if (!header)
+                  return;
+               result = header->minimumSectionSize();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (result < 0)
+            lua_pushnil(L);
+         else
+            lua_pushinteger(L, result);
+         return 1;
+      }
       luastackchange_t rows(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -783,6 +806,26 @@ namespace {
          editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QTableView::setCornerButtonEnabled, value);
          return 0;
       }
+      luastackchange_t min_column_width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int isnum;
+         int width = lua_tointegerx(L, 2, &isnum);
+         if (isnum) {
+            luaL_argcheck(L, width >= 0, 2, "negative values are not valid here");
+         } else {
+            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            width = -1;
+         }
+         auto* task    = new tasks::s2m::lambda(false);
+         auto* widget  = (wrapped_type*)self.widget;
+         task->handler = [widget, width]() {
+            auto* header = widget->horizontalHeader();
+            if (header)
+               header->setMinimumSectionSize(width);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t selection_mode(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
@@ -914,6 +957,7 @@ namespace {
             created->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
             created->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows); // sensible defaults
             created->setCornerButtonEnabled(false); // sensible defaults
+            created->horizontalHeader()->setStretchLastSection(true);
             auto* vh = created->verticalHeader();
             vh->setDefaultSectionSize(0); // get rid of weird padding
             vh->setHidden(true); // sensible defaults
@@ -951,6 +995,7 @@ namespace editor_script::wrappers::ui {
       { "column_headers",       &_getters::column_headers },
       { "columns",              &_getters::columns },
       { "has_corner_button",    &_getters::has_corner_button },
+      { "min_column_width",     &_getters::min_column_width },
       { "rows",                 &_getters::rows },
       { "selection",            &_getters::selection },
       { "selection_mode",       &_getters::selection_mode },
@@ -965,6 +1010,7 @@ namespace editor_script::wrappers::ui {
       { "alternate_row_colors", &_setters::alternate_row_colors },
       { "column_headers",       &_setters::column_headers },
       { "has_corner_button",    &_setters::has_corner_button },
+      { "min_column_width",     &_setters::min_column_width },
       { "selection_mode",       &_setters::selection_mode },
       { "selection_type",       &_setters::selection_type },
       { "show_column_headers",  &_setters::show_column_headers },
