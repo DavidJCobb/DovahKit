@@ -58,6 +58,8 @@ namespace editor_script {
          return wrappers::ui::radio_button::metatable_key;
       if (qobject_cast<QTableView*>(widget))
          return wrappers::ui::table_view::metatable_key;
+      if (qobject_cast<QTabWidget*>(widget))
+         return wrappers::ui::tabbox::metatable_key;
       if (qobject_cast<FormPicker*>(widget))
          return wrappers::ui::formpicker::metatable_key;
       return wrappers::ui::widget::metatable_key; // TODO: use a generic widget metatable

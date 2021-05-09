@@ -18,7 +18,9 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QTableView>
+#include <QTabWidget>
 #include "../../../helpers/qt/combobox.h" // for events
+#include "../wrappers/ui/tabbox/tab.h" // special-case
 
 #include <QSortFilterProxyModel>
 #include "../wrappers/ui/table_view/cell.h"
@@ -29,7 +31,7 @@ namespace {
    struct _event_widget {
       const QMetaObject* const meta;
       std::vector<const char*> events;
-      //
+      
       _event_widget(const QMetaObject* const m, std::initializer_list<const char*> e) : meta(m), events(e) {}
    };
    std::array _events_by_widget = {
@@ -73,6 +75,11 @@ namespace {
          }
       ),
       _event_widget(&QTableView::staticMetaObject,
+         {
+            "OnSelectionChanged",
+         }
+      ),
+      _event_widget(&QTabWidget::staticMetaObject,
          {
             "OnSelectionChanged",
          }
@@ -279,6 +286,20 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
          );
          return;
       }
+   } else if (auto* casted = qobject_cast<QTabWidget*>(&widget)) {
+      if (_stricmp(event_name, "OnSelectionChanged") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted, &QTabWidget::currentChanged, &vm,
+               [casted, ln](int index) {
+                  QWidget* widget = casted->widget(index);
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnSelectionChanged", ln.c_str(), { QVariant::fromValue<QObject*>(widget) });
+               }
+            ),
+            widget, event_name, listener_name
+         );
+         return;
+      }
    }
 }
 
@@ -472,6 +493,18 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
                ++argcount;
             }
             continue;
+         }
+         if (ut == qMetaTypeId<QObject*>()) {
+            auto* value = p.value<QObject*>();
+            auto* arg   = qobject_cast<QWidget*>(value);
+            if (arg) {
+               using namespace editor_script;
+               //
+               wrapper out;
+               auto* mt = wrap_widget(out, arg);
+               argcount += userdata_intfc.push(L, out, mt);
+               continue;
+            }
          }
          argcount += cobb::lua::push_qt_variant(L, p);
       }

@@ -93,6 +93,7 @@ namespace {
             task->handler = [widget, &name, &body]() {
                body = new QWidget;
                DovahKitScriptVMCore::get().set_up_new_scripted_widget(body);
+               override_widget_metatable(body, wrappers::ui::tabbox_tab::metatable_key);
                widget->addTab(body, name);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -124,6 +125,7 @@ namespace {
             task->handler = [widget, at, &name, &body]() {
                body = new QWidget;
                DovahKitScriptVMCore::get().set_up_new_scripted_widget(body);
+               override_widget_metatable(body, wrappers::ui::tabbox_tab::metatable_key);
                widget->insertTab(at, body, name);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);

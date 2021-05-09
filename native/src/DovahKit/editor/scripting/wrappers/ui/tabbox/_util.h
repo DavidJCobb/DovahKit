@@ -1,14 +1,15 @@
 #pragma once
 #include <type_traits>
+#include "../../../../../helpers/qt/traversal.h"
 
 namespace editor_script::util::tabbox {
-   template<class W, typename R> R get_tab_property(const W* widget, bool& found, R (QTabWidget::* tabbox_func)(int) const) {
+   template<class W, typename R> R get_tab_property(W* widget, bool& found, R (QTabWidget::* tabbox_func)(int) const) {
       R result;
       found = false;
       {
          auto* task = new tasks::s2m::ui_read_lambda();
-         task->handler = [widget, func, &result]() {
-            auto* parent = qobject_cast<QTabWidget*>(widget->parentWidget());
+         task->handler = [widget, &found, tabbox_func, &result]() {
+            auto* parent = (QTabWidget*) cobb::qt::nearest_widget_of_type(widget, QTabWidget::staticMetaObject);
             if (!parent)
                return;
             found = true;
@@ -27,10 +28,10 @@ namespace editor_script::util::tabbox {
    template<class W, class T> void set_tab_property(W* widget, void (QTabWidget::* tabbox_func)(int, const T&), const T& value) {
       auto* task = new tasks::s2m::lambda(false);
       task->handler = [widget, value, tabbox_func]() {
-         auto* parent = qobject_cast<QTabWidget*>(widget->parentWidget());
+         auto* parent = (QTabWidget*)cobb::qt::nearest_widget_of_type(widget, QTabWidget::staticMetaObject);
          if (!parent)
             return;
-         result = (parent->*tabbox_func)(parent->indexOf(widget));
+         (parent->*tabbox_func)(parent->indexOf(widget), value);
       };
       DovahKitScriptVMUITaskConduit::get().send_message(*task);
    }
@@ -43,7 +44,7 @@ namespace editor_script::util::tabbox {
    template<class W, class T, class U> requires (std::is_convertible_v<T, U> && !std::is_reference_v<T>) void set_tab_property(W* widget, void (QTabWidget::* tabbox_func)(int, T), U value) {
       auto* task = new tasks::s2m::lambda(false);
       task->handler = [widget, value, tabbox_func]() {
-         auto* parent = qobject_cast<QTabWidget*>(widget->parentWidget());
+         auto* parent = (QTabWidget*)cobb::qt::nearest_widget_of_type(widget, QTabWidget::staticMetaObject);
          if (!parent)
             return;
          (parent->*tabbox_func)(parent->indexOf(widget), value);

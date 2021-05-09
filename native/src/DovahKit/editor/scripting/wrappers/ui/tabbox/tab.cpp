@@ -22,15 +22,7 @@ namespace {
    namespace _methods {
    }
    namespace _getters {
-      luastackchange_t body(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.widget)
-            return 0;
-         wrapper out;
-         auto* mt = wrap_widget(out, self.widget);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
-      }
-      luastackchange_t enabled(lua_State* L) {
+      luastackchange_t tab_enabled(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
@@ -41,7 +33,7 @@ namespace {
          lua_pushboolean(L, result);
          return 1;
       }
-      luastackchange_t label(lua_State* L) {
+      luastackchange_t tab_name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
@@ -52,7 +44,7 @@ namespace {
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
-      luastackchange_t tooltip(lua_State* L) {
+      luastackchange_t tab_tooltip(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
@@ -63,7 +55,7 @@ namespace {
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
-      luastackchange_t whats_this(lua_State* L) {
+      luastackchange_t tab_whats_this(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
@@ -76,7 +68,7 @@ namespace {
       }
    }
    namespace _setters {
-      luastackchange_t enabled(lua_State* L) {
+      luastackchange_t tab_enabled(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
          if (!self.widget)
@@ -85,7 +77,7 @@ namespace {
          editor_script::util::tabbox::set_tab_property(self.widget, &QTabWidget::setTabEnabled, value);
          return 0;
       }
-      luastackchange_t label(lua_State* L) {
+      luastackchange_t tab_name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!self.widget)
@@ -94,7 +86,7 @@ namespace {
          editor_script::util::tabbox::set_tab_property(self.widget, &QTabWidget::setTabText, value);
          return 0;
       }
-      luastackchange_t tooltip(lua_State* L) {
+      luastackchange_t tab_tooltip(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!self.widget)
@@ -103,7 +95,7 @@ namespace {
          editor_script::util::tabbox::set_tab_property(self.widget, &QTabWidget::setTabToolTip, value);
          return 0;
       }
-      luastackchange_t whats_this(lua_State* L) {
+      luastackchange_t tab_whats_this(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!self.widget)
@@ -127,17 +119,16 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "body",       &_getters::body },
-      { "enabled",    &_getters::enabled },
-      { "label",      &_getters::label },
-      { "tooltip",    &_getters::tooltip },
-      { "whats_this", &_getters::whats_this },
+      { "tab_enabled",    &_getters::tab_enabled },
+      { "tab_name",       &_getters::tab_name },
+      { "tab_tooltip",    &_getters::tab_tooltip },
+      { "tab_whats_this", &_getters::tab_whats_this },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "enabled",    &_setters::enabled },
-      { "label",      &_setters::label },
-      { "tooltip",    &_setters::tooltip },
-      { "whats_this", &_setters::whats_this },
+      { "tab_enabled",    &_setters::tab_enabled },
+      { "tab_name",       &_setters::tab_name },
+      { "tab_tooltip",    &_setters::tab_tooltip },
+      { "tab_whats_this", &_setters::tab_whats_this },
    };
 
    /*static*/ void cls::setup(lua_State* L) {
