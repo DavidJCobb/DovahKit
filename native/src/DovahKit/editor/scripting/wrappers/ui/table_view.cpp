@@ -13,6 +13,7 @@
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
+#include "helpers/model_observer_data.h"
 #include "helpers/widget_properties.h"
 
 #include "table_view/row.h"
@@ -346,16 +347,7 @@ namespace {
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(true);
-         task->handler = [widget]() {
-            auto* proxy = (QSortFilterProxyModel*) widget->model();
-            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
-            model->removeRows(0, model->rowCount());
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         delete task;
-         DovahKitScriptVMCore::get().zombify_all_invalid_model_observers();
+         helpers::remove_items_from_model(self.widget, -2, -2);
          return 0;
       }
       luastackchange_t insert_column(lua_State* L) {
@@ -448,6 +440,48 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
          //
+         return 0;
+      }
+      luastackchange_t remove_column(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int   isnum;
+         int   col  = lua_tointegerx(L, 2, &isnum);
+         if (!isnum) {
+            auto* wrapper = wrapper_from_stack<wrappers::ui::table_view_col>(L, 2);
+            luaL_argcheck(L, wrapper != nullptr, 2, "expected an integer or table_view_col");
+            if (!wrapper->model_observer)
+               return 0;
+            col = wrapper->model_observer->col;
+            if (col == -1)
+               return 0;
+         } else {
+            luaL_argcheck(L, col > 0, 2, "table view columns are numbered from 1");
+         }
+         if (!self.widget)
+            return 0;
+         --col;
+         helpers::remove_items_from_model(self.widget, -2, col);
+         return 0;
+      }
+      luastackchange_t remove_row(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int   isnum;
+         int   row = lua_tointegerx(L, 2, &isnum);
+         if (!isnum) {
+            auto* wrapper = wrapper_from_stack<wrappers::ui::table_view_row>(L, 2);
+            luaL_argcheck(L, wrapper != nullptr, 2, "expected an integer or table_view_row");
+            if (!wrapper->model_observer)
+               return 0;
+            row = wrapper->model_observer->row;
+            if (row == -1)
+               return 0;
+         } else {
+            luaL_argcheck(L, row > 0, 2, "table view rows are numbered from 1");
+         }
+         if (!self.widget)
+            return 0;
+         --row;
+         helpers::remove_items_from_model(self.widget, row, -2);
          return 0;
       }
    }
@@ -909,6 +943,8 @@ namespace editor_script::wrappers::ui {
       { "clear",         &_methods::clear },
       { "insert_column", &_methods::insert_column },
       { "insert_row",    &_methods::insert_row },
+      { "remove_column", &_methods::remove_column },
+      { "remove_row",    &_methods::remove_row },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "alternate_row_colors", &_getters::alternate_row_colors },

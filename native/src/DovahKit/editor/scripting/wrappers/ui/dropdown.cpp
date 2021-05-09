@@ -15,6 +15,7 @@
 #include "../../../../helpers/qt/combobox.h"
 #include "../../../../helpers/lua/qt_variant.h"
 
+#include "helpers/model_observer_data.h"
 #include "helpers/widget_properties.h"
 
 /*
@@ -148,18 +149,7 @@ namespace widget_lua {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         auto* widget  = (wrapped_type*) self.widget;
-         auto* task    = new tasks::s2m::lambda(true);
-         task->handler = [widget]() {
-            auto* proxy = (QSortFilterProxyModel*) widget->model();
-            auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
-            model->removeRows(0, model->rowCount()); // QStandardItemModel::clear nukes headers; not relevant for comboboxes but significant for others, so best to make a habit of avoiding it
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         delete task;
-         //
-         DovahKitScriptVMCore::get().zombify_all_invalid_model_observers();
-         //
+         helpers::remove_items_from_model(self.widget, -2, -2);
          return 0;
       }
       luastackchange_t map_logical_index_to_proxy(lua_State* L) {
