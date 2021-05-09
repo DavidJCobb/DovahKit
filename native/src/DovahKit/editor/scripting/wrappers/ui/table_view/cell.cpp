@@ -13,8 +13,6 @@
 
 #include "../../../cross_thread_tasks/s2m/lambda.h"
 
-#include "cell.h"
-
 namespace {
    using namespace editor_script;
    using cls = wrappers::ui::table_view_cell;

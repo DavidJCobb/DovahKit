@@ -16,6 +16,8 @@ namespace editor_script {
       ui::radio_button::setup(L);
       ui::radio_group::setup(L);
       ui::spinbox::setup(L);
+      ui::tabbox::setup(L);
+         ui::tabbox_tab::setup(L);
       ui::table_view::setup(L);
          ui::table_view_row::setup(L);
          ui::table_view_col::setup(L);
