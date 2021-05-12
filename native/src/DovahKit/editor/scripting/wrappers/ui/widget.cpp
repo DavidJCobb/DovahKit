@@ -645,6 +645,11 @@ namespace editor_script::wrappers::ui {
       { "remove_event_listener", &_methods::remove_event_listener },
       { "set_layout",            &_methods::set_layout },
       { "set_layout_stretch_at", &_methods::set_layout_stretch_at },
+      //
+      // NOTE: When adding more member functions related  to the UI event system, be sure to 
+      //       also amend any Lua-side classes that take events but don't derive from widget 
+      //       e.g. radio_group.
+      //
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "enabled",        &_getters::enabled },

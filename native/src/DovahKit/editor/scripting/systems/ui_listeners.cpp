@@ -10,6 +10,7 @@
 #include "../wrapper_util.h"
 
 #include "../../../ui/generic/FormPicker.h"
+#include <QButtonGroup>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
@@ -27,68 +28,89 @@
 #include "../wrappers/ui/table_view/col.h"
 #include "../wrappers/ui/table_view/row.h"
 
+#include "../editor_script_core.h" // for DovahKitScriptVM
 namespace {
-   struct _event_widget {
+   inline static void _sanity_check_event_target(QObject& object) {
+      #if _DEBUG
+      assert(&object != &DovahKitScriptVMCore::get() && "Something has gone terribly wrong. Why are we using script VM internals as Lua-facing event targets?");
+      assert(&object != &DovahKitScriptVM::get()     && "Something has gone terribly wrong. Why are we using script VM internals as Lua-facing event targets?");
+      #endif
+   }
+}
+
+namespace {
+   struct _event_list_for_target_type {
       const QMetaObject* const meta;
       std::vector<const char*> events;
       
-      _event_widget(const QMetaObject* const m, std::initializer_list<const char*> e) : meta(m), events(e) {}
+      _event_list_for_target_type(const QMetaObject* const m, std::initializer_list<const char*> e) : meta(m), events(e) {}
    };
-   std::array _events_by_widget = {
-      _event_widget(&FormPicker::staticMetaObject,
+   std::array _events_by_target_type = {
+      _event_list_for_target_type(&FormPicker::staticMetaObject,
          {
             "OnChanged",
          }
       ),
-      _event_widget(&QCheckBox::staticMetaObject,
+      _event_list_for_target_type(&QButtonGroup::staticMetaObject,
          {
-            "OnChanged",
+            "OnSelectionChanged",
+         }
+      ),
+      _event_list_for_target_type(&QCheckBox::staticMetaObject,
+         {
+            "OnChanged", // Argument is the checkbox state as a string ("checked", "indeterminate", "unchecked").
             "OnToggled", // The same as OnChanged, but the argument is a boolean indicating whether the checkbox is checked.
          }
       ),
-      _event_widget(&QComboBox::staticMetaObject,
+      _event_list_for_target_type(&QComboBox::staticMetaObject,
          {
             "OnChanged", // The dropdown's selected logical index was changed through some cause other than the script directly setting it or the selected text.
          }
       ),
-      _event_widget(&QDoubleSpinBox::staticMetaObject,
+      _event_list_for_target_type(&QDoubleSpinBox::staticMetaObject,
          {
             "OnChanged", // The spinbox's value has been altered by the user. Fires instantly for increment/decrement buttons; for typing, works like the textbox OnChanged event.
          }
       ),
-      _event_widget(&QGroupBox::staticMetaObject,
+      _event_list_for_target_type(&QGroupBox::staticMetaObject,
          {
             "OnToggled",
          }
       ),
-      _event_widget(&QLineEdit::staticMetaObject,
+      _event_list_for_target_type(&QLineEdit::staticMetaObject,
          {
             "OnChanged",       // The textbox's value was previously altered, and the user hit Enter or moved focus away from the textbox.
             "OnInputRejected", // The textbox rejected input because it didn't validate or the max length would've been exceeded.
             "OnKeyPressed",    // The textbox's value was altered by a keypress.
          }
       ),
-      _event_widget(&QPushButton::staticMetaObject,
+      _event_list_for_target_type(&QPushButton::staticMetaObject,
          {
             "OnActivated",         // The button was clicked (or interacted with analogously via another input device).
             "OnCheckStateChanged", // The button is checkable and its check state changed.
          }
       ),
-      _event_widget(&QTableView::staticMetaObject,
+      _event_list_for_target_type(&QRadioButton::staticMetaObject,
+         {
+            "OnChanged", // Argument is the button state as a string ("checked", "unchecked").
+            "OnToggled", // The same as OnChanged, but the argument is a boolean indicating whether the button is checked.
+         }
+      ),
+      _event_list_for_target_type(&QTableView::staticMetaObject,
          {
             "OnSelectionChanged",
          }
       ),
-      _event_widget(&QTabWidget::staticMetaObject,
+      _event_list_for_target_type(&QTabWidget::staticMetaObject,
          {
             "OnSelectionChanged",
          }
       ),
    };
 
-   bool event_name_is_valid(const QWidget& widget, const char* event_name) {
+   bool event_name_is_valid(const QObject& widget, const char* event_name) {
       auto* mo = widget.metaObject();
-      for (auto& entry : _events_by_widget) {
+      for (auto& entry : _events_by_target_type) {
          if (!mo->inherits(entry.meta))
             continue;
          for (auto* name : entry.events) {
@@ -103,7 +125,9 @@ namespace {
    // Custom lambda struct, used as the slot handler for the Qt signal/slot connections we create 
    // when routing Qt events into Lua.
    template<typename... Args> struct _event_forwarding_lambda {
-      _event_forwarding_lambda(QWidget& w, const char* n, const char* l) : widget(w), event_name(n), listener_name(l) {}
+      _event_forwarding_lambda(QWidget& w, const char* n, const char* l) : widget(w), event_name(n), listener_name(l) {
+         _sanity_check_event_target(w);
+      }
 
       QWidget& widget;
       const std::string event_name;
@@ -117,15 +141,18 @@ namespace {
       }
    };
 }
-void DovahKitScriptUIListenerInterface::_connect_event(QMetaObject::Connection connection, QWidget& widget, const char* event_name, const char* listener_name) {
+void DovahKitScriptUIListenerInterface::_connect_event(QMetaObject::Connection connection, QObject& target, const char* event_name, const char* listener_name) {
    DovahKitScriptVMCore::require_script_thread();
+   _sanity_check_event_target(target);
+   //
    auto& vm    = DovahKitScriptVMCore::get();
-   auto& entry = vm.widgets.connections[&widget][event_name][listener_name];
+   auto& entry = vm.widgets.connections[&target][event_name][listener_name];
    QObject::disconnect(entry); // replace the existing listener, if any
    entry = connection;
 }
-void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const char* event_name, const char* listener_name) {
+void DovahKitScriptUIListenerInterface::_register_event(QObject& widget, const char* event_name, const char* listener_name) {
    DovahKitScriptVMCore::require_script_thread();
+   _sanity_check_event_target(widget);
    //
    // Runs on the script thread.
    //
@@ -133,6 +160,21 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
    if (auto* casted = qobject_cast<FormPicker*>(&widget)) {
       if (_stricmp(event_name, "OnChanged") == 0) {
          this->_connect_event(*casted, &FormPicker::formChanged, event_name, listener_name);
+         return;
+      }
+   } else if (auto* casted = qobject_cast<QButtonGroup*>(&widget)) {
+      if (_stricmp(event_name, "OnSelectionChanged") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted, QOverload<QAbstractButton*,bool>::of(&QButtonGroup::buttonToggled), &vm,
+               [casted, ln](QAbstractButton* button, bool checked) {
+                  if (!checked)
+                     return;
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnSelectionChanged", ln.c_str(), { QVariant::fromValue<QObject*>(button) });
+               }
+            ),
+            widget, event_name, listener_name
+         );
          return;
       }
    } else if (auto* casted = qobject_cast<QCheckBox*>(&widget)) {
@@ -228,6 +270,32 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
          this->_connect_event(*casted, &QPushButton::toggled, event_name, listener_name);
          return;
       }
+   } else if (auto* casted = qobject_cast<QRadioButton*>(&widget)) {
+      if (_stricmp(event_name, "OnChanged") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted, &QRadioButton::toggled, &vm,
+               [casted, ln](bool checked) {
+                  QString s = checked ? "checked" : "unchecked";
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { s });
+               }
+            ),
+            widget, event_name, listener_name
+            );
+         return;
+      }
+      if (_stricmp(event_name, "OnToggled") == 0) {
+         std::string ln = listener_name;
+         this->_connect_event(
+            QObject::connect(casted, &QRadioButton::toggled, &vm,
+               [casted, ln](bool checked) {
+                  DovahKitScriptUIListenerInterface::get().receive_event_from_main_thread(*casted, "OnToggled", ln.c_str(), { checked });
+               }
+            ),
+            widget, event_name, listener_name
+            );
+         return;
+      }
    } else if (auto* casted = qobject_cast<QTableView*>(&widget)) {
       if (_stricmp(event_name, "OnSelectionChanged") == 0) {
          std::string ln = listener_name;
@@ -303,8 +371,9 @@ void DovahKitScriptUIListenerInterface::_register_event(QWidget& widget, const c
    }
 }
 
-void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char* event_name, const char* listener_name, int listener_index) {
+void DovahKitScriptUIListenerInterface::add_listener(QObject& widget, const char* event_name, const char* listener_name, int listener_index) {
    DovahKitScriptVMCore::require_script_thread();
+   _sanity_check_event_target(widget);
    if (!event_name_is_valid(widget, event_name))
       return;
    //
@@ -347,8 +416,10 @@ void DovahKitScriptUIListenerInterface::add_listener(QWidget& widget, const char
    //
    lua_settop(L, start);
 }
-void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const char* event_name, const char* listener_name) {
+void DovahKitScriptUIListenerInterface::remove_listener(QObject& widget, const char* event_name, const char* listener_name) {
    DovahKitScriptVMCore::require_script_thread();
+   _sanity_check_event_target(widget);
+   //
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    //
@@ -390,8 +461,10 @@ void DovahKitScriptUIListenerInterface::remove_listener(QWidget& widget, const c
    //
    lua_settop(L, start);
 }
-void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
+void DovahKitScriptUIListenerInterface::remove_all_listeners(QObject& widget) {
    DovahKitScriptVMCore::require_script_thread();
+   _sanity_check_event_target(widget);
+   //
    auto* L     = this->vm.lua_vm;
    auto  start = lua_gettop(L);
    //
@@ -404,8 +477,9 @@ void DovahKitScriptUIListenerInterface::remove_all_listeners(QWidget& widget) {
    //
    lua_settop(L, start);
 }
-void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
+void DovahKitScriptUIListenerInterface::fire_event(QObject& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
    DovahKitScriptVMCore::require_script_thread();
+   _sanity_check_event_target(widget);
    constexpr bool double_check_stack = false;
    //
    auto* L     = this->vm.lua_vm;
@@ -513,7 +587,7 @@ void DovahKitScriptUIListenerInterface::fire_event(QWidget& widget, const char* 
    --this->vm.pending_ui_event_count;
 }
 
-void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QWidget& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
+void DovahKitScriptUIListenerInterface::receive_event_from_main_thread(QObject& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
    ++this->vm.pending_ui_event_count;
    //
    // Called by the main thread; sends a message to the script thread.

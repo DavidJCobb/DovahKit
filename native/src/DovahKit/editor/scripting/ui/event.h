@@ -8,12 +8,12 @@
 namespace editor_script {
    class ui_event {
       public:
-         QWidget& widget;
+         QObject& target;
          const std::string event_name;
          const std::string listener_name;
          const std::vector<QVariant> params;
 
-         ui_event(QWidget& w, const char* en, const char* ln, const std::vector<QVariant>& p) : widget(w), event_name(en), listener_name(ln), params(p) {}
+         ui_event(QObject& t, const char* en, const char* ln, const std::vector<QVariant>& p) : target(t), event_name(en), listener_name(ln), params(p) {}
    };
 
    struct ui_event_queue {
@@ -25,6 +25,6 @@ namespace editor_script {
          void process();            // script thread should call this to process pending events
          void push_back(ui_event*); // main thread should call this to send events to lua
 
-         void forget_about(QWidget&);
+         void forget_about(QObject&);
    };
 }

@@ -179,7 +179,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
             QVector<QWidget*>      widgets;
             QVector<QButtonGroup*> button_groups;
          } pending_deletion;
-         std::unordered_map<QWidget*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection;
+         std::unordered_map<QObject*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection; // can also hold event listeners for non-widgets
          int extant_widget_count = 0; // includes windows
       } widgets;
       struct {

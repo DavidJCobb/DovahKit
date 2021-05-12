@@ -2,6 +2,7 @@
 #include "../../systems/editor_script_inner_core.h"
 #include "../../systems/messaging.h"
 #include "../../systems/permissions.h"
+#include "../../systems/ui_listeners.h"
 #include "../../systems/userdata.h"
 
 #include <QAbstractButton>
@@ -17,6 +18,17 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
+      luastackchange_t on(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring  (L, 2), 2, "event name (string) expected");
+         luaL_argcheck(L, lua_isstring  (L, 3), 3, "listener name (string) expected");
+         luaL_argcheck(L, lua_isfunction(L, 4), 4, "listener (function) expected");
+         lua_settop(L, 4);
+         if (!self.button_group)
+            return 0;
+         DovahKitScriptUIListenerInterface::get().add_listener(*self.button_group, lua_tostring(L, 2), lua_tostring(L, 3), 4);
+         return 0;
+      }
       luastackchange_t remove(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* arg  = wrapper_from_stack<editor_script::wrappers::ui::radio_button>(L, 2);
@@ -34,6 +46,18 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
          //
+         return 0;
+      }
+      luastackchange_t remove_event_listener(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "event name (string) expected");
+         luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
+         lua_settop(L, 3);
+         if (!lua_isnoneornil(L, 3))
+            luaL_argcheck(L, lua_isstring(L, 3), 3, "listener name (string) expected");
+         if (!self.button_group)
+            return 0;
+         DovahKitScriptUIListenerInterface::get().remove_listener(*self.button_group, lua_tostring(L, 2), lua_tostring(L, 3));
          return 0;
       }
    }
@@ -110,7 +134,7 @@ namespace {
             id = lua_tointegerx(L, 2, &isnum);
             luaL_argcheck(L, isnum,   2, "integer expected");
             luaL_argcheck(L, id != 0, 2, "radio button IDs cannot be 0");
-            --id;
+            --id; // decrement to go from Lua to zero-indexed
          }
          if (!self.button_group)
             return 0;
@@ -128,7 +152,7 @@ namespace {
          delete task;
          //
          if (!success)
-            luaL_error(L, "this radio group doesn't have a radio button with ID %d", id);
+            luaL_error(L, "this radio group doesn't have a radio button with ID %d", id + 1); // increment to go from zero-indexed to Lua
          //
          return 0;
       }
@@ -165,7 +189,9 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "remove", &_methods::remove },
+      { "on",                    &_methods::on },
+      { "remove",                &_methods::remove },
+      { "remove_event_listener", &_methods::remove_event_listener },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "selected_button", &_getters::selected_button },

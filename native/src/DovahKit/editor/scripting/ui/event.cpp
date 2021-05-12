@@ -31,7 +31,7 @@ namespace editor_script {
       }
       auto& intfc = DovahKitScriptUIListenerInterface::get();
       for (auto* event : local) {
-         intfc.fire_event(event->widget, event->event_name.c_str(), event->listener_name.c_str(), event->params);
+         intfc.fire_event(event->target, event->event_name.c_str(), event->listener_name.c_str(), event->params);
          delete event;
       }
    }
@@ -40,15 +40,15 @@ namespace editor_script {
       this->list.push_back(e);
    }
 
-   void ui_event_queue::forget_about(QWidget& widget) {
+   void ui_event_queue::forget_about(QObject& target) {
       auto  guard = std::lock_guard(this->lock);
       auto& list  = this->list;
       list.erase(
          std::remove_if(
             list.begin(),
             list.end(),
-            [&widget](const ui_event* entry) {
-               return (&entry->widget == &widget);
+            [&target](const ui_event* entry) {
+               return (&entry->target == &target);
             }
          ),
          list.end()
