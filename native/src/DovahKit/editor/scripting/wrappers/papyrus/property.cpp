@@ -425,7 +425,7 @@ namespace {
          assert(script && "How did we manage to access a Papyrus property if we didn't manage to access its containing Papyrus script-object?");
          for (auto& p : script->properties)
             if (&p != prop && _stricmp(p.name.c_str(), name) == 0)
-               luaL_error(L, "the containing script already has a property named \"%s\"", name);
+               luaL_error(L, "the containing script already has a property named `%s`", name);
          //
          self.before_edit();
          prop->name = name;
@@ -445,7 +445,7 @@ namespace {
          std::string type = cobb::trim(lua_tostring(L, 2));
          size_t      size = type.size();
          if (size < 0)
-            luaL_error(L, "\"%s\" is not something Lua can recognize as a Papyrus typename", type.c_str());
+            luaL_error(L, "`%s` is not something Lua can recognize as a Papyrus typename", type.c_str());
          //
          auto typeval = papyrus_property_type::integer;
          bool match   = false;
@@ -457,12 +457,18 @@ namespace {
             }
          }
          if (!match)
-            luaL_error(L, "\"%s\" is not something Lua can recognize as a Papyrus typename", type.c_str());
+            luaL_error(L, "`%s` is not something Lua can recognize as a Papyrus typename", type.c_str());
          if (prop->type == typeval)
             return 0;
          //
          self.before_edit();
          prop->set_type(*self.form, typeval);
+         {  // Zombify any extant wrappers for the array, if its type has changed.
+            wrapper zombie = self;
+            zombie.append_part(editor_script::wrapper_part_types::papyrus_property_array_value);
+            zombie.is_collection = true;
+            DovahKitScriptVMUserdataInterface::get().remove(zombie);
+         }
          self.after_edit();
          return 0;
       }

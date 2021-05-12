@@ -25,7 +25,14 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
    void* light = instance.get_pertinent_pointer();
    //
    std::vector<int> refs_to_sever;
-   refs_to_sever.push_back(instance.lua_key);
+   if (instance.lua_key != LUA_NOREF)
+      //
+      // The instance can lack a Lua key if we're trying to zombify a wrapper "remotely," i.e. 
+      // rather than receiving a wrapper from Lua and zombifying it, we want to zombify a 
+      // wrapper that may or may not exist in Lua by constructing a wrapper on the stack and 
+      // then passing it into here.
+      //
+      refs_to_sever.push_back(instance.lua_key);
    //
    auto si_storage = start + 1;
    auto si_nk      = start + 2;
@@ -59,6 +66,7 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
       //
       lua_settop(L, si_nk);
       //
+      assert(other->lua_key != LUA_NOREF);
       if (!other || other->lua_key == instance.lua_key)
          continue;
       if (instance.is_in_same_collection(*other)) {
@@ -72,6 +80,9 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
          }
       } else if (other->is_descendant_of(instance)) {
          refs_to_sever.push_back(other->lua_key);
+      } else if (instance.lua_key == LUA_NOREF) {
+         if (instance.is_equal(other))
+            refs_to_sever.push_back(other->lua_key);
       }
    }
    //

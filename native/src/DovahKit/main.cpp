@@ -334,12 +334,6 @@
 //
 //           = Wrapper implementation
 //
-//              = Wrappers are now split into sub-lists based on their "pertinent pointer," 
-//                which will be a form_stub* for form data and a QWidget* for UI items. We 
-//                use light userdata, so the pointer itself is a key into the wrapper 
-//                storage. This means that if any pointers die (e.g. form deletion), we 
-//                need to zombify all wrappers in their lists.
-//
 //              = Lua utility classes
 //
 //                 = Note: it is theoretically possible to create a vector3 instance and 
@@ -371,12 +365,6 @@
 //                   entries should create gaps in the list. (This is a change in 
 //                   the originally intended design, so comments in the collection 
 //                   setter need to be updated as well.)
-//
-//              - Any further wrappers will depend on having UI implemented for 
-//                the respective form types or wrapped data, so that we can actually 
-//                verify that our scripted changes are being made and persisted 
-//                properly -- and that the script is even reading data properly in 
-//                the first place.
 //
 //              - Papyrus wrappers
 //
@@ -481,22 +469,6 @@
 //
 //                    - Lua wrappers for Quest data (bare minimum: the form itself 
 //                      and any aliases contained therein)
-//
-//                   When changing a property's type from an array to a scalar, 
-//                   zombify any existing wrappers for that array. A change back 
-//                   from scalar to array should lead to new wrappers being created, 
-//                   such that:
-//
-//                      local p = script.properties["foo"]
-//                      p.type  = "Form[]"
-//                      local a = p.value
-//                      p.type  = "Form"
-//                      p.type  = "Form[]"
-//                      object_is_zombie(a) == true
-//                   
-//                   When changing a property's name, we should emit a warning if 
-//                   there exists on the script another property which already has 
-//                   that case-insensitive name.
 //
 //                 - Fragment data for supported forms, and reimplementation of the 
 //                   script-data access so that these work for scripts on aliases.
