@@ -157,6 +157,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       bool _should_keep_running() const noexcept;
       
       std::atomic<bool>   aborted = false; // main thread can set this to kill the script
+      std::atomic<bool>   paused  = false; // main thread can set this to pause the script, though it won't take effect instantly
       cobb::lockable_bool running = false;
       bool in_teardown = false;
       std::vector<_model_observer> ui_model_observers;
@@ -217,6 +218,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       
       inline bool is_aborted() const noexcept { return this->aborted; }
       inline bool is_running() const noexcept { return this->running; }
+      inline bool is_paused()  const noexcept { return this->paused; }
       bool teardown_in_progress() const noexcept;
 
       inline QWidget* get_ui_parent_widget() const noexcept { return this->ui_parent; }
@@ -277,6 +279,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
    public:
       void abort();
       void runScript(const QString& code, const QString& name);
+      void setPaused(bool);
       void setUIParentWidget(QWidget*); // only allowed when a script is not running
       //
    protected slots:

@@ -36,7 +36,6 @@ namespace {
          return 0;
       }
       luastackchange_t count_forms_of_type(lua_State* L) {
-         luaL_argcheck(L, lua_isnumber(L, 1), 1, "form type (number) expected");
          auto& editor = DovahKitCore::get();
          if (!editor.has_data()) {
             lua_pushinteger(L, 0);
@@ -58,7 +57,6 @@ namespace {
       luastackchange_t create_form(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
-         luaL_argcheck(L, lua_isnumber(L, 1), 1, "form type (number) expected");
          auto& editor = DovahKitCore::get();
          if (!editor.has_data())
             luaL_error(L, "cannot create a new form because no data is loaded in the editor");
@@ -116,7 +114,6 @@ namespace {
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
       luastackchange_t for_each_form_of_type(lua_State* L) {
-         luaL_argcheck(L, lua_isnumber(L, 1),   1, "form type (number) expected");
          luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
          auto& editor = DovahKitCore::get();
          if (!editor.has_data())

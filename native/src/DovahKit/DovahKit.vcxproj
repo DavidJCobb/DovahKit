@@ -289,6 +289,8 @@
     <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_group.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\spinbox.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\tabbox.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\tabbox\tab.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\table_view.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\table_view\cell.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\table_view\col.cpp" />
@@ -633,6 +635,9 @@
     <ClInclude Include="editor\scripting\wrappers\ui\radio_button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\radio_group.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\tabbox.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\tabbox\tab.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\tabbox\_util.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\table_view.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\table_view\cell.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\table_view\col.h" />

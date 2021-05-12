@@ -31,5 +31,6 @@ class DovahKitScriptVM : public QObject, cobb::singleton {
    public slots:
       void abort();
       void runScript(const QString& code, const QString& name);
+      void setPaused(bool);
       void setUIParentWidget(QWidget*); // only allowed when a script is not running
 };

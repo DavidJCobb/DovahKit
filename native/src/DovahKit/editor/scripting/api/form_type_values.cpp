@@ -268,15 +268,14 @@ namespace editor_script {
          return dovah::form_type::none;
       }
       valid = (_stricmp(lua_tostring(L, -1), "form_type") == 0);
-      lua_pop(L, 1); // pop meta name
+      lua_pop(L, 2); // pop meta name
       if (!valid) {
-         lua_pop(L, 1); // pop metatable
          return dovah::form_type::none;
       }
-      type = lua_getiuservalue(L, -1, 1); // push meta value
+      type = lua_getiuservalue(L, stack_pos, 1); // push meta value
       int isnum;
       int result = lua_tointegerx(L, -1, &isnum);
-      lua_pop(L, 2); // pop meta value, metatable
+      lua_pop(L, 1); // pop uservalue
       if (!isnum) {
          valid = false;
          return dovah::form_type::none;

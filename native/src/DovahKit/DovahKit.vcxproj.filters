@@ -891,6 +891,12 @@
     <ClCompile Include="helpers\qt\string_scanner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\tabbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\tabbox\tab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1809,6 +1815,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\qt\string_scanner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\tabbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\tabbox\tab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\tabbox\_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

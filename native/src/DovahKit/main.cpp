@@ -482,85 +482,6 @@
 //                    - Lua wrappers for Quest data (bare minimum: the form itself 
 //                      and any aliases contained therein)
 //
-//                 - Script properties. Implement them as elements in a named 
-//                   collection, and give them "name," "type," and "value" 
-//                   properties, e.g.
-//
-//                      script.properties["foo"].name  == foo
-//                      script.properties["foo"].type  == "Activator[]"
-//                      script.properties["foo"].value -- table of forms
-//                   
-//                   If the property's type is an array, then its value should be a 
-//                   collection of unnamed elements, and attempting to set an entry 
-//                   to an incorrect type should warn or fail as appropriate. If the 
-//                   property's type is a scalar, then its value should be a scalar; 
-//                   same type-checking as for array elements.
-//
-//                   If the property's type is changed to one incompatible with the 
-//                   existing value (including switching between array and scalar 
-//                   types), then blank the existing value.
-//                   
-//                   Form types are going to be complicated because the loaded form 
-//                   data (and the file format itself) doesn't distinguish between 
-//                   different kinds of forms; "Container[]" and "Activator[]" are 
-//                   encoded the same way.
-//                   
-//                    - When a form or form-array property's type is queried, check 
-//                      whether there is a compiled script file for the current 
-//                      script. If so, check whether that file contains a property 
-//                      definition with the same name and whether that definition's 
-//                      type is NOT a primitive (e.g. Bool); if the definition 
-//                      matches, then return its type. Otherwise, fall back to 
-//                      "Form" and "Form[]".
-//
-//                       - We may want to provide a "fast" accessor as well, to 
-//                         cut down on file lookups where they may not strictly 
-//                         be needed.
-//
-//                          - property.type versus property.simple_type? The 
-//                            former can run checks on access to get a full 
-//                            typename, and can do auto-pruning when changed 
-//                            between form types as described below.
-//                   
-//                    - When the user sets a property's type, check whether there 
-//                      is a compiled script file for the current script. If so, 
-//                      and if the type that the user is setting doesn't match the 
-//                      type in that file, then log a warning. Furthermore, if the 
-//                      type that the user sets is unrecognized, then assume that 
-//                      it's a script name, and warn if there is no script with 
-//                      that name among the loose files or files in loaded BSAs 
-//                      (this check should be satisfied by PSC or PEX).
-//                   
-//                       - Of course, if the typename is invalid (e.g. "F[]oo"), 
-//                         then we should just throw an error immediately.
-//                   
-//                       - We should remember which typenames we warn for being 
-//                         unrecognized, and only warn for them once; that way, we 
-//                         don't spam the log during (potentially large-scale) 
-//                         batch operations.
-//                   
-//                       - When the user changes a property's type to a form type, 
-//                         the property's value should be cleaned if possible: 
-//                         if for example the property currently holds Container 
-//                         form(s) and we change it to an Activator or Activator[] 
-//                         property, then those forms should be cleared. We can't 
-//                         clear the property blindly, because the user may change 
-//                         a superclass property to a subclass such that some of 
-//                         the existing values still match the subclass (e.g. if 
-//                         we change a Form[] property to a Container[] property).
-//                         
-//                         We can run this cleaning if the user changes the property 
-//                         type to a scriptname only if the script is findable and 
-//                         we can identify what form type it extends. This may 
-//                         involve loading multiple scripts, if the script extends 
-//                         other non-built-in scripts.
-//                         
-//                         We may wish to offer a setter method that *doesn't* do 
-//                         auto-cleaning, or make it so that the property doesn't 
-//                         auto-clean and a setter function does. The latter may 
-//                         be best, as we can then give the setter function a name 
-//                         that states its side-effects: (set_type_and_clean_value).
-//
 //                   When changing a property's type from an array to a scalar, 
 //                   zombify any existing wrappers for that array. A change back 
 //                   from scalar to array should lead to new wrappers being created, 
@@ -653,8 +574,6 @@
 //          
 //           - UI widget ideas:
 //
-//              - Table views with arbitrary columns
-//
 //              - A "canvas" widget that allows scripts to draw arbitrary raster data. 
 //                A good use case for this would be a script that generates a render of 
 //                a worldspace's heightmap. Bonus points if the widget can optionally be 
@@ -684,10 +603,6 @@
 //       button to clear the log. Basically the only parts of the UI that are functional 
 //       right now are the buttons to start and stop script execution, so we need to 
 //       finish the rest.
-//
-//        - Attempting to close the window while a script is running should pop a 
-//          confirmation box asking whether to terminate the script. If the user 
-//          cancels, then don't close the window.
 //
 //     - Scripts should be able to include Greasemonkey-style comments at the top of 
 //       the file as a way of specifying extended configuration options. Options that 
@@ -721,13 +636,6 @@
 //       in the user being shown a confirmation message in the script selection window, 
 //       i.e. the user is shown a list of permissions that the script is requesting and 
 //       must explicitly grant those permissions before the script can run.
-//
-//     - Scripts should be able to spawn UI windows and widgets, and to register Lua 
-//       functions to run in response to Qt signals on these widgets.
-//
-//        - There should be a cap on how quickly a script can spawn windows.
-//
-//        - We'll probably want to provide generic table, list, and tree views to Lua.
 //
 //     - It'd be nice if scripts had access to a UI widget that would allow them to 
 //       draw arbitrary rasters, like JS canvas (but maybe with a friendlier API).

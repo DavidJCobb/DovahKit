@@ -41,6 +41,9 @@ namespace {
 namespace {
    void _lua_debug_hook(lua_State* L, lua_Debug* ar) {
       auto& vm = DovahKitScriptVMCore::get();
+      while (vm.is_paused())
+         if (vm.is_aborted())
+            break;
       if (vm.is_aborted()) {
          luaL_error(L, "Script terminated at the user's request.");
          __assume(0); // luaL_error performs a jump and so does not return
@@ -1002,6 +1005,7 @@ void DovahKitScriptVMCore::runScript(const QString& code, const QString& name) {
    auto& facade = DovahKitScriptVM::get();
    this->aborted = false;
    this->running = true;
+   this->paused  = false;
    this->main_thread_tick_timer.start();
    emit facade.scriptStarted();
    this->_teardown_lua_vm();
@@ -1030,6 +1034,9 @@ void DovahKitScriptVMCore::runScript(const QString& code, const QString& name) {
    emit scriptEnded(true);
 }
 
+void DovahKitScriptVMCore::setPaused(bool b) {
+   this->paused = b;
+}
 void DovahKitScriptVMCore::setUIParentWidget(QWidget* widget) {
    auto guard = std::lock_guard(this->running);
    if (!this->running)

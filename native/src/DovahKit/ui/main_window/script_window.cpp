@@ -93,13 +93,11 @@ void EditorScriptWindow::closeEvent(QCloseEvent* event) {
       return;
    }
    //
+   vm.setPaused(true);
    auto confirm = QMessageBox::question(this, "Abort the script?", "A script is currently running. Do you want to force it to stop?", QMessageBox::Yes | QMessageBox::No);
    if (confirm == QMessageBox::Yes) {
-      //
-      // TODO: Investigate pausing the script while this confirmation dialog 
-      // is open
-      //
       DovahKitScriptVM::get().abort();
       event->accept();
    }
+   vm.setPaused(false);
 }

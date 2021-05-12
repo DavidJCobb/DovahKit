@@ -27,6 +27,9 @@ void DovahKitScriptVM::abort() {
 void DovahKitScriptVM::runScript(const QString& code, const QString& name) {
    DovahKitScriptVMCore::get().runScript(code, name);
 }
+void DovahKitScriptVM::setPaused(bool b) {
+   DovahKitScriptVMCore::get().setPaused(b);
+}
 void DovahKitScriptVM::setUIParentWidget(QWidget* widget) {
    DovahKitScriptVMCore::get().setUIParentWidget(widget);
 }

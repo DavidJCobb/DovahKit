@@ -28,7 +28,7 @@ class QHeaderViewDKEx : public QHeaderView {
          int grow   = 1;
          int shrink = 0;
          int basis  = 0;
-         int mod    = 0;
+         int mod    = 0; // change made by the user when resizing columns; added to basis
          int render = 0; // last rendered size
       };
       QVector<_column_flex_info> _flexColumns;
