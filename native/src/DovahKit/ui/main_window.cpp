@@ -33,6 +33,7 @@
 #include "main_window/_debug_hooks/debug_target_form.h"
 #include "main_window/_debug_hooks/debug_target_form_papyrus.h"
 #include "main_window/_debug_hooks/form_picker_debug.h"
+#include "main_window/_debug_hooks/canvas_widget_tests.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -331,6 +332,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(this->ui.actionDebugFormPicker, &QAction::triggered, this, [this]() {
       DovahKitDebug::debug_form_picker(this);
+   });
+   QObject::connect(this->ui.actionDebugCanvasWidget, &QAction::triggered, this, [this]() {
+      DovahKitDebug::debug_canvas_widget(this);
    });
    #pragma endregion
 }

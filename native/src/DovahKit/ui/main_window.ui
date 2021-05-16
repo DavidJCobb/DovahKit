@@ -69,6 +69,7 @@
     <addaction name="actionDebugBreakOnForm"/>
     <addaction name="actionDebugBreakOnFormPapyrus"/>
     <addaction name="actionDebugFormPicker"/>
+    <addaction name="actionDebugCanvasWidget"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -226,6 +227,11 @@
   <action name="actionDebugFormPicker">
    <property name="text">
     <string>Debug FormPicker</string>
+   </property>
+  </action>
+  <action name="actionDebugCanvasWidget">
+   <property name="text">
+    <string>Debug CanvasWidget</string>
    </property>
   </action>
  </widget>
