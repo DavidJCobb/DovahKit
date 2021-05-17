@@ -906,6 +906,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\systems\lua_managed_resources.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2125,6 +2128,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\scripting\systems\lua_managed_resources.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

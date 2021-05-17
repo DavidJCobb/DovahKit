@@ -7,13 +7,13 @@ class DovahKitScriptVMResourceInterface;
 class ObservableStandardItemModel;
 
 namespace editor_script {
-   class LuaManagedResource;
-   template<typename T> class LuaManagedResourceHandleImpl;
-   using LuaManagedResourceHandle = LuaManagedResourceHandleImpl<LuaManagedResource>;
+   template<typename T> requires std::is_base_of_v<QObject, T> class LuaManagedResourceHandleImpl;
 
    class LuaManagedResource : public QObject {
+      Q_OBJECT;
+
       friend class DovahKitScriptVMResourceInterface;
-      friend class LuaManagedResourceHandle;
+      template<typename T> requires std::is_base_of_v<QObject, T> friend class LuaManagedResourceHandleImpl;
       
       using model_t = ObservableStandardItemModel;
 
@@ -42,7 +42,7 @@ namespace editor_script {
          void resynchronized();
    };
 
-   template<typename T> class LuaManagedResourceHandleImpl { // Qt needs it to be templated :(
+   template<typename T> requires std::is_base_of_v<QObject, T> class LuaManagedResourceHandleImpl { // Qt needs it to be templated :(
       protected:
          using model_t = ObservableStandardItemModel;
          using value_t = T;
@@ -92,6 +92,8 @@ namespace editor_script {
             return *this;
          }
    };
+
+   using LuaManagedResourceHandle = LuaManagedResourceHandleImpl<LuaManagedResource>;
 }
 
 //
