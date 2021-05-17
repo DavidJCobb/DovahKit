@@ -34,6 +34,7 @@
 #include "main_window/_debug_hooks/debug_target_form_papyrus.h"
 #include "main_window/_debug_hooks/form_picker_debug.h"
 #include "main_window/_debug_hooks/canvas_widget_tests.h"
+#include "main_window/_debug_hooks/lua_resource_manager_tests.h"
 
 namespace {
    MainWindow* _window = nullptr;
@@ -335,6 +336,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(this->ui.actionDebugCanvasWidget, &QAction::triggered, this, [this]() {
       DovahKitDebug::debug_canvas_widget(this);
+   });
+   QObject::connect(this->ui.actionDebugTestLuaRMResearch, & QAction::triggered, this, [this]() {
+      DovahKitDebug::run_lua_resource_manager_tests(this);
    });
    #pragma endregion
 }

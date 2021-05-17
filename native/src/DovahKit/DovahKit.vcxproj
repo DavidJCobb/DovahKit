@@ -344,6 +344,7 @@
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\form_windows\_base.cpp" />
+    <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\ColorPickerButton.cpp" />
     <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\generic\FormPicker.cpp" />
@@ -389,6 +390,7 @@
     <ClCompile Include="ui\main_window\save_window.cpp" />
     <ClCompile Include="ui\main_window\script_window.cpp" />
     <ClCompile Include="ui\main_window\script_window\hyperlink_confirm.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\canvas_widget_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp" />
@@ -397,6 +399,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\form_picker_debug.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\bs_hash.h" />
@@ -556,6 +559,7 @@
     <ClInclude Include="dovah\notice_code_t.h" />
     <ClInclude Include="dovah\utils\get_ini_defined_bsa_list.h" />
     <ClInclude Include="dovah\utils\get_user_language_name.h" />
+    <QtMoc Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.h" />
     <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h" />
     <ClInclude Include="dovah\utils\loose_enum.h" />
     <QtMoc Include="editor\form_data_cache.h" />
@@ -700,12 +704,14 @@
     <QtMoc Include="ui\generic\FormPicker.h" />
     <QtMoc Include="ui\generic\impl\FormPickerImpl.h" />
     <ClInclude Include="lua.h" />
+    <QtMoc Include="ui\generic\CanvasWidget.h" />
     <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
     <QtMoc Include="ui\generic\QLuaCheckBox.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h" />
     <QtMoc Include="ui\main_window\object_window\object_window_treeview.h" />
     <QtMoc Include="ui\main_window\script_window\hyperlink_confirm.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\canvas_widget_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\compiled_papyrus_script_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h" />

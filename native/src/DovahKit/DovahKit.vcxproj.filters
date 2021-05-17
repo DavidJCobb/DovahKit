@@ -897,6 +897,15 @@
     <ClCompile Include="editor\scripting\wrappers\ui\tabbox\tab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\generic\CanvasWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\canvas_widget_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1826,6 +1835,9 @@
     <ClInclude Include="editor\scripting\wrappers\ui\tabbox\_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\canvas_widget_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -2107,6 +2119,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\generic\QLuaCheckBox.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\generic\CanvasWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

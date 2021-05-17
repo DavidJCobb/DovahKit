@@ -70,6 +70,7 @@
     <addaction name="actionDebugBreakOnFormPapyrus"/>
     <addaction name="actionDebugFormPicker"/>
     <addaction name="actionDebugCanvasWidget"/>
+    <addaction name="actionDebugTestLuaRMResearch"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -232,6 +233,11 @@
   <action name="actionDebugCanvasWidget">
    <property name="text">
     <string>Debug CanvasWidget</string>
+   </property>
+  </action>
+  <action name="actionDebugTestLuaRMResearch">
+   <property name="text">
+    <string>Run Lua resource manager R&amp;&amp;D tests</string>
    </property>
   </action>
  </widget>
