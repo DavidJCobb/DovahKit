@@ -8,10 +8,14 @@
 #include <QPushButton>
 #include <QTimer>
 
+#include <QAbstractItemView>
+
 namespace {
    using namespace DovahKitDebug;
    using referent_t      = DovahKitTESTQVariantWrappedSmartPointerReferent;
    using smart_pointer_t = DovahKitTESTQVariantWrappedSmartPointer<referent_t>;
+
+   static constexpr bool update_entire_widgets = true;
 
    std::array colors = {
       QColor(255,   0, 0),
@@ -32,7 +36,8 @@ namespace {
 
    static void _shift_colors() {
       std::rotate(colors.begin(), colors.begin() + 1, colors.end());
-      DovahKitTESTQVariantWrappedSmartPointerReferentRegistry::get().updateAllReferents();
+      if (!update_entire_widgets)
+         DovahKitTESTQVariantWrappedSmartPointerReferentRegistry::get().updateAllReferents(); // if whole-widget updating isn't enabled above, update via QPMIs.
    }
 
    QModelIndex _get_combobox_item_qmi(QComboBox* widget, int index) {
@@ -89,16 +94,24 @@ namespace DovahKitDebug {
       {
          auto* button = new QPushButton("Cycle colors");
          layout->addWidget(button);
-         QObject::connect(button, &QPushButton::clicked, dialog, []() {
+         QObject::connect(button, &QPushButton::clicked, dialog, [select]() {
             _shift_colors();
+            if (update_entire_widgets) {
+               //select->repaint(); // only needed if we subclass QComboBox to draw the selected item's icon, if any
+               select->view()->viewport()->update(); // update the entire combobox list panel
+            }
          });
       }
       {
          auto* timer  = new QTimer(dialog);
          timer->setInterval(500);
          timer->setSingleShot(false);
-         QObject::connect(timer, &QTimer::timeout, dialog, []() {
+         QObject::connect(timer, &QTimer::timeout, dialog, [select]() {
             _shift_colors();
+            if (update_entire_widgets) {
+               //select->repaint(); // only needed if we subclass QComboBox to draw the selected item's icon, if any
+               select->view()->viewport()->update(); // update the entire combobox list panel
+            }
          });
          //
          auto* start = new QPushButton("Start cycling");

@@ -177,6 +177,16 @@ namespace DovahKitDebug {
    // 
    //         (Not to mention: QPMIs actually aren't sufficient. We need model observers, at least if we want 
    //         to be able to define default icons for rows and columns. And we do want that.)
+   // 
+   //         Alternatively, if we have the VM keep track of what widgets are using what models, we can have 
+   //         our smart-pointer class just notify the VM when models as a whole gain or lose references to 
+   //         the resource; then, we can force updates on individual widgets. Refer to uses of the constexpr 
+   //         (update_entire_widgets) bool in the CPP file. If we do it this way, then we don't need to make 
+   //         a QPMI for every model item that refers to a resource, which means that there'll be overhead 
+   //         on modifying resources that are being displayed (we have to track every model that refers to 
+   //         a resource, and then ask the VM to update all widgets for these models), but there won't be 
+   //         overhead on modifying a model that happens to use resources. I think that's the better way to 
+   //         do things.
    //
    class DovahKitTESTQStyledItemDelegate : public QStyledItemDelegate {
       protected:

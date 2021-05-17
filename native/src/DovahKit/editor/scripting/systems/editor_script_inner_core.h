@@ -155,21 +155,27 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       // still open and visible.
       //
       bool _should_keep_running() const noexcept;
+
+      inline QList<QWidget*> _get_scripted_widgets_using_model(ObservableStandardItemModel* model) const noexcept {
+         return this->widgets.by_model.values(model);
+      }
+
+      // Members:
       
       std::atomic<bool>   aborted = false; // main thread can set this to kill the script
-      std::atomic<bool>   paused  = false; // main thread can set this to pause the script, though it won't take effect instantly
+      std::atomic<bool>   paused  = false; // main thread can set this to pause the script, though it won't take effect instantly. we unpause when running a new script.
       cobb::lockable_bool running = false;
       bool in_teardown = false;
       std::vector<_model_observer> ui_model_observers;
       QWidget* ui_parent = nullptr;
-      //
+      
       struct {
          _task_queue s2m; // script-to-main
          struct { // main-to-script
             _task_queue urgent; // urgent messages. these MUST NOT trigger Lua code to execute!
          } m2s;
       } task_queues;
-      //
+      
       struct {
          QVector<QDialog*> windows;
          struct {
@@ -180,6 +186,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
             QVector<QWidget*>      widgets;
             QVector<QButtonGroup*> button_groups;
          } pending_deletion;
+         QMultiHash<ObservableStandardItemModel*, QWidget*> by_model;
          std::unordered_map<QObject*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection; // can also hold event listeners for non-widgets
          int extant_widget_count = 0; // includes windows
       } widgets;

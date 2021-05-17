@@ -464,6 +464,8 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
       lua_close(L);
    }
    
+   this->widgets.by_model.clear();
+
    _teardown_list_helper(this->widgets.windows);
    _teardown_list_helper(this->widgets.orphans.widgets);
    _teardown_list_helper(this->widgets.orphans.button_groups);
@@ -532,6 +534,10 @@ void DovahKitScriptVMCore::_script_thread_loop() {
          for (auto* widget : pd) {
             this->ui_queues.events.forget_about(*widget); // gotta do this before events are processed. since we sever a widget's signals when we mark it for deletion, we don't have to worry about it generating more events later
             widget->deleteLater();
+            //
+            if (auto* model = cobb::qt::get_underlying_model_of(widget))
+               if (auto* casted = qobject_cast<ObservableStandardItemModel*>(model))
+                  this->widgets.by_model.remove(casted, widget);
          }
          pd.clear();
       }
@@ -692,11 +698,20 @@ void DovahKitScriptVMCore::set_up_new_scripted_widget(QWidget* widget) {
       this->accept_new_orphaned_widget(widget);
 }
 void DovahKitScriptVMCore::set_up_widget_model(QWidget* widget) {
+   if (auto* prior = cobb::qt::get_underlying_model_of(widget))
+      if (auto* casted = qobject_cast<ObservableStandardItemModel*>(prior))
+         this->widgets.by_model.remove(casted, widget);
+   //
    auto* model = new ObservableStandardItemModel(widget);
    auto* proxy = new QSortFilterProxyModel(widget);
    proxy->setSourceModel(model);
    proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
    cobb::qt::set_model_of(widget, proxy);
+   //
+   this->widgets.by_model.insert(model, widget);
+   QObject::connect(model, &QObject::destroyed, this, [this, model]() {
+      this->widgets.by_model.remove(model);
+   });
 }
 void DovahKitScriptVMCore::accept_new_orphaned_widget(QWidget* widget) {
    DovahKitScriptVMCore::require_client_thread();
