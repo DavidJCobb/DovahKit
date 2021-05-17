@@ -27,6 +27,7 @@ class QButtonGroup;
 class DovahKitScriptVMMessenger;
 class DovahKitScriptVMUITaskConduit;
 class DovahKitScriptVMPermissionInterface;
+class DovahKitScriptVMResourceInterface;
 class DovahKitScriptVMUserdataInterface;
 class DovahKitScriptUIListenerInterface;
 
@@ -41,6 +42,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
    friend class DovahKitScriptVMMessenger;
    friend class DovahKitScriptVMUITaskConduit;
    friend class DovahKitScriptVMPermissionInterface;
+   friend class DovahKitScriptVMResourceInterface;
    friend class DovahKitScriptVMUserdataInterface;
    friend class DovahKitScriptUIListenerInterface;
    public:
