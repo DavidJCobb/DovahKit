@@ -274,6 +274,7 @@
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
     <ClCompile Include="editor\scripting\wrappers\quest.cpp" />
     <ClCompile Include="editor\scripting\wrappers\quest\alias.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\resource\raster.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic.cpp" />
@@ -624,6 +625,7 @@
     <ClInclude Include="editor\scripting\wrappers\papyrus\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\quest.h" />
     <ClInclude Include="editor\scripting\wrappers\quest\alias.h" />
+    <ClInclude Include="editor\scripting\wrappers\resource\raster.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
     <ClInclude Include="editor\scripting\wrappers\topic.h" />
@@ -656,6 +658,7 @@
     <ClInclude Include="editor\scripting\wrappers\word_of_power.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
+    <ClInclude Include="editor\scripting\wrappers\_all_resources.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_ui.h" />
     <ClInclude Include="editor\scripting\wrappers\_build_metatables.h" />
     <ClInclude Include="editor\scripting\wrappers\_build_singletons.h" />

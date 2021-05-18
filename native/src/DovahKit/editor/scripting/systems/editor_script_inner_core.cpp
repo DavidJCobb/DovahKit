@@ -427,6 +427,7 @@ void DovahKitScriptVMCore::_setup_lua_vm() {
    //
    // Make API functions available via tables:
    //
+   editor_script::build_all_resource_wrapper_singletons(this->lua_vm);
    {  // dovah
       lua_newtable(this->lua_vm); // create a new table
       editor_script::namespace_setup::dovah(this->lua_vm);

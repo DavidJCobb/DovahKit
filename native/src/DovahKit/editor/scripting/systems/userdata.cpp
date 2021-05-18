@@ -1,5 +1,6 @@
 #include "userdata.h"
 #include "editor_script_inner_core.h"
+#include "lua_managed_resources.h"
 
 #include "../class_killer.h"
 #include "../../../helpers/lua/dump.h"
@@ -235,14 +236,14 @@ void DovahKitScriptVMUserdataInterface::remove_model_observer(ObservableStandard
    lua_settop(L, start);
 }
 
-bool DovahKitScriptVMUserdataInterface::wrapper_exists_for(void* widget) {
+bool DovahKitScriptVMUserdataInterface::wrapper_exists_for(void* pertinent_pointer) {
    DovahKitScriptVMCore::require_script_thread();
    auto* L      = this->vm.lua_vm;
    auto  start  = lua_gettop(L);
    bool  result = false;
    //
    lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_storage_registry_key);
-   lua_pushlightuserdata(L, widget);
+   lua_pushlightuserdata(L, pertinent_pointer);
    lua_rawget(L, -2);
    if (lua_istable(L, -1)) {
       result = !cobb::lua::isempty(L, -1);

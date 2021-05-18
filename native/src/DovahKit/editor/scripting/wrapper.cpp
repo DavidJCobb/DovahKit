@@ -5,6 +5,7 @@
 #include "wrapper_util.h"
 #include "../core.h"
 
+#include "systems/lua_managed_resources.h"
 #include "systems/messaging.h"
 #include "cross_thread_tasks/s2m/lambda.h"
 
@@ -46,6 +47,12 @@ namespace editor_script {
          DovahKitScriptVMCore::get().button_group_no_longer_referenced(this->button_group);
          this->button_group = nullptr;
       }
+      if (this->type == wrapper_type::lua_managed_resource) {
+         auto* mr = this->managed_resource;
+         this->managed_resource = nullptr;
+         mr->is_lua_referenced = false;
+         DovahKitScriptVMResourceInterface::get().on_resource_unreferenced(*mr);
+      }
    }
 
    void wrapper::append_part(part_type_t signature, uint32_t index) {
@@ -71,6 +78,10 @@ namespace editor_script {
       switch (this->type) {
          case wrapper_type::ui_model_item:
             DovahKitScriptVMCore::get().model_observer_reference_gained(this->model_observer);
+            return;
+         case wrapper_type::lua_managed_resource:
+            assert(this->managed_resource);
+            this->managed_resource->is_lua_referenced = true;
             return;
       }
    }
@@ -137,6 +148,10 @@ namespace editor_script {
             break;
          case wrapper_type::ui_button_group:
             if (this->button_group != other->button_group)
+               return false;
+            break;
+         case wrapper_type::lua_managed_resource:
+            if (this->managed_resource != other->managed_resource)
                return false;
             break;
       }

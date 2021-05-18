@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 #include <mutex>
 #include "../../../helpers/singleton.h"
 #include "editor_script_inner_core.h"
@@ -20,17 +21,18 @@ namespace editor_script {
       protected:
          int refcount = 0;
          QHash<model_t*, int> model_refcounts;
-      public:
-         bool is_lua_referenced = false;
          struct {
             struct {
                QImage  script;
                QPixmap client;
             } raster;
          } content;
+      public:
+         bool is_lua_referenced = false;
 
-         // Script thread should call this when changing the image content.
-         void mark_dirty();
+         inline const QImage  get_raster_script_side() const noexcept { return this->content.raster.script; }
+         inline const QPixmap get_raster_widget_side() const noexcept { return this->content.raster.client; }
+         void modify_raster_script_side(std::function<void(QImage)> task); // Accessor to let Lua scripts modify image data. Refer to function on VM subsystem for further info.
 
       protected:
          void on_referenced(model_t*);
@@ -91,6 +93,8 @@ namespace editor_script {
             other.model    = nullptr;
             return *this;
          }
+
+         inline value_t* bare() const noexcept { return this->resource; }
    };
 
    using LuaManagedResourceHandle = LuaManagedResourceHandleImpl<LuaManagedResource>;
@@ -132,16 +136,17 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
       void main_thread_handler(); // VM core should call this from the main thread; nothing else should touch it
 
       // Creates a resource and returns it. This must be called from inside of a script-to-client cross-thread task, and 
-      // the script thread MUST receive the resource, store it in a Lua wrapper, and flag it as Lua-referenced.
-      //
-      // TODO: Ideally, the "push wrapper to Lua" function should set the Lua-referenced flag only when actually pushing 
-      // the copied wrapper into Lua.
-      //
+      // the script thread MUST receive the resource and push it into Lua via a wrapper.
       resource_t* create_resource(QImage source = QImage());
 
-      void on_resource_unreferenced(resource_t&); // call when the resource becomes Lua-unreferenced or Qt-unreferenced
+      // Accessor to allow Lua APIs to modify a resource's raster content on the script thread; for convenience, you can 
+      // also call this on the resource object itself. This function locks the desynchronized resource list for the full 
+      // duration of whatever task you pass in, to avoid race conditions that could lead to the image being modified 
+      // while the main thread is resynchronizing it (which would be especially bad when wholly overwriting the image, 
+      // as is needed for a resize).
+      void modify_raster_script_side(resource_t&, std::function<void(QImage&)> task);
 
-      void mark_dirty(resource_t&);
+      void on_resource_unreferenced(resource_t&); // call when the resource becomes Lua-unreferenced or Qt-unreferenced
 };
 
 // These macros don't work from within a namespace. Ignore IntelliSense errors on them, too; those may be false-positives.

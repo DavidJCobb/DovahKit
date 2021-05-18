@@ -33,6 +33,9 @@ namespace editor_script {
          define_wrapper_metatable<voicetype>(L);
          define_wrapper_metatable<word_of_power>(L);
       #pragma endregion
+      #pragma region Resources
+         define_wrapper_metatable<resource::raster>(L);
+      #pragma endregion
       #pragma region UI
          define_wrapper_metatable<ui::widget>(L);
             define_wrapper_metatable<ui::button>(L);

@@ -1,7 +1,13 @@
 #include "_build_singletons.h"
+#include "_all_resources.h"
 #include "_all_ui.h"
 
 namespace editor_script {
+   void build_all_resource_wrapper_singletons(lua_State* L) {
+      using namespace wrappers;
+      //
+      resource::raster::setup(L);
+   }
    void build_all_ui_wrapper_singletons(lua_State* L) {
       using namespace wrappers;
       //

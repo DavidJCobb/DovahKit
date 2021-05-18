@@ -12,12 +12,15 @@ class ObservableStandardItemModelObserver;
 class QButtonGroup;
 
 namespace editor_script {
+   class LuaManagedResource;
+
    enum class wrapper_type {
       undefined,
       form_data, // a form    or some object within a form
       ui,        // a QWidget or some data   within a QWidget
       ui_model_item,
       ui_button_group,
+      lua_managed_resource,
    };
 
    using part_type_t = cobb::eight_cc; // signature, e.g. 'FormRoot'
@@ -123,6 +126,8 @@ namespace editor_script {
          ObservableStandardItemModelObserver* model_observer = nullptr;
          //
          QButtonGroup* button_group = nullptr;
+         //
+         LuaManagedResource* managed_resource = nullptr;
          
          inline part& last_part() noexcept {
             if (!this->depth)
@@ -146,6 +151,8 @@ namespace editor_script {
                   return this->model_observer;
                case wrapper_type::ui_button_group:
                   return this->button_group;
+               case wrapper_type::lua_managed_resource:
+                  return this->managed_resource;
             }
             return nullptr;
          }

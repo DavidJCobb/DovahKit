@@ -2,8 +2,8 @@
 
 namespace editor_script {
    #pragma region LuaManagedResource
-   void LuaManagedResource::mark_dirty() {
-      DovahKitScriptVMResourceInterface::get().mark_dirty(*this);
+   void LuaManagedResource::modify_raster_script_side(std::function<void(QImage)> task) {
+      DovahKitScriptVMResourceInterface::get().modify_raster_script_side(*this, task);
    }
 
    void LuaManagedResource::on_referenced(model_t* m) {
@@ -150,6 +150,15 @@ DovahKitScriptVMResourceInterface::resource_t* DovahKitScriptVMResourceInterface
    return resource;
 }
 
+void DovahKitScriptVMResourceInterface::modify_raster_script_side(resource_t& r, std::function<void(QImage&)> task) {
+   auto& base = this->resources.desynched;
+   auto& list = base.list;
+   std::unique_lock guard(base.lock);
+   //
+   (task)(r.content.raster.script);
+   list.push_back(&r);
+}
+
 void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& resource) {
    if (resource.is_lua_referenced)
       return;
@@ -168,13 +177,5 @@ void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& res
       this->resources.pending_deletion.list.push_back(&resource);
    }
    delete &resource;
-}
-
-void DovahKitScriptVMResourceInterface::mark_dirty(resource_t& resource) {
-   std::unique_lock guard(this->resources.desynched.lock);
-   auto& list = this->resources.desynched.list;
-   if (list.contains(&resource))
-      return;
-   list.push_back(&resource);
 }
 #pragma endregion
