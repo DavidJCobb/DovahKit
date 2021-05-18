@@ -114,8 +114,9 @@ namespace {
       luastackchange_t new_(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_ui_permissions();
          //
-         int width  = -1;
-         int height = -1;
+         int    width      = -1;
+         int    height     = -1;
+         QColor background = Qt::GlobalColor::transparent;
          lua_settop(L, 1);
          {
             int isnum;
@@ -135,16 +136,27 @@ namespace {
             luaL_argcheck(L, width  != 0, 1, "width cannot be zero");
             luaL_argcheck(L, height >= 0, 1, "height cannot be negative");
             luaL_argcheck(L, height != 0, 1, "height cannot be zero");
+            //
+            lua_getfield(L, 1, "background_color");
+            if (!lua_isnoneornil(L, 2)) {
+               background = util::ui::pull_color(L, 2);
+            }
+            lua_pop(L, 1);
          }
          //
-         auto base = QImage(width, height, QImage::Format::Format_ARGB32);
-         base.fill(Qt::GlobalColor::transparent);
-         auto resource = DovahKitScriptVMResourceInterface::get().create_resource(base);
-         //
-         wrapper out;
-         out.type = wrapper_type::lua_managed_resource;
-         out.managed_resource = resource;
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::metatable_key);
+         LuaManagedResource* resource = nullptr;
+         {
+            auto* task    = new tasks::s2m::lambda(true);
+            task->handler = [width, height, background, &resource]() {
+               auto base = QImage(width, height, QImage::Format::Format_ARGB32);
+               base.fill(background);
+               resource = DovahKitScriptVMResourceInterface::get().create_resource(base);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+            assert(resource);
+         }
+         return cls::wrap_and_push(L, *resource);
       }
       luastackchange_t is(lua_State* L) {
          auto* wrapper = wrapper_from_stack<cls>(L, 1);
@@ -180,5 +192,12 @@ namespace editor_script::wrappers::resource {
       //
       assert(lua_gettop(L) == pos + 1);
       lua_setglobal(L, cls::global_name);
+   }
+
+   /*static*/ int cls::wrap_and_push(lua_State* L, LuaManagedResource& resource) {
+      wrapper out;
+      out.type = wrapper_type::lua_managed_resource;
+      out.managed_resource = &resource;
+      return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::metatable_key);
    }
 }

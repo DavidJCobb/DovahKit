@@ -1,5 +1,6 @@
 #include "dropdown.h"
 #include "../../systems/editor_script_inner_core.h"
+#include "../../systems/lua_managed_resources.h"
 #include "../../systems/messaging.h"
 #include "../../systems/permissions.h"
 #include "../../systems/userdata.h"
@@ -17,6 +18,8 @@
 
 #include "helpers/model_observer_data.h"
 #include "helpers/widget_properties.h"
+
+#include "../resource/raster.h"
 
 /*
    
@@ -446,6 +449,7 @@ namespace widget_lua {
             created = new wrapped_type();
             DovahKitScriptVMCore::get().set_up_widget_model(created);
             DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
+            created->setItemDelegate(new DovahKitScriptItemDelegate(created));
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
@@ -537,6 +541,32 @@ namespace item_lua {
          }
          return DovahKitScriptVMCore::get().push_to_lua(result);
       }
+      luastackchange_t icon(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.model_observer)
+            return 0;
+         LuaManagedResource* result = nullptr;
+         {
+            auto* observer = self.model_observer;
+            auto* task     = new tasks::s2m::ui_read_lambda();
+            task->handler  = [observer, &result]() {
+               auto* item = observer->item();
+               if (!item)
+                  return;
+               auto  data     = item->data(Qt::DecorationRole);
+               auto* resource = LuaManagedResourceHandle::extract_from_variant(data);
+               if (!resource)
+                  return;
+               resource->is_lua_referenced = true;
+               result = resource;
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!result)
+            return 0;
+         return wrappers::resource::raster::wrap_and_push(L, *result);
+      }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.model_observer)
@@ -578,6 +608,30 @@ namespace item_lua {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t icon(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.model_observer)
+            return 0;
+         //
+         LuaManagedResource* value = nullptr;
+         if (!lua_isnoneornil(L, 2)) {
+            auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
+            luaL_argcheck(L, arg != nullptr, 2, "raster expected");
+            value = arg->managed_resource;
+         }
+         //
+         auto* observer = self.model_observer;
+         auto* task     = new tasks::s2m::lambda(false);
+         task->handler  = [observer, value]() mutable {
+            if (auto* item = observer->item()) {
+               auto handle  = LuaManagedResourceHandle(value, observer->model);
+               auto wrapped = QVariant::fromValue<LuaManagedResourceHandle>(handle);
+               item->setData(wrapped, Qt::DecorationRole);
+            }
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
@@ -609,10 +663,12 @@ namespace editor_script::wrappers::ui {
    };
    /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_getters = {
       { "data", &item_lua::_getters::data }, // an arbitrary scalar value that can be associated with any dropdown item; uses Qt::UserRole
+      { "icon", &item_lua::_getters::icon },
       { "text", &item_lua::_getters::text },
    };
    /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_setters = {
       { "data",  &item_lua::_setters::data }, // an arbitrary scalar value that can be associated with any dropdown item; uses Qt::UserRole
+      { "icon",  &item_lua::_setters::icon },
       { "text",  &item_lua::_setters::text },
    };
 

@@ -1,5 +1,9 @@
 #include "lua_managed_resources.h"
 
+// Needed to force updates to a combobox's body
+#include <QAbstractItemView>
+#include <QComboBox>
+
 namespace editor_script {
    #pragma region LuaManagedResource
    void LuaManagedResource::modify_raster_script_side(std::function<void(QImage)> task) {
@@ -44,6 +48,29 @@ namespace editor_script {
       emit resynchronized();
    }
    #pragma endregion
+}
+
+void DovahKitScriptItemDelegate::initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const {
+   QStyledItemDelegate::initStyleOption(option, index);
+   //
+   auto data = index.data(Qt::DecorationRole);
+   if (auto* resource = editor_script::LuaManagedResourceHandle::extract_from_variant(data)) {
+      const auto pm = resource->get_raster_widget_side();
+      if (!pm.isNull()) {
+         option->icon = QIcon(pm);
+         {
+            //option->decorationSize = pm.size() / pm.devicePixelRatio(); // displays icon at actual size
+            auto size = pm.size() / pm.devicePixelRatio();
+            auto max  = option->decorationSize;
+            if (size.height() > max.height()) {
+               option->decorationSize = size.boundedTo(max);
+            } else if (size.height() < max.height()) {
+               option->decorationSize = size.expandedTo(max);
+            }
+         }
+         option->features |= QStyleOptionViewItem::HasDecoration;
+      }
+   }
 }
 
 #pragma region DovahKitScriptVMResourceInterface
@@ -111,8 +138,16 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
       }
       list.clear();
       //
-      for (auto* w : widgets_to_update)
-         w->update();
+      for (auto* w : widgets_to_update) {
+         const auto* mt = w->metaObject();
+         if (mt->inherits(&QComboBox::staticMetaObject)) {
+            if (auto* vw = ((QComboBox*)w)->view())
+               if (auto* vp = vw->viewport())
+                  vp->update();
+         } else {
+            w->update();
+         }
+      }
    }
    {
       auto& base = this->resources.pending_deletion;

@@ -3,6 +3,7 @@
 #include <mutex>
 #include "../../../helpers/singleton.h"
 #include "editor_script_inner_core.h"
+#include <QStyledItemDelegate>
 
 class DovahKitScriptVMResourceInterface;
 class ObservableStandardItemModel;
@@ -95,10 +96,25 @@ namespace editor_script {
          }
 
          inline value_t* bare() const noexcept { return this->resource; }
+
+         static value_t* extract_from_variant(const QVariant& data) noexcept {
+            if (data.isValid() && data.canConvert<QObject*>()) {
+               if (auto* object = data.value<QObject*>())
+                  return qobject_cast<value_t*>(object);
+            }
+            return nullptr;
+         }
    };
 
    using LuaManagedResourceHandle = LuaManagedResourceHandleImpl<LuaManagedResource>;
 }
+
+class DovahKitScriptItemDelegate : public QStyledItemDelegate {
+   public:
+      using QStyledItemDelegate::QStyledItemDelegate;
+
+      virtual void initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const override;
+};
 
 //
 // Manage resources such as rasters that are in use by scripts.

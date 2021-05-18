@@ -1,3 +1,5 @@
+#include "editor_script_inner_core.h"
+#include "lua_managed_resources.h"
 #include "messaging.h"
 #include "userdata.h"
 #include "../editor_script_core.h"
@@ -1060,6 +1062,7 @@ void DovahKitScriptVMCore::setUIParentWidget(QWidget* widget) {
 }
 
 void DovahKitScriptVMCore::mainThreadLoop() {
+   DovahKitScriptVMResourceInterface::get().main_thread_handler();
    if (this->repaint_requested_while_ui_locked) {
       if (!this->pending_ui_event_count) {
          this->repaint_requested_while_ui_locked = false;

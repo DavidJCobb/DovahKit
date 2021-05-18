@@ -13,5 +13,7 @@ namespace editor_script::wrappers::resource {
       static constexpr const char* global_name = "raster";
 
       static void setup(lua_State*);
+
+      static int wrap_and_push(lua_State*, LuaManagedResource&);
    };
 }
