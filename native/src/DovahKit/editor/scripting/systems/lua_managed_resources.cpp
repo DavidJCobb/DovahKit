@@ -245,8 +245,11 @@ void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& res
       this->resources.extant.list.removeAll(&resource);
    }
    {
-      std::unique_lock guard(this->resources.pending_deletion.lock);
-      this->resources.pending_deletion.list.push_back(&resource);
+      auto& base = this->resources.pending_deletion;
+      auto& list = base.list;
+      std::unique_lock guard(base.lock);
+      if (!list.contains(&resource))
+         list.push_back(&resource);
    }
 }
 #pragma endregion
