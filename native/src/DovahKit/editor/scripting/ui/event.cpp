@@ -54,4 +54,9 @@ namespace editor_script {
          list.end()
       );
    }
+
+   size_t ui_event_queue::size() const noexcept {
+      auto guard = std::lock_guard(this->lock);
+      return this->list.size();
+   }
 }

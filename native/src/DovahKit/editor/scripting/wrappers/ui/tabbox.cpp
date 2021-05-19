@@ -317,7 +317,6 @@ namespace editor_script::wrappers::ui {
 
    /*static*/ void cls::setup(lua_State* L) {
       int pos = lua_gettop(L);
-      editor_script::define_class(L, metatable_key, nullptr, metatable_methods);
       //
       // Create singleton:
       //

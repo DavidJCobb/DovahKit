@@ -3,6 +3,7 @@
 #include "lua_managed_resources.h"
 
 #include "../class_killer.h"
+#include "../../../helpers/lua/discontiguous_list.h"
 #include "../../../helpers/lua/dump.h"
 #include "../../../helpers/lua/isempty.h"
 
@@ -52,15 +53,6 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
    //
    lua_pushnil(L); // nk
    while (lua_next(L, si_storage) != 0) {
-      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
-         //
-         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
-         // manually ignore it.
-         //
-         lua_settop(L, si_nk);
-         continue;
-      }
-      //
       editor_script::wrapper* other = nullptr;
       if (lua_type(L, si_nv) == LUA_TUSERDATA)
          other = (editor_script::wrapper*) lua_touserdata(L, si_nv);
@@ -102,7 +94,7 @@ void DovahKitScriptVMUserdataInterface::remove(editor_script::wrapper& instance)
       //
       lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
       //
-      luaL_unref(L, si_storage, key); // remove the target from storage.
+      cobb::lua::discontiguous_list::remove(L, si_storage, key); // remove the target from storage.
    }
    //
    lua_pushnil(L);
@@ -142,15 +134,6 @@ void DovahKitScriptVMUserdataInterface::remove_form(dovah::form_stub& stub) {
    //
    lua_pushnil(L); // nk
    while (lua_next(L, si_storage) != 0) {
-      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
-         //
-         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
-         // manually ignore it.
-         //
-         lua_settop(L, si_nk);
-         continue;
-      }
-      //
       editor_script::wrapper* other = nullptr;
       if (lua_type(L, si_nv) == LUA_TUSERDATA) {
          if (auto* target = (editor_script::wrapper*) lua_touserdata(L, si_nv)) {
@@ -201,15 +184,6 @@ void DovahKitScriptVMUserdataInterface::remove_model_observer(ObservableStandard
    //
    lua_pushnil(L); // nk
    while (lua_next(L, si_storage) != 0) {
-      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
-         //
-         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
-         // manually ignore it.
-         //
-         lua_settop(L, si_nk);
-         continue;
-      }
-      //
       editor_script::wrapper* other = nullptr;
       if (lua_type(L, si_nv) == LUA_TUSERDATA) {
          if (auto* target = (editor_script::wrapper*) lua_touserdata(L, si_nv)) {
@@ -289,14 +263,6 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    //
    lua_pushnil(L); // push 1
    while (lua_next(L, table) != 0) { // push 2 (only if truthy)
-      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
-         //
-         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
-         // manually ignore it.
-         //
-         lua_settop(L, si_nk);
-         continue;
-      }
       auto* existing = (editor_script::wrapper*) lua_touserdata(L, si_nv);
       #if _DEBUG
          if (!existing) {
@@ -329,7 +295,7 @@ int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::w
    lua_setmetatable(L, si_created); // pop 1
    //
    lua_pushvalue(L, si_created); // push 1 // push another reference to the wrapper onto the stack, as the next function will remove whichever reference it uses
-   ptr->lua_key = luaL_ref(L, si_storage);
+   ptr->lua_key = cobb::lua::discontiguous_list::insert(L, si_storage);
    ptr->_on_pushed();
    //
    lua_remove(L, -2);
@@ -367,15 +333,6 @@ void DovahKitScriptVMUserdataInterface::clear_entire_collection(editor_script::w
    //
    lua_pushnil(L); // nk
    while (lua_next(L, si_storage) != 0) {
-      if (lua_type(L, si_nk) == LUA_TNUMBER && lua_tonumber(L, si_nk) == 0.0) {
-         //
-         // luaL_ref and friends use key 0 to store a list of free indices. we need to 
-         // manually ignore it.
-         //
-         lua_settop(L, si_nk);
-         continue;
-      }
-      //
       editor_script::wrapper* other = nullptr;
       if (lua_type(L, si_nv) == LUA_TUSERDATA)
          other = (editor_script::wrapper*) lua_touserdata(L, si_nv);
@@ -404,7 +361,7 @@ void DovahKitScriptVMUserdataInterface::clear_entire_collection(editor_script::w
       //
       lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
       //
-      luaL_unref(L, si_storage, key); // remove the target from storage.
+      cobb::lua::discontiguous_list::remove(L, si_storage, key); // remove the target from storage.
    }
    //
    lua_settop(L, start);

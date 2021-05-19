@@ -3,7 +3,7 @@
 
 namespace editor_script::wrappers::resource {
    struct raster : public wrapper_metatable {
-      static constexpr const char* superclass_key = nullptr;
+      static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.resource.raster";
       static constexpr const char* class_name     = "raster";
       static const std::initializer_list<luaL_Reg> metatable_methods;

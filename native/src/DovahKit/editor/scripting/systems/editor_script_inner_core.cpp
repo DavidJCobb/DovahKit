@@ -414,7 +414,7 @@ void DovahKitScriptVMCore::_setup_lua_vm() {
       lua_newtable  (this->lua_vm);
       lua_pushstring(this->lua_vm, "v");
       lua_setfield  (this->lua_vm, -2, "__mode");
-      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key);
+      lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key); // applied not to the wrapper storage root, but to each list-per-pertinent-pointer
       //
       lua_newtable(this->lua_vm);
       lua_setfield(this->lua_vm, LUA_REGISTRYINDEX, ui_listener_registry_key);
@@ -488,6 +488,8 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
       delete o.pointer;
    this->ui_model_observers.clear();
    this->pending_ui_event_count = 0;
+   //
+   DovahKitScriptVMResourceInterface::get().clear(); // This MUST run AFTER widgets are deleted.
    //
    this->in_teardown = false;
 }

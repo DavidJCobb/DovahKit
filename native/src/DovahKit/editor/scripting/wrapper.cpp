@@ -177,10 +177,8 @@ namespace editor_script {
    bool wrapper::is_in_same_collection(const wrapper& other) const noexcept {
       if (this->type != other.type)
          return false;
-      if (this->type == wrapper_type::form_data) {
-         if (this->stub != other.stub)
-            return false;
-      }
+      if (this->get_pertinent_pointer() != other.get_pertinent_pointer())
+         return false;
       if (this->depth != other.depth)
          return false;
       if (this->is_collection || other.is_collection)

@@ -556,8 +556,9 @@ namespace editor_script {
          assert(strcmp(class_metatable_key, super_metatable_key) != 0 && "The superclass and subclass can't use the same registry key name."); // (assert) should be no-op in Release, so this is fine
       lua_checkstack(luaVM, 3);
       //
-      luaL_newmetatable(luaVM, class_metatable_key); // STACK: [newmeta]
+      int  created  = luaL_newmetatable(luaVM, class_metatable_key); // STACK: [newmeta]
       auto index_mt = lua_gettop(luaVM);
+      assert(created && "This Lua class is already defined!");
       //
       if (class_name) {
          lua_pushstring(luaVM, "__name");

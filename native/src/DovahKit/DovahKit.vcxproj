@@ -311,6 +311,7 @@
     <ClCompile Include="helpers\files.cpp" />
     <ClCompile Include="helpers\filesystem.cpp" />
     <ClCompile Include="helpers\ini.cpp" />
+    <ClCompile Include="helpers\lua\discontiguous_list.cpp" />
     <ClCompile Include="helpers\lua\isempty.cpp" />
     <ClCompile Include="helpers\lua\metamethod_names.cpp" />
     <ClCompile Include="helpers\lua\dump.cpp" />
@@ -666,6 +667,7 @@
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
     <ClInclude Include="helpers\eight_cc.h" />
     <ClInclude Include="helpers\geometry.h" />
+    <ClInclude Include="helpers\lua\discontiguous_list.h" />
     <ClInclude Include="helpers\lua\isempty.h" />
     <ClInclude Include="helpers\lua\metamethod_names.h" />
     <ClInclude Include="helpers\lua\dump.h" />

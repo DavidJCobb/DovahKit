@@ -156,6 +156,9 @@ namespace {
             delete task;
             assert(resource);
          }
+         #if _DEBUG
+            DovahKitScriptVMResourceInterface::get()._run_queued_debug_functions();
+         #endif
          return cls::wrap_and_push(L, *resource);
       }
       luastackchange_t is(lua_State* L) {
@@ -180,7 +183,6 @@ namespace editor_script::wrappers::resource {
 
    /*static*/ void cls::setup(lua_State* L) {
       int pos = lua_gettop(L);
-      editor_script::define_class(L, metatable_key, nullptr, metatable_methods);
       //
       // Create singleton:
       //

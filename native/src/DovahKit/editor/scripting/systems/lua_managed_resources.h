@@ -136,11 +136,24 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
          locked_resource_list pending_deletion;
       } resources;
 
+      #if _DEBUG
+      // You can tamper with these in a debugger to queue checks to run.
+      struct {
+         bool double_check_lua_references = false;
+      } debug;
+      #endif
+
       DovahKitScriptVMResourceInterface() {
          qRegisterMetaType<handle_t>(); // ensure the metatype is registered at run-time
       }
 
-      // Call when tearing down the VM, after all widgets are gone.
+      // Call when tearing down the VM, after all widgets are gone. Calling before all widgets are gone may result in 
+      // double-frees when those widgets' contained LuaManagedResourceHandles run destructors, as those try to act on 
+      // resources that were already deleted.
+      //
+      // This function uses QObject::deleteLater on the resources, so you should probably use deleteLater on the UI 
+      // widgets first.
+      //
       void clear();
 
    public:
@@ -148,6 +161,8 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
          static DovahKitScriptVMResourceInterface instance;
          return instance;
       }
+
+      void _run_queued_debug_functions();
 
       void main_thread_handler(); // VM core should call this from the main thread; nothing else should touch it
 

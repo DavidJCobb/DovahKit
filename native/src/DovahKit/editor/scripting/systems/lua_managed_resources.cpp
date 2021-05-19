@@ -4,6 +4,11 @@
 #include <QAbstractItemView>
 #include <QComboBox>
 
+// For debugging
+#if _DEBUG
+   #include "userdata.h"
+#endif
+
 namespace editor_script {
    #pragma region LuaManagedResource
    void LuaManagedResource::modify_raster_script_side(std::function<void(QImage)> task) {
@@ -102,9 +107,29 @@ void DovahKitScriptVMResourceInterface::clear() {
       //
       for (auto* resource : list) {
          assert(resource);
-         delete resource;
+         resource->deleteLater();
       }
       list.clear();
+   }
+}
+
+void DovahKitScriptVMResourceInterface::_run_queued_debug_functions() {
+   #if !_DEBUG
+      return;
+   #endif
+   if (this->debug.double_check_lua_references) {
+      auto& base = this->resources.extant;
+      auto& list = base.list;
+      std::unique_lock guard(base.lock);
+      //
+      auto& intfc = DovahKitScriptVMUserdataInterface::get();
+      for (auto* resource : list) {
+         assert(resource);
+         if (!resource->is_lua_referenced)
+            continue;
+         assert(intfc.wrapper_exists_for(resource));
+      }
+      this->debug.double_check_lua_references = false;
    }
 }
 
@@ -155,8 +180,11 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
       std::unique_lock guard(base.lock);
       //
       for (auto* resource : list) {
-         assert(resource);
-         delete resource;
+         #if _DEBUG
+            assert(resource);
+            qDebug("Deleting Lua-managed resource: %p", resource);
+         #endif
+         resource->deleteLater();
       }
       list.clear();
    }
@@ -166,6 +194,9 @@ DovahKitScriptVMResourceInterface::resource_t* DovahKitScriptVMResourceInterface
    DovahKitScriptVMCore::require_client_thread();
    //
    resource_t* resource = new resource_t;
+   #if _DEBUG
+      qDebug("Creating Lua-managed resource: %p", resource);
+   #endif
    {
       auto& base = this->resources.extant;
       auto& list = base.list;
@@ -195,10 +226,16 @@ void DovahKitScriptVMResourceInterface::modify_raster_script_side(resource_t& r,
 }
 
 void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& resource) {
+   #if _DEBUG
+      qDebug("Lua-managed resource has become unreferenced either within Lua or Qt: %p", &resource);
+   #endif
    if (resource.is_lua_referenced)
       return;
    if (resource.refcount)
       return;
+   #if _DEBUG
+      qDebug("Marking Lua-managed resource for delete: %p", &resource);
+   #endif
    {
       std::unique_lock guard(this->resources.desynched.lock);
       this->resources.desynched.list.removeAll(&resource);
@@ -211,6 +248,5 @@ void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& res
       std::unique_lock guard(this->resources.pending_deletion.lock);
       this->resources.pending_deletion.list.push_back(&resource);
    }
-   delete &resource;
 }
 #pragma endregion
