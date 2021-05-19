@@ -489,7 +489,7 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
    this->ui_model_observers.clear();
    this->pending_ui_event_count = 0;
    //
-   DovahKitScriptVMResourceInterface::get().clear(); // This MUST run AFTER widgets are deleted.
+   DovahKitScriptVMResourceInterface::get().clear();
    //
    this->in_teardown = false;
 }

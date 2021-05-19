@@ -9,13 +9,13 @@ class DovahKitScriptVMResourceInterface;
 class ObservableStandardItemModel;
 
 namespace editor_script {
-   template<typename T> requires std::is_base_of_v<QObject, T> class LuaManagedResourceHandleImpl;
+   template<typename T> requires (std::is_base_of_v<QObject, T>) class LuaManagedResourceHandleImpl;
 
    class LuaManagedResource : public QObject {
       Q_OBJECT;
 
       friend class DovahKitScriptVMResourceInterface;
-      template<typename T> requires std::is_base_of_v<QObject, T> friend class LuaManagedResourceHandleImpl;
+      template<typename T> requires (std::is_base_of_v<QObject, T>) friend class LuaManagedResourceHandleImpl;
       
       using model_t = ObservableStandardItemModel;
 
@@ -45,7 +45,7 @@ namespace editor_script {
          void resynchronized();
    };
 
-   template<typename T> requires std::is_base_of_v<QObject, T> class LuaManagedResourceHandleImpl { // Qt needs it to be templated :(
+   template<typename T> requires (std::is_base_of_v<QObject, T>) class LuaManagedResourceHandleImpl { // Qt needs it to be templated :(
       protected:
          using model_t = ObservableStandardItemModel;
          using value_t = T;
@@ -53,11 +53,24 @@ namespace editor_script {
          value_t* resource = nullptr;
          model_t* model    = nullptr;
 
+         // It seems we can't reliably control the order in which widgets are deleted during VM teardown. 
+         // Several sub-widgets are managed by Qt directly; Qt decides when and how to delete those; Qt 
+         // decides when and how to delete their models... We can't guarantee a safe deletion order, so 
+         // this connection is here to ensure we never need to.
+         QMetaObject::Connection connection;
+
          void _inc() {
-            if (resource)
+            if (resource) {
                resource->on_referenced(model);
+               connection = QObject::connect(resource, &QObject::destroyed, [this]() {
+                  this->resource = nullptr;
+                  this->model    = nullptr;
+               });
+            }
          }
          void _dec() {
+            if (connection)
+               QObject::disconnect(connection);
             if (resource)
                resource->on_severed(model);
          }
@@ -147,13 +160,6 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
          qRegisterMetaType<handle_t>(); // ensure the metatype is registered at run-time
       }
 
-      // Call when tearing down the VM, after all widgets are gone. Calling before all widgets are gone may result in 
-      // double-frees when those widgets' contained LuaManagedResourceHandles run destructors, as those try to act on 
-      // resources that were already deleted.
-      //
-      // This function uses QObject::deleteLater on the resources, so you should probably use deleteLater on the UI 
-      // widgets first.
-      //
       void clear();
 
    public:
