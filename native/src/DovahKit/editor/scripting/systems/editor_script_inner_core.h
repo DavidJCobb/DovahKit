@@ -158,10 +158,6 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       //
       bool _should_keep_running() const noexcept;
 
-      inline QList<QWidget*> _get_scripted_widgets_using_model(ObservableStandardItemModel* model) const noexcept {
-         return this->widgets.by_model.values(model);
-      }
-
       // Members:
       
       std::atomic<bool>   aborted = false; // main thread can set this to kill the script
@@ -188,7 +184,6 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
             QVector<QWidget*>      widgets;
             QVector<QButtonGroup*> button_groups;
          } pending_deletion;
-         QMultiHash<ObservableStandardItemModel*, QWidget*> by_model;
          std::unordered_map<QObject*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections; // connections[widget][event_name][listener] = connection; // can also hold event listeners for non-widgets
          int extant_widget_count = 0; // includes windows
       } widgets;

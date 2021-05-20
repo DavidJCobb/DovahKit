@@ -623,7 +623,7 @@ namespace item_lua {
          auto* task     = new tasks::s2m::lambda(false);
          task->handler  = [observer, value]() mutable {
             if (auto* item = observer->item()) {
-               auto handle  = LuaManagedResourceHandle(value, observer->model);
+               auto handle  = LuaManagedResourceHandle(value);
                auto wrapped = QVariant::fromValue<LuaManagedResourceHandle>(handle);
                item->setData(wrapped, Qt::DecorationRole);
             }

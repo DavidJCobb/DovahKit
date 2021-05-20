@@ -16,12 +16,9 @@ namespace editor_script {
 
       friend class DovahKitScriptVMResourceInterface;
       template<typename T> requires (std::is_base_of_v<QObject, T>) friend class LuaManagedResourceHandleImpl;
-      
-      using model_t = ObservableStandardItemModel;
 
       protected:
          int refcount = 0;
-         QHash<model_t*, int> model_refcounts;
          struct {
             struct {
                QImage  script;
@@ -36,8 +33,8 @@ namespace editor_script {
          void modify_raster_script_side(std::function<void(QImage)> task); // Accessor to let Lua scripts modify image data. Refer to function on VM subsystem for further info.
 
       protected:
-         void on_referenced(model_t*);
-         void on_severed(model_t*);
+         void on_referenced();
+         void on_severed();
 
          void resynchronize();
 
@@ -47,11 +44,9 @@ namespace editor_script {
 
    template<typename T> requires (std::is_base_of_v<QObject, T>) class LuaManagedResourceHandleImpl { // Qt needs it to be templated :(
       protected:
-         using model_t = ObservableStandardItemModel;
          using value_t = T;
       protected:
          value_t* resource = nullptr;
-         model_t* model    = nullptr;
 
          // It seems we can't reliably control the order in which widgets are deleted during VM teardown. 
          // Several sub-widgets are managed by Qt directly; Qt decides when and how to delete those; Qt 
@@ -61,10 +56,9 @@ namespace editor_script {
 
          void _inc() {
             if (resource) {
-               resource->on_referenced(model);
+               resource->on_referenced();
                connection = QObject::connect(resource, &QObject::destroyed, [this]() {
                   this->resource = nullptr;
-                  this->model    = nullptr;
                });
             }
          }
@@ -72,12 +66,12 @@ namespace editor_script {
             if (connection)
                QObject::disconnect(connection);
             if (resource)
-               resource->on_severed(model);
+               resource->on_severed();
          }
 
       public:
          LuaManagedResourceHandleImpl() {}
-         LuaManagedResourceHandleImpl(value_t* v, model_t* m) : resource(v), model(m) {
+         LuaManagedResourceHandleImpl(value_t* v) : resource(v) {
             this->_inc();
          }
          LuaManagedResourceHandleImpl(const LuaManagedResourceHandleImpl& other) { *this = other; }
@@ -85,7 +79,6 @@ namespace editor_script {
          ~LuaManagedResourceHandleImpl() {
             this->_dec();
             this->resource = nullptr;
-            this->model    = nullptr;
          }
 
          operator bool() { return this->resource != nullptr; };
@@ -95,16 +88,13 @@ namespace editor_script {
          LuaManagedResourceHandleImpl& operator=(const LuaManagedResourceHandleImpl& other) noexcept {
             this->_dec();
             this->resource = other.resource;
-            this->model    = other.model;
             this->_inc();
             return *this;
          }
          LuaManagedResourceHandleImpl& operator=(LuaManagedResourceHandleImpl&& other) noexcept {
             this->_dec();
             this->resource = other.resource;
-            this->model    = other.model;
             other.resource = nullptr;
-            other.model    = nullptr;
             return *this;
          }
 
@@ -149,13 +139,6 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
          locked_resource_list pending_deletion;
       } resources;
 
-      #if _DEBUG
-      // You can tamper with these in a debugger to queue checks to run.
-      struct {
-         bool double_check_lua_references = false;
-      } debug;
-      #endif
-
       DovahKitScriptVMResourceInterface() {
          qRegisterMetaType<handle_t>(); // ensure the metatype is registered at run-time
       }
@@ -167,8 +150,6 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
          static DovahKitScriptVMResourceInterface instance;
          return instance;
       }
-
-      void _run_queued_debug_functions();
 
       void main_thread_handler(); // VM core should call this from the main thread; nothing else should touch it
 

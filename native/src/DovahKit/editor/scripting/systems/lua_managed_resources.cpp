@@ -16,25 +16,11 @@ namespace editor_script {
       DovahKitScriptVMResourceInterface::get().modify_raster_script_side(*this, task);
    }
 
-   void LuaManagedResource::on_referenced(model_t* m) {
+   void LuaManagedResource::on_referenced() {
       ++this->refcount;
-      //
-      if (m)
-         this->model_refcounts[m] += 1;
    }
-   void LuaManagedResource::on_severed(model_t* m) {
+   void LuaManagedResource::on_severed() {
       --this->refcount;
-      //
-      if (m) {
-         auto& map = this->model_refcounts;
-         auto  it  = map.find(m);
-         assert(it != map.end());
-         //
-         int v = (it.value() -= 1);
-         assert(v >= 0);
-         if (v == 0)
-            map.erase(it);
-      }
       //
       assert(this->refcount >= 0);
       if (this->refcount == 0)
@@ -114,26 +100,6 @@ void DovahKitScriptVMResourceInterface::clear() {
    }
 }
 
-void DovahKitScriptVMResourceInterface::_run_queued_debug_functions() {
-   #if !_DEBUG
-      return;
-   #endif
-   if (this->debug.double_check_lua_references) {
-      auto& base = this->resources.extant;
-      auto& list = base.list;
-      std::unique_lock guard(base.lock);
-      //
-      auto& intfc = DovahKitScriptVMUserdataInterface::get();
-      for (auto* resource : list) {
-         assert(resource);
-         if (!resource->is_lua_referenced)
-            continue;
-         assert(intfc.wrapper_exists_for(resource));
-      }
-      this->debug.double_check_lua_references = false;
-   }
-}
-
 void DovahKitScriptVMResourceInterface::main_thread_handler() {
    DovahKitScriptVMCore::require_client_thread();
    //
@@ -150,32 +116,6 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
       auto& list = base.list;
       std::unique_lock guard(base.lock);
       //
-      /*//
-      QList<QWidget*> widgets_to_update;
-      for (auto* resource : list) {
-         assert(resource);
-         resource->resynchronize();
-         //
-         for (auto* model : resource->model_refcounts.keys()) {
-            auto widgets = vm._get_scripted_widgets_using_model(model);
-            for (auto* w : widgets)
-               if (!widgets_to_update.contains(w))
-                  widgets_to_update.push_back(w);
-         }
-      }
-      list.clear();
-      //
-      for (auto* w : widgets_to_update) {
-         const auto* mt = w->metaObject();
-         if (mt->inherits(&QComboBox::staticMetaObject)) {
-            if (auto* vw = ((QComboBox*)w)->view())
-               if (auto* vp = vw->viewport())
-                  vp->update();
-         } else {
-            w->update();
-         }
-      }
-      //*/
       bool update = !list.empty();
       for (auto* resource : list) {
          assert(resource);

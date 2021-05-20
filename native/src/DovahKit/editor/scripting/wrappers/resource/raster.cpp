@@ -156,9 +156,6 @@ namespace {
             delete task;
             assert(resource);
          }
-         #if _DEBUG
-            DovahKitScriptVMResourceInterface::get()._run_queued_debug_functions();
-         #endif
          return cls::wrap_and_push(L, *resource);
       }
       luastackchange_t is(lua_State* L) {

@@ -384,12 +384,13 @@ namespace editor_script::moph {
       return 1;
    }
    extern QVariant pull_icon(lua_State* L, int stack_pos) {
+      if (lua_isnoneornil(L, stack_pos))
+         return QVariant();
       auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, stack_pos);
       if (wrap) {
          if (!wrap->managed_resource)
             return QVariant();
-         auto handle = LuaManagedResourceHandle(wrap->managed_resource, nullptr);
-         return QVariant::fromValue<LuaManagedResourceHandle>(handle);
+         return QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
       }
       return editor_script::util::ui::pull_color(L, stack_pos);
    }
