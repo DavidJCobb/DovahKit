@@ -5,6 +5,7 @@ local append = ui.button.new("Append")
 local remove = ui.button.new("Remove Sel'd")
 local remove2 = ui.button.new("Remove by UD")
 local lookup = ui.button.new("Echo")
+local run_gc = ui.button.new("Garbage Collect")
 
 local readout = ui.text.new()
 
@@ -46,9 +47,30 @@ local names = {
    "Mike",
    "Skyler",
 }
+local colors = {}
+do
+   local count = #names
+   for i = 1, count do
+      local c = "hsl("
+      c = c .. (360 / count * i) .. "deg, 100%, 50%)"
+      colors[i] = c
+   end
+end
 
-for i = 1, 5 do
-   picker:append_item(names[i] .. " (" .. i .. ")")
+do
+   local INITIAL_COUNT = 5
+   for i = 1, INITIAL_COUNT do
+      picker:append_item(names[i] .. " (" .. i .. ")")
+   end
+   local items = picker.items
+   for i = 1, INITIAL_COUNT do
+      local r = raster.new({
+         width  = 32,
+         height = 32,
+         background_color = colors[i]
+      })
+      items[i].icon = r
+   end
 end
 
 window:set_layout("grid")
@@ -59,6 +81,7 @@ window:add_child(lookup, 2, 3)
 window:add_child(append, 3, 1)
 window:add_child(remove, 3, 2)
 window:add_child(remove2, 3, 3)
+window:add_child(run_gc, 4, 1, 1, 3)
 
 button:on("OnActivated", "", function()
    picker.sorted = not picker.sorted
@@ -66,13 +89,21 @@ end)
 
 local offset = nil -- earliest removed item in the list
 append:on("OnActivated", "", function()
-   local count = #picker.items
+   local items = picker.items
+   local count = #items
    if count >= #names then
       return
    end
    local i    = count + 1
    local name = names[i] .. " (" .. i .. ")"
    picker:append_item(name)
+   --
+   local r = raster.new({
+      width  = 32,
+      height = 32,
+      background_color = colors[i]
+   })
+   items[i].icon = r
 end)
 remove:on("OnActivated", "", function()
    local i = picker.selected_index
@@ -105,6 +136,10 @@ lookup:on("OnActivated", "", function()
       error("failed to retrieve selected item #" .. index)
    end
    dovah.log_message("selected item #" .. index .. " text: " .. item.text)
+end)
+run_gc:on("OnActivated", "", function()
+   collectgarbage("collect")
+   collectgarbage("collect")
 end)
 
 

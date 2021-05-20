@@ -27,11 +27,16 @@ struct ObservableStandardItemModelObserver {
          this->row = i;
    }
 
+   // NOTE: This severs the observer's pointer to the observed model, which means that if the observer is 
+   //       deleted, it will not be able to inform that model of its deletion. This function's caller MUST 
+   //       make sure that the model abandons any pointers it holds to the observer. In practice, this may 
+   //       only be safe to use by the model internals.
    inline void invalidate() noexcept {
       this->model  = nullptr;
       this->parent = QModelIndex();
       this->row    = this->col = -1;
    }
+
    inline bool isValid() const noexcept {
       if (!this->model)
          return false;

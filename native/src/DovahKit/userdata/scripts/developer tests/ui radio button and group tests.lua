@@ -29,6 +29,19 @@ logger2:on("OnActivated", "", function()
    end
 end)
 
+group:on("OnSelectionChanged", "", function(button)
+   dovah.log_message("Group:OnSelectionChanged: %s", button)
+   if button then
+      dovah.log_message(" - %s", button.text)
+   end
+end)
+button1:on("OnChanged", "", function(state)
+   dovah.log_message("Button 1 state: %s", state)
+end)
+button1:on("OnToggled", "", function(state)
+   dovah.log_message("Button 1 toggled: %s", state)
+end)
+
 do
    local window1 = ui.window.new()
    local window2 = ui.window.new()

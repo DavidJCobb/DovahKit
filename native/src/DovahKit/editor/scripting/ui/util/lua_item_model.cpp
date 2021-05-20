@@ -245,7 +245,8 @@ void ObservableStandardItemModel::afterInsertion(Qt::Orientation orientation, co
    }
 }
 void ObservableStandardItemModel::afterRemoval(Qt::Orientation orientation, const QModelIndex& parent, int first, int last) {
-   int count = last - first + 1;
+   int  count = last - first + 1;
+   bool any_invalidated = false;
    for (auto* observer : this->_observers) {
       auto& o = *observer;
       int   p = o.axis(orientation);
@@ -253,6 +254,7 @@ void ObservableStandardItemModel::afterRemoval(Qt::Orientation orientation, cons
          continue;
       if (p >= first && o.row <= last) { // invalidate removed rows
          o.invalidate();
+         any_invalidated = true;
          continue;
       }
       if (p > first) // proceed only if the new rows were removed from before the observed row
@@ -260,6 +262,26 @@ void ObservableStandardItemModel::afterRemoval(Qt::Orientation orientation, cons
       if (o.parent != parent)
          continue;
       o.setAxis(orientation, p - count);
+   }
+   if (any_invalidated) {
+      //
+      // If we invalidated any observers, we now need to remove them from our list. Invalidating an observer 
+      // severs its model pointer, which means that if it's deleted later, it won't be able to let us know. 
+      // We have to get rid of it now.
+      //
+      any_invalidated = false;
+      //
+      auto& list = this->_observers;
+      int   size = list.size();
+      for (int i = 0; i < size; ++i) {
+         auto* o = list[i];
+         if (o->model == this)
+            continue;
+         list[i] = nullptr;
+         any_invalidated = true;
+      }
+      if (any_invalidated)
+         list.removeAll(nullptr);
    }
    for (auto& dataset : this->_defaultsByRole) {
       auto& list = dataset.setByAxis(orientation);
@@ -437,8 +459,10 @@ void ObservableStandardItemModel::afterMove(Qt::Orientation orientation, const Q
    }
 }
 void ObservableStandardItemModel::afterReset() {
-   for (auto* observer : this->_observers) // invalidate all observers
+   for (auto* observer : this->_observers) { // invalidate all observers
       observer->invalidate();
+   }
+   this->_observers.clear();
    this->_defaultsByRole.clear();
 }
 void ObservableStandardItemModel::beforeLayoutChange() {
