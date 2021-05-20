@@ -18,7 +18,7 @@ namespace editor_script {
       template<typename T> requires (std::is_base_of_v<QObject, T>) friend class LuaManagedResourceHandleImpl;
 
       protected:
-         int refcount = 0;
+         std::atomic<int> refcount = 0;
          struct {
             struct {
                QImage  script;
@@ -75,7 +75,7 @@ namespace editor_script {
             this->_inc();
          }
          LuaManagedResourceHandleImpl(const LuaManagedResourceHandleImpl& other) { *this = other; }
-         LuaManagedResourceHandleImpl(LuaManagedResourceHandleImpl&& other) { *this = other; }
+         LuaManagedResourceHandleImpl(LuaManagedResourceHandleImpl&& other) { *this = std::move(other); }
          ~LuaManagedResourceHandleImpl() {
             this->_dec();
             this->resource = nullptr;

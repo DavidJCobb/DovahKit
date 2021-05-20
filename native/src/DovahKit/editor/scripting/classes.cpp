@@ -594,7 +594,8 @@ namespace editor_script {
          // The __gc metamethod also needs to be forwarded for userdata.
          //
          _forward_metamethod_to_subclass(luaVM, "__tostring", -1, -2);
-         _forward_metamethod_to_subclass(luaVM, "__gc", -1, -2);
+         _forward_metamethod_to_subclass(luaVM, "__close", -1, -2);
+         _forward_metamethod_to_subclass(luaVM, "__gc",    -1, -2);
          //
          lua_pop(luaVM, 1); // STACK: [newmeta]
       }

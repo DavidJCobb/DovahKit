@@ -64,7 +64,7 @@ do
    end
    local items = picker.items
    for i = 1, INITIAL_COUNT do
-      local r = raster.new({
+      local r <close> = raster.new({
          width  = 32,
          height = 32,
          background_color = colors[i]
@@ -98,7 +98,7 @@ append:on("OnActivated", "", function()
    local name = names[i] .. " (" .. i .. ")"
    picker:append_item(name)
    --
-   local r = raster.new({
+   local r <close> = raster.new({
       width  = 32,
       height = 32,
       background_color = colors[i]

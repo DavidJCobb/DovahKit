@@ -612,7 +612,7 @@ namespace item_lua {
          if (!self.model_observer)
             return 0;
          //
-         LuaManagedResource* value = nullptr;
+         LuaManagedResourceHandle value; // must use a handle here, to avoid race conditions that stem from this being non-blocking (i.e. Lua var goes out of scope, gets closed or GC'd, before we send the resource to Qt)
          if (!lua_isnoneornil(L, 2)) {
             auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
             luaL_argcheck(L, arg != nullptr, 2, "raster expected");
@@ -623,8 +623,7 @@ namespace item_lua {
          auto* task     = new tasks::s2m::lambda(false);
          task->handler  = [observer, value]() mutable {
             if (auto* item = observer->item()) {
-               auto handle  = LuaManagedResourceHandle(value);
-               auto wrapped = QVariant::fromValue<LuaManagedResourceHandle>(handle);
+               auto wrapped = QVariant::fromValue<LuaManagedResourceHandle>(value);
                item->setData(wrapped, Qt::DecorationRole);
             }
          };

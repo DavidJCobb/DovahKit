@@ -17,9 +17,11 @@ namespace editor_script {
       // Allocate these on the heap, please.
       //
       public:
+         virtual ~cross_thread_task() {} // needs to be explicitly defined as virtual so that subclass destructors work
+
          bool seen = false; // has this message been received and acknowledged by its recipient?
          cobb::eight_cc collapse_key;
-         //
+         
       protected:
          virtual void _exec_impl() = 0;
       public:

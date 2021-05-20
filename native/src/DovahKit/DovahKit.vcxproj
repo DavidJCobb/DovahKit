@@ -250,6 +250,7 @@
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\create_form.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\delete_form.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\duplicate_form.cpp" />
+    <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\lambda.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\log_message.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\renumber_form.cpp" />
     <ClCompile Include="editor\scripting\cross_thread_tasks\s2m\spawn_window.cpp" />

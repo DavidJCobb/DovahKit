@@ -32,6 +32,7 @@ namespace editor_script {
       public:
          static constexpr int part_count = 5;
          
+         static luastackchange_t __close(lua_State* L);
          static luastackchange_t __gc(lua_State* L);
          
       protected:
@@ -168,7 +169,7 @@ namespace editor_script {
       private:
          wrapper_metatable() = delete;
       public:
-         static constexpr const char* superclass_key = nullptr;
+         static constexpr const char* superclass_key = nullptr;               // direct subclasses should set this to (metatable_key) before defining their own, so as to inherit common GC metamethods
          static constexpr const char* metatable_key  = "dovah.classes.!base"; // subclasses must override this
          static constexpr const char* class_name     = nullptr;               // subclasses should override this
          static const std::initializer_list<luaL_Reg> metatable_methods; // subclasses must override this even if they offer no methods

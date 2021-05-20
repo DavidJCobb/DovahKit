@@ -10,6 +10,27 @@
 #include "cross_thread_tasks/s2m/lambda.h"
 
 namespace editor_script {
+   /*static*/ luastackchange_t wrapper::__close(lua_State* L) {
+      //
+      // A wrapper will run this metamethod if it is stored in a local variable with the <close> 
+      // attribute and if that variable goes out of scope, e.g.
+      // 
+      //    do
+      //       local r <close> = raster.new(...)
+      //       my_dropdown.items[2].icon = r
+      //    end
+      // 
+      // Lua scripts, then, can decide to have a wrapper torn down as soon as possible. This is 
+      // encouraged when working with Lua-managed resources, as it will ensure that they are not 
+      // kept alive for longer than they need to be -- helpful if we decide to cap the total 
+      // memory usage of these resources. (Of course, it may be friendlier to users to just have 
+      // Lua run two GC passes before creating a resource, if the resource subsystem says that 
+      // it has no room for the desired resource.)
+      //
+      auto* userdata = (wrapper*)lua_touserdata(L, 1);
+      userdata->teardown();
+      return 0;
+   }
    /*static*/ luastackchange_t wrapper::__gc(lua_State* L) {
       auto* userdata = (wrapper*)lua_touserdata(L, 1);
       userdata->teardown();
@@ -22,7 +43,8 @@ namespace editor_script {
 
 namespace editor_script { // base metatable
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_metatable::metatable_methods = {
-      { "__gc",  &wrapper::__gc },
+      { "__close", &wrapper::__close },
+      { "__gc",    &wrapper::__gc },
    };
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_metatable::metatable_getters = no_functions;
    /*static*/ const std::initializer_list<luaL_Reg> wrapper_metatable::metatable_setters = no_functions;
@@ -32,9 +54,12 @@ namespace editor_script {
    wrapper::~wrapper() {
    }
    void wrapper::teardown() {
-      //
-      // Flag widgets as unreferenced when they are.
-      //
+      if (this->type == wrapper_type::undefined) {
+         //
+         // This can happen if the wrapper was closed.
+         //
+         return;
+      }
       if (this->type == wrapper_type::ui) {
          DovahKitScriptVMCore::get().widget_no_longer_referenced(this->widget);
          this->widget = nullptr;
@@ -53,6 +78,8 @@ namespace editor_script {
          mr->is_lua_referenced = false;
          DovahKitScriptVMResourceInterface::get().on_resource_unreferenced(*mr);
       }
+      //
+      this->type = wrapper_type::undefined;
    }
 
    void wrapper::append_part(part_type_t signature, uint32_t index) {
