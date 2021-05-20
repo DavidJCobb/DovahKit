@@ -202,6 +202,14 @@ namespace DovahKitDebug {
          //virtual void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
    };
 
+   class DovahKitTESTForceComboboxTrayRepaint : public QObject {
+      Q_OBJECT;
+      public:
+         using QObject::QObject;
+
+         virtual bool eventFilter(QObject* target, QEvent*) override;
+   };
+
    extern void run_lua_resource_manager_tests(QWidget* parent);
 }
 

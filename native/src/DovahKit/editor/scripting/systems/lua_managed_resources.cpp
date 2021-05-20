@@ -1,4 +1,5 @@
 #include "lua_managed_resources.h"
+#include "../../../helpers/qt/repaint.h"
 
 // Needed to force updates to a combobox's body
 #include <QAbstractItemView>
@@ -149,6 +150,7 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
       auto& list = base.list;
       std::unique_lock guard(base.lock);
       //
+      /*//
       QList<QWidget*> widgets_to_update;
       for (auto* resource : list) {
          assert(resource);
@@ -172,6 +174,17 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
          } else {
             w->update();
          }
+      }
+      //*/
+      bool update = !list.empty();
+      for (auto* resource : list) {
+         assert(resource);
+         resource->resynchronize();
+      }
+      list.clear();
+      if (update) {
+         for (auto* window : vm.widgets.windows)
+            cobb::qt::update_hierarchy(window);
       }
    }
    {
@@ -248,8 +261,8 @@ void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& res
       auto& base = this->resources.pending_deletion;
       auto& list = base.list;
       std::unique_lock guard(base.lock);
-      if (!list.contains(&resource))
-         list.push_back(&resource);
+      assert(!list.contains(&resource));
+      list.push_back(&resource);
    }
 }
 #pragma endregion

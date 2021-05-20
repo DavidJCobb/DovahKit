@@ -321,6 +321,7 @@
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
     <ClCompile Include="helpers\qt\combobox.cpp" />
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
+    <ClCompile Include="helpers\qt\repaint.cpp" />
     <ClCompile Include="helpers\qt\set_model_of.cpp" />
     <ClCompile Include="helpers\qt\strings.cpp" />
     <ClCompile Include="helpers\qt\string_scanner.cpp" />
@@ -679,6 +680,7 @@
     <ClInclude Include="helpers\qt\basic_bindings.h" />
     <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\qt\get_model_of.h" />
+    <ClInclude Include="helpers\qt\repaint.h" />
     <ClInclude Include="helpers\qt\set_model_of.h" />
     <ClInclude Include="helpers\qt\string_scanner.h" />
     <ClInclude Include="helpers\qt\traversal.h" />

@@ -9,13 +9,18 @@
 #include <QTimer>
 
 #include <QAbstractItemView>
+#include <QEvent>
+
+#include "../../helpers/qt/repaint.h"
 
 namespace {
    using namespace DovahKitDebug;
    using referent_t      = DovahKitTESTQVariantWrappedSmartPointerReferent;
    using smart_pointer_t = DovahKitTESTQVariantWrappedSmartPointer<referent_t>;
 
-   static constexpr bool update_entire_widgets = true;
+   static constexpr bool update_entire_widgets = false;
+   static constexpr bool update_entire_windows = true;
+   static_assert(!(update_entire_windows && update_entire_widgets), "Pick one, buddy.");
 
    std::array colors = {
       QColor(255,   0, 0),
@@ -36,7 +41,7 @@ namespace {
 
    static void _shift_colors() {
       std::rotate(colors.begin(), colors.begin() + 1, colors.end());
-      if (!update_entire_widgets)
+      if (!update_entire_widgets && !update_entire_windows)
          DovahKitTESTQVariantWrappedSmartPointerReferentRegistry::get().updateAllReferents(); // if whole-widget updating isn't enabled above, update via QPMIs.
    }
 
@@ -70,6 +75,22 @@ namespace DovahKitDebug {
       }
    }
 
+   bool DovahKitTESTForceComboboxTrayRepaint::eventFilter(QObject* target, QEvent* event) {
+      switch (event->type()) {
+         case QEvent::Paint:
+         case QEvent::UpdateLater:
+         case QEvent::UpdateRequest:
+            break;
+         default:
+            return false;
+      }
+      if (auto* combobox = qobject_cast<QComboBox*>(target))
+         if (auto* view = combobox->view())
+            if (auto* viewport = view->viewport())
+               viewport->update();
+      return false;
+   }
+
    extern void run_lua_resource_manager_tests(QWidget* parent) {
       qRegisterMetaType<smart_pointer_t>(); // ensure the metatype is registered at run-time
       //
@@ -91,12 +112,22 @@ namespace DovahKitDebug {
          select->setItemData(i, QVariant::fromValue<smart_pointer_t>(smart), Qt::DecorationRole);
       }
       //
+      if (update_entire_windows) {
+         //auto* filter = new DovahKitTESTForceComboboxTrayRepaint(dialog);
+         //select->installEventFilter(filter);
+      }
+      //
       {
          auto* button = new QPushButton("Cycle colors");
          layout->addWidget(button);
          QObject::connect(button, &QPushButton::clicked, dialog, [select]() {
             _shift_colors();
-            if (update_entire_widgets) {
+            if (update_entire_windows) {
+               auto* w = select->window();
+               assert(w);
+               //w->update();
+               cobb::qt::update_hierarchy(w);
+            } else if (update_entire_widgets) {
                //select->repaint(); // only needed if we subclass QComboBox to draw the selected item's icon, if any
                select->view()->viewport()->update(); // update the entire combobox list panel
             }
@@ -108,7 +139,12 @@ namespace DovahKitDebug {
          timer->setSingleShot(false);
          QObject::connect(timer, &QTimer::timeout, dialog, [select]() {
             _shift_colors();
-            if (update_entire_widgets) {
+            if (update_entire_windows) {
+               auto* w = select->window();
+               assert(w);
+               //w->update();
+               cobb::qt::update_hierarchy(w);
+            } else if (update_entire_widgets) {
                //select->repaint(); // only needed if we subclass QComboBox to draw the selected item's icon, if any
                select->view()->viewport()->update(); // update the entire combobox list panel
             }
