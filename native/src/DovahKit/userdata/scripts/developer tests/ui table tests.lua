@@ -137,6 +137,83 @@ do
       end)
       panel:add_child(button, 3, 2)
    end
+   do
+      local button = ui.button.new("Set Sel. Icon Color")
+      button:on("OnActivated", "", function()
+         local sel = table.selection
+         if not sel then
+            return
+         end
+         local c  = "hsl(0, 100%, 50%)"
+         local st = table.selection_type
+         --
+         function _handle(cell)
+            if cell then
+               cell.icon = c
+            end
+         end
+         --
+         if st == "rows" then
+            for _, v in ipairs(sel) do
+               local list = v.cells
+               for i = 1, #list do
+                  _handle(list[i])
+               end
+            end
+         elseif st == "columns" then
+            for _, v in ipairs(sel) do
+               local list = v.cells
+               for i = 1, #list do
+                  _handle(list[i])
+               end
+            end
+         elseif st == "cells" then
+            for _, v in ipairs(sel) do
+               _handle(v)
+            end
+         end
+      end)
+      panel:add_child(button, 4, 1)
+   end
+   do
+      local button = ui.button.new("Set Sel. Icon Raster")
+      button:on("OnActivated", "", function()
+         local sel = table.selection
+         if not sel then
+            return
+         end
+         local c  = "hsl(0, 100%, 50%)"
+         local r  = raster.new({ width = 8, height = 8, background_color = c })
+         local st = table.selection_type
+         --
+         function _handle(cell)
+            if cell then
+               cell.icon = r
+            end
+         end
+         --
+         if st == "rows" then
+            for _, v in ipairs(sel) do
+               local list = v.cells
+               for i = 1, #list do
+                  _handle(list[i])
+               end
+            end
+         elseif st == "columns" then
+            for _, v in ipairs(sel) do
+               local list = v.cells
+               for i = 1, #list do
+                  _handle(list[i])
+               end
+            end
+         elseif st == "cells" then
+            for _, v in ipairs(sel) do
+               _handle(v)
+            end
+         end
+      end)
+      panel:add_child(button, 4, 2)
+   end
    
    window:add_child(panel)
 end

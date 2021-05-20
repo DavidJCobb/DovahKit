@@ -61,6 +61,10 @@ namespace editor_script::moph {
    extern int push_color(lua_State*, const QVariant&);
    extern QVariant pull_color(lua_State*, int stack_pos);
 
+   // Icons can be QColors or rasters, currently.
+   extern int push_icon(lua_State*, const QVariant&);
+   extern QVariant pull_icon(lua_State*, int stack_pos);
+
    extern int push_string(lua_State*, const QVariant&);
    extern QVariant pull_string(lua_State*, int stack_pos);
 }

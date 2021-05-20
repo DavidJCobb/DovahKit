@@ -18,11 +18,6 @@ namespace {
    using cls = wrappers::ui::table_view_cell;
    using wrapped_type = cls::wrapped_type;
 
-   namespace _moph {
-      using moph_t = moph::model_observer_property_handler;
-      
-   }
-
    namespace _methods {
    }
    namespace _getters {
@@ -93,6 +88,7 @@ namespace editor_script::wrappers::ui {
 
    /*static*/ const moph::handler_set cls::moph_handlers = {{
       moph::model_observer_property_handler{ "alignment",  Qt::ItemDataRole::TextAlignmentRole, moph::push_alignment, moph::pull_alignment, moph::transform_alignment },
+      moph::model_observer_property_handler{ "icon",       Qt::ItemDataRole::DecorationRole,    moph::push_icon,      moph::pull_icon,      moph::model_observer_property_handler::default_transform, true },
       moph::model_observer_property_handler{ "text",       Qt::ItemDataRole::DisplayRole,       moph::push_string,    moph::pull_string },
       moph::model_observer_property_handler{ "text_color", Qt::ItemDataRole::ForegroundRole,    moph::push_color,     moph::pull_color,     moph::model_observer_property_handler::default_transform, true },
    }};

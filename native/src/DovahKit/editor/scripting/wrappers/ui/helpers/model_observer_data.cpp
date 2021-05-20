@@ -1,4 +1,5 @@
 #include "model_observer_data.h"
+#include "../../../systems/lua_managed_resources.h"
 #include "../../../systems/messaging.h"
 #include "../../../systems/userdata.h"
 #include "../../../wrapper.h"
@@ -6,6 +7,8 @@
 #include "../../../ui/util/alignment.h"
 #include "../../../ui/util/color.h"
 #include "../../../../../helpers/qt/get_model_of.h"
+
+#include "../../resource/raster.h"
 
 namespace editor_script::helpers {
    extern [[nodiscard]] QVariant get_model_items_data(ObservableStandardItemModelObserver* observer, int role) {
@@ -360,6 +363,34 @@ namespace editor_script::moph {
       return 1;
    }
    extern QVariant pull_color(lua_State* L, int stack_pos) {
+      return editor_script::util::ui::pull_color(L, stack_pos);
+   }
+
+   extern int push_icon(lua_State* L, const QVariant& v) {
+      switch (v.type()) {
+         case QMetaType::QBrush:
+            editor_script::util::ui::push_color(L, v.value<QBrush>().color());
+            return 1;
+         case QMetaType::QColor:
+            editor_script::util::ui::push_color(L, v.value<QColor>());
+            return 1;
+      }
+      if (v.type() == qMetaTypeId<LuaManagedResourceHandle>()) {
+         auto* resource = LuaManagedResourceHandle::extract_from_variant(v);
+         if (resource)
+            return wrappers::resource::raster::wrap_and_push(L, *resource);
+      }
+      lua_pushnil(L);
+      return 1;
+   }
+   extern QVariant pull_icon(lua_State* L, int stack_pos) {
+      auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, stack_pos);
+      if (wrap) {
+         if (!wrap->managed_resource)
+            return QVariant();
+         auto handle = LuaManagedResourceHandle(wrap->managed_resource, nullptr);
+         return QVariant::fromValue<LuaManagedResourceHandle>(handle);
+      }
       return editor_script::util::ui::pull_color(L, stack_pos);
    }
 

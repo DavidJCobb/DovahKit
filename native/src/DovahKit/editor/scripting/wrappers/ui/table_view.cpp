@@ -1,5 +1,6 @@
 #include "table_view.h"
 #include "../../systems/editor_script_inner_core.h"
+#include "../../systems/lua_managed_resources.h"
 #include "../../systems/messaging.h"
 #include "../../systems/permissions.h"
 #include "../../systems/userdata.h"
@@ -964,6 +965,7 @@ namespace {
             //
             DovahKitScriptVMCore::get().set_up_widget_model(created);
             DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
+            created->setItemDelegate(new DovahKitScriptItemDelegate(created));
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          delete task;
