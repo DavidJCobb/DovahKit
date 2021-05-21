@@ -116,10 +116,12 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
       auto& list = base.list;
       std::unique_lock guard(base.lock);
       //
-      bool update = !list.empty();
+      bool update = false;
       for (auto* resource : list) {
          assert(resource);
          resource->resynchronize();
+         if (!update && resource->refcount) // check (update) first to avoid delay on checking the atomic refcount
+            update = true;
       }
       list.clear();
       if (update) {

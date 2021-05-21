@@ -137,7 +137,31 @@ its refcount drop to zero, we call some code within our resource registry. This
 code can delete the resource if it is, at that time, also not referenced by Lua 
 anymore.
 
-From here on out, we may abbreviate LuaManagedResourceHandle as "LMRH."
+(From here on out, we may abbreviate LuaManagedResourceHandle as "LMRH.")
+
+Of course, we need to have LMRHs actually function within QVariants. We can use 
+two macros for this purpose: the usual  Q_DECLARE_METATYPE macro used to enable 
+the use of any type in a QVariant, as well as Q_DECLARE_SMART_POINTER_METATYPE, 
+to ensure  that smart pointer  behavior works  properly. The latter  macro only 
+works on a class templated on some typename  T, which must subclass QObject. We 
+need to use both macros: the former on  the template specialization; the latter 
+on the template.
+
+   Q_DECLARE_SMART_POINTER_METATYPE(Foo);
+   Q_DECLARE_METATYPE(Foo<Bar>);
+
+This of course means that LuaManagedResource  needs to subclass QObject, but we 
+get a few conveniences  from that. Firstly,  LMRH can hook  QObject::destroyed, 
+allowing us to delete LMRs even if there  are still extant LMRHs which refer to 
+them, which makes  VM teardown simpler (we just wipe all resources  immediately 
+as part of a central process). Secondly, we can offer a "resynchronized" signal 
+on LMR, which  can be used by  custom widgets. I said  earlier that  I'd circle 
+back to use cases like QToolButton, so  here we are: there's no way to take any 
+arbitrary widget that relies on QPixmap and  get it to use an LMRH instead, but 
+we can create custom widget (sub)classes  that use LMRH, and have them hook the 
+LMR's "resynchronized"  signal to know  when to repaint  (although this may not 
+even be strictly  necessary since we force all scripted windows  and widgets to 
+repaint anyway).
 
 
 === BEST PRACTICES FOR SCRIPTING WITH LMRs ====================================
