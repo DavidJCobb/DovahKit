@@ -12,6 +12,10 @@ table.word_wrap = "truncate"
 table:append_row("A", "B", "C", "D")
 table:append_row("E", "F", "G", "H")
 table:append_row("I", "J")
+table:append_row_with_options(
+   { text_color = "#FF00A0", text = "default" },
+   "K", "L", nil, "M"
+)
 
 do
    local panel = ui.widget.new()
