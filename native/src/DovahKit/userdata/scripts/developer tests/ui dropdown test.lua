@@ -1,3 +1,6 @@
+local OPTION_ALWAYS_USE_RASTERS = true
+-- NOTE: Using to-be-closed variables requires the above option
+
 local window = ui.window.new()
 local picker = ui.dropdown.new()
 local button = ui.button.new("Toggle Sort")
@@ -57,19 +60,34 @@ do
    end
 end
 
+function get_color_for_name(i)
+   local c = colors[i]
+   if OPTION_ALWAYS_USE_RASTERS then
+      c = raster.new({ width = 32, height = 32, background_color = c })
+   else
+      --
+      -- Strings can't be stored in to-be-closed variables, and we want to use 
+      -- those for rasters, so we'll wrap the string in a table whose __tostring 
+      -- just produces the string content.
+      --
+      local t = c
+      c = setmetatable({}, {
+         __close    = function() end,
+         __tostring = function() return t end
+      })
+   end
+   return c
+end
+
 do
    local INITIAL_COUNT = 5
    for i = 1, INITIAL_COUNT do
-      picker:append_item(names[i] .. " (" .. i .. ")")
-   end
-   local items = picker.items
-   for i = 1, INITIAL_COUNT do
-      local r <close> = raster.new({
-         width  = 32,
-         height = 32,
-         background_color = colors[i]
+      local name = names[i] .. " (" .. i .. ")"
+      local icon <close> = get_color_for_name(i)
+      picker:append_item({
+         text = name,
+         icon = icon
       })
-      items[i].icon = r
    end
 end
 
@@ -96,14 +114,11 @@ append:on("OnActivated", "", function()
    end
    local i    = count + 1
    local name = names[i] .. " (" .. i .. ")"
-   picker:append_item(name)
-   --
-   local r <close> = raster.new({
-      width  = 32,
-      height = 32,
-      background_color = colors[i]
+   local icon <close> = get_color_for_name(i)
+   picker:append_item({
+      text = name,
+      icon = icon
    })
-   items[i].icon = r
 end)
 remove:on("OnActivated", "", function()
    local i = picker.selected_index

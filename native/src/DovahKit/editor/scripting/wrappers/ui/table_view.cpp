@@ -60,31 +60,22 @@ namespace {
       widget->setProperty("Lua word wrap", false);
    }
 
-   void _extract_cell_arg_list(lua_State* L, int first, QVector<editor_script::moph::handler_set::role_map_t>& roles, QVector<QStandardItem*>& items) {
+   void _extract_cell_arg_list(lua_State* L, int first, QVector<editor_script::moph::handler_set::role_map_t>& roles) {
       using namespace editor_script;
 
       auto& core = DovahKitScriptVMCore::get();
       int   argcount = lua_gettop(L);
       for (int i = first; i <= argcount; ++i) {
-         if (auto* ia = wrapper_from_stack<wrappers::ui::table_view_cell>(L, i)) {
-            assert(ia->model_observer);
-            items.push_back(ia->model_observer->item());
-            roles.push_back(moph::handler_set::role_map_t());
-            continue;
-         }
          auto type = lua_type(L, i);
          if (type == LUA_TTABLE) {
             auto e = wrappers::ui::table_view_cell::moph_handlers.extract(L, i);
             roles.push_back(e);
-            items.push_back(nullptr);
             continue;
          }
          moph::handler_set::role_map_t e;
          e[Qt::DisplayRole] = core.variant_from_lua(i);
          roles.push_back(e);
-         items.push_back(nullptr);
       }
-      assert(roles.size() == items.size());
    }
 }
 
@@ -261,28 +252,23 @@ namespace {
          //
          // This function is designed in mimicry of the append-row column.
          //
-         QVector<role_map_t>     roles;
-         QVector<QStandardItem*> items;
-         _extract_cell_arg_list(L, 2, roles, items);
+         QVector<role_map_t> roles;
+         _extract_cell_arg_list(L, 2, roles);
          //
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [widget, roles, items]() { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         task->handler = [widget, roles]() { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             //
-            assert(roles.size() == items.size());
             int size = roles.size();
             QList<QStandardItem*> to_append;
             to_append.reserve(size);
             for (int i = 0; i < size; ++i) {
-               auto* item = items[i];
                auto& data = roles[i];
-               if (!item) {
-                  item = new QStandardItem();
-                  for (auto it = data.begin(); it != data.end(); ++it)
-                     item->setData(it.value(), it.key());
-               }
+               auto* item = new QStandardItem();
+               for (auto it = data.begin(); it != data.end(); ++it)
+                  item->setData(it.value(), it.key());
                to_append.push_back(item);
             }
             model->appendColumn(to_append);
@@ -309,32 +295,27 @@ namespace {
          //  - Any other value, which will be used for the Qt::DisplayRole and likely coerced to a 
          //    string in the process.
          //
-         QVector<role_map_t>     roles;
-         QVector<QStandardItem*> items;
-         _extract_cell_arg_list(L, 2, roles, items);
+         QVector<role_map_t> roles;
+         _extract_cell_arg_list(L, 2, roles);
          //
          // We've extracted the Lua arguments. Now, let's pass them in.
          //
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [widget, roles, items]() { // do NOT pass (args) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         task->handler = [widget, roles]() { // do NOT pass (args) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             if (model->rowCount() >= max_wrappable_word_count) // safety measure for large tables
                disable_word_wrap_without_changing_truncation(widget);
             //
-            assert(roles.size() == items.size());
             int size = roles.size();
             QList<QStandardItem*> to_append;
             to_append.reserve(size);
             for (int i = 0; i < size; ++i) {
-               auto* item = items[i];
                auto& data = roles[i];
-               if (!item) {
-                  item = new QStandardItem();
-                  for (auto it = data.begin(); it != data.end(); ++it)
-                     item->setData(it.value(), it.key());
-               }
+               auto* item = new QStandardItem();
+               for (auto it = data.begin(); it != data.end(); ++it)
+                  item->setData(it.value(), it.key());
                to_append.push_back(item);
             }
             model->appendRow(to_append);
@@ -362,28 +343,23 @@ namespace {
             luaL_argerror(L, 2, "column numbers start at 1");
          }
          //
-         QVector<role_map_t>     roles;
-         QVector<QStandardItem*> items;
-         _extract_cell_arg_list(L, 3, roles, items);
+         QVector<role_map_t> roles;
+         _extract_cell_arg_list(L, 3, roles);
          //
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(true);
-         task->handler = [widget, roles, items, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         task->handler = [widget, roles, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             //
-            assert(roles.size() == items.size());
             int size = roles.size();
             QList<QStandardItem*> to_append;
             to_append.reserve(size);
             for (int i = 0; i < size; ++i) {
-               auto* item = items[i];
                auto& data = roles[i];
-               if (!item) {
-                  item = new QStandardItem();
-                  for (auto it = data.begin(); it != data.end(); ++it)
-                     item->setData(it.value(), it.key());
-               }
+               auto* item = new QStandardItem();
+               for (auto it = data.begin(); it != data.end(); ++it)
+                  item->setData(it.value(), it.key());
                to_append.push_back(item);
             }
             int cc = model->columnCount();
@@ -407,30 +383,25 @@ namespace {
             luaL_argerror(L, 2, "row numbers start at 1");
          }
          //
-         QVector<role_map_t>     roles;
-         QVector<QStandardItem*> items;
-         _extract_cell_arg_list(L, 3, roles, items);
+         QVector<role_map_t> roles;
+         _extract_cell_arg_list(L, 3, roles);
          //
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(true);
-         task->handler = [widget, roles, items, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         task->handler = [widget, roles, insert_at]() mutable { // do NOT pass args by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
             if (model->rowCount() >= max_wrappable_word_count) // safety measure for large tables
                disable_word_wrap_without_changing_truncation(widget);
             //
-            assert(roles.size() == items.size());
             int size = roles.size();
             QList<QStandardItem*> to_append;
             to_append.reserve(size);
             for (int i = 0; i < size; ++i) {
-               auto* item = items[i];
                auto& data = roles[i];
-               if (!item) {
-                  item = new QStandardItem();
-                  for (auto it = data.begin(); it != data.end(); ++it)
-                     item->setData(it.value(), it.key());
-               }
+               auto* item = new QStandardItem();
+               for (auto it = data.begin(); it != data.end(); ++it)
+                  item->setData(it.value(), it.key());
                to_append.push_back(item);
             }
             int rc = model->rowCount();

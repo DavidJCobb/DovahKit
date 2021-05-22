@@ -284,6 +284,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\checkbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\dropdown\item.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\formpicker.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\groupbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\helpers\model_observer_data.cpp" />
@@ -637,6 +638,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\checkbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\dropdown\item.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\formpicker.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\groupbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\helpers\model_observer_data.h" />
@@ -857,6 +859,7 @@
     <Text Include="dovah\_docs\use info build process.txt" />
     <Text Include="editor\scripting\_docs\abstract.txt" />
     <Text Include="editor\scripting\_docs\case studies.txt" />
+    <Text Include="editor\scripting\_docs\lua-managed resources.txt" />
     <Text Include="editor\scripting\_docs\native classes.txt" />
     <Text Include="editor\scripting\_docs\ui - model observer property handlers.txt" />
     <Text Include="editor\scripting\_docs\ui - model observers.txt" />

@@ -19,6 +19,7 @@
 #include "helpers/model_observer_data.h"
 #include "helpers/widget_properties.h"
 
+#include "dropdown/item.h"
 #include "../resource/raster.h"
 
 /*
@@ -114,8 +115,7 @@ namespace {
 }
 #pragma endregion
 
-#pragma region dropdown
-namespace widget_lua {
+namespace {
    using namespace editor_script;
    using cls = wrappers::ui::dropdown;
    using wrapped_type = cls::wrapped_type;
@@ -129,19 +129,28 @@ namespace widget_lua {
    }
 
    namespace _methods {
+      using role_map_t = moph::handler_set::role_map_t;
+
       luastackchange_t append_item(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString text;
-         if (lua_gettop(L) >= 2)
-            text = QString::fromUtf8(lua_tostring(L, 2));
+         role_map_t roles;
+         if (lua_gettop(L) >= 2) {
+            if (lua_type(L, 2) == LUA_TTABLE) {
+               roles = wrappers::ui::dropdown_item::moph_handlers.extract(L, 2);
+            } else {
+               roles[Qt::DisplayRole] = DovahKitScriptVMCore::get().variant_from_lua(2);
+            }
+         }
          auto* widget  = (wrapped_type*) self.widget;
          auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [widget, text]() { // do NOT pass (text) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
+         task->handler = [widget, roles]() { // do NOT pass (roles) by reference, as this lambda is set not to block, so it'll go out of scope if you do!
             auto* proxy = (QSortFilterProxyModel*) widget->model();
             auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
-            auto* item  = new QStandardItem(text);
+            auto* item  = new QStandardItem();
+            for (auto it = roles.begin(); it != roles.end(); ++it)
+               item->setData(it.value(), it.key());
             model->appendRow(item);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -467,44 +476,44 @@ namespace widget_lua {
 }
 
 namespace editor_script::wrappers::ui {
-   /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_methods = {
-      { "append_item",                &widget_lua::_methods::append_item },
-      { "clear",                      &widget_lua::_methods::clear },
-      { "map_logical_index_to_proxy", &widget_lua::_methods::map_logical_index_to_proxy },
-      { "map_proxy_index_to_logical", &widget_lua::_methods::map_proxy_index_to_logical },
-      { "remove_item",                &widget_lua::_methods::remove_item },
+   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "append_item",                &_methods::append_item },
+      { "clear",                      &_methods::clear },
+      { "map_logical_index_to_proxy", &_methods::map_logical_index_to_proxy },
+      { "map_proxy_index_to_logical", &_methods::map_proxy_index_to_logical },
+      { "remove_item",                &_methods::remove_item },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_getters = {
-      { "items",          &widget_lua::_getters::items },
-      { "selected_index", &widget_lua::_getters::selected_index },
-      { "selected_item",  &widget_lua::_getters::selected_item },
-      { "selected_text",  &widget_lua::_getters::selected_text },
-      { "sorted",         &widget_lua::_getters::sorted },
+   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
+      { "items",          &_getters::items },
+      { "selected_index", &_getters::selected_index },
+      { "selected_item",  &_getters::selected_item },
+      { "selected_text",  &_getters::selected_text },
+      { "sorted",         &_getters::sorted },
    };
-   /*static*/ const std::initializer_list<luaL_Reg> widget_lua::cls::metatable_setters = {
-      { "selected_index", &widget_lua::_setters::selected_index },
-      { "selected_text",  &widget_lua::_setters::selected_text },
-      { "sorted",         &widget_lua::_setters::sorted },
+   /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
+      { "selected_index", &_setters::selected_index },
+      { "selected_text",  &_setters::selected_text },
+      { "sorted",         &_setters::sorted },
    };
 
-   /*static*/ void widget_lua::cls::setup(lua_State* L) {
+   /*static*/ void cls::setup(lua_State* L) {
       int pos = lua_gettop(L);
       //
       // Create singleton:
       //
       lua_createtable(L, 0, 2);
-      lua_pushcfunction(L, &widget_lua::_singleton_functions::new_);
+      lua_pushcfunction(L, &_singleton_functions::new_);
       lua_setfield     (L, -2, "new");
-      lua_pushcfunction(L, &widget_lua::_singleton_functions::is);
+      lua_pushcfunction(L, &_singleton_functions::is);
       lua_setfield     (L, -2, "is");
       //
       assert(lua_gettop(L) == pos + 1);
-      lua_setfield(L, pos, widget_lua::cls::global_name);
+      lua_setfield(L, pos, cls::global_name);
       //
       // Set up collection:
       //
       editor_script::define_collection_metatable(L, {
-         .registry_key          = widget_lua::cls::item_collection_key,
+         .registry_key          = cls::item_collection_key,
          .garbage_collection    = &wrapper::__gc,
          //
          .get_collection_length  = &_collections::items::get_collection_length,
@@ -512,175 +521,3 @@ namespace editor_script::wrappers::ui {
       });
    }
 }
-#pragma endregion
-
-#pragma region dropdown_item
-namespace item_lua {
-   using namespace editor_script;
-   using cls = wrappers::ui::dropdown_item;
-   using wrapped_type = cls::wrapped_type;
-
-   namespace _methods {
-   }
-   namespace _getters {
-      luastackchange_t data(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         QVariant result;
-         {
-            auto* observer = self.model_observer;
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [observer, &result]() {
-               if (auto* item = observer->item())
-                  result = item->data(Qt::UserRole);
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         return DovahKitScriptVMCore::get().push_to_lua(result);
-      }
-      luastackchange_t icon(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         LuaManagedResource* result = nullptr;
-         {
-            auto* observer = self.model_observer;
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [observer, &result]() {
-               auto* item = observer->item();
-               if (!item)
-                  return;
-               auto  data     = item->data(Qt::DecorationRole);
-               auto* resource = LuaManagedResourceHandle::extract_from_variant(data);
-               if (!resource)
-                  return;
-               resource->is_lua_referenced = true;
-               result = resource;
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         if (!result)
-            return 0;
-         return wrappers::resource::raster::wrap_and_push(L, *result);
-      }
-      luastackchange_t text(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         QString result;
-         {
-            auto* observer = self.model_observer;
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [observer, &result]() {
-               if (auto* item = observer->item())
-                  result = item->data(Qt::DisplayRole).toString();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         lua_pushstring(L, result.toUtf8());
-         return 1;
-      }
-   }
-   namespace _setters {
-      luastackchange_t data(lua_State* L) {
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         auto& vm    = DovahKitScriptVMCore::get();
-         if (lua_type(L, 2) == LUA_TTABLE) {
-            luaL_error(L, "storing a table as a dropdown item's data member is not supported");
-         }
-         auto  value = vm.variant_from_lua(2);
-         if (!value.isValid() && !lua_isnoneornil(L, 2)) {
-            luaL_error(L, "the provided value cannot be stored as a dropdown item's data member");
-         }
-         if (!self.model_observer)
-            return 0;
-         auto* observer = self.model_observer;
-         auto* task     = new tasks::s2m::lambda(false);
-         task->handler  = [observer, value]() {
-            if (auto* item = observer->item())
-               item->setData(value, Qt::UserRole);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         return 0;
-      }
-      luastackchange_t icon(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.model_observer)
-            return 0;
-         //
-         LuaManagedResourceHandle value; // must use a handle here, to avoid race conditions that stem from this being non-blocking (i.e. Lua var goes out of scope, gets closed or GC'd, before we send the resource to Qt)
-         if (!lua_isnoneornil(L, 2)) {
-            auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
-            luaL_argcheck(L, arg != nullptr, 2, "raster expected");
-            value = arg->managed_resource;
-         }
-         //
-         auto* observer = self.model_observer;
-         auto* task     = new tasks::s2m::lambda(false);
-         task->handler  = [observer, value]() mutable {
-            if (auto* item = observer->item()) {
-               auto wrapped = QVariant::fromValue<LuaManagedResourceHandle>(value);
-               item->setData(wrapped, Qt::DecorationRole);
-            }
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         return 0;
-      }
-      luastackchange_t text(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
-         if (!self.model_observer)
-            return 0;
-         auto* observer = self.model_observer;
-         auto* task     = new tasks::s2m::lambda(false);
-         auto  value    = QString::fromUtf8(lua_tostring(L, 2));
-         task->handler  = [observer, value]() {
-            if (auto* item = observer->item())
-               item->setData(value, Qt::DisplayRole);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         return 0;
-      }
-   }
-
-   namespace _singleton_functions {
-      luastackchange_t is(lua_State* L) {
-         auto* wrapper = wrapper_from_stack<cls>(L, 1);
-         lua_pushboolean(L, wrapper != nullptr);
-         return 1;
-      }
-   }
-}
-
-namespace editor_script::wrappers::ui {
-   /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_methods = {
-   };
-   /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_getters = {
-      { "data", &item_lua::_getters::data }, // an arbitrary scalar value that can be associated with any dropdown item; uses Qt::UserRole
-      { "icon", &item_lua::_getters::icon },
-      { "text", &item_lua::_getters::text },
-   };
-   /*static*/ const std::initializer_list<luaL_Reg> item_lua::cls::metatable_setters = {
-      { "data",  &item_lua::_setters::data }, // an arbitrary scalar value that can be associated with any dropdown item; uses Qt::UserRole
-      { "icon",  &item_lua::_setters::icon },
-      { "text",  &item_lua::_setters::text },
-   };
-
-   /*static*/ void item_lua::cls::setup(lua_State* L) {
-      int pos = lua_gettop(L);
-      //
-      // Create singleton:
-      //
-      lua_createtable(L, 0, 2);
-      lua_pushcfunction(L, &item_lua::_singleton_functions::is);
-      lua_setfield     (L, -2, "is");
-      //
-      assert(lua_gettop(L) == pos + 1);
-      lua_setfield(L, pos, item_lua::cls::global_name);
-   }
-}
-#pragma endregion

@@ -2,6 +2,7 @@
 #include "ui/button.h"
 #include "ui/checkbox.h"
 #include "ui/dropdown.h"
+#include "ui/dropdown/item.h"
 #include "ui/formpicker.h"
 #include "ui/groupbox.h"
 #include "ui/line.h"
