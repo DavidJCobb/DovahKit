@@ -7,6 +7,7 @@ namespace editor_script {
       using namespace wrappers;
       //
       resource::raster::setup(L);
+      // NOTE: As of this writing the "unknown" type DOES NOT have a singleton
    }
    void build_all_ui_wrapper_singletons(lua_State* L) {
       using namespace wrappers;

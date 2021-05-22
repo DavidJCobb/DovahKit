@@ -21,6 +21,7 @@ namespace editor_script {
       protected:
          std::atomic<int> refcount = 0;
          struct {
+            QByteArray binary; // for unknown-type resources
             struct {
                QImage  script;
                QPixmap client;
@@ -32,6 +33,8 @@ namespace editor_script {
          inline const QImage  get_raster_script_side() const noexcept { return this->content.raster.script; }
          inline const QPixmap get_raster_widget_side() const noexcept { return this->content.raster.client; }
          void modify_raster_script_side(std::function<void(QImage&)> task); // Accessor to let Lua scripts modify image data. Refer to function on VM subsystem for further info.
+
+         inline const QByteArray get_binary_script_side() const noexcept { return this->content.binary; }
 
       protected:
          void on_referenced();
@@ -158,6 +161,9 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
       // Creates a resource and returns it. This must be called from inside of a script-to-client cross-thread task, and 
       // the script thread MUST receive the resource and push it into Lua via a wrapper.
       resource_t* create_resource(QImage source = QImage());
+
+      // Creates a binary-type resource.
+      resource_t* create_resource(const QByteArray&);
 
       // Accessor to allow Lua APIs to modify a resource's raster content on the script thread; for convenience, you can 
       // also call this on the resource object itself. This function locks the desynchronized resource list for the full 

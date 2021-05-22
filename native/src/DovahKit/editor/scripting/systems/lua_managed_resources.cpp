@@ -169,6 +169,25 @@ DovahKitScriptVMResourceInterface::resource_t* DovahKitScriptVMResourceInterface
    return resource;
 }
 
+DovahKitScriptVMResourceInterface::resource_t* DovahKitScriptVMResourceInterface::create_resource(const QByteArray& source) {
+   DovahKitScriptVMCore::require_client_thread();
+   //
+   resource_t* resource = new resource_t;
+   #if _DEBUG
+      qDebug("Creating Lua-managed resource: %p", resource);
+   #endif
+   {
+      auto& base = this->resources.extant;
+      auto& list = base.list;
+      std::unique_lock guard(base.lock);
+      //
+      list.push_back(resource);
+   }
+   resource->content.binary = source;
+   resource->content.binary.detach();
+   return resource;
+}
+
 void DovahKitScriptVMResourceInterface::modify_raster_script_side(resource_t& r, std::function<void(QImage&)> task) {
    auto& base = this->resources.desynched;
    auto& list = base.list;

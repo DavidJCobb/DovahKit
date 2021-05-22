@@ -1,5 +1,7 @@
 #include "dovah.h"
+#include "../../../../helpers/lua/setfuncs.h"
 #include "../../systems/editor_script_inner_core.h"
+#include "../../systems/lua_managed_resources.h"
 #include "../../systems/messaging.h"
 #include "../../systems/permissions.h"
 #include "../../systems/userdata.h"
@@ -11,9 +13,16 @@
 #include "../../../core.h" // DovahKitCore
 #include "../form_type_values.h"
 #include "../../cross_thread_tasks/s2m/create_form.h"
+#include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../cross_thread_tasks/s2m/log_message.h"
 #include "../../cross_thread_tasks/s2m/test_call_and_response.h"
 #include "../../wrappers/form.h"
+
+#include <QBuffer>
+#include <QImageReader>
+#include "../../../../dovah/files/bsa/bsa_archived_file.h"
+#include "../../wrappers/resource/raster.h"
+#include "../../wrappers/resource/unknown.h"
 
 namespace {
    using namespace editor_script;
@@ -203,6 +212,76 @@ namespace {
          DovahKitScriptVMMessenger::get().send_message(m);
          return 0;
       }
+      luastackchange_t lookup_game_asset(lua_State* L) {
+         const char* raw = nullptr;
+         if (lua_isstring(L, 1)) {
+            raw = lua_tostring(L, 1);
+         } else if (lua_istable(L, 1) || lua_isuserdata(L, 1)) {
+            int type = luaL_getmetafield(L, 1, "__tostring");
+            lua_pop(L, 1);
+            if (type == LUA_TFUNCTION)
+               raw = luaL_tolstring(L, 1, nullptr);
+         }
+         luaL_argcheck(L, raw != nullptr, 1, "string expected");
+         std::filesystem::path path = raw;
+         //
+         dovah::bsa_archived_file* file = nullptr;
+         {
+            auto* task    = new tasks::s2m::lambda(true);
+            task->handler = [path, &file]() {
+               file = DovahKitCore::get().lookup_game_asset(path, true);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!file)
+            return 0;
+         {
+            QImageReader reader;
+            {
+               auto p = path.filename().u8string();
+               auto s = QString::fromUtf8((const char*)p.c_str());
+               reader.setFileName(s);
+            }
+            auto buffer = QByteArray::fromRawData((const char*)file->data(), file->size());
+            auto device = QBuffer(&buffer);
+            reader.setDevice(&device);
+            if (!reader.format().isEmpty()) {
+               auto raster = reader.read();
+               if (!raster.isNull()) {
+                  LuaManagedResource* resource = nullptr;
+                  {
+                     auto* task    = new tasks::s2m::lambda(true);
+                     task->handler = [&raster, &resource]() {
+                        resource = DovahKitScriptVMResourceInterface::get().create_resource(raster);
+                     };
+                     DovahKitScriptVMUITaskConduit::get().send_message(*task);
+                     delete task;
+                     assert(resource);
+                  }
+                  return wrappers::resource::raster::wrap_and_push(L, *resource);
+               }
+            }
+         }
+         static_assert(false, "Qt doesn't support DDS files, in part because the code they wrote to load them is buggy, and in part because a DDS file can encode multiple textures. We need to roll our own loader.");
+         //
+         // The resource could not be identified.
+         //
+         LuaManagedResource* resource = nullptr;
+         {
+            auto* task    = new tasks::s2m::lambda(true);
+            task->handler = [&file, &resource]() {
+               resource = DovahKitScriptVMResourceInterface::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()));
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+            assert(resource);
+         }
+         wrapper out;
+         out.type = wrapper_type::lua_managed_resource;
+         out.managed_resource = resource;
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::resource::unknown::metatable_key);
+      }
       luastackchange_t object_is(lua_State* L) {
          lua_settop(L, 2);
          constexpr int index_obj = 1;
@@ -256,7 +335,7 @@ namespace {
       }
    }
 
-   std::array _functions = {
+   const std::initializer_list<luaL_Reg> _functions = {
       luaL_Reg{ "benchmark_start",        &_definitions::benchmark_start },
       luaL_Reg{ "benchmark_stop",         &_definitions::benchmark_stop },
       luaL_Reg{ "count_forms_of_type",    &_definitions::count_forms_of_type },
@@ -264,6 +343,7 @@ namespace {
       luaL_Reg{ "for_each_form_of_type",  &_definitions::for_each_form_of_type },
       luaL_Reg{ "get_form_by_id",         &_definitions::get_form_by_id },
       luaL_Reg{ "log_message",            &_definitions::log_message },
+      luaL_Reg{ "lookup_game_asset",      &_definitions::lookup_game_asset },
       luaL_Reg{ "object_is",              &_definitions::object_is },
       luaL_Reg{ "test_call_and_response", &_definitions::test_call_and_response },
       luaL_Reg{ "type",                   &_definitions::type },
@@ -271,11 +351,6 @@ namespace {
 }
 namespace editor_script::namespace_setup {
    extern void dovah(lua_State* L) {
-      int pos = lua_gettop(L);
-      for (auto& entry : _functions) {
-         lua_pushstring(L, entry.name);    // key
-         lua_pushcfunction(L, entry.func); // value
-         lua_rawset(L, pos);
-      }
+      cobb::lua::setfuncs(L, _functions);
    }
 }

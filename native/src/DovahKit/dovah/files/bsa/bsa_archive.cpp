@@ -190,7 +190,7 @@ namespace dovah {
       if (this->header.flags & bsa_header::flag::embed_filenames) {
          uint8_t length;
          this->_read_at(length, offset);
-         offset += length;
+         offset += sizeof(length) + length;
       }
       bool compressed = entry.non_default_compression();
       if (this->header.flags & bsa_header::flag::compressed_by_default)

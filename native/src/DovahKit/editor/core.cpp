@@ -735,7 +735,7 @@ dovah::bsa_archived_file* DovahKitCore::lookup_game_asset(const std::filesystem:
    auto* archives = this->load_order->get_archive_list();
    if (!archives)
       return nullptr;
-   return archives->lookup_file(path.string(), true);
+   return archives->lookup_file(path.string(), false);
 }
 dovah::compiled_papyrus_script DovahKitCore::parse_compiled_script(const std::string& scriptname) {
    using out_t  = dovah::compiled_papyrus_script;

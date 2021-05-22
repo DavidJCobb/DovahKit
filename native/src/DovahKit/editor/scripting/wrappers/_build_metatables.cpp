@@ -35,6 +35,7 @@ namespace editor_script {
       #pragma endregion
       #pragma region Resources
          define_wrapper_metatable<resource::raster>(L);
+         define_wrapper_metatable<resource::unknown>(L);
       #pragma endregion
       #pragma region UI
          define_wrapper_metatable<ui::widget>(L);
