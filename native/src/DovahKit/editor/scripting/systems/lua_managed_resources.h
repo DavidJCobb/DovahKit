@@ -1,9 +1,10 @@
 #pragma once
 #include <functional>
 #include <mutex>
+#include <QElapsedTimer>
+#include <QStyledItemDelegate>
 #include "../../../helpers/singleton.h"
 #include "editor_script_inner_core.h"
-#include <QStyledItemDelegate>
 
 class DovahKitScriptVMResourceInterface;
 class ObservableStandardItemModel;
@@ -30,7 +31,7 @@ namespace editor_script {
 
          inline const QImage  get_raster_script_side() const noexcept { return this->content.raster.script; }
          inline const QPixmap get_raster_widget_side() const noexcept { return this->content.raster.client; }
-         void modify_raster_script_side(std::function<void(QImage)> task); // Accessor to let Lua scripts modify image data. Refer to function on VM subsystem for further info.
+         void modify_raster_script_side(std::function<void(QImage&)> task); // Accessor to let Lua scripts modify image data. Refer to function on VM subsystem for further info.
 
       protected:
          void on_referenced();
@@ -133,6 +134,7 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
          resource_list_t list;
       };
 
+      QElapsedTimer timer;
       struct {
          locked_resource_list desynched;
          locked_resource_list extant;

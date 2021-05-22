@@ -24,10 +24,14 @@ namespace {
          int isnum;
          int x = lua_tointegerx(L, 2, &isnum);
          luaL_argcheck(L, isnum,  2, "x-coordinate (integer) expected");
+         luaL_argcheck(L, x != 0, 2, "x-coordinate cannot be zero");
          luaL_argcheck(L, x >= 0, 2, "x-coordinate cannot be negative");
          int y = lua_tointegerx(L, 3, &isnum);
          luaL_argcheck(L, isnum,  3, "y-coordinate (integer) expected");
+         luaL_argcheck(L, y != 0, 3, "y-coordinate cannot be zero");
          luaL_argcheck(L, y >= 0, 3, "y-coordinate cannot be negative");
+         --x;
+         --y;
          //
          auto image = self.managed_resource->get_raster_script_side();
          util::ui::push_color(L, image.pixel(x, y));
@@ -41,13 +45,17 @@ namespace {
          int isnum;
          int x = lua_tointegerx(L, 2, &isnum);
          luaL_argcheck(L, isnum,  2, "x-coordinate (integer) expected");
+         luaL_argcheck(L, x != 0, 2, "x-coordinate cannot be zero");
          luaL_argcheck(L, x >= 0, 2, "x-coordinate cannot be negative");
          int y = lua_tointegerx(L, 3, &isnum);
          luaL_argcheck(L, isnum,  3, "y-coordinate (integer) expected");
+         luaL_argcheck(L, y != 0, 3, "y-coordinate cannot be zero");
          luaL_argcheck(L, y >= 0, 3, "y-coordinate cannot be negative");
+         --x;
+         --y;
          QColor color = util::ui::pull_color(L, 4);
          //
-         self.managed_resource->modify_raster_script_side([x, y, color](QImage image) {
+         self.managed_resource->modify_raster_script_side([x, y, color](QImage& image) {
             assert(image.format() == QImage::Format::Format_ARGB32);
             auto* bytes = (QRgb*)image.scanLine(y);
             bytes[x] = color.rgba();

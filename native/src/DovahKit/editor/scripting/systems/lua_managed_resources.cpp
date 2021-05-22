@@ -5,14 +5,13 @@
 #include <QAbstractItemView>
 #include <QComboBox>
 
-// For debugging
-#if _DEBUG
-   #include "userdata.h"
-#endif
+namespace {
+   static constexpr int resource_resynchronize_interval = 17; // 1000 / 60 == 16.6ms
+}
 
 namespace editor_script {
    #pragma region LuaManagedResource
-   void LuaManagedResource::modify_raster_script_side(std::function<void(QImage)> task) {
+   void LuaManagedResource::modify_raster_script_side(std::function<void(QImage&)> task) {
       DovahKitScriptVMResourceInterface::get().modify_raster_script_side(*this, task);
    }
 
@@ -104,14 +103,13 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
    DovahKitScriptVMCore::require_client_thread();
    //
    auto& vm = DovahKitScriptVMCore::get();
-   {
+   if (!this->timer.isValid() || this->timer.elapsed() > resource_resynchronize_interval) {
+      this->timer.start();
       //
       // Synchronize any resource edits made on the script thread, over to the main thread. 
       // Force any widgets using these resources within model items to repaint. (Widgets 
       // using these resources in and of themselves can hook the "resynchronized" signal.)
       // 
-      // TODO: Throttle this part of the main thread handler to 60 FPS.
-      //
       auto& base = this->resources.desynched;
       auto& list = base.list;
       std::unique_lock guard(base.lock);
