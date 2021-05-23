@@ -96,6 +96,16 @@ DovahKitCore::DovahKitCore() {
          emit this->fileLoadWarningReceived(w.warning);
       }, Qt::QueuedConnection);
    }
+   //
+   {
+      //
+      // Set up COM on this thread so that it can use DirectXTex.
+      //
+      HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+      if (!FAILED(hr)) {
+         this->com_is_ready = true;
+      }
+   }
 }
 DovahKitCore::~DovahKitCore() {
    if (auto thread = this->async_loader) {
@@ -107,6 +117,11 @@ DovahKitCore::~DovahKitCore() {
    //
    delete this->load_order;
    this->load_order = nullptr;
+   //
+   if (this->com_is_ready) {
+      CoUninitialize(); // every CoInitializeEx call must have a matching CoUninitialize call
+      this->com_is_ready = false;
+   }
 }
 void DovahKitCore::_configure_load_order() {
    this->load_order->on_form_create   = &_on_form_created;

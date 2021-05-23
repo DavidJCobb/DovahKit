@@ -63,6 +63,7 @@ class DovahKitCore : public QObject {
       QThread* async_loader = nullptr;
       std::string encoding;
       std::string language_name;
+      bool com_is_ready = false; // is COM set up for the main thread?
       //
       std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
       std::unordered_map<bare_form_id_t, QDialog*> extant_use_info_dialogs;

@@ -20,6 +20,7 @@
 
 #include <QBuffer>
 #include <QImageReader>
+#include "../../../../../DirectXTex/DirectXTex.h"
 #include "../../../../dovah/files/bsa/bsa_archived_file.h"
 #include "../../wrappers/resource/raster.h"
 #include "../../wrappers/resource/unknown.h"
@@ -263,7 +264,71 @@ namespace {
                }
             }
          }
-         static_assert(false, "Qt doesn't support DDS files, in part because the code they wrote to load them is buggy, and in part because a DDS file can encode multiple textures. We need to roll our own loader.");
+         if (_stricmp(path.extension().string().data(), ".dds") == 0) {
+            LuaManagedResource* resource = nullptr;
+            {
+               auto* task    = new tasks::s2m::lambda(true);
+               task->handler = [&file, &resource]() {
+                  using namespace DirectX;
+                  //
+                  ScratchImage image;
+                  TexMetadata  metadata;
+                  HRESULT      result = LoadFromDDSMemory(file->data(), file->size(), DDS_FLAGS_NONE, &metadata, image);
+                  if (FAILED(result))
+                     return;
+                  //
+                  QImage data;
+                  if (IsCompressed(metadata.format)) {
+                     ScratchImage scratch;
+                     Decompress(image.GetImages(), image.GetImageCount(), metadata, DXGI_FORMAT_R8G8B8A8_UINT, scratch);
+                     auto* layer = scratch.GetImage(0, 0, 0);
+                     if (!layer)
+                        return;
+                     if (layer->width > std::numeric_limits<int>::max())
+                        return;
+                     if (layer->height > std::numeric_limits<int>::max())
+                        return;
+                     if (layer->rowPitch > std::numeric_limits<int>::max())
+                        return;
+                     data = QImage((const uchar*)layer->pixels, (int)layer->width, (int)layer->height, (int)layer->rowPitch, QImage::Format_ARGB32);
+                     data.detach();
+                     {
+                        auto pixel = data.pixelColor(0, 0);
+                        qDebug() << "RGBA at (0, 0): " << pixel.red() << ", " << pixel.green() << ", " << pixel.blue() << ", " << pixel.alpha();
+                     }
+                     assert(data.isDetached());
+                  } else {
+                     auto* layer = image.GetImage(0, 0, 0);
+                     if (!layer)
+                        return;
+                     ScratchImage scratch;
+                     HRESULT hr = Convert(*layer, DXGI_FORMAT_R8G8B8A8_UINT, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, scratch);
+                     if (FAILED(hr))
+                        return;
+                     layer = scratch.GetImage(0, 0, 0);
+                     if (!layer)
+                        return;
+                     if (layer->width > std::numeric_limits<int>::max())
+                        return;
+                     if (layer->height > std::numeric_limits<int>::max())
+                        return;
+                     if (layer->rowPitch > std::numeric_limits<int>::max())
+                        return;
+                     data = QImage((const uchar*)layer->pixels, (int)layer->width, (int)layer->height, (int)layer->rowPitch, QImage::Format_ARGB32);
+                     data.detach();
+                     assert(data.isDetached());
+                  }
+                  if (data.isNull())
+                     return;
+                  resource = DovahKitScriptVMResourceInterface::get().create_resource(data);
+               };
+               DovahKitScriptVMUITaskConduit::get().send_message(*task);
+               delete task;
+            }
+            if (resource) {
+               return wrappers::resource::raster::wrap_and_push(L, *resource);
+            }
+         }
          //
          // The resource could not be identified.
          //

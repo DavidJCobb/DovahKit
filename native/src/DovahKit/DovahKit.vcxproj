@@ -276,6 +276,7 @@
     <ClCompile Include="editor\scripting\wrappers\quest.cpp" />
     <ClCompile Include="editor\scripting\wrappers\quest\alias.cpp" />
     <ClCompile Include="editor\scripting\wrappers\resource\raster.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\resource\unknown.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic.cpp" />
@@ -630,6 +631,7 @@
     <ClInclude Include="editor\scripting\wrappers\quest.h" />
     <ClInclude Include="editor\scripting\wrappers\quest\alias.h" />
     <ClInclude Include="editor\scripting\wrappers\resource\raster.h" />
+    <ClInclude Include="editor\scripting\wrappers\resource\unknown.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
     <ClInclude Include="editor\scripting\wrappers\topic.h" />
@@ -826,6 +828,9 @@
     <QtRcc Include="ui\resources\resources.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DirectXTex\DirectXTex_Desktop_2019.vcxproj">
+      <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>
     </ProjectReference>

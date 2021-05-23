@@ -10,10 +10,14 @@ This program was built using Microsoft Visual Studio Community 2019 with the [Qt
 
 Lua is compiled as C++; this means that Lua errors properly unwind the stack (calling destructors within any C-functions we make available to Lua) instead of using setjmp/longjmp.
 
+I built DirectXTex using the `DirectXTex_Desktop_2019` project, suitable for programs meant to support Windows 7 SP1 or newer that are built with Visual Studio 2019. A guide to DirectXTex project files and Visual Studio setup can be found [on its own repo](https://github.com/Microsoft/DirectXTex/wiki/DirectXTex#adding-to-a-vs-solution). General setup requirements are also on that page.
+
 This program uses C++20 via the `/std:c++latest` compiler option. The included project files should take care of that for you.
 
 ## License
 
-Qt and its components have their own license; as do zlib, LZ4, and Lua. My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain, etc.).
+My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain as indicated by code comments, etc.).
 
-Per the terms of LGPL, I am required to make [the source code for Qt 5.15.2](https://download.qt.io/archive/qt/5.15/5.15.2/single/) available to you in case you're unable to acquire it on your own. Presently I have a copy saved to my machine.
+DirectXTex and Lua are MIT-licensed. LZ4's license is in the `LICENSE` file in the LZ4 folder. zlib has a custom license in `zlib.h`.
+
+Qt and its components are licensed under LGPL v3. Per the terms of LGPL, I am required to make [the source code for Qt 5.15.2](https://download.qt.io/archive/qt/5.15/5.15.2/single/) available to you in case you're unable to acquire it on your own. Presently I have a copy saved to my machine.

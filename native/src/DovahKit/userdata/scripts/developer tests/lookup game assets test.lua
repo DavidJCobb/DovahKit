@@ -143,22 +143,49 @@ local paths = {
    "textures/landscape/snowstone01_n.dds",
 }
 
-for i = 1, #paths do
-   local name = paths[i] .. " (" .. i .. ")"
-   local icon <close> = dovah.lookup_game_asset(paths[i])
-   if icon and dovah.type(icon) == "raster" then
-      picker:append_item({
-         text = name,
-         icon = icon
-      })
-   elseif icon then
-      dovah.log_message("Not a raster: %s", paths[i])
-   else
-      dovah.log_message("Missing: %s", paths[i])
+window:set_layout("grid")
+window:add_child(picker, 1, 1)
+
+do
+   function _ends_with(haystack, needle)
+      return haystack:sub(-#needle) == needle
+   end
+   
+   for i = 1, #paths do
+      local path = paths[i]
+      if not _ends_with(path, "_n.dds") then
+         local name = path -- TODO: get filename only
+         local icon <close> = dovah.lookup_game_asset(paths[i])
+         if icon and dovah.type(icon) == "raster" then
+            picker:append_item({
+               text = name,
+               icon = icon
+            })
+         elseif icon then
+            dovah.log_message("Not a raster: %s", paths[i])
+         else
+            dovah.log_message("Missing: %s", paths[i])
+         end
+      end
    end
 end
 
-window:set_layout("grid")
-window:add_child(picker, 1, 1)
+do
+   local sacrificial = raster.new({ width = 32, height = 32, background_color = "#000" })
+   picker:append_item({
+      text = "Testing Placeholder",
+      icon = sacrificial
+   })
+   --
+   local button = ui.button.new("Modify Placeholder")
+   button:on("OnActivated", "", function()
+      local x = math.random(1, 32)
+      local y = math.random(1, 32)
+      local hue = math.random(0, 359)
+      sacrificial:set_pixel(x, y, "hsl(" .. hue .. "deg, 100%, 50%)")
+   end)
+   --
+   window:add_child(button, 2, 1)
+end
 
 window:show()
