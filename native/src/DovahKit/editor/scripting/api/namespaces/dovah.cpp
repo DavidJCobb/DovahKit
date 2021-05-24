@@ -226,11 +226,11 @@ namespace {
          luaL_argcheck(L, raw != nullptr, 1, "string expected");
          std::filesystem::path path = raw;
          //
-         dovah::bsa_archived_file* file = nullptr;
+         std::unique_ptr<dovah::bsa_archived_file> file = nullptr;
          {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [path, &file]() {
-               file = DovahKitCore::get().lookup_game_asset(path, true);
+               file.reset(DovahKitCore::get().lookup_game_asset(path, true));
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
@@ -270,56 +270,92 @@ namespace {
                auto* task    = new tasks::s2m::lambda(true);
                task->handler = [&file, &resource]() {
                   using namespace DirectX;
+                  using image_ptr_t = std::unique_ptr<ScratchImage>;
+                  static constexpr DXGI_FORMAT DESIRED_DX_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
                   //
-                  ScratchImage image;
-                  TexMetadata  metadata;
-                  HRESULT      result = LoadFromDDSMemory(file->data(), file->size(), DDS_FLAGS_NONE, &metadata, image);
-                  if (FAILED(result))
+                  TexMetadata metadata;
+                  image_ptr_t raw(new (std::nothrow) ScratchImage);
+                  HRESULT     hr = LoadFromDDSMemory(file->data(), file->size(), DDS_FLAGS_NONE, &metadata, *raw);
+                  if (FAILED(hr))
                      return;
                   //
-                  QImage data;
-                  if (IsCompressed(metadata.format)) {
-                     ScratchImage scratch;
-                     Decompress(image.GetImages(), image.GetImageCount(), metadata, DXGI_FORMAT_R8G8B8A8_UINT, scratch);
-                     auto* layer = scratch.GetImage(0, 0, 0);
-                     if (!layer)
+                  if (IsTypeless(metadata.format)) {
+                     metadata.format = MakeTypelessUNORM(metadata.format);
+                     if (IsTypeless(metadata.format))
                         return;
-                     if (layer->width > std::numeric_limits<int>::max())
-                        return;
-                     if (layer->height > std::numeric_limits<int>::max())
-                        return;
-                     if (layer->rowPitch > std::numeric_limits<int>::max())
-                        return;
-                     data = QImage((const uchar*)layer->pixels, (int)layer->width, (int)layer->height, (int)layer->rowPitch, QImage::Format_ARGB32);
-                     data.detach();
-                     {
-                        auto pixel = data.pixelColor(0, 0);
-                        qDebug() << "RGBA at (0, 0): " << pixel.red() << ", " << pixel.green() << ", " << pixel.blue() << ", " << pixel.alpha();
-                     }
-                     assert(data.isDetached());
-                  } else {
-                     auto* layer = image.GetImage(0, 0, 0);
-                     if (!layer)
-                        return;
-                     ScratchImage scratch;
-                     HRESULT hr = Convert(*layer, DXGI_FORMAT_R8G8B8A8_UINT, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, scratch);
+                     raw->OverrideFormat(metadata.format);
+                  }
+                  if (IsPlanar(metadata.format)) {
+                     //
+                     // Some DDS files split the image into multiple "planes:" instead of having the R, G, B, and A 
+                     // values interleaved together, the file effectively stores four single-channel images. We want 
+                     // to merge those into RGBA.
+                     //
+                     image_ptr_t merged(new (std::nothrow) ScratchImage);
+                     if (!merged)
+                        return; // out of memory
+                     hr = ConvertToSinglePlane(raw->GetImages(), raw->GetImageCount(), metadata, *merged);
                      if (FAILED(hr))
                         return;
-                     layer = scratch.GetImage(0, 0, 0);
-                     if (!layer)
-                        return;
-                     if (layer->width > std::numeric_limits<int>::max())
-                        return;
-                     if (layer->height > std::numeric_limits<int>::max())
-                        return;
-                     if (layer->rowPitch > std::numeric_limits<int>::max())
-                        return;
-                     data = QImage((const uchar*)layer->pixels, (int)layer->width, (int)layer->height, (int)layer->rowPitch, QImage::Format_ARGB32);
-                     data.detach();
-                     assert(data.isDetached());
+                     metadata = merged->GetMetadata();
+                     raw.swap(merged);
                   }
-                  if (data.isNull())
+                  //
+                  if (IsCompressed(metadata.format)) {
+                     image_ptr_t decompressed(new (std::nothrow) ScratchImage);
+                     if (!decompressed)
+                        return; // out of memory
+                     Decompress(raw->GetImages(), raw->GetImageCount(), metadata, DXGI_FORMAT_UNKNOWN, *decompressed);
+                     std::swap(decompressed, raw);
+                     metadata = raw->GetMetadata();
+                  }
+                  if (metadata.format != DESIRED_DX_FORMAT) {
+                     image_ptr_t converted(new (std::nothrow) ScratchImage);
+                     if (!converted)
+                        return; // out of memory
+                     hr = Convert(raw->GetImages(), raw->GetImageCount(), metadata, DESIRED_DX_FORMAT, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, *converted);
+                     if (FAILED(hr))
+                        return;
+                     std::swap(converted, raw);
+                     metadata = raw->GetMetadata();
+                  }
+                  //
+                  if (HasAlpha(metadata.format) && metadata.IsPMAlpha()) {
+                     //
+                     // If alpha needs to be premultiplied, handle it. Note that PremultiplyAlpha returns an 
+                     // error code on images that don't need PMA, so we actually do have to check that.
+                     //
+                     image_ptr_t mod(new (std::nothrow) ScratchImage);
+                     if (!mod)
+                        return; // out-of-memory
+                     hr = PremultiplyAlpha(raw->GetImages(), raw->GetImageCount(), metadata, TEX_PMALPHA_REVERSE, *mod);
+                     if (FAILED(hr))
+                        return;
+                     metadata = mod->GetMetadata();
+                     raw.swap(mod);
+                  }
+                  //
+                  if (metadata.IsCubemap()) {
+                     //
+                     // Don't care; but a proper DDS wrapper might provide individual access to each cubemap 
+                     // face.
+                     //
+                  }
+                  //
+                  const auto* first_layer = raw->GetImage(0, 0, 0);
+                  if (!first_layer)
                      return;
+                  if (first_layer->width > std::numeric_limits<int>::max())
+                     return;
+                  if (first_layer->height > std::numeric_limits<int>::max())
+                     return;
+                  if (first_layer->rowPitch > std::numeric_limits<int>::max())
+                     return;
+                  auto data = QImage((const uchar*)first_layer->pixels, first_layer->width, first_layer->height, first_layer->rowPitch, QImage::Format_ARGB32);
+                  assert(!data.isNull());
+                  data.detach();
+                  assert(data.isDetached());
+                  assert(data.constBits() != first_layer->pixels);
                   resource = DovahKitScriptVMResourceInterface::get().create_resource(data);
                };
                DovahKitScriptVMUITaskConduit::get().send_message(*task);
