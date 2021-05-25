@@ -28,7 +28,7 @@ namespace editor_script {
             } raster;
          } content;
       public:
-         bool is_lua_referenced = false;
+         int lua_refcount = 0;
 
          inline const QImage  get_raster_script_side() const noexcept { return this->content.raster.script; }
          inline const QPixmap get_raster_widget_side() const noexcept { return this->content.raster.client; }

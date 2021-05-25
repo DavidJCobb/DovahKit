@@ -75,7 +75,7 @@ namespace editor_script {
       if (this->type == wrapper_type::lua_managed_resource) {
          auto* mr = this->managed_resource;
          this->managed_resource = nullptr;
-         mr->is_lua_referenced = false;
+         --mr->lua_refcount;
          DovahKitScriptVMResourceInterface::get().on_resource_unreferenced(*mr);
       }
       //
@@ -108,7 +108,7 @@ namespace editor_script {
             return;
          case wrapper_type::lua_managed_resource:
             assert(this->managed_resource);
-            this->managed_resource->is_lua_referenced = true;
+            ++this->managed_resource->lua_refcount;
             return;
       }
    }

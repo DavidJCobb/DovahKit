@@ -48,7 +48,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.model_observer)
             return 0;
-         LuaManagedResource* result = nullptr;
+         LuaManagedResourceHandle result;
          {
             auto* observer = self.model_observer;
             auto* task     = new tasks::s2m::ui_read_lambda();
@@ -60,7 +60,6 @@ namespace {
                auto* resource = LuaManagedResourceHandle::extract_from_variant(data);
                if (!resource)
                   return;
-               resource->is_lua_referenced = true;
                result = resource;
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
