@@ -34,6 +34,7 @@ namespace editor_script {
          define_wrapper_metatable<word_of_power>(L);
       #pragma endregion
       #pragma region Resources
+         define_wrapper_metatable<resource::dds>(L);
          define_wrapper_metatable<resource::raster>(L);
          define_wrapper_metatable<resource::unknown>(L);
       #pragma endregion

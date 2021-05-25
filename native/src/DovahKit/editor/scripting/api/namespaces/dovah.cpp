@@ -22,6 +22,7 @@
 #include <QImageReader>
 #include "../../../../../DirectXTex/DirectXTex.h"
 #include "../../../../dovah/files/bsa/bsa_archived_file.h"
+#include "../../wrappers/resource/dds.h"
 #include "../../wrappers/resource/raster.h"
 #include "../../wrappers/resource/unknown.h"
 
@@ -265,110 +266,23 @@ namespace {
             }
          }
          if (_stricmp(path.extension().string().data(), ".dds") == 0) {
-            LuaManagedResource* resource = nullptr;
+            LuaManagedResourceHandle resource;
             {
                auto* task    = new tasks::s2m::lambda(true);
                task->handler = [&file, &resource]() {
-                  using namespace DirectX;
-                  using image_ptr_t = std::unique_ptr<ScratchImage>;
-                  static constexpr DXGI_FORMAT DESIRED_DX_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
-                  //
-                  TexMetadata metadata;
-                  image_ptr_t raw(new (std::nothrow) ScratchImage);
-                  HRESULT     hr = LoadFromDDSMemory(file->data(), file->size(), DDS_FLAGS_NONE, &metadata, *raw);
-                  if (FAILED(hr))
-                     return;
-                  //
-                  if (IsTypeless(metadata.format)) {
-                     metadata.format = MakeTypelessUNORM(metadata.format);
-                     if (IsTypeless(metadata.format))
-                        return;
-                     raw->OverrideFormat(metadata.format);
-                  }
-                  if (IsPlanar(metadata.format)) {
-                     //
-                     // Some DDS files split the image into multiple "planes:" instead of having the R, G, B, and A 
-                     // values interleaved together, the file effectively stores four single-channel images. We want 
-                     // to merge those into RGBA.
-                     //
-                     image_ptr_t merged(new (std::nothrow) ScratchImage);
-                     if (!merged)
-                        return; // out of memory
-                     hr = ConvertToSinglePlane(raw->GetImages(), raw->GetImageCount(), metadata, *merged);
-                     if (FAILED(hr))
-                        return;
-                     metadata = merged->GetMetadata();
-                     raw.swap(merged);
-                  }
-                  //
-                  if (IsCompressed(metadata.format)) {
-                     image_ptr_t decompressed(new (std::nothrow) ScratchImage);
-                     if (!decompressed)
-                        return; // out of memory
-                     Decompress(raw->GetImages(), raw->GetImageCount(), metadata, DXGI_FORMAT_UNKNOWN, *decompressed);
-                     std::swap(decompressed, raw);
-                     metadata = raw->GetMetadata();
-                  }
-                  if (metadata.format != DESIRED_DX_FORMAT) {
-                     image_ptr_t converted(new (std::nothrow) ScratchImage);
-                     if (!converted)
-                        return; // out of memory
-                     hr = Convert(raw->GetImages(), raw->GetImageCount(), metadata, DESIRED_DX_FORMAT, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, *converted);
-                     if (FAILED(hr))
-                        return;
-                     std::swap(converted, raw);
-                     metadata = raw->GetMetadata();
-                  }
-                  //
-                  if (HasAlpha(metadata.format) && metadata.IsPMAlpha()) {
-                     //
-                     // If alpha needs to be premultiplied, handle it. Note that PremultiplyAlpha returns an 
-                     // error code on images that don't need PMA, so we actually do have to check that.
-                     //
-                     image_ptr_t mod(new (std::nothrow) ScratchImage);
-                     if (!mod)
-                        return; // out-of-memory
-                     hr = PremultiplyAlpha(raw->GetImages(), raw->GetImageCount(), metadata, TEX_PMALPHA_REVERSE, *mod);
-                     if (FAILED(hr))
-                        return;
-                     metadata = mod->GetMetadata();
-                     raw.swap(mod);
-                  }
-                  //
-                  if (metadata.IsCubemap()) {
-                     //
-                     // Don't care; but a proper DDS wrapper might provide individual access to each cubemap 
-                     // face.
-                     //
-                  }
-                  //
-                  const auto* first_layer = raw->GetImage(0, 0, 0);
-                  if (!first_layer)
-                     return;
-                  if (first_layer->width > std::numeric_limits<int>::max())
-                     return;
-                  if (first_layer->height > std::numeric_limits<int>::max())
-                     return;
-                  if (first_layer->rowPitch > std::numeric_limits<int>::max())
-                     return;
-                  auto data = QImage((const uchar*)first_layer->pixels, first_layer->width, first_layer->height, first_layer->rowPitch, QImage::Format_ARGB32);
-                  assert(!data.isNull());
-                  data.detach();
-                  assert(data.isDetached());
-                  assert(data.constBits() != first_layer->pixels);
-                  resource = DovahKitScriptVMResourceInterface::get().create_resource(data);
+                  resource = DovahKitScriptVMResourceInterface::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()), editor_script::lua_managed_resource_type::dds);
                };
                DovahKitScriptVMUITaskConduit::get().send_message(*task);
                delete task;
             }
             if (resource) {
-               return wrappers::resource::raster::wrap_and_push(L, *resource);
+               return wrappers::resource::dds::wrap_and_push(L, *resource);
             }
          }
          //
          // The resource could not be identified.
          //
-         LuaManagedResource* resource = nullptr;
+         LuaManagedResourceHandle resource = nullptr;
          {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [&file, &resource]() {

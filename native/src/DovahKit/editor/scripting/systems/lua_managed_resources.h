@@ -6,11 +6,23 @@
 #include "../../../helpers/singleton.h"
 #include "editor_script_inner_core.h"
 
+namespace DirectX {
+   struct ScratchImage;
+   struct TexMetadata;
+}
 class DovahKitScriptVMResourceInterface;
 class ObservableStandardItemModel;
 
 namespace editor_script {
    template<typename T> requires (std::is_base_of_v<QObject, T>) class LuaManagedResourceHandleImpl;
+
+   enum class lua_managed_resource_type {
+      undefined = -1,
+      //
+      binary,
+      dds,
+      raster,
+   };
 
    class LuaManagedResource : public QObject {
       Q_OBJECT;
@@ -19,22 +31,38 @@ namespace editor_script {
       template<typename T> requires (std::is_base_of_v<QObject, T>) friend class LuaManagedResourceHandleImpl;
 
       protected:
+         lua_managed_resource_type type = lua_managed_resource_type::undefined;
          std::atomic<int> refcount = 0;
          struct {
             QByteArray binary; // for unknown-type resources
+            struct {
+               DirectX::ScratchImage* data = nullptr;
+               DirectX::TexMetadata*  info = nullptr;
+            } dds;
             struct {
                QImage  script;
                QPixmap client;
             } raster;
          } content;
+         //
       public:
          int lua_refcount = 0;
+
+         static LuaManagedResource* make_dds(const void* buffer, size_t size);
+
+         inline const lua_managed_resource_type resource_type() const noexcept { return this->type; }
 
          inline const QImage  get_raster_script_side() const noexcept { return this->content.raster.script; }
          inline const QPixmap get_raster_widget_side() const noexcept { return this->content.raster.client; }
          void modify_raster_script_side(std::function<void(QImage&)> task); // Accessor to let Lua scripts modify image data. Refer to function on VM subsystem for further info.
 
          inline const QByteArray get_binary_script_side() const noexcept { return this->content.binary; }
+
+         inline bool is_dds() const noexcept { return this->type == lua_managed_resource_type::dds; }
+         bool   is_cubemap()         const noexcept;
+         size_t texture_array_size() const noexcept; // returns 1 for a non-array; 0 on failure. // NOTE: textures in an array can be mipmapped
+         size_t mipmap_count()       const noexcept; // returns 0 for a non-mipmapped image
+         QImage get_dds_layer(size_t array_index, size_t mipmap_index, uint8_t cubemap_face = 0) const noexcept;
 
       protected:
          void on_referenced();
@@ -162,8 +190,9 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
       // the script thread MUST receive the resource and push it into Lua via a wrapper.
       resource_t* create_resource(QImage source = QImage());
 
-      // Creates a binary-type resource.
-      resource_t* create_resource(const QByteArray&);
+      // Creates a resource from a buffer. Can return nullptr if the desired buffer does not contain valid data for the 
+      // desired resource type (e.g. trying to create a DDS resource from non-DDS data).
+      resource_t* create_resource(const QByteArray&, editor_script::lua_managed_resource_type type = editor_script::lua_managed_resource_type::binary);
 
       // Accessor to allow Lua APIs to modify a resource's raster content on the script thread; for convenience, you can 
       // also call this on the resource object itself. This function locks the desynchronized resource list for the full 
@@ -172,7 +201,8 @@ class DovahKitScriptVMResourceInterface : cobb::singleton {
       // as is needed for a resize).
       void modify_raster_script_side(resource_t&, std::function<void(QImage&)> task);
 
-      void on_resource_unreferenced(resource_t&); // call when the resource becomes Lua-unreferenced or Qt-unreferenced
+      void on_resource_ui_referenced_changed(resource_t&, bool became_referenced); // call when the resource becomes Qt-(un)referenced
+      void on_resource_unreferenced(resource_t&); // call when the resource becomes Lua-unreferenced
 };
 
 // These macros don't work from within a namespace. Ignore IntelliSense errors on them, too; those may be false-positives.

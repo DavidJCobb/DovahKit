@@ -927,6 +927,9 @@
     <ClCompile Include="editor\scripting\wrappers\resource\unknown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\resource\dds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1875,6 +1878,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\resource\unknown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\resource\dds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

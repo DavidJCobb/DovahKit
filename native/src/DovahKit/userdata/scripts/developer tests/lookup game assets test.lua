@@ -125,16 +125,18 @@ do
       local path = paths[i]
       if not _ends_with(path, "_n.dds") then
          local name = path -- TODO: get filename only
-         local icon <close> = dovah.lookup_game_asset(paths[i])
-         if icon and dovah.type(icon) == "raster" then
+         local icon <close> = dovah.lookup_game_asset(path)
+         local i_ty = dovah.type(icon)
+         if icon and (i_ty == "raster" or i_ty == "dds_resource") then
             picker:append_item({
                text = name,
                icon = icon
             })
+            dovah.log_message("Raster (%s): %s", i_ty, path)
          elseif icon then
-            dovah.log_message("Not a raster: %s", paths[i])
+            dovah.log_message("Not a raster (%s): %s", i_ty, path)
          else
-            dovah.log_message("Missing: %s", paths[i])
+            dovah.log_message("Missing: %s", path)
          end
       end
    end

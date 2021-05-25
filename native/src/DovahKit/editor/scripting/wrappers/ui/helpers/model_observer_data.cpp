@@ -8,6 +8,7 @@
 #include "../../../ui/util/color.h"
 #include "../../../../../helpers/qt/get_model_of.h"
 
+#include "../../resource/dds.h"
 #include "../../resource/raster.h"
 
 namespace editor_script::helpers {
@@ -386,8 +387,12 @@ namespace editor_script::moph {
    extern QVariant pull_icon(lua_State* L, int stack_pos) {
       if (lua_isnoneornil(L, stack_pos))
          return QVariant();
-      auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, stack_pos);
-      if (wrap) {
+      if (auto* wrap = wrapper_from_stack<wrappers::resource::dds>(L, stack_pos)) {
+         if (!wrap->managed_resource)
+            return QVariant();
+         return QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
+      }
+      if (auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, stack_pos)) {
          if (!wrap->managed_resource)
             return QVariant();
          return QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
