@@ -164,6 +164,79 @@ even be strictly  necessary since we force all scripted windows  and widgets to
 repaint anyway).
 
 
+=== SUBRESOURCES ==============================================================
+
+In addition to  raster LMRs,  we also have DDS LMRs,  which store  a DirectDraw 
+Surface texture. "Texture," here, is of course a misleading term: DDS files can 
+store an array of multiple images, and some "images," namely cubemaps, are them-
+selves a set of multiple raster images. A DDS file, then, can have layouts like 
+these:
+
+   DDS
+    - Array element 0
+       - Mipmap 0
+       - Mipmap 1
+       - Mipmap 2
+    - Array element 1
+       - Mipmap 0
+       - Mipmap 1
+       - Mipmap 2
+
+All elements in  the array have the same  number of mipmap  levels. Cubemap DDS 
+files are  implemented as  an array of  six images;  an array of N  cubemaps is 
+implemented as a flat array of (N * 6) images; and each of these, too, can have 
+mipmaps.
+
+We can conceive of each individual raster  as a "subresource." How do we handle 
+subresources within our system?
+
+The short answer is  that we simply don't. Handling subresources  would require 
+being able to refer to a  subresource from an LMRH, either  by allowing LMRs to 
+be nestable  or by allowing LMRHs to encode "path" information  similar to that 
+stored in  Lua wrappers'  C-side data. The former  approach will  require us to 
+change  how LMR lifetimes work, making them more similar to QWidget  lifetimes: 
+we will need to ensure that whole LMR trees are deleted only when every element 
+in the tree is  unreferenced within both Lua and Qt. The latter  approach would 
+require us to configure LMRHs individually every time we use them to refer to a 
+subresource. Either way, we would also  need to store a refcount for each of an 
+LMR's individual subresources...
+
+Here's where DDS  files get complicated: we rely on the DirectXTex  library for 
+loading DDS files, converting  them to a pixel format  ideal for scripting with 
+rasters. DirectXTex produces a ScratchImage  which contains the raw pixel data, 
+along with metadata for identifying the  size and flags. The trouble is that as 
+of this writing, there is no explicit API  for taking ownership of the internal 
+pixel buffers; we can only copy them.  (That is to say: we certainly *could* go 
+and look at the DirectXTex source code, determine whether it is safe to "steal" 
+a ScratchImage's  buffers, and then do so; but we wouldn't be  acting according 
+to any sort of spec; future  changes to the library  could break our behavior.)
+
+That gives us two choices, then:
+
+   a) When loading a DDS, preemptively copy all of its raster subresources into 
+      QImage instances  that we'll assign  to new LMRs. This  will incur a time 
+      cost and (briefly) double our memory usage.
+
+   b) Design LMRs  so that they  can pull assets  from parent or  ancestor LMRs 
+      instead of containing their own  data. This will further complicate every 
+      piece of code in which we work with LMRs.
+
+   c) Don't.
+
+We only  need to explicitly  handle subresources if  we want them to be  usable 
+from within Qt.  Lua's own wrapper "part" data is suitable for  allowing Lua to 
+refer to  an LMR subresource. This will  lead to some ugliness, of  course; for 
+example, the code below will not have the desired effect:
+
+   my_table_cell.icon = my_dds.images[4]
+
+We simply can't store a subresource in  Qt::DecorationRole without any explicit 
+support for  subresources, so  the above code will  fail. A script  author will 
+have to explicitly create a new LMR:
+
+   my_table_cell.icon = my_dds.images[4]:copy_to_raster()
+
+
 === BEST PRACTICES FOR SCRIPTING WITH LMRs ====================================
 
 We may impose a cap on the total  size of all Lua-managed resources, to prevent 
