@@ -1,4 +1,5 @@
 #include "image.h"
+#include "cubemap_face_list.h"
 #include "../dds.h"
 #include "../raster.h"
 
@@ -144,6 +145,17 @@ namespace {
       }
    }
    namespace _getters {
+      luastackchange_t cubemap_faces(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.managed_resource)
+            return 0;
+         if (self.depth > 1)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrapper_part_types::resource_dds_cubemap);
+         out.is_collection = true;
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::resource::dds_cubemap_face_list::metatable_key);
+      }
       luastackchange_t mipmaps(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.managed_resource)
@@ -163,7 +175,8 @@ namespace editor_script::wrappers::resource {
       { "copy_to_raster", &_methods::copy_to_raster },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "mipmaps", &_getters::mipmaps },
+      { "cubemap_faces", &_getters::cubemap_faces },
+      { "mipmaps",       &_getters::mipmaps },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
    };
