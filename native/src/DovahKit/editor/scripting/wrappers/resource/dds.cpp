@@ -122,4 +122,12 @@ namespace editor_script::wrappers::resource {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
    };
+
+   /*static*/ int cls::wrap_and_push(lua_State* L, LuaManagedResource& resource) {
+      assert(resource.resource_type() == lua_managed_resource_type::raster);
+      wrapper out;
+      out.type = wrapper_type::lua_managed_resource;
+      out.managed_resource = &resource;
+      return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::metatable_key);
+   }
 }
