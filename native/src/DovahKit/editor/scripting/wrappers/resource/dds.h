@@ -29,6 +29,8 @@ namespace editor_script::wrappers::resource {
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;
 
-      static int wrap_and_push(lua_State*, LuaManagedResource&);
+      static constexpr const char* image_collection_key = "collection<dovah.classes.resource.dds.images>";
+
+      static void setup(lua_State*);
    };
 }

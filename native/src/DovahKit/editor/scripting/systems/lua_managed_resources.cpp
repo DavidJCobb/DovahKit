@@ -114,6 +114,8 @@ namespace editor_script {
       auto* info = this->content.dds.info;
       if (!info)
          return 0;
+      if (info->IsCubemap())
+         return (info->arraySize / 6);
       return info->arraySize;
    }
    size_t LuaManagedResource::mipmap_count() const noexcept {

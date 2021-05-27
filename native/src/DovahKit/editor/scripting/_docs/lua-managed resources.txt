@@ -380,7 +380,10 @@ item's  Qt::DecorationRole to create LMRH  #3 on the main thread,  and then the
 lambda and LMRH #2  are destroyed on the  main thread;  meanwhile, the API body 
 returns to  Lua, taking  LMRH #1 out of scope and destroying  it. All  of these 
 operations after the creation of LMRH #2  are essentially unordered, and so the 
-refcount must be atomic to allow thread-safe usage.
+refcount must  be atomic to allow  thread-safe usage. The Lua  refcount, on the 
+other  hand, doesn't need  to be thread-safe; it should  only ever be  modified 
+from whichever thread  actually "owns" the Lua VM (the  script thread normally; 
+the main thread during VM teardown).
 
 Incidentally, the model observer property handler system behaves as needed here 
 because its  setter stuffs the  to-be-stored value  into a QVariant  within the 
