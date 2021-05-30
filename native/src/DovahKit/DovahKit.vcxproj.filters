@@ -933,6 +933,15 @@
     <ClCompile Include="editor\scripting\wrappers\resource\dds\image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\resource\dds\cubemap_face_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\widgets\LuaManagedRasterWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\image_widget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1889,6 +1898,12 @@
     <ClInclude Include="editor\scripting\wrappers\resource\dds\image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\resource\dds\cubemap_face_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\image_widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -2179,6 +2194,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\scripting\systems\lua_managed_resources.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\scripting\widgets\LuaManagedRasterWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

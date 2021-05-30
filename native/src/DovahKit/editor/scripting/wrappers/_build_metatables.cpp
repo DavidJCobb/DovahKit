@@ -46,6 +46,7 @@ namespace editor_script {
                define_wrapper_metatable<ui::dropdown_item>(L);
             define_wrapper_metatable<ui::formpicker>(L);
             define_wrapper_metatable<ui::groupbox>(L);
+            define_wrapper_metatable<ui::image_widget>(L);
             define_wrapper_metatable<ui::line>(L);
             define_wrapper_metatable<ui::progress_bar>(L);
             define_wrapper_metatable<ui::radio_button>(L);

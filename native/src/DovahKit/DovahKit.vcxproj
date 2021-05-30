@@ -267,6 +267,7 @@
     <ClCompile Include="editor\scripting\ui\util\color.cpp" />
     <ClCompile Include="editor\scripting\ui\util\lua_item_model.cpp" />
     <ClCompile Include="editor\scripting\util.cpp" />
+    <ClCompile Include="editor\scripting\widgets\LuaManagedRasterWidget.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\formlist.cpp" />
@@ -276,6 +277,7 @@
     <ClCompile Include="editor\scripting\wrappers\quest.cpp" />
     <ClCompile Include="editor\scripting\wrappers\quest\alias.cpp" />
     <ClCompile Include="editor\scripting\wrappers\resource\dds.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\resource\dds\cubemap_face_list.cpp" />
     <ClCompile Include="editor\scripting\wrappers\resource\dds\image.cpp" />
     <ClCompile Include="editor\scripting\wrappers\resource\raster.cpp" />
     <ClCompile Include="editor\scripting\wrappers\resource\unknown.cpp" />
@@ -291,6 +293,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\formpicker.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\groupbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\helpers\model_observer_data.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\image_widget.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\line.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp" />
@@ -623,6 +626,7 @@
     <QtMoc Include="editor\scripting\ui\util\lua_item_model.h" />
     <ClInclude Include="editor\scripting\ui\util\color.h" />
     <ClInclude Include="editor\scripting\util.h" />
+    <QtMoc Include="editor\scripting\widgets\LuaManagedRasterWidget.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />
@@ -633,6 +637,7 @@
     <ClInclude Include="editor\scripting\wrappers\quest.h" />
     <ClInclude Include="editor\scripting\wrappers\quest\alias.h" />
     <ClInclude Include="editor\scripting\wrappers\resource\dds.h" />
+    <ClInclude Include="editor\scripting\wrappers\resource\dds\cubemap_face_list.h" />
     <ClInclude Include="editor\scripting\wrappers\resource\dds\image.h" />
     <ClInclude Include="editor\scripting\wrappers\resource\raster.h" />
     <ClInclude Include="editor\scripting\wrappers\resource\unknown.h" />
@@ -649,6 +654,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\groupbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\helpers\model_observer_data.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\helpers\widget_properties.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\image_widget.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\line.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\radio_button.h" />

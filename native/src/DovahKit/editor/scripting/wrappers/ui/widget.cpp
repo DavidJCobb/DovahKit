@@ -397,6 +397,54 @@ namespace {
          //
          return 1;
       }
+      luastackchange_t max_height(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::maximumHeight);
+         if (result >= QWIDGETSIZE_MAX) {
+            lua_pushnil(L);
+            return 1;
+         }
+         lua_pushinteger(L, result);
+         return 1;
+      }
+      luastackchange_t min_height(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::minimumHeight);
+         if (result <= 0) {
+            lua_pushnil(L);
+            return 1;
+         }
+         lua_pushinteger(L, result);
+         return 1;
+      }
+      luastackchange_t max_width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::maximumWidth);
+         if (result >= QWIDGETSIZE_MAX) {
+            lua_pushnil(L);
+            return 1;
+         }
+         lua_pushinteger(L, result);
+         return 1;
+      }
+      luastackchange_t min_width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::minimumWidth);
+         if (result <= 0) {
+            lua_pushnil(L);
+            return 1;
+         }
+         lua_pushinteger(L, result);
+         return 1;
+      }
       luastackchange_t name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -578,6 +626,74 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t max_height(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         if (!isnum) {
+            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            value = QWIDGETSIZE_MAX;
+         } else {
+            luaL_argcheck(L, value > 0, 2, "the size cannot be negative or zero");
+            if (value > QWIDGETSIZE_MAX)
+               value = QWIDGETSIZE_MAX;
+         }
+         if (!self.widget)
+            return 0;
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setMaximumHeight, value);
+         return 0;
+      }
+      luastackchange_t min_height(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         if (!isnum) {
+            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            value = 0;
+         } else {
+            luaL_argcheck(L, value > 0, 2, "the size cannot be negative or zero");
+            if (value > QWIDGETSIZE_MAX)
+               value = QWIDGETSIZE_MAX;
+         }
+         if (!self.widget)
+            return 0;
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setMinimumHeight, value);
+         return 0;
+      }
+      luastackchange_t max_width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         if (!isnum) {
+            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            value = QWIDGETSIZE_MAX;
+         } else {
+            luaL_argcheck(L, value > 0, 2, "the size cannot be negative or zero");
+            if (value > QWIDGETSIZE_MAX)
+               value = QWIDGETSIZE_MAX;
+         }
+         if (!self.widget)
+            return 0;
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setMaximumWidth, value);
+         return 0;
+      }
+      luastackchange_t min_width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         if (!isnum) {
+            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            value = 0;
+         } else {
+            luaL_argcheck(L, value > 0, 2, "the size cannot be negative or zero");
+            if (value > QWIDGETSIZE_MAX)
+               value = QWIDGETSIZE_MAX;
+         }
+         if (!self.widget)
+            return 0;
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setMinimumWidth, value);
+         return 0;
+      }
       luastackchange_t name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
@@ -654,6 +770,10 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "enabled",        &_getters::enabled },
       { "layout_margins", &_getters::layout_margins },
+      { "max_height",     &_getters::max_height },
+      { "min_height",     &_getters::min_height },
+      { "max_width",      &_getters::max_width },
+      { "min_width",      &_getters::min_width },
       { "name",           &_getters::name },
       { "tooltip",        &_getters::tooltip },
       { "whats_this",     &_getters::whats_this },
@@ -661,6 +781,10 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "enabled",        &_setters::enabled },
       { "layout_margins", &_setters::layout_margins },
+      { "max_height",     &_setters::max_height },
+      { "min_height",     &_setters::min_height },
+      { "max_width",      &_setters::max_width },
+      { "min_width",      &_setters::min_width },
       { "name",           &_setters::name },
       { "tooltip",        &_setters::tooltip },
       { "whats_this",     &_setters::whats_this },

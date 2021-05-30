@@ -18,6 +18,7 @@ namespace editor_script {
          ui::dropdown_item::setup(L);
       ui::formpicker::setup(L);
       ui::groupbox::setup(L);
+      ui::image_widget::setup(L);
       ui::line::setup(L);
       ui::progress_bar::setup(L);
       ui::radio_button::setup(L);

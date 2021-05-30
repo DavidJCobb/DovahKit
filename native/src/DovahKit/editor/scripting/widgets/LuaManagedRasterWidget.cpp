@@ -80,6 +80,11 @@ void LuaManagedRasterWidget::paintEvent(QPaintEvent* event) {
    auto pm = this->_getPixmap();
    if (pm.isNull())
       return;
+   QSize space = this->size();
+   QSize size  = pm.size().scaled(space.width(), space.height(), Qt::AspectRatioMode::KeepAspectRatio);
+   int x = (space.width() - size.width()) / 2;
+   int y = (space.height() - size.height()) / 2;
+   //
    QPainter painter(this);
-   painter.drawPixmap(0, 0, width(), height(), pm);
+   painter.drawPixmap(x, y, size.width(), size.height(), pm);
 }

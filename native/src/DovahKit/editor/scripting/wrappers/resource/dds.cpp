@@ -124,7 +124,7 @@ namespace editor_script::wrappers::resource {
    };
 
    /*static*/ int cls::wrap_and_push(lua_State* L, LuaManagedResource& resource) {
-      assert(resource.resource_type() == lua_managed_resource_type::raster);
+      assert(resource.resource_type() == lua_managed_resource_type::dds);
       wrapper out;
       out.type = wrapper_type::lua_managed_resource;
       out.managed_resource = &resource;
