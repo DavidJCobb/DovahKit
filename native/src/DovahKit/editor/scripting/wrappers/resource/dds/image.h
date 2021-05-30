@@ -21,6 +21,8 @@ namespace editor_script::wrappers::resource {
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;
 
+      static void build_collection_metatables(lua_State*);
+
       static constexpr const char* cubemap_face_collection_key = "collection<dovah.classes.resource.dds_image_subresource.cubemap_faces>";
       static constexpr const char* mipmap_collection_key       = "collection<dovah.classes.resource.dds_image_subresource.mipmaps>";
    };

@@ -8,6 +8,7 @@
 
 #include "../../editor_script_core.h"
 #include "../../wrapper_util.h"
+#include "../../collections.h"
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
@@ -49,10 +50,10 @@ namespace {
          auto& dds  = get_resource(self);
          //
          int isnum;
-         int i = lua_tointegerx(L, 2, &isnum) - 1;
+         int i = lua_tointegerx(L, 2, &isnum);
          if (!isnum)
             return 0;
-         if (i <= 0)
+         if (i < 0)
             return 0;
          --i;
          if (i >= dds.texture_array_size())
@@ -122,6 +123,16 @@ namespace editor_script::wrappers::resource {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
    };
+
+   /*static*/ void cls::build_collection_metatables(lua_State* L) {
+      editor_script::define_collection_metatable(L, {
+         .registry_key          = cls::image_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::images::get_collection_length,
+         .lookup_item_by_index   = &_collections::images::lookup_item_by_index,
+      });
+   }
 
    /*static*/ int cls::wrap_and_push(lua_State* L, LuaManagedResource& resource) {
       assert(resource.resource_type() == lua_managed_resource_type::dds);

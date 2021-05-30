@@ -35,6 +35,10 @@ namespace editor_script {
       #pragma endregion
       #pragma region Resources
          define_wrapper_metatable<resource::dds>(L);
+         resource::dds::build_collection_metatables(L);
+            define_wrapper_metatable<resource::dds_image_subresource>(L);
+            resource::dds_image_subresource::build_collection_metatables(L);
+               define_wrapper_metatable<resource::dds_cubemap_face_list>(L);
          define_wrapper_metatable<resource::raster>(L);
          define_wrapper_metatable<resource::unknown>(L);
       #pragma endregion

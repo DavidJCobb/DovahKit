@@ -3,6 +3,7 @@
 #include <QPainter>
 
 LuaManagedRasterWidget::LuaManagedRasterWidget(QWidget* parent) : QWidget(parent) {
+   this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 const QPixmap LuaManagedRasterWidget::_getPixmap() const noexcept {
@@ -32,6 +33,7 @@ void LuaManagedRasterWidget::setDesiredHeight(int s) noexcept {
 
 void LuaManagedRasterWidget::setResource(const LMRH& input) {
    this->_resource = input;
+   this->updateGeometry();
    this->update();
 }
 
