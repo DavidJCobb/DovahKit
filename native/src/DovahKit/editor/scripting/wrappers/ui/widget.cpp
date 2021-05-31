@@ -74,14 +74,27 @@ namespace {
          int rowspan = 1;
          int colspan = 1;
          //
-         if (lua_isnumber(L, 3))
-            row     = lua_tonumber(L, 3);
-         if (lua_isnumber(L, 4))
-            col     = lua_tonumber(L, 4);
-         if (lua_isnumber(L, 5))
-            rowspan = lua_tonumber(L, 5);
-         if (lua_isnumber(L, 6))
-            colspan = lua_tonumber(L, 6);
+         int isnum;
+         if (lua_isnumber(L, 3)) {
+            row = lua_tointegerx(L, 3, &isnum);
+            luaL_argcheck(L, isnum,   3, "positions in a layout, if specified, must be integers");
+            luaL_argcheck(L, row > 0, 3, "positions in a layout, if specified, must be integers");
+         }
+         if (lua_isnumber(L, 4)) {
+            col = lua_tointegerx(L, 4, &isnum);
+            luaL_argcheck(L, isnum,   4, "positions in a layout, if specified, must be integers");
+            luaL_argcheck(L, col > 0, 4, "positions in a layout, if specified, must be integers");
+         }
+         if (lua_isnumber(L, 5)) {
+            rowspan = lua_tointegerx(L, 5, &isnum);
+            luaL_argcheck(L, isnum,       5, "the row span, if specified, must be an integer");
+            luaL_argcheck(L, rowspan > 0, 5, "the row span, if specified, must be greater than zero");
+         }
+         if (lua_isnumber(L, 6)) {
+            colspan = lua_tointegerx(L, 6, &isnum);
+            luaL_argcheck(L, isnum,       6, "the column span, if specified, must be an integer");
+            luaL_argcheck(L, colspan > 0, 6, "the column span, if specified, must be greater than zero");
+         }
          --row; // Lua one-indexed -> C zero-indexed
          --col; // Lua one-indexed -> C zero-indexed
          //
@@ -107,6 +120,118 @@ namespace {
             }
             DovahKitScriptVMCore::get().widget_no_longer_orphaned(child);
          };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t add_spacer(lua_State* L) {
+         enum class _spacer_axis {
+            h,
+            v,
+            both,
+         };
+         //
+         int   argcount = lua_gettop(L);
+         auto& self     = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         if (!_can_have_layout(*self.widget))
+            luaL_error(L, "this widget cannot have a layout and so cannot have children either");
+         //
+         _spacer_axis axis = _spacer_axis::both;
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "spacer axis (string) expected");
+         {
+            const char* v = lua_tostring(L, 2);
+            if (_stricmp(v, "h") == 0) {
+               axis = _spacer_axis::h;
+            } else if (_stricmp(v, "horizontal") == 0) {
+               axis = _spacer_axis::h;
+            } else if (_stricmp(v, "v") == 0) {
+               axis = _spacer_axis::v;
+            } else if (_stricmp(v, "vertical") == 0) {
+               axis = _spacer_axis::v;
+            } else if (_stricmp(v, "both") == 0) {
+               axis = _spacer_axis::both;
+            } else {
+               luaL_argerror(L, 2, "unrecognized spacer axis (allowed: \"h\", \"horizontal\", \"v\", \"vertical\", \"both\")");
+            }
+         }
+         //
+         int row     = 0; // or (index) for boxes
+         int col     = 0;
+         int rowspan = 1;
+         int colspan = 1;
+         //
+         int isnum;
+         if (lua_isnumber(L, 3)) {
+            row = lua_tointegerx(L, 3, &isnum);
+            luaL_argcheck(L, isnum,   3, "positions in a layout, if specified, must be integers");
+            luaL_argcheck(L, row > 0, 3, "positions in a layout, if specified, must be integers");
+         }
+         if (lua_isnumber(L, 4)) {
+            col = lua_tointegerx(L, 4, &isnum);
+            luaL_argcheck(L, isnum,   4, "positions in a layout, if specified, must be integers");
+            luaL_argcheck(L, col > 0, 4, "positions in a layout, if specified, must be integers");
+         }
+         if (lua_isnumber(L, 5)) {
+            rowspan = lua_tointegerx(L, 5, &isnum);
+            luaL_argcheck(L, isnum,       5, "the row span, if specified, must be an integer");
+            luaL_argcheck(L, rowspan > 0, 5, "the row span, if specified, must be greater than zero");
+         }
+         if (lua_isnumber(L, 6)) {
+            colspan = lua_tointegerx(L, 6, &isnum);
+            luaL_argcheck(L, isnum,       6, "the column span, if specified, must be an integer");
+            luaL_argcheck(L, colspan > 0, 6, "the column span, if specified, must be greater than zero");
+         }
+         --row; // Lua one-indexed -> C zero-indexed
+         --col; // Lua one-indexed -> C zero-indexed
+         //
+         const QMetaObject* layout_mt = nullptr;
+         auto* widget = self.widget;
+         auto* task   = new tasks::s2m::lambda(false);
+         task->handler = [widget, row, col, rowspan, colspan, axis, &layout_mt]() {
+            auto* layout = widget->layout();
+            if (!layout)
+               return;
+            layout_mt = layout->metaObject();
+            //
+            QSpacerItem* child = nullptr;
+            if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
+               child = new QSpacerItem(0, 0);
+               if (row >= 0 && col >= 0) {
+                  grid->addItem(child, row, col, rowspan, colspan);
+               }
+            } else if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
+               child = new QSpacerItem(0, 0);
+               if (row >= 0) {
+                  box->insertSpacerItem(row, child);
+               } else {
+                  box->addSpacerItem(child);
+               }
+            }
+            //
+            if (child) {
+               switch (axis) {
+                  case _spacer_axis::h:
+                     child->changeSize(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+                     break;
+                  case _spacer_axis::v:
+                     child->changeSize(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+                     break;
+                  case _spacer_axis::both:
+                     child->changeSize(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
+                     break;
+               }
+               layout->invalidate();
+            }
+         };
+         //
+         if (layout_mt == &QGridLayout::staticMetaObject) {
+            if (row < 0)
+               return luaL_argerror(L, 2, "(grid layout) you must specify a row number");
+            if (col < 0)
+               return luaL_argerror(L, 2, "(grid layout) you must specify a column number");
+         }
+         //
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
@@ -754,6 +879,7 @@ namespace {
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
       { "add_child",             &_methods::add_child },
+      { "add_spacer",            &_methods::add_spacer },
       { "can_have_layout",       &_methods::can_have_layout },
       { "get_layout_stretch_at", &_methods::get_layout_stretch_at },
       { "on",                    &_methods::on },

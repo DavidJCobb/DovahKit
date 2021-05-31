@@ -22,6 +22,7 @@ class LuaManagedRasterWidget : public QWidget {
       LMRH _resource;
       QSize _desiredSize;
 
+      virtual bool hasHeightForWidth() const override { return true; }
       virtual int heightForWidth(int w) const override;
       virtual QSize minimumSizeHint() const override;
       virtual QSize sizeHint() const override;

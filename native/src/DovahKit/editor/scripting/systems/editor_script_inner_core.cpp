@@ -1102,6 +1102,7 @@ bool DovahKitScriptVMCore::eventFilter(QObject* object, QEvent* event) {
       case QEvent::ParentAboutToChange:   // a widget is about to be reparented
       case QEvent::ParentChange:          // a widget has been reparented
       case QEvent::ReadOnlyChange:        // a widget's read-only state has changed
+      case QEvent::Resize:                // a widget has been resized
       case QEvent::ScrollPrepare:
       case QEvent::Show:                  // a widget was shown
       case QEvent::ShowToParent:          // a child widget was shown

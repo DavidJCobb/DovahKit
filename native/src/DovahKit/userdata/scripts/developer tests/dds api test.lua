@@ -71,6 +71,8 @@ do
       update()
    end)
    
+   panel:add_spacer("v", 5, 1, 1, 2)
+   
    do
       local _lock = false -- lock to protect against widget change events triggered by the update process below
       local function _make_lock_guard()
@@ -141,5 +143,5 @@ update(true)
 window:show()
 window:set_layout_stretch_at(1, 3)
 window:set_layout_stretch_at(2, 2)
-panel:set_layout_stretch_at("col", 1, 1)
-panel:set_layout_stretch_at("col", 2, 2)
+panel:set_layout_stretch_at("col", 1, 3)
+panel:set_layout_stretch_at("col", 2, 1)
