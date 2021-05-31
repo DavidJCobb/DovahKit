@@ -298,6 +298,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\progress_bar.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\radio_group.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\scrollbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\spinbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\tabbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\tabbox\tab.cpp" />
@@ -659,6 +660,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\progress_bar.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\radio_button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\radio_group.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\scrollbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\spinbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\tabbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\tabbox\tab.h" />

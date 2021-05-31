@@ -1092,12 +1092,15 @@ bool DovahKitScriptVMCore::eventFilter(QObject* object, QEvent* event) {
       case QEvent::Close:
       case QEvent::DeferredDelete:
       case QEvent::EnabledChange:         // a widget's enable state has changed
+      case QEvent::Enter:                 // widget mouseover
       case QEvent::Expose:
       case QEvent::Hide:                  // a widget was hidden
       case QEvent::LanguageChange:        // the program's translation changed
       case QEvent::LayoutDirectionChange: // layout update
       case QEvent::LayoutRequest:         // layout update
+      case QEvent::Leave:                 // widget mouseout
       case QEvent::LocaleChange:          // the system locale has changed
+      case QEvent::MouseButtonRelease:    // the mouse was released
       case QEvent::OrientationChange:     // the screen orientation has changed
       case QEvent::ParentAboutToChange:   // a widget is about to be reparented
       case QEvent::ParentChange:          // a widget has been reparented

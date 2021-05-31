@@ -23,6 +23,7 @@ namespace editor_script {
       ui::progress_bar::setup(L);
       ui::radio_button::setup(L);
       ui::radio_group::setup(L);
+      ui::scrollbox::setup(L);
       ui::spinbox::setup(L);
       ui::tabbox::setup(L);
          ui::tabbox_tab::setup(L);

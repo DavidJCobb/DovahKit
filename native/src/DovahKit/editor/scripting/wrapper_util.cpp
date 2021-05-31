@@ -58,6 +58,8 @@ namespace editor_script {
          return wrappers::ui::button::metatable_key;
       if (qobject_cast<QRadioButton*>(widget))
          return wrappers::ui::radio_button::metatable_key;
+      if (qobject_cast<QScrollArea*>(widget))
+         return wrappers::ui::scrollbox::metatable_key;
       if (qobject_cast<QTableView*>(widget))
          return wrappers::ui::table_view::metatable_key;
       if (qobject_cast<QTabWidget*>(widget))

@@ -55,6 +55,7 @@ namespace editor_script {
             define_wrapper_metatable<ui::progress_bar>(L);
             define_wrapper_metatable<ui::radio_button>(L);
             define_wrapper_metatable<ui::radio_group>(L);
+            define_wrapper_metatable<ui::scrollbox>(L);
             define_wrapper_metatable<ui::spinbox>(L);
             define_wrapper_metatable<ui::tabbox>(L);
                define_wrapper_metatable<ui::tabbox_tab>(L);

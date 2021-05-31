@@ -6,10 +6,6 @@
 #include "../../../../DirectXTex/DirectXTex.h"
 #include "../../../helpers/intrusive_windows_defines.h"
 
-// Needed to force updates to a combobox's body
-#include <QAbstractItemView>
-#include <QComboBox>
-
 namespace {
    static constexpr int resource_resynchronize_interval = 17; // 1000 / 60 == 16.6ms
 

@@ -32,11 +32,22 @@ void LuaManagedRasterWidget::setDesiredHeight(int s) noexcept {
 }
 
 void LuaManagedRasterWidget::setResource(const LMRH& input) {
+   if (this->_resource) {
+      QObject::disconnect(this->_resource, nullptr, this, nullptr);
+   }
    this->_resource = input;
    this->updateGeometry();
    this->update();
+   QObject::connect(this->_resource, &LMR::resynchronized, this, [this]() {
+      this->updateGeometry();
+      this->update();
+   });
 }
 
+bool LuaManagedRasterWidget::hasHeightForWidth() const {
+   return false;
+   return !this->_getPixmap().isNull();
+}
 int LuaManagedRasterWidget::heightForWidth(int w) const {
    auto pm = this->_getPixmap();
    if (pm.isNull())
@@ -54,7 +65,7 @@ QSize LuaManagedRasterWidget::minimumSizeHint() const {
    if (w < 0 && h < 0) {
       if (pm.isNull())
          return QSize(0, 0);
-      return pm.size();
+      return pm.size() / pm.devicePixelRatio();
    }
    if (w < 0) {
       if (pm.isNull())
@@ -75,7 +86,7 @@ QSize LuaManagedRasterWidget::sizeHint() const {
    auto pm = this->_getPixmap();
    if (pm.isNull())
       return QSize(-1, -1);
-   return pm.size();
+   return pm.size() / pm.devicePixelRatio();
 }
 
 void LuaManagedRasterWidget::paintEvent(QPaintEvent* event) {
@@ -83,7 +94,7 @@ void LuaManagedRasterWidget::paintEvent(QPaintEvent* event) {
    if (pm.isNull())
       return;
    QSize space = this->size();
-   QSize size  = pm.size().scaled(space.width(), space.height(), Qt::AspectRatioMode::KeepAspectRatio);
+   QSize size  = (pm.size() / pm.devicePixelRatio()).scaled(space.width(), space.height(), Qt::AspectRatioMode::KeepAspectRatio);
    int x = (space.width() - size.width()) / 2;
    int y = (space.height() - size.height()) / 2;
    //

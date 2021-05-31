@@ -1,12 +1,41 @@
+local DEFAULT_PATH = "textures/landscape/rocks01.dds"
+
 local window = ui.window.new()
 local panel  = ui.widget.new()
 local render = ui.image_widget.new()
 window:set_layout("ltr")
-window:add_child(render)
-window:add_child(panel)
 
-render.min_height = 32
-render.min_width  = 32
+local update_scroll_bounds = nil
+do
+   --window:add_child(render)
+   local box  = ui.scrollbox.new()
+   local body = box.body
+   body:set_layout("grid")
+   body:add_child(render, 1, 1)
+   window:add_child(box)
+   --
+   box.min_height = 64
+   box.min_width  = 64
+   body.layout_margins = 1
+   --
+   do
+      body:add_spacer("h", 1, 2)
+      body:add_spacer("v", 2, 1)
+      body:add_spacer("both", 2, 2)
+      body:set_layout_stretch_at("col", 1, 0)
+      body:set_layout_stretch_at("col", 2, 1)
+      body:set_layout_stretch_at("row", 1, 0)
+      body:set_layout_stretch_at("row", 2, 1)
+   end
+   --
+   update_scroll_bounds = function(w, h)
+      body.min_width  = w
+      body.min_height = h
+      render.min_width = w
+      render.min_height = h
+   end
+end
+window:add_child(panel)
 
 local loaded_dds = nil
 local update     = nil -- forward-declared function
@@ -17,6 +46,7 @@ do
    
    local in_path = ui.textbox.new()
    local in_load = ui.button.new("Load DDS")
+   in_path.text = DEFAULT_PATH
    panel:add_child(in_path, 1, 1)
    panel:add_child(in_load, 1, 2)
    in_load:on("OnActivated", "", function()
@@ -132,6 +162,7 @@ do
             end
             if image then
                content = image:copy_to_raster()
+               update_scroll_bounds(content.width, content.height)
             end
          end
          render.image = content

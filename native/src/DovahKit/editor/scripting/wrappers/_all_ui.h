@@ -10,6 +10,7 @@
 #include "ui/progress_bar.h"
 #include "ui/radio_button.h"
 #include "ui/radio_group.h"
+#include "ui/scrollbox.h"
 #include "ui/spinbox.h"
 #include "ui/tabbox.h"
 #include "ui/tabbox/tab.h"

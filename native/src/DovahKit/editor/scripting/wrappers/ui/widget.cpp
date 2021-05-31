@@ -68,6 +68,11 @@ namespace {
             luaL_error(L, "this widget cannot have a layout and so cannot have children either");
          if (!arg->widget)
             return 0;
+         {
+            auto data = arg->widget->property("Lua widget forced parent");
+            if (data.isValid())
+               luaL_argerror(L, 2, "the desired child widget cannot have its parent changed");
+         }
          //
          int row     = 0; // or (index) for boxes
          int col     = 0;
@@ -299,6 +304,11 @@ namespace {
             luaL_error(L, "this widget cannot have a layout and so cannot have children either");
          if (!arg->widget)
             return 0;
+         {
+            auto data = arg->widget->property("Lua widget forced parent");
+            if (data.isValid())
+               luaL_argerror(L, 2, "the specified child widget cannot have its parent changed");
+         }
          //
          auto* widget = self.widget;
          auto* child  = arg->widget;
