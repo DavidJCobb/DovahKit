@@ -19,6 +19,10 @@ do
    body.layout_margins = 1
    --
    do
+      --
+      -- Put some spacers in and configure stretch, so that the image 
+      -- doesn't stretch to fill any space.
+      --
       body:add_spacer("h", 1, 2)
       body:add_spacer("v", 2, 1)
       body:add_spacer("both", 2, 2)

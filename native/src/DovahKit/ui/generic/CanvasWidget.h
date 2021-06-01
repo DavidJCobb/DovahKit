@@ -3,8 +3,8 @@
 #include <QWidget>
 
 class CanvasWidget;
-class CanvasLayer;
-class CanvasLayerData;
+class CanvasWidgetLayer;
+class CanvasWidgetLayerData;
 
 class CanvasWidget : public QWidget {
    Q_OBJECT;
@@ -12,15 +12,15 @@ class CanvasWidget : public QWidget {
       CanvasWidget(QWidget* parent = nullptr);
       ~CanvasWidget();
    protected:
-      QVector<CanvasLayer*> _layers;
+      QVector<CanvasWidgetLayer*> _layers;
       QSize _size;
 
       virtual void paintEvent(QPaintEvent* event) override;
       virtual QSize sizeHint() const override;
 
    public:
-      CanvasLayer* addLayer(CanvasLayerData* data = nullptr);
-      QList<CanvasLayer*> layers() const noexcept;
+      CanvasWidgetLayer* addLayer(CanvasWidgetLayerData* data = nullptr);
+      QList<CanvasWidgetLayer*> layers() const noexcept;
 
       inline QSize imageSize() const noexcept { return this->_size; }
       inline int imageWidth() const noexcept { return this->size().width(); }
@@ -29,21 +29,24 @@ class CanvasWidget : public QWidget {
       void setImageSize(int w, int h) noexcept;
 };
 
-class CanvasLayer {
+// Owned by the parent CanvasWidget, and deleted when that object is destroyed.
+class CanvasWidgetLayer {
    friend class CanvasWidget;
    protected:
-      CanvasWidget*    _owner = nullptr;
-      CanvasLayerData* _data  = nullptr;
+      CanvasWidget*          _owner = nullptr;
+      CanvasWidgetLayerData* _data  = nullptr;
       bool   _visible = false;
       QPoint _pos;
 
       void _paint(QPainter&);
 
    public:
+      ~CanvasWidgetLayer();
+
       inline CanvasWidget* owner() const noexcept { return this->_owner; }
 
-      inline CanvasLayerData* data() const noexcept { return this->_data; }
-      void setData(CanvasLayerData*);
+      inline CanvasWidgetLayerData* data() const noexcept { return this->_data; }
+      void setData(CanvasWidgetLayerData*);
 
       inline QPoint position() const noexcept { return this->_pos; }
       inline int x() const noexcept { return this->position().x(); }
@@ -59,22 +62,41 @@ class CanvasLayer {
       void update();
 };
 
-class CanvasLayerData {
-   friend class CanvasLayer;
+class CanvasWidgetLayerData : public QObject {
+   Q_OBJECT;
+   friend class CanvasWidgetLayer;
    protected:
-      mutable std::shared_mutex mutex;
-      QList<CanvasLayer*> _users;
-      QImage* _image = nullptr;
+      QList<CanvasWidgetLayer*> _users;
 
-      void _paint(QPainter&, const QPoint& pos);
+      virtual void paint(QPainter&, const QPoint& pos) noexcept = 0;
 
    public:
-      QImage* image(); // doesn't lock
-      void replaceWithImage(QImage*);
+      CanvasWidgetLayerData(QObject* parent = nullptr) : QObject(parent) {};
 
-      QImage* checkOutImage();    // exclusively locks the mutex and grabs the image, for editing. you must check the image back in once your changes are made. undefined behavior if replacing data wholesale while checked out.
-      void checkInImage(QImage*); // you must pass in the same image you checked out
+      virtual QRect rect() const noexcept = 0;
 
-      QRect rect() const noexcept;
-      inline QList<CanvasLayer*> users() const noexcept { return this->_users; }
+      inline QList<CanvasWidgetLayer*> users() const noexcept { return this->_users; }
+
+   signals:
+      void attached(); // a previously-unused layer-data has been given to a layer
+      void detached(); // a layer-data has ceased to be in use by any layers
+};
+
+class CanvasWidgetLayerDataImage : public CanvasWidgetLayerData {
+   Q_OBJECT;
+   protected:
+      struct {
+         QImage  image;
+         QPixmap pixmap;
+         qint64  cache_key = 0;
+      } content;
+
+      virtual void paint(QPainter&, const QPoint& pos) noexcept override;
+
+   public:
+      using CanvasWidgetLayerData::CanvasWidgetLayerData; // inherit constructor
+
+      QImage& image();
+
+      virtual QRect rect() const noexcept override;
 };

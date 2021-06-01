@@ -28,15 +28,15 @@ QSize CanvasWidget::sizeHint() const {
    return this->imageSize();
 }
 
-CanvasLayer* CanvasWidget::addLayer(CanvasLayerData* data) {
-   auto* layer = new CanvasLayer;
+CanvasWidgetLayer* CanvasWidget::addLayer(CanvasWidgetLayerData* data) {
+   auto* layer = new CanvasWidgetLayer;
    layer->_owner = this;
    this->_layers.push_back(layer);
    layer->setData(data);
    return layer;
 }
-QList<CanvasLayer*> CanvasWidget::layers() const noexcept {
-   QList<CanvasLayer*> list;
+QList<CanvasWidgetLayer*> CanvasWidget::layers() const noexcept {
+   QList<CanvasWidgetLayer*> list;
    list.reserve(this->_layers.size());
    for (auto* l : this->_layers)
       list.push_back(l);
@@ -52,24 +52,36 @@ void CanvasWidget::setImageSize(int w, int h) noexcept {
 }
 #pragma endregion
 
-#pragma region CanvasLayer
-void CanvasLayer::_paint(QPainter& painter) {
+#pragma region CanvasWidgetLayer
+CanvasWidgetLayer::~CanvasWidgetLayer() {
+   this->setData(nullptr);
+}
+
+void CanvasWidgetLayer::_paint(QPainter& painter) {
    if (!this->_data)
       return;
-   this->_data->_paint(painter, this->position());
+   this->_data->paint(painter, this->position());
 }
 
-void CanvasLayer::setData(CanvasLayerData* d) {
+void CanvasWidgetLayer::setData(CanvasWidgetLayerData* d) {
    if (d == this->_data)
       return;
-   if (auto* old = this->_data)
-      old->_users.removeOne(this);
+   if (auto* old = this->_data) {
+      auto& list = old->_users;
+      list.removeOne(this);
+      if (list.isEmpty())
+         emit old->detached();
+   }
    this->_data = d;
-   if (d)
-      d->_users.push_back(this);
+   if (d) {
+      auto& list = d->_users;
+      list.push_back(this);
+      if (list.size() == 1)
+         emit d->attached();
+   }
 }
 
-void CanvasLayer::setPosition(const QPoint& to) noexcept {
+void CanvasWidgetLayer::setPosition(const QPoint& to) noexcept {
    auto prior = this->position();
    if (prior == to)
       return;
@@ -83,24 +95,24 @@ void CanvasLayer::setPosition(const QPoint& to) noexcept {
    this->_owner->update(prior_r);
    this->update();
 }
-void CanvasLayer::setPosition(int x, int y) noexcept {
+void CanvasWidgetLayer::setPosition(int x, int y) noexcept {
    this->setPosition({ x, y });
 }
 
-QRect CanvasLayer::rect() const noexcept {
+QRect CanvasWidgetLayer::rect() const noexcept {
    if (!this->_data)
       return QRect();
    return this->_data->rect().translated(this->position());
 }
 
-void CanvasLayer::setVisible(bool v) noexcept {
+void CanvasWidgetLayer::setVisible(bool v) noexcept {
    if (this->_visible == v)
       return;
    this->_visible = v;
    this->update();
 }
 
-void CanvasLayer::update() {
+void CanvasWidgetLayer::update() {
    if (!this->_data || !this->_owner)
       return;
    auto rect = this->data()->rect().translated(this->position());
@@ -108,41 +120,27 @@ void CanvasLayer::update() {
 }
 #pragma endregion
 
-#pragma region CanvasLayerData
-void CanvasLayerData::_paint(QPainter& painter, const QPoint& pos) {
-   std::shared_lock guard(this->mutex);
-   if (auto* image = this->image()) {
-      painter.drawImage(pos, *image, image->rect(), Qt::NoOpaqueDetection);
+#pragma region CanvasWidgetLayerDataImage
+void CanvasWidgetLayerDataImage::paint(QPainter& painter, const QPoint& pos) noexcept {
+   auto& im = this->content.image;
+   auto& pm = this->content.pixmap;
+   if (im.isNull())
       return;
+   if (im.cacheKey() != this->content.cache_key)
+      pm = QPixmap();
+   if (pm.isNull()) {
+      pm = QPixmap::fromImage(im);
    }
+   painter.drawPixmap(pos, pm);
 }
-QRect CanvasLayerData::rect() const noexcept {
-   std::shared_lock guard(this->mutex);
-   if (!this->_image)
+QRect CanvasWidgetLayerDataImage::rect() const noexcept {
+   auto& im = this->content.image;
+   if (im.isNull())
       return QRect();
-   return this->_image->rect();
+   return im.rect();
 }
 
-QImage* CanvasLayerData::image() {
-   return this->_image;
-}
-void CanvasLayerData::replaceWithImage(QImage* input) {
-   {
-      std::unique_lock guard(this->mutex);
-      this->_image = input;
-   }
-   for (auto* user : users())
-      user->update();
-}
-
-QImage* CanvasLayerData::checkOutImage() {
-   this->mutex.lock();
-   return this->_image;
-}
-void CanvasLayerData::checkInImage(QImage* in) {
-   assert(in == this->_image);
-   this->mutex.unlock();
-   for (auto* user : users())
-      user->update();
+QImage& CanvasWidgetLayerDataImage::image() {
+   return this->content.image;
 }
 #pragma endregion
