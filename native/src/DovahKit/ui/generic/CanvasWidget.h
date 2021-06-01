@@ -1,25 +1,36 @@
 #pragma once
-#include <shared_mutex>
 #include <QWidget>
+#include "../../helpers/qt/traversal.h"
 
 class CanvasWidget;
 class CanvasWidgetLayer;
 class CanvasWidgetLayerData;
 
+//
+// A widget which displays CanvasWidgetLayer objects in its frame. The widget relies 
+// on QObject's ownership-tree system: CWLs that use the widget as their parents will 
+// be drawn, and will be destroyed when the widget is destroyed; and CWLs can be made 
+// parents to each other in order to allow for "layer groups."
+//
 class CanvasWidget : public QWidget {
    Q_OBJECT;
    public:
       CanvasWidget(QWidget* parent = nullptr);
       ~CanvasWidget();
    protected:
-      QVector<CanvasWidgetLayer*> _layers;
       QSize _size;
 
       virtual void paintEvent(QPaintEvent* event) override;
       virtual QSize sizeHint() const override;
 
    public:
-      CanvasWidgetLayer* addLayer(CanvasWidgetLayerData* data = nullptr);
+
+      // Add a layer to this canvas. The canvas becomes the parent object of the layer and 
+      // so takes ownership of it.
+      void addLayer(CanvasWidgetLayer* layer);
+
+      CanvasWidgetLayer* createLayer(CanvasWidgetLayerData* data = nullptr);
+
       QList<CanvasWidgetLayer*> layers() const noexcept;
 
       inline QSize imageSize() const noexcept { return this->_size; }
@@ -27,23 +38,33 @@ class CanvasWidget : public QWidget {
       inline int imageHeight() const noexcept { return this->size().height(); }
       void setImageSize(const QSize&) noexcept;
       void setImageSize(int w, int h) noexcept;
+
+      void moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
+      void moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
+
+      // Traverses all child and descendant layers, returning a list of those and any data 
+      // objects that those may have. Useful if, say, you plan on using this widget in Lua 
+      // and quickly need a way to quickly check whether the widget or any of its parts are 
+      // referenced.
+      QList<QObject*> allAssociatedObjects(bool includeWidgets = true) const noexcept;
 };
 
-// Owned by the parent CanvasWidget, and deleted when that object is destroyed.
-class CanvasWidgetLayer {
+class CanvasWidgetLayer : public QObject {
+   Q_OBJECT;
    friend class CanvasWidget;
    protected:
-      CanvasWidget*          _owner = nullptr;
-      CanvasWidgetLayerData* _data  = nullptr;
+      CanvasWidgetLayerData* _data = nullptr;
       bool   _visible = false;
       QPoint _pos;
 
-      void _paint(QPainter&);
+      void _paint(QPainter&, QPoint p = QPoint(0, 0));
 
    public:
+      using QObject::QObject; // inherit constructor
       ~CanvasWidgetLayer();
 
-      inline CanvasWidget* owner() const noexcept { return this->_owner; }
+      CanvasWidget* canvas() const noexcept;
+      inline CanvasWidgetLayer* parentLayer() const noexcept { return qobject_cast<CanvasWidgetLayer*>(this->parent()); }
 
       inline CanvasWidgetLayerData* data() const noexcept { return this->_data; }
       void setData(CanvasWidgetLayerData*);
@@ -54,7 +75,12 @@ class CanvasWidgetLayer {
       void setPosition(const QPoint&) noexcept;
       void setPosition(int x, int y) noexcept;
 
-      QRect rect() const noexcept;
+      QPoint effectivePosition() const noexcept;
+
+      // Returns the region occupied by this layer and all of its descendants, recursing as needed. 
+      // Note that this function doesn't take the layer's ancestor-layers (if any) into account; if 
+      // called on a nested layer, it will not apply the ancestor-layers' position offsets.
+      QRegion region() const noexcept;
 
       inline bool visible() const noexcept { return this->_visible; }
       void setVisible(bool) noexcept;
@@ -72,6 +98,7 @@ class CanvasWidgetLayerData : public QObject {
 
    public:
       CanvasWidgetLayerData(QObject* parent = nullptr) : QObject(parent) {};
+      ~CanvasWidgetLayerData();
 
       virtual QRect rect() const noexcept = 0;
 

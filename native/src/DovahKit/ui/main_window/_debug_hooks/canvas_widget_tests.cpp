@@ -45,9 +45,9 @@ namespace DovahKitDebug {
       dialog->setFixedHeight(200);
       //
       {
-         canvas->addLayer(); // red
-         canvas->addLayer(); // green
-         canvas->addLayer(); // blue
+         canvas->createLayer(); // red
+         canvas->createLayer(); // green
+         canvas->createLayer(); // blue
          for (auto* layer : canvas->layers()) {
             auto* data  = new CanvasWidgetLayerDataImage(dialog);
             auto& image = data->image();
