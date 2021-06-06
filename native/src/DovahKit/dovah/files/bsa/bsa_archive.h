@@ -1,8 +1,10 @@
 #pragma once
+#include <exception>
 #include <filesystem>
 #include <functional>
-#include <string>
 #include <map>
+#include <string>
+#include <type_traits>
 #include <vector>
 #include "../../../helpers/endianness.h"
 #include "../../../helpers/files.h"
@@ -11,6 +13,21 @@
 namespace dovah {
    class bsa_archived_file;
    class bsa_load_order;
+
+   struct bsa_load_exception : public std::runtime_error {
+      bsa_load_exception(const char* w) : runtime_error(w) {}
+
+      std::filesystem::path bsa_path;
+      uint64_t stream_position = 0;
+   };
+   struct bsa_unexpected_eof_exception : public bsa_load_exception {
+      bsa_unexpected_eof_exception() : bsa_load_exception("unexpected EOF") {}
+   };
+   struct bsa_winapi_load_exception : public bsa_load_exception {
+      bsa_winapi_load_exception() : bsa_load_exception("BSA WinAPI load error") {}
+
+      uint32_t code = 0;
+   };
 
    struct bsa_header {
       struct flag {
@@ -109,21 +126,18 @@ namespace dovah {
 
    class bsa_archive {
       public:
-         enum class read_error_code {
-            none,
-            bad_header_sentinel, // the header sentinel was not 'B' 'S' 'A' '\0'
-         };
-         //
          struct file_entry {
             bs_hash     hash;
             std::string name; // present only if the BSA uses the (include_filenames) flag
-            uint32_t    size_and_flags = 0;
+            uint32_t    size_and_flags = 0; // size of the data embedded in the BSA, i.e. the compressed data if compression is in use
             uint32_t    offset         = 0; // offset of: the embedded filename, if any, with a one-byte length prefix and no null terminator; the uncompressed size (if the file is compressed); and then the file data
-            //
+            bool        corrupt = false; // set if the file claims to be too large to fit in the BSA, such that reading it would read past the BSA's end
+
             inline uint32_t size() const noexcept { return this->size_and_flags & ~0xC0000000; }
             inline bool invalidated() const noexcept { return (this->size_and_flags & 0x80000000) != 0; } // this flag should only be set at run-time
             inline bool non_default_compression() const noexcept { return (this->size_and_flags & 0x40000000) != 0; }
          };
+
          struct folder_entry {
             bs_hash     hash;
             std::string name; // present only if the BSA uses the (include_directory_names) flag
@@ -133,7 +147,7 @@ namespace dovah {
             //
             const file_entry* find_file(const bs_hash& file_hash, const std::string& file_name) const noexcept; // if string args are non-empty and the archive contains strings, then args are used to verify hash correctness
          };
-         //
+         
       protected:
          std::filesystem::path path;
          bsa_header            header;
@@ -142,16 +156,38 @@ namespace dovah {
          //
          // General loading-state fields:
          //
-         read_error_code read_error = read_error_code::none;
          uint64_t stream_position       = 0;
          bool     needs_endianness_flip = false;
+         bool     loading_failed        = false;
          //
          // Fields for retrieving filenames from the filename blob:
          //
          uint32_t current_file_index    = 0;
          uint64_t filename_blob_offset  = 0;
          uint64_t last_filename_offset  = 0;
-         //
+
+         template<typename T> requires (std::is_base_of_v<bsa_load_exception, T>) void _throw_load_exception() {
+            this->loading_failed = true;
+            auto e = T();
+            e.bsa_path        = this->path;
+            e.stream_position = this->stream_position;
+            throw e;
+         }
+         template<typename T> requires (std::is_base_of_v<bsa_load_exception, T>) void _throw_load_exception(const char* w) {
+            this->loading_failed = true;
+            T e(w);
+            e.bsa_path        = this->path;
+            e.stream_position = this->stream_position;
+            throw e;
+         }
+
+         void _unchecked_read(void* target, size_t size) noexcept;
+         template<typename T> void _unchecked_read(T& out) noexcept {
+            this->_unchecked_read(&out, sizeof(T));
+            if (this->needs_endianness_flip)
+               out = cobb::byteswap(out);
+         }
+         
          void _read(void* target, size_t size);
          template<typename T> void _read(T& out) {
             this->_read(&out, sizeof(T));
@@ -161,29 +197,36 @@ namespace dovah {
          void _read(std::string&);
          void _read(folder_entry&);
          void _read(file_entry&);
-         //
+
+         void _read_non_null_terminated_string(std::string&, size_t length);
+
+         // Intended for use post-load only.
          void _read_at(void* target, size_t size, uint64_t offset);
          template<typename T> void _read_at(T& out, uint64_t offset) {
             this->_read_at(&out, sizeof(T), offset);
             if (this->needs_endianness_flip)
                out = cobb::byteswap(out);
          }
-         //
-         void _read_non_null_terminated_string(std::string&, size_t length);
-         //
+         
+         inline bool is_eof() const noexcept {
+            return this->stream_position >= this->mapping.size();
+         }
+         inline bool is_in_bounds(uint32_t bytes) const noexcept {
+            return ((uint64_t)this->stream_position + bytes) < this->mapping.size();
+         }
+         
          const file_entry* find_file(const bs_hash& folder_hash, const bs_hash& file_hash, const std::string& folder_name, const std::string& file_name) const noexcept; // if string args are non-empty and the archive contains strings, then args are used to verify hash correctness
          bsa_archived_file* retrieve_entry(const file_entry&);
-         //
+         
       public:
          void set_path(const std::filesystem::path&); // only works if a file is not open
          //
          void open();
          void open(const std::filesystem::path&);
-         inline read_error_code get_error() const noexcept { return this->read_error; }
-         inline bool has_error() const noexcept { return this->read_error != read_error_code::none; }
          //
          inline const std::filesystem::path& get_path() const noexcept { return this->path; }
          bool is_open() const noexcept;
+         inline bool did_loading_fail() const noexcept { return this->loading_failed; }
          //
          bsa_archived_file* lookup_file(const bs_hash& folder, const bs_hash& file);
          bsa_archived_file* lookup_file(const std::string& path_and_name);

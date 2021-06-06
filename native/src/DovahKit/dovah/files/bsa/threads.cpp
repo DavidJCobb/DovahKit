@@ -13,7 +13,9 @@ namespace dovah {
             return;
          if (self.owner.is_archive_load_aborted())
             break;
-         archive->open();
+         try {
+            archive->open();
+         } catch (const bsa_load_exception& e) {}
       }
       self.complete = true;
       self.owner.on_thread_complete(self);

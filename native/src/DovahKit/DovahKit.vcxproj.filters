@@ -945,6 +945,9 @@
     <ClCompile Include="editor\scripting\wrappers\ui\scrollbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\qt\ownership.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1908,6 +1911,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\ui\scrollbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\ownership.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

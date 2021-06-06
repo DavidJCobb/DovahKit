@@ -9,21 +9,32 @@ extern "C" {
 
 namespace dovah {
    #pragma region File reading and loading
-   void bsa_archive::_read(void* target, size_t size) {
-      if (!this->mapping)
-         return;
+   void bsa_archive::_unchecked_read(void* target, size_t size) noexcept {
       memcpy(target, (const uint8_t*)this->mapping.data() + this->stream_position, size);
       this->stream_position += size;
    }
+   void bsa_archive::_read(void* target, size_t size) {
+      assert(this->mapping);
+      if (this->stream_position + size >= this->mapping.size())
+         this->_throw_load_exception<bsa_unexpected_eof_exception>();
+      this->_unchecked_read(target, size);
+   }
    void bsa_archive::_read_at(void* target, size_t size, uint64_t offset) {
-      if (!this->mapping)
-         return;
+      assert(this->mapping);
+      if (offset + size >= this->mapping.size()) {
+         bsa_unexpected_eof_exception e;
+         e.bsa_path        = this->path;
+         e.stream_position = offset;
+         throw e;
+      }
       memcpy(target, (const uint8_t*)this->mapping.data() + offset, size);
    }
    void bsa_archive::_read(std::string& out) {
       char c = 0;
       do {
-         this->_read(c);
+         if (!this->is_in_bounds(1))
+            break;
+         this->_unchecked_read(c);
          if (c)
             out += c;
       } while (c);
@@ -67,9 +78,12 @@ namespace dovah {
       this->stream_position = pos;
    }
    void bsa_archive::_read(bsa_archive::file_entry& file) {
-      this->_read(file.hash);
-      this->_read(file.size_and_flags);
-      this->_read(file.offset);
+      if (!this->is_in_bounds(sizeof(file.hash) + sizeof(file.size_and_flags) + sizeof(file.offset))) {
+         this->_throw_load_exception<bsa_unexpected_eof_exception>();
+      }
+      this->_unchecked_read(file.hash);
+      this->_unchecked_read(file.size_and_flags);
+      this->_unchecked_read(file.offset);
       //
       auto pos = this->stream_position;
       if (this->header.flags & bsa_header::flag::embed_filenames) {
@@ -101,11 +115,14 @@ namespace dovah {
       }
       this->stream_position = pos;
       //
+      if (file.size() + file.offset > this->mapping.size()) {
+         file.corrupt = true;
+      }
+      //
       ++this->current_file_index;
    }
    void bsa_archive::set_path(const std::filesystem::path& path) {
-      if (this->mapping.data())
-         return;
+      assert(!this->mapping.data() && "why do you want to change the path after the BSA has been opened?");
       this->path = path;
    }
    void bsa_archive::open() {
@@ -118,6 +135,12 @@ namespace dovah {
       this->mapping.open(path.c_str());
       this->folders.clear();
       this->stream_position = 0;
+      if (auto e = this->mapping.get_error()) {
+         bsa_winapi_load_exception ex;
+         ex.bsa_path = this->path;
+         ex.code     = e;
+         throw ex;
+      }
       //
       this->_read(this->header.sentinel);
       this->_read(this->header.version);
@@ -130,8 +153,7 @@ namespace dovah {
       this->_read(this->header.filetypes);
       //
       if (this->header.sentinel != _byteswap_ulong('BSA\0')) {
-         this->read_error = read_error_code::bad_header_sentinel;
-         return;
+         this->_throw_load_exception<bsa_load_exception>("bad header sentinel");
       }
       if (this->header.folder_offset != 0x24) {
          dovah::logging::print_line("Warning: The BSA we're loading seems to have unknown content between its file header and its folder listing, or its header is longer than we expect.");
@@ -182,11 +204,15 @@ namespace dovah {
       return nullptr;
    }
    bsa_archived_file* bsa_archive::retrieve_entry(const bsa_archive::file_entry& entry) {
+      assert(this->mapping);
+      if (entry.corrupt)
+         return nullptr;
       auto size = entry.size();
       if (!size)
          return nullptr;
       //
       uint64_t offset = entry.offset;
+      assert(offset + size <= this->mapping.size());
       if (this->header.flags & bsa_header::flag::embed_filenames) {
          uint8_t length;
          this->_read_at(length, offset);

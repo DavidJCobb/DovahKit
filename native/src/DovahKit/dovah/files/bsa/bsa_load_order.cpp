@@ -143,7 +143,7 @@ namespace dovah {
       auto& list = this->archives;
       for (auto it = list.rbegin(); it != list.rend(); ++it) {
          auto* archive = *it;
-         if (!archive || !archive->is_open())
+         if (!archive || !archive->is_open() || archive->did_loading_fail())
             continue;
          auto* result = archive->lookup_file(path_and_name);
          if (result)
