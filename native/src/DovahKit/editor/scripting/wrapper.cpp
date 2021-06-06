@@ -7,6 +7,7 @@
 
 #include "systems/lua_managed_resources.h"
 #include "systems/messaging.h"
+#include "systems/userdata.h"
 #include "cross_thread_tasks/s2m/lambda.h"
 
 namespace editor_script {
@@ -60,6 +61,9 @@ namespace editor_script {
          //
          return;
       }
+      //
+      DovahKitScriptVMUserdataInterface::get().prune_wrapper_list_for(*this);
+      //
       if (this->type == wrapper_type::ui) {
          DovahKitScriptVMCore::get().widget_no_longer_referenced(this->widget);
          this->widget = nullptr;

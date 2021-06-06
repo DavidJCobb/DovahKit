@@ -226,6 +226,26 @@ bool DovahKitScriptVMUserdataInterface::wrapper_exists_for(void* pertinent_point
    return result;
 }
 
+void DovahKitScriptVMUserdataInterface::prune_wrapper_list_for(editor_script::wrapper& instance) {
+   void* light = instance.get_pertinent_pointer();
+   if (!light)
+      return;
+   auto* L = this->vm.lua_vm;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_storage_registry_key);
+   lua_pushlightuserdata(L, light);
+   lua_rawget(L, -2);
+   if (lua_istable(L, -1)) {
+      if (cobb::lua::isempty(L, -1)) {
+         lua_pop(L, 1);
+         //
+         lua_pushlightuserdata(L, light);
+         lua_pushnil(L);
+         lua_rawset(L, -3);
+      }
+   }
+}
+
 int DovahKitScriptVMUserdataInterface::push(lua_State* L, const editor_script::wrapper& instance, const char* metatable_name) {
    DovahKitScriptVMCore::require_script_thread();
    if (!instance.should_expose_to_script())

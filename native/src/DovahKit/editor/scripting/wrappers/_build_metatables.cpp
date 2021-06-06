@@ -45,6 +45,7 @@ namespace editor_script {
       #pragma region UI
          define_wrapper_metatable<ui::widget>(L);
             define_wrapper_metatable<ui::button>(L);
+            define_wrapper_metatable<ui::canvas>(L);
             define_wrapper_metatable<ui::checkbox>(L);
             define_wrapper_metatable<ui::dropdown>(L);
                define_wrapper_metatable<ui::dropdown_item>(L);

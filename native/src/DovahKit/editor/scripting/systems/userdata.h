@@ -32,6 +32,11 @@ class DovahKitScriptVMUserdataInterface : cobb::singleton {
 
       bool wrapper_exists_for(void*);
 
+      // Wrappers should call this when their __gc or __close function runs. This function will 
+      // check whether the wrapper list for the given pointer is empty and if so, delete the list 
+      // (and run whatever other teardown code may be warranted).
+      void prune_wrapper_list_for(editor_script::wrapper&);
+
       //
       // Check if Lua already has an identical copy of the passed-in wrapper;  if so, push that copy 
       // onto the Lua stack. Otherwise, copy the passed-in wrapper into Lua and push it onto the Lua 

@@ -1,5 +1,6 @@
 #pragma once
 #include "ui/button.h"
+#include "ui/canvas.h"
 #include "ui/checkbox.h"
 #include "ui/dropdown.h"
 #include "ui/dropdown/item.h"
