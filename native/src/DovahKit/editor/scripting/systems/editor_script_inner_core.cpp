@@ -38,6 +38,8 @@
 
 namespace {
    static constexpr int max_script_windows = 10;
+
+   static constexpr bool test_model_observer_no_refcount = true;
 }
 
 namespace {
@@ -254,10 +256,8 @@ void DovahKitScriptVMCore::_hierarchy_finder::submit_non_abandoned_model(Observa
       list.push_back(model);
 }
 void DovahKitScriptVMCore::_hierarchy_finder::import_non_abandoned_models(DovahKitScriptVMCore& core, ObservableStandardItemModelObserver* exclude) noexcept {
-   for (auto& om : core.ui_model_observers) {
-      auto* p = om.pointer;
-      if (!p)
-         continue;
+   for (auto* p : core.ui_model_observers.extant) {
+      assert(p);
       if (exclude && p == exclude)
          continue;
       this->submit_non_abandoned_model(p->model);
@@ -333,7 +333,8 @@ DovahKitScriptVMCore::~DovahKitScriptVMCore() {
 void DovahKitScriptVMCore::_setup_lua_vm() {
    assert(!this->in_teardown);
    assert(this->lua_vm == nullptr);
-   assert(this->ui_model_observers.empty());
+   assert(this->ui_model_observers.extant.empty());
+   assert(this->ui_model_observers.pending_deletion.empty());
    assert(this->widgets.extant_widget_count == 0);
    assert(this->widgets.orphans.widgets.empty());
    assert(this->widgets.orphans.button_groups.empty());
@@ -482,9 +483,12 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
    this->widgets.extant_widget_count = 0;
    this->widgets.connections.clear();
    
-   for (auto& o : this->ui_model_observers)
-      delete o.pointer;
-   this->ui_model_observers.clear();
+   for (auto* o : this->ui_model_observers.extant)
+      delete o;
+   this->ui_model_observers.extant.clear();
+   for (auto* o : this->ui_model_observers.pending_deletion)
+      delete o;
+   this->ui_model_observers.pending_deletion.clear();
    this->pending_ui_event_count = 0;
    //
    DovahKitScriptVMResourceInterface::get().clear();
@@ -841,17 +845,16 @@ void DovahKitScriptVMCore::model_observer_reference_gained(ObservableStandardIte
    DovahKitScriptVMCore::require_script_thread();
    if (!observer)
       return;
-   auto& list  = this->ui_model_observers;
-   bool  found = false;
-   for (auto& e : list) {
-      if (e.pointer == observer) {
-         ++e.refcount;
-         found = true;
-         break;
-      }
+   auto& ex = this->ui_model_observers.extant;
+   auto& pd = this->ui_model_observers.pending_deletion;
+   if (!ex.contains(observer)) {
+      std::unique_lock guard(this->ui_model_observers.pd_mutex);
+      pd.removeOne(observer);
+      ex.push_back(observer);
+   } else {
+      std::unique_lock guard(this->ui_model_observers.pd_mutex);
+      assert(!pd.contains(observer));
    }
-   if (!found)
-      list.emplace_back(observer, 1);
    //
    // Rescue widgets from deletion as needed:
    //
@@ -875,25 +878,22 @@ void DovahKitScriptVMCore::model_observer_reference_gained(ObservableStandardIte
       }
    }
 }
-void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemModelObserver* observer) {
+void DovahKitScriptVMCore::model_observer_no_longer_referenced(ObservableStandardItemModelObserver* observer) {
    DovahKitScriptVMCore::require_wrapper_teardown_thread(); // caller should be wrapper::teardown via wrapper __gc
    if (!observer)
       return;
-   auto& list  = this->ui_model_observers;
-   bool  found = false;
-   for (auto& e : list) {
-      if (e.pointer != observer)
-         continue;
-      found = true;
-      if (--e.refcount > 0)
-         return;
-      assert(e.refcount == 0 && "How is the refcount negative?");
-      break;
-   }
-   if (!found)
-      return;
    if (this->teardown_in_progress()) // teardown in progress; we will delete everything as part of that process, and it may not be safe to check whether things are Lua-referenced during that process
       return;
+   auto* observer_model = observer->model; // We need to gather this BEFORE we mark the observer for deletion, to avoid race conditions with the lifetime behavior below.
+   //
+   auto& ex = this->ui_model_observers.extant;
+   auto& pd = this->ui_model_observers.pending_deletion;
+   ex.removeOne(observer);
+   {
+      std::unique_lock guard(this->ui_model_observers.pd_mutex);
+      assert(!pd.contains(observer));
+      pd.push_back(observer);
+   }
    //
    // You'd expect that we'd destroy an unreferenced observer now, right? But nah. See, this 
    // function runs on the script thread, but we can only safely (un)register observers on 
@@ -905,11 +905,13 @@ void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemM
    //
    // Anyway, let's mark any widgets for deletion as needed:
    //
+   if (!observer_model)
+      return;
    for (auto* root : this->widgets.orphans.widgets) {
       bool contains_any_referenced = false;
-      cobb::qt::for_each_widget_in_hierarchy(root, [observer, &contains_any_referenced](QWidget* widget) {
+      cobb::qt::for_each_widget_in_hierarchy(root, [observer_model, &contains_any_referenced](QWidget* widget) {
          if (auto* model = cobb::qt::get_underlying_model_of(widget)) {
-            if (observer->model == model) {
+            if (observer_model == model) {
                contains_any_referenced = true;
                return true;
             }
@@ -927,8 +929,8 @@ void DovahKitScriptVMCore::model_observer_reference_lost(ObservableStandardItemM
 void DovahKitScriptVMCore::zombify_all_invalid_model_observers() {
    DovahKitScriptVMCore::require_script_thread();
    auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
-   for (auto& e : this->ui_model_observers) {
-      auto* o = e.pointer;
+   //
+   for (auto* o : this->ui_model_observers.extant) {
       if (!o)
          continue;
       if (o->isValid())
@@ -1058,18 +1060,12 @@ void DovahKitScriptVMCore::mainThreadLoop() {
       }
    }
    {
-      auto& list = this->ui_model_observers;
-      for (auto& e : list) {
-         if (!e.refcount) {
-            delete e.pointer;
-            e.pointer = nullptr;
-         }
-      }
-      list.erase(
-         std::remove_if(list.begin(), list.end(), [](const _model_observer& e) {
-            return e.pointer == nullptr;
-         }), list.end()
-      );
+      std::unique_lock guard(this->ui_model_observers.pd_mutex);
+      //
+      auto& list = this->ui_model_observers.pending_deletion;
+      for (auto* o : list)
+         delete o;
+      list.clear();
    }
    this->task_queues.s2m.process();
    this->ui_queues.read.process();

@@ -287,6 +287,7 @@
     <ClCompile Include="editor\scripting\wrappers\topic_info.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic_info\response.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\canvas.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\checkbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown\item.cpp" />
@@ -649,6 +650,7 @@
     <ClInclude Include="editor\scripting\wrappers\topic_info.h" />
     <ClInclude Include="editor\scripting\wrappers\topic_info\response.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\canvas.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\checkbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown\item.h" />

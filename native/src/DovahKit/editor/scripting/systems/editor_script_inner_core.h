@@ -45,6 +45,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
    friend class DovahKitScriptVMResourceInterface;
    friend class DovahKitScriptVMUserdataInterface;
    friend class DovahKitScriptUIListenerInterface;
+   using model_observer_t = ObservableStandardItemModelObserver;
    public:
 
       // Storage in the Lua registry for a cached copy of (string.format), which we place there 
@@ -90,10 +91,9 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
 
       struct _model_observer {
          ObservableStandardItemModelObserver* pointer = nullptr;
-         int refcount = 0;
 
          _model_observer() {}
-         _model_observer(ObservableStandardItemModelObserver* p, int i) : pointer(p), refcount(i) {}
+         _model_observer(ObservableStandardItemModelObserver* p) : pointer(p) {}
       };
 
       // Given a basis widget, traverses the entire hierarchy containing that basis, as well as 
@@ -164,7 +164,12 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       std::atomic<bool>   paused  = false; // main thread can set this to pause the script, though it won't take effect instantly. we unpause when running a new script.
       cobb::lockable_bool running = false;
       bool in_teardown = false;
-      std::vector<_model_observer> ui_model_observers;
+      struct {
+         std::mutex pd_mutex; // the (extant) list should not be touched from the non-script thread
+         //
+         QVector<model_observer_t*> extant;
+         QVector<model_observer_t*> pending_deletion;
+      } ui_model_observers;
       QWidget* ui_parent = nullptr;
       
       struct {
@@ -251,8 +256,8 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       void button_group_lost_a_member(QButtonGroup*);
       void button_group_no_longer_referenced(QButtonGroup*);
 
-      void model_observer_reference_gained(ObservableStandardItemModelObserver*); // called by userdata-interface internals when a new observer wrapper is created
-      void model_observer_reference_lost(ObservableStandardItemModelObserver*);   // called by wrapper internals when an observer wrapper is unreferenced
+      void model_observer_reference_gained(ObservableStandardItemModelObserver*);     // called by userdata-interface internals when a new observer wrapper is created
+      void model_observer_no_longer_referenced(ObservableStandardItemModelObserver*); // called by userdata-interface internals when no wrappers for an observer remain
 
       //
       // Lua APIs that remove and delete items from a ObservableStandardItemModel should call 

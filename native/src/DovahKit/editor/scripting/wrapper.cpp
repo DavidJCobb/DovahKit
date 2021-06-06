@@ -69,7 +69,6 @@ namespace editor_script {
          this->widget = nullptr;
       }
       if (this->type == wrapper_type::ui_model_item) {
-         DovahKitScriptVMCore::get().model_observer_reference_lost(this->model_observer);
          this->model_observer = nullptr;
       }
       if (this->type == wrapper_type::ui_button_group) {
