@@ -1,4 +1,12 @@
 
+**NOTE: This document is out of date. I have since learned that the struct issue that it 
+describes is actually successfully mitigated in Bethesda in the vast majority of cases 
+(e.g. REFR/XLOC): they had the presence of mind to load structs field-by-field in Special 
+in a way that matches Classic data. The issues only arise in the cases they forgot, which 
+are fairly rare; WEAP/CRDT is a known example where all of the information below applies.**
+
+
+
 Every record in  an ES[LPM] file has a version number attached to  it. With the 
 release of Skyrim Special Edition, these  version numbers became relevant; much 
 of the community is now aware of the  terms "form version 43" and "form version 

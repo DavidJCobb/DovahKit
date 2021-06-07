@@ -12,12 +12,15 @@ namespace dovah::loaded_forms::components::extra {
             };
          };
          //
+         // This content is loaded as a blindly-copied struct in Classic, but is loaded field-by-field 
+         // in Special in order to maintain backward-compatibility.
+         //
          uint8_t  level; // from 0 to 255; thresholds are: novice = 1; apprentice = 25; adept = 50; expert = 75; master = 100; requires key = 255
-         struct_form_reference_t key;
+         form_reference_t key;
          uint8_t  flags = 0;
          uint32_t unk0C;
          uint32_t unk10;
-         //
+         
          virtual extra_data_type get_type() const noexcept { return extra_data_type::lock; };
          virtual load_result load(tes_subrecord_reader& subrecord, load_interface_t& intfc) override;
          virtual void save(tes_record_writer&, save_interface_t&) override;
