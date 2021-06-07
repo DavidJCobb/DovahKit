@@ -13,10 +13,8 @@ namespace dovah::loaded_forms::components::extra {
          };
          //
          uint8_t  level; // from 0 to 255; thresholds are: novice = 1; apprentice = 25; adept = 50; expert = 75; master = 100; requires key = 255
-         uint8_t  pad01[3];
          struct_form_reference_t key;
          uint8_t  flags = 0;
-         uint8_t  pad09[3];
          uint32_t unk0C;
          uint32_t unk10;
          //

@@ -868,6 +868,7 @@
     <Text Include="dovah\_docs\extra data.txt" />
     <Text Include="dovah\_docs\feature list.txt" />
     <Text Include="dovah\_docs\form stubs.txt" />
+    <Text Include="dovah\_docs\form versions 43 and 44.txt" />
     <Text Include="dovah\_docs\game settings.txt" />
     <Text Include="dovah\_docs\how the game loads forms.txt" />
     <Text Include="dovah\_docs\list of SSE CK warnings (non-exhaustive).txt" />

@@ -2254,6 +2254,7 @@
     <Text Include="editor\scripting\_docs\ui - model observer property handlers.txt" />
     <Text Include="editor\scripting\_docs\ui - model observers.txt" />
     <Text Include="editor\scripting\_docs\lua-managed resources.txt" />
+    <Text Include="dovah\_docs\form versions 43 and 44.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt">

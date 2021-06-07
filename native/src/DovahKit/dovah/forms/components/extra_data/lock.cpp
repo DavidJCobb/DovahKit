@@ -7,13 +7,17 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->level);
-      subrecord.read(this->pad01);
+      if (subrecord.is_skyrim_special()) {
+         subrecord.skip_bytes(3); // TESForm pointers must be 4-byte-aligned
+      } else {
+         subrecord.skip_bytes(7); // TESForm pointers must be 8-byte-aligned
+      }
       subrecord.read(this->key);
       intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
          detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::key, intfc.target_stub, this->key)
       );
       subrecord.read(this->flags);
-      subrecord.read(this->pad09);
+      subrecord.skip_bytes(3);
       subrecord.read(this->unk0C);
       subrecord.read(this->unk10);
       return load_result::succeeded;
@@ -21,10 +25,14 @@ namespace dovah::loaded_forms::components::extra {
    void lock::save(tes_record_writer& record, save_interface_t& intfc) {
       auto& subrecord = record.open_next_subrecord(signature);
       subrecord.write(this->level);
-      subrecord.write(this->pad01);
+      if (subrecord.is_skyrim_special()) {
+         subrecord.skip_bytes(3);
+      } else {
+         subrecord.skip_bytes(7);
+      }
       subrecord.write(this->key);
       subrecord.write(this->flags);
-      subrecord.write(this->pad09);
+      subrecord.skip_bytes(3);
       subrecord.write(this->unk0C);
       subrecord.write(this->unk10);
       subrecord.close();
@@ -32,20 +40,18 @@ namespace dovah::loaded_forms::components::extra {
    //
    /*static*/ void lock::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib, extra_data_use_info_state& state) {
       auto& subrecord = record.get_current_subrecord();
-      subrecord.skip_bytes(sizeof(level) + sizeof(pad01));
+      if (subrecord.is_skyrim_special()) {
+         subrecord.skip_bytes(8);
+      } else {
+         subrecord.skip_bytes(4);
+      }
       subrecord.read(state.by_name.lock.key);
    }
    basic_extra_data* lock::clone(loaded_forms::Form& clone_owner) const noexcept {
       auto* clone = new lock;
       clone->level = this->level;
-      clone->pad01[0] = this->pad01[0];
-      clone->pad01[1] = this->pad01[1];
-      clone->pad01[2] = this->pad01[2];
       clone->key.set(clone_owner, this->key);
       clone->flags = this->flags;
-      clone->pad09[0] = this->pad09[0];
-      clone->pad09[1] = this->pad09[1];
-      clone->pad09[2] = this->pad09[2];
       clone->unk0C = this->unk0C;
       clone->unk10 = this->unk10;
       return clone;

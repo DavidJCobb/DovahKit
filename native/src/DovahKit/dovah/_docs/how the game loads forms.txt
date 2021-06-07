@@ -34,10 +34,11 @@ If the form is already  loaded, then the  game checks if  it's a "parent" form,
 i.e. if it is allowed to "contain" other forms (as in the case of: CELLs, which 
 contain REFRs; WRLDs, which contain CELLs;  or DIALs, which contain INFOs; note 
 that QUSTs don't actually contain DIALs). The game then checks if the record is 
-"partial." Cell and worldspace records are "partial" if they have the "partial" 
-flag, while overrides  of all other parent  forms are always  "partial." If the 
-record is "partial," then the game does a special "partial" load and then stops 
-all further processing: the record is at this point fully loaded.
+"partial." A parent form's record is "partial" if it has the "partial" flag, or 
+if the file is being loaded with the HotLoadPlugin console command and the form 
+is neither a  cell nor a worldspace. If the record is "partial,"  then the game 
+does a special "partial" load and then stops all further processing: the record 
+is at this point fully loaded.
 
 (The purpose of "partial" loads is to  serve as a source control mechanism. One 
 author can modify, say, a REFR,  without including a "false" edit of the parent 
