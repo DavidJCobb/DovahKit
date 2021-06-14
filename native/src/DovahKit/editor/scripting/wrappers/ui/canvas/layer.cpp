@@ -20,6 +20,26 @@ namespace {
    namespace _methods {
    }
    namespace _getters {
+      luastackchange_t canvas(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.canvas_layer)
+            return 0;
+         CanvasWidget* result = nullptr;
+         {
+            auto* layer   = self.canvas_layer;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [layer, &result]() {
+               result = layer->canvas();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!result)
+            return 0;
+         wrapper out;
+         auto* mt = wrap_widget(out, result);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+      }
       luastackchange_t data(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_layer)
@@ -147,9 +167,10 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "data", &_getters::data },
-      { "x",    &_getters::x },
-      { "y",    &_getters::y },
+      { "canvas", &_getters::canvas },
+      { "data",   &_getters::data },
+      { "x",      &_getters::x },
+      { "y",      &_getters::y },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "data", &_setters::data },

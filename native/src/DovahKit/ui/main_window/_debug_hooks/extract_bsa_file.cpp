@@ -8,14 +8,10 @@
 namespace DovahKitDebug {
    void extract_bsa_file(const std::filesystem::path& bsa, const std::string& target, const std::filesystem::path& extract_to) {
       dovah::bsa_archive archive;
-      archive.open(bsa);
-      if (archive.has_error()) {
-         using error_code = dovah::bsa_archive::read_error_code;
-         switch (archive.get_error()) {
-            case error_code::bad_header_sentinel:
-               qDebug() << "BSA file had a bad header sentinel.";
-               break;
-         }
+      try {
+         archive.open(bsa);
+      } catch (const dovah::bsa_load_exception& e) {
+         qDebug() << "BSA load exception: " << e.what();
          return;
       }
       auto* file = archive.lookup_file(target);

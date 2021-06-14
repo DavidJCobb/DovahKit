@@ -1,6 +1,7 @@
 #include "CanvasWidget.h"
 #include <QPaintEvent>
 #include <QPainter>
+#include "../../helpers/qt/ownership.h"
 
 #pragma region CanvasWidget
 CanvasWidget::CanvasWidget(QWidget* parent) : QWidget(parent) {
@@ -56,40 +57,10 @@ void CanvasWidget::setImageSize(int w, int h) noexcept {
 }
 
 void CanvasWidget::moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
-   assert(target->parent() == this);
-   if (subject->parent() != this)
-      subject->setParent(this);
-   //
-   // Qt doesn't have any built-in functionality for reordering a QObject's children. For QWidget 
-   // children, you can call the child's "raise" or "lower" member functions, but that can't be 
-   // done for QObjects. The function to get the child list returns a const reference to the real 
-   // child list, so we'll just do this the stupid way: edit the list directly by abusing a const 
-   // cast, and do what we need to do.
-   //
-   auto& list = const_cast<QObjectList&>(this->children());
-   int   from = list.indexOf(subject);
-   int   to   = list.indexOf(target);
-   list.move(from, to);
-   assert(list.indexOf(subject) == to); // If this fails, then perhaps Qt changed in some way, e.g. having the children() getter copy the list to prevent tampering.
+   cobb::qt::move_object_before(this, subject, target);
 }
 void CanvasWidget::moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
-   assert(target->parent() == this);
-   if (subject->parent() != this)
-      subject->setParent(this);
-   //
-   // Qt doesn't have any built-in functionality for reordering a QObject's children. For QWidget 
-   // children, you can call the child's "raise" or "lower" member functions, but that can't be 
-   // done for QObjects. The function to get the child list returns a const reference to the real 
-   // child list, so we'll just do this the stupid way: edit the list directly by abusing a const 
-   // cast, and do what we need to do.
-   //
-   auto& list = const_cast<QObjectList&>(this->children());
-   int   from = list.indexOf(subject);
-   int   to   = list.indexOf(target);
-   if (from > to)
-      ++to;
-   list.move(from, to);
-   assert(list.indexOf(subject) == to); // If this fails, then perhaps Qt changed in some way, e.g. having the children() getter copy the list to prevent tampering.
+   cobb::qt::move_object_after(this, subject, target);
 }
 
 QList<QObject*> CanvasWidget::allAssociatedObjects(bool includeWidgets) const noexcept {
@@ -131,10 +102,11 @@ CanvasWidgetLayer::~CanvasWidgetLayer() {
 }
 
 CanvasWidget* CanvasWidgetLayer::canvas() const noexcept {
-   const QObject* o = this;
-   while (o = o->parent())
+   QObject* o = this->parent();
+   do {
       if (auto* c = qobject_cast<CanvasWidget*>(o))
          return c;
+   } while (o = o->parent());
    return nullptr;
 }
 
@@ -243,6 +215,13 @@ void CanvasWidgetLayer::update() {
       return;
    c->update(r);
 }
+
+void CanvasWidgetLayer::moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
+   cobb::qt::move_object_before(this, subject, target);
+}
+void CanvasWidgetLayer::moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
+   cobb::qt::move_object_after(this, subject, target);
+}
 #pragma endregion
 
 #pragma region CanvasWidgetLayerData
@@ -251,6 +230,10 @@ CanvasWidgetLayerData::~CanvasWidgetLayerData() {
    this->_users.clear();
    for (auto* layer : list)
       layer->setData(nullptr);
+}
+void CanvasWidgetLayerData::update() {
+   for (auto* layer : this->users())
+      layer->update();
 }
 #pragma endregion
 

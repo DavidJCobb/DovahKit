@@ -86,6 +86,9 @@ class CanvasWidgetLayer : public QObject {
       void setVisible(bool) noexcept;
 
       void update();
+
+      void moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
+      void moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
 };
 
 class CanvasWidgetLayerData : public QObject {
@@ -98,11 +101,13 @@ class CanvasWidgetLayerData : public QObject {
 
    public:
       CanvasWidgetLayerData(QObject* parent = nullptr) : QObject(parent) {};
-      ~CanvasWidgetLayerData();
+      virtual ~CanvasWidgetLayerData();
 
       virtual QRect rect() const noexcept = 0;
 
       inline QList<CanvasWidgetLayer*> users() const noexcept { return this->_users; }
+
+      void update();
 
    signals:
       void attached(); // a previously-unused layer-data has been given to a layer

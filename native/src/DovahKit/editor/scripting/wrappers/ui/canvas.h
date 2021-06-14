@@ -3,6 +3,10 @@
 #include "widget.h"
 #include "../../../../ui/generic/CanvasWidget.h"
 
+namespace editor_script::wrapper_part_types {
+   inline constexpr cobb::eight_cc ui_canvas_layers = "CanvLayr"; // only used for the collection
+}
+
 namespace editor_script::wrappers::ui {
    struct canvas : public widget {
       static constexpr const char* superclass_key = metatable_key;
@@ -14,6 +18,8 @@ namespace editor_script::wrappers::ui {
 
       static constexpr const char* global_name = "canvas";
       using wrapped_type = CanvasWidget;
+
+      static constexpr const char* layer_collection_key = "collection<dovah.classes.ui.canvas.layers>";
 
       static void setup(lua_State*); // the "ui" table should be at the top of the stack
    };
