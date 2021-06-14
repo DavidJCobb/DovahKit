@@ -10,6 +10,8 @@
 
 #include "../../../cross_thread_tasks/s2m/lambda.h"
 
+#include "../../../widgets/objects/CanvasWidgetLayerDataLuaManagedResource.h"
+#include "../../resource/dds.h"
 #include "../../resource/raster.h"
 
 namespace {
@@ -56,7 +58,25 @@ namespace {
          }
          if (!result)
             return 0;
-         static_assert(false, "finish me");
+         if (auto* res_layer = qobject_cast<CanvasWidgetLayerDataLuaManagedResource*>(result)) {
+            //
+            // If the layer-data type is CanvasWidgetLayerDataLuaManagedResource, then the "canvas layer 
+            // data" object should be invisible to the script; as far as the script is concerned, the 
+            // layer data is the wrapped Lua-managed resource and not the CWLDLMR wrapping it.
+            //
+            LuaManagedResourceHandle handle = res_layer->resource();
+            if (!handle)
+               return 0;
+            switch (handle->resource_type()) {
+               using t = editor_script::lua_managed_resource_type;
+               case t::dds:
+                  return wrappers::resource::dds::wrap_and_push(L, *handle);
+               case t::raster:
+                  return wrappers::resource::raster::wrap_and_push(L, *handle);
+            }
+            return 0;
+         }
+         return 0;
       }
       luastackchange_t x(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -95,23 +115,39 @@ namespace {
    }
    namespace _setters {
       luastackchange_t data(lua_State* L) {
-         static_assert(false, "finish me");
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         auto& vm    = DovahKitScriptVMCore::get();
-         if (lua_type(L, 2) == LUA_TTABLE) {
-            luaL_error(L, "storing a table as a dropdown item's data member is not supported");
+         auto&    self = get_wrapper_for_thiscall<cls>(L);
+         QVariant value;
+         if (auto* wrap = wrapper_from_stack<wrappers::resource::dds>(L, 2)) {
+            if (wrap->managed_resource)
+               value = QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
+         } else if (auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, 2)) {
+            if (wrap->managed_resource)
+               value = QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
+         } else {
+            //
+            // Handling for any new layer data types goes here
+            //
+            luaL_argerror(L, 2, "dds_resource or raster expected");
          }
-         auto  value = vm.variant_from_lua(2);
-         if (!value.isValid() && !lua_isnoneornil(L, 2)) {
-            luaL_error(L, "the provided value cannot be stored as a dropdown item's data member");
-         }
-         if (!self.model_observer)
+         if (!self.canvas_layer)
             return 0;
-         auto* observer = self.model_observer;
-         auto* task     = new tasks::s2m::lambda(false);
-         task->handler  = [observer, value]() {
-            if (auto* item = observer->item())
-               item->setData(value, Qt::UserRole);
+         auto* layer   = self.canvas_layer;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [layer, value]() {
+            if (value.type() == qMetaTypeId<LuaManagedResourceHandle>()) {
+               auto* resource = LuaManagedResourceHandle::extract_from_variant(value);
+               assert(resource);
+
+               static_assert(false, "THIS IS BAD! The VM core needs to keep track of all scripted CanvasWidgetLayerData objects so that it can delete them as appropriate during VM teardown!");
+
+               auto* data = new CanvasWidgetLayerDataLuaManagedResource;
+               data->setResource(resource);
+               layer->setData(data);
+               return;
+            }
+            //
+            // Handling for any new layer data types goes here
+            //
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;

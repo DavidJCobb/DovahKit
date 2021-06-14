@@ -5,6 +5,7 @@
 #include "../../systems/userdata.h"
 
 #include "../../wrapper_util.h"
+#include "../../collections.h"
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
@@ -167,5 +168,15 @@ namespace editor_script::wrappers::ui {
       //
       assert(lua_gettop(L) == pos + 1);
       lua_setfield(L, pos, cls::global_name);
+      //
+      // Set up collection:
+      //
+      editor_script::define_collection_metatable(L, {
+         .registry_key          = cls::layer_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::layers::get_collection_length,
+         .lookup_item_by_index   = &_collections::layers::lookup_item_by_index,
+      });
    }
 }
