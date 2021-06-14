@@ -4,75 +4,70 @@ them, in order to  display information  and ask for input.  Naturally, however,
 this means that the script  engine needs to manage  the lifetimes of spawned UI 
 widgets and objects. How is this done?
 
-Before we begin, we need to define some terms.
+Our primary goal  is to ensure that script authors don't have  to manage native 
+objects themselves. A script author should never have to manually delete any of 
+the objects that we  allow them to create, nor should they  have to worry about 
+memory leaks  from objects that were not explicitly deleted.  Rather, we should 
+automatically delete any native objects that are no longer being used by Lua or 
+Qt (and that are no longer reachable via either).
 
-QObjects, including  but not limited to widgets, form a  hierarchy, wherein one 
-QObject can have a single "parent"  QObject and multiple "child" QObjects. Note 
-that I am  here referring to  QObjects, not only  QWidgets; a QWidget  can have 
-children that are not, themselves, widgets.  A collection of QWidgets linked to 
-each other by parent/child relationships  shall be called a "widget hierarchy," 
-with the "topmost" QWidget -- the  furthest ancestor -- being the "root" of the 
-hierarchy.
+This, of course,  means that we need to properly determine  when native objects 
+are reachable -- that  is, when the objects are either referred  to directly by 
+Lua, or can be retrieved via some other  object that is referred to directly by 
+Lua. Let's start by examining one of the more complicated cases: QWidgets.
 
-We shall say that two  widget hierarchies are "linked" if  there is some object 
-that is  referred to by at least one  widget in each hierarchy. For  example, a 
-QButtonGroup instance can be used to make a collection of QRadioButtons operate 
-in tandem with one another regardless of their physical location, and so if two 
-QRadioButtons in different widget hierarchies share the same QButtonGroup, then 
-those widget hierarchies are "linked."
 
-We shall say that a QWidget, QButtonGroup, or similar entity is "referenced" if 
-there exists  any Lua variable that  refers to the entity.  Occasionally we may 
-also use the synonym "Lua-referenced," and  the antonyms "Lua-unreferenced" and 
-"unreferenced."
+=== LIFETIME MANAGEMENT FOR UI WIDGETS ========================================
 
-We shall say  that a QWidget  is "orphaned" if it is  not a QDialog  and has no 
-parent. QWidgets are  orphaned by default and cease to be  orphaned if they are 
-inserted  into a parent; they  become orphaned  again if they are  removed from 
-that parent without being inserted into a different parent.
+All QObjects,  including widgets, belong  to a hierarchy,  wherein each QObject 
+can have one "parent" QObject and any  number of "child" QObjects. Object types 
+can mix and match,  with widgets able  to have non-widget  parents or children. 
+This hierarchy is primarily an ownership  model: when deleted, a parent QObject 
+will automatically delete its children.
 
-Finally, we shall say that a widget hierarchy and all of its contained widgets, 
-QButtonGroups, and  similar entities are "abandoned" if none  of the widgets in 
-that hierarchy  or any linked  hierarchy are referenced,  and if  none of those 
-hierarchies have as their root a visible  QDialog. If any single widget, button 
-group, or similar entity within a hierarchy  is referenced, then that hierarchy 
-and all linked hierarchies are not "abandoned."
+It is possible for objects like QButtonGroup  to "bridge" widget hierarchies. A 
+QButtonGroup can be used to make  multiple QRadioButtons behave in tandem, even 
+when they aren't part of the same hierarchy.
 
-Next, let's establish some facts that are useful to know.
+We'll say that  an object is "Lua-referenced" if there exists  any Lua userdata 
+that refers directly to that object  (in whole or in part). The antonym to this 
+term is "Lua-unreferenced."
 
- - When a QObject is deleted, it will  trigger the recursive deletion of all of 
-   its descendant QObjects. This happens immediately and automatically and is a 
-   behavior built into the Qt library.
+We shall say that a QWidget is "orphaned" if it has no parent widget.
 
- - QObjects can be deleted from any thread  by calling QObject::deleteLater. We 
-   could, in theory,  delete QWidgets instantly  upon some  criteria being met, 
-   but it would be better to  instead mark them for  deletion and then call the 
-   QObject::deleteLater  function  within our script  loop  -- outside of event 
-   listener processing and similar -- so that  we can safely perform tasks like 
-   deleting any pending UI events for the to-be-deleted widget.
+Finally, we shall say  that a widget  hierarchy, its  contents, and its bridges 
+are "abandoned"  if none of the widgets or bridges in that  hierarchy or in any 
+bridged-to hierarchy are Lua-referenced,  and if none of those hierarchies have 
+as their root a  visible QDialog. Visible dialog boxes should  never be deleted 
+even if the script has discarded all variables that once referred to them.
 
- - No matter how we  decide to handle object  lifetimes, we need  to explicitly 
-   delete all such objects  when the  script VM is torn down.  Scripts can halt 
-   due to an error or if force-killed by the user, and in both cases that means 
-   that we need to manually  delete objects. This implies  a need to keep track 
-   of all QDialogs and all orphaned widgets  and, in turn, a need to keep track 
-   of when widgets become orphaned or, in keeping with the metaphor, "adopted."
+With all these facts in hand, we can make a few deductions.
 
- - Widgets that have been marked for deletion should be kept in a separate list 
-   from orphaned widgets that have not been marked for deletion.
+No matter how we  decide to handle object lifetimes, we must  explicitly delete 
+all objects when the script VM is torn down -- that is, when the script is done 
+running, whether because it completed or because it encountered an error or was 
+force-killed by the user. This implies a need to keep track of all objects that 
+we let a script  create; in practice, however, because deleting  a QObject will 
+also automatically delete all of its descendant QObjects, we only need to track 
+root and orphaned QWidgets, along with bridges.
 
- - If we assume a lockstep  threading model, wherein every  action requested by 
-   Lua blocks the script thread until  completed, then by definition, it is not 
-   possible for any abandoned widget or  object to become Lua-referenced again; 
-   these are objects that have been "lost" by the script. This is not, however, 
-   the threading model we actually use, but we'll get to that in a bit.
+(As a side note, QObjects can be deleted  from any thread via the "deleteLater" 
+member function, so we could instantly delete QWidgets upon some criteria being 
+met; however, it would be better to instead mark them for deletion and then run 
+QObject::deleteLater  within our script  loop -- outside of  any event listener 
+processing or similar -- so that we can  safely perform tasks like deleting any 
+pending UI events  for the to-be-deleted object. Accordingly,  then, we need to 
+maintain  two lists of QWidgets: one for  orphans and one for widgets  that are 
+pending deletion.  Similarly, we need  two lists of QButtonGroups:  one for the 
+QButtonGroups that are not abandoned,  and another for those that are abandoned 
+and therefore pending deletion.)
 
-Accordingly, we need to decide how exactly we want object lifetimes to work. We 
-could require scripts to manage lifetimes  by hand via explicit "delete" calls, 
-with us collecting  any objects left behind at the end of  the script, but this 
-would be unwieldy for script  authors; it would also  be contrary to how normal 
-Lua data works, where unused data is  garbage collected rather than effectively 
-becoming a memory leak until the VM tears  down. No, we need a better solution.
+Now, if we assume a lockstep threading model, wherein every action requested by 
+Lua blocks  the script  thread until completed, then  by definition,  it is not 
+possible for  any abandoned  widget or object  to become  Lua-referenced again; 
+these are objects that  have been "lost"  by the script. This  is not, however, 
+the threading  model we actually  use, but let's  ignore  that and try a simple 
+approach to widget garbage collection.
 
 The naive approach -- certainly a good starting point -- would be to design the 
 VM to delete a "root" widget the very instant its hierarchy is abandoned. We're 
@@ -150,25 +145,36 @@ The functions that  actually handle all of  this, then, are  all members of the
 DovahKitScriptVMCore singleton and are:
 
 
- - find_abandoned_widgets_and_groups
+ - _hierarchy_finder
 
-   Given a widget, this function gathers all widgets and all QButtonGroups that 
-   belong to the same  hierarchy or to any  linked hierarchy.  However, it will 
-   stop early and produce no output if the hierarchy isn't abandoned.
+   A utility class; given a widget, bridge,  or other hierarchy-relevant object 
+   to serve as a starting point, a hierarchy  finder will traverse all widgets, 
+   bridges, and hierarchy-relevant  objects reachable from that starting point. 
+   The finder can optionally be configured to stop early (producing no output) 
+   if it finds that the hierarchies in  question are not abandoned.
 
 
  - widget_no_longer_referenced
 
-   Called by the QWidget  userdata __gc metamethod, to  indicate that a QWidget 
-   is no  longer Lua-referenced.  Uses  (find_abandoned_widgets_and_groups)  to 
-   check whether  the widget's  hierarchy is  abandoned  and if so,  passes the 
-   results to (mark_abandoned_hierarchy_for_delete).
+   Called by our userdata internals when a QWidget is no longer Lua-referenced. 
+   (We'll talk about how we actually detect that situation later.) The function 
+   uses a hierarchy finder to determine whether the unreferenced widget's cont-
+   aining hierarchy is now abandoned, and if so, it passes the finder's results 
+   to (mark_abandoned_hierarchy_for_delete).
 
 
  - mark_abandoned_hierarchy_for_delete
 
-   Marks a collection of root widgets and QButtonGroups for deletion, and helps 
-   to keep track of how many scripted widgets remain.
+   Receives a hierarchy finder, and loops over the root widgets and the bridges 
+   in that finder. All such objects are marked for deletion. This function also 
+   helps to keep track of how many widgets the script has active.
+
+
+ - unmark_rescued_hierarchy_for_delete
+
+   Receives a hierarchy finder, and loops over the root widgets and the bridges 
+   in that finder.  All such objects are  unmarked for deletion.  This function 
+   also helps to keep track of how many widgets the script has active.
 
 
  - widget_no_longer_orphaned
@@ -196,11 +202,101 @@ DovahKitScriptVMCore singleton and are:
 
  - button_group_no_longer_referenced
 
-   Called by the  QButtonGroup userdata  __gc metamethod,  to indicate that the 
-   QButtonGroup is no longer Lua-referenced. Behaves pretty much identically to 
-   its widget counterpart, (widget_no_longer_referenced).
+   Called by our userdata internals when a QButtonGroup is no longer Lua-refer-
+   enced. (As with widgets, we'll talk  about how we detect that situation in a 
+   later section.)  Behaves pretty much identically to its  widget counterpart, 
+   (widget_no_longer_referenced).
 
 
-Hopefully, this is more intuitive for you,  the reader, than it was for me when 
-I was actually debugging the edge-case I walked you through above.
+The vast majority of the above functions run on the script thread. We'll talk 
+about the ramifications of this later.
 
+
+=== HOW DO WE TELL WHEN SOMETHING IS LUA-UNREFERENCED? ========================
+
+The naive approach  to detecting when an object is and isn't  Lua-referenced is 
+to store a refcount somewhere. We can run code when we push a new userdata into 
+Lua, and we can run code when a userdata is garbage-collected, and this is what 
+we would need in order to manage a refcount.
+
+The issue with  this approach, however, is that not all native  objects that we 
+allow Lua to create will have a refcount  field. Sometimes, we might be able to 
+store a refcount somewhere in the object, as in the case of QWidget properties, 
+but other times, we would have to go to  the trouble of creating a wrapper type 
+for the object  or engaging in other shenanigans;  and this in turn  means that 
+our object lifetime management is a bit inconsistent.
+
+Fortunately, we can take advantage of  how userdata are stored and recycled, to 
+eliminate the need for a manually tracked refcount. Our scripting core stores a 
+hidden table of lists of userdata --  one list per wrapped object. This storage 
+is used to recycle userdata: if a Lua API  function is called twice and returns 
+the same result, then it should return the same userdata, rather than returning 
+two different userdata that wrap the same object (which would test as different 
+objects  unless we wrote a custom `__eq` metamethod). Each of the  lists in our 
+storage is a  weak-table, which means  that it's configured  not to prevent the 
+garbage-collection  of its own values: if  those values  aren't in use anywhere 
+else in Lua, then they'll disappear from the list.
+
+Our userdata storage is laid out like this,  where `storage[bare_pointer]` is a 
+weak-table:
+
+   type(storage[bare_pointer][unique_key]) == "userdata"
+
+Accordingly, we  know that a native  object is Lua-referenced  if it has a list 
+within the weak-table,  and if that list is not empty.  This means that we also 
+know that a native object is Lua-unreferenced  if the list is empty or entirely 
+absent.
+
+We can design our userdata `__gc` and  `__close` metamethods, then, to identify 
+the list  that once contained the userdata, and check if the list is  empty. If 
+so, we'll delete the  list (just to keep  things nice and  neat, and maybe even 
+speed up lookups), and we'll also have an opportunity to run whatever functions 
+we need to whenever the userdata-wrapped native object becomes unreferenced.
+
+
+=== SO HOW ABOUT THOSE RAMIFICATIONS WE SAID WE'D TALK ABOUT? =================
+
+Above, we focused on  determining when to delete objects based  on when they're 
+Lua-referenced.  I mentioned that when we're dealing with  QWidgets, all of the 
+lifetime-relevant events are reacted  to on the script thread: widgets becoming 
+orphaned or adopted; QButtonGroups  gaining or losing members; and so on. These 
+are situations that have no usable signals  or slots within Qt, so they have to 
+be dealt with by hand:  there are functions in the script  core that need to be 
+called when a Lua API does something that would change a QWidget's parentage or 
+a QButtonGroup's  contents, and in practice  these functions  get called on the 
+script thread.  That's very  convenient for us, because  we can only  check our 
+userdata storage (and thus whether the  objects in question are Lua-referenced) 
+from the script thread.
+
+Let's describe  these events, collectively,  as changes in how  the objects are 
+referred to within Qt. When an object becomes Lua-unreferenced, we have to test 
+whether it is also "Qt-referenced," i.e.  whether it is connected via Qt to any 
+Lua-referenced  or otherwise non-abandoned object, and if the object  is indeed 
+both Lua-unreferenced  and Qt-unreferenced, then it gets  deleted. This is also 
+true in reverse:  when the object becomes Qt-unreferenced,  we must check if it 
+is Lua-unreferenced and if so, mark it for deletion.
+
+When QWidgets and QButtonGroups experience changes to how they're referenced in 
+Qt (herein: "Qt-reference changes"), those  changes are instigated by code that 
+runs on the script thread, and that same code gives the script core a chance to 
+respond  to those changes  -- and therefore, that response  takes place  on the 
+script thread. However, there are other object types that react to Qt-reference 
+changes automatically on whatever thread  those changes actually take place on, 
+which is to say,  the client thread  (which is to say,  not the script thread). 
+These object types include:
+
+ - Canvas widget layer data
+
+ - Lua-managed resources
+
+Generally, these  will rely on signals  and slots, or smart  pointers, to alert 
+the script  core to when  they become Qt-unreferenced;  and so when  the script 
+core reacts,  that reaction  occurs on the client  thread, and  we can't safely 
+search our userdata storage (i.e. Lua state which belongs to the script thread) 
+to check whether these objects are also Lua-unreferenced.
+
+The solution we  use is to have these  objects store an atomic  bool indicating 
+whether they are Lua-referenced.  We handle  their becoming  Lua-(un)referenced 
+similarly to QWidgets, QButtonGroups,  and friends: we run code when a userdata 
+is destroyed  and our storage holds no other  userdata for the  same underlying 
+object; but we have that code manage the underlying object's atomic bool.

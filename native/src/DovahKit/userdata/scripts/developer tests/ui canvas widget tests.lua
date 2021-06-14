@@ -12,6 +12,7 @@ widget.height = 64
 local dds = dovah.lookup_game_asset(PATH)
 local layer = widget:append_layer()
 layer.data = dds
+layer.x = 8
 
 window:show()
 
