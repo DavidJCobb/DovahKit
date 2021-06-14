@@ -8,6 +8,7 @@
 #include "classes.h"
 #include "util.h"
 
+class CanvasWidgetLayer;
 class ObservableStandardItemModelObserver;
 class QButtonGroup;
 
@@ -21,6 +22,7 @@ namespace editor_script {
       ui_model_item,
       ui_button_group,
       lua_managed_resource,
+      ui_canvas_layer,
    };
 
    using part_type_t = cobb::eight_cc; // signature, e.g. 'FormRoot'
@@ -129,6 +131,8 @@ namespace editor_script {
          QButtonGroup* button_group = nullptr;
          //
          LuaManagedResource* managed_resource = nullptr;
+         //
+         CanvasWidgetLayer* canvas_layer = nullptr;
          
          inline part& last_part() noexcept {
             if (!this->depth)
@@ -154,6 +158,8 @@ namespace editor_script {
                   return this->button_group;
                case wrapper_type::lua_managed_resource:
                   return this->managed_resource;
+               case wrapper_type::ui_canvas_layer:
+                  return this->canvas_layer;
             }
             return nullptr;
          }

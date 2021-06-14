@@ -89,11 +89,11 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
          void clear();
       };
 
-      // Given a basis widget, traverses the entire hierarchy containing that basis, as well as 
-      // any other widget hierarchy that is connected to that hierarchy by way of a QButtonGroup. 
-      // If any widget or button group is referenced by Lua, aborts immediately and returns empty 
-      // lists; otherwise, provides a list of all hierarchy-root widgets and all button groups 
-      // found.
+      // This class is capable of traversing an entire set of bridged widget hierarchies -- that 
+      // is, hierarchies of QWidgets which may be "bridged" to each other by objects such as a 
+      // QButtonGroup. These objects are considered interdependent: if any object in a set of 
+      // bridged hierarchies is Lua-referenced, then all of the objects are potentially reachable 
+      // through Lua, and so none can be deleted.
       //
       // Used to determine when to delete objects that are no longer referenced or referenceable 
       // by Lua. Refer to our internal documentation on widget lifetimes for further information.
@@ -125,6 +125,11 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
             } options;
             search_results results; // (total_widget_count) is 0 unless all hierarchies are abandoned
 
+            // Given some "basis" widget, traverse the widget hierarchy that that widget belongs to, 
+            // checking whether any widgets or "bridge" objects in that hierarchy are Lua-referenced. 
+            // This function also returns a list of the "bridges," but does not cross them to examine 
+            // other hierarchies; that's the caller's responsibility.
+            // 
             // Returns false if it halts the search as per (options.halt_and_clear_upon_non_abandoned).
             bool _traverse_from_basis(QWidget* basis, search_results& out);
 

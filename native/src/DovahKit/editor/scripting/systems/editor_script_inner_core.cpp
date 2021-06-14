@@ -29,6 +29,7 @@
 #include <QEvent>
 #include <QLabel>
 #include <QSortFilterProxyModel>
+#include "../../../ui/generic/CanvasWidget.h"
 
 #include "../wrappers/form.h" // for the object_is_form function and for internal variant_from_lua
 #include "../wrappers/ui/widget.h" // for internal variant_from_lua
@@ -234,6 +235,13 @@ bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basi
       //
       ++working.total_widget_count;
       if (auto* button = qobject_cast<QAbstractButton*>(w)) {
+         //
+         // Here, we're only going to do two things. We're going to check if this button is 
+         // in a QButtonGroup; if so, we'll track the group, and we'll check if the group is 
+         // Lua-referenced. QButtonGroups are capable of "bridging" multiple hierarchies of 
+         // widgets together, but actually crossing those bridges and examining connected 
+         // hierarchies is our caller's job, not ours.
+         //
          if (auto* g = button->group()) {
             if (this->options.halt_and_clear_upon_non_abandoned)
                if (ud_brain.wrapper_exists_for(g))
@@ -245,10 +253,24 @@ bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basi
       if (this->options.halt_and_clear_upon_non_abandoned) {
          if (ud_brain.wrapper_exists_for(w))
             return true;
+         //
          if (auto* model = cobb::qt::get_underlying_model_of(w))
             if (auto* lua_model = qobject_cast<ObservableStandardItemModel*>(model))
                if (this->referenced_models.contains(lua_model))
                   return true;
+         //
+         if (auto* canvas = qobject_cast<CanvasWidget*>(w)) {
+            //
+            // A canvas should not be considered abandoned if any of its layers are Lua-
+            // referenced. Layer data is irrelevant, however, in that a Lua-referenced 
+            // layer data should not keep an otherwise-abandoned canvas layer (or thus 
+            // an otherwise-abandoned entire canvas) alive.
+            //
+            for (auto* layer : canvas->layers()) {
+               if (ud_brain.wrapper_exists_for(layer))
+                  return true;
+            }
+         }
       }
       //
       completed = true;
