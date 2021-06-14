@@ -92,6 +92,7 @@ namespace {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [widget, &layer]() {
                layer = widget->createLayer();
+               layer->setVisible(true);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;

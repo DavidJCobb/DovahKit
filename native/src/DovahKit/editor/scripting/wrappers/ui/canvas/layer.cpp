@@ -78,6 +78,23 @@ namespace {
          }
          return 0;
       }
+      luastackchange_t visible(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.canvas_layer)
+            return 0;
+         bool result;
+         {
+            auto* layer   = self.canvas_layer;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [layer, &result]() {
+               result = layer->visible();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushboolean(L, result);
+         return 1;
+      }
       luastackchange_t x(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_layer)
@@ -127,14 +144,20 @@ namespace {
             //
             // Handling for any new layer data types goes here
             //
-            luaL_argerror(L, 2, "dds_resource or raster expected");
+            if (!lua_isnoneornil(L, 2)) {
+               luaL_argerror(L, 2, "dds_resource, raster, or nil expected");
+            }
          }
          if (!self.canvas_layer)
             return 0;
          auto* layer   = self.canvas_layer;
          auto* task    = new tasks::s2m::lambda(false);
          task->handler = [layer, value]() {
-            if (value.type() == qMetaTypeId<LuaManagedResourceHandle>()) {
+            if (!value.isValid()) {
+               layer->setData(nullptr);
+               return;
+            }
+            if (value.userType() == qMetaTypeId<LuaManagedResourceHandle>()) {
                auto* resource = LuaManagedResourceHandle::extract_from_variant(value);
                assert(resource);
                auto* data = new CanvasWidgetLayerDataLuaManagedResource;
@@ -146,6 +169,20 @@ namespace {
             //
             // Handling for any new layer data types goes here
             //
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t visible(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto& vm    = DovahKitScriptVMCore::get();
+         bool value = lua_toboolean(L, 2);
+         if (!self.canvas_layer)
+            return 0;
+         auto* layer   = self.canvas_layer;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [layer, value]() {
+            layer->setVisible(value);
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
@@ -201,14 +238,16 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "canvas", &_getters::canvas },
-      { "data",   &_getters::data },
-      { "x",      &_getters::x },
-      { "y",      &_getters::y },
+      { "canvas",  &_getters::canvas },
+      { "data",    &_getters::data },
+      { "x",       &_getters::x },
+      { "y",       &_getters::y },
+      { "visible", &_getters::visible },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "data", &_setters::data },
-      { "x",    &_setters::x },
-      { "y",    &_setters::y },
+      { "data",    &_setters::data },
+      { "x",       &_setters::x },
+      { "y",       &_setters::y },
+      { "visible", &_setters::visible },
    };
 }
