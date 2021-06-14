@@ -169,36 +169,80 @@ void DovahKitScriptVMCore::_task_queue::clear() {
 }
 #pragma endregion
 
-#pragma region DovahKitScriptVM::_abandoned_hierarchy_finder
-bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups) {
-   bool result = true;
+#pragma region DovahKitScriptVM::_hierarchy_finder
+void DovahKitScriptVMCore::_hierarchy_finder::search_results::append(const search_results& other) noexcept {
+   this->total_widget_count += other.total_widget_count;
+   this->widgets.append(other.widgets);
+   this->button_groups.append(other.button_groups);
+}
+void DovahKitScriptVMCore::_hierarchy_finder::search_results::clear() noexcept {
+   this->total_widget_count = 0;
+   this->widgets.clear();
+   this->button_groups.clear();
+}
+bool DovahKitScriptVMCore::_hierarchy_finder::search_results::empty() const noexcept {
+   if (!this->widgets.empty())
+      return false;
+   if (!this->button_groups.empty())
+      return false;
+   return true;
+}
+bool DovahKitScriptVMCore::_hierarchy_finder::search_results::has_hierarchy_bridges() const noexcept {
+   if (!this->button_groups.empty())
+      return true;
+   return false;
+}
+//
+bool DovahKitScriptVMCore::_hierarchy_finder::search_results::contains(QButtonGroup* o) const noexcept {
+   return this->button_groups.contains(o);
+}
+bool DovahKitScriptVMCore::_hierarchy_finder::search_results::contains(QWidget* o) const noexcept {
+   return this->widgets.contains(o);
+}
+//
+QList<QWidget*> DovahKitScriptVMCore::_hierarchy_finder::search_results::get_linked_hierarchies(const search_results& ignore) const noexcept {
+   QList<QWidget*> list;
+   for (auto* o : this->button_groups) {
+      if (ignore.button_groups.contains(o))
+         continue;
+      for (auto* w : o->buttons()) {
+         auto* root = cobb::qt::topmost_container_of(w);
+         if (!list.contains(root) && !ignore.contains(root))
+            list.push_back(root);
+      }
+   }
+   return list;
+}
+
+bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basis, search_results& working) {
+   search_results& results = this->results;
+   bool completed = true;
    //
    auto* root = cobb::qt::topmost_container_of(basis);
-   if (this->config.halt_and_clear_upon_non_abandoned) {
+   if (this->options.halt_and_clear_upon_non_abandoned) {
       if (auto* dialog = qobject_cast<QDialog*>(root)) // QWidget::parentWindow just traverses upward. no need to do it twice
          if (dialog->isVisible()) // visible windows and their contents should never be considered abandoned
             return false;
    }
-   if (widgets.contains(root))
+   if (results.contains(root))
       return true;
    //
    auto& ud_brain = DovahKitScriptVMUserdataInterface::get();
    //
-   int found = 0;
-   cobb::qt::for_each_widget_in_hierarchy(root, [this, &ud_brain, &found, &result, &groups](QWidget* w) {
-      result = false;
+   cobb::qt::for_each_widget_in_hierarchy(root, [this, &ud_brain, &completed, &working, &results](QWidget* w) {
+      completed = false;
       //
-      ++found;
+      ++working.total_widget_count;
       if (auto* button = qobject_cast<QAbstractButton*>(w)) {
          if (auto* g = button->group()) {
-            if (this->config.halt_and_clear_upon_non_abandoned)
+            if (this->options.halt_and_clear_upon_non_abandoned)
                if (ud_brain.wrapper_exists_for(g))
                   return true;
-            if (!groups.contains(g))
-               groups.push_back(g);
+            if (!working.contains(g) && !results.contains(g))
+               working.button_groups.push_back(g);
          }
       }
-      if (this->config.halt_and_clear_upon_non_abandoned) {
+      if (this->options.halt_and_clear_upon_non_abandoned) {
          if (ud_brain.wrapper_exists_for(w))
             return true;
          if (auto* model = cobb::qt::get_underlying_model_of(w))
@@ -207,45 +251,63 @@ bool DovahKitScriptVMCore::_hierarchy_finder::_traverse_from_basis(QWidget* basi
                   return true;
       }
       //
-      result = true;
+      completed = true;
       return false;
    });
-   if (!result)
+   if (!completed)
       return false;
-   //
-   this->found.count += found;
-   widgets.push_back(root);
-   return result;
+   working.widgets.push_back(root);
+   return true;
 }
 bool DovahKitScriptVMCore::_hierarchy_finder::_start_from_basis(QObject* basis) {
-   this->found.widgets.clear();
-   this->found.button_groups.clear();
-   this->found.count = 0; // number of all widgets in all found hierarchies, if the hierarchies are all abandoned
+   this->results.total_widget_count = 0; // number of all widgets in all found hierarchies, if the hierarchies are all abandoned
    //
-   QList<QWidget*>      wl;
-   QList<QButtonGroup*> gl;
-   int  found  = 0;
-   bool result = true;
+   search_results  working;
+   search_results& results = this->results;
+   results.clear();
    if (auto* bw = qobject_cast<QWidget*>(basis)) {
-      if (!this->_traverse_from_basis(bw, wl, gl))
+      if (!this->_traverse_from_basis(bw, working))
          return false;
    } else if (auto* bg = qobject_cast<QButtonGroup*>(basis)) {
-      gl = { bg };
+      working.button_groups = { bg };
    } else {
       assert(false && "unsupported QObject type");
    }
-   while (!gl.isEmpty()) {
-      QList<QButtonGroup*> next_pass;
-      for (auto* g : gl)
-         for (auto* w : g->buttons())
-            if (!this->_traverse_from_basis(w, wl, next_pass))
-               return false;
-      this->found.button_groups.append(gl);
-      gl = next_pass;
+   //
+   // We may at this point have found one or more root widgets, as well as all bridges 
+   // contained within their hierarchies. We must now process all found bridges.
+   //
+   results.widgets = working.widgets;
+   working.widgets.clear();
+   while (working.has_hierarchy_bridges()) {
+      //
+      // The (results) object now contains all already-processed objects -- root widgets 
+      // and hierarchy bridges -- while the (working) object contains only unprocessed 
+      // bridges. Let's start, then, by getting all unprocessed root widgets that those 
+      // bridges connect to.
+      //
+      QList<QWidget*> wl = working.get_linked_hierarchies(results);
+      //
+      // Now that we have those widgets on hand, let's transfer all of the bridges from 
+      // (working) into (results) to signify that we've processed them. Then, we'll loop 
+      // over all of the found roots and traverse from them, storing what we find into 
+      // (working).
+      //
+      results.append(working);
+      working.clear();
+      for (auto* w : wl) {
+         if (!this->_traverse_from_basis(w, working))
+            return false;
+      }
+      //
+      // And of course, the widgets in (working) will be all the roots we just looped 
+      // over, so let's transfer them to (results) to signify that we've now processed 
+      // them.
+      //
+      results.widgets.append(working.widgets);
+      working.widgets.clear();
    }
-   this->found.widgets = wl;
-   this->found.count   = found;
-   return result;
+   return true;
 }
 
 void DovahKitScriptVMCore::_hierarchy_finder::submit_non_abandoned_model(ObservableStandardItemModel* model) noexcept {
@@ -265,23 +327,21 @@ void DovahKitScriptVMCore::_hierarchy_finder::import_non_abandoned_models(DovahK
 }
 
 void DovahKitScriptVMCore::_hierarchy_finder::gather_from(QObject* basis) noexcept {
-   if (this->config.halt_and_clear_upon_non_abandoned) {
+   if (this->options.halt_and_clear_upon_non_abandoned) {
       //
       // This option can only be used while on the script thread, as we need to be able to 
       // access Lua-side data in order to check whether an object is referenced (by virtue 
       // of checking whether it has a Lua-side wrapper).
       //
       // You cannot use this option when the Lua state is being torn down. You also should 
-      // not use this option when the Lua state is being torn down: you don't need to try 
-      // and find abandoned widgets/objects, to mark them for deletion, because the tear-
-      // down process is going to delete everything anyway.
+      // not need to use this option when the Lua state is being torn down: you don't need 
+      // to try and find abandoned widgets/objects, to mark them for deletion, because the 
+      // teardown process is going to delete everything anyway.
       //
       DovahKitScriptVMCore::require_script_thread();
    }
    if (!this->_start_from_basis(basis)) {
-      this->found.widgets.clear();
-      this->found.button_groups.clear();
-      this->found.count = 0;
+      this->results.clear();
    }
 }
 #pragma endregion

@@ -403,7 +403,7 @@ void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& res
    #if _DEBUG
       qDebug("Lua-managed resource has become unreferenced either within Lua or Qt: %p", &resource);
    #endif
-   if (resource.lua_refcount)
+   if (resource.is_lua_referenced)
       return;
    if (resource.refcount)
       return;

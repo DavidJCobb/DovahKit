@@ -11,7 +11,7 @@ local logger2 = ui.button.new("Log")
 logger1:on("OnActivated", "", function()
    dovah.log_message("Selected button in R1's group: %s", tostring(button1.group.selected_id))
    dovah.log_message(" - R1's ID: %s", tostring(button1.id))
-   local sb = button2.group.selected_button
+   local sb = button1.group.selected_button
    if sb then
       dovah.log_message(" - Selected ID via button: %s", tostring(button2.group.selected_button.id))
    else

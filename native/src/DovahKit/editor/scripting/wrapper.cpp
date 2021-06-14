@@ -79,22 +79,10 @@ namespace editor_script {
       }
       //
       DovahKitScriptVMUserdataInterface::get().prune_wrapper_list_for(*this);
-      //
-      if (this->type == wrapper_type::ui) {
-         this->widget = nullptr;
-      }
-      if (this->type == wrapper_type::ui_model_item) {
-         this->model_observer = nullptr;
-      }
-      if (this->type == wrapper_type::ui_button_group) {
-         this->button_group = nullptr;
-      }
-      if (this->type == wrapper_type::lua_managed_resource) {
-         auto* mr = this->managed_resource;
-         this->managed_resource = nullptr;
-         --mr->lua_refcount;
-         DovahKitScriptVMResourceInterface::get().on_resource_unreferenced(*mr);
-      }
+      this->widget           = nullptr;
+      this->model_observer   = nullptr;
+      this->button_group     = nullptr;
+      this->managed_resource = nullptr;
       //
       this->type = wrapper_type::undefined;
    }
@@ -125,7 +113,7 @@ namespace editor_script {
             return;
          case wrapper_type::lua_managed_resource:
             assert(this->managed_resource);
-            ++this->managed_resource->lua_refcount;
+            this->managed_resource->is_lua_referenced = true;
             return;
       }
    }

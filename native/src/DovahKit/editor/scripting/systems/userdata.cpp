@@ -284,7 +284,11 @@ void DovahKitScriptVMUserdataInterface::prune_wrapper_list_for(editor_script::wr
       switch (instance.type) {
          using wt = editor_script::wrapper_type;
          case wt::lua_managed_resource:
-            // TODO
+            {
+               auto* mr = instance.managed_resource;
+               mr->is_lua_referenced = false;
+               DovahKitScriptVMResourceInterface::get().on_resource_unreferenced(*mr);
+            }
             break;
          case wt::ui:
             this->vm.widget_no_longer_referenced(instance.widget);

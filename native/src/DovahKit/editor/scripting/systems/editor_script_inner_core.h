@@ -99,23 +99,38 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       // by Lua. Refer to our internal documentation on widget lifetimes for further information.
       class _hierarchy_finder {
          protected:
+            struct search_results {
+               int total_widget_count = 0; // count of all widgets in all found hierarchies
+               QList<QWidget*>      widgets; // hierarchy root widgets
+               QList<QButtonGroup*> button_groups;
+               //
+               void append(const search_results&) noexcept;
+               void clear() noexcept;
+               bool empty() const noexcept;
+               bool has_hierarchy_bridges() const noexcept;
+               
+               bool contains(QButtonGroup*) const noexcept;
+               bool contains(QWidget*) const noexcept;
+
+               // Some of the object types that we search for, like QButtonGroup, can bridge multiple 
+               // widget hierarchies together. This function returns a list of all root widgets of 
+               // all hierarchies that this (search_results) instance's "bridges" connect to, unless 
+               // the bridges themselves or the found roots are in the (ignore) instance.
+               QList<QWidget*> get_linked_hierarchies(const search_results& ignore) const noexcept;
+            };
+
             QVector<ObservableStandardItemModel*> referenced_models; // models known in advance not to be abandoned
             struct {
                bool halt_and_clear_upon_non_abandoned = true;
-            } config;
-            struct {
-               int count = 0;
-               //
-               QList<QWidget*> widgets;
-               QList<QButtonGroup*> button_groups;
-            } found;
+            } options;
+            search_results results; // (total_widget_count) is 0 unless all hierarchies are abandoned
 
-            // Returns false if it halts the search as per (config.halt_and_clear_upon_non_abandoned).
-            bool _traverse_from_basis(QWidget* basis, QList<QWidget*>& widgets, QList<QButtonGroup*>& groups);
+            // Returns false if it halts the search as per (options.halt_and_clear_upon_non_abandoned).
+            bool _traverse_from_basis(QWidget* basis, search_results& out);
 
             // Given a basis widget, searches the widget's entire containing hierarchy as well as any 
             // containing hierarchies linked by a QButtonGroup. Returns false if it halts the search 
-            // as per (config.halt_and_clear_upon_non_abandoned).
+            // as per (options.halt_and_clear_upon_non_abandoned).
             bool _start_from_basis(QObject*);
 
          public:
@@ -124,9 +139,9 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
 
             void gather_from(QObject*) noexcept;
 
-            inline int found_widget_count() const noexcept { return this->found.count; }
-            inline const QList<QWidget*>& found_root_widgets() const noexcept { return this->found.widgets; }
-            inline const QList<QButtonGroup*>& found_button_groups() const noexcept { return this->found.button_groups; }
+            inline int found_widget_count() const noexcept { return this->results.total_widget_count; }
+            inline const QList<QWidget*>& found_root_widgets() const noexcept { return this->results.widgets; }
+            inline const QList<QButtonGroup*>& found_button_groups() const noexcept { return this->results.button_groups; }
 
             // Control whether the finder aborts, and clears its results, upon finding something that isn't 
             // abandoned. The finder will abort-and-clear by default, as a useful optimization for when the 
@@ -134,7 +149,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
             //
             // This option can only safely be used when running on the wrapper teardown thread.
             inline void set_stop_on_referenced(bool b) noexcept {
-               this->config.halt_and_clear_upon_non_abandoned = b;
+               this->options.halt_and_clear_upon_non_abandoned = b;
             }
       };
       
