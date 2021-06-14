@@ -30,6 +30,7 @@
 #include <QLabel>
 #include <QSortFilterProxyModel>
 #include "../../../ui/generic/CanvasWidget.h"
+#include "../widgets/objects/LuaScriptableCanvasWidgetLayerData.h"
 
 #include "../wrappers/form.h" // for the object_is_form function and for internal variant_from_lua
 #include "../wrappers/ui/widget.h" // for internal variant_from_lua
@@ -417,6 +418,8 @@ void DovahKitScriptVMCore::_setup_lua_vm() {
    assert(this->lua_vm == nullptr);
    assert(this->ui_model_observers.extant.empty());
    assert(this->ui_model_observers.pending_deletion.empty());
+   assert(this->ui_canvas_layer_data.extant.empty());
+   assert(this->ui_canvas_layer_data.pending_deletion.empty());
    assert(this->widgets.extant_widget_count == 0);
    assert(this->widgets.orphans.widgets.empty());
    assert(this->widgets.orphans.button_groups.empty());
@@ -568,9 +571,19 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
    for (auto* o : this->ui_model_observers.extant)
       delete o;
    this->ui_model_observers.extant.clear();
+   //
    for (auto* o : this->ui_model_observers.pending_deletion)
       delete o;
    this->ui_model_observers.pending_deletion.clear();
+   //
+   for (auto* o : this->ui_canvas_layer_data.extant)
+      delete o;
+   this->ui_canvas_layer_data.extant.clear();
+   //
+   for (auto* o : this->ui_canvas_layer_data.pending_deletion)
+      delete o;
+   this->ui_canvas_layer_data.pending_deletion.clear();
+   //
    this->pending_ui_event_count = 0;
    //
    DovahKitScriptVMResourceInterface::get().clear();
@@ -1021,6 +1034,39 @@ void DovahKitScriptVMCore::zombify_all_invalid_model_observers() {
    }
 }
 
+void DovahKitScriptVMCore::set_up_new_canvas_layer_data(CanvasWidgetLayerData* data) {
+   QObject::connect(data, &CanvasWidgetLayerData::detached, this, [this, data]() {
+      this->canvas_layer_data_detached(data);
+   });
+}
+void DovahKitScriptVMCore::canvas_layer_data_unreferenced(LuaScriptableCanvasWidgetLayerData* data) {
+   data->is_lua_referenced = false;
+   if (data->users().size())
+      return;
+   auto& ex = this->ui_canvas_layer_data.extant;
+   auto& pd = this->ui_canvas_layer_data.pending_deletion;
+   ex.removeOne(data);
+   {
+      std::unique_lock guard(this->ui_canvas_layer_data.pd_mutex);
+      assert(!pd.contains(data));
+      pd.push_back(data);
+   }
+}
+void DovahKitScriptVMCore::canvas_layer_data_detached(CanvasWidgetLayerData* data) {
+   if (auto* scriptable = qobject_cast<LuaScriptableCanvasWidgetLayerData*>(data)) {
+      if (scriptable->is_lua_referenced)
+         return;
+   }
+   auto& ex = this->ui_canvas_layer_data.extant;
+   auto& pd = this->ui_canvas_layer_data.pending_deletion;
+   ex.removeOne(data);
+   {
+      std::unique_lock guard(this->ui_canvas_layer_data.pd_mutex);
+      assert(!pd.contains(data));
+      pd.push_back(data);
+   }
+}
+
 void DovahKitScriptVMCore::queue_lua_function(int stack_pos, bool lock_ui_for_function) {
    DovahKitScriptVMCore::require_script_thread();
    auto* L   = this->lua_vm;
@@ -1145,6 +1191,14 @@ void DovahKitScriptVMCore::mainThreadLoop() {
       std::unique_lock guard(this->ui_model_observers.pd_mutex);
       //
       auto& list = this->ui_model_observers.pending_deletion;
+      for (auto* o : list)
+         delete o;
+      list.clear();
+   }
+   {
+      std::unique_lock guard(this->ui_canvas_layer_data.pd_mutex);
+      //
+      auto& list = this->ui_canvas_layer_data.pending_deletion;
       for (auto* o : list)
          delete o;
       list.clear();

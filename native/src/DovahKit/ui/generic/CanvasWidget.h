@@ -38,6 +38,8 @@ class CanvasWidget : public QWidget {
       inline int imageHeight() const noexcept { return this->size().height(); }
       void setImageSize(const QSize&) noexcept;
       void setImageSize(int w, int h) noexcept;
+      void setImageWidth(int w) noexcept;
+      void setImageHeight(int h) noexcept;
 
       void moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
       void moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);

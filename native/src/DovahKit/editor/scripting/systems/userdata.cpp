@@ -9,6 +9,7 @@
 
 #include "../../form_stub_meta_type.h" // needed for QVariants of form stub pointers
 #include "../../../dovah/forms/Form.h" // needed for working with any loaded_form_ptr
+#include "../widgets/objects/LuaScriptableCanvasWidgetLayerData.h"
 
 //
 // Given a dovah::form_stub& named stub:
@@ -298,6 +299,12 @@ void DovahKitScriptVMUserdataInterface::prune_wrapper_list_for(editor_script::wr
             break;
          case wt::ui_model_item:
             this->vm.model_observer_no_longer_referenced(instance.model_observer);
+            break;
+         case wt::ui_canvas_layer:
+            // TODO?
+            break;
+         case wt::ui_canvas_layer_data:
+            this->vm.canvas_layer_data_unreferenced(instance.canvas_layer_data);
             break;
       }
    }

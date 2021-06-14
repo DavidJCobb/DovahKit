@@ -9,6 +9,8 @@
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
+#include "helpers/widget_properties.h"
+
 #include "canvas/layer.h"
 
 #pragma region Collection: "layers"
@@ -104,6 +106,14 @@ namespace {
       }
    }
    namespace _getters {
+      luastackchange_t height(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &CanvasWidget::imageHeight);
+         lua_pushinteger(L, result);
+         return 1;
+      }
       luastackchange_t layers(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
@@ -113,8 +123,38 @@ namespace {
          out.is_collection = true;
          return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::layer_collection_key);
       }
+      luastackchange_t width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         int result = editor_script::helpers::get_widget_property((wrapped_type*)self.widget, &CanvasWidget::imageWidth);
+         lua_pushinteger(L, result);
+         return 1;
+      }
    }
    namespace _setters {
+      luastackchange_t height(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "height (integer) expected");
+         luaL_argcheck(L, value >= 0, 2, "the size cannot be negative");
+         if (!self.widget)
+            return 0;
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &CanvasWidget::setImageHeight, value);
+         return 0;
+      }
+      luastackchange_t width(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum, 2, "width (integer) expected");
+         luaL_argcheck(L, value >= 0, 2, "the size cannot be negative");
+         if (!self.widget)
+            return 0;
+         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &CanvasWidget::setImageWidth, value);
+         return 0;
+      }
    }
 
    namespace _singleton_functions {
@@ -150,9 +190,13 @@ namespace editor_script::wrappers::ui {
       { "append_layer", &_methods::append_layer },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
+      { "height", &_getters::height },
       { "layers", &_getters::layers },
+      { "width",  &_getters::width },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
+      { "height", &_setters::height },
+      { "width",  &_setters::width },
    };
 
    /*static*/ void cls::setup(lua_State* L) {

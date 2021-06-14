@@ -9,6 +9,7 @@
 #include "systems/messaging.h"
 #include "systems/userdata.h"
 #include "cross_thread_tasks/s2m/lambda.h"
+#include "widgets/objects/LuaScriptableCanvasWidgetLayerData.h"
 
 namespace editor_script {
    /*static*/ luastackchange_t wrapper::__close(lua_State* L) {
@@ -79,10 +80,12 @@ namespace editor_script {
       }
       //
       DovahKitScriptVMUserdataInterface::get().prune_wrapper_list_for(*this);
-      this->widget           = nullptr;
-      this->model_observer   = nullptr;
-      this->button_group     = nullptr;
-      this->managed_resource = nullptr;
+      this->widget            = nullptr;
+      this->model_observer    = nullptr;
+      this->button_group      = nullptr;
+      this->managed_resource  = nullptr;
+      this->canvas_layer      = nullptr;
+      this->canvas_layer_data = nullptr;
       //
       this->type = wrapper_type::undefined;
    }
@@ -114,6 +117,10 @@ namespace editor_script {
          case wrapper_type::lua_managed_resource:
             assert(this->managed_resource);
             this->managed_resource->is_lua_referenced = true;
+            return;
+         case wrapper_type::ui_canvas_layer_data:
+            assert(this->canvas_layer_data);
+            this->canvas_layer_data->is_lua_referenced = true;
             return;
       }
    }

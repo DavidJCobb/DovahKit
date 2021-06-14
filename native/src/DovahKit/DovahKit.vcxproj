@@ -633,6 +633,7 @@
     <ClInclude Include="editor\scripting\util.h" />
     <QtMoc Include="editor\scripting\widgets\LuaManagedRasterWidget.h" />
     <QtMoc Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaManagedResource.h" />
+    <QtMoc Include="editor\scripting\widgets\objects\LuaScriptableCanvasWidgetLayerData.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />

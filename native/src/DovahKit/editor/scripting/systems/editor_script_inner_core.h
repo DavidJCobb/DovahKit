@@ -22,6 +22,8 @@ namespace dovah {
    class form_stub;
 }
 
+class CanvasWidgetLayerData;
+class LuaScriptableCanvasWidgetLayerData;
 class QButtonGroup;
 
 class DovahKitScriptVMMessenger;
@@ -183,6 +185,12 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
          QVector<model_observer_t*> extant;
          QVector<model_observer_t*> pending_deletion;
       } ui_model_observers;
+      struct {
+         std::mutex pd_mutex; // the (extant) list should not be touched from the non-script thread
+         //
+         QVector<CanvasWidgetLayerData*> extant;
+         QVector<CanvasWidgetLayerData*> pending_deletion;
+      } ui_canvas_layer_data;
       QWidget* ui_parent = nullptr;
       
       struct {
@@ -287,6 +295,10 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       // that case gracefully too!
       //
       void zombify_all_invalid_model_observers();
+
+      void set_up_new_canvas_layer_data(CanvasWidgetLayerData*);   // Lua functions that create CWLDs must call this
+      void canvas_layer_data_unreferenced(LuaScriptableCanvasWidgetLayerData*); // called by userdata-interface internals when a CWLD becomes Lua-unreferenced
+      void canvas_layer_data_detached(CanvasWidgetLayerData*);     // called by our signal/slot connection when a CWLD becomes Qt-unreferenced
 
       void queue_lua_function(int stack_pos, bool lock_ui_for_function); // made available for Lua APIs
 

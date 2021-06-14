@@ -55,6 +55,18 @@ void CanvasWidget::setImageSize(const QSize& s) noexcept {
 void CanvasWidget::setImageSize(int w, int h) noexcept {
    this->setImageSize(QSize(w, h));
 }
+void CanvasWidget::setImageWidth(int w) noexcept {
+   this->_size.setWidth(w);
+   this->setMinimumSize(this->_size);
+   this->updateGeometry();
+   this->update();
+}
+void CanvasWidget::setImageHeight(int h) noexcept {
+   this->_size.setHeight(h);
+   this->setMinimumSize(this->_size);
+   this->updateGeometry();
+   this->update();
+}
 
 void CanvasWidget::moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
    cobb::qt::move_object_before(this, subject, target);

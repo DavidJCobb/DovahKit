@@ -2229,6 +2229,9 @@
     <QtMoc Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaManagedResource.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\scripting\widgets\objects\LuaScriptableCanvasWidgetLayerData.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">

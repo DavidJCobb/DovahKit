@@ -137,10 +137,8 @@ namespace {
             if (value.type() == qMetaTypeId<LuaManagedResourceHandle>()) {
                auto* resource = LuaManagedResourceHandle::extract_from_variant(value);
                assert(resource);
-
-               static_assert(false, "THIS IS BAD! The VM core needs to keep track of all scripted CanvasWidgetLayerData objects so that it can delete them as appropriate during VM teardown!");
-
                auto* data = new CanvasWidgetLayerDataLuaManagedResource;
+               DovahKitScriptVMCore::get().set_up_new_canvas_layer_data(data);
                data->setResource(resource);
                layer->setData(data);
                return;
