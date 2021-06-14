@@ -458,11 +458,6 @@ namespace dovah {
    //
    dialogue_quest_reference_t::dialogue_quest_reference_t() : form_reference_t(use_info_entry::flag::dialogue_quest) {};
    dialogue_quest_reference_t::dialogue_quest_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue_quest, s) {};
-   //
-   void struct_form_reference_t::set(loaded_forms::Form& owner, const struct_form_reference_t& set_to) {
-      form_reference_t::set(owner, set_to.stub);
-      this->padding = set_to.padding;
-   }
 
    void clear_form_reference_list(std::vector<form_reference_t>& list, loaded_forms::Form& owner) {
       for (auto& id : list)

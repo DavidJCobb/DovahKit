@@ -150,15 +150,6 @@ namespace dovah {
             field.stub = nullptr;
          return true;
       }
-      bool subrecord::_read_form_reference(struct_form_reference_t& field) const noexcept {
-         form_reference_t& base = *(form_reference_t*)&field;
-         if (this->_read_form_reference(base)) {
-            if (this->is_skyrim_special())
-               return this->read(field.padding);
-            return true;
-         }
-         return false;
-      }
       void subrecord::_unchecked_read_form_id(form_id_t& field) const noexcept {
          this->unchecked_read(field.value);
          this->_fix_up_form_id(field.value);
@@ -176,12 +167,6 @@ namespace dovah {
             }
          } else
             field.stub = nullptr;
-      }
-      void subrecord::_unchecked_read_form_reference(struct_form_reference_t& field) const noexcept {
-         form_reference_t& base = *(form_reference_t*)&field;
-         this->_unchecked_read_form_reference(base);
-         if (this->is_skyrim_special())
-            this->unchecked_read(field.padding);
       }
       //
       record& subrecord::get_containing_record() const {

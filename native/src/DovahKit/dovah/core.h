@@ -363,22 +363,6 @@ namespace dovah {
          dialogue_quest_reference_t();
          dialogue_quest_reference_t(form_stub* s);
    };
-   class struct_form_reference_t : public form_reference_t {
-      //
-      // In some cases, the game reads entire structs from the file by blindly copying bytes. 
-      // If these structs contain form IDs, then they will differ in Skyrim Special. Skyrim 
-      // treats references from one form to another as unions of form IDs and form pointers; 
-      // loading happens in two stages, with the first stage pulling form IDs into the places 
-      // where the pointers would be, and the second stage replacing all form IDs with pointers. 
-      // Skyrim Special is 64-bit, so its pointers are eight bytes instead of four bytes; as 
-      // such, structs that are blindly copied will have their layouts change, with four 
-      // padding bytes following each four-byte form ID.
-      //
-      public:
-         uint32_t padding = 0;
-         //
-         void set(loaded_forms::Form& owner, const struct_form_reference_t& set_to);
-   };
 
    extern void clear_form_reference_list(std::vector<form_reference_t>&, loaded_forms::Form& owner);
    extern void remove_form_from_reference_list(std::vector<form_reference_t>&, form_stub& target, loaded_forms::Form& owner);

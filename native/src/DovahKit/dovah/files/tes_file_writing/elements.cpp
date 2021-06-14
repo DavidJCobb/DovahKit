@@ -133,11 +133,6 @@ namespace dovah::tes_file_writing {
          this->_fixup_form_id(id);
       this->write(id);
    }
-   void subrecord::_write_impl(const struct_form_reference_t& ref) {
-      this->_write_impl(*(form_reference_t*)&ref);
-      if (this->is_skyrim_special())
-         this->write(ref.padding);
-   }
    void subrecord::_write_impl(const localized_string& field) {
       if (this->owner.use_string_table) {
          this->write(field.index);
