@@ -53,7 +53,23 @@ namespace editor_script { // base metatable
 
 namespace editor_script {
    wrapper::~wrapper() {
+      //
+      // Don't run teardown code in the destructor. The way wrappers work is that a Lua API 
+      // creates a given wrapper and asks our userdata interface to push that wrapper onto 
+      // the Lua stack, which returns it to the script. However, the userdata interface will 
+      // first check to see if there's already an identical wrapper active in the script, 
+      // and if so, it returns that instead. This means that if a Lua API is called twice 
+      // and returns wrappers to the same object, those wrappers compare equal (without us 
+      // needing to override __eq or other nonsense).
+      // 
+      // A consequence of it working this way is that the wrapper that a Lua API creates is 
+      // never actually used directly; it's *copied* into Lua, and the original then goes 
+      // out of scope when the Lua API ends, and is destroyed. So, if we run teardown code 
+      // when a wrapper is destroyed, these not-actually-in-the-script wrappers will be 
+      // torn down, which will... confuse our script core.
+      //
    }
+
    void wrapper::teardown() {
       if (this->type == wrapper_type::undefined) {
          //
@@ -65,14 +81,12 @@ namespace editor_script {
       DovahKitScriptVMUserdataInterface::get().prune_wrapper_list_for(*this);
       //
       if (this->type == wrapper_type::ui) {
-         DovahKitScriptVMCore::get().widget_no_longer_referenced(this->widget);
          this->widget = nullptr;
       }
       if (this->type == wrapper_type::ui_model_item) {
          this->model_observer = nullptr;
       }
       if (this->type == wrapper_type::ui_button_group) {
-         DovahKitScriptVMCore::get().button_group_no_longer_referenced(this->button_group);
          this->button_group = nullptr;
       }
       if (this->type == wrapper_type::lua_managed_resource) {

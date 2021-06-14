@@ -245,45 +245,56 @@ void DovahKitScriptVMUserdataInterface::prune_wrapper_list_for(editor_script::wr
    lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_storage_registry_key);
    lua_pushlightuserdata(L, light);
    lua_rawget(L, -2);
-   if (lua_istable(L, -1)) {
-      if (cobb::lua::isempty(L, -1)) {
-         lua_pop(L, 1);
-         //
-         // The wrapper list is empty. This means a few things:
-         // 
-         //  - The wrapped object is no longer referred to within Lua.
-         // 
-         //  - We may end up destroying the wrapped object, in which case we'll be 
-         //    left with an empty list keyed to a dangling pointer.
-         // 
-         // We should destroy the list just to keep things clean. We can also use this 
-         // as an opportunity to manage object lifetimes. It is theoretically possible 
-         // for multiple Lua userdata to refer to [different parts of] the same under-
-         // lying object (the wrapper's "pertinent pointer"), and if we need to know 
-         // when the object is referenced by Lua (in order to manage its lifetime), 
-         // then we need to either:
-         // 
-         //  - Track a refcount for it within the VM core, and update that refcount 
-         //    every time any userdata for the object is created or destroyed.
-         // 
-         // or:
-         // 
-         //  - Don't bother tracking a refcount; just act on the object here, in this 
-         //    very function below this very code comment, since we know at this point 
-         //    that no userdata point to the object anymore.
-         // 
-         // We're going with the latter approach.
-         //
-         lua_pushlightuserdata(L, light);
-         lua_pushnil(L);
-         lua_rawset(L, -3);
-         //
-         switch (instance.type) {
-            using wt = editor_script::wrapper_type;
-            case wt::ui_model_item:
-               this->vm.model_observer_no_longer_referenced(instance.model_observer);
-               break;
-         }
+   bool destroy = !lua_istable(L, -1);
+   if (!destroy)
+      destroy = cobb::lua::isempty(L, -1);
+   lua_pop(L, 1);
+   //
+   if (destroy) {
+      //
+      // The wrapper list is empty. This means a few things:
+      // 
+      //  - The wrapped object is no longer referred to within Lua.
+      // 
+      //  - We may end up destroying the wrapped object, in which case we'll be 
+      //    left with an empty list keyed to a dangling pointer.
+      // 
+      // We should destroy the list just to keep things clean. We can also use this 
+      // as an opportunity to manage object lifetimes. It is theoretically possible 
+      // for multiple Lua userdata to refer to [different parts of] the same under-
+      // lying object (the wrapper's "pertinent pointer"), and if we need to know 
+      // when the object is referenced by Lua (in order to manage its lifetime), 
+      // then we need to either:
+      // 
+      //  - Track a refcount for it within the VM core, and update that refcount 
+      //    every time any userdata for the object is created or destroyed.
+      // 
+      // or:
+      // 
+      //  - Don't bother tracking a refcount; just act on the object here, in this 
+      //    very function below this very code comment, since we know at this point 
+      //    that no userdata point to the object anymore.
+      // 
+      // We're going with the latter approach.
+      //
+      lua_pushlightuserdata(L, light);
+      lua_pushnil(L);
+      lua_rawset(L, -3);
+      //
+      switch (instance.type) {
+         using wt = editor_script::wrapper_type;
+         case wt::lua_managed_resource:
+            // TODO
+            break;
+         case wt::ui:
+            this->vm.widget_no_longer_referenced(instance.widget);
+            break;
+         case wt::ui_button_group:
+            this->vm.button_group_no_longer_referenced(instance.button_group);
+            break;
+         case wt::ui_model_item:
+            this->vm.model_observer_no_longer_referenced(instance.model_observer);
+            break;
       }
    }
 }

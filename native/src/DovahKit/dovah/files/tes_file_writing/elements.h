@@ -104,7 +104,6 @@ namespace dovah {
             //
             void _fixup_form_id(bare_form_id_t& id) const noexcept;
             void _write_impl(const form_reference_t&);
-            void _write_impl(const struct_form_reference_t&);
             void _write_impl(const localized_string&);
             //
             void _report_length_prefixed_string_too_long_to_save(size_t len, size_t max);
@@ -140,7 +139,6 @@ namespace dovah {
                this->write(v.data(), v.size());
             }
             template<> inline void write(const form_reference_t& field) { return this->_write_impl(field); }
-            template<> inline void write(const struct_form_reference_t& field) { return this->_write_impl(field); }
             template<> inline void write(const localized_string& field) { return this->_write_impl(field); }
             template<> inline void write(const tes_file_group_header& v) = delete;
             template<> inline void write(const tes_file_record_header& v) = delete;

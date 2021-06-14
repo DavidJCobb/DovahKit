@@ -89,13 +89,6 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
          void clear();
       };
 
-      struct _model_observer {
-         ObservableStandardItemModelObserver* pointer = nullptr;
-
-         _model_observer() {}
-         _model_observer(ObservableStandardItemModelObserver* p) : pointer(p) {}
-      };
-
       // Given a basis widget, traverses the entire hierarchy containing that basis, as well as 
       // any other widget hierarchy that is connected to that hierarchy by way of a QButtonGroup. 
       // If any widget or button group is referenced by Lua, aborts immediately and returns empty 
