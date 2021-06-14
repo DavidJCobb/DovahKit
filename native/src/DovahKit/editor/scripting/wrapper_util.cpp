@@ -64,6 +64,8 @@ namespace editor_script {
          return wrappers::ui::table_view::metatable_key;
       if (qobject_cast<QTabWidget*>(widget))
          return wrappers::ui::tabbox::metatable_key;
+      if (qobject_cast<CanvasWidget*>(widget))
+         return wrappers::ui::canvas::metatable_key;
       if (qobject_cast<FormPicker*>(widget))
          return wrappers::ui::formpicker::metatable_key;
       if (qobject_cast<LuaManagedRasterWidget*>(widget))
