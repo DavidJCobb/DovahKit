@@ -11,16 +11,29 @@ CanvasWidget::~CanvasWidget() {
 
 void CanvasWidget::paintEvent(QPaintEvent* event) {
    auto er = event->rect();
+   //er = er.intersected(QRect(QPoint(0, 0), this->_size));
+   er = QRect(QPoint(0, 0), this->_size); // *sigh* 
    //
    QPainter painter(this);
-   for (auto* layer : this->layers()) {
-      if (!layer->visible())
-         continue;
-      auto lr = layer->region();
-      if (!lr.intersects(er))
-         continue;
-      layer->_paint(painter);
+   painter.setClipRect(er);
+   {
+      QPixmap pixmap = QPixmap(er.width(), er.height());
+      pixmap.fill(Qt::GlobalColor::transparent);
+      //
+      static_assert(false, "We tried using a QPixmap here because the ''multiply'' blend mode seemed to not be working. In fact, however, it's broken by design! It ignores alpha on the destination layer and colorizes even transparent areas. Splendid.");
+      QPainter pp = QPainter(&pixmap);
+      for (auto* layer : this->layers()) {
+         if (!layer->visible())
+            continue;
+         auto lr = layer->region();
+         if (!lr.intersects(er))
+            continue;
+         //layer->_paint(painter);
+         layer->_paint(pp);
+      }
+      painter.drawPixmap(pixmap.rect(), pixmap);
    }
+   painter.setClipRect(QRect(), Qt::NoClip);
 }
 QSize CanvasWidget::sizeHint() const {
    return this->imageSize();
@@ -122,17 +135,61 @@ CanvasWidget* CanvasWidgetLayer::canvas() const noexcept {
    return nullptr;
 }
 
+QList<CanvasWidgetLayer*> CanvasWidgetLayer::childLayers() const noexcept {
+   QList<CanvasWidgetLayer*> list;
+   for (auto* child : this->children())
+      if (auto* layer = qobject_cast<CanvasWidgetLayer*>(child))
+         list.push_back(layer);
+   return list;
+}
+CanvasWidgetLayer* CanvasWidgetLayer::createLayer(CanvasWidgetLayerData* data) {
+   auto* layer = new CanvasWidgetLayer(this);
+   layer->setData(data);
+   return layer;
+}
+
 void CanvasWidgetLayer::_paint(QPainter& painter, QPoint p) {
-   QPoint effective = this->position() + p;
-   if (auto* d = this->_data) {
-      d->paint(painter, effective);
+   auto pos = this->position();
+   painter.translate(pos);
+   //
+   auto children = this->childLayers();
+   if (children.isEmpty()) {
+      painter.setCompositionMode(this->_blendMode);
+      if (auto* d = this->_data) {
+         d->paint(painter, QPoint(0, 0));
+      }
+   } else {
+      int w = 0;
+      int h = 0;
+      if (painter.hasClipping()) {
+         auto rect = painter.clipBoundingRect();
+         w = rect.width();
+         h = rect.height();
+      } else {
+         auto* device = painter.device();
+         w = device->width();
+         h = device->height();
+      }
+      if (w > 0 && h > 0) {
+         QPixmap pixmap = QPixmap(w, h);
+         pixmap.fill(Qt::GlobalColor::transparent);
+         //
+         QPainter pp = QPainter(&pixmap);
+         pp.setWorldTransform(painter.worldTransform());
+         if (auto* d = this->_data) {
+            d->paint(pp, QPoint(0, 0));
+         }
+         for (auto* child : children) {
+            child->_paint(pp);
+         }
+         static_assert(false, "The ''multiply'' blend mode is broken by design! It ignores alpha on the destination layer and colorizes even transparent areas. We need to do this manually.");
+            // Possible workaround: two paint steps: <https://forum.qt.io/post/302457> (this won't work exactly because it assumes a solid-color mask...)
+         painter.setCompositionMode(this->_blendMode);
+         painter.drawPixmap(QRect(0, 0, w, h), pixmap);
+      }
    }
-   for (auto* child : this->children()) {
-      auto* layer = qobject_cast<CanvasWidgetLayer*>(child);
-      if (!layer)
-         continue;
-      layer->_paint(painter, effective);
-   }
+   //
+   painter.translate(-pos);
 }
 
 void CanvasWidgetLayer::setData(CanvasWidgetLayerData* d) {
@@ -218,10 +275,39 @@ void CanvasWidgetLayer::setVisible(bool v) noexcept {
    this->update();
 }
 
-void CanvasWidgetLayer::update() {
-   auto* c = this->canvas();
-   if (!c)
+void CanvasWidgetLayer::setCompositionMode(CompositionMode c) noexcept {
+   if (this->_blendMode == c)
       return;
+   this->_blendMode = c;
+   this->update();
+}
+
+void CanvasWidgetLayer::update() {
+   CanvasWidget* c = nullptr;
+   {
+      //
+      // Updates need to propagate up. The highest ancestor with a non-normal blend mode 
+      // needs to be the one that updates.
+      //
+      static constexpr auto normal_blend_mode = CompositionMode::CompositionMode_SourceOver;
+      //
+      CanvasWidgetLayer* highestBlend = this;
+      QObject* o = this->parent();
+      do {
+         if (auto* l = qobject_cast<CanvasWidgetLayer*>(o)) {
+            if (l->_blendMode != normal_blend_mode)
+               highestBlend = l;
+         } else if (c = qobject_cast<CanvasWidget*>(o)) {
+            break;
+         }
+      } while (o = o->parent());
+      if (!c)
+         return;
+      if (highestBlend != this) {
+         highestBlend->update();
+         return;
+      }
+   }
    auto r = this->region();
    if (r.isEmpty())
       return;

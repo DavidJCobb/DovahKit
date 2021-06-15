@@ -1,4 +1,5 @@
 #pragma once
+#include <QPainter>
 #include <QWidget>
 #include "../../helpers/qt/traversal.h"
 
@@ -54,10 +55,14 @@ class CanvasWidget : public QWidget {
 class CanvasWidgetLayer : public QObject {
    Q_OBJECT;
    friend class CanvasWidget;
+   public:
+      using CompositionMode = QPainter::CompositionMode;
+
    protected:
       CanvasWidgetLayerData* _data = nullptr;
       bool   _visible = false;
       QPoint _pos;
+      CompositionMode _blendMode = CompositionMode::CompositionMode_SourceOver;
 
       void _paint(QPainter&, QPoint p = QPoint(0, 0));
 
@@ -67,6 +72,9 @@ class CanvasWidgetLayer : public QObject {
 
       CanvasWidget* canvas() const noexcept;
       inline CanvasWidgetLayer* parentLayer() const noexcept { return qobject_cast<CanvasWidgetLayer*>(this->parent()); }
+
+      CanvasWidgetLayer* createLayer(CanvasWidgetLayerData* data = nullptr);
+      QList<CanvasWidgetLayer*> childLayers() const noexcept;
 
       inline CanvasWidgetLayerData* data() const noexcept { return this->_data; }
       void setData(CanvasWidgetLayerData*);
@@ -86,6 +94,9 @@ class CanvasWidgetLayer : public QObject {
 
       inline bool visible() const noexcept { return this->_visible; }
       void setVisible(bool) noexcept;
+
+      inline CompositionMode compositionMode() const noexcept { return this->_blendMode; }
+      void setCompositionMode(CompositionMode) noexcept;
 
       void update();
 

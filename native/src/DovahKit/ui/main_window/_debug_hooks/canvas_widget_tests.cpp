@@ -23,10 +23,8 @@ namespace {
       //
       image.setPixel({ x, y }, qRgba(colors[0], colors[1], colors[2], 255));
    }
-}
 
-namespace DovahKitDebug {
-   void debug_canvas_widget(QWidget* parent) {
+   void _dialog_1(QWidget* parent) {
       auto* dialog = new QDialog(parent);
       auto* layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
       auto* canvas = new CanvasWidget(dialog);
@@ -104,5 +102,101 @@ namespace DovahKitDebug {
       //
       dialog->show();
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
+   }
+   void _dialog_2(QWidget* parent) {
+      auto* dialog = new QDialog(parent);
+      auto* layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
+      auto* canvas = new CanvasWidget(dialog);
+      dialog->setLayout(layout);
+      {
+         auto* scroll = new QScrollArea;
+         scroll->setWidget(canvas);
+         layout->addWidget(scroll);
+      }
+      //
+      auto* grid = new QWidget(dialog);
+      grid->setLayout(new QGridLayout);
+      layout->addWidget(grid);
+      //
+      canvas->setImageSize(300, 300);
+      dialog->setFixedHeight(200);
+      //
+      {
+         auto* logo  = canvas->createLayer();
+         auto* color = canvas->createLayer();
+         logo->setVisible(true);
+         color->setVisible(true);
+         //
+         {
+            auto* data  = new CanvasWidgetLayerDataImage(dialog);
+            auto& image = data->image();
+            image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
+            image.fill(qRgba(0, 0, 0, 0)); // the constructor doesn't actually initialize or clear any image data
+            //
+            QPainter painter(&image);
+            QBrush   brush = QColor(255, 255, 255, 255);
+            painter.setBrush(brush);
+            painter.drawEllipse(image.rect());
+            //
+            logo->setData(data);
+         }
+         {
+            auto* mask = color->createLayer();
+            auto* grad = color->createLayer();
+            mask->setVisible(true);
+            grad->setVisible(true);
+            color->setCompositionMode(QPainter::CompositionMode_Multiply);
+            grad->setCompositionMode(QPainter::CompositionMode_Multiply);
+            //
+            {
+               auto* data  = new CanvasWidgetLayerDataImage(dialog);
+               auto& image = data->image();
+               image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
+               image.fill(qRgba(0, 0, 0, 0)); // the constructor doesn't actually initialize or clear any image data
+               //
+               QPainter painter(&image);
+               QRect rect = image.rect();
+               auto  y    = rect.height() / 2;
+               rect.setHeight(y);
+               rect.setTop(rect.top() + y / 2);
+               painter.fillRect(rect, QColor(255, 255, 255, 255));
+               //
+               mask->setData(data);
+            }
+            {
+               auto* data  = new CanvasWidgetLayerDataImage(dialog);
+               auto& image = data->image();
+               image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
+               image.fill(qRgba(0, 0, 0, 0)); // the constructor doesn't actually initialize or clear any image data
+               //
+               QPainter painter(&image);
+               QLinearGradient gradient(0, 0, image.width(), 0);
+               gradient.setStops({
+                  { 0.000, QColor::fromHsl(  0, 255, 128) },
+                  { 0.128, QColor::fromHsl( 45, 255, 128) },
+                  { 0.250, QColor::fromHsl( 90, 255, 128) },
+                  { 0.375, QColor::fromHsl(135, 255, 128) },
+                  { 0.500, QColor::fromHsl(180, 255, 128) },
+                  { 0.625, QColor::fromHsl(225, 255, 128) },
+                  { 0.750, QColor::fromHsl(270, 255, 128) },
+                  { 0.875, QColor::fromHsl(315, 255, 128) },
+                  { 1.000, QColor::fromHsl(359, 255, 128) },
+               });
+               painter.fillRect(image.rect(), gradient);
+               //
+               grad->setData(data);
+            }
+         }
+      }
+      //
+      dialog->show();
+      QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
+   }
+}
+
+namespace DovahKitDebug {
+   void debug_canvas_widget(QWidget* parent) {
+      _dialog_1(parent);
+      _dialog_2(parent);
    }
 }
