@@ -61,6 +61,7 @@ class CanvasWidgetLayer : public QObject {
    protected:
       CanvasWidgetLayerData* _data = nullptr;
       bool   _visible = false;
+      qreal  _opacity = 1.0;
       QPoint _pos;
       CompositionMode _blendMode = CompositionMode::CompositionMode_SourceOver;
 
@@ -85,6 +86,9 @@ class CanvasWidgetLayer : public QObject {
       void setPosition(const QPoint&) noexcept;
       void setPosition(int x, int y) noexcept;
 
+      inline qreal opacity() const noexcept { return this->_opacity; }
+      void setOpacity(qreal) noexcept;
+
       QPoint effectivePosition() const noexcept;
 
       // Returns the region occupied by this layer and all of its descendants, recursing as needed. 
@@ -102,6 +106,8 @@ class CanvasWidgetLayer : public QObject {
 
       void moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
       void moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
+
+      QImage render(QSize bounds);
 };
 
 class CanvasWidgetLayerData : public QObject {

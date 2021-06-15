@@ -3,6 +3,39 @@
 #include <QPainter>
 #include "../../helpers/qt/ownership.h"
 
+namespace {
+   // Optimal format for QPainter's blend modes
+   static constexpr QImage::Format INTERMEDIATE_IMAGE_FORMAT = QImage::Format_ARGB32_Premultiplied;
+
+   QImage _drawAtop(QImage& src, QImage& dst, const QPoint& src_pos, QPainter::CompositionMode mode) {
+      if (mode == QPainter::CompositionMode_Multiply) {
+         //
+         // Qt's "multply" doesn't work like the "multiply" in image editors: it pays no heed to the 
+         // destination alpha, effectively overwriting that with the source alpha. The only way to 
+         // fix this is to apply the destination alpha to the source, and then apply the modified 
+         // source (via multiply) to the destination.
+         // 
+         // Confusingly enough, since we're copying from the destination of the eventual multiply 
+         // operation to the source, the two pixmaps' roles are reversed during the copy: (source) 
+         // is the destination and (out), the source.
+         //
+         QPainter cda = QPainter(&src); // Copy Destination Alpha
+         cda.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+         QRectF copy_to   = src.rect();
+         QRectF copy_from = src.rect();
+         copy_to.setTopLeft(QPoint(0, 0));
+         copy_from.setTopLeft(src_pos);
+         cda.drawImage(copy_to, dst, copy_from);
+      }
+      QPainter painter(&dst);
+      painter.setCompositionMode(mode);
+      painter.drawImage(src_pos, src);
+      //
+      return dst;
+   }
+
+}
+
 #pragma region CanvasWidget
 CanvasWidget::CanvasWidget(QWidget* parent) : QWidget(parent) {
 }
@@ -17,21 +50,21 @@ void CanvasWidget::paintEvent(QPaintEvent* event) {
    QPainter painter(this);
    painter.setClipRect(er);
    {
-      QPixmap pixmap = QPixmap(er.width(), er.height());
-      pixmap.fill(Qt::GlobalColor::transparent);
-      //
-      static_assert(false, "We tried using a QPixmap here because the ''multiply'' blend mode seemed to not be working. In fact, however, it's broken by design! It ignores alpha on the destination layer and colorizes even transparent areas. Splendid.");
-      QPainter pp = QPainter(&pixmap);
+      auto prior = QImage(this->_size, INTERMEDIATE_IMAGE_FORMAT);
+      prior.fill(Qt::GlobalColor::transparent);
       for (auto* layer : this->layers()) {
          if (!layer->visible())
             continue;
-         auto lr = layer->region();
-         if (!lr.intersects(er))
-            continue;
-         //layer->_paint(painter);
-         layer->_paint(pp);
+         QPoint pos  = layer->position();
+         QSize  size = this->_size;
+         size.setWidth(size.width() - pos.x());
+         size.setHeight(size.height() - pos.y());
+         //
+         QImage after = layer->render(size);
+         prior = _drawAtop(after, prior, pos, layer->_blendMode);
       }
-      painter.drawPixmap(pixmap.rect(), pixmap);
+      painter.setCompositionMode(QPainter::CompositionMode_SourceOver); // just in case, I guess
+      painter.drawImage(prior.rect(), prior);
    }
    painter.setClipRect(QRect(), Qt::NoClip);
 }
@@ -182,10 +215,18 @@ void CanvasWidgetLayer::_paint(QPainter& painter, QPoint p) {
          for (auto* child : children) {
             child->_paint(pp);
          }
-         static_assert(false, "The ''multiply'' blend mode is broken by design! It ignores alpha on the destination layer and colorizes even transparent areas. We need to do this manually.");
+ //        static_assert(false, "The ''multiply'' blend mode is broken by design! It ignores alpha on the destination layer and colorizes even transparent areas. We need to do this manually.");
             // Possible workaround: two paint steps: <https://forum.qt.io/post/302457> (this won't work exactly because it assumes a solid-color mask...)
          painter.setCompositionMode(this->_blendMode);
-         painter.drawPixmap(QRect(0, 0, w, h), pixmap);
+         if (this->_blendMode == QPainter::CompositionMode_Multiply) {
+            QPixmap dest_copy = QPixmap(w, h);
+
+
+
+            painter.drawPixmap(QRect(0, 0, w, h), pixmap);
+         } else {
+            painter.drawPixmap(QRect(0, 0, w, h), pixmap);
+         }
       }
    }
    //
@@ -245,6 +286,14 @@ void CanvasWidgetLayer::setPosition(const QPoint& to) noexcept {
 }
 void CanvasWidgetLayer::setPosition(int x, int y) noexcept {
    this->setPosition({ x, y });
+}
+
+void CanvasWidgetLayer::setOpacity(qreal v) noexcept {
+   v = std::clamp(v, 0.0, 1.0);
+   if (this->_opacity == v)
+      return;
+   this->_opacity = v;
+   this->update();
 }
 
 QPoint CanvasWidgetLayer::effectivePosition() const noexcept {
@@ -319,6 +368,39 @@ void CanvasWidgetLayer::moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidget
 }
 void CanvasWidgetLayer::moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
    cobb::qt::move_object_after(this, subject, target);
+}
+
+QImage CanvasWidgetLayer::render(QSize bounds) {
+   if (!bounds.isValid()) {
+      bounds = this->region().boundingRect().size();
+   }
+   int w = bounds.width();
+   int h = bounds.height();
+   if (w <= 0 || h <= 0)
+      return QImage();
+   QImage out = QImage(w, h, INTERMEDIATE_IMAGE_FORMAT);
+   {
+      QPainter painter = QPainter(&out);
+      out.fill(Qt::GlobalColor::transparent);
+      //
+      if (auto* d = this->_data)
+         d->paint(painter, QPoint(0, 0));
+   }
+   //
+   for (auto* child : this->childLayers()) {
+      if (!child->visible())
+         continue;
+      auto c_offset = child->position();
+      auto c_bounds = bounds;
+      c_bounds.setWidth(c_bounds.width() - c_offset.x());
+      c_bounds.setHeight(c_bounds.height() - c_offset.y());
+      if (!c_bounds.isValid())
+         continue;
+      //
+      QImage source = child->render(c_bounds);
+      out = _drawAtop(source, out, c_offset, child->_blendMode);
+   }
+   return out;
 }
 #pragma endregion
 

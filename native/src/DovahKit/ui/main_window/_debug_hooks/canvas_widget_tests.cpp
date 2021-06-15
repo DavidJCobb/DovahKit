@@ -126,6 +126,8 @@ namespace {
          auto* color = canvas->createLayer();
          logo->setVisible(true);
          color->setVisible(true);
+         logo->setObjectName("logo");
+         color->setObjectName("color");
          //
          {
             auto* data  = new CanvasWidgetLayerDataImage(dialog);
@@ -145,6 +147,8 @@ namespace {
             auto* grad = color->createLayer();
             mask->setVisible(true);
             grad->setVisible(true);
+            mask->setObjectName("mask");
+            grad->setObjectName("grad");
             color->setCompositionMode(QPainter::CompositionMode_Multiply);
             grad->setCompositionMode(QPainter::CompositionMode_Multiply);
             //
