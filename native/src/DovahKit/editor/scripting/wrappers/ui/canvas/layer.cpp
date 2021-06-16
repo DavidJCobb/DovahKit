@@ -270,7 +270,7 @@ namespace {
       luastackchange_t opacity(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          auto& vm    = DovahKitScriptVMCore::get();
-         bool value = lua_tonumber(L, 2);
+         lua_Number value = lua_tonumber(L, 2);
          if (!self.canvas_layer)
             return 0;
          auto* layer   = self.canvas_layer;

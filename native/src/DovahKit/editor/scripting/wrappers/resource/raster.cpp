@@ -16,6 +16,19 @@ namespace {
    using cls = wrappers::resource::raster;
 
    namespace _methods {
+      luastackchange_t fill(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.managed_resource)
+            return 0;
+         //
+         QColor color = util::ui::pull_color(L, 2);
+         //
+         self.managed_resource->modify_raster_script_side([color](QImage& image) {
+            image.fill(color);
+         });
+         //
+         return 0;
+      }
       luastackchange_t get_pixel(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.managed_resource)
@@ -176,6 +189,7 @@ namespace {
 
 namespace editor_script::wrappers::resource {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "fill",      &_methods::fill },
       { "get_pixel", &_methods::get_pixel },
       { "set_pixel", &_methods::set_pixel },
    };
