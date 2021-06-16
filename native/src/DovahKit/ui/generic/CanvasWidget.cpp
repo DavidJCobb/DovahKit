@@ -7,7 +7,7 @@ namespace {
    // Optimal format for QPainter's blend modes
    static constexpr QImage::Format INTERMEDIATE_IMAGE_FORMAT = QImage::Format_ARGB32_Premultiplied;
 
-   QImage _drawAtop(QImage& src, QImage& dst, const QPoint& src_pos, QPainter::CompositionMode mode) {
+   QImage _drawAtop(QImage& src, QImage& dst, const QPoint& src_pos, QPainter::CompositionMode mode, qreal opacity = 1.0) {
       if (mode == QPainter::CompositionMode_Multiply) {
          //
          // Qt's "multply" doesn't work like the "multiply" in image editors: it pays no heed to the 
@@ -29,6 +29,7 @@ namespace {
       }
       QPainter painter(&dst);
       painter.setCompositionMode(mode);
+      painter.setOpacity(opacity);
       painter.drawImage(src_pos, src);
       //
       return dst;
@@ -58,12 +59,12 @@ void CanvasWidget::paintEvent(QPaintEvent* event) {
             auto* group = (CanvasWidgetLayerGroup*)child;
             //
             QImage after = group->render(this->_size, group->position());
-            prior = _drawAtop(after, prior, { 0, 0 }, group->compositionMode());
+            prior = _drawAtop(after, prior, { 0, 0 }, group->compositionMode(), group->opacity());
          } else {
             auto* layer = (CanvasWidgetLayer*)child;
             //
             QImage after = layer->render();
-            prior = _drawAtop(after, prior, layer->position(), layer->compositionMode());
+            prior = _drawAtop(after, prior, layer->position(), layer->compositionMode(), layer->opacity());
          }
       }
       painter.drawImage(prior.rect(), prior);
@@ -350,14 +351,14 @@ QImage CanvasWidgetLayerGroup::render(QSize bounds, QPoint offset) {
       if (child->isLayerGroup()) {
          auto* group = (CanvasWidgetLayerGroup*)child;
          //
-         QPoint c_offset = child->position() + offset;
+         QPoint c_offset = group->position() + offset;
          QImage source   = group->render(bounds, c_offset);
-         out = _drawAtop(source, out, { 0, 0 }, child->compositionMode());
+         out = _drawAtop(source, out, { 0, 0 }, child->compositionMode(), group->opacity());
       } else {
          auto* layer = (CanvasWidgetLayer*)child;
          //
          QImage source = layer->render();
-         out = _drawAtop(source, out, layer->position(), layer->compositionMode());
+         out = _drawAtop(source, out, layer->position(), layer->compositionMode(), layer->opacity());
       }
    }
    return out;

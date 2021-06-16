@@ -99,6 +99,31 @@ do
       end)
       list:add_child(b)
    end
+   do
+      local layer = l_mask
+      local b = ui.button.new("Mask Opacity")
+      b:on("OnActivated", "", function()
+         if layer.opacity < 0.6 then
+            layer.opacity = 1
+         else
+            layer.opacity = 0.5
+         end
+      end)
+      list:add_child(b)
+   end
+   do
+      local layer = l_mask
+      local b = ui.button.new("Mask Pos")
+      b:on("OnActivated", "", function()
+         local x = layer.x
+         if x == 0 then
+            layer.x = 150
+         else
+            layer.x = 0
+         end
+      end)
+      list:add_child(b)
+   end
 end
 
 window:show()
