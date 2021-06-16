@@ -389,7 +389,8 @@ void DovahKitScriptVMResourceInterface::modify_raster_script_side(resource_t& r,
    std::unique_lock guard(base.lock);
    //
    (task)(r.content.raster.script);
-   list.push_back(&r);
+   if (!list.contains(&r))
+      list.push_back(&r);
 }
 
 void DovahKitScriptVMResourceInterface::on_resource_ui_referenced_changed(resource_t& resource, bool became_referenced) {
