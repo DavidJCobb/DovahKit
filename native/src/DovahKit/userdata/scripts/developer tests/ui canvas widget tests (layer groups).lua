@@ -124,6 +124,43 @@ do
       end)
       list:add_child(b)
    end
+   do
+      local layer = l_mask
+      local data  = layer.data
+      local b = ui.button.new("Mask Data")
+      b:on("OnActivated", "", function()
+         if layer.data then
+            layer.data = nil
+         else
+            layer.data = data
+         end
+      end)
+      list:add_child(b)
+   end
+   do
+      local layer = l_color
+      local b = ui.dropdown.new()
+      --
+      b:append_item("Add")
+      b:append_item("Burn")
+      b:append_item("Darken Only")
+      b:append_item("Difference")
+      b:append_item("Dodge")
+      b:append_item("Hard Light")
+      b:append_item("Lighten Only")
+      b:append_item("Multiply")
+      b.selected_index = #b.items
+      b:append_item("Normal")
+      b:append_item("Overlay")
+      b:append_item("Screen")
+      b:append_item("Soft Light")
+      --
+      b:on("OnChanged", "", function(i)
+         local item = b.items[i]
+         layer.blend_mode = item.text
+      end)
+      list:add_child(b)
+   end
 end
 
 window:show()

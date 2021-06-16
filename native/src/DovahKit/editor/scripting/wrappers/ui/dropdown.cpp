@@ -78,8 +78,17 @@ namespace {
 
       luastackchange_t get_collection_length(lua_State* L) {
          auto& self  = get_collection_wrapper(L);
-         auto& model = get_model(self);
-         lua_pushinteger(L, model.rowCount());
+         int count = 0;
+         {
+            auto* task = new tasks::s2m::lambda(true);
+            task->handler = [&self, &count]() {
+               auto& model = get_model(self);
+               count = model.rowCount();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushinteger(L, count);
          return 1;
       }
       luastackchange_t lookup_item_by_index(lua_State* L) {

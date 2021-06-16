@@ -17,7 +17,6 @@ namespace {
    using _blend_mode_name = std::pair<_blend_mode, const char*>;
 
    std::array _modes_to_strings = {
-      _blend_mode_name{ _blend_mode::CompositionMode_Clear,      "clear" },
       _blend_mode_name{ _blend_mode::CompositionMode_ColorBurn,  "burn" },
       _blend_mode_name{ _blend_mode::CompositionMode_ColorDodge, "dodge" },
       _blend_mode_name{ _blend_mode::CompositionMode_Darken,     "darken only" },
@@ -30,7 +29,6 @@ namespace {
       _blend_mode_name{ _blend_mode::CompositionMode_Screen,     "screen" },
       _blend_mode_name{ _blend_mode::CompositionMode_SoftLight,  "soft light" },
       _blend_mode_name{ _blend_mode::CompositionMode_SourceOver, "normal" },
-      _blend_mode_name{ _blend_mode::CompositionMode_Xor,        "xor" },
    };
 }
 

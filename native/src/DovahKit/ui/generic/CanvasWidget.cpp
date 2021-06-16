@@ -8,12 +8,14 @@ namespace {
    static constexpr QImage::Format INTERMEDIATE_IMAGE_FORMAT = QImage::Format_ARGB32_Premultiplied;
 
    QImage _drawAtop(QImage& src, QImage& dst, const QPoint& src_pos, QPainter::CompositionMode mode, qreal opacity = 1.0) {
-      if (mode == QPainter::CompositionMode_Multiply) {
+      if (mode != QPainter::CompositionMode_SourceOver) {
          //
          // Qt's "multply" doesn't work like the "multiply" in image editors: it pays no heed to the 
          // destination alpha, effectively overwriting that with the source alpha. The only way to 
          // fix this is to apply the destination alpha to the source, and then apply the modified 
          // source (via multiply) to the destination.
+         // 
+         // The same is true for other modes, like "difference."
          // 
          // Confusingly enough, since we're copying from the destination of the eventual multiply 
          // operation to the source, the two pixmaps' roles are reversed during the copy: (source) 
