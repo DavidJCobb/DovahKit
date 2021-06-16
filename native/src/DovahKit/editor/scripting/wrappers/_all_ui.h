@@ -1,6 +1,7 @@
 #pragma once
 #include "ui/button.h"
 #include "ui/canvas.h"
+#include "ui/canvas/canvas_text_data.h"
 #include "ui/canvas/layer.h"
 #include "ui/canvas/layer_group.h"
 #include "ui/checkbox.h"

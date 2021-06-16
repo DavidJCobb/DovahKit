@@ -8,6 +8,7 @@ local l_logo  = widget:append_layer()
 local l_color = widget:append_layer_group()
 local l_mask  = l_color:append_layer()
 local l_grad  = l_color:append_layer()
+local l_text  = widget:append_layer()
 
 l_grad.blend_mode = "multiply"
 l_color.blend_mode = "multiply"
@@ -55,6 +56,14 @@ do -- Create "grad" layer
       end
    end
    dovah.log_message("Generated \"grad\" layer.")
+end
+do -- Create "text" layer
+   local data = ui.canvas_text_data.new()
+   data.color = "#000000"
+   data.text  = "Hello!"
+   l_text.data = data
+   l_text.x = 50
+   l_text.y = 50
 end
 
 -- Controls

@@ -269,6 +269,7 @@
     <ClCompile Include="editor\scripting\util.cpp" />
     <ClCompile Include="editor\scripting\widgets\LuaManagedRasterWidget.cpp" />
     <ClCompile Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaManagedResource.cpp" />
+    <ClCompile Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaText.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\formlist.cpp" />
@@ -289,6 +290,7 @@
     <ClCompile Include="editor\scripting\wrappers\topic_info\response.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\canvas.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\canvas\canvas_text_data.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\canvas\layer.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\canvas\layer_group.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\checkbox.cpp" />
@@ -635,6 +637,7 @@
     <QtMoc Include="editor\scripting\widgets\LuaManagedRasterWidget.h" />
     <QtMoc Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaManagedResource.h" />
     <QtMoc Include="editor\scripting\widgets\objects\LuaScriptableCanvasWidgetLayerData.h" />
+    <QtMoc Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaText.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />
@@ -656,6 +659,7 @@
     <ClInclude Include="editor\scripting\wrappers\topic_info\response.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\canvas.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\canvas\canvas_text_data.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\canvas\layer.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\canvas\layer_group.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\checkbox.h" />

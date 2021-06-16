@@ -11,8 +11,10 @@
 #include "../../../cross_thread_tasks/s2m/lambda.h"
 
 #include "../../../widgets/objects/CanvasWidgetLayerDataLuaManagedResource.h"
+#include "../../../widgets/objects/CanvasWidgetLayerDataLuaText.h"
 #include "../../resource/dds.h"
 #include "../../resource/raster.h"
+#include "canvas_text_data.h"
 
 namespace {
    using _blend_mode = CanvasWidgetEntity::CompositionMode;
@@ -120,6 +122,12 @@ namespace {
                   return wrappers::resource::raster::wrap_and_push(L, *handle);
             }
             return 0;
+         }
+         if (auto* text_layer = qobject_cast<CanvasWidgetLayerDataLuaText*>(result)) {
+            wrapper out;
+            out.type = wrapper_type::ui_canvas_layer_data;
+            out.canvas_layer_data = text_layer;
+            return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::ui::canvas_text_data::metatable_key);
          }
          return 0;
       }
@@ -230,10 +238,10 @@ namespace {
          } else if (auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, 2)) {
             if (wrap->managed_resource)
                value = QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
+         } else if (auto* wrap = wrapper_from_stack<wrappers::ui::canvas_text_data>(L, 2)) {
+            if (wrap->canvas_layer_data)
+               value = QVariant::fromValue<QObject*>(wrap->canvas_layer_data);
          } else {
-            //
-            // Handling for any new layer data types goes here
-            //
             if (!lua_isnoneornil(L, 2)) {
                luaL_argerror(L, 2, "dds_resource, raster, or nil expected");
             }
@@ -258,9 +266,15 @@ namespace {
                layer->setData(data);
                return;
             }
-            //
-            // Handling for any new layer data types goes here
-            //
+            if (value.userType() == QMetaType::QObjectStar) {
+               auto* object = value.value<QObject*>();
+               if (auto* data = qobject_cast<LuaScriptableCanvasWidgetLayerData*>(object)) {
+                  layer->setData(data);
+                  return;
+               }
+               assert(false && "Unrecognized QObject type passed in as layer data!");
+               return;
+            }
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
