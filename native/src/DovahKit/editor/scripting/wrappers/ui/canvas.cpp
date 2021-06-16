@@ -12,6 +12,7 @@
 #include "helpers/widget_properties.h"
 
 #include "canvas/layer.h"
+#include "canvas/layer_group.h"
 
 #pragma region Collection: "layers"
 namespace {
@@ -68,13 +69,17 @@ namespace {
             return 0;
          //
          if (layer->isLayerGroup()) {
-            // TODO: IMPLEMENT ME
-            return 0;
+            wrapper iw;
+            iw.type = wrapper_type::ui_canvas_layer;
+            iw.canvas_layer = layer;
+            return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer_group::metatable_key);
+         } else if (layer->isLayer()) {
+            wrapper iw;
+            iw.type = wrapper_type::ui_canvas_layer;
+            iw.canvas_layer = layer;
+            return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer::metatable_key);
          }
-         wrapper iw;
-         iw.type = wrapper_type::ui_canvas_layer;
-         iw.canvas_layer = layer;
-         return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer::metatable_key);
+         return 0;
       }
    }
 }

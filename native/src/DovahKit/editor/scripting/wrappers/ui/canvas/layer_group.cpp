@@ -1,4 +1,4 @@
-#include "layer.h"
+#include "layer_group.h"
 #include "../../../systems/editor_script_inner_core.h"
 #include "../../../systems/lua_managed_resources.h"
 #include "../../../systems/messaging.h"
@@ -10,9 +10,7 @@
 
 #include "../../../cross_thread_tasks/s2m/lambda.h"
 
-#include "../../../widgets/objects/CanvasWidgetLayerDataLuaManagedResource.h"
-#include "../../resource/dds.h"
-#include "../../resource/raster.h"
+#include "layer.h"
 
 namespace {
    using _blend_mode = CanvasWidgetEntity::CompositionMode;
@@ -36,9 +34,82 @@ namespace {
    };
 }
 
+#pragma region Collection: "layers"
 namespace {
    using namespace editor_script;
-   using cls = wrappers::ui::canvas_layer;
+
+   namespace _collections::layers {
+      using cls        = wrappers::ui::canvas_layer_group;
+      using group_t    = CanvasWidgetLayerGroup;
+      using layer_t    = CanvasWidgetLayer;
+
+      static constexpr auto collection_key = cls::layer_collection_key;
+
+      wrapper& get_collection_wrapper(lua_State* L) {
+         auto* self = (wrapper*)editor_script::cast_to_class(L, 1, collection_key);
+         if (self == nullptr) {
+            luaL_error(L, "function called with bad self (expected %s)", collection_key);
+         }
+         if (self->widget == nullptr) {
+            luaL_error(L, "function called with zombie self (expected %s)", collection_key);
+         }
+         return *self;
+      }
+
+      luastackchange_t get_collection_length(lua_State* L) {
+         auto& self  = get_collection_wrapper(L);
+         auto& group = *(group_t*)self.canvas_layer;
+         assert(group.isLayerGroup());
+         lua_pushinteger(L, group.childLayers().size());
+         return 1;
+      }
+      luastackchange_t lookup_item_by_index(lua_State* L) {
+         auto& self = get_collection_wrapper(L);
+         int isnum;
+         int i = lua_tointegerx(L, 2, &isnum);
+         if (!isnum)
+            return 0;
+         --i;
+         if (i < 0)
+            return 0;
+         //
+         CanvasWidgetEntity* layer = nullptr;
+         {
+            auto* task  = new tasks::s2m::lambda(true);
+            auto* group = (group_t*)self.canvas_layer;
+            assert(group->isLayerGroup());
+            task->handler = [group, i, &layer]() {
+               auto list = group->childLayers();
+               if (i >= list.size())
+                  return;
+               layer = list[i];
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!layer)
+            return 0;
+         //
+         if (layer->isLayerGroup()) {
+            wrapper iw;
+            iw.type = wrapper_type::ui_canvas_layer;
+            iw.canvas_layer = layer;
+            return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer_group::metatable_key);
+         } else if (layer->isLayer()) {
+            wrapper iw;
+            iw.type = wrapper_type::ui_canvas_layer;
+            iw.canvas_layer = layer;
+            return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer::metatable_key);
+         }
+         return 0;
+      }
+   }
+}
+#pragma endregion
+
+namespace {
+   using namespace editor_script;
+   using cls = wrappers::ui::canvas_layer_group;
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
@@ -87,43 +158,14 @@ namespace {
          auto* mt = wrap_widget(out, result);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
       }
-      luastackchange_t data(lua_State* L) {
+      luastackchange_t layers(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.canvas_layer)
+         if (!self.widget)
             return 0;
-         assert(self.canvas_layer->isLayer());
-         auto* layer = (CanvasWidgetLayer*) self.canvas_layer;
-         //
-         CanvasWidgetLayerData* result = nullptr;
-         {
-            auto* task    = new tasks::s2m::ui_read_lambda();
-            task->handler = [layer, &result]() {
-               result = layer->data();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         if (!result)
-            return 0;
-         if (auto* res_layer = qobject_cast<CanvasWidgetLayerDataLuaManagedResource*>(result)) {
-            //
-            // If the layer-data type is CanvasWidgetLayerDataLuaManagedResource, then the "canvas layer 
-            // data" object should be invisible to the script; as far as the script is concerned, the 
-            // layer data is the wrapped Lua-managed resource and not the CWLDLMR wrapping it.
-            //
-            LuaManagedResourceHandle handle = res_layer->resource();
-            if (!handle)
-               return 0;
-            switch (handle->resource_type()) {
-               using t = editor_script::lua_managed_resource_type;
-               case t::dds:
-                  return wrappers::resource::dds::wrap_and_push(L, *handle);
-               case t::raster:
-                  return wrappers::resource::raster::wrap_and_push(L, *handle);
-            }
-            return 0;
-         }
-         return 0;
+         wrapper out = self;
+         out.parts[0].signature = wrapper_part_types::ui_canvas_layers;
+         out.is_collection = true;
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::layer_collection_key);
       }
       luastackchange_t opacity(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -223,50 +265,6 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
-      luastackchange_t data(lua_State* L) {
-         auto&    self = get_wrapper_for_thiscall<cls>(L);
-         QVariant value;
-         if (auto* wrap = wrapper_from_stack<wrappers::resource::dds>(L, 2)) {
-            if (wrap->managed_resource)
-               value = QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
-         } else if (auto* wrap = wrapper_from_stack<wrappers::resource::raster>(L, 2)) {
-            if (wrap->managed_resource)
-               value = QVariant::fromValue<LuaManagedResourceHandle>(wrap->managed_resource);
-         } else {
-            //
-            // Handling for any new layer data types goes here
-            //
-            if (!lua_isnoneornil(L, 2)) {
-               luaL_argerror(L, 2, "dds_resource, raster, or nil expected");
-            }
-         }
-         if (!self.canvas_layer)
-            return 0;
-         assert(self.canvas_layer->isLayer());
-         auto* layer = (CanvasWidgetLayer*)self.canvas_layer;
-         //
-         auto* task    = new tasks::s2m::lambda(false);
-         task->handler = [layer, value]() {
-            if (!value.isValid()) {
-               layer->setData(nullptr);
-               return;
-            }
-            if (value.userType() == qMetaTypeId<LuaManagedResourceHandle>()) {
-               auto* resource = LuaManagedResourceHandle::extract_from_variant(value);
-               assert(resource);
-               auto* data = new CanvasWidgetLayerDataLuaManagedResource;
-               DovahKitScriptVMCore::get().set_up_new_canvas_layer_data(data);
-               data->setResource(resource);
-               layer->setData(data);
-               return;
-            }
-            //
-            // Handling for any new layer data types goes here
-            //
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         return 0;
-      }
       luastackchange_t opacity(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          auto& vm    = DovahKitScriptVMCore::get();
@@ -348,7 +346,7 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "blend_mode", &_getters::blend_mode },
       { "canvas",     &_getters::canvas },
-      { "data",       &_getters::data },
+      { "layers",     &_getters::layers },
       { "opacity",    &_getters::opacity },
       { "x",          &_getters::x },
       { "y",          &_getters::y },
@@ -356,8 +354,7 @@ namespace editor_script::wrappers::ui {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "blend_mode", &_setters::blend_mode },
-      { "data",       &_setters::data },
-      { "opacity",    &_setters::opacity },
+      { "opacity",    &_getters::opacity },
       { "x",          &_setters::x },
       { "y",          &_setters::y },
       { "visible",    &_setters::visible },
