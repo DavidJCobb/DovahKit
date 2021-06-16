@@ -114,6 +114,29 @@ namespace {
          iw.canvas_layer = layer;
          return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer::metatable_key);
       }
+      luastackchange_t append_layer_group(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         CanvasWidgetLayerGroup* layer = nullptr;
+         {
+            auto* widget  = (wrapped_type*) self.widget;
+            auto* task    = new tasks::s2m::lambda(true);
+            task->handler = [widget, &layer]() {
+               layer = widget->createLayerGroup();
+               layer->setVisible(true);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!layer)
+            return 0;
+         //
+         wrapper iw;
+         iw.type = wrapper_type::ui_canvas_layer;
+         iw.canvas_layer = layer;
+         return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer_group::metatable_key);
+      }
    }
    namespace _getters {
       luastackchange_t height(lua_State* L) {
@@ -197,7 +220,8 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "append_layer", &_methods::append_layer },
+      { "append_layer",       &_methods::append_layer },
+      { "append_layer_group", &_methods::append_layer_group },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "height", &_getters::height },

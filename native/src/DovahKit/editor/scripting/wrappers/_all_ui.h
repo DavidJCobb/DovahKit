@@ -2,6 +2,7 @@
 #include "ui/button.h"
 #include "ui/canvas.h"
 #include "ui/canvas/layer.h"
+#include "ui/canvas/layer_group.h"
 #include "ui/checkbox.h"
 #include "ui/dropdown.h"
 #include "ui/dropdown/item.h"

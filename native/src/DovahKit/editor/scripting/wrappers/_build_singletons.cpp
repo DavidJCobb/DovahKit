@@ -14,6 +14,7 @@ namespace editor_script {
       //
       ui::button::setup(L);
       ui::canvas::setup(L);
+         ui::canvas_layer_group::setup(L);
       ui::checkbox::setup(L);
       ui::dropdown::setup(L);
          ui::dropdown_item::setup(L);

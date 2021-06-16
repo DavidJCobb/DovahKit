@@ -206,7 +206,7 @@ namespace {
             bool found = false;
             for (auto& pair : _modes_to_strings) {
                if (_stricmp(name, pair.second) == 0) {
-                  lua_pushstring(L, pair.second);
+                  value = pair.first;
                   found = true;
                   break;
                }

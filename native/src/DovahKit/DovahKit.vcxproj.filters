@@ -957,6 +957,9 @@
     <ClCompile Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaManagedResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\canvas\layer_group.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1929,6 +1932,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\ui\canvas\layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\canvas\layer_group.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

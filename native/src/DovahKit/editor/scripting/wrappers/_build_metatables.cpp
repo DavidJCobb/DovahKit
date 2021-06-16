@@ -47,6 +47,7 @@ namespace editor_script {
             define_wrapper_metatable<ui::button>(L);
             define_wrapper_metatable<ui::canvas>(L);
                define_wrapper_metatable<ui::canvas_layer>(L);
+               define_wrapper_metatable<ui::canvas_layer_group>(L);
             define_wrapper_metatable<ui::checkbox>(L);
             define_wrapper_metatable<ui::dropdown>(L);
                define_wrapper_metatable<ui::dropdown_item>(L);

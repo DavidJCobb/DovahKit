@@ -290,6 +290,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\button.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\canvas.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\canvas\layer.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\canvas\layer_group.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\checkbox.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\dropdown\item.cpp" />
@@ -656,6 +657,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\button.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\canvas.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\canvas\layer.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\canvas\layer_group.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\checkbox.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\dropdown\item.h" />

@@ -113,6 +113,54 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
+      luastackchange_t append_layer(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.canvas_layer)
+            return 0;
+         assert(self.canvas_layer->isLayerGroup());
+         CanvasWidgetLayer* layer = nullptr;
+         {
+            auto* group   = (CanvasWidgetLayerGroup*) self.canvas_layer;
+            auto* task    = new tasks::s2m::lambda(true);
+            task->handler = [group, &layer]() {
+               layer = group->createLayer();
+               layer->setVisible(true);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!layer)
+            return 0;
+         //
+         wrapper iw;
+         iw.type = wrapper_type::ui_canvas_layer;
+         iw.canvas_layer = layer;
+         return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer::metatable_key);
+      }
+      luastackchange_t append_layer_group(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.canvas_layer)
+            return 0;
+         assert(self.canvas_layer->isLayerGroup());
+         CanvasWidgetLayerGroup* layer = nullptr;
+         {
+            auto* group   = (CanvasWidgetLayerGroup*) self.canvas_layer;
+            auto* task    = new tasks::s2m::lambda(true);
+            task->handler = [group, &layer]() {
+               layer = group->createLayerGroup();
+               layer->setVisible(true);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         if (!layer)
+            return 0;
+         //
+         wrapper iw;
+         iw.type = wrapper_type::ui_canvas_layer;
+         iw.canvas_layer = layer;
+         return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer_group::metatable_key);
+      }
    }
    namespace _getters {
       luastackchange_t blend_mode(lua_State* L) {
@@ -141,7 +189,6 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_layer)
             return 0;
-         assert(self.canvas_layer->isLayer());
          CanvasWidget* result = nullptr;
          {
             auto* layer   = self.canvas_layer;
@@ -248,7 +295,7 @@ namespace {
             bool found = false;
             for (auto& pair : _modes_to_strings) {
                if (_stricmp(name, pair.second) == 0) {
-                  lua_pushstring(L, pair.second);
+                  value = pair.first;
                   found = true;
                   break;
                }
@@ -342,6 +389,8 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "append_layer",       &_methods::append_layer },
+      { "append_layer_group", &_methods::append_layer_group },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "blend_mode", &_getters::blend_mode },
@@ -359,4 +408,17 @@ namespace editor_script::wrappers::ui {
       { "y",          &_setters::y },
       { "visible",    &_setters::visible },
    };
+
+   /*static*/ void cls::setup(lua_State* L) {
+      //
+      // Set up collection:
+      //
+      editor_script::define_collection_metatable(L, {
+         .registry_key          = cls::layer_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::layers::get_collection_length,
+         .lookup_item_by_index   = &_collections::layers::lookup_item_by_index,
+      });
+   }
 }
