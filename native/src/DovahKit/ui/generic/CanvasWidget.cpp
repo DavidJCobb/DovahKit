@@ -192,6 +192,7 @@ void CanvasWidgetEntity::setPosition(const QPoint& to) noexcept {
       QRegion after = this->region();
       c->update(prior.united(after));
       */
+      this->_pos = to;
       c->update();
    } else {
       this->_pos = to;
