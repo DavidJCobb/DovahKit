@@ -26,6 +26,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_layer)
             return 0;
+         assert(self.canvas_layer->isLayer());
          CanvasWidget* result = nullptr;
          {
             auto* layer   = self.canvas_layer;
@@ -46,9 +47,11 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_layer)
             return 0;
+         assert(self.canvas_layer->isLayer());
+         auto* layer = (CanvasWidgetLayer*) self.canvas_layer;
+         //
          CanvasWidgetLayerData* result = nullptr;
          {
-            auto* layer   = self.canvas_layer;
             auto* task    = new tasks::s2m::ui_read_lambda();
             task->handler = [layer, &result]() {
                result = layer->data();
@@ -150,7 +153,9 @@ namespace {
          }
          if (!self.canvas_layer)
             return 0;
-         auto* layer   = self.canvas_layer;
+         assert(self.canvas_layer->isLayer());
+         auto* layer = (CanvasWidgetLayer*)self.canvas_layer;
+         //
          auto* task    = new tasks::s2m::lambda(false);
          task->handler = [layer, value]() {
             if (!value.isValid()) {

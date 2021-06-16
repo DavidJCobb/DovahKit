@@ -8,7 +8,7 @@
 #include "classes.h"
 #include "util.h"
 
-class CanvasWidgetLayer;
+class CanvasWidgetEntity;
 class LuaScriptableCanvasWidgetLayerData;
 class ObservableStandardItemModelObserver;
 class QButtonGroup;
@@ -134,7 +134,7 @@ namespace editor_script {
          //
          LuaManagedResource* managed_resource = nullptr;
          //
-         CanvasWidgetLayer* canvas_layer = nullptr;
+         CanvasWidgetEntity* canvas_layer = nullptr;
          //
          LuaScriptableCanvasWidgetLayerData* canvas_layer_data = nullptr;
          

@@ -11,17 +11,21 @@ namespace {
    void _max_random_pixel(CanvasWidget* canvas, int which_color) {
       std::array<int, 3> colors = { 0, 0, 0 };
       //
-      auto* layer = canvas->layers()[which_color];
+      auto* child = canvas->layers()[which_color];
+      assert(!child->isLayerGroup());
+      auto* layer = (CanvasWidgetLayer*)child;
+      //
       auto* data  = qobject_cast<CanvasWidgetLayerDataImage*>(layer->data());
       assert(data);
-      auto& image = data->image();
-      auto  size  = image.size();
+      auto image = data->image();
+      auto size  = image.size();
       int x = rand() % size.width();
       int y = rand() % size.height();
       //
       colors[which_color] = 255;
       //
       image.setPixel({ x, y }, qRgba(colors[0], colors[1], colors[2], 255));
+      data->setImage(image);
    }
 
    void _dialog_1(QWidget* parent) {
@@ -46,11 +50,13 @@ namespace {
          canvas->createLayer(); // red
          canvas->createLayer(); // green
          canvas->createLayer(); // blue
-         for (auto* layer : canvas->layers()) {
+         for (auto* child : canvas->layers()) {
+            assert(!child->isLayerGroup());
+            auto* layer = (CanvasWidgetLayer*)child;
             auto* data  = new CanvasWidgetLayerDataImage(dialog);
-            auto& image = data->image();
-            image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
+            auto  image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
             image.fill(qRgba(0, 0, 0, 0)); // the constructor doesn't actually initialize or clear any image data
+            data->setImage(image);
             layer->setData(data);
          }
       }
@@ -123,7 +129,7 @@ namespace {
       //
       {
          auto* logo  = canvas->createLayer();
-         auto* color = canvas->createLayer();
+         auto* color = canvas->createLayerGroup();
          logo->setVisible(true);
          color->setVisible(true);
          logo->setObjectName("logo");
@@ -131,8 +137,7 @@ namespace {
          //
          {
             auto* data  = new CanvasWidgetLayerDataImage(dialog);
-            auto& image = data->image();
-            image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
+            auto  image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
             image.fill(qRgba(0, 0, 0, 0)); // the constructor doesn't actually initialize or clear any image data
             //
             QPainter painter(&image);
@@ -140,6 +145,7 @@ namespace {
             painter.setBrush(brush);
             painter.drawEllipse(image.rect());
             //
+            data->setImage(image);
             logo->setData(data);
          }
          {
@@ -154,23 +160,22 @@ namespace {
             //
             {
                auto* data  = new CanvasWidgetLayerDataImage(dialog);
-               auto& image = data->image();
-               image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
+               auto  image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
                image.fill(qRgba(0, 0, 0, 0)); // the constructor doesn't actually initialize or clear any image data
                //
                QPainter painter(&image);
                QRect rect = image.rect();
                auto  y    = rect.height() / 2;
+               rect.setTop(y / 2);
                rect.setHeight(y);
-               rect.setTop(rect.top() + y / 2);
                painter.fillRect(rect, QColor(255, 255, 255, 255));
                //
+               data->setImage(image);
                mask->setData(data);
             }
             {
                auto* data  = new CanvasWidgetLayerDataImage(dialog);
-               auto& image = data->image();
-               image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
+               auto  image = QImage(canvas->imageSize(), QImage::Format_ARGB32);
                image.fill(qRgba(0, 0, 0, 0)); // the constructor doesn't actually initialize or clear any image data
                //
                QPainter painter(&image);
@@ -188,9 +193,76 @@ namespace {
                });
                painter.fillRect(image.rect(), gradient);
                //
+               data->setImage(image);
                grad->setData(data);
             }
          }
+      }
+      {
+         auto* button = new QPushButton("Move Mask to -50% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("mask");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(canvas->imageWidth() / -2);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Mask to 0% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("mask");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(0);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Mask to 50% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("mask");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(canvas->imageWidth() / 2);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Grad to -50% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("grad");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(canvas->imageWidth() / -2);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Grad to 0% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("grad");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(0);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Grad to 50% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("grad");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(canvas->imageWidth() / 2);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
       }
       //
       dialog->show();

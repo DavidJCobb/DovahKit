@@ -4,8 +4,10 @@
 #include "../../helpers/qt/traversal.h"
 
 class CanvasWidget;
+class CanvasWidgetEntity;
 class CanvasWidgetLayer;
 class CanvasWidgetLayerData;
+class CanvasWidgetLayerGroup;
 
 //
 // A widget which displays CanvasWidgetLayer objects in its frame. The widget relies 
@@ -31,8 +33,9 @@ class CanvasWidget : public QWidget {
       void addLayer(CanvasWidgetLayer* layer);
 
       CanvasWidgetLayer* createLayer(CanvasWidgetLayerData* data = nullptr);
+      CanvasWidgetLayerGroup* createLayerGroup();
 
-      QList<CanvasWidgetLayer*> layers() const noexcept;
+      QList<CanvasWidgetEntity*> layers() const noexcept;
 
       inline QSize imageSize() const noexcept { return this->_size; }
       inline int imageWidth() const noexcept { return this->size().width(); }
@@ -42,8 +45,8 @@ class CanvasWidget : public QWidget {
       void setImageWidth(int w) noexcept;
       void setImageHeight(int h) noexcept;
 
-      void moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
-      void moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
+      void moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
+      void moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
 
       // Traverses all child and descendant layers, returning a list of those and any data 
       // objects that those may have. Useful if, say, you plan on using this widget in Lua 
@@ -52,34 +55,30 @@ class CanvasWidget : public QWidget {
       QList<QObject*> allAssociatedObjects(bool includeWidgets = true) const noexcept;
 };
 
-class CanvasWidgetLayer : public QObject {
+// Base class for layers and groups
+class CanvasWidgetEntity : public QObject {
    Q_OBJECT;
    friend class CanvasWidget;
    public:
       using CompositionMode = QPainter::CompositionMode;
 
    protected:
-      CanvasWidgetLayerData* _data = nullptr;
+      const bool _isLayerGroup = false;
       bool   _visible = false;
       qreal  _opacity = 1.0;
       QPoint _pos;
       CompositionMode _blendMode = CompositionMode::CompositionMode_SourceOver;
 
-      void _paint(QPainter&, QPoint p = QPoint(0, 0));
-
    public:
-      using QObject::QObject; // inherit constructor
-      ~CanvasWidgetLayer();
+      CanvasWidgetEntity(bool g, QObject* parent = nullptr) : QObject(parent), _isLayerGroup(g) {}
 
+      inline bool isLayer() const noexcept { return !this->_isLayerGroup; }
+      inline bool isLayerGroup() const noexcept { return this->_isLayerGroup; }
+      
       CanvasWidget* canvas() const noexcept;
-      inline CanvasWidgetLayer* parentLayer() const noexcept { return qobject_cast<CanvasWidgetLayer*>(this->parent()); }
-
-      CanvasWidgetLayer* createLayer(CanvasWidgetLayerData* data = nullptr);
-      QList<CanvasWidgetLayer*> childLayers() const noexcept;
-
-      inline CanvasWidgetLayerData* data() const noexcept { return this->_data; }
-      void setData(CanvasWidgetLayerData*);
-
+      inline CanvasWidgetEntity* parentLayer() const noexcept { return qobject_cast<CanvasWidgetEntity*>(this->parent()); }
+      QPoint effectivePosition() const noexcept;
+      
       inline QPoint position() const noexcept { return this->_pos; }
       inline int x() const noexcept { return this->position().x(); }
       inline int y() const noexcept { return this->position().y(); }
@@ -89,13 +88,6 @@ class CanvasWidgetLayer : public QObject {
       inline qreal opacity() const noexcept { return this->_opacity; }
       void setOpacity(qreal) noexcept;
 
-      QPoint effectivePosition() const noexcept;
-
-      // Returns the region occupied by this layer and all of its descendants, recursing as needed. 
-      // Note that this function doesn't take the layer's ancestor-layers (if any) into account; if 
-      // called on a nested layer, it will not apply the ancestor-layers' position offsets.
-      QRegion region() const noexcept;
-
       inline bool visible() const noexcept { return this->_visible; }
       void setVisible(bool) noexcept;
 
@@ -103,11 +95,55 @@ class CanvasWidgetLayer : public QObject {
       void setCompositionMode(CompositionMode) noexcept;
 
       void update();
+};
 
-      void moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
-      void moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target);
+class CanvasWidgetLayer : public CanvasWidgetEntity {
+   Q_OBJECT;
+   friend class CanvasWidget;
+   protected:
+      CanvasWidgetLayerData* _data = nullptr;
 
-      QImage render(QSize bounds);
+   public:
+      CanvasWidgetLayer(QObject* parent = nullptr) : CanvasWidgetEntity(false, parent) {}
+      ~CanvasWidgetLayer();
+
+      inline CanvasWidgetLayerData* data() const noexcept { return this->_data; }
+      void setData(CanvasWidgetLayerData*);
+
+      // Returns the region occupied by this layer and all of its descendants, recursing as needed. 
+      // Note that this function doesn't take the layer's ancestor-layers (if any) into account; if 
+      // called on a nested layer, it will not apply the ancestor-layers' position offsets.
+      QRegion region() const noexcept;
+
+      QImage render();
+};
+
+class CanvasWidgetLayerGroup : public CanvasWidgetEntity {
+   Q_OBJECT;
+   friend class CanvasWidget;
+   public:
+      CanvasWidgetLayerGroup(QObject* parent = nullptr) : CanvasWidgetEntity(true, parent) {}
+
+      CanvasWidgetLayer* createLayer(CanvasWidgetLayerData* data = nullptr);
+      CanvasWidgetLayerGroup* createLayerGroup();
+      QList<CanvasWidgetEntity*> childLayers() const noexcept;
+
+      // Returns the region occupied by this layer and all of its descendants, recursing as needed. 
+      // Note that this function doesn't take the layer's ancestor-layers (if any) into account; if 
+      // called on a nested layer, it will not apply the ancestor-layers' position offsets.
+      QRegion region() const noexcept;
+
+      void moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
+      void moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
+
+      // For a top-level layer, (offset) should be the layer's position. For recursive calls to 
+      // render nested layers, (offset) should be the layer's effective position (that is, its own 
+      // position plus the positions of every ancestor layer).
+      //
+      // Of course, if you want to just render a single layer in isolation, you could just pass a 
+      // zero offset, with layer->region().boundingRect().size() for the canvas bounds, though that 
+      // would shear off any descendant layers that have negative offsets relative to this layer.
+      QImage render(QSize canvas_bounds, QPoint offset);
 };
 
 class CanvasWidgetLayerData : public QObject {
@@ -147,7 +183,8 @@ class CanvasWidgetLayerDataImage : public CanvasWidgetLayerData {
    public:
       using CanvasWidgetLayerData::CanvasWidgetLayerData; // inherit constructor
 
-      QImage& image();
+      QImage image();
+      void setImage(QImage);
 
       virtual QRect rect() const noexcept override;
 };

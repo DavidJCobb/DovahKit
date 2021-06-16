@@ -51,7 +51,7 @@ namespace {
          if (i < 0)
             return 0;
          //
-         layer_t* layer = nullptr;
+         CanvasWidgetEntity* layer = nullptr;
          {
             auto* task    = new tasks::s2m::lambda(true);
             auto* widget  = (widget_t*)self.widget;
@@ -67,6 +67,10 @@ namespace {
          if (!layer)
             return 0;
          //
+         if (layer->isLayerGroup()) {
+            // TODO: IMPLEMENT ME
+            return 0;
+         }
          wrapper iw;
          iw.type = wrapper_type::ui_canvas_layer;
          iw.canvas_layer = layer;

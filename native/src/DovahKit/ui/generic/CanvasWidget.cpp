@@ -44,26 +44,28 @@ CanvasWidget::~CanvasWidget() {
 
 void CanvasWidget::paintEvent(QPaintEvent* event) {
    auto er = event->rect();
-   //er = er.intersected(QRect(QPoint(0, 0), this->_size));
-   er = QRect(QPoint(0, 0), this->_size); // *sigh* 
+   er = er.intersected(QRect(QPoint(0, 0), this->_size));
    //
    QPainter painter(this);
    painter.setClipRect(er);
    {
       auto prior = QImage(this->_size, INTERMEDIATE_IMAGE_FORMAT);
       prior.fill(Qt::GlobalColor::transparent);
-      for (auto* layer : this->layers()) {
-         if (!layer->visible())
+      for (auto* child : this->layers()) {
+         if (!child->visible())
             continue;
-         QPoint pos  = layer->position();
-         QSize  size = this->_size;
-         size.setWidth(size.width() - pos.x());
-         size.setHeight(size.height() - pos.y());
-         //
-         QImage after = layer->render(size);
-         prior = _drawAtop(after, prior, pos, layer->_blendMode);
+         if (child->isLayerGroup()) {
+            auto* group = (CanvasWidgetLayerGroup*)child;
+            //
+            QImage after = group->render(this->_size, group->position());
+            prior = _drawAtop(after, prior, { 0, 0 }, group->compositionMode());
+         } else {
+            auto* layer = (CanvasWidgetLayer*)child;
+            //
+            QImage after = layer->render();
+            prior = _drawAtop(after, prior, layer->position(), layer->compositionMode());
+         }
       }
-      painter.setCompositionMode(QPainter::CompositionMode_SourceOver); // just in case, I guess
       painter.drawImage(prior.rect(), prior);
    }
    painter.setClipRect(QRect(), Qt::NoClip);
@@ -82,12 +84,16 @@ CanvasWidgetLayer* CanvasWidget::createLayer(CanvasWidgetLayerData* data) {
    layer->setData(data);
    return layer;
 }
-QList<CanvasWidgetLayer*> CanvasWidget::layers() const noexcept {
-   QList<CanvasWidgetLayer*> out;
+CanvasWidgetLayerGroup* CanvasWidget::createLayerGroup() {
+   auto* layer = new CanvasWidgetLayerGroup(this);
+   return layer;
+}
+QList<CanvasWidgetEntity*> CanvasWidget::layers() const noexcept {
+   QList<CanvasWidgetEntity*> out;
    const auto& list = this->children();
    out.reserve(list.size());
    for (auto* child : list) {
-      if (auto* l = qobject_cast<CanvasWidgetLayer*>(child))
+      if (auto* l = qobject_cast<CanvasWidgetEntity*>(child))
          out.push_back(l);
    }
    return out;
@@ -114,10 +120,10 @@ void CanvasWidget::setImageHeight(int h) noexcept {
    this->update();
 }
 
-void CanvasWidget::moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
+void CanvasWidget::moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_before(this, subject, target);
 }
-void CanvasWidget::moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
+void CanvasWidget::moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_after(this, subject, target);
 }
 
@@ -154,12 +160,8 @@ QList<QObject*> CanvasWidget::allAssociatedObjects(bool includeWidgets) const no
 }
 #pragma endregion
 
-#pragma region CanvasWidgetLayer
-CanvasWidgetLayer::~CanvasWidgetLayer() {
-   this->setData(nullptr);
-}
-
-CanvasWidget* CanvasWidgetLayer::canvas() const noexcept {
+#pragma region CanvasWidgetEntity
+CanvasWidget* CanvasWidgetEntity::canvas() const noexcept {
    QObject* o = this->parent();
    do {
       if (auto* c = qobject_cast<CanvasWidget*>(o))
@@ -167,70 +169,69 @@ CanvasWidget* CanvasWidgetLayer::canvas() const noexcept {
    } while (o = o->parent());
    return nullptr;
 }
-
-QList<CanvasWidgetLayer*> CanvasWidgetLayer::childLayers() const noexcept {
-   QList<CanvasWidgetLayer*> list;
-   for (auto* child : this->children())
-      if (auto* layer = qobject_cast<CanvasWidgetLayer*>(child))
-         list.push_back(layer);
-   return list;
-}
-CanvasWidgetLayer* CanvasWidgetLayer::createLayer(CanvasWidgetLayerData* data) {
-   auto* layer = new CanvasWidgetLayer(this);
-   layer->setData(data);
-   return layer;
-}
-
-void CanvasWidgetLayer::_paint(QPainter& painter, QPoint p) {
-   auto pos = this->position();
-   painter.translate(pos);
-   //
-   auto children = this->childLayers();
-   if (children.isEmpty()) {
-      painter.setCompositionMode(this->_blendMode);
-      if (auto* d = this->_data) {
-         d->paint(painter, QPoint(0, 0));
-      }
-   } else {
-      int w = 0;
-      int h = 0;
-      if (painter.hasClipping()) {
-         auto rect = painter.clipBoundingRect();
-         w = rect.width();
-         h = rect.height();
-      } else {
-         auto* device = painter.device();
-         w = device->width();
-         h = device->height();
-      }
-      if (w > 0 && h > 0) {
-         QPixmap pixmap = QPixmap(w, h);
-         pixmap.fill(Qt::GlobalColor::transparent);
-         //
-         QPainter pp = QPainter(&pixmap);
-         pp.setWorldTransform(painter.worldTransform());
-         if (auto* d = this->_data) {
-            d->paint(pp, QPoint(0, 0));
-         }
-         for (auto* child : children) {
-            child->_paint(pp);
-         }
- //        static_assert(false, "The ''multiply'' blend mode is broken by design! It ignores alpha on the destination layer and colorizes even transparent areas. We need to do this manually.");
-            // Possible workaround: two paint steps: <https://forum.qt.io/post/302457> (this won't work exactly because it assumes a solid-color mask...)
-         painter.setCompositionMode(this->_blendMode);
-         if (this->_blendMode == QPainter::CompositionMode_Multiply) {
-            QPixmap dest_copy = QPixmap(w, h);
-
-
-
-            painter.drawPixmap(QRect(0, 0, w, h), pixmap);
-         } else {
-            painter.drawPixmap(QRect(0, 0, w, h), pixmap);
-         }
-      }
+QPoint CanvasWidgetEntity::effectivePosition() const noexcept {
+   QPoint p = this->_pos;
+   if (auto* container = this->parentLayer()) {
+      p += container->effectivePosition();
    }
+   return p;
+}
+      
+void CanvasWidgetEntity::setPosition(const QPoint& to) noexcept {
+   if (this->position() == to)
+      return;
    //
-   painter.translate(-pos);
+   auto* c = this->canvas();
+   if (c) {
+      /*
+      QRegion prior = this->region();
+      this->_pos = to;
+      //
+      // Repaint the rects this layer used to occupy, and the rects it now occupies:
+      //
+      QRegion after = this->region();
+      c->update(prior.united(after));
+      */
+      c->update();
+   } else {
+      this->_pos = to;
+   }
+}
+void CanvasWidgetEntity::setPosition(int x, int y) noexcept {
+   this->setPosition({ x, y });
+}
+
+void CanvasWidgetEntity::setOpacity(qreal v) noexcept {
+   v = std::clamp(v, 0.0, 1.0);
+   if (this->_opacity == v)
+      return;
+   this->_opacity = v;
+   this->update();
+}
+
+void CanvasWidgetEntity::setVisible(bool v) noexcept {
+   if (this->_visible == v)
+      return;
+   this->_visible = v;
+   this->update();
+}
+
+void CanvasWidgetEntity::setCompositionMode(CompositionMode c) noexcept {
+   if (this->_blendMode == c)
+      return;
+   this->_blendMode = c;
+   this->update();
+}
+
+void CanvasWidgetEntity::update() {
+   if (auto* c = this->canvas())
+      c->update();
+}
+#pragma endregion
+
+#pragma region CanvasWidgetLayer
+CanvasWidgetLayer::~CanvasWidgetLayer() {
+   this->setData(nullptr);
 }
 
 void CanvasWidgetLayer::setData(CanvasWidgetLayerData* d) {
@@ -267,43 +268,6 @@ void CanvasWidgetLayer::setData(CanvasWidgetLayerData* d) {
    }
 }
 
-void CanvasWidgetLayer::setPosition(const QPoint& to) noexcept {
-   if (this->position() == to)
-      return;
-   //
-   auto* c = this->canvas();
-   if (c) {
-      QRegion prior = this->region();
-      this->_pos = to;
-      //
-      // Repaint the rects this layer used to occupy, and the rects it now occupies:
-      //
-      QRegion after = this->region();
-      c->update(prior.united(after));
-   } else {
-      this->_pos = to;
-   }
-}
-void CanvasWidgetLayer::setPosition(int x, int y) noexcept {
-   this->setPosition({ x, y });
-}
-
-void CanvasWidgetLayer::setOpacity(qreal v) noexcept {
-   v = std::clamp(v, 0.0, 1.0);
-   if (this->_opacity == v)
-      return;
-   this->_opacity = v;
-   this->update();
-}
-
-QPoint CanvasWidgetLayer::effectivePosition() const noexcept {
-   QPoint p = this->_pos;
-   if (auto* container = this->parentLayer()) {
-      p += container->effectivePosition();
-   }
-   return p;
-}
-
 QRegion CanvasWidgetLayer::region() const noexcept {
    QRegion base;
    if (this->_data)
@@ -317,63 +281,58 @@ QRegion CanvasWidgetLayer::region() const noexcept {
    return base;
 }
 
-void CanvasWidgetLayer::setVisible(bool v) noexcept {
-   if (this->_visible == v)
-      return;
-   this->_visible = v;
-   this->update();
-}
-
-void CanvasWidgetLayer::setCompositionMode(CompositionMode c) noexcept {
-   if (this->_blendMode == c)
-      return;
-   this->_blendMode = c;
-   this->update();
-}
-
-void CanvasWidgetLayer::update() {
-   CanvasWidget* c = nullptr;
+QImage CanvasWidgetLayer::render() {
+   auto* data = this->data();
+   if (!data)
+      return QImage();
+   auto  size = data->rect().size();
+   auto  out  = QImage(size, INTERMEDIATE_IMAGE_FORMAT);
    {
-      //
-      // Updates need to propagate up. The highest ancestor with a non-normal blend mode 
-      // needs to be the one that updates.
-      //
-      static constexpr auto normal_blend_mode = CompositionMode::CompositionMode_SourceOver;
-      //
-      CanvasWidgetLayer* highestBlend = this;
-      QObject* o = this->parent();
-      do {
-         if (auto* l = qobject_cast<CanvasWidgetLayer*>(o)) {
-            if (l->_blendMode != normal_blend_mode)
-               highestBlend = l;
-         } else if (c = qobject_cast<CanvasWidget*>(o)) {
-            break;
-         }
-      } while (o = o->parent());
-      if (!c)
-         return;
-      if (highestBlend != this) {
-         highestBlend->update();
-         return;
-      }
+      QPainter painter = QPainter(&out);
+      out.fill(Qt::GlobalColor::transparent);
+      data->paint(painter, QPoint(0, 0));
    }
-   auto r = this->region();
-   if (r.isEmpty())
-      return;
-   c->update(r);
+   return out;
+}
+#pragma endregion
+
+#pragma region CanvasWidgetLayerGroup
+QList<CanvasWidgetEntity*> CanvasWidgetLayerGroup::childLayers() const noexcept {
+   QList<CanvasWidgetEntity*> list;
+   for (auto* child : this->children())
+      if (auto* layer = qobject_cast<CanvasWidgetEntity*>(child))
+         list.push_back(layer);
+   return list;
+}
+CanvasWidgetLayer* CanvasWidgetLayerGroup::createLayer(CanvasWidgetLayerData* data) {
+   auto* layer = new CanvasWidgetLayer(this);
+   layer->setData(data);
+   return layer;
+}
+CanvasWidgetLayerGroup* CanvasWidgetLayerGroup::createLayerGroup() {
+   auto* layer = new CanvasWidgetLayerGroup(this);
+   return layer;
 }
 
-void CanvasWidgetLayer::moveLayerBefore(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
+QRegion CanvasWidgetLayerGroup::region() const noexcept {
+   QRegion base;
+   for (auto* child : this->children()) {
+      auto* layer = qobject_cast<CanvasWidgetLayer*>(child);
+      if (!layer)
+         continue;
+      base = base.united(layer->region());
+   }
+   return base;
+}
+
+void CanvasWidgetLayerGroup::moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_before(this, subject, target);
 }
-void CanvasWidgetLayer::moveLayerAfter(CanvasWidgetLayer* subject, CanvasWidgetLayer* target) {
+void CanvasWidgetLayerGroup::moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target) {
    cobb::qt::move_object_after(this, subject, target);
 }
 
-QImage CanvasWidgetLayer::render(QSize bounds) {
-   if (!bounds.isValid()) {
-      bounds = this->region().boundingRect().size();
-   }
+QImage CanvasWidgetLayerGroup::render(QSize bounds, QPoint offset) {
    int w = bounds.width();
    int h = bounds.height();
    if (w <= 0 || h <= 0)
@@ -382,23 +341,23 @@ QImage CanvasWidgetLayer::render(QSize bounds) {
    {
       QPainter painter = QPainter(&out);
       out.fill(Qt::GlobalColor::transparent);
-      //
-      if (auto* d = this->_data)
-         d->paint(painter, QPoint(0, 0));
    }
    //
    for (auto* child : this->childLayers()) {
       if (!child->visible())
          continue;
-      auto c_offset = child->position();
-      auto c_bounds = bounds;
-      c_bounds.setWidth(c_bounds.width() - c_offset.x());
-      c_bounds.setHeight(c_bounds.height() - c_offset.y());
-      if (!c_bounds.isValid())
-         continue;
-      //
-      QImage source = child->render(c_bounds);
-      out = _drawAtop(source, out, c_offset, child->_blendMode);
+      if (child->isLayerGroup()) {
+         auto* group = (CanvasWidgetLayerGroup*)child;
+         //
+         QPoint c_offset = child->position() + offset;
+         QImage source   = group->render(bounds, c_offset);
+         out = _drawAtop(source, out, { 0, 0 }, child->compositionMode());
+      } else {
+         auto* layer = (CanvasWidgetLayer*)child;
+         //
+         QImage source = layer->render();
+         out = _drawAtop(source, out, layer->position(), layer->compositionMode());
+      }
    }
    return out;
 }
@@ -427,6 +386,7 @@ void CanvasWidgetLayerDataImage::paint(QPainter& painter, const QPoint& pos) noe
       pm = QPixmap();
    if (pm.isNull()) {
       pm = QPixmap::fromImage(im);
+      this->content.cache_key = im.cacheKey();
    }
    painter.drawPixmap(pos, pm);
 }
@@ -437,7 +397,11 @@ QRect CanvasWidgetLayerDataImage::rect() const noexcept {
    return im.rect();
 }
 
-QImage& CanvasWidgetLayerDataImage::image() {
+QImage CanvasWidgetLayerDataImage::image() {
    return this->content.image;
+}
+void CanvasWidgetLayerDataImage::setImage(QImage i) {
+   this->content.image = i;
+   this->update();
 }
 #pragma endregion

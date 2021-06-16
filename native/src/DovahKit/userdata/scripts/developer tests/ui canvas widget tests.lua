@@ -16,6 +16,10 @@ layer.x = 8
 
 window:show()
 
+if not dds then
+   dovah.log_message("DDS missing; did you remember to load any game data?")
+end
+
 --
 -- ISSUES AS OF 6/14/2021:
 --
