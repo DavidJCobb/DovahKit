@@ -81,6 +81,13 @@ void CanvasWidgetLayerDataLuaText::paint(QPainter& painter, const QPoint& pos) n
    } else {
       //
       // We are only constraining on one axis, or not constraining on any axis.
+      // 
+      // QPainter doesn't actually let you constrain the text only on one axis, so we have 
+      // to work around that by setting the unconstrained axis to some absurdly long length. 
+      // However, that in turn means that we need to be careful about text alignment on the 
+      // unconstrained axis; for example, if width is unconstrained and we thus set the X 
+      // axis to something like 9999, then text that's been flagged as right-aligned will 
+      // draw out of bounds.
       //
       if (this->constrain.width() > 0) {
          flags &= ~Qt::AlignVertical_Mask; // strip vertical flags
@@ -119,6 +126,12 @@ QRect CanvasWidgetLayerDataLuaText::rect() const noexcept {
    }
    QFontMetrics metrics(this->font);
    if (w > 0) {
+      //
+      // TODO: This won't be perfectly consistent with QPainter because QPainter actually 
+      // goes out of its way to ensure that each line begins on an integer coordinate, to 
+      // avoid sub-pixel blurs. We should test to see if (test_measure_text), above, will 
+      // work properly.
+      //
       if (!this->wordWrap) {
          int fw = metrics.horizontalAdvance(this->text);
          int fh = metrics.height();
