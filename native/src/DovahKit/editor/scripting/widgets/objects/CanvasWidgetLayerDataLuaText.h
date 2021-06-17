@@ -8,8 +8,10 @@ class CanvasWidgetLayerDataLuaText : public LuaScriptableCanvasWidgetLayerData {
          QSize size;
       } cache;
    public:
+      CanvasWidgetLayerDataLuaText();
+      
       QString text;
-      Qt::Alignment alignment;
+      Qt::Alignment alignment = Qt::AlignLeft | Qt::AlignTop;
       QColor  color;
       QSizeF  constrain;
       QFont   font;

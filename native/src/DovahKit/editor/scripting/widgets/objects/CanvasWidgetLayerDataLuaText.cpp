@@ -3,7 +3,50 @@
 #include <QTextLayout>
 
 namespace {
-   static constexpr int MAX_LINE_COUNT = 5000;
+   static constexpr int ABSURDLY_LARGE_SIZE = 9999;
+   static constexpr int MAX_LINE_COUNT      = 5000;
+}
+
+namespace {
+   // TODO: Test if this works. If we can measure how QPainter would lay out and 
+   // draw text by drawing it to a 1x1px dummy image, then we can use that to 
+   // guarantee a consistent size on our rect calls (though arguably we should 
+   // cache that).
+   QSizeF test_measure_text(CanvasWidgetLayerDataLuaText& data) {
+      int flags = data.alignment;
+      if (data.wordWrap)
+         flags |= Qt::TextWordWrap;
+      //
+      auto constrain = QRectF({ 0, 0 }, data.constrain);
+      if (!constrain.isValid()) {
+         if (constrain.width() <= 0) {
+            constrain.setWidth(ABSURDLY_LARGE_SIZE);
+         }
+         if (constrain.height() <= 0) {
+            constrain.setHeight(ABSURDLY_LARGE_SIZE);
+         }
+      }
+      //
+      QImage   dummy   = QImage(1, 1, QImage::Format::Format_Mono);
+      QPainter painter = QPainter(&dummy);
+      QRectF   bounding;
+      painter.setFont(data.font);
+      painter.setPen(data.color);
+      painter.drawText(constrain, flags, data.text, &bounding);
+      //
+      auto br = bounding.bottomRight();
+      return { br.x(), br.y() };
+   }
+}
+
+CanvasWidgetLayerDataLuaText::CanvasWidgetLayerDataLuaText() {
+   this->font.setPixelSize(12);
+   this->font.setStyleHint(QFont::StyleHint::SansSerif);
+   this->font.setFamilies({
+      "Segoe UI",
+      "Calibri",
+      "Arial"
+   });
 }
 
 void CanvasWidgetLayerDataLuaText::update() {
@@ -14,7 +57,14 @@ void CanvasWidgetLayerDataLuaText::update() {
 void CanvasWidgetLayerDataLuaText::paint(QPainter& painter, const QPoint& pos) noexcept {
    if (this->text.isEmpty())
       return;
-   QRect rect = QRect(0, 0, this->constrain.width(), this->constrain.height());
+   auto rect  = QRectF(0, 0, this->constrain.width(), this->constrain.height());
+   int  flags = this->alignment;
+   if (this->wordWrap) {
+      flags |= Qt::TextWordWrap;
+   }
+   if (!(flags & Qt::AlignVertical_Mask)) { // default to top edge, not baseline
+      flags |= Qt::AlignTop;
+   }
    //
    painter.setFont(this->font);
    painter.setPen(this->color);
@@ -29,19 +79,33 @@ void CanvasWidgetLayerDataLuaText::paint(QPainter& painter, const QPoint& pos) n
          painter.setClipRect(prior);
       }
    } else {
+      //
+      // We are only constraining on one axis, or not constraining on any axis.
+      //
       if (this->constrain.width() > 0) {
-         rect.setHeight(9999);
+         flags &= ~Qt::AlignVertical_Mask; // strip vertical flags
+         flags |=  Qt::AlignTop;
+         rect.setHeight(ABSURDLY_LARGE_SIZE);
       } else if (this->constrain.height() > 0) {
-         rect.setWidth(9999);
+         flags &= ~Qt::AlignHorizontal_Mask; // strip horizontal flags
+         flags |=  Qt::AlignLeft | Qt::AlignAbsolute;
+         rect.setWidth(ABSURDLY_LARGE_SIZE);
       }
       if (rect.isValid()) {
          auto prior = painter.clipBoundingRect();
          auto bound = rect.translated(pos);
          painter.setClipRect(bound);
-         painter.drawText(pos, this->text);
+         painter.drawText(rect, flags, this->text);
          painter.setClipRect(prior);
       } else {
-         painter.drawText(pos, this->text);
+         //
+         // For the drawText function that takes a point, the Y-position is the baseline, not 
+         // the top edge.
+         //
+         QFontMetrics metrics(this->font);
+         auto ascent = metrics.ascent();
+         //
+         painter.drawText(pos + QPoint(0, ascent), this->text);
       }
    }
 }
