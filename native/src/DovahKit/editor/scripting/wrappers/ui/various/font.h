@@ -2,6 +2,11 @@
 #include "../../../wrapper.h"
 #include <QFont>
 
+namespace editor_script::wrapper_part_types {
+   inline constexpr cobb::eight_cc ui_font_data = "BaseFont"; // for widgets, canvas text data, etc.
+   inline constexpr cobb::eight_cc ui_font_role = "FontRole"; // for model observers
+}
+
 namespace editor_script::wrappers::ui {
    struct font : public wrapper_metatable {
       static constexpr const char* superclass_key = metatable_key;
