@@ -8,6 +8,30 @@ namespace editor_script::wrapper_part_types {
 }
 
 namespace editor_script::wrappers::ui {
+   namespace impl {
+      struct font_property_handler {
+         using push_function_t  = int(*)(lua_State*, const QFont&); // return number of values pushed to the Lua stack
+         using pull_function_t  = QVariant(*)(lua_State*, int);     // int argument is Lua stack pos. feel free to throw Lua errors
+         using apply_function_t = QFont(*)(QFont, const QVariant&); // apply a pulled property to a QFont
+
+         const char*      name;  // the field name we want to expose to Lua
+         push_function_t  push;  // push a value into Lua
+         pull_function_t  pull;  // pull a value from Lua
+         apply_function_t apply;
+      };
+      class font_handler_set : public std::vector<font_property_handler> {
+         public:
+            using role_map_t = QMap<Qt::ItemDataRole, QVariant>;
+         public:
+            using std::vector<font_property_handler>::vector;
+
+            const font_property_handler* lookup(const char* name) const noexcept;
+            void extend(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const noexcept;
+
+            QFont extract(lua_State* L, int table_pos) const noexcept;
+      };
+   }
+
    struct font : public wrapper_metatable {
       static constexpr const char* superclass_key = metatable_key;
       static constexpr const char* metatable_key  = "dovah.classes.ui.font";
