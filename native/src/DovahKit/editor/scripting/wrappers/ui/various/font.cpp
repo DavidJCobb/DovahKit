@@ -25,14 +25,9 @@ namespace {
 }
 
 namespace {
-   using namespace editor_script;
-   using cls = wrappers::ui::font;
-   using wrapped_type = cls::wrapped_type;
-
-   // Helper functions for accessing whatever font we want to pull from the wrapper.
-   QFont _get_font(const wrapper& w) {
+   QFont _get_font(const editor_script::wrapper& w) {
       switch (w.type) {
-         using wt = wrapper_type;
+         using wt = editor_script::wrapper_type;
          case wt::ui: // widget
             if (auto* u = w.widget) {
                assert(w.parts[0].signature == wrapper_part_types::ui_font_data);
@@ -60,9 +55,9 @@ namespace {
       }
       return QFont();
    }
-   void _set_font(wrapper& w, QFont f) {
+   void _set_font(editor_script::wrapper& w, QFont f) {
       switch (w.type) {
-         using wt = wrapper_type;
+         using wt = editor_script::wrapper_type;
          case wt::ui: // widget
             if (auto* u = w.widget) {
                u->setFont(f);
@@ -91,6 +86,178 @@ namespace {
             return;
       }
    }
+}
+
+namespace editor_script::impl::font_properties {
+   namespace {
+      int __pcall_pull_helper(lua_State* L) {
+         auto* hnd    = (handler*) lua_touserdata(L, lua_upvalueindex(1));
+         auto* result = (QVariant*) lua_touserdata(L, lua_upvalueindex(2));
+         int top = lua_gettop(L);
+         assert(top >= 1);
+         //
+         *result = (hnd->pull)(L, 1);
+         return 0;
+      }
+      QVariant _pcall_pull(lua_State* L, int stack_pos, const handler& hnd) {
+         QVariant result;
+         //
+         stack_pos = lua_absindex(L, stack_pos);
+         lua_pushlightuserdata(L, (void*)&hnd);   // upvalue 1
+         lua_pushlightuserdata(L, (void*)&result); // upvalue 2
+         lua_pushcclosure(L, &__pcall_pull_helper, 2);
+         lua_pushvalue(L, stack_pos);
+         if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+            lua_warning(L, "invalid value for property `", 1);
+            lua_warning(L, hnd.name, 1);
+            if (lua_isstring(L, -1)) {
+               lua_warning(L, "`: ", 1);
+               lua_warning(L, lua_tostring(L, -1), 0);
+            } else {
+               lua_warning(L, "`", 0);
+            }
+            result = QVariant();
+         }
+         //
+         return result;
+      }
+   }
+   namespace {
+      extern int _getter(lua_State* L) {
+         // Upvalue 1: string:         class metatable key (used to type-check self and get a valid wrapper-object)
+         // Upvalue 2: light userdata: the handler set
+         // Upvalue 3: light userdata: the handler name
+         assert(lua_isstring(L, lua_upvalueindex(1)));
+         assert(lua_islightuserdata(L, lua_upvalueindex(2)));
+         assert(lua_isstring(L, lua_upvalueindex(3)));
+         auto* class_metatable_key = lua_tostring(L, lua_upvalueindex(1));
+         auto* class_handler_set   = (handler_set*) lua_touserdata(L, lua_upvalueindex(2));
+         auto* property_name       = lua_tostring(L, lua_upvalueindex(3));
+         assert(class_handler_set);
+         assert(property_name && property_name[0]);
+         //
+         auto* wrap = (wrapper*) editor_script::cast_to_class(L, 1, class_metatable_key);
+         if (wrap == nullptr)
+            return luaL_error(L, "function called with bad self (expected %s)", class_metatable_key);
+         auto* hnd = class_handler_set->lookup(property_name);
+         if (!hnd)
+            return luaL_error(L, "property `%1` is not available here", property_name);
+         //
+         QVariant value;
+         {
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [hnd, &wrap, &value]() {
+               auto font = _get_font(*wrap);
+               value = (hnd->get)(font);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         return (hnd->push)(L, value);
+      }
+      extern int _setter(lua_State* L) {
+         // Upvalue 1: string:         class metatable key (used to type-check self and get a valid wrapper-object)
+         // Upvalue 2: light userdata: the handler set
+         // Upvalue 3: light userdata: the handler name
+         assert(lua_isstring(L, lua_upvalueindex(1)));
+         assert(lua_islightuserdata(L, lua_upvalueindex(2)));
+         assert(lua_isstring(L, lua_upvalueindex(3)));
+         auto* class_metatable_key = lua_tostring (L, lua_upvalueindex(1));
+         auto* class_handler_set   = (handler_set*) lua_touserdata(L, lua_upvalueindex(2));
+         auto* property_name       = lua_tostring (L, lua_upvalueindex(3));
+         assert(class_handler_set);
+         assert(property_name && property_name[0]);
+         //
+         auto* wrap = (wrapper*)editor_script::cast_to_class(L, 1, class_metatable_key);
+         if (wrap == nullptr)
+            return luaL_error(L, "function called with bad self (expected %s)", class_metatable_key);
+         const auto* hnd = class_handler_set->lookup(property_name);
+         if (!hnd)
+            return luaL_error(L, "property `%1` is not available here", property_name);
+         //
+         if (hnd->reset_if_nil && lua_isnoneornil(L, 2)) {
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [hnd, &wrap, class_handler_set]() {
+               QFont original = _get_font(*wrap);
+               QFont modified;
+               for (handler& other : *class_handler_set) {
+                  if (&other == hnd)
+                     continue;
+                  if (!other.use_in_reset)
+                     continue;
+                  auto value = (other.get)(original);
+                  if (value.isValid())
+                     (other.set)(modified, value);
+               }
+               _set_font(*wrap, modified);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+            //
+            return 0;
+         }
+         auto value = (hnd->pull)(L, 2);
+         {
+            auto* task = new tasks::s2m::ui_read_lambda();
+            task->handler = [hnd, &wrap, &value]() {
+               auto font = _get_font(*wrap);
+               (hnd->set)(font, value);
+               _set_font(*wrap, font);
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         //
+         return 0;
+      }
+   }
+
+   void handler_set::extend_lua_class(lua_State* L, const char* class_metatable_key, int getter_list_stack_pos, int setter_list_stack_pos) const noexcept {
+      getter_list_stack_pos = lua_absindex(L, getter_list_stack_pos);
+      setter_list_stack_pos = lua_absindex(L, setter_list_stack_pos);
+      lua_checkstack(L, 5);
+      for (auto& hnd : *this) {
+         {  // Getter
+            lua_pushstring       (L, class_metatable_key);
+            lua_pushlightuserdata(L, (void*)this);
+            lua_pushstring       (L, hnd.name);
+            lua_pushcclosure(L, &_getter, 3);
+         }
+         lua_setfield(L, getter_list_stack_pos, hnd.name);
+         {
+            lua_pushstring       (L, class_metatable_key);
+            lua_pushlightuserdata(L, (void*)this);
+            lua_pushstring       (L, hnd.name);
+            lua_pushcclosure(L, &_setter, 3);
+         }
+         lua_setfield(L, setter_list_stack_pos, hnd.name);
+      }
+   }
+   QFont handler_set::table_to_struct(lua_State* L, int table_pos) const noexcept {
+      table_pos = lua_absindex(L, table_pos);
+      int top = lua_gettop(L);
+      //
+      QFont out;
+      for(auto& hnd : *this) {
+         auto t = lua_getfield(L, table_pos, hnd.name);
+         if (t == LUA_TNONE || t == LUA_TNIL) {
+            lua_settop(L, top);
+            continue;
+         }
+         auto v = _pcall_pull(L, top + 1, hnd);
+         if (v.isValid())
+            (hnd.set)(out, v);
+         lua_settop(L, top);
+      }
+      return out;
+   }
+}
+
+namespace {
+   using namespace editor_script;
+   using cls = wrappers::ui::font;
+   using wrapped_type = cls::wrapped_type;
+
 
    /*
    
@@ -102,153 +269,6 @@ namespace {
 
    */
 
-
-
-   template<typename lua_type> lua_type basic_pull_from_lua(lua_State* L) {
-      lua_type raw = lua_type();
-      if constexpr (std::is_same_v<lua_type, int>) {
-         int isnum;
-         raw = lua_tointegerx(L, 2, &isnum);
-         luaL_argcheck(L, isnum, 2, "integer expected");
-      } else if constexpr (std::is_same_v<lua_type, const char*>) {
-         raw = lua_tostring(L, 2);
-      } else if constexpr (std::is_same_v<lua_type, float> || std::is_same_v<lua_type, double>) {
-         raw = lua_tonumber(L, 2);
-      } else if constexpr (std::is_same_v<lua_type, bool>) {
-         raw = lua_toboolean(L, 2);
-      } else {
-         // Lambda ugliness allows us to make static asserts conditional on their containing if-constexprs.
-         []<bool flag = false>(){ static_assert(flag, "Unhandled Lua type!"); };
-      }
-      return raw;
-   }
-   template<typename lua_type> int basic_push_to_lua(lua_State* L, lua_type out) {
-      if constexpr (std::is_same_v<lua_type, int>) {
-         lua_pushinteger(L, out);
-      } else if constexpr (std::is_same_v<lua_type, const char*>) {
-         lua_pushstring(L, out);
-      } else if constexpr (std::is_same_v<lua_type, float> || std::is_same_v<lua_type, double>) {
-         lua_pushnumber(L, out);
-      } else if constexpr (std::is_same_v<lua_type, bool>) {
-         lua_pushboolean(L, out);
-      } else {
-         // Lambda ugliness allows us to make static asserts conditional on their containing if-constexprs.
-         []<bool flag = false>(){ static_assert(flag, "Unhandled Lua type!"); };
-      }
-      return 1;
-   }
-
-
-   template<typename in_t, typename out_t = in_t> out_t no_op_c_to_lua(in_t f) {
-      return f;
-   }
-   template<typename in_t, typename out_t = in_t> out_t no_op_lua_to_c(lua_State* L, in_t f) {
-      return f;
-   }
-
-   // Defines a Lua getter for a font property. The first template parameter should be the 
-   // QFont member function that retrieves the value. The optional second template parameter 
-   // will be a function which takes that value and transforms it as necessary for use within 
-   // Lua, e.g. switching zero-indexed integers to one-indexed or converting integer enums to 
-   // string values.
-   template<
-      auto(QFont::* c_get)() const,
-      auto adapt = no_op_c_to_lua<cobb::return_type_of<c_get>>
-   > luastackchange_t font_getter(lua_State* L) {
-      using c_type   = decltype((std::declval<QFont>().*c_get)());
-      using lua_type = decltype((adapt)(c_type()));
-      //
-      auto&  self  = get_wrapper_for_thiscall<cls>(L);
-      c_type value = c_type();
-      {
-         auto* task     = new tasks::s2m::ui_read_lambda();
-         task->handler  = [&self, &value]() {
-            auto font = _get_font(self);
-            value = (font.*c_get)();
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         delete task;
-      }
-      //
-      lua_type out = (adapt)(value);
-      return basic_push_to_lua(L, out);
-   };
-
-   // Defines a Lua setter for a font property; prefer the shorthand `font_setter` templates 
-   // below. As with the getter, you specify a QFont member function to set the value, and 
-   // an optional "adapt" function which transforms input from Lua into a format and type 
-   // suitable for use with the QFont member function.
-   template<
-      typename c_type,
-      typename lua_type,
-      void(QFont::*c_set)(c_type),
-      auto adapt = no_op_lua_to_c<lua_type, c_type>
-   > luastackchange_t font_setter_impl(lua_State* L) {
-      auto& self = get_wrapper_for_thiscall<cls>(L);
-      //
-      lua_type raw = basic_pull_from_lua<lua_type>(L);
-      c_type value = adapt(L, raw);
-      {
-         auto* task = new tasks::s2m::ui_read_lambda();
-         task->handler = [&self, &value]() {
-            auto font = _get_font(self);
-            (font.*c_set)(value);
-            _set_font(self, font);
-         };
-         DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         delete task;
-      }
-      return 0;
-   }
-
-   // Shorthand template for defining font setters.
-   //
-   // With "auto" template parameters, we can't meaningfully use them until we're actually in 
-   // the function body. That means no "requires" criteria, and no ability to give (adapt) a 
-   // default that depends on the traits of (setter).
-   template<auto setter> luastackchange_t font_setter(lua_State* L) {
-      static_assert(!cobb::is_const_function<setter>);
-      using c_type = cobb::type_of_nth_argument<setter, 0>;
-      return font_setter_impl<c_type, c_type, setter>(L);
-   }
-   template<auto setter, auto adapt> luastackchange_t font_setter(lua_State* L) {
-      static_assert(std::is_same_v<lua_State*, cobb::type_of_nth_argument<adapt, 0>>, "The `adapt` function should take a Lua state as its first argument, so that it can throw errors upon receiving a bad value.");
-      static_assert(!cobb::is_const_function<setter>);
-      using c_type   = cobb::return_type_of<adapt>;
-      using lua_type = cobb::type_of_nth_argument<adapt, 1>;
-      static_assert(std::is_same_v<c_type, cobb::type_of_nth_argument<setter, 0>>);
-      return font_setter_impl<c_type, lua_type, setter, adapt>(L);
-   }
-
-   template<auto setter> void pull_field_from_table(QFont& font, const char* name, lua_State* L, int table_pos) {
-      static_assert(!cobb::is_const_function<setter>);
-      using c_type = cobb::type_of_nth_argument<setter, 0>;
-      //
-      lua_getfield(L, table_pos, name);
-      if (lua_isnoneornil(L, -1)) {
-         lua_pop(L, 1);
-         return;
-      }
-      //
-      c_type raw = basic_pull_from_lua<c_type>(L);
-      (font.*setter)(raw);
-   }
-   template<auto setter, auto adapt> void pull_field_from_table(QFont& font, const char* name, lua_State* L, int table_pos) {
-      static_assert(std::is_same_v<lua_State*, cobb::type_of_nth_argument<adapt, 0>>, "The `adapt` function should take a Lua state as its first argument, so that it can throw errors upon receiving a bad value.");
-      static_assert(!cobb::is_const_function<setter>);
-      using c_type   = cobb::return_type_of<adapt>;
-      using lua_type = cobb::type_of_nth_argument<adapt, 1>;
-      //
-      lua_getfield(L, table_pos, name);
-      if (lua_isnoneornil(L, -1)) {
-         lua_pop(L, 1);
-         return;
-      }
-      //
-      lua_type raw = basic_pull_from_lua<lua_type>(L);
-      c_type value = adapt(L, raw); // TODO: pcall this
-      (font.*setter)(value);
-   }
 
    const char* capitalization_to_lua(QFont::Capitalization c) {
       switch (c) {
@@ -458,10 +478,188 @@ namespace {
    }
 }
 
+namespace {
+   template<typename T> int simple_push(lua_State* L, const QVariant& v) {
+      if constexpr (std::is_same_v<T, bool>) {
+         lua_pushboolean(L, v.toBool());
+         return 1;
+      }
+      if constexpr (std::is_same_v<T, int>) {
+         lua_pushinteger(L, v.toInt());
+      } else if constexpr (std::is_same_v<T, const char*>) {
+         lua_pushstring(L, v.toString().toUtf8());
+      } else if constexpr (std::is_same_v<T, float>) {
+         lua_pushnumber(L, v.toFloat());
+      } else if constexpr (std::is_same_v<lua_type, double>) {
+         lua_pushnumber(L, v.toDouble());
+      } else if constexpr (std::is_same_v<T, bool>) {
+         lua_pushboolean(L, v.toBool());
+      } else {
+         // Lambda ugliness allows us to make static asserts conditional on their containing if-constexprs.
+         []<bool flag = false>(){ static_assert(flag, "Unhandled Lua type!"); };
+      }
+      return 1;
+   }
+   template<typename T, bool allow_nil = false> QVariant simple_pull(lua_State* L, int stack_pos) {
+      if constexpr (allow_nil) {
+         if (lua_isnoneornil(L, stack_pos))
+            return QVariant();
+      }
+      //
+      if constexpr (std::is_same_v<T, int>) {
+         int isnum;
+         int value = lua_tointegerx(L, stack_pos, &isnum);
+         if (!isnum) {
+            if constexpr (allow_nil)
+               luaL_error(L, "integer or nil expected");
+            else
+               luaL_error(L, "integer expected");
+         }
+         return QVariant::fromValue<int>(value);
+      } else if constexpr (std::is_same_v<T, const char*>) {
+         if (!lua_isstring(L, stack_pos)) {
+            if constexpr (allow_nil)
+               luaL_error(L, "string or nil expected");
+            else
+               luaL_error(L, "string expected");
+         }
+         auto* value = lua_tostring(L, stack_pos);
+         return QVariant::fromValue<QString>(QString::fromUtf8(value));
+      } else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>) {
+         if (!lua_isnumber(L, stack_pos)) {
+            if constexpr (allow_nil)
+               luaL_error(L, "number or nil expected");
+            else
+               luaL_error(L, "number expected");
+         }
+         if constexpr (std::is_same_v<T, float>)
+            return QVariant::fromValue<float>(lua_tonumber(L, stack_pos));
+         QVariant::fromValue<double>(lua_tonumber(L, stack_pos));
+      } else if constexpr (std::is_same_v<T, bool>) {
+         if (!lua_isboolean(L, stack_pos)) {
+            if constexpr (allow_nil)
+               luaL_error(L, "boolean or nil expected");
+            else
+               luaL_error(L, "boolean expected");
+         }
+         return QVariant::fromValue<bool>(lua_toboolean(L, stack_pos));
+      } else {
+         // Lambda ugliness allows us to make static asserts conditional on their containing if-constexprs.
+         []<bool flag = false>(){ static_assert(flag, "Unhandled Lua type!"); };
+      }
+      return QVariant();
+   }
+
+   template<auto func> int verbatim_push(lua_State* L, const QVariant& v) {
+      static_assert(std::is_same_v<cobb::member_function_context_type<func>, QFont>, "The wrapped function must be a getter on QFont.");
+      using T = cobb::return_type_of<func>;
+      //
+      return simple_push<T>(L, v);
+   }
+   template<auto func, bool allow_nil = false> QVariant verbatim_pull(lua_State* L, int stack_pos) {
+      static_assert(std::is_same_v<cobb::member_function_context_type<func>, QFont>, "The wrapped function must be a setter on QFont.");
+      using T = cobb::type_of_nth_argument<func, 0>;
+      //
+      return simple_pull<T, allow_nil>(L, stack_pos);
+   }
+   
+   template<auto func, typename T> QVariant qvariant_get(const T& obj) {
+      using out_t = cobb::return_type_of<func>;
+      static_assert(std::is_base_of_v<cobb::function_traits<func>::context_type, T>, "The wrapped function must be a getter on templated type T.");
+      static_assert(!cobb::is_const_function<func>, "The wrapped function must be a getter and therefore must be const.");
+      static_assert(!std::is_same_v<out_t, void>, "The wrapped function must be a getter and therefore must return a value.");
+      //
+      out_t value = (obj.*func)();
+      return QVariant::fromValue<out_t>(value);
+   }
+   template<auto func, typename T> void qvariant_set(T& obj, const QVariant& value) {
+      using in_t = cobb::type_of_nth_argument<func, 0>;
+      static_assert(std::is_base_of_v<cobb::function_traits<func>::context_type, T>, "The wrapped function must be a setter on templated type T.");
+      static_assert(!cobb::is_const_function<func>, "The wrapped function must be a setter and therefore cannot be const.");
+      //
+      (obj.*func)(value.value<in_t>());
+   }
+}
+
+namespace {
+   namespace _fields {
+      namespace bold {
+         QVariant get(const QFont& font) {
+            return QVariant::fromValue<bool>(font.weight() >= QFont::Medium);
+         }
+         void set(QFont& font, const QVariant& value) {
+            bool after = value.toBool();
+            bool prior = font.weight() >= QFont::Medium;
+            if (after == prior)
+               return;
+            if (after)
+               font.setWeight(QFont::Bold);
+            else
+               font.setWeight(QFont::Normal);
+         }
+         int push(lua_State* L, const QVariant& value) {
+            lua_pushboolean(L, value.toBool());
+            return 1;
+         }
+         QVariant pull(lua_State* L, int stack_pos) {
+            if (!lua_isboolean(L, stack_pos))
+               luaL_error(L, "boolean expected");
+            return QVariant::fromValue<bool>(lua_toboolean(L, stack_pos));
+         }
+      }
+      namespace capitalization {
+         using C = QFont::Capitalization;
+         static constexpr const std::array list = {
+            std::pair{ C::MixedCase,    "normal" },
+            std::pair{ C::AllUppercase, "uppercase" },
+            std::pair{ C::AllLowercase, "lowercase" },
+            std::pair{ C::SmallCaps,    "small caps" },
+            std::pair{ C::Capitalize,   "capitalize" }
+         };
+         //
+         int push(lua_State* L, const QVariant& value) {
+            C v = (C)value.value<int>();
+            for (auto& pair : list) {
+               if (pair.first == v) {
+                  lua_pushstring(L, pair.second);
+                  return 1;
+               }
+            }
+            return 0;
+         }
+         QVariant pull(lua_State* L, int stack_pos) {
+            if (!lua_isstring(L, stack_pos))
+               luaL_error(L, "string expected");
+            auto* v = lua_tostring(L, stack_pos);
+            for (auto& pair : list) {
+               if (_stricmp(v, pair.second) == 0) {
+                  return QVariant::fromValue<int>(pair.first);
+               }
+            }
+            std::string error = "unrecognized value; valid values are: ";
+            size_t size = list.size();
+            for (size_t i = 0; i < size; ++i) {
+               if (i)
+                  error += ", ";
+               error += '"';
+               error += list[i].second;
+               error += '"';
+            }
+            luaL_error(L, error.c_str());
+            __assume(0);
+         }
+      }
+   }
+}
+
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
+      //
+      // Fields that are handled as "font property handlers" should go in the list of those below, not here.
+      //
+      static_assert(false, "Finish converting all of these into FPHs.");
       { "bold",           &_getters::bold },           // boolean; checks if the weight is bold
       { "capitalization", &_getters::capitalization }, // string enum
       { "italics",        &_getters::italics },        // boolean indicating whether the text is italicized
@@ -471,25 +669,53 @@ namespace editor_script::wrappers::ui {
       { "width",          &_getters::width },          // font-stretch as a percentage of normal font weight, e.g. 200% for twice as wide, or nil for "don't care"
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
-      { "bold",           &_setters::bold },
-      { "capitalization", &_setters::capitalization },
-      { "italics",        &_setters::italics },
-      { "letter_spacing", &_setters::letter_spacing },
-      { "size",           &_setters::size },
-      { "weight",         &_setters::weight },
-      { "width",          &_setters::width },
+      //
+      // Fields that are handled as "font property handlers" should go in the list of those below, not here.
+      //
    };
 
-   /*static*/ void cls::setup(lua_State* L) {
-      int pos = lua_gettop(L);
+   using fph = editor_script::impl::font_properties::handler;
+   /*static*/ const editor_script::impl::font_properties::handler_set cls::fph_handlers = {{
+      fph{ 
+         .name = "bold",
+         .push = _fields::bold::push,
+         .pull = _fields::bold::pull,
+         .get  = _fields::bold::get,
+         .set  = _fields::bold::set,
+         .reset_if_nil = false,
+         .use_in_reset = false,
+      },
+      fph{ 
+         .name = "capitalization",
+         .push = _fields::capitalization::push,
+         .pull = _fields::capitalization::pull,
+         .get  = qvariant_get<QFont::capitalization>,
+         .set  = qvariant_set<QFont::setCapitalization>,
+         .reset_if_nil = true
+      },
+      fph{ 
+         .name = "letter_spacing",
+         .push = verbatim_push<QFont::letterSpacing>,
+         .pull = verbatim_pull<QFont::setLetterSpacing, true>,
+         .get  = qvariant_get<QFont::letterSpacing>,
+         .set  = qvariant_set<QFont::setLetterSpacing>,
+         .reset_if_nil = true
+      },
+      fph{ 
+         .name = "weight",
+         .push = verbatim_push<QFont::weight>,
+         .pull = verbatim_pull<QFont::setWeight, true>,
+         .get  = qvariant_get<QFont::weight>,
+         .set  = qvariant_set<QFont::setWeight>,
+         .reset_if_nil = true
+      },
+   }};
+
+   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+      int index_class   = lua_absindex(L, -3);
+      int index_getters = lua_absindex(L, -2);
+      int index_setters = lua_absindex(L, -1);
       //
-      // Create singleton:
-      //
-      lua_createtable(L, 0, 2);
-      lua_pushcfunction(L, &_singleton_functions::is);
-      lua_setfield     (L, -2, "is");
-      //
-      assert(lua_gettop(L) == pos + 1);
-      lua_setfield(L, pos, cls::global_name);
+      cls::fph_handlers.extend_lua_class(L, cls::metatable_key, index_getters, index_setters);
    }
 }
