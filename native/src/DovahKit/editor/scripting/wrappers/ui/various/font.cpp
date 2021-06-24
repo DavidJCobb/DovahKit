@@ -20,10 +20,47 @@
 
 #include <type_traits>
 
+//
+// QFont is a bit messy, not least because it has member functions that are neither deprecated nor 
+// documented -- and that are highly relevant to what it does.
+// 
+// QFont consists of a set of optional font properties, as well as an internal flags mask denoting 
+// which properties are actually set. This means that an individual QFont can be used to selectively 
+// override specific font properties in some context, while leaving other font properties (i.e. ones 
+// inherited from some broader context) untouched. In simpler terms: you can have a QFont that says, 
+// "make this text bold, but don't change anything else" just by creating a new QFont and making sure 
+// to only call QFont::setWeight on it.
+// 
+// When Qt needs to actually determine the final font properties for some object, it does so by using 
+// {QFont QFont::resolve(const QFont&) const} to essentially "stack" all relevant QFonts together. 
+// When that function is called on some QFont instance A and given some QFont instance B, it will 
+// create and return a new QFont consisting of all properties that were set on A or B; if a property 
+// is set on both A and B, then the value from A takes priority and is used by the result.
+// 
+// Given that QFont works this way, you would probably expect to be able to do the following:
+// 
+//  - Query which properties have been set on a given QFont
+//  - Clear a property that was previously set on a given QFont
+// 
+// In reality, it's not nearly that simple. There are no documented functions which can be used for 
+// these tasks. There are, however, undocumented public functions in files that are not marked as 
+// being internal-only, which can perform these tasks. This is not entirely unusual; the "detach" 
+// function on classes like QImage is also undocumented in most cases. For QFont, the functions we 
+// want are these:
+// 
+//  - uint QFont::resolve() const;
+//    Return the internal bitmask of "resolved" properties.
+// 
+//  - void QFont::resolve(uint);
+//    Wholly overwrite the internal bitmask of "resolved" properties.
+//
+
 namespace {
    static constexpr int FONT_BOLD_WEIGHT_THRESHOLD = QFont::Bold;
-}
 
+   static_assert(std::is_same_v<decltype(std::declval<QFont&>().resolve()),  uint>, "This code relied on a QFont::resolve overload that was neither deprecated nor documented. Said overload returned the font's internal mask of resolved properties.");
+   static_assert(std::is_same_v<decltype(std::declval<QFont&>().resolve(0)), void>, "This code relied on a QFont::resolve overload that was neither deprecated nor documented. Said overload modified the font's internal mask of resolved properties.");
+}
 namespace {
    QFont _get_font(const editor_script::wrapper& w) {
       switch (w.type) {
@@ -86,6 +123,15 @@ namespace {
             return;
       }
    }
+
+   bool _test_font_property(const QFont& font, QFont::ResolveProperties mask) {
+      auto resolved = font.resolve();
+      return (resolved & mask) == mask;
+   }
+   void _clear_font_properties(QFont& font, QFont::ResolveProperties mask) {
+      auto resolved = font.resolve();
+      font.resolve(resolved &= ~(uint)mask);
+   }
 }
 
 namespace editor_script::impl::font_properties {
@@ -144,14 +190,25 @@ namespace editor_script::impl::font_properties {
             return luaL_error(L, "property `%1` is not available here", property_name);
          //
          QVariant value;
+         bool not_set = false;
          {
             auto* task = new tasks::s2m::ui_read_lambda();
-            task->handler = [hnd, &wrap, &value]() {
+            task->handler = [hnd, &wrap, &value, &not_set]() {
                auto font = _get_font(*wrap);
+               if (hnd->reset_if_nil && hnd->resolve_mask) {
+                  if (!_test_font_property(font, hnd->resolve_mask)) {
+                     not_set = true;
+                     return;
+                  }
+               }
                value = (hnd->get)(font);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
+         }
+         if (not_set) {
+            lua_pushnil(L);
+            return 1;
          }
          return (hnd->push)(L, value);
       }
@@ -176,20 +233,13 @@ namespace editor_script::impl::font_properties {
             return luaL_error(L, "property `%1` is not available here", property_name);
          //
          if (hnd->reset_if_nil && lua_isnoneornil(L, 2)) {
+            assert(hnd->resolve_mask);
+            //
             auto* task = new tasks::s2m::ui_read_lambda();
             task->handler = [hnd, &wrap, class_handler_set]() {
-               QFont original = _get_font(*wrap);
-               QFont modified;
-               for (handler& other : *class_handler_set) {
-                  if (&other == hnd)
-                     continue;
-                  if (!other.use_in_reset)
-                     continue;
-                  auto value = (other.get)(original);
-                  if (value.isValid())
-                     (other.set)(modified, value);
-               }
-               _set_font(*wrap, modified);
+               QFont font = _get_font(*wrap);
+               _clear_font_properties(font, hnd->resolve_mask);
+               _set_font(*wrap, font);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
@@ -258,114 +308,9 @@ namespace {
    using cls = wrappers::ui::font;
    using wrapped_type = cls::wrapped_type;
 
-
-   /*
-   
-   TEMPLATE EXPERIMENTS:
-
-   We need something like this so that getters, setters, and QFont::pull (a function to take a 
-   plain table and write its fields into a new QFont) can share code, instead of us having to 
-   effectively write two "set" functions per property.
-
-   */
-
-
-   const char* capitalization_to_lua(QFont::Capitalization c) {
-      switch (c) {
-         using C = decltype(c);
-         case C::MixedCase:
-            return "normal";
-         case C::AllUppercase:
-            return "uppercase"; // HELLO, WORLD!
-         case C::AllLowercase:
-            return "lowercase"; // hello, world!
-         case C::SmallCaps:
-            return "small caps"; // "HELLO, WORLD!" but tiny
-         case C::Capitalize:
-            return "capitalize"; // Hello, World!
-      }
-      return "unknown";
-   }
-   QFont::Capitalization capitalization_from_lua(lua_State* L, const char* c) {
-      assert(c);
-      //
-      using C = QFont::Capitalization;
-      std::array list = {
-         std::pair{ C::MixedCase,    "normal" },
-         std::pair{ C::AllUppercase, "uppercase" },
-         std::pair{ C::AllLowercase, "lowercase" },
-         std::pair{ C::SmallCaps,    "small caps" },
-         std::pair{ C::Capitalize,   "capitalize" }
-      };
-      for (auto& pair : list) {
-         if (_stricmp(c, pair.second))
-            return pair.first;
-      }
-      luaL_error(L, "unrecognized capitalization value: \"%s\"", c);
-      return C::MixedCase;
-   }
-
-
-
-
-
-
-
-
-
-
-
-
-   /**/
-
    namespace _methods {
    }
    namespace _getters {
-      luastackchange_t bold(lua_State* L) {
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         int   value = QFont::Weight::Normal;
-         {
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [&self, &value]() {
-               value = _get_font(self).weight();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         lua_pushboolean(L, value >= QFont::Medium);
-         return 1;
-      }
-      luastackchange_t capitalization(lua_State* L) {
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         QFont::Capitalization value = QFont::Capitalization::MixedCase;
-         {
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [&self, &value]() {
-               value = _get_font(self).capitalization();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         switch (value) {
-            using C = QFont::Capitalization;
-            case C::MixedCase:
-               lua_pushstring(L, "normal"); // Hello, world!
-               return 1;
-            case C::AllUppercase:
-               lua_pushstring(L, "uppercase"); // HELLO, WORLD!
-               return 1;
-            case C::AllLowercase:
-               lua_pushstring(L, "lowercase"); // hello, world!
-               return 1;
-            case C::SmallCaps:
-               lua_pushstring(L, "small caps"); // "HELLO, WORLD!" but tiny
-               return 1;
-            case C::Capitalize:
-               lua_pushstring(L, "capitalize"); // Hello, World!
-               return 1;
-         }
-         return 0;
-      }
       luastackchange_t italics(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          QFont::Style style = QFont::Style::StyleNormal;
@@ -389,64 +334,6 @@ namespace {
                return 1;
          }
          return 0;
-      }
-      luastackchange_t letter_spacing(lua_State* L) {
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         qreal value = 0;
-         {
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [&self, &value]() {
-               auto font = _get_font(self);
-               if (font.letterSpacingType() == QFont::SpacingType::AbsoluteSpacing)
-                  value = _get_font(self).letterSpacing();
-               else
-                  value = 0;
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         lua_pushnumber(L, value);
-         return 1;
-      }
-      luastackchange_t size(lua_State* L) {
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         int   value = 0;
-         bool  pixel = false;
-         {
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [&self, &value, &pixel]() {
-               auto font = _get_font(self);
-               value = font.pixelSize();
-               pixel = value >= 0;
-               if (!pixel)
-                  value = font.pointSize();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         if (pixel) {
-            lua_pushfstring(L, "%dpx", value);
-            return 1;
-         } else {
-            lua_pushfstring(L, "%dpt", value);
-            return 1;
-         }
-         return 0;
-      }
-      luastackchange_t weight(lua_State* L) {
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         int   value = QFont::Weight::Normal;
-         {
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [&self, &value]() {
-               value = _get_font(self).weight();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         ++value; // [0, 99] -> [1, 100]
-         lua_pushinteger(L, value);
-         return 1;
       }
       luastackchange_t width(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
@@ -579,6 +466,20 @@ namespace {
       //
       (obj.*func)(value.value<in_t>());
    }
+
+   int push_indexed_integer(lua_State* L, const QVariant& v) {
+      int i = v.toInt() + 1;
+      lua_pushinteger(L, i);
+      return 1;
+   }
+   QVariant pull_indexed_integer(lua_State* L, int stack_pos) {
+      int isnum;
+      int value = lua_tointegerx(L, stack_pos, &isnum);
+      if (!isnum)
+         luaL_error(L, "integer expected");
+      --value;
+      return QVariant::fromValue<int>(value);
+   }
 }
 
 namespace {
@@ -603,7 +504,7 @@ namespace {
          }
          QVariant pull(lua_State* L, int stack_pos) {
             if (!lua_isboolean(L, stack_pos))
-               luaL_error(L, "boolean expected");
+               luaL_error(L, "boolean or nil expected");
             return QVariant::fromValue<bool>(lua_toboolean(L, stack_pos));
          }
       }
@@ -629,14 +530,14 @@ namespace {
          }
          QVariant pull(lua_State* L, int stack_pos) {
             if (!lua_isstring(L, stack_pos))
-               luaL_error(L, "string expected");
+               luaL_error(L, "string or nil expected");
             auto* v = lua_tostring(L, stack_pos);
             for (auto& pair : list) {
                if (_stricmp(v, pair.second) == 0) {
                   return QVariant::fromValue<int>(pair.first);
                }
             }
-            std::string error = "unrecognized value; valid values are: ";
+            std::string error = "unrecognized string; valid values are: ";
             size_t size = list.size();
             for (size_t i = 0; i < size; ++i) {
                if (i)
@@ -647,6 +548,90 @@ namespace {
             }
             luaL_error(L, error.c_str());
             __assume(0);
+         }
+      }
+      namespace letter_spacing {
+         QVariant get(const QFont& font) {
+            if (font.letterSpacingType() != QFont::SpacingType::AbsoluteSpacing)
+               return QVariant::fromValue<qreal>(0.0);
+            return QVariant::fromValue<qreal>(font.letterSpacing());
+         }
+         void set(QFont& font, const QVariant& value) {
+            qreal n = value.value<qreal>();
+            font.setLetterSpacing(QFont::SpacingType::AbsoluteSpacing, n);
+         }
+         int push(lua_State* L, const QVariant& value) {
+            lua_pushnumber(L, value.value<qreal>());
+            return 1;
+         }
+         QVariant pull(lua_State* L, int stack_pos) {
+            if (!lua_isnumber(L, stack_pos))
+               luaL_error(L, "number or nil expected");
+            return QVariant::fromValue<qreal>(lua_tonumber(L, stack_pos));
+         }
+      }
+      namespace size {
+         QVariant get(const QFont& font) {
+            auto value = QString("%1%2");
+            auto size  = font.pixelSize();
+            if (size < 0) {
+               size  = font.pointSize();
+               value = value.arg(size).arg("pt");
+            } else {
+               value = value.arg(size).arg("px");
+            }
+            return value;
+         }
+         void set(QFont& font, const QVariant& value) {
+            auto string = value.value<QString>();
+            auto size   = string.size();
+            //
+            assert(!string.isEmpty());
+            assert(size > 2);
+            assert(string[size - 2] == 'p');
+            //
+            auto type = string[size - 1];
+            string.chop(2);
+            bool ok;
+            auto num = string.toInt(&ok); // toInt ignores whitespace, so that ensures that "12 pt" and so on still works
+            assert(ok);
+            assert(num >= 0);
+            //
+            if (type == 't') { // point
+               font.setPointSize(num);
+            } else if (type == 'x') { // pixel
+               font.setPixelSize(num);
+            }
+         }
+         int push(lua_State* L, const QVariant& value) {
+            lua_pushstring(L, value.value<QString>().toUtf8());
+            return 1;
+         }
+         QVariant pull(lua_State* L, int stack_pos) {
+            if (!lua_isstring(L, stack_pos))
+               luaL_error(L, "string or nil expected");
+            auto string = QString::fromUtf8(lua_tostring(L, stack_pos)).trimmed(); // we remove leading and trailing whitespace here; whitespace between the number and unit is removed in (set)
+            auto size   = string.size();
+            if (size < 2)
+               luaL_error(L, "invalid font size: the string must consist of a number followed by a unit (either 'px' or 'pt'), with no space");
+            if (!string.endsWith("pt")) {
+               if (!string.endsWith("px")) {
+                  luaL_error(L, "invalid font size: you must specify a unit (either 'px' or 'pt') after the number, with no space");
+               }
+            }
+            return string;
+         }
+      }
+      namespace weight {
+         QVariant pull(lua_State* L, int stack_pos) {
+            int isnum;
+            int value = lua_tointegerx(L, stack_pos, &isnum);
+            if (!isnum)
+               luaL_error(L, "integer or nil expected");
+            if (value <= 0 || value > 100)
+               luaL_error(L, "weight must be between 1 and 100 inclusive");
+            --value;
+            return QVariant::fromValue<int>(value);
          }
       }
    }
@@ -660,12 +645,7 @@ namespace editor_script::wrappers::ui {
       // Fields that are handled as "font property handlers" should go in the list of those below, not here.
       //
       static_assert(false, "Finish converting all of these into FPHs.");
-      { "bold",           &_getters::bold },           // boolean; checks if the weight is bold
-      { "capitalization", &_getters::capitalization }, // string enum
       { "italics",        &_getters::italics },        // boolean indicating whether the text is italicized
-      { "letter_spacing", &_getters::letter_spacing }, // letter spacing, as a signed integer
-      { "size",           &_getters::size },           // font size, e.g. "12px" or "12pt"
-      { "weight",         &_getters::weight },         // font weight as a weighting scale from 1 to 100
       { "width",          &_getters::width },          // font-stretch as a percentage of normal font weight, e.g. 200% for twice as wide, or nil for "don't care"
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
@@ -677,37 +657,44 @@ namespace editor_script::wrappers::ui {
    using fph = editor_script::impl::font_properties::handler;
    /*static*/ const editor_script::impl::font_properties::handler_set cls::fph_handlers = {{
       fph{ 
-         .name = "bold",
+         .name = "bold", // Boolean shortcut to make a font bold or not bold.
          .push = _fields::bold::push,
          .pull = _fields::bold::pull,
          .get  = _fields::bold::get,
          .set  = _fields::bold::set,
-         .reset_if_nil = false,
-         .use_in_reset = false,
+         .resolve_mask = QFont::ResolveProperties::WeightResolved,
       },
       fph{ 
-         .name = "capitalization",
+         .name = "capitalization", // String enum used to change letter case or enable small caps.
          .push = _fields::capitalization::push,
          .pull = _fields::capitalization::pull,
          .get  = qvariant_get<QFont::capitalization>,
          .set  = qvariant_set<QFont::setCapitalization>,
-         .reset_if_nil = true
+         .resolve_mask = QFont::ResolveProperties::CapitalizationResolved,
       },
       fph{ 
-         .name = "letter_spacing",
-         .push = verbatim_push<QFont::letterSpacing>,
-         .pull = verbatim_pull<QFont::setLetterSpacing, true>,
-         .get  = qvariant_get<QFont::letterSpacing>,
-         .set  = qvariant_set<QFont::setLetterSpacing>,
-         .reset_if_nil = true
+         .name = "letter_spacing", // letter spacing as a signed number
+         .push = _fields::letter_spacing::push,
+         .pull = _fields::letter_spacing::pull,
+         .get  = _fields::letter_spacing::get,
+         .set  = _fields::letter_spacing::set,
+         .resolve_mask = QFont::ResolveProperties::LetterSpacingResolved,
       },
       fph{ 
-         .name = "weight",
-         .push = verbatim_push<QFont::weight>,
-         .pull = verbatim_pull<QFont::setWeight, true>,
+         .name = "size", // font size, e.g. "12px" or "12pt"; values like 12 and "12 px" are not valid
+         .push = _fields::size::push,
+         .pull = _fields::size::pull,
+         .get  = _fields::size::get,
+         .set  = _fields::size::set,
+         .resolve_mask = QFont::ResolveProperties::SizeResolved,
+      },
+      fph{ 
+         .name = "weight", // Specific font weight (boldness) as an int between 1 and 100
+         .push = push_indexed_integer,
+         .pull = _fields::weight::pull,
          .get  = qvariant_get<QFont::weight>,
          .set  = qvariant_set<QFont::setWeight>,
-         .reset_if_nil = true
+         .resolve_mask = QFont::ResolveProperties::WeightResolved,
       },
    }};
 
