@@ -3,6 +3,14 @@
 #include <type_traits>
 
 namespace cobb {
+
+   // Templates to inspect the value of any non-overloaded function.
+   //
+   // When using function_traits, the template argument must be decltype(&function), while when using the 
+   // individual-trait templates, the template argument must be &function. IntelliSense will accept a 
+   // direct reference to the function, but MSVC itself will likely encounter an internal compiler error 
+   // that it does not know how to report.
+
    template<typename T> struct function_traits {};
    template<typename R, typename ...Args> struct function_traits<std::function<R(Args...)>> {
       static constexpr const size_t arg_count = sizeof...(Args);

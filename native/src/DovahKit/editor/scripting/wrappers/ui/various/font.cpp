@@ -15,6 +15,7 @@
 #include "../../../../../helpers/lua/qt_variant.h"
 #include "../../../../../helpers/function_traits.h"
 #include "../../../../../helpers/strings.h"
+#include "../../../../../helpers/type_traits.h"
 
 #include "../../../widgets/objects/CanvasWidgetLayerDataLuaText.h"
 
@@ -65,14 +66,14 @@ namespace {
          using wt = editor_script::wrapper_type;
          case wt::ui: // widget
             if (auto* u = w.widget) {
-               assert(w.parts[0].signature == wrapper_part_types::ui_font_data);
+               assert(w.parts[0].signature == editor_script::wrapper_part_types::ui_font_data);
                return u->font();
             }
             break;
          case wt::ui_canvas_layer_data:
             if (auto* d = w.canvas_layer_data) {
                if (auto* tld = qobject_cast<CanvasWidgetLayerDataLuaText*>(d)) {
-                  assert(w.parts[0].signature == wrapper_part_types::ui_font_data);
+                  assert(w.parts[0].signature == editor_script::wrapper_part_types::ui_font_data);
                   return tld->font;
                }
             }
@@ -80,7 +81,7 @@ namespace {
          case wt::ui_model_item:
             if (auto* o = w.model_observer) {
                if (auto* i = o->item()) {
-                  assert(w.parts[0].signature == wrapper_part_types::ui_font_role);
+                  assert(w.parts[0].signature == editor_script::wrapper_part_types::ui_font_role);
                   auto data = i->data(Qt::FontRole);
                   if (data.isValid() && data.type() == QMetaType::QFont)
                      return data.value<QFont>();
@@ -307,22 +308,6 @@ namespace {
    namespace _methods {
    }
    namespace _getters {
-      luastackchange_t width(lua_State* L) {
-         auto& self  = get_wrapper_for_thiscall<cls>(L);
-         int value = 100;
-         {
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [&self, &value]() {
-               value = _get_font(self).stretch();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         if (value == 0)
-            return 0;
-         lua_pushinteger(L, value);
-         return 1;
-      }
    }
    namespace _setters {
    }
@@ -390,7 +375,7 @@ namespace {
       }
       return QVariant();
    }
-
+   
    template<auto func> int verbatim_push(lua_State* L, const QVariant& v) {
       static_assert(std::is_same_v<cobb::member_function_context_type<func>, QFont>, "The wrapped function must be a getter on QFont.");
       using T = cobb::return_type_of<func>;
@@ -405,20 +390,22 @@ namespace {
    }
    
    template<auto func, typename T> QVariant qvariant_get(const T& obj) {
-      using out_t = cobb::return_type_of<func>;
-      static_assert(std::is_base_of_v<cobb::function_traits<func>::context_type, T>, "The wrapped function must be a getter on templated type T.");
-      static_assert(!cobb::is_const_function<func>, "The wrapped function must be a getter and therefore must be const.");
-      static_assert(!std::is_same_v<out_t, void>, "The wrapped function must be a getter and therefore must return a value.");
+      using raw_t = cobb::return_type_of<func>;
+      using int_t = cobb::strip_enum_t<raw_t>;
+      static_assert(std::is_base_of_v<cobb::member_function_context_type<func>, T>, "The wrapped function must be a getter on templated type T.");
+      static_assert(cobb::is_const_function<func>, "The wrapped function must be a getter and therefore must be const.");
+      static_assert(!std::is_same_v<raw_t, void>, "The wrapped function must be a getter and therefore must return a value.");
       //
-      out_t value = (obj.*func)();
-      return QVariant::fromValue<out_t>(value);
+      raw_t value = (obj.*func)();
+      return QVariant::fromValue<int_t>((int_t)value);
    }
    template<auto func, typename T> void qvariant_set(T& obj, const QVariant& value) {
-      using in_t = cobb::type_of_nth_argument<func, 0>;
-      static_assert(std::is_base_of_v<cobb::function_traits<func>::context_type, T>, "The wrapped function must be a setter on templated type T.");
+      using raw_t = cobb::type_of_nth_argument<func, 0>;
+      using int_t = cobb::strip_enum_t<raw_t>;
+      static_assert(std::is_base_of_v<cobb::member_function_context_type<func>, T>, "The wrapped function must be a setter on templated type T.");
       static_assert(!cobb::is_const_function<func>, "The wrapped function must be a setter and therefore cannot be const.");
       //
-      (obj.*func)(value.value<in_t>());
+      (obj.*func)((raw_t)value.value<int_t>());
    }
 
    int push_indexed_integer(lua_State* L, const QVariant& v) {
@@ -768,12 +755,6 @@ namespace {
          }
       }
       namespace width {
-         QVariant get(const QFont& font) {
-            return QVariant::fromValue<int>(font.stretch());
-         }
-         void set(QFont& font, const QVariant& value) {
-            font.setStretch(value.toInt());
-         }
          int push(lua_State* L, const QVariant& value) {
             int stretch = value.toInt();
             if (stretch == QFont::AnyStretch) // this is basically the same as CSS "inherit"
@@ -824,8 +805,8 @@ namespace editor_script::wrappers::ui {
          .name = "capitalization", // String enum used to change letter case or enable small caps.
          .push = _fields::capitalization::push,
          .pull = _fields::capitalization::pull,
-         .get  = qvariant_get<QFont::capitalization>,
-         .set  = qvariant_set<QFont::setCapitalization>,
+         .get  = qvariant_get<&QFont::capitalization>,
+         .set  = qvariant_set<&QFont::setCapitalization>,
          .resolve_mask = QFont::ResolveProperties::CapitalizationResolved,
       },
       fph{ 
@@ -862,34 +843,34 @@ namespace editor_script::wrappers::ui {
       },
       fph{ 
          .name = "strikethrough", // Boolean indicating whether a line crosses through the middle of the text.
-         .push = verbatim_push<QFont::strikeOut>,
-         .pull = verbatim_pull<QFont::setStrikeOut>,
-         .get  = qvariant_get<QFont::strikeOut>,
-         .set  = qvariant_set<QFont::setStrikeOut>,
+         .push = verbatim_push<&QFont::strikeOut>,
+         .pull = verbatim_pull<&QFont::setStrikeOut>,
+         .get  = qvariant_get<&QFont::strikeOut>,
+         .set  = qvariant_set<&QFont::setStrikeOut>,
          .resolve_mask = QFont::ResolveProperties::StrikeOutResolved,
       },
       fph{ 
          .name = "weight", // Specific font weight (boldness) as an int between 1 and 100.
          .push = push_indexed_integer,
          .pull = _fields::weight::pull,
-         .get  = qvariant_get<QFont::weight>,
-         .set  = qvariant_set<QFont::setWeight>,
+         .get  = qvariant_get<&QFont::weight>,
+         .set  = qvariant_set<&QFont::setWeight>,
          .resolve_mask = QFont::ResolveProperties::WeightResolved,
       },
       fph{ 
          .name = "width", // Positive integer indicating the font's width as a percentage.
          .push = _fields::width::push,
          .pull = _fields::width::pull,
-         .get  = _fields::width::get,
-         .set  = _fields::width::set,
+         .get  = qvariant_get<&QFont::stretch>,
+         .set  = qvariant_set<&QFont::setStretch>,
          .resolve_mask = QFont::ResolveProperties::StretchResolved,
       },
       fph{ 
          .name = "word_spacing", // Number indicating added spacing between words; can be negative; doesn't apply to space-less writing systems.
-         .push = verbatim_push<QFont::wordSpacing>,
-         .pull = verbatim_pull<QFont::setWordSpacing>,
-         .get  = qvariant_get<QFont::wordSpacing>,
-         .set  = qvariant_set<QFont::setWordSpacing>,
+         .push = verbatim_push<&QFont::wordSpacing>,
+         .pull = verbatim_pull<&QFont::setWordSpacing>,
+         .get  = qvariant_get<&QFont::wordSpacing>,
+         .set  = qvariant_set<&QFont::setWordSpacing>,
          .resolve_mask = QFont::ResolveProperties::WordSpacingResolved,
       },
    }};
