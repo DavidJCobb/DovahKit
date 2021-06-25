@@ -204,6 +204,42 @@ void ObservableStandardItemModel::setDefaultDataForSpan(int role, Qt::Orientatio
 }
 
 QVariant ObservableStandardItemModel::data(const QModelIndex& index, int role) const {
+   if (role == Qt::FontRole) {
+      //
+      // Special-case behavior for FontRole: if a cell specifies some font properties, 
+      // its containing row specifies some others, and its containing column specifies 
+      // yet others, then these three sets of properties should be coalesced, with the 
+      // cell properties prioritized over the row properties and those over the column 
+      // properties.
+      //
+      if (!index.isValid())
+         return QVariant();
+      QVariant cell = QStandardItemModel::data(index, role);
+      QVariant row;
+      QVariant col;
+      //
+      auto it = this->_defaultsByRole.find((Qt::ItemDataRole)role);
+      if (it != this->_defaultsByRole.end()) {
+         auto& entry = *it;
+         row = entry.forRow(index.row());
+         col = entry.forCol(index.column());
+      }
+      //
+      if (!cell.isValid() || cell.type() == QMetaType::QFont) {
+         QFont resolved = cell.value<QFont>();
+         resolved = resolved.resolve(row.value<QFont>());
+         resolved = resolved.resolve(col.value<QFont>());
+         return resolved;
+      }
+      if (cell.isValid())
+         return cell;
+      if (row.isValid())
+         return row;
+      if (col.isValid())
+         return col;
+      return QVariant();
+   }
+   //
    auto value = QStandardItemModel::data(index, role);
    if (!value.isValid()) {
       if (index.isValid() && !index.parent().isValid()) { // top-level item

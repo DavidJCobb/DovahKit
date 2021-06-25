@@ -336,6 +336,7 @@
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
     <ClCompile Include="helpers\qt\combobox.cpp" />
+    <ClCompile Include="helpers\qt\font.cpp" />
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
     <ClCompile Include="helpers\qt\ownership.cpp" />
     <ClCompile Include="helpers\qt\repaint.cpp" />
@@ -713,6 +714,7 @@
     <ClInclude Include="helpers\matrix.h" />
     <ClInclude Include="helpers\qt\basic_bindings.h" />
     <ClInclude Include="helpers\qt\combobox.h" />
+    <ClInclude Include="helpers\qt\font.h" />
     <ClInclude Include="helpers\qt\get_model_of.h" />
     <ClInclude Include="helpers\qt\ownership.h" />
     <ClInclude Include="helpers\qt\repaint.h" />

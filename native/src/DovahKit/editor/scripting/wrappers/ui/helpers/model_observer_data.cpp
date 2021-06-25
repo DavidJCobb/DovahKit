@@ -10,6 +10,7 @@
 
 #include "../../resource/dds.h"
 #include "../../resource/raster.h"
+#include "../../ui/various/font.h"
 
 namespace editor_script::helpers {
    extern [[nodiscard]] QVariant get_model_items_data(ObservableStandardItemModelObserver* observer, int role) {
@@ -184,7 +185,7 @@ namespace editor_script::moph {
             return luaL_error(L, "property `%1` is not available here", property_name);
          }
          QVariant result = helpers::get_model_items_data(self.model_observer, moph->role);
-         return moph->push(L, result);
+         return (moph->push)(L, result, self);
       }
       extern int setter(lua_State* L) {
          // Upvalue 1: string:         class metatable key (used to type-check self and get a valid wrapper-object)
@@ -299,7 +300,7 @@ namespace editor_script::moph {
       return out;
    }
 
-   extern int push_alignment(lua_State* L, const QVariant& v) {
+   extern int push_alignment(lua_State* L, const QVariant& v, const wrapper& observer) {
       std::string out;
       editor_script::util::ui::alignment_to_string((Qt::Alignment)v.value<Qt::Alignment::Int>(), out);
       lua_pushstring(L, out.c_str());
@@ -347,7 +348,7 @@ namespace editor_script::moph {
       return QVariant::fromValue<Qt::Alignment::Int>(out);
    }
 
-   extern int push_color(lua_State* L, const QVariant& v) {
+   extern int push_color(lua_State* L, const QVariant& v, const wrapper& observer) {
       QColor color;
       switch (v.type()) {
          case QMetaType::QBrush:
@@ -367,7 +368,23 @@ namespace editor_script::moph {
       return editor_script::util::ui::pull_color(L, stack_pos);
    }
 
-   extern int push_icon(lua_State* L, const QVariant& v) {
+   extern int push_font(lua_State* L, const QVariant& v, const wrapper& observer) {
+      if (v.isValid()) {
+         assert(v.type() == QMetaType::QFont);
+         wrapper out = observer;
+         out.append_part(wrapper_part_types::ui_font_role);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::ui::font::metatable_key);
+      }
+      return 0;
+   }
+   extern QVariant pull_font(lua_State* L, int stack_pos) {
+      if (lua_isnoneornil(L, stack_pos))
+         return QVariant();
+      QFont converted = wrappers::ui::font::pull(L, stack_pos);
+      return QVariant::fromValue(converted);
+   }
+
+   extern int push_icon(lua_State* L, const QVariant& v, const wrapper& observer) {
       switch (v.type()) {
          case QMetaType::QBrush:
             editor_script::util::ui::push_color(L, v.value<QBrush>().color());
@@ -400,7 +417,7 @@ namespace editor_script::moph {
       return editor_script::util::ui::pull_color(L, stack_pos);
    }
 
-   extern int push_string(lua_State* L, const QVariant& v) {
+   extern int push_string(lua_State* L, const QVariant& v, const wrapper& observer) {
       if (!v.isValid()) {
          lua_pushnil(L);
          return 1;

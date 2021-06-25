@@ -12,6 +12,9 @@ namespace editor_script::helpers {
    extern void remove_items_from_model(QWidget* widget, int row, int col, QModelIndex parent = QModelIndex());
 }
 
+namespace editor_script {
+   class wrapper;
+}
 namespace editor_script::moph {
    namespace util {
       extern int getter(lua_State* L);
@@ -19,8 +22,8 @@ namespace editor_script::moph {
    }
 
    struct model_observer_property_handler {
-      using push_function_t      = int(*)(lua_State*, const QVariant&); // return number of values pushed to the Lua stack
-      using pull_function_t      = QVariant(*)(lua_State*, int); // int argument is Lua stack pos. feel free to throw Lua errors
+      using push_function_t      = int(*)(lua_State*, const QVariant& value, const wrapper& observer); // Function to push a value into Lua. Return the number of values pushed to the Lua stack.
+      using pull_function_t      = QVariant(*)(lua_State*, int stack_pos);                             // Function to pull a value from Lua. Int argument is Lua stack pos. Feel free to throw Lua errors.
       using transform_function_t = QVariant(*)(const QVariant& prior, const QVariant& changes);
 
       const char*          name; // the field name we want to expose to Lua
@@ -54,17 +57,21 @@ namespace editor_script::moph {
          role_map_t extract(lua_State* L, int table_pos) const noexcept;
    };
 
-   extern int push_alignment(lua_State*, const QVariant&);
+   extern int push_alignment(lua_State*, const QVariant&, const wrapper& observer);
    extern QVariant pull_alignment(lua_State*, int stack_pos);
    extern QVariant transform_alignment(const QVariant& prior, const QVariant& changes);
 
-   extern int push_color(lua_State*, const QVariant&);
+   extern int push_color(lua_State*, const QVariant&, const wrapper& observer);
    extern QVariant pull_color(lua_State*, int stack_pos);
 
+   // Reads return either nil or a wrappers::ui::font wrapper. Writes accept nil, a table, or a wrapper.
+   extern int push_font(lua_State*, const QVariant&, const wrapper& observer);
+   extern QVariant pull_font(lua_State*, int stack_pos);
+
    // Icons can be QColors or rasters, currently.
-   extern int push_icon(lua_State*, const QVariant&);
+   extern int push_icon(lua_State*, const QVariant&, const wrapper& observer);
    extern QVariant pull_icon(lua_State*, int stack_pos);
 
-   extern int push_string(lua_State*, const QVariant&);
+   extern int push_string(lua_State*, const QVariant&, const wrapper& observer);
    extern QVariant pull_string(lua_State*, int stack_pos);
 }

@@ -13,6 +13,7 @@
 #include "../../../cross_thread_tasks/s2m/lambda.h"
 
 #include "../../../../../helpers/lua/qt_variant.h"
+#include "../../../../../helpers/qt/font.h"
 #include "../../../../../helpers/function_traits.h"
 #include "../../../../../helpers/strings.h"
 #include "../../../../../helpers/type_traits.h"
@@ -56,10 +57,6 @@
 //    Wholly overwrite the internal bitmask of "resolved" properties.
 //
 
-namespace {
-   static_assert(std::is_same_v<decltype(std::declval<QFont&>().resolve()),  uint>, "This code relied on a QFont::resolve overload that was neither deprecated nor documented. Said overload returned the font's internal mask of resolved properties.");
-   static_assert(std::is_same_v<decltype(std::declval<QFont&>().resolve(0)), void>, "This code relied on a QFont::resolve overload that was neither deprecated nor documented. Said overload modified the font's internal mask of resolved properties.");
-}
 namespace {
    QFont _get_font(const editor_script::wrapper& w) {
       switch (w.type) {
@@ -108,28 +105,40 @@ namespace {
             return;
          case wt::ui_model_item:
             if (auto* o = w.model_observer) {
-               if (auto* i = o->item()) {
-                  if (f == QFont()) {
-                     //
-                     // If it's a default font, yeet it.
-                     //
-                     i->setData(QVariant(), Qt::FontRole);
-                  } else {
-                     i->setData(f, Qt::FontRole);
+               bool has_row = o->row >= 0;
+               bool has_col = o->col >= 0;
+               if (!has_row && !has_col)
+                  return;
+               if (has_row && has_col) {
+                  if (auto* item = o->item()) {
+                     if (f.resolve() == 0) {
+                        item->setData(QVariant(), Qt::FontRole); // if it's an empty font, just clear it entirely
+                     } else {
+                        item->setData(f, Qt::FontRole);
+                     }
                   }
+                  return;
+               }
+               auto* model = o->model;
+               if (!model)
+                  return;
+               Qt::Orientation orientation;
+               int pos;
+               if (has_row) {
+                  pos = o->row;
+                  orientation = ObservableStandardItemModelObserver::rowOrientation;
+               } else {
+                  pos = o->col;
+                  orientation = ObservableStandardItemModelObserver::colOrientation;
+               }
+               if (f.resolve() == 0) {
+                  model->setDefaultDataForSpan(Qt::FontRole, orientation, pos, QVariant()); // if it's an empty font, just clear it entirely
+               } else {
+                  model->setDefaultDataForSpan(Qt::FontRole, orientation, pos, f);
                }
             }
             return;
       }
-   }
-
-   bool _test_font_property(const QFont& font, QFont::ResolveProperties mask) {
-      auto resolved = font.resolve();
-      return (resolved & mask) == mask;
-   }
-   void _clear_font_properties(QFont& font, QFont::ResolveProperties mask) {
-      auto resolved = font.resolve();
-      font.resolve(resolved &= ~(uint)mask);
    }
 }
 
@@ -195,7 +204,7 @@ namespace editor_script::impl::font_properties {
             task->handler = [hnd, &wrap, &value, &not_set]() {
                auto font = _get_font(*wrap);
                if (hnd->resolve_mask) {
-                  if (!_test_font_property(font, hnd->resolve_mask)) {
+                  if (!cobb::qt::test_font_properties(font, hnd->resolve_mask)) {
                      not_set = true;
                      return;
                   }
@@ -235,7 +244,7 @@ namespace editor_script::impl::font_properties {
             auto* task = new tasks::s2m::ui_read_lambda();
             task->handler = [hnd, &wrap, class_handler_set]() {
                QFont font = _get_font(*wrap);
-               _clear_font_properties(font, hnd->resolve_mask);
+               cobb::qt::clear_font_properties(font, hnd->resolve_mask);
                _set_font(*wrap, font);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -710,7 +719,7 @@ namespace {
             assert(size > 2);
             assert(string[size - 2] == 'p');
             //
-            auto type = string[size - 1];
+            QChar type = string[size - 1]; // cannot use "auto" because that gets us a QCharRef
             string.chop(2);
             bool ok;
             auto num = string.toInt(&ok); // toInt ignores whitespace, so that ensures that "12 pt" and so on still works
@@ -884,6 +893,18 @@ namespace editor_script::wrappers::ui {
    }
 
    /*static*/ QFont cls::pull(lua_State* L, int stack_pos) {
+      if (auto* wrap = wrapper_from_stack<cls>(L, stack_pos)) {
+         QFont out;
+         //
+         auto* task = new tasks::s2m::ui_read_lambda();
+         task->handler = [&out, &wrap]() {
+            out = _get_font(*wrap);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         delete task;
+         //
+         return out;
+      }
       return cls::fph_handlers.table_to_struct(L, stack_pos);
    }
 }

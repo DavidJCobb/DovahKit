@@ -83,12 +83,12 @@ namespace {
          if (lua_isnumber(L, 3)) {
             row = lua_tointegerx(L, 3, &isnum);
             luaL_argcheck(L, isnum,   3, "positions in a layout, if specified, must be integers");
-            luaL_argcheck(L, row > 0, 3, "positions in a layout, if specified, must be integers");
+            luaL_argcheck(L, row > 0, 3, "positions in a layout, if specified, must be greater than zero");
          }
          if (lua_isnumber(L, 4)) {
             col = lua_tointegerx(L, 4, &isnum);
             luaL_argcheck(L, isnum,   4, "positions in a layout, if specified, must be integers");
-            luaL_argcheck(L, col > 0, 4, "positions in a layout, if specified, must be integers");
+            luaL_argcheck(L, col > 0, 4, "positions in a layout, if specified, must be greater than zero");
          }
          if (lua_isnumber(L, 5)) {
             rowspan = lua_tointegerx(L, 5, &isnum);
