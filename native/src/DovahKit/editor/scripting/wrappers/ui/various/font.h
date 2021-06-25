@@ -4,6 +4,7 @@
 
 #include <type_traits>
 #include "../../../../../helpers/function_traits.h"
+#include "../../../../../helpers/strings.h"
 
 namespace editor_script::wrapper_part_types {
    inline constexpr cobb::eight_cc ui_font_data = "BaseFont"; // for widgets, canvas text data, etc.

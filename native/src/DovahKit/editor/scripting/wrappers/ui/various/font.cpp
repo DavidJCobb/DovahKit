@@ -348,7 +348,7 @@ namespace {
          lua_pushstring(L, v.toString().toUtf8());
       } else if constexpr (std::is_same_v<T, float>) {
          lua_pushnumber(L, v.toFloat());
-      } else if constexpr (std::is_same_v<lua_type, double>) {
+      } else if constexpr (std::is_same_v<T, double>) {
          lua_pushnumber(L, v.toDouble());
       } else if constexpr (std::is_same_v<T, bool>) {
          lua_pushboolean(L, v.toBool());
