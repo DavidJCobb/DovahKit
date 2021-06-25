@@ -56,8 +56,6 @@
 //
 
 namespace {
-   static constexpr int FONT_BOLD_WEIGHT_THRESHOLD = QFont::Bold;
-
    static_assert(std::is_same_v<decltype(std::declval<QFont&>().resolve()),  uint>, "This code relied on a QFont::resolve overload that was neither deprecated nor documented. Said overload returned the font's internal mask of resolved properties.");
    static_assert(std::is_same_v<decltype(std::declval<QFont&>().resolve(0)), void>, "This code relied on a QFont::resolve overload that was neither deprecated nor documented. Said overload modified the font's internal mask of resolved properties.");
 }
@@ -195,7 +193,7 @@ namespace editor_script::impl::font_properties {
             auto* task = new tasks::s2m::ui_read_lambda();
             task->handler = [hnd, &wrap, &value, &not_set]() {
                auto font = _get_font(*wrap);
-               if (hnd->reset_if_nil && hnd->resolve_mask) {
+               if (hnd->resolve_mask) {
                   if (!_test_font_property(font, hnd->resolve_mask)) {
                      not_set = true;
                      return;
@@ -232,9 +230,7 @@ namespace editor_script::impl::font_properties {
          if (!hnd)
             return luaL_error(L, "property `%1` is not available here", property_name);
          //
-         if (hnd->reset_if_nil && lua_isnoneornil(L, 2)) {
-            assert(hnd->resolve_mask);
-            //
+         if (hnd->resolve_mask && lua_isnoneornil(L, 2)) {
             auto* task = new tasks::s2m::ui_read_lambda();
             task->handler = [hnd, &wrap, class_handler_set]() {
                QFont font = _get_font(*wrap);
@@ -311,30 +307,6 @@ namespace {
    namespace _methods {
    }
    namespace _getters {
-      luastackchange_t italics(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         QFont::Style style = QFont::Style::StyleNormal;
-         {
-            auto* task     = new tasks::s2m::ui_read_lambda();
-            task->handler  = [&self, &style]() {
-               style = _get_font(self).style();
-            };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
-            delete task;
-         }
-         switch (style) {
-            case QFont::StyleNormal:
-               lua_pushboolean(L, false);
-               return 1;
-            case QFont::StyleItalic:
-               lua_pushboolean(L, true);
-               return 1;
-            case QFont::StyleOblique:
-               lua_pushboolean(L, true);
-               return 1;
-         }
-         return 0;
-      }
       luastackchange_t width(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          int value = 100;
@@ -353,7 +325,6 @@ namespace {
       }
    }
    namespace _setters {
-
    }
 
    namespace _singleton_functions {
@@ -387,47 +358,30 @@ namespace {
       }
       return 1;
    }
-   template<typename T, bool allow_nil = false> QVariant simple_pull(lua_State* L, int stack_pos) {
-      if constexpr (allow_nil) {
-         if (lua_isnoneornil(L, stack_pos))
-            return QVariant();
-      }
-      //
+   template<typename T> QVariant simple_pull(lua_State* L, int stack_pos) {
       if constexpr (std::is_same_v<T, int>) {
          int isnum;
          int value = lua_tointegerx(L, stack_pos, &isnum);
          if (!isnum) {
-            if constexpr (allow_nil)
-               luaL_error(L, "integer or nil expected");
-            else
-               luaL_error(L, "integer expected");
+            luaL_error(L, "integer or nil expected");
          }
          return QVariant::fromValue<int>(value);
       } else if constexpr (std::is_same_v<T, const char*>) {
          if (!lua_isstring(L, stack_pos)) {
-            if constexpr (allow_nil)
-               luaL_error(L, "string or nil expected");
-            else
-               luaL_error(L, "string expected");
+            luaL_error(L, "string or nil expected");
          }
          auto* value = lua_tostring(L, stack_pos);
          return QVariant::fromValue<QString>(QString::fromUtf8(value));
       } else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>) {
          if (!lua_isnumber(L, stack_pos)) {
-            if constexpr (allow_nil)
-               luaL_error(L, "number or nil expected");
-            else
-               luaL_error(L, "number expected");
+            luaL_error(L, "number or nil expected");
          }
          if constexpr (std::is_same_v<T, float>)
             return QVariant::fromValue<float>(lua_tonumber(L, stack_pos));
          QVariant::fromValue<double>(lua_tonumber(L, stack_pos));
       } else if constexpr (std::is_same_v<T, bool>) {
          if (!lua_isboolean(L, stack_pos)) {
-            if constexpr (allow_nil)
-               luaL_error(L, "boolean or nil expected");
-            else
-               luaL_error(L, "boolean expected");
+            luaL_error(L, "boolean or nil expected");
          }
          return QVariant::fromValue<bool>(lua_toboolean(L, stack_pos));
       } else {
@@ -443,11 +397,11 @@ namespace {
       //
       return simple_push<T>(L, v);
    }
-   template<auto func, bool allow_nil = false> QVariant verbatim_pull(lua_State* L, int stack_pos) {
+   template<auto func> QVariant verbatim_pull(lua_State* L, int stack_pos) {
       static_assert(std::is_same_v<cobb::member_function_context_type<func>, QFont>, "The wrapped function must be a setter on QFont.");
       using T = cobb::type_of_nth_argument<func, 0>;
       //
-      return simple_pull<T, allow_nil>(L, stack_pos);
+      return simple_pull<T>(L, stack_pos);
    }
    
    template<auto func, typename T> QVariant qvariant_get(const T& obj) {
@@ -491,8 +445,10 @@ namespace {
          void set(QFont& font, const QVariant& value) {
             bool after = value.toBool();
             bool prior = font.weight() >= QFont::Medium;
-            if (after == prior)
-               return;
+            if (after == prior) {
+               if (font.resolve() & QFont::ResolveProperties::WeightResolved)
+                  return;
+            }
             if (after)
                font.setWeight(QFont::Bold);
             else
@@ -548,6 +504,183 @@ namespace {
             }
             luaL_error(L, error.c_str());
             __assume(0);
+         }
+      }
+      namespace family {
+         std::array generics_to_constants = {
+            std::pair{ QFont::SansSerif, "sans-serif" },
+            std::pair{ QFont::Serif,     "serif" },
+            std::pair{ QFont::Monospace, "monospace" },
+            std::pair{ QFont::Fantasy,   "fantasy" },
+            std::pair{ QFont::Cursive,   "cursive" },
+         };
+         //
+         QFont::StyleHint _check_generic(const QString& family) {
+            for (auto& pair : generics_to_constants)
+               if (family.compare(QByteArray(pair.second), Qt::CaseInsensitive) == 0)
+                  return pair.first;
+            return QFont::StyleHint::AnyStyle;
+         }
+         bool _handle_quotes(QString& family, bool& quoted) { // returns false on error
+            if (family[0] != '"' && family[0] != '\'') // not quoted
+               return true;
+            auto quot = family[0];
+            auto size = family.size();
+            if (family[size - 1] != quot) // not quoted
+               return true;
+            bool escape = false;
+            for (int i = 1; i < size - 1; ++i) {
+               if (escape) {
+                  escape = false;
+                  continue;
+               }
+               if (family[i] == '\\') {
+                  escape = true;
+                  continue;
+               }
+               if (family[i] == quot) // unescaped quote in middle
+                  return false;
+            }
+            family = family.mid(1, size - 2);
+            return true;
+         }
+         void _strip_quotes(QString& family) { // assumes the family has already been checked for correctness, and skips those checks
+            if (family[0] != '"' && family[0] != '\'') // not quoted
+               return;
+            auto quot = family[0];
+            auto size = family.size();
+            if (family[size - 1] != quot) // not quoted
+               return;
+            family = family.mid(1, size - 2);
+         }
+         bool _is_generic(const QString& family) {
+            return _check_generic(family) != QFont::StyleHint::AnyStyle;
+         }
+         
+         QVariant get(const QFont& font) {
+            QString out;
+            //
+            auto mask = font.resolve();
+            if (mask & QFont::ResolveProperties::FamilyResolved) {
+               auto family = font.family();
+               if (_is_generic(family)) {
+                  out += '"';
+                  out += family.replace('"', "\"");
+                  out += '"';
+               } else {
+                  out += family;
+               }
+            }
+            if (mask & QFont::ResolveProperties::FamiliesResolved) {
+               for (auto& family : font.families()) {
+                  if (!out.isEmpty())
+                     out += ", ";
+                  if (_is_generic(family)) {
+                     out += '"';
+                     out += family.replace('"', "\"");
+                     out += '"';
+                  } else {
+                     out += family;
+                  }
+               }
+            }
+            if (mask & QFont::ResolveProperties::StyleHintResolved) {
+               auto keyword = font.styleHint();
+               for (auto& pair : generics_to_constants) {
+                  if (pair.first == keyword) {
+                     if (!out.isEmpty())
+                        out += ", ";
+                     out += pair.second;
+                  }
+               }
+            }
+            //
+            return QVariant::fromValue<QString>(out);
+         }
+         void set(QFont& font, const QVariant& value) {
+            auto list = value.value<QStringList>();
+            auto size = list.size();
+            //
+            QStringList families;
+            auto hint = QFont::StyleHint::AnyStyle;
+            //
+            for (int i = 0; i < size; ++i) {
+               auto family = list[i];
+               if (i == size - 1) {
+                  hint = _check_generic(family);
+                  if (hint != QFont::StyleHint::AnyStyle) {
+                     continue;
+                  }
+               }
+               _strip_quotes(family);
+               families.push_back(family);
+            }
+            //
+            font.setStyleHint(hint);
+            font.setFamilies(families);
+         }
+         int push(lua_State* L, const QVariant& value) {
+            if (!value.isValid())
+               return 0;
+            lua_pushstring(L, value.toString().toUtf8());
+            return 1;
+         }
+         QVariant pull(lua_State* L, int stack_pos) {
+            if (!lua_isstring(L, stack_pos))
+               luaL_error(L, "string or nil expected");
+            //
+            QStringList list;
+            //
+            QString source   = QString::fromUtf8(lua_tostring(L, stack_pos));
+            QChar   in_quote = '\0';
+            QString current;
+            for (auto c : source) {
+               if (c == ',') {
+                  list.push_back(current.trimmed());
+                  current.clear();
+                  continue;
+               }
+               if (current.isEmpty() && c.isSpace())
+                  continue;
+               current += c;
+            }
+            if (!current.isEmpty()) {
+               list.push_back(current);
+               current.clear();
+            }
+            //
+            int size = list.size();
+            for(int i = 0; i < size; ++i) {
+               auto family = list[i];
+               bool quoted = false;
+               if (!_handle_quotes(family, quoted)) {
+                  luaL_error(L, "incorrect use of enclosing quotes");
+               }
+               if (!quoted) {
+                  if (_is_generic(family) && i != size - 1) {
+                     luaL_error(L, "a font family list can only contain one generic family, and it must be at the end of the list; to use a font actually named \"%s\", enclose it in quotes", family);
+                  }
+               }
+            }
+            //
+            return QVariant::fromValue<QStringList>(list);
+         }
+      }
+      namespace italics {
+         QVariant get(const QFont& font) {
+            return QVariant::fromValue<bool>(font.style() != QFont::Style::StyleNormal);
+         }
+         void set(QFont& font, const QVariant& value) {
+            font.setStyle(value.toBool() ? QFont::Style::StyleItalic : QFont::Style::StyleNormal);
+         }
+         int push(lua_State* L, const QVariant& value) {
+            lua_pushboolean(L, value.toBool());
+            return 1;
+         }
+         QVariant pull(lua_State* L, int stack_pos) {
+            if (!lua_isboolean(L, stack_pos))
+               luaL_error(L, "boolean or nil expected");
+            return QVariant::fromValue<bool>(lua_toboolean(L, stack_pos));
          }
       }
       namespace letter_spacing {
@@ -634,6 +767,32 @@ namespace {
             return QVariant::fromValue<int>(value);
          }
       }
+      namespace width {
+         QVariant get(const QFont& font) {
+            return QVariant::fromValue<int>(font.stretch());
+         }
+         void set(QFont& font, const QVariant& value) {
+            font.setStretch(value.toInt());
+         }
+         int push(lua_State* L, const QVariant& value) {
+            int stretch = value.toInt();
+            if (stretch == QFont::AnyStretch) // this is basically the same as CSS "inherit"
+               return 0;
+            lua_pushinteger(L, stretch);
+            return 1;
+         }
+         QVariant pull(lua_State* L, int stack_pos) {
+            int isnum;
+            int value = lua_tointegerx(L, stack_pos, &isnum);
+            if (!isnum)
+               luaL_error(L, "integer or nil expected");
+            if (value <= 0)
+               luaL_error(L, "font stretch must be greater than zero");
+            if (value > 4000)
+               luaL_error(L, "font stretch cannot be greater than 4000");
+            return QVariant::fromValue<int>(value);
+         }
+      }
    }
 }
 
@@ -644,9 +803,6 @@ namespace editor_script::wrappers::ui {
       //
       // Fields that are handled as "font property handlers" should go in the list of those below, not here.
       //
-      static_assert(false, "Finish converting all of these into FPHs.");
-      { "italics",        &_getters::italics },        // boolean indicating whether the text is italicized
-      { "width",          &_getters::width },          // font-stretch as a percentage of normal font weight, e.g. 200% for twice as wide, or nil for "don't care"
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       //
@@ -673,7 +829,23 @@ namespace editor_script::wrappers::ui {
          .resolve_mask = QFont::ResolveProperties::CapitalizationResolved,
       },
       fph{ 
-         .name = "letter_spacing", // letter spacing as a signed number
+         .name = "family", // Positive integer indicating the font's width as a percentage.
+         .push = _fields::family::push,
+         .pull = _fields::family::pull,
+         .get  = _fields::family::get,
+         .set  = _fields::family::set,
+         .resolve_mask = (QFont::ResolveProperties)(QFont::ResolveProperties::FamilyResolved | QFont::ResolveProperties::FamiliesResolved | QFont::ResolveProperties::StyleHintResolved),
+      },
+      fph{ 
+         .name = "italics", // Boolean to make a font italic or not italic.
+         .push = _fields::italics::push,
+         .pull = _fields::italics::pull,
+         .get  = _fields::italics::get,
+         .set  = _fields::italics::set,
+         .resolve_mask = QFont::ResolveProperties::StyleResolved,
+      },
+      fph{ 
+         .name = "letter_spacing", // Letter spacing as a signed number.
          .push = _fields::letter_spacing::push,
          .pull = _fields::letter_spacing::pull,
          .get  = _fields::letter_spacing::get,
@@ -681,7 +853,7 @@ namespace editor_script::wrappers::ui {
          .resolve_mask = QFont::ResolveProperties::LetterSpacingResolved,
       },
       fph{ 
-         .name = "size", // font size, e.g. "12px" or "12pt"; values like 12 and "12 px" are not valid
+         .name = "size", // Font size as a string, e.g. "12px" or "12pt"; a unit is required.
          .push = _fields::size::push,
          .pull = _fields::size::pull,
          .get  = _fields::size::get,
@@ -689,12 +861,36 @@ namespace editor_script::wrappers::ui {
          .resolve_mask = QFont::ResolveProperties::SizeResolved,
       },
       fph{ 
-         .name = "weight", // Specific font weight (boldness) as an int between 1 and 100
+         .name = "strikethrough", // Boolean indicating whether a line crosses through the middle of the text.
+         .push = verbatim_push<QFont::strikeOut>,
+         .pull = verbatim_pull<QFont::setStrikeOut>,
+         .get  = qvariant_get<QFont::strikeOut>,
+         .set  = qvariant_set<QFont::setStrikeOut>,
+         .resolve_mask = QFont::ResolveProperties::StrikeOutResolved,
+      },
+      fph{ 
+         .name = "weight", // Specific font weight (boldness) as an int between 1 and 100.
          .push = push_indexed_integer,
          .pull = _fields::weight::pull,
          .get  = qvariant_get<QFont::weight>,
          .set  = qvariant_set<QFont::setWeight>,
          .resolve_mask = QFont::ResolveProperties::WeightResolved,
+      },
+      fph{ 
+         .name = "width", // Positive integer indicating the font's width as a percentage.
+         .push = _fields::width::push,
+         .pull = _fields::width::pull,
+         .get  = _fields::width::get,
+         .set  = _fields::width::set,
+         .resolve_mask = QFont::ResolveProperties::StretchResolved,
+      },
+      fph{ 
+         .name = "word_spacing", // Number indicating added spacing between words; can be negative; doesn't apply to space-less writing systems.
+         .push = verbatim_push<QFont::wordSpacing>,
+         .pull = verbatim_pull<QFont::setWordSpacing>,
+         .get  = qvariant_get<QFont::wordSpacing>,
+         .set  = qvariant_set<QFont::setWordSpacing>,
+         .resolve_mask = QFont::ResolveProperties::WordSpacingResolved,
       },
    }};
 
@@ -704,5 +900,9 @@ namespace editor_script::wrappers::ui {
       int index_setters = lua_absindex(L, -1);
       //
       cls::fph_handlers.extend_lua_class(L, cls::metatable_key, index_getters, index_setters);
+   }
+
+   /*static*/ QFont cls::pull(lua_State* L, int stack_pos) {
+      return cls::fph_handlers.table_to_struct(L, stack_pos);
    }
 }

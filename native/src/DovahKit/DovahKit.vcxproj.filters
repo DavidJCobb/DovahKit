@@ -966,6 +966,9 @@
     <ClCompile Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaText.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\ui\various\font.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1944,6 +1947,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\ui\canvas\canvas_text_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\ui\various\font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\function_traits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -314,6 +314,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\table_view\row.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\text.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\textbox.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\ui\various\font.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\widget.cpp" />
     <ClCompile Include="editor\scripting\wrappers\ui\window.cpp" />
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
@@ -685,6 +686,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\table_view\row.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\text.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\textbox.h" />
+    <ClInclude Include="editor\scripting\wrappers\ui\various\font.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\widget.h" />
     <ClInclude Include="editor\scripting\wrappers\ui\window.h" />
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
@@ -698,6 +700,7 @@
     <ClInclude Include="editor\scripting\wrapper_util.h" />
     <ClInclude Include="editor\scripting\_docs\zombie wrappers.txt" />
     <ClInclude Include="helpers\eight_cc.h" />
+    <ClInclude Include="helpers\function_traits.h" />
     <ClInclude Include="helpers\geometry.h" />
     <ClInclude Include="helpers\lua\discontiguous_list.h" />
     <ClInclude Include="helpers\lua\isempty.h" />

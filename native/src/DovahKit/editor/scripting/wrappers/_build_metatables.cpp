@@ -70,6 +70,9 @@ namespace editor_script {
             define_wrapper_metatable<ui::text>(L);
             define_wrapper_metatable<ui::textbox>(L);
             define_wrapper_metatable<ui::window>(L);
+         #pragma region Various
+            define_wrapper_metatable<ui::font>(L);
+         #pragma endregion
       #pragma endregion
    }
 }

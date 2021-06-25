@@ -23,7 +23,6 @@ namespace editor_script::impl::font_properties {
       get_function_t  get;  // write a value into a QFont
       set_function_t  set;  // read  a value from a QFont
       QFont::ResolveProperties resolve_mask = QFont::ResolveProperties::NoPropertiesResolved; // QFont mask value used to tell whether a property has ever been set
-      bool reset_if_nil = true;
    };
 
    class handler_set : public std::vector<handler> {
