@@ -11,6 +11,8 @@
 
 #include "../../../ui/util/color.h"
 
+#include "../various/font.h"
+
 namespace {
    using namespace editor_script;
    using cls = wrappers::ui::canvas_text_data;
@@ -35,6 +37,15 @@ namespace {
          }
          util::ui::push_color(L, result);
          return 1;
+      }
+      luastackchange_t font(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* data = qobject_cast<wrapped_type*>(self.canvas_layer_data);
+         if (!data)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrapper_part_types::ui_font_role);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::ui::font::metatable_key);
       }
       luastackchange_t max_height(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -119,6 +130,20 @@ namespace {
          auto* task    = new tasks::s2m::lambda(false);
          task->handler = [data, value]() {
             data->color = value;
+            data->update();
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
+      luastackchange_t font(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* data  = qobject_cast<wrapped_type*>(self.canvas_layer_data);
+         if (!data)
+            return 0;
+         QFont font    = wrappers::ui::font::pull(L, 2);
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [data, font]() {
+            data->font = font;
             data->update();
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -230,6 +255,7 @@ namespace editor_script::wrappers::ui {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "color",      &_getters::color },
+      { "font",       &_getters::font },
       { "max_height", &_getters::max_height },
       { "max_width",  &_getters::max_width },
       { "text",       &_getters::text },
@@ -237,6 +263,7 @@ namespace editor_script::wrappers::ui {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "color",      &_setters::color },
+      { "font",       &_setters::font },
       { "max_height", &_setters::max_height },
       { "max_width",  &_setters::max_width },
       { "text",       &_setters::text },

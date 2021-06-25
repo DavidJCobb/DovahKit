@@ -22,4 +22,6 @@ class CanvasWidgetLayerDataLuaText : public LuaScriptableCanvasWidgetLayerData {
       virtual QRect rect() const noexcept;
    protected:
       virtual void paint(QPainter&, const QPoint& pos) noexcept;
+
+      void paint_and_report(QPainter&, const QPoint& pos, QRectF& out_size) const noexcept;
 };

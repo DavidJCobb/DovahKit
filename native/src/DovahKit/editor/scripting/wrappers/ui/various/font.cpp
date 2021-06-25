@@ -905,6 +905,8 @@ namespace editor_script::wrappers::ui {
          //
          return out;
       }
+      if (!lua_istable(L, stack_pos) && !lua_isuserdata(L, stack_pos))
+         luaL_error(L, "nil, font, or table expected");
       return cls::fph_handlers.table_to_struct(L, stack_pos);
    }
 }

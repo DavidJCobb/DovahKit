@@ -61,6 +61,12 @@ do -- Create "text" layer
    local data = ui.canvas_text_data.new()
    data.color = "#000000"
    data.text  = "Hello!"
+   data.font = {
+      family  = "Impact",
+      italics = true,
+      size    = "16pt",
+      letter_spacing = 2,
+   }
    l_text.data = data
    l_text.x = 50
    l_text.y = 50
