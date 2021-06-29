@@ -31,9 +31,7 @@ namespace {
          if (data == nullptr)
             luaL_error(L, "topic_info_response wrapper has no underlying object (deleted?)");
          __assume(data != nullptr);
-         wrapper out;
-         auto* mt = wrap_form(out, data->idles.listener.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, data->idles.listener);
       }
       luastackchange_t parent(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -41,9 +39,7 @@ namespace {
          if (data == nullptr)
             luaL_error(L, "topic_info_response wrapper has no underlying object (deleted?)");
          __assume(data != nullptr);
-         wrapper out;
-         auto* mt = wrap_form(out, self.stub);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, self.stub);
       }
       luastackchange_t script_notes(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -60,9 +56,7 @@ namespace {
          if (data == nullptr)
             luaL_error(L, "topic_info_response wrapper has no underlying object (deleted?)");
          __assume(data != nullptr);
-         wrapper out;
-         auto* mt = wrap_form(out, data->idles.speaker.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, data->idles.speaker);
       }
       luastackchange_t substitute_sound(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -70,9 +64,7 @@ namespace {
          if (data == nullptr)
             luaL_error(L, "topic_info_response wrapper has no underlying object (deleted?)");
          __assume(data != nullptr);
-         wrapper out;
-         auto* mt = wrap_form(out, data->sound.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, data->sound);
       }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -103,12 +95,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word  = _wrapper_t::unwrap(self);
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::idle, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::idle);
          if (!word)
             return 0;
          self.before_edit();
-         word->idles.listener.set(*self.stub->form, other->stub);
+         word->idles.listener.set(*self.stub->form, value);
          self.after_edit();
          return 0;
       }
@@ -130,12 +121,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word  = _wrapper_t::unwrap(self);
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::idle, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::idle);
          if (!word)
             return 0;
          self.before_edit();
-         word->idles.speaker.set(*self.stub->form, other->stub);
+         word->idles.speaker.set(*self.stub->form, value);
          self.after_edit();
          return 0;
       }
@@ -144,12 +134,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word  = _wrapper_t::unwrap(self);
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::idle, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::sound);
          if (!word)
             return 0;
          self.before_edit();
-         word->sound.set(*self.stub->form, other->stub);
+         word->sound.set(*self.stub->form, value);
          self.after_edit();
          return 0;
       }

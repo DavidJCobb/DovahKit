@@ -211,7 +211,7 @@ and look at the DirectXTex source code, determine whether it is safe to "steal"
 a ScratchImage's  buffers, and then do so; but we wouldn't be  acting according 
 to any sort of spec; future  changes to the library  could break our behavior.)
 
-That gives us two choices, then:
+That gives us three choices, then:
 
    a) When loading a DDS, preemptively copy all of its raster subresources into 
       QImage instances  that we'll assign  to new LMRs. This  will incur a time 
@@ -340,7 +340,7 @@ Assume that this is the C-side code for our API:
    int icon(lua_State* L) {
       auto& self = get_wrapper_for_thiscall<cls>(L);
       //
-      LuaManagedResource value* = nullptr;
+      LuaManagedResource* value = nullptr;
       if (!lua_isnoneornil(L, 2)) {
          auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
          luaL_argcheck(L, arg != nullptr, 2, "raster expected");
@@ -372,6 +372,28 @@ to creating our lambda-task, and have the  LMRH be captured by value. This will
 ensure that the resource is already flagged as in use by Qt before we return to 
 Lua, which will prevent its premature destruction.
 
+   int icon(lua_State* L) {
+      auto& self = get_wrapper_for_thiscall<cls>(L);
+      //
+      LuaManagedResourceHandle value = nullptr;
+      if (!lua_isnoneornil(L, 2)) {
+         auto* arg = wrapper_from_stack<wrappers::resource::raster>(L, 2);
+         luaL_argcheck(L, arg != nullptr, 2, "raster expected");
+         value = arg->managed_resource;
+      }
+      //
+      auto* observer = self.model_observer;
+      auto* task     = new tasks::s2m::lambda(false);
+      task->handler  = [observer, value]() mutable {
+         if (auto* item = observer->item()) {
+            auto wrapped = QVariant::fromValue<LuaManagedResourceHandle>(value);
+            item->setData(wrapped, Qt::DecorationRole);
+         }
+      };
+      DovahKitScriptVMUITaskConduit::get().send_message(*task);
+      return 0;
+   }
+
 Incidentally, this is also why LMRs' intrusive refcounts need to be atomic: the 
 LMRHs can be created and destroyed on multiple threads, sometimes at around the 
 same time. We create  LMRH #1 in the API body and copy it  into the lambda (the 
@@ -380,10 +402,7 @@ item's  Qt::DecorationRole to create LMRH  #3 on the main thread,  and then the
 lambda and LMRH #2  are destroyed on the  main thread;  meanwhile, the API body 
 returns to  Lua, taking  LMRH #1 out of scope and destroying  it. All  of these 
 operations after the creation of LMRH #2  are essentially unordered, and so the 
-refcount must  be atomic to allow  thread-safe usage. The Lua  refcount, on the 
-other  hand, doesn't need  to be thread-safe; it should  only ever be  modified 
-from whichever thread  actually "owns" the Lua VM (the  script thread normally; 
-the main thread during VM teardown).
+refcount must  be atomic to allow  thread-safe usage.
 
 Incidentally, the model observer property handler system behaves as needed here 
 because its  setter stuffs the  to-be-stored value  into a QVariant  within the 

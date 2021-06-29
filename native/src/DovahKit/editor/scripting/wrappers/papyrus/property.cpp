@@ -182,9 +182,7 @@ namespace {
                      if (value.aliasID != (decltype(value.aliasID))dovah::loaded_forms::Alias::none_id) {
                         return wrappers::quest_alias::wrap(L, quest, value.aliasID);
                      } else {
-                        wrapper out;
-                        auto* mt = wrap_form(out, quest);
-                        return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+                        return wrap_and_push_form(L, quest);
                      }
                   }
                   return 0;
@@ -388,9 +386,7 @@ namespace {
                      if (value.aliasID != (decltype(value.aliasID))dovah::loaded_forms::Alias::none_id) {
                         return wrappers::quest_alias::wrap(L, quest, value.aliasID);
                      } else {
-                        wrapper out;
-                        auto* mt = wrap_form(out, quest);
-                        return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+                        return wrap_and_push_form(L, quest);
                      }
                   }
                   return 0;

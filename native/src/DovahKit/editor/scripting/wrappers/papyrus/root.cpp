@@ -227,13 +227,14 @@ namespace {
          auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);
          if (!self.stub)
             return 0;
-         //
-         // TODO: If we decide to use the same metatable for quest alias scripts, then we'll need to 
-         // check whether this script data is attached to an alias and if so, return that alias.
-         //
-         wrapper out;
-         auto* mt = wrap_form(out, self.stub);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         if (auto* alias = wrappers::quest_alias::unwrap(self)) {
+            if (self.parts[1].signature != wrapper_part_types::papyrus_root)
+               luaL_error(L, "internal error: unknown wrapper path");
+            if (self.depth != 2)
+               luaL_error(L, "internal error: unknown wrapper path");
+            return wrappers::quest_alias::wrap(L, &alias->owner.stub, alias);
+         }
+         return wrap_and_push_form(L, self.stub);
       }
       luastackchange_t scripts(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::papyrus_root>(L);

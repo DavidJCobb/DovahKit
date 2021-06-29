@@ -319,6 +319,7 @@
     <ClCompile Include="editor\scripting\wrappers\ui\window.cpp" />
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
     <ClCompile Include="editor\scripting\wrappers\word_of_power.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\worldspace.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_singletons.cpp" />
     <ClCompile Include="editor\scripting\wrapper_util.cpp" />
@@ -692,6 +693,7 @@
     <ClInclude Include="editor\scripting\wrappers\ui\window.h" />
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
     <ClInclude Include="editor\scripting\wrappers\word_of_power.h" />
+    <ClInclude Include="editor\scripting\wrappers\worldspace.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_resources.h" />

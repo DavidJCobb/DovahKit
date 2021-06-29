@@ -85,9 +85,7 @@ namespace {
          auto* p = self.stub->get_parent_form();
          if (p->formType != dovah::form_type::topic)
             p = nullptr;
-         wrapper out;
-         auto* mt = wrap_form(out, p);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, p);
       }
       luastackchange_t parent_quest(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -100,9 +98,7 @@ namespace {
             if (quest->formType != dovah::form_type::quest)
                quest = nullptr;
          }
-         wrapper out;
-         auto* mt = wrap_form(out, quest);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, quest);
       }
       luastackchange_t responses(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -119,18 +115,14 @@ namespace {
          auto* form = self.get_loaded_form_data<_loaded_form_t>();
          if (!form)
             return 0;
-         wrapper out;
-         auto* mt = wrap_form(out, form->speaker.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, form->speaker.get_form_stub());
       }
       luastackchange_t walk_away_topic(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* form = self.get_loaded_form_data<_loaded_form_t>();
          if (!form)
             return 0;
-         wrapper out;
-         auto* mt = wrap_form(out, form->walk_away_topic.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, form->walk_away_topic.get_form_stub());
       }
    }
    namespace _setters {
@@ -165,12 +157,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* form  = self.get_loaded_form_data<_loaded_form_t>();
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::actor_base, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::actor_base);
          if (!form)
             return 0;
          self.before_edit();
-         form->speaker.set(*form, other->stub);
+         form->speaker.set(*form, value);
          self.after_edit();
          return 0;
       }
@@ -179,12 +170,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* form  = self.get_loaded_form_data<_loaded_form_t>();
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::topic, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::topic);
          if (!form)
             return 0;
          self.before_edit();
-         form->walk_away_topic.set(*form, other->stub);
+         form->walk_away_topic.set(*form, value);
          self.after_edit();
          return 0;
       }

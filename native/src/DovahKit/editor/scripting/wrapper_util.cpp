@@ -3,6 +3,7 @@
 #include "wrappers/_all_ui.h"
 #include "wrappers/_all_resources.h"
 #include "systems/lua_managed_resources.h"
+#include "systems/userdata.h"
 
 namespace editor_script {
    extern const char* wrap_form(wrapper& out, dovah::form_stub* stub) {
@@ -92,8 +93,29 @@ namespace editor_script {
       return wrappers::resource::unknown::metatable_key;
    }
 
+   extern int wrap_and_push_form(lua_State* L, dovah::form_stub* stub) {
+      if (!stub)
+         return 0;
+      wrapper out;
+      auto* mt = wrap_form(out, stub);
+      return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+   }
+   extern int wrap_and_push_form(lua_State* L, const dovah::form_reference_t& ref) {
+      return wrap_and_push_form(L, ref.get_form_stub());
+   }
+
    extern void override_widget_metatable(QWidget* widget, const char* mt) {
       assert(widget && mt);
       widget->setProperty("Lua metatable override", QVariant::fromValue<void*>((void*)mt));
+   }
+
+   extern dovah::form_stub* pull_form_stub_argument(lua_State* L, int pos, dovah::form_type_t ft) {
+      if (lua_isnoneornil(L, pos))
+         return nullptr;
+      auto* other = wrapper_from_stack<wrappers::form>(L, 2);
+      luaL_argcheck(L, other != nullptr, 2, "form or nil expected");
+      if (ft != dovah::form_type::none)
+         other->error_if_wrong_form_type(L, 2, ft, true);
+      return other->stub;
    }
 }

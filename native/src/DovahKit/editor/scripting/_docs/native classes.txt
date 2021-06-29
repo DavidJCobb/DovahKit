@@ -38,7 +38,7 @@ was chosen, and what the alternatives were. Our specific priorities are:
    for something like forms  in an ESP file; moreover,  our class system can be 
    applied  to userdata  or to normal tables, so implementing  expando  support 
    risks being  redundant. Expandos  are not  urgent  and would complicate  our 
-   class implementation, so they have been omitted; the language-level default 
+   class implementation, so they have  been omitted; the language-level default 
    behavior for userdata is for them to reject modification including expandos, 
    so it's reasonable for us not to mask that behavior.
 

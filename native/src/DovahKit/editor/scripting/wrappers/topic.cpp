@@ -35,9 +35,8 @@ namespace {
          lua_createtable(L, size, 0);
          size_t j = 0;
          for (size_t i = 0; i < size; ++i) {
-            wrapper out;
-            auto* mt = wrap_form(out, list[i]);
-            if (DovahKitScriptVMUserdataInterface::get().push(L, out, mt))
+            int wcount = wrap_and_push_form(L, list[i]);
+            while (wcount--)
                lua_rawseti(L, -2, ++j);
          }
          return 1;
@@ -49,9 +48,7 @@ namespace {
          auto* parent = self.stub->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_branch);
          if (parent->formType != dovah::form_type::dialogue_branch)
             return 0;
-         wrapper out;
-         auto* mt = wrap_form(out, parent);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, parent);
       }
       luastackchange_t parent_quest(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -60,9 +57,7 @@ namespace {
          auto* parent = self.stub->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
          if (parent->formType != dovah::form_type::quest)
             return 0;
-         wrapper out;
-         auto* mt = wrap_form(out, parent);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, parent);
       }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);

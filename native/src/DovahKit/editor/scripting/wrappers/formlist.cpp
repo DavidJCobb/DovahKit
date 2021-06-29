@@ -45,9 +45,7 @@ namespace {
          if (i > list.size() || i <= 0)
             return 0;
          --i;
-         wrapper out;
-         auto* mt = wrap_form(out, list[i].get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, list[i]);
       }
       luastackchange_t member_function_insert(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();

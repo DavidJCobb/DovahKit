@@ -167,8 +167,8 @@ namespace {
       quest_type_name{ _loaded_form_t::quest_type::daedric,          "daedric" },
       quest_type_name{ _loaded_form_t::quest_type::sidequest,        "sidequest" },
       quest_type_name{ _loaded_form_t::quest_type::civil_war,        "civil_war" },
-      quest_type_name{ _loaded_form_t::quest_type::dlc_dawnguard,    "dlc_dawnguard" },
-      quest_type_name{ _loaded_form_t::quest_type::dlc_dragonborn,   "dlc_dragonborn" },
+      quest_type_name{ _loaded_form_t::quest_type::dlc_dawnguard,    "dlc: dawnguard" },
+      quest_type_name{ _loaded_form_t::quest_type::dlc_dragonborn,   "dlc: dragonborn" },
    };
 }
 
@@ -338,9 +338,9 @@ namespace {
                }
                break;
             default:
-               luaL_error(L, "expected a string name or an integer, preferring the former");
+               luaL_error(L, "expected a string name or an integer, preferring the former; got a %s", lua_typename(L, atype));
          }
-         auto* form  = self.get_loaded_form_data<_loaded_form_t>();
+         auto* form = self.get_loaded_form_data<_loaded_form_t>();
          if (!form)
             return 0;
          self.before_edit();

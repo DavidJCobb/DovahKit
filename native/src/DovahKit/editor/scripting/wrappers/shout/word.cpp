@@ -22,9 +22,7 @@ namespace {
          if (word == nullptr)
             luaL_error(L, "shout_word wrapper has no underlying object (deleted?)");
          __assume(word != nullptr);
-         wrapper out;
-         auto* mt = wrap_form(out, word->word_of_power.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, word->word_of_power);
       }
       luastackchange_t spell(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -32,9 +30,7 @@ namespace {
          if (word == nullptr)
             luaL_error(L, "shout_word wrapper has no underlying object (deleted?)");
          __assume(word != nullptr);
-         wrapper out;
-         auto* mt = wrap_form(out, word->spell.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, word->spell);
       }
       luastackchange_t cooldown(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -52,12 +48,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word  = wrappers::shout_word::unwrap(self);
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::word_of_power, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::word_of_power);
          if (!word)
             return 0;
          self.before_edit();
-         word->word_of_power.set(*self.stub->form, other->stub);
+         word->word_of_power.set(*self.stub->form, value);
          self.after_edit();
          return 0;
       }
@@ -66,12 +61,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* word  = wrappers::shout_word::unwrap(self);
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::spell, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::spell);
          if (!word)
             return 0;
          self.before_edit();
-         word->spell.set(*self.stub->form, other->stub);
+         word->spell.set(*self.stub->form, value);
          self.after_edit();
          return 0;
       }

@@ -52,9 +52,7 @@ namespace {
             if (alias == nullptr)
                luaL_error(L, "alias wrapper has no underlying object (deleted?)");
             __assume(alias != nullptr);
-            wrapper out;
-            auto* mt = wrap_form(out, &alias->owner.stub);
-            return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+            return wrap_and_push_form(L, &alias->owner.stub);
          }
          luastackchange_t type(lua_State* L) {
             auto& self  = get_wrapper_for_thiscall<wrappers::quest_alias>(L);
@@ -148,10 +146,9 @@ namespace {
             if (alias == nullptr)
                luaL_error(L, "alias wrapper has no underlying object (deleted?)");
             __assume(alias != nullptr);
-            auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-            other->error_if_wrong_form_type(L, 2, dovah::form_type::message, true);
+            auto* value = pull_form_stub_argument(L, 2, dovah::form_type::message);
             self.before_edit();
-            alias->display_name.set(*self.stub->form, other->stub);
+            alias->display_name.set(*self.stub->form, value);
             self.after_edit();
             return 0;
          }

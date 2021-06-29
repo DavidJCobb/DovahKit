@@ -108,8 +108,7 @@ script thread has fully processed  that event,  including running Lua listeners
 to completion if appropriate. This is needed to ensure that events process in a 
 sequential manner; a script that wants  to mutate a textbox's value in response 
 to keypress events, for example, will typically need to be able to fully do its 
-job in response to one  keypress before another  keypress is possible. Wherever 
-this is not the case, a listener can manually unlock the UI.)
+job in response to one  keypress before another  keypress is possible.)
 
 There are a few considerations that need to be made here.
 

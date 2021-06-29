@@ -48,13 +48,13 @@ behave as follows:
 The class system (described in <native classes.txt>) supports inheritance along 
 with members  powered by native getters  and setters. Zombie  classes mimic the 
 inheritance chain but offer no getters: creating  a zombie class that parallels 
-a living subclass  will result in the  creatrion of  zombie classes paralleling 
+a living subclass  will result in the  creation of  zombie classes  paralleling 
 each of its ancestor classes.
 
 Zombie classes are all marked with a sentinel value:  an "__iszombie" key whose 
 value is the same userdata  object hidden in the  Lua C registry. This value is 
 not used  anywhere else,  and serves as a way  of telling a  zombie class apart 
-from a normal metatable. The  userdata object is create d when the first zombie 
+from a normal metatable. The  userdata object is created  when the first zombie 
 class is created, and zombie classes are  created at the time that an object is 
 zombified; with that in mind, we check if an object is a zombie as follows:
 

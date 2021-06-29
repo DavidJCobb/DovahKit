@@ -109,9 +109,7 @@ namespace {
          auto* stub = m->result;
          delete m;
          //
-         wrapper out;
-         auto* mt = wrap_form(out, stub);
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, stub);
       }
       luastackchange_t form_id_to_string(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::form>(L);
@@ -184,17 +182,14 @@ namespace {
          auto  table = lua_gettop(L);
          //
          auto& vm = DovahKitScriptVMUserdataInterface::get();
-         int   i  = 1; // Lua arrays start with 1, remember?
+         int   i  = 0; // Lua arrays start with 1, but we ++increment the index before using it, so this is fine
          for (auto& pair : stub->inbound) {
             auto& entry = pair.second;
             if (!entry.other)
                continue;
-            wrapper out;
-            auto*   mt = wrap_form(out, stub);
-            if (0 == DovahKitScriptVMUserdataInterface::get().push(L, out, mt))
-               continue;
-            lua_seti(L, table, i);
-            ++i;
+            int wcount = wrap_and_push_form(L, entry.other);
+            while (wcount--)
+               lua_seti(L, table, ++i);
          }
          //
          return 1;

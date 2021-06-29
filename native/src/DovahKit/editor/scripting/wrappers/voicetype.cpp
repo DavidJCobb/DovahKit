@@ -12,7 +12,9 @@ namespace {
    using Voicetype = dovah::loaded_forms::Voicetype;
    //
    namespace _methods {
-      luastackchange_t get_allow_default_dialogue(lua_State* L) {
+   }
+   namespace _getters {
+      luastackchange_t allow_default_dialogue(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<wrappers::voicetype>(L);
          auto* form = self.get_loaded_form_data<Voicetype>();
          if (!form)
@@ -20,7 +22,17 @@ namespace {
          lua_pushboolean(L, (form->voicetype_flags & Voicetype::voicetype_flag::allow_default_dialogue));
          return 1;
       }
-      luastackchange_t set_allow_default_dialogue(lua_State* L) {
+      luastackchange_t is_female(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<wrappers::voicetype>(L);
+         auto* form = self.get_loaded_form_data<Voicetype>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, (form->voicetype_flags & Voicetype::voicetype_flag::female));
+         return 1;
+      }
+   }
+   namespace _setters {
+      luastackchange_t allow_default_dialogue(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<wrappers::voicetype>(L);
@@ -33,17 +45,7 @@ namespace {
          self.after_edit();
          return 0;
       }
-      luastackchange_t get_is_female(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<wrappers::voicetype>(L);
-         auto* form = self.get_loaded_form_data<Voicetype>();
-         if (!form)
-            return 0;
-         self.before_edit();
-         lua_pushboolean(L, (form->voicetype_flags & Voicetype::voicetype_flag::female));
-         self.after_edit();
-         return 1;
-      }
-      luastackchange_t set_is_female(lua_State* L) {
+      luastackchange_t is_female(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
          auto& self = get_wrapper_for_thiscall<wrappers::voicetype>(L);
@@ -63,11 +65,11 @@ namespace editor_script::wrappers {
    /*static*/ std::initializer_list<luaL_Reg> voicetype::metatable_methods = no_functions;
    
    /*static*/ std::initializer_list<luaL_Reg> voicetype::metatable_getters = {
-      { "allows_default_dialogue", &_methods::get_allow_default_dialogue },
-      { "is_female",               &_methods::get_is_female },
+      { "allows_default_dialogue", &_getters::allow_default_dialogue },
+      { "is_female",               &_getters::is_female },
    };
    /*static*/ std::initializer_list<luaL_Reg> voicetype::metatable_setters = {
-      { "allows_default_dialogue", &_methods::set_allow_default_dialogue },
-      { "is_female",               &_methods::set_is_female },
+      { "allows_default_dialogue", &_setters::allow_default_dialogue },
+      { "is_female",               &_setters::is_female },
    };
 }

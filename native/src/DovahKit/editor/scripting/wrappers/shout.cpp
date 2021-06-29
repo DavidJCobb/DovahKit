@@ -77,18 +77,14 @@ namespace {
          auto* form = self.get_loaded_form_data<_loaded_form_t>();
          if (!form)
             return 0;
-         wrapper out;
-         auto* mt = wrap_form(out, form->equip_type.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, form->equip_type);
       }
       luastackchange_t menu_display_object(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* form = self.get_loaded_form_data<_loaded_form_t>();
          if (!form)
             return 0;
-         wrapper out;
-         auto* mt = wrap_form(out, form->menu_display_object.get_form_stub());
-         return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+         return wrap_and_push_form(L, form->menu_display_object);
       }
       luastackchange_t words(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<_wrapper_t>(L);
@@ -133,12 +129,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* form  = self.get_loaded_form_data<_loaded_form_t>();
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::equip_slot, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::equip_slot);
          if (!form)
             return 0;
          self.before_edit();
-         form->equip_type.set(*form, other->stub);
+         form->equip_type.set(*form, value);
          self.after_edit();
          return 0;
       }
@@ -147,12 +142,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<_wrapper_t>(L);
          auto* form  = self.get_loaded_form_data<_loaded_form_t>();
-         auto* other = wrapper_from_stack<wrappers::form>(L, 2);
-         other->error_if_wrong_form_type(L, 2, dovah::form_type::statik, true);
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::statik);
          if (!form)
             return 0;
          self.before_edit();
-         form->menu_display_object.set(*form, other->stub);
+         form->menu_display_object.set(*form, value);
          self.after_edit();
          return 0;
       }

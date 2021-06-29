@@ -35,9 +35,6 @@ If we want to take full advantage of DovahKit's multi-threading, we need to set
 up our cells' properties  without performing any read  operations. Fortunately, 
 the "append_row" API gives us a way to do this.
 
-[NOTE: As of 5/5/2021 The "append_row" functionality described herein isn't yet 
-implemented; this is what we're working towards.]
-
    for i = 1, 50 do
       my_table:append_row(
          {
@@ -120,12 +117,3 @@ QFlags<Qt::AlignmentFlag> values between QVariants and Lua. When we actually go
 and write a QVariant into the appropriate item data role, we need to be able to 
 have the MOPH perform special handling  at that time in order to smoothly merge 
 the prior value with the new value.
-
-Font properties are another example of  where this is needed. Our current plans 
-are to offer discrete  font properties: booleans for  bold and italics, numbers 
-for letter spacing and size, and a string for the typeface. However, within Qt, 
-all of these properties are encompassed by a single object, QFont, and a single 
-role, Qt::ItemDataRole::FontRole. In order to split them up as desired, we need 
-to be able to offer MOPHs for each  individual Lua-side value which merge those 
-values into the broader QFont.
-
