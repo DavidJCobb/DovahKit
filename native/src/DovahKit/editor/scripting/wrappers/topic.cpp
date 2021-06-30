@@ -9,6 +9,16 @@
 
 #include "../../../dovah/form_stub_addenda.h"
 
+//
+// MISSING APIS:
+//  - Do All Before Repeating
+//  - Priority
+//  - Subtype (do we want to expose this?)
+//
+#ifndef _DEBUG
+   #pragma message("WARNING: Are you compiling in Release? The Lua API for topics is incomplete!")
+#endif
+
 namespace {
    using namespace editor_script;
    using _wrapper_t     = wrappers::topic;

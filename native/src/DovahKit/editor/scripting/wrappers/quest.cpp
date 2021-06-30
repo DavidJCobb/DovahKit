@@ -10,6 +10,10 @@
 
 #include "quest/alias.h"
 
+#ifndef _DEBUG
+   #pragma message("WARNING: Are you compiling in Release? The Lua API for quests is incomplete!")
+#endif
+
 namespace {
    using namespace editor_script;
    using _wrapper_t     = wrappers::quest;

@@ -4,6 +4,10 @@
 #include "Form.h"
 #include "_common.h"
 
+#ifndef _DEBUG
+   #pragma message("WARNING: Are you compiling in Release? The backend is incomplete: Package is an empty class.")
+#endif
+
 namespace dovah::loaded_forms {
    class Package : public Form {
       #include "impl/form_subclass_components.txt"

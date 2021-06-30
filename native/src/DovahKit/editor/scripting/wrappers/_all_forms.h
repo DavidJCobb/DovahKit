@@ -11,3 +11,6 @@
    #include "topic_info/response.h"
 #include "voicetype.h"
 #include "word_of_power.h"
+#include "worldspace.h"
+   #include "worldspace/grid_bounds.h"
+   #include "worldspace/grid_bounds_root.h"

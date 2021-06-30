@@ -11,6 +11,29 @@
 #include "../quest.h"
 #include "../papyrus/root.h"
 
+//
+// MISSING APIS:
+//  - Base
+//     - Common flags
+//  - Location aliases
+//     - Fill type and parameters
+//     - Flags
+//  - Reference aliases
+//     - Fill type and parameters
+//     - Flags
+//     - Added Factions
+//     - Added Inventory
+//     - Added Keywords
+//     - Added Packages
+//     - Added Spells
+//     - Package override lists
+//     - Additional voicetypes
+//
+#ifndef _DEBUG
+   #pragma message("WARNING: Are you compiling in Release? The Lua API for location aliases is incomplete!")
+   #pragma message("WARNING: Are you compiling in Release? The Lua API for reference aliases is incomplete!")
+#endif
+
 namespace {
    using namespace editor_script;
    //

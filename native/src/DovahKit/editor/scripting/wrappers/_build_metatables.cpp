@@ -32,6 +32,9 @@ namespace editor_script {
             define_wrapper_metatable<topic_info_response>(L);
          define_wrapper_metatable<voicetype>(L);
          define_wrapper_metatable<word_of_power>(L);
+         define_wrapper_metatable<worldspace>(L);
+            define_wrapper_metatable<worldspace_grid_bounds>(L);
+               define_wrapper_metatable<worldspace_grid_bounds_extent>(L);
       #pragma endregion
       #pragma region Resources
          define_wrapper_metatable<resource::dds>(L);

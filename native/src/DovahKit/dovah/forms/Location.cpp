@@ -2,6 +2,11 @@
 #include "_common_cpp.h"
 #include "../../helpers/vector.h"
 
+
+#ifndef _DEBUG
+   #pragma message("WARNING: Are you compiling in Release? The backend is incomplete: Location is missing everything except its loader.")
+#endif
+
 namespace dovah::loaded_forms {
    void Location::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
