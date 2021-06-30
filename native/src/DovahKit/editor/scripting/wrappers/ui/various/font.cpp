@@ -843,6 +843,14 @@ namespace editor_script::wrappers::ui {
          .resolve_mask = QFont::ResolveProperties::LetterSpacingResolved,
       },
       fph{ 
+         .name = "overline", // Boolean indicating whether a line is drawn above the text's top edge.
+         .push = verbatim_push<&QFont::overline>,
+         .pull = verbatim_pull<&QFont::setOverline>,
+         .get  = qvariant_get<&QFont::overline>,
+         .set  = qvariant_set<&QFont::setOverline>,
+         .resolve_mask = QFont::ResolveProperties::OverlineResolved,
+      },
+      fph{ 
          .name = "size", // Font size as a string, e.g. "12px" or "12pt"; a unit is required.
          .push = _fields::size::push,
          .pull = _fields::size::pull,
@@ -857,6 +865,14 @@ namespace editor_script::wrappers::ui {
          .get  = qvariant_get<&QFont::strikeOut>,
          .set  = qvariant_set<&QFont::setStrikeOut>,
          .resolve_mask = QFont::ResolveProperties::StrikeOutResolved,
+      },
+      fph{ 
+         .name = "underline", // Boolean indicating whether a line is drawn below the text's bottom edge.
+         .push = verbatim_push<&QFont::underline>,
+         .pull = verbatim_pull<&QFont::setUnderline>,
+         .get  = qvariant_get<&QFont::underline>,
+         .set  = qvariant_set<&QFont::setUnderline>,
+         .resolve_mask = QFont::ResolveProperties::OverlineResolved,
       },
       fph{ 
          .name = "weight", // Specific font weight (boldness) as an int between 1 and 100.

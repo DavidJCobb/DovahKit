@@ -113,6 +113,110 @@ namespace {
       }
    }
    namespace _setters {
+      luastackchange_t climate(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* form  = self.get_loaded_form_data<form_t>();
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::climate);
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->climate.set(*form, value);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t default_land_height(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<form_t>();
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->land_data.default_land_height = lua_tonumber(L, 2);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t default_water_height(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<form_t>();
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->land_data.default_water_height = lua_tonumber(L, 2);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t encounter_zone(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* form  = self.get_loaded_form_data<form_t>();
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::encounter_zone);
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->encounter_zone.set(*form, value);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t lighting_template(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* form  = self.get_loaded_form_data<form_t>();
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::lighting_template);
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->lighting_template.set(*form, value);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t location(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* form  = self.get_loaded_form_data<form_t>();
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::location);
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->location.set(*form, value);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t lod_water_height(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<form_t>();
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->lod_water_height = lua_tonumber(L, 2);
+         self.after_edit();
+         return 0;
+      }
+      luastackchange_t music_type(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* form  = self.get_loaded_form_data<form_t>();
+         auto* value = pull_form_stub_argument(L, 2, dovah::form_type::music_type);
+         if (!form)
+            return 0;
+         self.before_edit();
+         form->music.set(*form, value);
+         self.after_edit();
+         return 0;
+      }
       luastackchange_t parent(lua_State* L) {
          DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
          //
@@ -173,6 +277,14 @@ namespace editor_script::wrappers {
       { "water_type_lod",       &_getters::water_type_lod },
    };
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_setters = {
+      { "climate",              &_setters::climate },
+      { "default_land_height",  &_setters::default_land_height },
+      { "default_water_height", &_setters::default_water_height },
+      { "encounter_zone",       &_setters::encounter_zone },
+      { "lighting_template",    &_setters::lighting_template },
+      { "location",             &_setters::location },
+      { "lod_water_height",     &_setters::lod_water_height },
+      { "music_type",           &_setters::music_type },
       { "parent",               &_setters::parent },
       { "water_type",           &_setters::water_type },
       { "water_type_lod",       &_setters::water_type_lod },
