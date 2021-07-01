@@ -977,6 +977,40 @@ namespace editor_helpers {
             }
             break;
             //
+         case notice_code::invalid_landscape_quad_index:
+            {
+               text = QObject::tr("Form %1 subrecord %2 specified landscape quad index %3, but quad indices must be between 0 and 3 inclusive.", "notice_code::invalid_landscape_quad_index");
+               //
+               QString form      = QObject::tr("<unknown form>", "log window");
+               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
+                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
+               }
+               //
+               text = text.arg(form).arg(subrecord).arg(notice.extra_integers[0]);
+            }
+            break;
+            //
+         case notice_code::landscape_quads_can_only_have_six_layers:
+            {
+               text = QObject::tr("Landspace %1 quad %2 attempted to specify land-texture %4 for layer #%3, but a quad can only have six layers. In-game, this layer will overwrite layer #6.", "notice_code::landscape_quads_can_only_have_six_layers");
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               QString tex  = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               if (!notice.relevant_forms.empty()) {
+                  tex = _read_error_form_id_to_string(notice.relevant_forms[0]);
+               }
+               //
+               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]).arg(tex);
+            }
+            break;
+            //
          case notice_code::unknown_error:
          default:
             text = QObject::tr("Unknown error.", "write error");

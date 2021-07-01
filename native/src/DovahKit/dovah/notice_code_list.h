@@ -106,6 +106,8 @@ namespace dovah {
          too_many_destruction_stages_to_save         = 0x00000061,
          papyrus_property_has_multiple_scalar_values = 0x00000062, // Cannot save a non-array Papyrus property when it has multiple values in-memory. Something edited the property incorrectly.
          papyrus_property_is_scalar_but_empty        = 0x00000063, // Attempted to save a non-array Papyrus property that had no value. Something edited the property incorrectly. We saved it with a default.
+         invalid_landscape_quad_index                = 0x00000064, // LAND full load: something tried to specify an out-of-bounds quad.
+         landscape_quads_can_only_have_six_layers    = 0x00000065, // LAND full load: a landscape quad can only have six layers; higher layers overwrite the sixth at run-time.
       };
    };
 }

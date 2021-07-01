@@ -51,15 +51,18 @@ namespace {
          //
          int i   = 0;
          int pos = lua_gettop(L);
-         for (auto& pair : stub->inbound) {
-            auto& entry = pair.second;
-            auto* other = entry.other;
-            if (!other || other->formType != dovah::form_type::cell)
-               continue;
-            int wcount = wrap_and_push_form(L, other);
+         const auto* persistent_cell = dovah::form_stub_helpers::get_worldspace_persistent_cell(stub);
+         dovah::form_stub_helpers::for_each_child_form(stub, [L, &i, pos, persistent_cell](dovah::form_stub* child) {
+            if (child == persistent_cell)
+               return false;
+            if (child->formType != dovah::form_type::cell)
+               return false;
+            int wcount = wrap_and_push_form(L, child);
             while (wcount--)
                lua_rawseti(L, pos, ++i);
-         }
+            return false;
+         });
+         assert(lua_gettop(L) == pos);
          //
          return 1;
       }

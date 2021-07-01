@@ -73,7 +73,7 @@ namespace dovah::loaded_forms {
          components::extra_data_list extra_data;
          struct {
             components::interior_lighting lighting; // XCLL (LNAM overrides the inherit flags specifically)
-            form_reference_t lighting_template_ID; // LTMP
+            form_reference_t lighting_template; // LTMP
          } interior;
          struct {
             occlusion_data_t  occlusion_data;  // TVDT ("Terrain Visibility Data?")

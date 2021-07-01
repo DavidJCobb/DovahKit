@@ -1,5 +1,6 @@
 #pragma once
 #include "papyrus/_all.h"
+#include "cell.h"
 #include "form.h"
 #include "formlist.h"
 #include "quest.h"

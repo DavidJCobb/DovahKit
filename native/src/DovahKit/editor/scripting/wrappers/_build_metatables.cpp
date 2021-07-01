@@ -16,6 +16,7 @@ namespace editor_script {
                papyrus_property::build_collection_metatables(L);
       #pragma endregion
       #pragma region Form types
+         define_wrapper_metatable<cell>(L);
          define_wrapper_metatable<formlist>(L);
             formlist::build_collection_metatables(L);
          define_wrapper_metatable<shout>(L);

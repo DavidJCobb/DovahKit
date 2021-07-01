@@ -69,9 +69,9 @@ namespace dovah::loaded_forms {
                this->interior.lighting.load(subrecord, intfc);
                break;
             case 'LTMP':
-               subrecord.read(this->interior.lighting_template_ID);
+               subrecord.read(this->interior.lighting_template);
                intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, this->stub, this->interior.lighting_template_ID)
+                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, this->stub, this->interior.lighting_template)
                );
                break;
             case 'TVDT':
@@ -189,7 +189,7 @@ namespace dovah::loaded_forms {
       copy->land_flags = this->land_flags;
       copy->extra_data.clone_from(this->extra_data, *copy);
       copy->interior.lighting = this->interior.lighting;
-      copy->interior.lighting_template_ID.set(*copy, this->interior.lighting_template_ID);
+      copy->interior.lighting_template.set(*copy, this->interior.lighting_template);
       copy->exterior.occlusion_data = this->exterior.occlusion_data;
       copy->exterior.max_height_data = this->exterior.max_height_data;
       copy->water.height = this->water.height;
@@ -241,7 +241,7 @@ namespace dovah::loaded_forms {
                MHDT.write(col);
          MHDT.close();
       }
-      record.write_formID_subrecord('LTMP', this->interior.lighting_template_ID);
+      record.write_formID_subrecord('LTMP', this->interior.lighting_template);
       auto& XCLW = record.open_next_subrecord('XCLW');
       XCLW.write(this->water.height);
       XCLW.close();
@@ -265,7 +265,7 @@ namespace dovah::loaded_forms {
       this->cell_flags = 0;
       this->land_flags = 0;
       this->extra_data.clear(*this);
-      this->interior.lighting_template_ID.set(*this, nullptr);
+      this->interior.lighting_template.set(*this, nullptr);
       this->exterior.max_height_data.clear();
       this->exterior.occlusion_data.clear();
       this->water.height = 0.0F;
@@ -278,6 +278,6 @@ namespace dovah::loaded_forms {
       this->extra_data.sever_outbound_references_to(other, *this);
       this->script_data.sever_outbound_references_to(other, *this);
       //
-      this->interior.lighting_template_ID.clear_if(*this, other);
+      this->interior.lighting_template.clear_if(*this, other);
    }
 }
