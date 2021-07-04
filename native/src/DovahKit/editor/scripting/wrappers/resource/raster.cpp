@@ -68,11 +68,19 @@ namespace {
          --y;
          QColor color = util::ui::pull_color(L, 4);
          //
-         self.managed_resource->modify_raster_script_side([x, y, color](QImage& image) {
+         int w = -1;
+         int h = -1;
+         self.managed_resource->modify_raster_script_side([x, y, color, &w, &h](QImage& image) {
             assert(image.format() == QImage::Format::Format_ARGB32);
+            w = image.width();
+            h = image.height();
+            if (x > w || y > h)
+               return;
             auto* bytes = (QRgb*)image.scanLine(y);
             bytes[x] = color.rgba();
          });
+         luaL_argcheck(L, x < w, 2, "x-coordinate exceeded the raster's width");
+         luaL_argcheck(L, y < h, 3, "y-coordinate exceeded the raster's height");
          //
          return 0;
       }

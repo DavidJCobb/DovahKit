@@ -36,8 +36,10 @@ namespace dovah::loaded_forms {
          };
 
          // Bethesda splits the landscape up into four quads. We're not gonna bother.
-         // Data starts from the bottom-left and is filled one row at a time.
-         // The leftmost column and bottommost row overlap with the contents of adjacent cells.
+         // Data starts from the southwesternmost vertex and advances toward the 
+         // northeasternmost vertex, so positive Y is north and negative Y is south. 
+         // The western column and southern row must overlap with those of the adjoining 
+         // cells, or there will be tears in the landscape.
          template<typename T> struct grid {
             std::array<T, vertices_per_side * vertices_per_side> list;
 
@@ -64,8 +66,7 @@ namespace dovah::loaded_forms {
 
          uint32_t land_flags = land_flag::all_common_flags; // DATA
          struct {
-            float base = 0.0F; // baseline height; all vertex heights are relative to this and cannot be more than 1024 units lower or 1016 units higher
-            grid<int8_t>               heights; // heights[y][x] // VHGT // multiply by 8 to get "true" values. constrained to range [-1024, 1016] of the base
+            grid<float>                heights; // heights[y][x] // VHGT
             grid<cobb::vector3<float>> normals; // normals[y][x] // VNML, always 0xCC3 bytes in the file. each normal is encoded as a cobb::vector3<int8_t>; convert to float by dividing by 127.0F
             grid<vertex_color>         colors;  // colors[y][x]  // VCLR
          } heightmap;
@@ -73,8 +74,6 @@ namespace dovah::loaded_forms {
          std::array<form_reference_t, 4> default_quad_textures; // BTXT: Base TeXTure // index == quad
          std::vector<alpha_layer> alpha_layers;
          std::vector<uint8_t> mpcd; // MPCD // hkMoppCode, the pre-generated collision data for the terrain. we suspect it's optional, with the game doing collision at run-time if it's absent
-
-         inline float vertex_height_at(int x, int y) const noexcept { return (float)this->heightmap.heights.at(x, y) * 8; }
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

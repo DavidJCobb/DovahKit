@@ -435,7 +435,7 @@ void DovahKitScriptVMCore::_setup_lua_vm() {
    // Make the appropriate standard libraries available, and prune any functions that we 
    // don't want the user having easy access to:
    //
-   luaL_requiref(this->lua_vm, "_G",     luaopen_base,  1); // loads the library to the top of the Lua stack
+   luaL_requiref(this->lua_vm, "_G", luaopen_base, 1); // loads the library to the top of the Lua stack
    {  // shim collectgarbage
       auto ti = lua_gettop(this->lua_vm);
       lua_pushstring   (this->lua_vm, "collectgarbage");

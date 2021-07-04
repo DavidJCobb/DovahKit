@@ -3,6 +3,8 @@
 #include "../../helpers/qt/strings.h"
 #include "../../dovah/notice_code_list.h"
 
+#include "../../dovah/forms/Landscape.h"
+
 namespace {
    QString _read_error_form_id_to_string(const dovah::detailed_notice::relevant_form& form) {
       QString signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(form.type).signature);
@@ -1029,6 +1031,32 @@ namespace editor_helpers {
                } else {
                   // ...
                }
+            }
+            break;
+         case notice_code::landscape_heights_are_too_steep:
+            {
+               text = QObject::tr("Landspace %1 vertex (%2, %3) is too steep relative to vertex (%4, %5). The landscape cannot be saved.", "notice_code::landscape_heights_are_too_steep");
+               //
+               constexpr int vertices_per_side = dovah::loaded_forms::Landscape::vertices_per_side;
+               int i  = notice.extra_integers[0];
+               int xa = i % vertices_per_side;
+               int ya = i / vertices_per_side;
+               int xb = 0;
+               int yb = 0;
+               if (xa == 0) {
+                  xb = xa;
+                  yb = ya - 1;
+               } else {
+                  xb = xa - 1;
+                  yb = ya;
+               }
+               //
+               QString form = QObject::tr("<unknown form>", "log window");
+               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                  form = _read_error_form_id_to_string(notice.cause_form);
+               }
+               //
+               text = text.arg(form).arg(xa).arg(ya).arg(xb).arg(yb);
             }
             break;
             //

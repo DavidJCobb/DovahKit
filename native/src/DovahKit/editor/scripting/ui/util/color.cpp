@@ -25,6 +25,9 @@ namespace {
             value = lua_tointegerx(L, top + 1, &isnum);
             lua_pop(L, 1);
          }
+         if (value < 0 || value > 255) {
+            luaL_error(L, "value %d is out of range for the %s color component", value, names[i - 1]);
+         }
          values[i - 1] = value;
          if (isnum)
             found |= 1 << i;
@@ -42,6 +45,9 @@ namespace {
          lua_pop(L, 1);
          if (isnum)
             values[3] = value;
+      }
+      if (value < 0 || value > 255) {
+         luaL_error(L, "value %d is out of range for the alpha color component", value);
       }
       color.setAlpha(values[3]);
    }

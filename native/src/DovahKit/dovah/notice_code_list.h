@@ -109,6 +109,7 @@ namespace dovah {
          invalid_landscape_quad_index                = 0x00000064, // LAND full load: something tried to specify an out-of-bounds quad.
          landscape_quads_can_only_have_six_layers    = 0x00000065, // LAND full load: a landscape quad can only have six layers; higher layers overwrite the sixth at run-time.
          havok_data_is_not_supported_here            = 0x00000066, // This feature can't load/save/etc. Havok data.
+         landscape_heights_are_too_steep             = 0x00000067, // This landscape cannot be saved, because there is too steep a slope somewhere in its heightmap.
       };
    };
 }

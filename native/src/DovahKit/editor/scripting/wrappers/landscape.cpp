@@ -47,8 +47,7 @@ namespace {
             return 0;
          --x;
          --y;
-         float height = form->vertex_height_at(x, y);
-         lua_pushnumber(L, height);
+         lua_pushnumber(L, form->heightmap.heights.at(x, y));
          return 1;
       }
       luastackchange_t get_maximum_height(lua_State* L) {
@@ -56,12 +55,11 @@ namespace {
          auto* form = self.get_loaded_form_data<form_t>();
          if (!form)
             return 0;
-         float  base   = form->heightmap.base;
-         int8_t offset = std::numeric_limits<int8_t>::min();
-         for (auto o : form->heightmap.heights.list)
-            if (o > offset)
-               offset = o;
-         lua_pushnumber(L, base + (offset * 8));
+         float max = std::numeric_limits<float>::min();
+         for (auto f : form->heightmap.heights.list)
+            if (f > max)
+               max = f;
+         lua_pushnumber(L, max);
          return 1;
       }
       luastackchange_t get_minimum_height(lua_State* L) {
@@ -69,12 +67,11 @@ namespace {
          auto* form = self.get_loaded_form_data<form_t>();
          if (!form)
             return 0;
-         float  base   = form->heightmap.base;
-         int8_t offset = std::numeric_limits<int8_t>::max();
-         for (auto o : form->heightmap.heights.list)
-            if (o < offset)
-               offset = o;
-         lua_pushnumber(L, base + (offset * 8));
+         float min = std::numeric_limits<float>::max();
+         for (auto f : form->heightmap.heights.list)
+            if (f < min)
+               min = f;
+         lua_pushnumber(L, min);
          return 1;
       }
    }

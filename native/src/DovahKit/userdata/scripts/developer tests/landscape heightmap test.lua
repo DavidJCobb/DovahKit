@@ -4,6 +4,15 @@ if not world then
    error("No worldspace to work with!")
 end
 
+--
+-- NOTE: Bethesda's coordinate system points northeast. Southwest is 
+-- negative. Given a top-down view with north matching up, this would 
+-- correspond to a vertical flip.
+--
+function do_grid_flip(x, y)
+   return x, (33 - y + 1)
+end
+
 local bounds = {}
 do
    local b  = world.bounds
@@ -26,9 +35,9 @@ end
 local cells = world:get_all_cells()
 local count = #cells
 
-local window = ui.window.new()
-local scroll = ui.scrollbox.new()
-local canvas = ui.canvas.new()
+local window   = ui.window.new()
+local scroll   = ui.scrollbox.new()
+local canvas   = ui.canvas.new()
 local progress = ui.progress_bar.new()
 progress.alignment = "center center"
 window.title = string.format("Heightmap for %s", world.name)
@@ -60,7 +69,7 @@ local base_raster = raster.new({
 local base_layer = canvas:append_layer()
 base_layer.data = base_raster
 
-progress.format  = "Checking world height range: %p% (%v/%m)..."
+progress.format  = "Checking world height range..."
 progress.minimum = 0
 progress.maximum = count
 progress.value   = 0
@@ -76,7 +85,7 @@ for i = 1, count do
       if not world_min_height or min < world_min_height then
          world_min_height = min
       end
-      if not world_max_height or max < world_max_height then
+      if not world_max_height or max > world_max_height then
          world_max_height = max
       end
    end
@@ -87,8 +96,16 @@ if not (world_min_height and world_max_height) then
    error("Failed to identify world height range")
 end
 local world_height_span = world_max_height - world_min_height
+dovah.log_message("Terrain height spans the range of [%s, %s], distance %s.", world_min_height, world_max_height, world_height_span)
+if world_height_span < 0 then
+   error(string.format("World height span is a negative number (%s).", world_height_span))
+end
+if world_height_span == 0 then
+   world_height_span = 1
+end
 
-progress.format  = "Drawing cells: %p% (%v/%m)..."
+--progress.format  = "Drawing cells: %p% (%v/%m)..." -- perf impact?
+progress.format  = "Drawing cells..."
 progress.minimum = 0
 progress.maximum = count
 progress.value   = 0
@@ -98,8 +115,11 @@ for i = 1, count do
    local land = cell.landscape
    if land then
       local gc = cell.grid_coords
-      local x  = (gc.x - bounds.x.min) * 32
-      local y  = (gc.y - bounds.y.min) * 32
+      local x  = gc.x - bounds.x.min
+      local y  = gc.y - bounds.y.min
+      y = bounds.height - y - 1
+      x = x * 32
+      y = y * 32
       --
       for u = 2, 33 do -- leftmost col overlaps with western cell, so skip it
          for v = 1, 32 do -- bottom row overlaps with southern cell, so skip it
@@ -107,6 +127,7 @@ for i = 1, count do
             local shade  = (height - world_min_height) / world_height_span
             shade = math.floor(shade * 255) -- TODO: round
             --
+            u, v = do_grid_flip(u, v)
             base_raster:set_pixel(x + u, y + v, { r = shade, g = shade, b = shade })
          end
       end

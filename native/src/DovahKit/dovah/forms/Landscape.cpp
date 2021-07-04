@@ -2,16 +2,6 @@
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 
-namespace {
-   static int _flip_vertex_index_vertically(int i) {
-      constexpr int vertices_per_side = dovah::loaded_forms::Landscape::vertices_per_side;
-      //
-      int y = i / vertices_per_side;
-      int x = i % vertices_per_side;
-      return x + (vertices_per_side - y - 1);
-   }
-}
-
 namespace dovah::loaded_forms {
    void Landscape::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -32,7 +22,7 @@ namespace dovah::loaded_forms {
                break;
             case 'VCLR': // vertex colors
                // The game skips this if the "has color" flag is not set, but that behavior wouldn't be useful for 
-               // editing programs, so we won't replicate it.
+               // editor programs, so we won't replicate it.
                for (int i = 0; i < total_vertex_count; ++i) {
                   if (!subrecord.is_in_bounds(3))
                      break;
@@ -43,23 +33,63 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(g);
                   subrecord.unchecked_read(b);
                   //
-                  this->heightmap.colors.list[_flip_vertex_index_vertically(i)] = { r, g, b };
+                  this->heightmap.colors.list[i] = { r, g, b };
                }
                break;
             case 'VHGT': // vertex heights
                // The game skips this if the "has heightmap" flag is not set, but that behavior wouldn't be useful 
-               // for editing programs, so we won't replicate it.
+               // for editor programs, so we won't replicate it.
                if (!subrecord.is_in_bounds(sizeof(float) + total_vertex_count))
                   break;
-               subrecord.unchecked_read(this->heightmap.base);
-               for (int i = 0; i < total_vertex_count; ++i) {
-                  subrecord.unchecked_read(this->heightmap.heights.list[_flip_vertex_index_vertically(i)]);
+               {
+                  //
+                  // Landscapes are encoded as follows:
+                  // 
+                  //  - There is a base height consisting of a float divided by eight, followed by a grid of 33x33 
+                  //    vertex deltas encoded as signed bytes.
+                  // 
+                  //  - The first vertex in each row is encoded as the delta from the first vertex in the previous 
+                  //    row, divided by eight. The first vertex in the first row has a delta of zero.
+                  // 
+                  //  - After that, Each vertex in a row is encoded as the delta from the previous vertex, divided 
+                  //    by eight.
+                  // 
+                  // Accordingly, the following relationships exist, in order of decreasing priority:
+                  // 
+                  //  - bytes[0][0] == 0
+                  // 
+                  //  - bytes[0][y] == (height[0][y] - height[0][y - 1]) / 8
+                  // 
+                  //  - bytes[x][y] == (height[x][y] - height[x - 1][y]) / 8
+                  //
+                  float base_offset = 0.0F;
+                  float span_offset = 0.0F;
+                  subrecord.unchecked_read(base_offset);
+                  base_offset *= 8.0F;
+                  //
+                  for (int i = 0; i < total_vertex_count; ++i) {
+                     int8_t value;
+                     subrecord.unchecked_read(value);
+                     //
+                     int x = i % vertices_per_side; // col
+                     int y = i / vertices_per_side; // row
+                     if (x == 0) {
+                        //
+                        // The first value in a row serves as a basis for the entire row.
+                        //
+                        span_offset = 0.0F;
+                        base_offset += (float)value * 8.0F;
+                     } else {
+                        span_offset += (float)value * 8.0F;
+                     }
+                     this->heightmap.heights.list[i] = base_offset + span_offset;
+                  }
                }
                subrecord.skip_bytes(3); // padding
                break;
             case 'VNML': // vertex normals
                // The game skips this if the "has heightmap" flag is not set, but that behavior wouldn't be useful 
-               // for editing programs, so we won't replicate it.
+               // for editor programs, so we won't replicate it.
                for (int i = 0; i < total_vertex_count; ++i) {
                   if (!subrecord.is_in_bounds(3))
                      break;
@@ -70,7 +100,7 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(y);
                   subrecord.unchecked_read(z);
                   //
-                  auto& vec = this->heightmap.normals.list[_flip_vertex_index_vertically(i)];
+                  auto& vec = this->heightmap.normals.list[i];
                   vec.x = (float)x / 127.0F;
                   vec.y = (float)y / 127.0F;
                   vec.z = (float)z / 127.0F;
@@ -176,8 +206,6 @@ namespace dovah::loaded_forms {
                   subrecord.skip_bytes(2);
                   subrecord.unchecked_read(entry.value);
                   //
-                  entry.index = _flip_vertex_index_vertically(entry.index);
-                  //
                   alpha_layer_pending_data = false;
                }
                break;
@@ -267,7 +295,6 @@ namespace dovah::loaded_forms {
       auto* copy = (Landscape*)out;
       //
       copy->land_flags = this->land_flags;
-      copy->heightmap.base = this->heightmap.base;
       copy->heightmap.heights = this->heightmap.heights;
       copy->heightmap.normals = this->heightmap.normals;
       copy->heightmap.colors  = this->heightmap.colors;
@@ -298,7 +325,7 @@ namespace dovah::loaded_forms {
       //
       auto& VNML = record.open_next_subrecord('VNML');
       for (int i = 0; i < total_vertex_count; ++i) {
-         auto& vec = this->heightmap.normals.list[_flip_vertex_index_vertically(i)];
+         auto& vec = this->heightmap.normals.list[i];
          //
          int8_t x = 0;
          int8_t y = 0;
@@ -315,16 +342,67 @@ namespace dovah::loaded_forms {
       VNML.close();
       //
       auto& VHGT = record.open_next_subrecord('VHGT');
-      VHGT.write(this->heightmap.base);
-      for (int i = 0; i < total_vertex_count; ++i) {
-         int8_t height = this->heightmap.heights.list[_flip_vertex_index_vertically(i)];
-         VHGT.write(height);
+      {
+         auto& list = this->heightmap.heights.list;
+         //
+         // Landscapes are encoded as follows:
+         // 
+         //  - There is a base height consisting of a float divided by eight, followed by a grid of 33x33 
+         //    vertex deltas encoded as signed bytes.
+         // 
+         //  - The first vertex in each row is encoded as the delta from the first vertex in the previous 
+         //    row, divided by eight. The first vertex in the first row has a delta of zero.
+         // 
+         //  - After that, Each vertex in a row is encoded as the delta from the previous vertex, divided 
+         //    by eight.
+         // 
+         // Accordingly, the following relationships exist, in order of decreasing priority:
+         // 
+         //  - bytes[0][0] == 0
+         // 
+         //  - bytes[0][y] == (height[0][y] - height[0][y - 1]) / 8
+         // 
+         //  - bytes[x][y] == (height[x][y] - height[x - 1][y]) / 8
+         //
+         float base_offset = floor(this->heightmap.heights.list[0] / 8.0F);
+         float span_offset = 0.0F;
+         VHGT.write(base_offset);
+         for (int i = 0; i < total_vertex_count; ++i) {
+            int x = i % vertices_per_side; // col
+            int y = i / vertices_per_side; // row
+            //
+            int8_t out = 0;
+            float  raw = 0.0F;
+            if (x == 0) {
+               if (y != 0) {
+                  int j = i - vertices_per_side; // list[j] == height[0][y - 1]
+                  raw = round((list[i] - list[j]) / 8.0F);
+               }
+            } else {
+               raw = round((list[i] - list[i - 1]) / 8.0F);
+            }
+            if (raw < std::numeric_limits<int8_t>::min() || raw > std::numeric_limits<int8_t>::max()) {
+               detailed_notice error;
+               error.code = notice_code::landscape_heights_are_too_steep;
+               error.set_cause_form(this->stub);
+               error.set_cause_subrecord('VHGT');
+               error.extra_integers[0] = i;
+               intfc.set_save_error(error);
+               //
+               return false;
+            }
+            out = raw;
+            VHGT.write(out);
+         }
+         #if !_DEBUG
+            static_assert(false, "Test this code before you ship anything! Even a JavaScript simulation is better than nothing!");
+         #endif
       }
       VHGT.close();
       //
       auto& VCLR = record.open_next_subrecord('VCLR');
       for (int i = 0; i < total_vertex_count; ++i) {
-         auto& color = this->heightmap.colors.list[_flip_vertex_index_vertically(i)];
+         auto& color = this->heightmap.colors.list[i];
          VCLR.write(color.r);
          VCLR.write(color.g);
          VCLR.write(color.b);
@@ -367,8 +445,7 @@ namespace dovah::loaded_forms {
          //
          auto& VTXT = record.open_next_subrecord('VTXT');
          for (auto& entry : layer.alpha) {
-            uint16_t index = _flip_vertex_index_vertically(entry.index);
-            VTXT.write(index);
+            VTXT.write(entry.index);
             VTXT.skip_bytes(2);
             VTXT.write(entry.value);
          }
@@ -404,9 +481,8 @@ namespace dovah::loaded_forms {
       this->alpha_layers.clear();
       //
       this->land_flags = land_flag::all_common_flags;
-      this->heightmap.base = 0.0F;
       for (auto& e : this->heightmap.heights.list)
-         e = 0;
+         e = 0.0F;
       for (auto& e : this->heightmap.normals.list)
          e = { 0, 0, 1.0F };
       for (auto& e : this->heightmap.colors.list)

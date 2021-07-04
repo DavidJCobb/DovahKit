@@ -6,6 +6,8 @@
 #include "../../../../DirectXTex/DirectXTex.h"
 #include "../../../helpers/intrusive_windows_defines.h"
 
+#include <QThread>
+
 namespace {
    static constexpr int resource_resynchronize_interval = 17; // 1000 / 60 == 16.6ms
 
@@ -255,6 +257,7 @@ void DovahKitScriptVMResourceInterface::clear() {
       //
       for (auto* resource : list) {
          assert(resource);
+         assert(QThread::currentThread() == resource->thread());
          delete resource;
       }
       list.clear();
