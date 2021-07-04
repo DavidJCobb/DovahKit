@@ -1,8 +1,10 @@
 #pragma once
 #include "papyrus/_all.h"
 #include "cell.h"
+   #include "cell/grid_coords.h"
 #include "form.h"
 #include "formlist.h"
+#include "landscape.h"
 #include "quest.h"
    #include "quest/alias.h"
 #include "shout.h"

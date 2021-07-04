@@ -273,8 +273,10 @@
     <ClCompile Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaText.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
     <ClCompile Include="editor\scripting\wrappers\cell.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\cell\grid_coords.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\formlist.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\landscape.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\property.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
@@ -648,8 +650,10 @@
     <QtMoc Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaText.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
     <ClInclude Include="editor\scripting\wrappers\cell.h" />
+    <ClInclude Include="editor\scripting\wrappers\cell\grid_coords.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />
+    <ClInclude Include="editor\scripting\wrappers\landscape.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\property.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\script.h" />

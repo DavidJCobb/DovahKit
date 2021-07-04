@@ -165,17 +165,22 @@ namespace {
             lua_pop(L, 1);
          }
          //
-         LuaManagedResource* resource = nullptr;
+         LuaManagedResourceHandle resource = nullptr;
          {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [width, height, background, &resource]() {
                auto base = QImage(width, height, QImage::Format::Format_ARGB32);
+               if (base.isNull()) // can occur if the image is too large?
+                  return;
                base.fill(background);
                resource = DovahKitScriptVMResourceInterface::get().create_resource(base);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
-            assert(resource);
+            //
+            if (!resource) {
+               luaL_error(L, "unable to create %dx%dpx raster", width, height);
+            }
          }
          return cls::wrap_and_push(L, *resource);
       }

@@ -67,4 +67,19 @@ namespace dovah::form_stub_helpers {
       }
       return nullptr;
    }
+   extern form_stub* get_cell_landscape(const form_stub* cell) {
+      if (cell->formType != dovah::form_type::cell)
+         return nullptr;
+      for (auto& pair : cell->inbound) {
+         auto& entry = pair.second;
+         if (entry.flags & use_info_entry::flag::i_am_parent_of) {
+            auto* child = entry.other;
+            if (!child)
+               continue;
+            if (child->formType == dovah::form_type::land)
+               return child;
+         }
+      }
+      return nullptr;
+   }
 }

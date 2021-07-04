@@ -114,7 +114,7 @@ namespace {
    namespace _singleton_functions {
       luastackchange_t new_(lua_State* L) {
          if (lua_gettop(L) > 0)
-            luaL_error(L, "the ui.dialog.new function should not be called with a colon or passed any arguments");
+            luaL_error(L, "the ui.window.new function should not be called with a colon or passed any arguments");
          //
          DovahKitScriptVMPermissionInterface::verify_ui_permissions();
          //

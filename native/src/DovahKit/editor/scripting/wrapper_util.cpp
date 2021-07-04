@@ -12,20 +12,26 @@ namespace editor_script {
       out.type = wrapper_type::form_data;
       if (stub) {
          switch (stub->formType) { // TODO: an actual list would maybe be more efficient than a switch-case once we end up with a large number of metatables here
+            case dovah::form_type::cell:
+               return wrappers::cell::metatable_key;
             case dovah::form_type::formlist:
                return wrappers::formlist::metatable_key;
+            case dovah::form_type::land:
+               return wrappers::landscape::metatable_key;
+            case dovah::form_type::quest:
+               return wrappers::quest::metatable_key;
             case dovah::form_type::shout:
                return wrappers::shout::metatable_key;
             case dovah::form_type::topic:
                return wrappers::topic::metatable_key;
             case dovah::form_type::topic_info:
                return wrappers::topic_info::metatable_key;
-            case dovah::form_type::quest:
-               return wrappers::quest::metatable_key;
             case dovah::form_type::voicetype:
                return wrappers::voicetype::metatable_key;
             case dovah::form_type::word_of_power:
                return wrappers::word_of_power::metatable_key;
+            case dovah::form_type::worldspace:
+               return wrappers::worldspace::metatable_key;
          }
       }
       return wrappers::form::metatable_key;

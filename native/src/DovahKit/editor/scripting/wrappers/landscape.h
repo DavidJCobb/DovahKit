@@ -1,15 +1,13 @@
 #pragma once
 #include "form.h"
 
-namespace editor_script::wrapper_part_types {
-   inline constexpr cobb::eight_cc cell_grid_coords = "CellGrid";
-}
+#include "../../../dovah/forms/Landscape.h"
 
 namespace editor_script::wrappers {
-   struct cell : public form {
+   struct landscape : public form {
       static constexpr const char* superclass_key = metatable_key;
-      static constexpr const char* metatable_key  = "dovah.classes.cell";
-      static constexpr const char* class_name     = "cell";
+      static constexpr const char* metatable_key  = "dovah.classes.landscape";
+      static constexpr const char* class_name     = "landscape";
       static std::initializer_list<luaL_Reg> metatable_methods;
       static std::initializer_list<luaL_Reg> metatable_getters;
       static std::initializer_list<luaL_Reg> metatable_setters;

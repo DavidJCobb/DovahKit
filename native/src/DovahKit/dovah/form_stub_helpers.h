@@ -10,5 +10,6 @@ namespace dovah {
       extern form_stub* get_base_form(const form_stub* ref);
       extern form_stub* get_worldspace_persistent_cell(const form_stub*);
       extern form_stub* get_worldspace_cell_by_grid(const form_stub* world, int32_t x, int32_t y);
+      extern form_stub* get_cell_landscape(const form_stub* cell);
    }
 }

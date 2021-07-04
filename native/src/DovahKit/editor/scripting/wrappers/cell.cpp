@@ -9,7 +9,7 @@
 #include "../util.h"
 #include "../../../dovah/forms/Cell.h"
 #include "../../../dovah/form_stub_helpers.h"
-#include "worldspace/grid_bounds_root.h"
+#include "cell/grid_coords.h"
 
 //
 // MISSING APIS:
@@ -50,21 +50,26 @@ namespace {
          return 1;
       }
       
+      luastackchange_t grid_coords(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* stub = self.stub;
+         if (!stub)
+            return 0;
+         int32_t x;
+         int32_t y;
+         if (stub->get_grid_coordinates(x, y)) {
+            wrapper out = self;
+            out.append_part(wrapper_part_types::cell_grid_coords);
+            return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::cell_grid_coords::metatable_key);
+         }
+         return 0;
+      }
       luastackchange_t landscape(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* stub = self.stub;
          if (!stub)
             return 0;
-         for (auto& pair : stub->inbound) {
-            auto& entry = pair.second;
-            auto* other = entry.other;
-            if (!(entry.flags & dovah::use_info_entry::flag::i_am_parent_of))
-               continue;
-            if (!other || other->formType != dovah::form_type::land)
-               continue;
-            return wrap_and_push_form(L, other);
-         }
-         return 0;
+         return wrap_and_push_form(L, dovah::form_stub_helpers::get_cell_landscape(stub));
       }
       luastackchange_t name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -182,6 +187,7 @@ namespace editor_script::wrappers {
    };
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "allow_fast_travel",   &_getters::cell_flag_invert<form_t::cell_flag::cant_travel_from_here> },
+      { "grid_coords",         &_getters::grid_coords },
       { "has_lod_water",       &_getters::cell_flag_invert<form_t::cell_flag::no_lod_water> },
       { "has_water",           &_getters::cell_flag<form_t::cell_flag::has_water> }, // NOTE: Game forces this to true on load for exterior cells.
       { "is_hand_changed",     &_getters::cell_flag<form_t::cell_flag::hand_changed> },

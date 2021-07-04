@@ -17,16 +17,18 @@ namespace editor_script {
       #pragma endregion
       #pragma region Form types
          define_wrapper_metatable<cell>(L);
+            define_wrapper_metatable<cell_grid_coords>(L);
          define_wrapper_metatable<formlist>(L);
             formlist::build_collection_metatables(L);
-         define_wrapper_metatable<shout>(L);
-            shout::build_collection_metatables(L);
-            define_wrapper_metatable<shout_word>(L);
+         define_wrapper_metatable<landscape>(L);
          define_wrapper_metatable<quest>(L);
             quest::build_collection_metatables(L);
             define_wrapper_metatable<quest_alias>(L);
             define_wrapper_metatable<quest_loc_alias>(L);
             define_wrapper_metatable<quest_ref_alias>(L);
+         define_wrapper_metatable<shout>(L);
+            shout::build_collection_metatables(L);
+            define_wrapper_metatable<shout_word>(L);
          define_wrapper_metatable<topic>(L);
          define_wrapper_metatable<topic_info>(L);
             topic_info::build_collection_metatables(L);
