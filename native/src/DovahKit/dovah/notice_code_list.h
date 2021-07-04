@@ -108,6 +108,7 @@ namespace dovah {
          papyrus_property_is_scalar_but_empty        = 0x00000063, // Attempted to save a non-array Papyrus property that had no value. Something edited the property incorrectly. We saved it with a default.
          invalid_landscape_quad_index                = 0x00000064, // LAND full load: something tried to specify an out-of-bounds quad.
          landscape_quads_can_only_have_six_layers    = 0x00000065, // LAND full load: a landscape quad can only have six layers; higher layers overwrite the sixth at run-time.
+         havok_data_is_not_supported_here            = 0x00000066, // This feature can't load/save/etc. Havok data.
       };
    };
 }

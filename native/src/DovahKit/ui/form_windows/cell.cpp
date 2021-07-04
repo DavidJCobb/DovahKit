@@ -245,7 +245,7 @@ void FormDialogCell::_load_impl() {
    #pragma endregion
    if (!is_exterior) {
       #pragma region Lighting
-         this->ui.lightingTemplate->setFormByID(this->form->interior.lighting_template_ID);
+         this->ui.lightingTemplate->setFormByID(this->form->interior.lighting_template);
          //
          this->ui.inheritAmbient->setChecked(lighting.inherit_flags & inherit_flag::ambient);
          this->ui.inheritDirectionalColor->setChecked(lighting.inherit_flags & inherit_flag::directional);
@@ -362,7 +362,7 @@ void FormDialogCell::_save_impl() {
    #pragma endregion
    if (!is_exterior) {
       #pragma region Lighting
-         this->save_form_id(this->form->interior.lighting_template_ID, this->ui.lightingTemplate->formStub());
+         this->save_form_id(this->form->interior.lighting_template, this->ui.lightingTemplate->formStub());
          //
          cobb::edit_bit(lighting.inherit_flags, inherit_flag::ambient,              this->ui.inheritAmbient->isChecked());
          cobb::edit_bit(lighting.inherit_flags, inherit_flag::directional,          this->ui.inheritDirectionalColor->isChecked());
@@ -438,7 +438,7 @@ void FormDialogCell::_save_impl() {
       // Strip interior-specific data off of this exterior cell.
       //
       #pragma region Lighting
-         this->save_form_id(this->form->interior.lighting_template_ID, nullptr);
+         this->save_form_id(this->form->interior.lighting_template, nullptr);
          cobb::edit_bit(this->form->cell_flags, cell_flag::show_sky,         false);
          cobb::edit_bit(this->form->cell_flags, cell_flag::use_sky_lighting, false);
          extra.remove_by_type(extra_data_type::cell_climate);

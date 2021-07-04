@@ -303,13 +303,20 @@ namespace dovah::tes_file_reading::threads {
                if (record.signature() == 'CELL') {
                   if (!this->set_stub_parent(stub, desired.worldspaceID))
                      continue;
-               } else if (form_type_info::form_type_is_reference(stub->formType)) {
-                  uint32_t cellID = group.getRawIDOfParentCell();
-                  lo.local_formID_to_global_formID(this->loader, cellID);
-                  if (!this->set_stub_parent(stub, cellID))
-                     continue;
-                  if (!cellID)
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
+               }
+               switch (group.header.type) {
+                  case tes_file_group_type::cell_children:
+                  case tes_file_group_type::cell_persistent_children:
+                  case tes_file_group_type::cell_temporary_children:
+                     {
+                        uint32_t cellID = group.getRawIDOfParentCell();
+                        lo.local_formID_to_global_formID(this->loader, cellID);
+                        if (!this->set_stub_parent(stub, cellID))
+                           continue;
+                        if (!cellID)
+                           dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Form %08X is not in a cell?", this->loader->get_filename(), stub->formID);
+                     }
+                     break;
                }
                if (!this->commit_stub(stub)) {
                   continue;

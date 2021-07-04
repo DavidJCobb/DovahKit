@@ -2,6 +2,16 @@
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 
+namespace {
+   static int _flip_vertex_index_vertically(int i) {
+      constexpr int vertices_per_side = dovah::loaded_forms::Landscape::vertices_per_side;
+      //
+      int y = i / vertices_per_side;
+      int x = i % vertices_per_side;
+      return x + (vertices_per_side - y - 1);
+   }
+}
+
 namespace dovah::loaded_forms {
    void Landscape::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -21,6 +31,8 @@ namespace dovah::loaded_forms {
                subrecord.read(this->land_flags);
                break;
             case 'VCLR': // vertex colors
+               // The game skips this if the "has color" flag is not set, but that behavior wouldn't be useful for 
+               // editing programs, so we won't replicate it.
                for (int i = 0; i < total_vertex_count; ++i) {
                   if (!subrecord.is_in_bounds(3))
                      break;
@@ -31,30 +43,34 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(g);
                   subrecord.unchecked_read(b);
                   //
-                  this->heightmap.colors.list[i] = { r, g, b };
+                  this->heightmap.colors.list[_flip_vertex_index_vertically(i)] = { r, g, b };
                }
                break;
             case 'VHGT': // vertex heights
+               // The game skips this if the "has heightmap" flag is not set, but that behavior wouldn't be useful 
+               // for editing programs, so we won't replicate it.
                if (!subrecord.is_in_bounds(sizeof(float) + total_vertex_count))
                   break;
                subrecord.unchecked_read(this->heightmap.base);
                for (int i = 0; i < total_vertex_count; ++i) {
-                  subrecord.unchecked_read(this->heightmap.heights.list[i]);
+                  subrecord.unchecked_read(this->heightmap.heights.list[_flip_vertex_index_vertically(i)]);
                }
                subrecord.skip_bytes(3); // padding
                break;
             case 'VNML': // vertex normals
+               // The game skips this if the "has heightmap" flag is not set, but that behavior wouldn't be useful 
+               // for editing programs, so we won't replicate it.
                for (int i = 0; i < total_vertex_count; ++i) {
                   if (!subrecord.is_in_bounds(3))
                      break;
-                  uint8_t x;
-                  uint8_t y;
-                  uint8_t z;
+                  int8_t x;
+                  int8_t y;
+                  int8_t z;
                   subrecord.unchecked_read(x);
                   subrecord.unchecked_read(y);
                   subrecord.unchecked_read(z);
                   //
-                  auto& vec = this->heightmap.normals.list[i++];
+                  auto& vec = this->heightmap.normals.list[_flip_vertex_index_vertically(i)];
                   vec.x = (float)x / 127.0F;
                   vec.y = (float)y / 127.0F;
                   vec.z = (float)z / 127.0F;
@@ -117,7 +133,6 @@ namespace dovah::loaded_forms {
                      // landscape, and the user may want to edit them in a sensible way; however, excess 
                      // quads can only be garbage data.
                      //
-                     static_assert(false, "TODO: When we write the save code, out-of-bounds quad indices should result in a save error and should fail the save operation.");
                      break;
                   }
                   if (layer.layer > 5) {
@@ -161,6 +176,8 @@ namespace dovah::loaded_forms {
                   subrecord.skip_bytes(2);
                   subrecord.unchecked_read(entry.value);
                   //
+                  entry.index = _flip_vertex_index_vertically(entry.index);
+                  //
                   alpha_layer_pending_data = false;
                }
                break;
@@ -188,165 +205,219 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      form_id_t take_sound;
-      form_id_t drop_sound;
-      form_id_t content_actor;
-      form_id_t content_sound;
-      form_id_t content_topic;
-      form_id_t form_id;
-      note_type type = (note_type)0;
+      std::array<form_id_t, 4> base_textures;
+      std::vector<form_id_t>   layer_textures;
+      std::vector<form_id_t>   general_textures;
+      form_id_t id;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
-            case 'FULL':
-               break;
-            case 'MODL':
-            case 'MODT':
-            case 'MODS':
-               components::model::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
-               break;
-            case 'OBND':
-               components::object_bounds::generate_use_info(subrecord, uib);
-               break;
-            case 'VMAD':
-               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
-               break;
             case 'DATA':
+            case 'VCLR':
+            case 'VHGT':
+            case 'VNML':
+               break;
+            case 'BTXT':
                {
-                  auto prior = type;
-                  type = (note_type)0;
-                  subrecord.read(type);
-                  if (type != prior) {
-                     content_actor = 0;
-                     content_sound = 0;
-                     content_topic = 0;
+                  subrecord.read(id);
+                  uint8_t quad;
+                  subrecord.read(quad);
+                  subrecord.skip_bytes(3);
+                  //
+                  if (quad > 3) { // our loader doesn't store bad quads
+                     break;
                   }
+                  base_textures[quad] = id;
                }
                break;
-            case 'ONAM':
-               if (subrecord.read(form_id))
-                  uib.add_outbound_reference(form_id);
-               break;
-            case 'XNAM': // texture content (alternate way to specify)
-               break;
-            case 'YNAM':
-               subrecord.read(take_sound);
-               break;
-            case 'ZNAM':
-               subrecord.read(drop_sound);
-               break;
-            default:
-               switch (type) {
+            case 'ATXT':
+               {
+                  subrecord.read(id);
+                  uint8_t quad;
+                  subrecord.read(quad);
+                  subrecord.skip_bytes(3);
                   //
-                  // This is how Bethesda does it, though they don't react to entirely unknown 
-                  // subrecords and so don't need the (handled) bool.
-                  //
-                  case note_type::image:
-                     switch (subrecord.signature()) {
-                        case 'ICON':
-                           break;
-                     }
+                  if (quad > 3) { // our loader doesn't store bad quads
                      break;
-                  case note_type::sound:
-                     switch (subrecord.signature()) {
-                        case 'SNAM':
-                           subrecord.read(content_sound);
-                           break;
-                     }
-                     break;
-                  case note_type::text:
-                     switch (subrecord.signature()) {
-                        case 'TNAM':
-                           break;
-                     }
-                     break;
-                  case note_type::voice:
-                     switch (subrecord.signature()) {
-                        case 'SNAM':
-                           subrecord.read(content_actor);
-                           break;
-                        case 'TNAM':
-                           subrecord.read(content_topic);
-                           break;
-                     }
-                     break;
+                  }
+                  layer_textures.push_back(id);
+               }
+               break;
+            case 'VTXT':
+               break;
+            case 'VTEX':
+               while (subrecord.is_in_bounds(0)) {
+                  subrecord.unchecked_read(id);
+                  general_textures.push_back(id);
                }
                break;
          }
       }
-      uib.add_outbound_reference(take_sound);
-      uib.add_outbound_reference(drop_sound);
-      uib.add_outbound_reference(content_actor);
-      uib.add_outbound_reference(content_sound);
-      uib.add_outbound_reference(content_topic);
-      uib.add_outbound_reference(form_id);
+      for (auto id : base_textures)
+         uib.add_outbound_reference(id);
+      for (auto id : layer_textures)
+         uib.add_outbound_reference(id);
+      for (auto id : general_textures)
+         uib.add_outbound_reference(id);
    }
    bool Landscape::_clone_impl(Form* out) const noexcept {
       if (out->formType != form_type)
          return false;
-      auto copy = (Note*)out;
+      auto* copy = (Landscape*)out;
       //
-      copy->model.clone_from(this->model);
-      copy->script_data.clear(*copy);
-      copy->drop_sound.set(*copy, this->drop_sound);
-      copy->take_sound.set(*copy, this->take_sound);
-      copy_form_reference_list(*copy, copy->owning_quests, this->owning_quests);
-      copy->content.sound.set(*copy, this->content.sound);
-      copy->content.speaker.set(*copy, this->content.speaker);
-      copy->content.topic.set(*copy, this->content.topic);
+      copy->land_flags = this->land_flags;
+      copy->heightmap.base = this->heightmap.base;
+      copy->heightmap.heights = this->heightmap.heights;
+      copy->heightmap.normals = this->heightmap.normals;
+      copy->heightmap.colors  = this->heightmap.colors;
+      copy_form_reference_list(*copy, copy->textures, this->textures);
+      for (size_t i = 0; i < this->default_quad_textures.size(); ++i)
+         copy->default_quad_textures[i].set(*copy, this->default_quad_textures[i]);
+      //
+      size_t size = this->alpha_layers.size();
+      assert(copy->alpha_layers.empty());
+      copy->alpha_layers.resize(size);
+      for (size_t i = 0; i < size; ++i) {
+         auto& src = this->alpha_layers[i];
+         auto& dst = copy->alpha_layers[i];
+         dst.texture.set(*copy, src.texture);
+         dst.quad  = src.quad;
+         dst.layer = src.layer;
+         dst.alpha = src.alpha;
+      }
+      //
+      copy->mpcd = this->mpcd;
       //
       return true;
    }
    bool Landscape::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord('OBND');
-      this->bounds.save(OBND, intfc);
-      OBND.close();
-      auto& FULL = record.open_next_subrecord('FULL');
-      FULL.write(this->name);
-      FULL.close();
-      this->model.save(record, intfc, 'MODL', 'MODT');
-      record.write_string_subrecord('ICON', this->icon);
-      record.write_formID_subrecord('YNAM', this->take_sound, true);
-      record.write_formID_subrecord('ZNAM', this->drop_sound, true);
       auto& DATA = record.open_next_subrecord('DATA');
-      DATA.write(this->type);
+      DATA.write(this->land_flags);
       DATA.close();
-      for (auto& id : this->owning_quests)
-         record.write_formID_subrecord('ONAM', id, true);
-      if (this->type == note_type::image)
-         record.write_string_subrecord('XNAM', this->content.image);
-      else if (this->type == note_type::text) {
-         auto& TNAM = record.open_next_subrecord('TNAM');
-         TNAM.write(this->content.text);
-         TNAM.close();
-      } else if (this->type == note_type::sound) {
-         record.write_formID_subrecord('SNAM', this->content.sound);
-      } else if (this->type == note_type::voice) {
-         record.write_formID_subrecord('TNAM', this->content.topic);
-         record.write_formID_subrecord('SNAM', this->content.speaker);
+      //
+      auto& VNML = record.open_next_subrecord('VNML');
+      for (int i = 0; i < total_vertex_count; ++i) {
+         auto& vec = this->heightmap.normals.list[_flip_vertex_index_vertically(i)];
+         //
+         int8_t x = 0;
+         int8_t y = 0;
+         int8_t z = 0;
+         if (vec.length() >= 0.000001F) {
+            x = vec.x * 127.0F;
+            y = vec.y * 127.0F;
+            z = vec.z * 127.0F;
+         }
+         VNML.write(x);
+         VNML.write(y);
+         VNML.write(z);
+      }
+      VNML.close();
+      //
+      auto& VHGT = record.open_next_subrecord('VHGT');
+      VHGT.write(this->heightmap.base);
+      for (int i = 0; i < total_vertex_count; ++i) {
+         int8_t height = this->heightmap.heights.list[_flip_vertex_index_vertically(i)];
+         VHGT.write(height);
+      }
+      VHGT.close();
+      //
+      auto& VCLR = record.open_next_subrecord('VCLR');
+      for (int i = 0; i < total_vertex_count; ++i) {
+         auto& color = this->heightmap.colors.list[_flip_vertex_index_vertically(i)];
+         VCLR.write(color.r);
+         VCLR.write(color.g);
+         VCLR.write(color.b);
+      }
+      VCLR.close();
+      //
+      {
+         auto& list = this->default_quad_textures;
+         for (int i = 0; i < list.size(); ++i) {
+            auto& ref  = list[i];
+            if (ref == nullptr)
+               continue;
+            auto& BTXT = record.open_next_subrecord('BTXT');
+            BTXT.write(ref);
+            BTXT.write(uint8_t(i));
+            BTXT.skip_bytes(1);
+            BTXT.write(int16_t(-1));
+            BTXT.close();
+         }
+      }
+      for (auto& layer : this->alpha_layers) {
+         if (layer.quad > 3) {
+            detailed_notice error;
+            error.code = notice_code::invalid_landscape_quad_index;
+            error.set_cause_form(this->stub);
+            error.set_cause_subrecord('ATXT');
+            if (layer.texture)
+               error.add_relevant_form(*layer.texture.get_form_stub());
+            error.extra_integers[0] = layer.quad;
+            intfc.set_save_error(error);
+            //
+            return false;
+         }
+         auto& ATXT = record.open_next_subrecord('ATXT');
+         ATXT.write(layer.texture);
+         ATXT.write(layer.quad);
+         ATXT.skip_bytes(1);
+         ATXT.write(layer.layer);
+         ATXT.close();
+         //
+         auto& VTXT = record.open_next_subrecord('VTXT');
+         for (auto& entry : layer.alpha) {
+            uint16_t index = _flip_vertex_index_vertically(entry.index);
+            VTXT.write(index);
+            VTXT.skip_bytes(2);
+            VTXT.write(entry.value);
+         }
+         VTXT.close();
+      }
+      auto& VTEX = record.open_next_subrecord('VTEX');
+      for (auto& ref : this->textures) {
+         VTEX.write(ref);
+      }
+      VTEX.close();
+      //
+      if (!this->mpcd.empty()) {
+         //
+         // We can't currently generate MPCD data, so let's not save it.
+         //
+         detailed_notice warning;
+         warning.code = notice_code::havok_data_is_not_supported_here;
+         warning.set_cause_form(this->stub);
+         warning.set_cause_subrecord('MPCD');
+         intfc.log_save_warning(warning);
       }
       return true;
    }
    void Landscape::_clear_impl() noexcept {
-      this->model.clear();
-      this->script_data.clear(*this);
-      this->drop_sound.set(*this, nullptr);
-      this->take_sound.set(*this, nullptr);
-      clear_form_reference_list(this->owning_quests, *this);
-      this->content.sound.set(*this, nullptr);
-      this->content.speaker.set(*this, nullptr);
-      this->content.topic.set(*this, nullptr);
+      clear_form_reference_list(this->textures, *this);
+      //
+      for (auto& ref : this->default_quad_textures)
+         ref.set(*this, nullptr);
+      //
+      for (auto& layer : this->alpha_layers) {
+         layer.texture.set(*this, nullptr);
+      }
+      this->alpha_layers.clear();
+      //
+      this->land_flags = land_flag::all_common_flags;
+      this->heightmap.base = 0.0F;
+      for (auto& e : this->heightmap.heights.list)
+         e = 0;
+      for (auto& e : this->heightmap.normals.list)
+         e = { 0, 0, 1.0F };
+      for (auto& e : this->heightmap.colors.list)
+         e = { 0, 0, 0 };
+      this->mpcd.clear();
    }
    void Landscape::_sever_outbound_references_impl(form_stub& other) noexcept {
-      this->model.sever_outbound_references_to(other, *this);
-      this->script_data.sever_outbound_references_to(other, *this);
-      this->drop_sound.clear_if(*this, other);
-      this->take_sound.clear_if(*this, other);
-      remove_form_from_reference_list(this->owning_quests, other, *this);
-      this->content.sound.clear_if(*this, other);
-      this->content.speaker.clear_if(*this, other);
-      this->content.topic.clear_if(*this, other);
+      remove_form_from_reference_list(this->textures, other, *this);
+      for (auto& ref : this->default_quad_textures)
+         ref.clear_if(*this, other);
+      for (auto& layer : this->alpha_layers)
+         layer.texture.clear_if(*this, other);
    }
 }

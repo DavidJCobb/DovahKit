@@ -7,6 +7,7 @@
 #include "../DialogueBranch.h"
 #include "../Faction.h"
 #include "../FormList.h"
+#include "../Landscape.h"
 #include "../Location.h"
 #include "../Note.h"
 #include "../ObjectReference.h"
@@ -59,6 +60,7 @@ namespace {
       { form_type::reference,              _handlers::make<loaded_forms::ObjectReference>() },
       { form_type::actor,                  _handlers::make<loaded_forms::Actor>() },
       { form_type::worldspace,             _handlers::make<loaded_forms::Worldspace>() },
+      { form_type::land,                   _handlers::make<loaded_forms::Landscape>() },
       { form_type::topic,                  _handlers::make<loaded_forms::Topic>() },
       { form_type::topic_info,             _handlers::make<loaded_forms::TopicInfo>() },
       { form_type::quest,                  _handlers::make<loaded_forms::Quest>() },

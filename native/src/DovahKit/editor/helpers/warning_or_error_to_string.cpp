@@ -1011,6 +1011,27 @@ namespace editor_helpers {
             }
             break;
             //
+         case notice_code::havok_data_is_not_supported_here:
+            {
+               text = QObject::tr("DovahKit doesn't support this type of Havok data.", "notice_code::havok_data_is_not_supported_here");
+               if (notice.context == dovah::detailed_notice::notice_context::form_save) {
+                  text = QObject::tr("DovahKit failed to save Havok data for form %1.", "notice_code::havok_data_is_not_supported_here");
+                  //
+                  QString form = QObject::tr("<unknown form>", "log window");
+                  if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
+                     form = _read_error_form_id_to_string(notice.cause_form);
+                     if (notice.cause_form.type == dovah::form_type::land) {
+                        text = QObject::tr("DovahKit does not currently support generating compressed Havok collision data for landscapes, and so failed to save the data present for %1.", "notice_code::havok_data_is_not_supported_here");
+                     }
+                  }
+                  //
+                  text = text.arg(form);
+               } else {
+                  // ...
+               }
+            }
+            break;
+            //
          case notice_code::unknown_error:
          default:
             text = QObject::tr("Unknown error.", "write error");

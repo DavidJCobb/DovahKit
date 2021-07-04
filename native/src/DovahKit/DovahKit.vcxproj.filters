@@ -975,6 +975,18 @@
     <ClCompile Include="editor\scripting\wrappers\worldspace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\worldspace\grid_bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\worldspace\grid_bounds_root.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Landscape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -1965,6 +1977,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\scripting\wrappers\worldspace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\worldspace\grid_bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\worldspace\grid_bounds_root.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Landscape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

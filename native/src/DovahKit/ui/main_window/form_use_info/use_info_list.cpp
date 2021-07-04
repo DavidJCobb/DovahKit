@@ -5,6 +5,36 @@
 #include "../../../editor/core.h"
 #include "../../../editor/open_window_for_form.h"
 
+namespace {
+   QString _format_cell(dovah::form_stub* cell) {
+      assert(cell->formType == dovah::form_type::cell);
+      //
+      auto name = cell->get_editor_id();
+      auto id   = QString("%1").arg(cell->formID, 8, 16, QChar('0')).toUpper();
+      QString cell_text = QString("[CELL:%1]").arg(id);
+      if (name && name[0]) {
+         cell_text += name;
+      } else {
+         auto world = cell->get_parent_form();
+         if (world) {
+            assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
+            auto    id   = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
+            QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
+            int32_t x;
+            int32_t y;
+            QString grid;
+            if (cell->get_grid_coordinates(x, y)) {
+               grid = QString("(%1, %2)").arg(x).arg(y);
+            } else {
+               grid = QString("(?, ?)");
+            }
+            return QString("%2%3 in %1").arg(s).arg(cell_text).arg(grid);
+         }
+      }
+      return cell_text;
+   }
+}
+
 #pragma region FormUseInfoListModel
 FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* source) {
    bool is_reference = (source->flags & data_t::flag::object_reference) != 0;
@@ -36,28 +66,15 @@ void FormUseInfoListModelItem::updateFromStub() {
       auto parent = stub->get_parent_form();
       if (parent) { // can be nullptr for PlayerRef
          assert(parent->formType == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
-         auto name = parent->get_editor_id();
-         auto id   = QString("%1").arg(parent->formID, 8, 16, QChar('0')).toUpper();
-         this->parentCell = QString("[CELL:%1]").arg(id);
-         if (name && name[0]) {
-            this->parentCell += name;
-         } else {
-            auto world = parent->get_parent_form();
-            if (world) {
-               assert(world->formType == dovah::form_type::worldspace && "When this code was written, it was only possible for CELLs to appear inside of WRLDs. Looks like something's changed?");
-               auto    id   = QString("%1").arg(world->formID, 8, 16, QChar('0')).toUpper();
-               QString s    = QString("[WRLD:%1]%2").arg(id).arg(world->get_editor_id());
-               int32_t x;
-               int32_t y;
-               QString grid;
-               if (parent->get_grid_coordinates(x, y)) {
-                  grid = QString("(%1, %2)").arg(x).arg(y);
-               } else {
-                  grid = QString("(?, ?)");
-               }
-               this->parentCell = QString("%2%3 in %1").arg(s).arg(this->parentCell).arg(grid);
-            }
-         }
+         this->parentCell = _format_cell(parent);
+      }
+   } else {
+      dovah::form_stub* cell = nullptr;
+      if (stub->formType == dovah::form_type::land) {
+         cell = stub->get_parent_form();
+      }
+      if (cell && cell->formType == dovah::form_type::cell) {
+         this->parentCell = _format_cell(cell);
       }
    }
 }
@@ -301,6 +318,9 @@ QVariant FormUseInfoListModel::data(const QModelIndex& index, int role) const {
             case Qt::UserRole + 0: // sorting
             case Qt::UserRole + 1: // filtering
                if (this->mode == relationship_mode::base_form_only) {
+                  return item->parentCell;
+               }
+               if (item->otherType == dovah::form_type::land) {
                   return item->parentCell;
                }
                return item->editorID;

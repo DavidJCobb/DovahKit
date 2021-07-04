@@ -194,6 +194,7 @@
     <ClCompile Include="dovah\forms\factories\use_info.cpp" />
     <ClCompile Include="dovah\forms\form.cpp" />
     <ClCompile Include="dovah\forms\FormList.cpp" />
+    <ClCompile Include="dovah\forms\Landscape.cpp" />
     <ClCompile Include="dovah\forms\Location.cpp" />
     <ClCompile Include="dovah\forms\MagicEffect.cpp" />
     <ClCompile Include="dovah\forms\Note.cpp" />
@@ -271,6 +272,7 @@
     <ClCompile Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaManagedResource.cpp" />
     <ClCompile Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaText.cpp" />
     <ClCompile Include="editor\scripting\wrapper.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\cell.cpp" />
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\formlist.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\property.cpp" />
@@ -320,6 +322,8 @@
     <ClCompile Include="editor\scripting\wrappers\voicetype.cpp" />
     <ClCompile Include="editor\scripting\wrappers\word_of_power.cpp" />
     <ClCompile Include="editor\scripting\wrappers\worldspace.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\worldspace\grid_bounds.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\worldspace\grid_bounds_root.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_metatables.cpp" />
     <ClCompile Include="editor\scripting\wrappers\_build_singletons.cpp" />
     <ClCompile Include="editor\scripting\wrapper_util.cpp" />
@@ -545,6 +549,7 @@
     <ClInclude Include="dovah\forms\factories\use_info.h" />
     <ClInclude Include="dovah\forms\Actor.h" />
     <ClInclude Include="dovah\forms\impl\component_templates.h" />
+    <ClInclude Include="dovah\forms\Landscape.h" />
     <ClInclude Include="dovah\forms\Note.h" />
     <ClInclude Include="dovah\forms\Package.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
@@ -642,6 +647,7 @@
     <QtMoc Include="editor\scripting\widgets\objects\LuaScriptableCanvasWidgetLayerData.h" />
     <QtMoc Include="editor\scripting\widgets\objects\CanvasWidgetLayerDataLuaText.h" />
     <ClInclude Include="editor\scripting\wrapper.h" />
+    <ClInclude Include="editor\scripting\wrappers\cell.h" />
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\property.h" />
@@ -694,6 +700,8 @@
     <ClInclude Include="editor\scripting\wrappers\voicetype.h" />
     <ClInclude Include="editor\scripting\wrappers\word_of_power.h" />
     <ClInclude Include="editor\scripting\wrappers\worldspace.h" />
+    <ClInclude Include="editor\scripting\wrappers\worldspace\grid_bounds.h" />
+    <ClInclude Include="editor\scripting\wrappers\worldspace\grid_bounds_root.h" />
     <ClInclude Include="editor\scripting\wrappers\_all.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_forms.h" />
     <ClInclude Include="editor\scripting\wrappers\_all_resources.h" />

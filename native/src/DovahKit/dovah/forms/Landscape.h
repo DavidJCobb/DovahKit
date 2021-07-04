@@ -70,7 +70,7 @@ namespace dovah::loaded_forms {
             grid<vertex_color>         colors;  // colors[y][x]  // VCLR
          } heightmap;
          std::vector<form_reference_t> textures; // VTEX
-         std::array<form_reference_t, 4> default_quad_textures; // BTXT: Base TeXTure
+         std::array<form_reference_t, 4> default_quad_textures; // BTXT: Base TeXTure // index == quad
          std::vector<alpha_layer> alpha_layers;
          std::vector<uint8_t> mpcd; // MPCD // hkMoppCode, the pre-generated collision data for the terrain. we suspect it's optional, with the game doing collision at run-time if it's absent
 
