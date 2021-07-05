@@ -28,6 +28,13 @@ do
    sb:set_layout("grid")
    sb:add_child(canvas)
    window:add_child(progress, 2, 1)
+   
+   do
+      local tip = ui.text.new("TIP: It's normal for rivers and other water formations to be missing chunks. In order to allow for waterfalls at oblique angles relative to the compass, Bethesda will use placed water objects instead of cell and worldspace water.")
+      tip.word_wrap = true
+      window:add_child(tip, 3, 1)
+   end
+   
    window:show()
 end
 
