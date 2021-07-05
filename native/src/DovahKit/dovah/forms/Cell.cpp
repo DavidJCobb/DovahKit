@@ -93,7 +93,13 @@ namespace dovah::loaded_forms {
                subrecord.read(this->interior.lighting.inherit_flags);
                break;
             case 'XCLW':
-               subrecord.read(this->water.height);
+               {
+                  float value;
+                  subrecord.read(value);
+                  if (value >= inherit_water_height)
+                     break;
+                  this->water.height = round(value); // the game rounds to the nearest multiple of 1.0F
+               }
                break;
             case 'XNAM':
                subrecord.to_string(this->water.noise_texture);

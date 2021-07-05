@@ -94,7 +94,7 @@ namespace {
          auto* form = self.get_loaded_form_data<form_t>();
          if (!form)
             return 0;
-         if (form->water.height == FLT_MAX) {
+         if (form->water.height >= form_t::inherit_water_height) {
             lua_pushnil(L);
             return 1;
          }
@@ -152,12 +152,11 @@ namespace {
          //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          auto* form  = self.get_loaded_form_data<form_t>();
-         float value = FLT_MAX;
+         float value = form_t::absent_water_height;
          if (!lua_isnoneornil(L, 2)) {
             luaL_argcheck(L, lua_isnumber(L, 2), 2, "number or nil expected");
             value = lua_tonumber(L, 2);
-            luaL_argcheck(L, value != FLT_MAX, 2, "FLT_MAX cannot be used as a water height; the game engine uses that value to mean \"no water\"");
-            luaL_argcheck(L, value <  FLT_MAX, 2, "water height is a float and cannot exceed FLT_MAX");
+            luaL_argcheck(L, value <= form_t::inherit_water_height, 2, "the game caps water height to below 2147483648; pass a lower value, or pass nil to inherit the parent worldspace's height");
          }
          if (!form)
             return 0;

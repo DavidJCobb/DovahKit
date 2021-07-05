@@ -1,7 +1,7 @@
 
-local TRANSPARENT = "#00000000"
-local WATER_DEPTH = 4096
-local WATER_MURK  = 1
+local TRANSPARENT     = "#00000000"
+local WATER_DEPTH     = 4096
+local WATER_MIN_ALPHA = 0.5
 
 local world = dovah.get_form_by_id(0x3C)
 if not world then
@@ -157,15 +157,26 @@ progress.value   = 0
 local working_raster = raster.new({ width = 32, height = 32 })
 local working_water  = raster.new({ width = 32, height = 32 })
 
+function _alpha_from_height(land, water)
+   local diff = water - land
+   if diff > 0 then
+      local span  = 1 - WATER_MIN_ALPHA
+      local alpha = (math.min(1, diff / WATER_DEPTH) * span) + WATER_MIN_ALPHA
+      alpha = math.min(1, alpha)
+      return math.ceil(alpha * 255)
+   end
+   return 0
+end
+
 for i = 1, count do
    local cell = cells[i]
    --
    local water_height = nil
    do
-      local a = cell.water_height
+      local a = cell.water_height -- nil if we're defaulting to the world water height
       local b = world_info.heights.water
       if a then
-         water_height = math.max(a, b)
+         water_height = a
       else
          water_height = b or -9999999
       end
@@ -196,11 +207,10 @@ for i = 1, count do
             b = b - 1 -- account for skipped row
             working_raster:set_pixel(a, b, { r = shade, g = shade, b = shade })
             --
-            do -- water
-               local diff = water_height - height
-               if diff > 0 then
-                  local opacity = math.ceil(math.min(1, diff / WATER_DEPTH) * 255)
-                  working_water:set_pixel(a, b, { r = 80, g = 160, b = 255, a = opacity })
+            if cell.has_water then -- water
+               local alpha = _alpha_from_height(height, water_height)
+               if alpha > 0 then
+                  working_water:set_pixel(a, b, { r = 80, g = 160, b = 255, a = alpha })
                end
             end
          end
@@ -226,11 +236,12 @@ for i = 1, count do
       --
       base_raster:draw_raster(working_raster, x + 1, y + 1)
       --
-      if height < water_height then -- water
-         local diff = water_height - height
-         local opacity = math.ceil(math.min(1, diff / WATER_DEPTH) * 255)
-         working_water:fill({ r = 80, g = 160, b = 255, a = opacity })
-         base_raster:draw_raster(working_water,   x + 1, y + 1)
+      if cell.has_water and height < water_height then -- water
+         local alpha = _alpha_from_height(height, water_height)
+         if alpha > 0 then
+            working_water:fill({ r = 80, g = 160, b = 255, a = alpha })
+            base_raster:draw_raster(working_water, x + 1, y + 1)
+         end
       end
    end
    progress.value = i

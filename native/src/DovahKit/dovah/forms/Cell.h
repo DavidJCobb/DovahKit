@@ -17,6 +17,24 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::cell;
          Cell(const constructor_params& c) : Form(form_type, c) {};
 
+         static constexpr float inherit_water_height = (float) uint32_t(0x80000000);
+         static constexpr float absent_water_height  = (float) FLT_MAX;
+         //
+         // The game default-initializes a cell's water height to (absent_water_height). During 
+         // load, if the game reads any value greater than or equal to (inherit_water_height), 
+         // then it simply discards the value outright.
+         // 
+         // At run-time, the game will use the cell's water height if the value is lower than 
+         // (inherit_water_height); otherwise, it will check the parent cell, if appropriate. 
+         // If the game is unable to get a valid water height for any reason, it will return 
+         // the value (absent_water_height) as a sentinel.
+         // 
+         // Note the wording, though. If the cell's water height is (absent_water_height), that 
+         // alone doesn't eliminate water; it's a cue to check the worldspace; it's just that 
+         // (absent_water_height) is also the value the game uses as a sentinel if, during play, 
+         // a water height check fails.
+         //
+
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
                persistent = 0x00000400,
@@ -80,7 +98,7 @@ namespace dovah::loaded_forms {
             max_height_data_t max_height_data; // MHDT
          } exterior;
          struct {
-            float       height = 0.0F; // XCLW
+            float       height = absent_water_height; // XCLW
             std::string noise_texture; // XNAM
          } water;
          //

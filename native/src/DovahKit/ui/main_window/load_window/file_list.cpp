@@ -216,7 +216,7 @@ LoadOrderFileList::LoadOrderFileList(QWidget* parent) : QTableView(parent) {
    auto metrics = QFontMetrics(this->font());
    header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
    header->setMinimumSectionSize(2);
-   header->setSectionResizeMode(0, QHeaderView::Stretch);
+   header->setSectionResizeMode(0, QHeaderView::Interactive);
    header->setSectionResizeMode(1, QHeaderView::Interactive);
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       if (!index.isValid())

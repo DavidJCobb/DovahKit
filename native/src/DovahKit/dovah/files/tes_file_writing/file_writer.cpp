@@ -320,6 +320,7 @@ namespace dovah::tes_file_writing {
             if (!child->needs_save())
                return false;
             persistent.push_back(child);
+            return false;
          });
       } else {
          bool gather_persistent = !stub->is_exterior_cell();
