@@ -337,19 +337,23 @@ namespace dovah::tes_file_writing {
          });
       }
       //
-      if (!persistent.empty()) {
-         this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-         for (auto* child : persistent) {
-            if (!this->_write_form(child))
-               break;
+      if (!persistent.empty() || !temporary.empty()) {
+         this->open_group(tes_file_group_type::cell_children, stub->formID, 0);
+         if (!persistent.empty()) {
+            this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+            for (auto* child : persistent) {
+               if (!this->_write_form(child))
+                  break;
+            }
+            this->close_current_group();
          }
-         this->close_current_group();
-      }
-      if (!temporary.empty()) {
-         this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-         for (auto* child : temporary) {
-            if (!this->_write_form(child))
-               break;
+         if (!temporary.empty()) {
+            this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+            for (auto* child : temporary) {
+               if (!this->_write_form(child))
+                  break;
+            }
+            this->close_current_group();
          }
          this->close_current_group();
       }

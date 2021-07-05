@@ -395,9 +395,6 @@ namespace dovah::loaded_forms {
             VHGT.write(out);
          }
          VHGT.skip_bytes(3);
-         #if !_DEBUG
-            static_assert(false, "Test this code before you ship anything! Even a JavaScript simulation is better than nothing!");
-         #endif
       }
       VHGT.close();
       //
