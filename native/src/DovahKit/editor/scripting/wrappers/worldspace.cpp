@@ -41,12 +41,12 @@ namespace {
             lua_createtable(L, 0, 0);
             return 1;
          }
-         int estimated = 0;
-         if (auto* form = self.get_loaded_form_data<form_t>()) {
-            int x = form->bounds.max.x - form->bounds.min.x;
-            int y = form->bounds.max.y - form->bounds.min.y;
-            estimated = x * y; // this can be quite large!
-         }
+         // The vast majority of references to a WRLD will be its own CELLs, so preallocate the 
+         // Lua array to match that size. Beware, however, that Lua only shrinks tables when it 
+         // rehashes them (i.e. if they grow too full); if we specify too large a size, the 
+         // wasted space will never be freed. Better to specify a size too small; we'll skip 
+         // several rehashes and only have to rehash a few times at the end.
+         int estimated = stub->inbound.size() / 4 * 3;
          lua_createtable(L, estimated, 0);
          //
          int i   = 0;
@@ -110,7 +110,7 @@ namespace {
          auto* form = self.get_loaded_form_data<form_t>();
          if (!form)
             return 0;
-         lua_pushnumber(L, form->land_data.default_land_height);
+         lua_pushnumber(L, form->land_data.default_water_height);
          return 1;
       }
       luastackchange_t encounter_zone(lua_State* L) {

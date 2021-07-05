@@ -8,6 +8,7 @@
 #include "../classes.h"
 #include "../util.h"
 #include "../../../dovah/forms/Landscape.h"
+#include "../../../dovah/forms/Worldspace.h"
 #include "../../../dovah/form_stub_helpers.h"
 
 //
@@ -55,7 +56,7 @@ namespace {
          auto* form = self.get_loaded_form_data<form_t>();
          if (!form)
             return 0;
-         float max = std::numeric_limits<float>::min();
+         float max = std::numeric_limits<float>::lowest(); // ::min() isn't actually the minimum for floating-point types
          for (auto f : form->heightmap.heights.list)
             if (f > max)
                max = f;
@@ -76,6 +77,30 @@ namespace {
       }
    }
    namespace _getters {
+      luastackchange_t enable_paint_layers(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<form_t>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, form->land_flags & form_t::land_flag::has_layers);
+         return 1;
+      }
+      luastackchange_t enable_vertex_colors(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<form_t>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, form->land_flags & form_t::land_flag::has_colors);
+         return 1;
+      }
+      luastackchange_t enable_vertex_heights(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<form_t>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, form->land_flags & form_t::land_flag::has_heightmap);
+         return 1;
+      }
       luastackchange_t parent_cell(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* stub = self.stub;
@@ -98,7 +123,10 @@ namespace editor_script::wrappers {
       { "get_minimum_height", &_methods::get_minimum_height },
    };
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_getters = {
-      { "parent_cell", &_getters::parent_cell },
+      { "enable_paint_layers",   &_getters::enable_paint_layers },
+      { "enable_vertex_colors",  &_getters::enable_vertex_colors },
+      { "enable_vertex_heights", &_getters::enable_vertex_heights },
+      { "parent_cell",           &_getters::parent_cell },
    };
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_setters = {
    };

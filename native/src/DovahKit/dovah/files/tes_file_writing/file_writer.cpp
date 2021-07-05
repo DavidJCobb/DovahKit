@@ -308,72 +308,50 @@ namespace dovah::tes_file_writing {
    }
 
    void file_writer::_write_child_forms_for_cell(form_stub* stub) {
-      bool has_persistent_children;
-      bool has_temporary_children;
-      {
-         //
-         // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
-         // be saved to (i.e. whether the cell has any persistent or temporary children to save). We'll get to 
-         // that when we implement world editing.
-         //
-         auto& e = this->error;
-         e.code = notice_code::unknown_error;
-         this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
-         return;
-      }
-      if (has_persistent_children) {
-         bool group_opened = false;
-         //
-         form_stub_helpers::for_each_child_form(stub, [this, stub, &group_opened](form_stub* child) {
-            {
-               //
-               // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
-               // be saved to. We'll get to that when we implement world editing.
-               //
-               auto& e = this->error;
-               e.code = notice_code::unknown_error;
-               this->error.set_cause_form(*child).set_file_offset(this->get_stream_position());
-               return true;
-            }
+      assert(stub->formType == dovah::form_type::cell);
+      //
+      std::vector<form_stub*> persistent;
+      std::vector<form_stub*> temporary;
+      if (form_stub_helpers::is_worldspace_persistent_cell(*stub)) {
+         auto* world = stub->get_parent_form();
+         assert(world);
+         assert(world->formType == form_type::worldspace);
+         form_stub_helpers::for_each_persistent_ref_in_world(*world, [&persistent](form_stub* child) {
             if (!child->needs_save())
                return false;
-            if (!group_opened) {
-               this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-               group_opened = true;
-            }
-            this->_write_form(child);
-            return false;
+            persistent.push_back(child);
          });
-         //
-         if (group_opened)
-            this->close_current_group();
-      }
-      if (has_temporary_children) {
-         bool group_opened = false;
-         //
-         form_stub_helpers::for_each_child_form(stub, [this, stub, &group_opened](form_stub* child) {
-            {
-               //
-               // TODO: We haven't yet implemented code to determine which CELL child group a REFR/ACHR/etc. should 
-               // be saved to. We'll get to that when we implement world editing.
-               //
-               auto& e = this->error;
-               e.code = notice_code::unknown_error;
-               this->error.set_cause_form(*child).set_file_offset(this->get_stream_position());
-               return true;
-            }
+      } else {
+         bool gather_persistent = !stub->is_exterior_cell();
+         form_stub_helpers::for_each_child_form(stub, [stub, gather_persistent, &persistent, &temporary](form_stub* child) {
             if (!child->needs_save())
                return false;
-            if (!group_opened) {
-               this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-               group_opened = true;
+            if (form_stub_helpers::is_persistent(child)) {
+               if (!gather_persistent)
+                  return false;
+               persistent.push_back(child);
+            } else {
+               temporary.push_back(child);
             }
-            this->_write_form(child);
             return false;
          });
-         //
-         if (group_opened)
-            this->close_current_group();
+      }
+      //
+      if (!persistent.empty()) {
+         this->open_group(tes_file_group_type::cell_persistent_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         for (auto* child : persistent) {
+            if (!this->_write_form(child))
+               break;
+         }
+         this->close_current_group();
+      }
+      if (!temporary.empty()) {
+         this->open_group(tes_file_group_type::cell_temporary_children, stub->formID, tes_file_group_header::uninitialized_unknown);
+         for (auto* child : temporary) {
+            if (!this->_write_form(child))
+               break;
+         }
+         this->close_current_group();
       }
    }
    void file_writer::_write_child_forms_for_topic(form_stub* stub) {

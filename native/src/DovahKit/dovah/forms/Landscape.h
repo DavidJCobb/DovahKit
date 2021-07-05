@@ -41,16 +41,16 @@ namespace dovah::loaded_forms {
          // The western column and southern row must overlap with those of the adjoining 
          // cells, or there will be tears in the landscape.
          template<typename T> struct grid {
-            std::array<T, vertices_per_side * vertices_per_side> list;
+            std::array<T, vertices_per_side * vertices_per_side> list = {};
 
             T& at(int x, int y) noexcept { return list[y * vertices_per_side + x]; }
             const T& at(int x, int y) const noexcept { return list[y * vertices_per_side + x]; }
          };
 
          struct vertex_color {
-            uint8_t r = 0;
-            uint8_t g = 0;
-            uint8_t b = 0;
+            uint8_t r = 255;
+            uint8_t g = 255;
+            uint8_t b = 255;
          };
 
          struct alpha_entry {

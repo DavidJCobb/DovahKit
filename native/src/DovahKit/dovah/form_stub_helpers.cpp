@@ -82,4 +82,38 @@ namespace dovah::form_stub_helpers {
       }
       return nullptr;
    }
+
+   extern bool is_persistent(const form_stub* stub) {
+      if (!stub)
+         return false;
+      if (form_type_info::form_type_is_reference(stub->formType)) {
+         return stub->test_record_flags(0x400);
+      }
+      return false;
+   }
+   extern void for_each_persistent_ref_in_world(const form_stub& world, std::function<bool(form_stub*)> functor) {
+      if (world.formType != form_type::worldspace)
+         return;
+      for_each_child_form(&world, [functor](form_stub* cell) {
+         bool result;
+         if (cell->formType != form_type::cell)
+            return false;
+         for_each_child_form(cell, [functor, &result](form_stub* child) {
+            if (!is_persistent(child))
+               return false;
+            result = (functor)(child);
+            return result;
+         });
+         return result;
+      });
+   }
+
+   extern bool is_worldspace_persistent_cell(const form_stub& cell) {
+      auto* parent = cell.get_parent_form();
+      if (!parent)
+         return false;
+      if (parent->formType != form_type::worldspace)
+         return false;
+      return &cell == get_worldspace_persistent_cell(parent);
+   }
 }

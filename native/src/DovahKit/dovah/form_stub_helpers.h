@@ -11,5 +11,10 @@ namespace dovah {
       extern form_stub* get_worldspace_persistent_cell(const form_stub*);
       extern form_stub* get_worldspace_cell_by_grid(const form_stub* world, int32_t x, int32_t y);
       extern form_stub* get_cell_landscape(const form_stub* cell);
+
+      extern bool is_persistent(const form_stub*);
+      extern void for_each_persistent_ref_in_world(const form_stub& world, std::function<bool(form_stub*)> functor); // return (true) to stop looping early
+
+      extern bool is_worldspace_persistent_cell(const form_stub& cell);
    }
 }

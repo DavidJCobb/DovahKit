@@ -26,6 +26,8 @@
 #include "../../wrappers/resource/raster.h"
 #include "../../wrappers/resource/unknown.h"
 
+#include "../../../../helpers/lua/dump.h"
+
 namespace {
    using namespace editor_script;
 
@@ -123,6 +125,15 @@ namespace {
          wrapper out;
          auto* mt = wrap_form(out, stub);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, mt);
+      }
+      luastackchange_t dump(lua_State* L) {
+         lua_settop(L, 1);
+         auto string = cobb::lua::var_to_string(L, 1);
+         //
+         auto m = new editor_script::tasks::s2m::log_message();
+         m->text = QString::fromStdString(string);
+         DovahKitScriptVMMessenger::get().send_message(m);
+         return 0;
       }
       luastackchange_t for_each_form_of_type(lua_State* L) {
          luaL_argcheck(L, lua_isfunction(L, 2), 2, "function expected");
@@ -355,6 +366,7 @@ namespace {
       luaL_Reg{ "benchmark_stop",         &_definitions::benchmark_stop },
       luaL_Reg{ "count_forms_of_type",    &_definitions::count_forms_of_type },
       luaL_Reg{ "create_form",            &_definitions::create_form },
+      luaL_Reg{ "dump",                   &_definitions::dump },
       luaL_Reg{ "for_each_form_of_type",  &_definitions::for_each_form_of_type },
       luaL_Reg{ "get_form_by_id",         &_definitions::get_form_by_id },
       luaL_Reg{ "log_message",            &_definitions::log_message },

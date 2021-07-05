@@ -11,11 +11,41 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../ui/util/color.h"
 
+#include <QPainter>
+
 namespace {
    using namespace editor_script;
    using cls = wrappers::resource::raster;
 
    namespace _methods {
+      luastackchange_t draw_raster(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* arg  = wrapper_from_stack<cls>(L, 2);
+         luaL_argcheck(L, arg != nullptr, 2, "raster expected");
+         int isnum;
+         int x = lua_tointegerx(L, 3, &isnum);
+         luaL_argcheck(L, isnum,  3, "integer (x-coordinate) expected");
+         luaL_argcheck(L, x != 0, 3, "x-coordinate cannot be zero");
+         luaL_argcheck(L, x >= 0, 3, "x-coordinate cannot be negative");
+         int y = lua_tointegerx(L, 4, &isnum);
+         luaL_argcheck(L, isnum,  4, "integer (y-coordinate) expected");
+         luaL_argcheck(L, y != 0, 4, "y-coordinate cannot be zero");
+         luaL_argcheck(L, y >= 0, 4, "y-coordinate cannot be negative");
+         if (!self.managed_resource)
+            return 0;
+         auto* other = arg->managed_resource;
+         if (!other)
+            return 0;
+         //
+         self.managed_resource->modify_raster_script_side([other, x, y](QImage& image) {
+            auto img = other->get_raster_script_side();
+            //
+            QPainter painter(&image);
+            painter.drawImage(QPoint{ x, y }, img);
+         });
+         //
+         return 0;
+      }
       luastackchange_t fill(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.managed_resource)
@@ -74,7 +104,7 @@ namespace {
             assert(image.format() == QImage::Format::Format_ARGB32);
             w = image.width();
             h = image.height();
-            if (x > w || y > h)
+            if (x >= w || y >= h)
                return;
             auto* bytes = (QRgb*)image.scanLine(y);
             bytes[x] = color.rgba();
@@ -202,9 +232,10 @@ namespace {
 
 namespace editor_script::wrappers::resource {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "fill",      &_methods::fill },
-      { "get_pixel", &_methods::get_pixel },
-      { "set_pixel", &_methods::set_pixel },
+      { "draw_raster", &_methods::draw_raster },
+      { "fill",        &_methods::fill },
+      { "get_pixel",   &_methods::get_pixel },
+      { "set_pixel",   &_methods::set_pixel },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "height", &_getters::height },

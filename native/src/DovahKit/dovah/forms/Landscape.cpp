@@ -394,6 +394,7 @@ namespace dovah::loaded_forms {
             out = raw;
             VHGT.write(out);
          }
+         VHGT.skip_bytes(3);
          #if !_DEBUG
             static_assert(false, "Test this code before you ship anything! Even a JavaScript simulation is better than nothing!");
          #endif
@@ -451,11 +452,13 @@ namespace dovah::loaded_forms {
          }
          VTXT.close();
       }
-      auto& VTEX = record.open_next_subrecord('VTEX');
-      for (auto& ref : this->textures) {
-         VTEX.write(ref);
+      if (!this->textures.empty()) {
+         auto& VTEX = record.open_next_subrecord('VTEX');
+         for (auto& ref : this->textures) {
+            VTEX.write(ref);
+         }
+         VTEX.close();
       }
-      VTEX.close();
       //
       if (!this->mpcd.empty()) {
          //
@@ -486,7 +489,7 @@ namespace dovah::loaded_forms {
       for (auto& e : this->heightmap.normals.list)
          e = { 0, 0, 1.0F };
       for (auto& e : this->heightmap.colors.list)
-         e = { 0, 0, 0 };
+         e = { 255, 255, 255 };
       this->mpcd.clear();
    }
    void Landscape::_sever_outbound_references_impl(form_stub& other) noexcept {
