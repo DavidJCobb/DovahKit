@@ -112,6 +112,8 @@ namespace {
    }
    namespace _setters {
       template<decltype(form_t::cell_flags) flag> luastackchange_t cell_flag(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          auto* form  = self.get_loaded_form_data<form_t>();
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
@@ -124,6 +126,8 @@ namespace {
          return 0;
       }
       template<decltype(form_t::cell_flags) flag> luastackchange_t cell_flag_invert(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          auto* form  = self.get_loaded_form_data<form_t>();
          luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
@@ -137,6 +141,8 @@ namespace {
       }
       
       luastackchange_t name(lua_State* L) {
+         DovahKitScriptVMPermissionInterface::verify_form_write_permissions();
+         //
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "expected string");
          auto* form = self.get_loaded_form_data<form_t>();

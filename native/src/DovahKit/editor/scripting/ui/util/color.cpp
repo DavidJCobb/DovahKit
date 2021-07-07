@@ -225,6 +225,13 @@ namespace {
       if (!color.isValid())
          luaL_error(L, "the provided string is not a recognized color name");
    }
+
+   int _pcallable_pull(lua_State* L) {
+      assert(lua_islightuserdata(L, 2));
+      auto* out = (QColor*) lua_touserdata(L, 2);
+      *out = editor_script::util::ui::pull_color(L, 1);
+      return 0;
+   }
 }
 
 namespace editor_script::util::ui {
@@ -292,5 +299,25 @@ namespace editor_script::util::ui {
       }
       //
       return color;
+   }
+
+   extern [[nodiscard]] QColor protected_pull_color(lua_State* L, int index, std::string& error) {
+      auto top = lua_gettop(L);
+      //
+      error.clear();
+      index = lua_absindex(L, index);
+      //
+      QColor result;
+      lua_pushvalue(L, index);
+      lua_pushlightuserdata(L, &result);
+      lua_pushcfunction(L, &_pcallable_pull);
+      auto   status = lua_pcall(L, 1, 1, 0);
+      if (status == LUA_OK) {
+         lua_settop(L, top);
+         return result;
+      }
+      error = lua_tostring(L, -1);
+      lua_settop(L, top);
+      return QColor();
    }
 }
