@@ -47,6 +47,13 @@ do
          }
       }
    })
+   
+   raster:draw_line({
+      from = { 16, 16 },
+      to   = { 80, 80 },
+      line_color = "#0FF",
+      line_width = 3
+   })
 end
 
 window:show()

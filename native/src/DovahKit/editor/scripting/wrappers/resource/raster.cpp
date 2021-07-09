@@ -406,9 +406,7 @@ namespace {
             QPointF to;
             //
             lua_getfield(L, 2, "from"); // 3
-            if (_helpers::pull_qpoint_f(L, 3, from)) {
-               rect.setTopLeft(from);
-            } else {
+            if (!_helpers::pull_qpoint_f(L, 3, from)) {
                lua_getfield(L, 2, "x"); // 4
                lua_getfield(L, 2, "y"); // 5
                if (!lua_isnumber(L, 4))
@@ -420,6 +418,7 @@ namespace {
                lua_pop(L, 2);
             }
             lua_pop(L, 1);
+            rect.setTopLeft(from);
             //
             lua_getfield(L, 2, "to"); // 3
             if (_helpers::pull_qpoint_f(L, 3, to)) {
@@ -449,7 +448,7 @@ namespace {
          }
          //
          QPen   pen;
-         QBrush brush;
+         QBrush brush = QBrush(Qt::SolidPattern);
          //
          assert(lua_gettop(L) == 2);
          lua_getfield(L, 2, "line_color");    // 3
