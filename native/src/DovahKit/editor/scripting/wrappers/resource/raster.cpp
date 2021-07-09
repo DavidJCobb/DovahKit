@@ -11,9 +11,12 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../ui/util/color.h"
 
+#include "../../../../helpers/lua/error.h"
+#include "../../../../helpers/lua/for_each_in_array.h"
 #include "../../../../helpers/lua/istablelike.h"
 #include "../../../../helpers/lua/qt_point.h"
 #include "../../../../helpers/lua/set_top_on_exit.h"
+#include "../../../../helpers/lua/tostringex.h"
 #include "../../../../helpers/rotation.h"
 
 #include <QPainter>
@@ -23,71 +26,113 @@ namespace {
    using cls = wrappers::resource::raster;
 
    namespace _helpers {
-      QGradient* _pull_fill_gradient(lua_State* L, int index) {
+      void pull_fill_color(lua_State* L, int index, QBrush& brush, bool optional = false) {
          index = lua_absindex(L, index);
+         if (optional && lua_isnoneornil(L, index)) {
+            brush.setColor(QColorConstants::Transparent);
+            return;
+         }
+         std::string error;
+         QColor      color = util::ui::protected_pull_color(L, index, error);
+         if (!color.isValid()) {
+            if (error.empty())
+               cobb::lua::error(L, "options.fill_color was not a valid color");
+            cobb::lua::error(L, "options.fill_color was not a valid color: %s", error.c_str());
+         }
+         brush.setColor(color);
+      }
+
+      // Given a Lua table (or nil), pull configuration information for a QGradient from it and overwrite the input 
+      // brush if valid information is found. This function needs to receive the bounding rect that will be filled 
+      // with a gradient so that it can properly set up start and end points for QLinearGradient.
+      void pull_fill_gradient(lua_State* L, int index, QBrush& brush, QRectF bound) {
+         index = lua_absindex(L, index);
+         if (lua_isnoneornil(L, index)) {
+            return;
+         }
+         if (!cobb::lua::istablelike(L, index))
+            cobb::lua::error(L, "options.fill_gradient was neither nil nor a table");
+         //
          auto top   = lua_gettop(L);
          auto guard = cobb::lua::set_top_on_exit(L, top);
          //
-         QVector<QGradientStop> stops;
-         {
-            lua_checkstack(L, 3);
-            lua_getfield(L, index, "stops");
-            if (!lua_istable(L, -1))
-               return nullptr;
-            int stop_index = lua_gettop(L);
-            lua_len(L, -1);
-            int isnum;
-            int count = lua_tonumber(L, -1);
-            if (!isnum || count <= 0)
-               return nullptr;
-            lua_pop(L, 1);
-            assert(lua_gettop(L) == stop_index);
-            //
-            for (int i = 1; i < count; ++i) {
-               lua_geti(L, stop_index, i); // { offset, color }
-               if (!cobb::lua::istablelike(L, -1)) {
-                  lua_pop(L, 1);
-                  continue;
-               }
-               lua_geti(L, stop_index + 1, 1);
-               lua_geti(L, stop_index + 2, 2);
-               if (!lua_isnumber(L, -2))
-                  luaL_error(L, "options.fill_color.stops[%s][1] is not a number", i);
-               //
-               std::string   error;
-               QGradientStop stop;
-               stop.first  = lua_tonumber(L, -2);
-               if (stop.first < 0.0 || stop.first > 1.0)
-                  luaL_error(L, "options.fill_color.stops[%s][1] is out of bounds; it must be between 0 and 1 inclusive", i);
-               stop.second = util::ui::protected_pull_color(L, -1, error);
-               if (!stop.second.isValid()) {
-                  if (error.empty())
-                     luaL_error(L, "options.fill_color.stops[%s][2] is not a valid color: %s", i, error.c_str());
-                  luaL_error(L, "options.fill_color.stops[%s][2] is not a valid color");
-               }
-               stops.push_back(stop);
-            }
-            lua_settop(L, top);
-         }
-         //
          QGradient::Type type = QGradient::Type::LinearGradient;
          lua_getfield(L, index, "type");
-         if (lua_isstring(L, -1)) {
+         if (!lua_isnoneornil(L, -1)) {
+            std::string tn;
+            if (!cobb::lua::tostringex(L, -1, tn))
+               cobb::lua::error(L, "options.fill_gradient.type was neither nil nor a string, but was instead type `%s`", lua_typename(L, lua_type(L, -1)));
+            //
             type = QGradient::Type::NoGradient;
             constexpr std::array map = {
                std::pair{ QGradient::Type::ConicalGradient, "conical" },
                std::pair{ QGradient::Type::LinearGradient,  "linear" },
                std::pair{ QGradient::Type::RadialGradient,  "radial" },
             };
-            auto* tn = lua_tostring(L, -1);
             for (auto& pair : map) {
-               if (stricmp(tn, pair.second) == 0) {
+               if (stricmp(tn.c_str(), pair.second) == 0) {
                   type = pair.first;
                   break;
                }
             }
+            if (type == QGradient::Type::NoGradient)
+               cobb::lua::error(L, "options.fill_gradient.type was not a recognized type (\"conical\", \"linear\", or \"radial\") but was instead \"%s\"", tn.c_str());
          }
          lua_pop(L, 1);
+         //
+         QVector<QGradientStop> stops;
+         {
+            bool is_sorted = true;
+            //
+            lua_getfield(L, index, "stops");
+            int code = cobb::lua::for_each_in_array(L, -1, [&stops, &is_sorted](lua_State* L, int i) {
+               if (!cobb::lua::istablelike(L, -1))
+                  cobb::lua::error(L, "options.fill_gradient.stops[%d] was not a table", i);
+               lua_geti(L, -1, 1);
+               lua_geti(L, -2, 2);
+               if (!lua_isnumber(L, -2))
+                  cobb::lua::error(L, "options.fill_gradient.stops[%d][1] should've been the stop position (a number between 0 and 1, inclusive) but is not a number", i);
+               //
+               std::string   error;
+               QGradientStop stop;
+               stop.first = lua_tonumber(L, -2);
+               if (stop.first < 0.0 || stop.first > 1.0)
+                  cobb::lua::error(L, "options.fill_gradient.stops[%d][1] is out of bounds; it must be between 0 and 1 inclusive", i);
+               stop.second = util::ui::protected_pull_color(L, -1, error);
+               if (!stop.second.isValid()) {
+                  if (!error.empty())
+                     cobb::lua::error(L, "options.fill_gradient.stops[%d][2] is not a valid color: %s", i, error.c_str());
+                  cobb::lua::error(L, "options.fill_gradient.stops[%d][2] is not a valid color", i);
+               }
+               if (is_sorted && i > 1) {
+                  if (stop.first < stops.back().first) {
+                     is_sorted = false;
+                  }
+               }
+               stops.push_back(stop);
+            });
+            switch (code) {
+               case 0:
+                  break; // no error
+               case 1:
+                  cobb::lua::error(L, "options.fill_gradient.stops has a zero length");
+               case -1:
+                  cobb::lua::error(L, "options.fill_gradient.stops was not a table");
+               case -2:
+                  cobb::lua::error(L, "options.fill_gradient.stops has a non-integer length");
+               case -3:
+                  cobb::lua::error(L, "options.fill_gradient.stops has a negative length");
+               default:
+                  cobb::lua::error(L, "options.fill_gradient.stops is not a valid array");
+            }
+            lua_pop(L, 1);
+            //
+            if (!is_sorted) {
+               qStableSort(stops.begin(), stops.end(), [](const QGradientStop& a, const QGradientStop& b) {
+                  return a.first < b.first;
+               });
+            }
+         }
          //
          bool has_angle  = false;
          bool has_center = false;
@@ -113,28 +158,89 @@ namespace {
          //
          QGradient* result = nullptr;
          switch (type) {
-            case QGradient::Type::NoGradient:
-               {
-                  lua_getfield(L, index, "type");
-                  luaL_error(L, "options.fill_color appeared to be a gradient (options.fill_color.stops was a table), but options.fill_color.type was an unrecognized value (\"%s\")", luaL_tolstring(L, -1, nullptr));
-               }
-               return nullptr;
             case QGradient::Type::LinearGradient:
                {
                   if (!has_angle)
-                     luaL_error(L, "options.fill_color appeared to be a linear gradient, but options.fill_color.angle was not a number");
+                     cobb::lua::error(L, "options.fill_gradient is a linear gradient, but options.fill_gradient.angle was not a number");
+                  //
+                  lua_getfield(L, index, "stretch");
+                  if (!lua_isnoneornil(L, -1)) {
+                     if (!lua_isboolean(L, -1))
+                        cobb::lua::error(L, "options.fill_gradient is a linear gradient, but options.fill_gradient.stretch was neither nil nor a boolean");
+                     if (lua_toboolean(L, -1)) {
+                        auto w    = bound.width();
+                        auto h    = bound.height();
+                        auto side = std::max(w, h);
+                        bound.setSize({ side, side });
+                        bound.translate({ -(side - w) / 2.0, -(side - h) / 2.0 });
+                     }
+                  }
+                  lua_pop(L, 1);
+                  //
                   auto* lg = new QLinearGradient;
-                  lg->setStart({ 0, 0 });
-                  lg->setFinalStop({ cos(angle), sin(angle) });
+                  //
+                  if (angle) {
+                     //
+                     // For angles other than 0, 90, 180, 270, and 360, we need to do some geometry in order to fit the 
+                     // gradient to the bounds of the drawn object. We want to accept an angle (and maybe, in the future, 
+                     // an offset), but Qt wants to take start and end locations, so we need to convert from the one to 
+                     // the other.
+                     // 
+                     auto vx = cos(angle);
+                     auto vy = sin(angle);
+                     if (!has_center)
+                        center = bound.center();
+                     else {
+                        if (!bound.contains(center))
+                           cobb::lua::error(L, "options.fill_gradient is a linear gradient and specified a bad center (point (%f, %f) lies out of bounds)", center.x(), center.y());
+                     }
+                     //
+                     // Per: <https://stackoverflow.com/a/3197924>
+                     auto get_intersection = [](double angle, const QRectF& bound, const QPointF from) -> QPointF {
+                        double vx = cos(angle);
+                        double vy = sin(angle);
+                        double t  = NAN;
+                        std::array sides = {
+                           (bound.left()   - from.x()) / vx, // intersects left
+                           (bound.right()  - from.x()) / vx, // intersects right
+                           (bound.top()    - from.y()) / vy, // intersects top
+                           (bound.bottom() - from.y()) / vy, // intersects bottom
+                        };
+                        // The smallest positive value of the above four is the value of (t), usable to compute the 
+                        // intersection.
+                        for (auto v : sides) {
+                           if (v > 0) {
+                              if (isnan(t))
+                                 t = v;
+                              else
+                                 t = std::min(t, v);
+                           }
+                        }
+                        //
+                        assert(!isnan(t));
+                        return { from.x() + (t * vx), from.y() + (t * vy) };
+                     };
+                     //
+                     QPointF forward_intersection  = get_intersection(angle,            bound, center);
+                     QPointF backward_intersection = get_intersection(angle - cobb::pi, bound, center);
+                     //
+                     lg->setStart(backward_intersection);
+                     lg->setFinalStop(forward_intersection);
+                  } else {
+                     auto mag = std::max(bound.width(), bound.height());
+                     lg->setStart({ 0, 0 });
+                     lg->setFinalStop({ cos(angle) * mag, sin(angle) * mag });
+                  }
+                  //
                   result = lg;
                }
                break;
             case QGradient::Type::ConicalGradient:
                {
                   if (!has_angle)
-                     luaL_error(L, "options.fill_color appeared to be a conical gradient, but options.fill_color.angle was not a number");
+                     cobb::lua::error(L, "options.fill_gradient is a conical gradient, but options.fill_gradient.angle was not a number");
                   if (!has_center)
-                     luaL_error(L, "options.fill_color appeared to be a conical gradient, but options.fill_color.center was not a table or did not have the expected coordinates");
+                     cobb::lua::error(L, "options.fill_gradient is a conical gradient, but options.fill_gradient.center was not a table or did not have the expected coordinates");
                   auto* cg = new QConicalGradient;
                   cg->setAngle(angle);
                   cg->setCenter(center);
@@ -144,14 +250,14 @@ namespace {
             case QGradient::Type::RadialGradient:
                {
                   if (!has_center)
-                     luaL_error(L, "options.fill_color appeared to be a radial gradient, but options.fill_color.center was not a table or did not have the expected coordinates");
+                     cobb::lua::error(L, "options.fill_gradient is a radial gradient, but options.fill_gradient.center was not a table or did not have the expected coordinates");
                   lua_getfield(L, index, "radius");
                   if (!lua_isnumber(L, -1))
-                     luaL_error(L, "options.fill_color appeared to be a radial gradient, but options.fill_color.radius was not a number");
+                     cobb::lua::error(L, "options.fill_gradient is a radial gradient, but options.fill_gradient.radius was not a number");
                   qreal radius = lua_tonumber(L, -1);
                   lua_pop(L, 1);
                   if (radius <= 0)
-                     luaL_error(L, "options.fill_color appeared to be a radial gradient, but options.fill_color.radius was zero or negative");
+                     cobb::lua::error(L, "options.fill_gradient is a radial gradient, but options.fill_gradient.radius was zero or negative");
                   auto* rg = new QRadialGradient;
                   rg->setCenter(center);
                   rg->setCenterRadius(radius);
@@ -161,31 +267,9 @@ namespace {
          }
          assert(result);
          result->setStops(stops);
-         return result;
+         brush = QBrush(*result);
       }
 
-      void pull_fill_color(lua_State* L, int index, QBrush& brush, bool optional = false) {
-         index = lua_absindex(L, index);
-         if (optional && lua_isnoneornil(L, index)) {
-            brush.setColor(QColorConstants::Transparent);
-            return;
-         }
-         if (lua_istable(L, index)) {
-            auto* grad = _pull_fill_gradient(L, index);
-            if (grad) {
-               brush = QBrush(*grad); // This will cost us all other properties, so we need to get the fill color first
-               return;
-            }
-         }
-         std::string error;
-         QColor      color = util::ui::protected_pull_color(L, index, error);
-         if (!color.isValid()) {
-            if (error.empty())
-               luaL_error(L, "options.fill_color was not a valid color");
-            luaL_error(L, "options.fill_color was not a valid color: %s", error.c_str());
-         }
-         brush.setColor(color);
-      }
       void pull_line_color(lua_State* L, int index, QPen& pen, bool optional = false) {
          index = lua_absindex(L, index);
          if (optional && lua_isnoneornil(L, index)) {
@@ -201,6 +285,7 @@ namespace {
          }
          pen.setColor(color);
       }
+
       void pull_line_width(lua_State* L, int index, QPen& pen) {
          index = lua_absindex(L, index);
          if (lua_isnoneornil(L, index)) {
@@ -209,42 +294,36 @@ namespace {
          }
          if (!lua_isnumber(L, index))
             luaL_error(L, "options.line_width was neither nil nor a number");
-         qreal width = lua_tonumber(L, 6);
+         qreal width = lua_tonumber(L, index);
          if (width <= 0)
             luaL_error(L, "options.line_width was a number less than or equal to zero");
          pen.setWidthF(width);
       }
+
+      bool pull_qpoint_f(lua_State* L, int index, QPointF& out) {
+         index = lua_absindex(L, index);
+         if (!cobb::lua::istablelike(L, index))
+            return false;
+         lua_checkstack(L, 2);
+         lua_geti(L, index, 1);
+         lua_geti(L, index, 2);
+         if (!lua_isnumber(L, -2) || !lua_isnumber(L, -1)) {
+            lua_pop(L, 2);
+            lua_getfield(L, index, "x");
+            lua_getfield(L, index, "y");
+            if (!lua_isnumber(L, -2) || !lua_isnumber(L, -1)) {
+               lua_pop(L, 2);
+               return false;
+            }
+         }
+         out.setX(lua_tonumber(L, -2));
+         out.setY(lua_tonumber(L, -1));
+         lua_pop(L, 2);
+         return true;
+      }
    }
 
    namespace _methods {
-      luastackchange_t draw_raster(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* arg  = wrapper_from_stack<cls>(L, 2);
-         luaL_argcheck(L, arg != nullptr, 2, "raster expected");
-         int isnum;
-         int x = lua_tointegerx(L, 3, &isnum);
-         luaL_argcheck(L, isnum,  3, "integer (x-coordinate) expected");
-         luaL_argcheck(L, x != 0, 3, "x-coordinate cannot be zero");
-         luaL_argcheck(L, x >= 0, 3, "x-coordinate cannot be negative");
-         int y = lua_tointegerx(L, 4, &isnum);
-         luaL_argcheck(L, isnum,  4, "integer (y-coordinate) expected");
-         luaL_argcheck(L, y != 0, 4, "y-coordinate cannot be zero");
-         luaL_argcheck(L, y >= 0, 4, "y-coordinate cannot be negative");
-         if (!self.managed_resource)
-            return 0;
-         auto* other = arg->managed_resource;
-         if (!other)
-            return 0;
-         //
-         self.managed_resource->modify_raster_script_side([other, x, y](QImage& image) {
-            auto img = other->get_raster_script_side();
-            //
-            QPainter painter(&image);
-            painter.drawImage(QPoint{ x, y }, img);
-         });
-         //
-         return 0;
-      }
       luastackchange_t draw_line(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
@@ -285,6 +364,117 @@ namespace {
             QPainter painter(&image);
             painter.setPen(pen);
             painter.drawLine(endpoints[0], endpoints[1]);
+         });
+         return 0;
+      }
+      luastackchange_t draw_raster(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* arg  = wrapper_from_stack<cls>(L, 2);
+         luaL_argcheck(L, arg != nullptr, 2, "raster expected");
+         int isnum;
+         int x = lua_tointegerx(L, 3, &isnum);
+         luaL_argcheck(L, isnum,  3, "integer (x-coordinate) expected");
+         luaL_argcheck(L, x != 0, 3, "x-coordinate cannot be zero");
+         luaL_argcheck(L, x >= 0, 3, "x-coordinate cannot be negative");
+         int y = lua_tointegerx(L, 4, &isnum);
+         luaL_argcheck(L, isnum,  4, "integer (y-coordinate) expected");
+         luaL_argcheck(L, y != 0, 4, "y-coordinate cannot be zero");
+         luaL_argcheck(L, y >= 0, 4, "y-coordinate cannot be negative");
+         if (!self.managed_resource)
+            return 0;
+         auto* other = arg->managed_resource;
+         if (!other)
+            return 0;
+         //
+         self.managed_resource->modify_raster_script_side([other, x, y](QImage& image) {
+            auto img = other->get_raster_script_side();
+            //
+            QPainter painter(&image);
+            painter.drawImage(QPoint{ x, y }, img);
+         });
+         //
+         return 0;
+      }
+      luastackchange_t draw_rect(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
+         lua_settop(L, 2);
+         //
+         QRectF rect;
+         {
+            QPointF from;
+            QPointF to;
+            //
+            lua_getfield(L, 2, "from"); // 3
+            if (_helpers::pull_qpoint_f(L, 3, from)) {
+               rect.setTopLeft(from);
+            } else {
+               lua_getfield(L, 2, "x"); // 4
+               lua_getfield(L, 2, "y"); // 5
+               if (!lua_isnumber(L, 4))
+                  cobb::lua::error(L, "options.from was unspecified or invalid, and options.x was not a number");
+               if (!lua_isnumber(L, 5))
+                  cobb::lua::error(L, "options.from was unspecified or invalid, and options.y was not a number");
+               from.setX(lua_tonumber(L, 4));
+               from.setY(lua_tonumber(L, 5));
+               lua_pop(L, 2);
+            }
+            lua_pop(L, 1);
+            //
+            lua_getfield(L, 2, "to"); // 3
+            if (_helpers::pull_qpoint_f(L, 3, to)) {
+               rect.setBottomRight(to);
+            } else {
+               lua_getfield(L, 2, "w"); // 4
+               if (!lua_isnumber(L, 4)) {
+                  lua_pop(L, 1);
+                  lua_getfield(L, 2, "width");
+                  if (!lua_isnumber(L, 4))
+                     cobb::lua::error(L, "options.to was unspecified or invalid, and neither options.w nor options.width were numbers");
+               }
+               rect.setWidth(lua_tonumber(L, 4));
+               lua_pop(L, 1);
+               //
+               lua_getfield(L, 2, "h"); // 4
+               if (!lua_isnumber(L, 4)) {
+                  lua_pop(L, 1);
+                  lua_getfield(L, 2, "height");
+                  if (!lua_isnumber(L, 4))
+                     cobb::lua::error(L, "options.to was unspecified or invalid, and neither options.h nor options.height were numbers");
+               }
+               rect.setHeight(lua_tonumber(L, 4));
+               lua_pop(L, 1);
+            }
+            lua_pop(L, 1);
+         }
+         //
+         QPen   pen;
+         QBrush brush;
+         //
+         assert(lua_gettop(L) == 2);
+         lua_getfield(L, 2, "line_color");    // 3
+         lua_getfield(L, 2, "line_width");    // 4
+         lua_getfield(L, 2, "fill_color");    // 5
+         lua_getfield(L, 2, "fill_gradient"); // 6
+         //
+         // Get pen settings:
+         //
+         _helpers::pull_line_color   (L, 3, pen, true);
+         _helpers::pull_line_width   (L, 4, pen);
+         _helpers::pull_fill_color   (L, 5, brush, true);
+         _helpers::pull_fill_gradient(L, 6, brush, rect);
+         if (!brush.gradient() && !brush.color().isValid())
+            cobb::lua::error(L, "neither options.fill_color nor options.fill_gradient appear to have been specified");
+         //
+         // Begin drawing:
+         //
+         if (!self.managed_resource)
+            return 0;
+         self.managed_resource->modify_raster_script_side([rect, pen, brush](QImage& image) {
+            QPainter painter(&image);
+            painter.setPen(pen);
+            painter.setBrush(brush);
+            painter.drawRect(rect);
          });
          return 0;
       }
@@ -474,8 +664,9 @@ namespace {
 
 namespace editor_script::wrappers::resource {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "draw_raster", &_methods::draw_raster },
       { "draw_line",   &_methods::draw_line },
+      { "draw_raster", &_methods::draw_raster },
+      { "draw_rect",   &_methods::draw_rect },
       { "fill",        &_methods::fill },
       { "get_pixel",   &_methods::get_pixel },
       { "set_pixel",   &_methods::set_pixel },

@@ -19,14 +19,3 @@ window:show()
 if not dds then
    dovah.log_message("DDS missing; did you remember to load any game data?")
 end
-
---
--- THINGS PENDING TESTING:
---
---  - Lifetime tests: can a Lua-referenced layer keep its owning canvas alive 
---    even if that canvas is Lua-unreferenced?
---
--- THINGS NOT YET IMPLEMENTED:
---
---  - Text layers
---

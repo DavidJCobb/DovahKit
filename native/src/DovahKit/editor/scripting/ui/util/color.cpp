@@ -7,7 +7,8 @@
 struct lua_State;
 
 namespace {
-   void _pull_from_table(QColor& color, lua_State* L, int index, int top, uint8_t& found) {
+   // Returns error string, if any.
+   std::string _pull_from_table(QColor& color, lua_State* L, int index, int top, uint8_t& found) {
       found = 0;
       //
       int isnum;
@@ -26,7 +27,7 @@ namespace {
             lua_pop(L, 1);
          }
          if (value < 0 || value > 255) {
-            luaL_error(L, "value %d is out of range for the %s color component", value, names[i - 1]);
+            return cobb::format_string("value %d is out of range for the %s color component", value, names[i - 1]);
          }
          values[i - 1] = value;
          if (isnum)
@@ -47,11 +48,15 @@ namespace {
             values[3] = value;
       }
       if (value < 0 || value > 255) {
-         luaL_error(L, "value %d is out of range for the alpha color component", value);
+         return cobb::format_string("value %d is out of range for the alpha color component", value);
       }
       color.setAlpha(values[3]);
+      //
+      return "";
    }
-   void _pull_from_string(QColor& color, lua_State* L, int index) {
+
+   // Returns error string, if any.
+   std::string _pull_from_string(QColor& color, lua_State* L, int index) {
       std::array<int, 4> values = { 0, 0, 0, 255 };
       //
       auto raw = QString::fromUtf8(lua_tostring(L, index)).trimmed().toLower();
@@ -73,7 +78,7 @@ namespace {
                digits = 2;
                break;
             default:
-               luaL_error(L, "syntax for hex-color is incorrect: provide a `#` sign followed by either 3, 4, 6, or 8 hexadecimal digits");
+               return cobb::format_string("syntax for hex-color is incorrect: provide a `#` sign followed by either 3, 4, 6, or 8 hexadecimal digits");
          }
          bool isnum;
          for (int i = 0; i < 4; ++i) {
@@ -88,10 +93,10 @@ namespace {
             }
             values[i] = octet.toInt(&isnum, 16);
             if (!isnum)
-               luaL_error(L, "syntax for hex-color is incorrect: provide a `#` sign followed by either 3, 4, 6, or 8 hexadecimal digits");
+               return cobb::format_string("syntax for hex-color is incorrect: provide a `#` sign followed by either 3, 4, 6, or 8 hexadecimal digits");
          }
          color.setRgb(values[0], values[1], values[2], values[3]);
-         return;
+         return "";
       }
       //
       // Check for CSS function-style rgb(a) or hsl(a) colors.
@@ -124,11 +129,11 @@ namespace {
          if (scanner.extract_specific_char('a', true))
             alpha = true;
          if (!scanner.extract_specific_char('('))
-            luaL_error(L, "syntax for function-color is incorrect: expected `(`");
+            return "syntax for function-color is incorrect: expected `(`";
          //
          double v;
          if (!scanner.extract_double(v))
-            luaL_error(L, "syntax for function-color is incorrect: expected number");
+            return "syntax for function-color is incorrect: expected first number";
          if (css_hsl) {
             if (scanner.extract_specific_substring("deg", true)) {
                ; // degrees are the default for HSL "H" values
@@ -151,47 +156,47 @@ namespace {
             comma = true;
          //
          if (!scanner.extract_double(v))
-            luaL_error(L, "syntax for function-color is incorrect: expected number");
+            return "syntax for function-color is incorrect: expected second number";
          if (percent || css_hsl) {
             if (!scanner.extract_specific_char('%', true)) {
                if (css_hsl)
-                  luaL_error(L, "syntax for function-color is incorrect: HSL saturation values must be percentages");
+                  return "syntax for function-color is incorrect: HSL saturation values must be percentages";
                else
-                  luaL_error(L, "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values");
+                  return "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values";
             }
             v *= 2.55;
          } else {
             if (scanner.extract_specific_char('%', true))
-               luaL_error(L, "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values");
+               return "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values";
          }
          values[1] = std::round(v);
          if (comma)
             if (!scanner.extract_specific_char(','))
-               luaL_error(L, "syntax for function-color is incorrect: expected `,`");
+               return "syntax for function-color is incorrect: expected `,`";
          //
          if (!scanner.extract_double(v))
-            luaL_error(L, "syntax for function-color is incorrect: expected number");
+            return "syntax for function-color is incorrect: expected number";
          if (percent || css_hsl) {
             if (!scanner.extract_specific_char('%', true)) {
                if (css_hsl)
-                  luaL_error(L, "syntax for function-color is incorrect: HSL lightness values must be percentages");
+                  return "syntax for function-color is incorrect: HSL lightness values must be percentages";
                else
-                  luaL_error(L, "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values");
+                  return "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values";
             }
             v *= 2.55;
          } else {
             if (scanner.extract_specific_char('%', true))
-               luaL_error(L, "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values");
+               return "syntax for function-color is incorrect: do not mix and match percentage and non-percentage RGB values";
          }
          values[2] = std::round(v);
          //
          if (alpha) {
             QChar desired = comma ? ',' : '/';
             if (!scanner.extract_specific_char(desired))
-               luaL_error(L, "syntax for function-color is incorrect: expected `%s`", QString(desired).toUtf8());
+               return cobb::format_string("syntax for function-color is incorrect: expected `%s`", QString(desired).toUtf8());
             //
             if (!scanner.extract_double(v))
-               luaL_error(L, "syntax for function-color is incorrect: expected number (alpha)");
+               return "syntax for function-color is incorrect: expected number (alpha)";
             if (scanner.extract_specific_char('%', true)) // alpha can be a percentage even if the other values are not
                v *= 2.55;
             else
@@ -200,10 +205,10 @@ namespace {
          }
          //
          if (!scanner.extract_specific_char(')'))
-            luaL_error(L, "syntax for function-color is incorrect: expected `)`");
+            return "syntax for function-color is incorrect: expected `)`";
          //
          if (!scanner.is_at_effective_end()) {
-            luaL_error(L, "syntax for function-color is incorrect: unexpected content after the color");
+            return "syntax for function-color is incorrect: unexpected content after the color";
          }
          //
          if (css_hsl) {
@@ -211,26 +216,75 @@ namespace {
             for (int i = 1; i < 4; ++i)
                values[i] = std::clamp(values[i], 0, 255);
             color.setHsl(values[0], values[1], values[2], values[3]);
-            return;
+            return "";
          }
          for (int i = 0; i < 4; ++i)
             values[i] = std::clamp(values[i], 0, 255);
          color.setRgb(values[0], values[1], values[2], values[3]);
-         return;
+         return "";
       }
       //
       // Named color.
       //
       color.setNamedColor(raw);
       if (!color.isValid())
-         luaL_error(L, "the provided string is not a recognized color name");
+         return "the provided string is not a recognized color name";
+      //
+      return "";
    }
 
-   int _pcallable_pull(lua_State* L) {
-      assert(lua_islightuserdata(L, 2));
-      auto* out = (QColor*) lua_touserdata(L, 2);
-      *out = editor_script::util::ui::pull_color(L, 1);
-      return 0;
+   void _pull_impl(lua_State* L, int index, QColor& color, std::string& error) {
+      index = lua_absindex(L, index);
+      //
+      auto top = lua_gettop(L);
+      switch (lua_type(L, index)) {
+         case LUA_TTABLE:
+            [[fallthrough]];
+         case LUA_TUSERDATA:
+            {
+               uint8_t found = 0;
+               error = _pull_from_table(color, L, index, top, found);
+               if (!error.empty())
+                  return;
+               //
+               found >>= 1;
+               if ((found & 0b1111) == 0) {
+                  //
+                  // No RGBA components were supplied. Check for __tostring.
+                  //
+                  int type = luaL_getmetafield(L, index, "__tostring");
+                  lua_pop(L, 1);
+                  if (type == LUA_TFUNCTION) {
+                     luaL_tolstring(L, index, nullptr);
+                     error = _pull_from_string(color, L, lua_gettop(L));
+                     lua_pop(L, 1);
+                     if (!error.empty())
+                        return;
+                  }
+               } else if ((found & 0b111) != 0b111) {
+                  //
+                  // TODO: Can we warn that a color component is missing? Or should we error on that 
+                  // instead? Not sure how we'd report warnings properly for functions that take a 
+                  // color verbatim, versus MOPHs (particularly those that accept multiple types, 
+                  // including colors, with fallbacks).
+                  //
+               }
+            }
+            break;
+            //
+         case LUA_TSTRING:
+            error = _pull_from_string(color, L, index);
+            break;
+         case LUA_TNUMBER:
+         case LUA_TFUNCTION:
+         case LUA_TLIGHTUSERDATA:
+         case LUA_TBOOLEAN:
+            [[fallthrough]];
+         case LUA_TNONE:
+         case LUA_TNIL:
+            error = "color (string, table, or nil) expected";
+            break;
+      }
    }
 }
 
@@ -249,75 +303,19 @@ namespace editor_script::util::ui {
       }
    }
    extern [[nodiscard]] QColor pull_color(lua_State* L, int index) {
-      QColor color;
-      //
-      index = lua_absindex(L, index);
-      auto top = lua_gettop(L);
-      switch (lua_type(L, index)) {
-         case LUA_TTABLE:
-            [[fallthrough]];
-         case LUA_TUSERDATA:
-            {
-               uint8_t found = 0;
-               _pull_from_table(color, L, index, top, found);
-               //
-               found >>= 1;
-               if ((found & 0b1111) == 0) {
-                  //
-                  // No RGBA components were supplied. Check for __tostring.
-                  //
-                  int type = luaL_getmetafield(L, index, "__tostring");
-                  lua_pop(L, 1);
-                  if (type == LUA_TFUNCTION) {
-                     luaL_tolstring(L, index, nullptr);
-                     _pull_from_string(color, L, lua_gettop(L));
-                     lua_pop(L, 1);
-                  }
-               } else if ((found & 0b111) != 0b111) {
-                  //
-                  // TODO: Can we warn that a color component is missing? Or should we error on that 
-                  // instead? Not sure how we'd report warnings properly for functions that take a 
-                  // color verbatim, versus MOPHs (particularly those that accept multiple types, 
-                  // including colors, with fallbacks).
-                  //
-               }
-            }
-            break;
-            //
-         case LUA_TSTRING:
-            _pull_from_string(color, L, index);
-            break;
-         case LUA_TNUMBER:
-         case LUA_TFUNCTION:
-         case LUA_TLIGHTUSERDATA:
-         case LUA_TBOOLEAN:
-            [[fallthrough]];
-         case LUA_TNONE:
-         case LUA_TNIL:
-            luaL_error(L, "color (string, table, or nil) expected");
-            break;
-      }
-      //
+      QColor      color;
+      std::string error;
+      _pull_impl(L, index, color, error);
+      if (!error.empty())
+         luaL_error(L, error.c_str());
       return color;
    }
 
    extern [[nodiscard]] QColor protected_pull_color(lua_State* L, int index, std::string& error) {
-      auto top = lua_gettop(L);
-      //
-      error.clear();
-      index = lua_absindex(L, index);
-      //
-      QColor result;
-      lua_pushvalue(L, index);
-      lua_pushlightuserdata(L, &result);
-      lua_pushcfunction(L, &_pcallable_pull);
-      auto   status = lua_pcall(L, 1, 1, 0);
-      if (status == LUA_OK) {
-         lua_settop(L, top);
-         return result;
-      }
-      error = lua_tostring(L, -1);
-      lua_settop(L, top);
-      return QColor();
+      QColor color;
+      _pull_impl(L, index, color, error);
+      if (!error.empty())
+         return QColor();
+      return color;
    }
 }

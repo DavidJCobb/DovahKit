@@ -67,7 +67,40 @@ namespace cobb {
          return false;
       return _strnicmp(a.c_str(), b.c_str(), length) == 0;
    }
-   //
+   
+   extern std::string format_string(const char* format, ...) {
+      std::string out;
+      //
+      va_list args;
+      va_start(args, format);
+      va_list safe;
+      va_copy(safe, args);
+      {
+         char b[128];
+         if (vsnprintf(b, sizeof(b), format, args) < 128) {
+            out = b;
+            va_end(safe);
+            va_end(args);
+            return out;
+         }
+      }
+      uint32_t s = 256;
+      char* b = (char*)malloc(s);
+      int32_t r = vsnprintf(b, s, format, args);
+      while (r + 1 > s) {
+         va_copy(args, safe);
+         s += 20;
+         free(b);
+         b = (char*)malloc(s);
+         r = vsnprintf(b, s, format, args);
+      }
+      out = b;
+      free(b);
+      va_end(safe);
+      va_end(args);
+      return out;
+   }
+   
    bool string_says_false(const char* str) {
       char c = *str;
       while (c) { // skip leading whitespace
