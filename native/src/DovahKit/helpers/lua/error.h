@@ -13,4 +13,8 @@ namespace cobb::lua {
       lua_concat(L, 2);
       lua_error(L);
    }
+
+   [[noreturn]] inline void argerror(lua_State* L, int arg, const char* message) {
+      luaL_argerror(L, arg, message);
+   }
 }

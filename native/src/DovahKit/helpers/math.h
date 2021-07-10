@@ -17,7 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 
 namespace cobb {
-   template<typename T, typename U> auto constexpr pow(T base, U exponent) {
+   template<typename T, typename U> T constexpr pow(T base, U exponent) {
       static_assert(std::is_integral<U>(), "exponent must be integral");
       return exponent == 0 ? 1 : base * pow(base, exponent - 1);
    }
