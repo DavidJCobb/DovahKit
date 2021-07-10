@@ -385,6 +385,8 @@ DovahKitScriptVMResourceInterface::resource_t* DovahKitScriptVMResourceInterface
 }
 
 void DovahKitScriptVMResourceInterface::modify_raster_script_side(resource_t& r, std::function<void(QImage&)> task) {
+   DovahKitScriptVMCore::require_script_thread();
+   //
    if (r.type != editor_script::lua_managed_resource_type::raster)
       return;
    auto& base = this->resources.desynched;

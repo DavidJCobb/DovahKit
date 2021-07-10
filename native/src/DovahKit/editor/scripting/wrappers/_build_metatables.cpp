@@ -80,5 +80,6 @@ namespace editor_script {
             define_wrapper_metatable<ui::font>(L);
          #pragma endregion
       #pragma endregion
+      define_wrapper_metatable<raster_draw_path>(L);
    }
 }

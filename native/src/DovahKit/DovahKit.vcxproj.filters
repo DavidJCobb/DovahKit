@@ -1002,6 +1002,9 @@
     <ClCompile Include="helpers\lua\for_each_in_array.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\wrappers\misc\raster_draw_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2025,6 +2028,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\lua\error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\wrappers\misc\raster_draw_path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,7 @@
 
 local window = ui.window.new()
 local widget = ui.canvas.new()
-window:set_layout("grid")
+window:set_layout("ltr")
 window:add_child(widget)
 
 widget.width  = 128
@@ -69,6 +69,35 @@ do
    
    widget.width  = raster.width
    widget.height = raster.height
+end
+
+do
+   local widget = ui.canvas.new()
+   window:add_child(widget)
+
+   widget.width  = 128
+   widget.height = 128
+   
+   local raster = raster.new({ width = 128, height = 128 })
+   local layer  = widget:append_layer()
+   layer.data = raster
+   
+   raster:fill("#202020")
+   
+   local path = raster_draw_path.new()
+   path:move_to( 8,   8)
+   path:line_to(16,  16)
+   path:line_to(16,  64)
+   path:line_to(64,  64)
+   path:line_to( 0, 128)
+   path:line_to( 8,   8)
+   
+   raster:draw_path({
+      path       = path,
+      line_width = 5,
+      line_color = "#FF0000FF",
+      fill_color = "#FF000060"
+   })
 end
 
 window:show()

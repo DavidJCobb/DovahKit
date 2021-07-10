@@ -19,6 +19,8 @@
 #include "../../../../helpers/lua/tostringex.h"
 #include "../../../../helpers/rotation.h"
 
+#include "../misc/raster_draw_path.h"
+
 #include <QPainter>
 #include <QPainterPath>
 
@@ -517,6 +519,43 @@ namespace {
          });
          return 0;
       }
+      luastackchange_t draw_path(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
+         lua_settop(L, 2);
+         //
+         lua_getfield(L, 2, "path");
+         auto* path = wrappers::raster_draw_path::pull(L, 3);
+         if (path == nullptr)
+            cobb::lua::error(L, "options.path was not a raster_draw_path instance");
+         lua_pop(L, 1);
+         //
+         QPen   pen;
+         QBrush brush      = QBrush(Qt::SolidPattern);
+         auto   final_path = path->translated({ -1.0, -1.0 }); // Lua coords to normal. This is a copy operation, so if the path isn't "finished" yet, we'll get a bad copy.
+         auto   bounds     = final_path.boundingRect();
+         //
+         assert(lua_gettop(L) == 2);
+         _pull_paint_parameters(L, 2, brush, pen, bounds, {
+            .fill_color = trait::optional,
+            .line_color = trait::optional,
+            .line_join  = trait::optional,
+            .line_width = trait::optional,
+         });
+         //
+         // Begin drawing:
+         //
+         if (!self.managed_resource)
+            return 0;
+         self.managed_resource->modify_raster_script_side([&final_path, pen, brush](QImage& image) {
+            QPainter painter(&image);
+            painter.setRenderHints(default_painter_hints, true);
+            painter.setPen(pen);
+            painter.setBrush(brush);
+            painter.drawPath(final_path);
+         });
+         return 0;
+      }
       luastackchange_t draw_raster(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* arg  = wrapper_from_stack<cls>(L, 2);
@@ -875,6 +914,7 @@ namespace editor_script::wrappers::resource {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
       { "draw_ellipse", &_methods::draw_ellipse },
       { "draw_line",    &_methods::draw_line },
+      { "draw_path",    &_methods::draw_path },
       { "draw_raster",  &_methods::draw_raster },
       { "draw_rect",    &_methods::draw_rect },
       { "fill",         &_methods::fill },

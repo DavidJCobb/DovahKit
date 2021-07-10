@@ -1,6 +1,7 @@
 #include "_build_singletons.h"
 #include "_all_resources.h"
 #include "_all_ui.h"
+#include "misc/raster_draw_path.h"
 
 namespace editor_script {
    void build_all_resource_wrapper_singletons(lua_State* L) {
@@ -8,6 +9,8 @@ namespace editor_script {
       //
       resource::raster::setup(L);
       // NOTE: As of this writing the "unknown" type DOES NOT have a singleton
+      //
+      raster_draw_path::setup(L);
    }
    void build_all_ui_wrapper_singletons(lua_State* L) {
       using namespace wrappers;

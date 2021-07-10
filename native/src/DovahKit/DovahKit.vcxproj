@@ -277,6 +277,7 @@
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\formlist.cpp" />
     <ClCompile Include="editor\scripting\wrappers\landscape.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\misc\raster_draw_path.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\property.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\script.cpp" />
@@ -657,6 +658,7 @@
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />
     <ClInclude Include="editor\scripting\wrappers\landscape.h" />
+    <ClInclude Include="editor\scripting\wrappers\misc\raster_draw_path.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\property.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\script.h" />
