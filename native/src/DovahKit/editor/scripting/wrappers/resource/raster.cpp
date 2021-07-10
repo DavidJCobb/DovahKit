@@ -273,60 +273,6 @@ namespace {
          brush = QBrush(*result);
       }
 
-      void pull_line_color(lua_State* L, int index, QPen& pen, bool optional = false) {
-         index = lua_absindex(L, index);
-         if (optional && lua_isnoneornil(L, index)) {
-            pen.setColor(QColorConstants::Transparent);
-            return;
-         }
-         std::string error;
-         QColor      color = util::ui::protected_pull_color(L, index, error);
-         if (!color.isValid()) {
-            if (error.empty())
-               luaL_error(L, "options.line_color was not a valid color");
-            luaL_error(L, "options.line_color was not a valid color: %s", error.c_str());
-         }
-         pen.setColor(color);
-      }
-
-      void pull_line_join(lua_State* L, int index, QPen& pen) {
-         index = lua_absindex(L, index);
-         if (lua_isnoneornil(L, index)) {
-            pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
-            return;
-         }
-         if (!lua_isstring(L, index))
-            cobb::lua::error(L, "options.line_join was neither nil nor a string");
-         auto* str = lua_tostring(L, index);
-         if (stricmp(str, "miter") == 0) {
-            pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
-            return;
-         }
-         if (stricmp(str, "bevel") == 0) {
-            pen.setJoinStyle(Qt::PenJoinStyle::BevelJoin);
-            return;
-         }
-         if (stricmp(str, "round") == 0) {
-            pen.setJoinStyle(Qt::PenJoinStyle::RoundJoin);
-            return;
-         }
-         cobb::lua::error(L, "options.line_join was an unrecognized value: \"%s\"", str);
-      }
-
-      void pull_line_width(lua_State* L, int index, QPen& pen) {
-         index = lua_absindex(L, index);
-         if (lua_isnoneornil(L, index)) {
-            pen.setWidthF(1.0F);
-            return;
-         }
-         if (!lua_isnumber(L, index))
-            luaL_error(L, "options.line_width was neither nil nor a number");
-         qreal width = lua_tonumber(L, index);
-         if (width <= 0)
-            luaL_error(L, "options.line_width was a number less than or equal to zero");
-         pen.setWidthF(width);
-      }
-
       bool pull_qpoint_f(lua_State* L, int index, QPointF& out) {
          index = lua_absindex(L, index);
          if (!cobb::lua::istablelike(L, index))
@@ -347,6 +293,94 @@ namespace {
          out.setY(lua_tonumber(L, -1));
          lua_pop(L, 2);
          return true;
+      }
+   }
+
+   enum class trait {
+      required,
+      optional,
+      skipped,
+   };
+   struct paint_operation_param_request {
+      trait fill_color = trait::optional; // also controls fill_gradient; either must be present
+      trait line_color = trait::optional;
+      trait line_join  = trait::optional;
+      trait line_width = trait::optional;
+   };
+   void _pull_paint_parameters(lua_State* L, int index, QBrush& brush, QPen& pen, QRectF bound, const paint_operation_param_request request) {
+      if (request.fill_color != trait::skipped) {
+         lua_getfield(L, index, "fill_color");
+         _helpers::pull_fill_color(L, -1, brush, true);
+         lua_getfield(L, index, "fill_gradient");
+         _helpers::pull_fill_gradient(L, -1, brush, bound);
+         lua_pop(L, 2);
+         //
+         if (request.fill_color != trait::optional) {
+            if (!brush.gradient() && !brush.color().isValid())
+               cobb::lua::error(L, "neither options.fill_color nor options.fill_gradient appear to have been specified");
+         }
+      }
+      if (request.line_color != trait::skipped) {
+         lua_getfield(L, index, "line_color");
+         if (lua_isnoneornil(L, -1)) {
+            if (request.line_color != trait::optional)
+               cobb::lua::error(L, "options.line_color was not specified");
+            pen.setColor(Qt::GlobalColor::transparent);
+         } else {
+            std::string error;
+            QColor      color = util::ui::protected_pull_color(L, -1, error);
+            if (!color.isValid()) {
+               if (error.empty())
+                  cobb::lua::error(L, "options.line_color was not a valid color");
+               cobb::lua::error(L, "options.line_color was not a valid color: %s", error.c_str());
+            }
+            pen.setColor(color);
+         }
+         lua_pop(L, 1);
+      }
+      if (request.line_width != trait::skipped) {
+         lua_getfield(L, index, "line_width");
+         if (lua_isnoneornil(L, -1)) {
+            if (request.line_color != trait::optional)
+               cobb::lua::error(L, "options.line_width was not specified");
+            pen.setWidthF(1.0F);
+         } else {
+            if (!lua_isnumber(L, -1))
+               cobb::lua::error(L, "options.line_width was neither nil nor a number");
+            qreal width = lua_tonumber(L, -1);
+            if (width <= 0)
+               cobb::lua::error(L, "options.line_width was a number less than or equal to zero");
+            pen.setWidthF(width);
+         }
+         lua_pop(L, 1);
+      }
+      if (request.line_join != trait::skipped) {
+         lua_getfield(L, index, "line_join");
+         if (lua_isnoneornil(L, -1)) {
+            if (request.line_join != trait::optional)
+               cobb::lua::error(L, "options.line_join was not specified");
+            pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
+         } else {
+            static constexpr std::array join_styles = {
+               std::pair{ Qt::PenJoinStyle::BevelJoin, "bevel" },
+               std::pair{ Qt::PenJoinStyle::MiterJoin, "miter" },
+               std::pair{ Qt::PenJoinStyle::RoundJoin, "round" },
+            };
+            if (!lua_isstring(L, -1))
+               cobb::lua::error(L, "options.line_join was neither nil nor a string");
+            auto* str   = lua_tostring(L, -1);
+            bool  found = false;
+            for (auto& pair : join_styles) {
+               if (stricmp(str, pair.second) == 0) {
+                  found = true;
+                  pen.setJoinStyle(pair.first);
+                  break;
+               }
+            }
+            if (!found)
+               cobb::lua::error(L, "options.line_join was an unrecognized value: \"%s\"", str);
+         }
+         lua_pop(L, 1);
       }
    }
 
@@ -412,21 +446,12 @@ namespace {
          }
          //
          assert(lua_gettop(L) == 2);
-         lua_getfield(L, 2, "line_color");    // 3
-         lua_getfield(L, 2, "line_width");    // 4
-         lua_getfield(L, 2, "fill_color");    // 5
-         lua_getfield(L, 2, "fill_gradient"); // 6
-         lua_getfield(L, 2, "line_join");     // 7
-         //
-         // Get pen settings:
-         //
-         _helpers::pull_line_color   (L, 3, pen, true);
-         _helpers::pull_line_width   (L, 4, pen);
-         _helpers::pull_fill_color   (L, 5, brush, true);
-         _helpers::pull_fill_gradient(L, 6, brush, bound);
-         _helpers::pull_line_join    (L, 7, pen);
-         if (!brush.gradient() && !brush.color().isValid())
-            cobb::lua::error(L, "neither options.fill_color nor options.fill_gradient appear to have been specified");
+         _pull_paint_parameters(L, 2, brush, pen, bound, {
+            .fill_color = trait::optional,
+            .line_color = trait::optional,
+            .line_join  = trait::optional,
+            .line_width = trait::optional,
+         });
          //
          // Begin drawing:
          //
@@ -449,8 +474,6 @@ namespace {
          lua_settop(L, 2);
          lua_getfield(L, 2, "from");       // 3
          lua_getfield(L, 2, "to");         // 4
-         lua_getfield(L, 2, "line_color"); // 5
-         lua_getfield(L, 2, "line_width"); // 6
          if (!cobb::lua::istablelike(L, 3)) {
             auto type = lua_type(L, 3);
             luaL_error(L, "options.from must be a table; got %s", lua_typename(L, type));
@@ -460,7 +483,8 @@ namespace {
             luaL_error(L, "options.to must be a table; got %s", lua_typename(L, type));
          }
          std::array<QPointF, 2> endpoints;
-         QPen pen;
+         QPen   pen;
+         QBrush brush;
          //
          // Get endpoints:
          //
@@ -474,8 +498,12 @@ namespace {
          //
          // Get pen settings:
          //
-         _helpers::pull_line_color(L, 5, pen);
-         _helpers::pull_line_width(L, 6, pen);
+         _pull_paint_parameters(L, 2, brush, pen, QRectF(), {
+            .fill_color = trait::skipped,
+            .line_color = trait::required,
+            .line_join  = trait::skipped,
+            .line_width = trait::optional,
+         });
          //
          // Begin drawing:
          //
@@ -574,21 +602,12 @@ namespace {
          QBrush brush = QBrush(Qt::SolidPattern);
          //
          assert(lua_gettop(L) == 2);
-         lua_getfield(L, 2, "line_color");    // 3
-         lua_getfield(L, 2, "line_width");    // 4
-         lua_getfield(L, 2, "fill_color");    // 5
-         lua_getfield(L, 2, "fill_gradient"); // 6
-         lua_getfield(L, 2, "line_join");     // 7
-         //
-         // Get pen settings:
-         //
-         _helpers::pull_line_color   (L, 3, pen, true);
-         _helpers::pull_line_width   (L, 4, pen);
-         _helpers::pull_fill_color   (L, 5, brush, true);
-         _helpers::pull_fill_gradient(L, 6, brush, rect);
-         _helpers::pull_line_join    (L, 7, pen);
-         if (!brush.gradient() && !brush.color().isValid())
-            cobb::lua::error(L, "neither options.fill_color nor options.fill_gradient appear to have been specified");
+         _pull_paint_parameters(L, 2, brush, pen, rect, {
+            .fill_color = trait::optional,
+            .line_color = trait::optional,
+            .line_join  = trait::optional,
+            .line_width = trait::optional,
+         });
          //
          // Begin drawing:
          //
@@ -616,6 +635,29 @@ namespace {
          //
          return 0;
       }
+      luastackchange_t flip(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.managed_resource)
+            return 0;
+         bool horizontal = false;
+         bool vertical   = false;
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "string (flip direction) expected");
+         auto* str = lua_tostring(L, 2);
+         if (stricmp(str, "horizontal") == 0 || stricmp(str, "h") == 0) {
+            horizontal = true;
+         } else if (stricmp(str, "vertical") == 0 || stricmp(str, "v") == 0) {
+            vertical   = true;
+         } else if (stricmp(str, "both") == 0) {
+            horizontal = true;
+            vertical   = true;
+         }
+         //
+         self.managed_resource->modify_raster_script_side([horizontal, vertical](QImage& image) {
+            image = image.mirrored(horizontal, vertical);
+         });
+         //
+         return 0;
+      }
       luastackchange_t get_pixel(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.managed_resource)
@@ -636,6 +678,41 @@ namespace {
          auto image = self.managed_resource->get_raster_script_side();
          util::ui::push_color(L, image.pixel(x, y));
          return 1;
+      }
+      luastackchange_t scale(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         //
+         QSizeF size;
+         //
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number (scale multiplier) expected");
+         size.setWidth(lua_tonumber(L, 2));
+         luaL_argcheck(L, size.width() > 0.0, 2, "scale multipliers cannot be negative or zero");
+         //
+         if (lua_isnoneornil(L, 3)) {
+            size.setHeight(size.width());
+         } else {
+            luaL_argcheck(L, lua_isnumber(L, 3),  3, "number (scale multiplier) expected");
+            size.setHeight(lua_tonumber(L, 3));
+            luaL_argcheck(L, size.height() > 0.0, 3, "scale multipliers cannot be negative or zero");
+         }
+         //
+         if (!self.managed_resource)
+            return 0;
+         if (size.width() == 1.0 && size.height() == 1.0)
+            return 0;
+         //
+         self.managed_resource->modify_raster_script_side([size](QImage& image) {
+            auto prior = image.size();
+            prior.setWidth ((qreal)prior.width()  * size.width());
+            prior.setHeight((qreal)prior.height() * size.height());
+            if (prior.width() < 1)
+               prior.setWidth(1);
+            if (prior.height() < 1)
+               prior.setHeight(1);
+            image = image.scaled(prior);
+         });
+         //
+         return 0;
       }
       luastackchange_t set_pixel(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -685,7 +762,7 @@ namespace {
       }
       luastackchange_t width(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         if (!self.widget)
+         if (!self.managed_resource)
             return 0;
          auto image = self.managed_resource->get_raster_script_side();
          if (image.isNull())
@@ -695,35 +772,42 @@ namespace {
       }
    }
    namespace _setters {
-      /*//
-      luastackchange_t auto_default(lua_State* L) {
+      luastackchange_t height(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
-         if (!self.widget)
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum,      3, "integer (height) expected");
+         luaL_argcheck(L, value != 0, 3, "height cannot be zero");
+         luaL_argcheck(L, value >  0, 3, "height cannot be negative");
+         if (!self.managed_resource)
             return 0;
-         auto value = lua_toboolean(L, 2);
-         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QPushButton::setAutoDefault, value);
+         //
+         self.managed_resource->modify_raster_script_side([value](QImage& image) {
+            if (image.height() == value)
+               return;
+            image = image.copy(0, 0, image.width(), value);
+         });
+         //
          return 0;
       }
-      luastackchange_t flat(lua_State* L) {
+      luastackchange_t width(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
-         if (!self.widget)
+         int isnum;
+         int value = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum,      3, "integer (width) expected");
+         luaL_argcheck(L, value != 0, 3, "width cannot be zero");
+         luaL_argcheck(L, value >  0, 3, "width cannot be negative");
+         if (!self.managed_resource)
             return 0;
-         auto value = lua_toboolean(L, 2);
-         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QPushButton::setFlat, value);
+         //
+         self.managed_resource->modify_raster_script_side([value](QImage& image) {
+            if (image.width() == value)
+               return;
+            image = image.copy(0, 0, value, image.height());
+         });
+         //
          return 0;
       }
-      luastackchange_t text(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
-         if (!self.widget)
-            return 0;
-         auto value = QString::fromUtf8(lua_tostring(L, 2));
-         editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QPushButton::setText, value);
-         return 0;
-      }
-      //*/
    }
 
    namespace _singleton_functions {
@@ -794,7 +878,9 @@ namespace editor_script::wrappers::resource {
       { "draw_raster",  &_methods::draw_raster },
       { "draw_rect",    &_methods::draw_rect },
       { "fill",         &_methods::fill },
+      { "flip",         &_methods::flip },      // `raster:flip("horizontal")` or `raster:flip("h")` or `raster:flip("vertical")` or `raster:flip("v")` or `raster:flip("both")`
       { "get_pixel",    &_methods::get_pixel },
+      { "scale",        &_methods::scale },     // `raster:scale(2.0)` or `raster:scale(2.0, 0.5)` given either one size multiplier, or two (width and height respectively)
       { "set_pixel",    &_methods::set_pixel },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
@@ -802,6 +888,8 @@ namespace editor_script::wrappers::resource {
       { "width",  &_getters::width },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
+      { "height", &_setters::height },
+      { "width",  &_setters::width },
    };
 
    /*static*/ void cls::setup(lua_State* L) {

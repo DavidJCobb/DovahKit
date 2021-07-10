@@ -63,6 +63,12 @@ do
       line_color = "#0FF",
       line_width = 3
    })
+   
+   raster:scale(2.0, 3.0)
+   raster:flip("v")
+   
+   widget.width  = raster.width
+   widget.height = raster.height
 end
 
 window:show()
