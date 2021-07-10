@@ -20,10 +20,13 @@
 #include "../../../../helpers/rotation.h"
 
 #include <QPainter>
+#include <QPainterPath>
 
 namespace {
    using namespace editor_script;
    using cls = wrappers::resource::raster;
+
+   static constexpr auto default_painter_hints = QPainter::Antialiasing | QPainter::TextAntialiasing;
 
    namespace _helpers {
       void pull_fill_color(lua_State* L, int index, QBrush& brush, bool optional = false) {
@@ -286,6 +289,30 @@ namespace {
          pen.setColor(color);
       }
 
+      void pull_line_join(lua_State* L, int index, QPen& pen) {
+         index = lua_absindex(L, index);
+         if (lua_isnoneornil(L, index)) {
+            pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
+            return;
+         }
+         if (!lua_isstring(L, index))
+            cobb::lua::error(L, "options.line_join was neither nil nor a string");
+         auto* str = lua_tostring(L, index);
+         if (stricmp(str, "miter") == 0) {
+            pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
+            return;
+         }
+         if (stricmp(str, "bevel") == 0) {
+            pen.setJoinStyle(Qt::PenJoinStyle::BevelJoin);
+            return;
+         }
+         if (stricmp(str, "round") == 0) {
+            pen.setJoinStyle(Qt::PenJoinStyle::RoundJoin);
+            return;
+         }
+         cobb::lua::error(L, "options.line_join was an unrecognized value: \"%s\"", str);
+      }
+
       void pull_line_width(lua_State* L, int index, QPen& pen) {
          index = lua_absindex(L, index);
          if (lua_isnoneornil(L, index)) {
@@ -324,6 +351,98 @@ namespace {
    }
 
    namespace _methods {
+      luastackchange_t draw_ellipse(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
+         lua_settop(L, 2);
+         //
+         QPointF center;
+         QSizeF  radii;
+         qreal   angle = 0.0;
+         //
+         lua_getfield(L, 2, "center"); // 3
+         if (!_helpers::pull_qpoint_f(L, 3, center)) {
+            lua_getfield(L, 2, "x"); // 4
+            lua_getfield(L, 2, "y"); // 5
+            if (!lua_isnumber(L, 4))
+               cobb::lua::error(L, "options.center was unspecified or invalid, and options.x was not a number");
+            if (!lua_isnumber(L, 5))
+               cobb::lua::error(L, "options.center was unspecified or invalid, and options.y was not a number");
+            center.setX(lua_tonumber(L, 4));
+            center.setY(lua_tonumber(L, 5));
+            lua_pop(L, 2);
+         }
+         lua_pop(L, 1);
+         //
+         lua_getfield(L, 2, "radius"); // 3
+         if (!lua_isnoneornil(L, 3)) {
+            if (!lua_isnumber(L, 3))
+               cobb::lua::error(L, "options.radius was neither nil nor a number");
+            auto n = lua_tonumber(L, 3);
+            radii.setWidth(n);
+            radii.setHeight(n);
+         } else {
+            QPointF working;
+            lua_getfield(L, 2, "radii"); // 4
+            if (!_helpers::pull_qpoint_f(L, 4, working))
+               cobb::lua::error(L, "options.radius was unspecified, and options.radii was unspecified or invalid");
+            lua_pop(L, 1);
+            radii.setWidth(working.x());
+            radii.setHeight(working.y());
+         }
+         lua_pop(L, 1);
+         //
+         lua_getfield(L, 2, "angle");
+         if (!lua_isnoneornil(L, 3)) {
+            if (!lua_isnumber(L, 3))
+               cobb::lua::error(L, "options.angle was neither nil nor a number");
+            angle = lua_tonumber(L, 3); // DO NOT convert to radians; QPainter::rotate takes degrees
+         }
+         lua_pop(L, 1);
+         //
+         center += { -1, -1 }; // Lua values should start from (1, 1)
+         //
+         QPen   pen;
+         QBrush brush = QBrush(Qt::SolidPattern);
+         QRectF bound;
+         {
+            bound.setSize(radii * 2);
+            bound.translate(center);
+            bound.translate({ -radii.width(), -radii.height() });
+         }
+         //
+         assert(lua_gettop(L) == 2);
+         lua_getfield(L, 2, "line_color");    // 3
+         lua_getfield(L, 2, "line_width");    // 4
+         lua_getfield(L, 2, "fill_color");    // 5
+         lua_getfield(L, 2, "fill_gradient"); // 6
+         lua_getfield(L, 2, "line_join");     // 7
+         //
+         // Get pen settings:
+         //
+         _helpers::pull_line_color   (L, 3, pen, true);
+         _helpers::pull_line_width   (L, 4, pen);
+         _helpers::pull_fill_color   (L, 5, brush, true);
+         _helpers::pull_fill_gradient(L, 6, brush, bound);
+         _helpers::pull_line_join    (L, 7, pen);
+         if (!brush.gradient() && !brush.color().isValid())
+            cobb::lua::error(L, "neither options.fill_color nor options.fill_gradient appear to have been specified");
+         //
+         // Begin drawing:
+         //
+         if (!self.managed_resource)
+            return 0;
+         self.managed_resource->modify_raster_script_side([center, radii, angle, pen, brush](QImage& image) {
+            QPainter painter(&image);
+            painter.setRenderHints(default_painter_hints, true);
+            painter.setPen(pen);
+            painter.setBrush(brush);
+            painter.translate(center);
+            painter.rotate(angle);
+            painter.drawEllipse({ 0, 0 }, radii.width(), radii.height());
+         });
+         return 0;
+      }
       luastackchange_t draw_line(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
@@ -347,8 +466,10 @@ namespace {
          //
          {
             constexpr std::array names = { "options.from", "options.to" };
-            for (int i = 0; i < 2; ++i)
+            for (int i = 0; i < 2; ++i) {
                endpoints[i] = cobb::lua::pull_qpointf(L, 3 + i, names[i]);
+               endpoints[i] += { -1, -1 }; // Lua uses coordinates from (1, 1)
+            }
          }
          //
          // Get pen settings:
@@ -362,6 +483,7 @@ namespace {
             return 0;
          self.managed_resource->modify_raster_script_side([endpoints, pen](QImage& image) {
             QPainter painter(&image);
+            painter.setRenderHints(default_painter_hints, true);
             painter.setPen(pen);
             painter.drawLine(endpoints[0], endpoints[1]);
          });
@@ -446,6 +568,7 @@ namespace {
             }
             lua_pop(L, 1);
          }
+         rect.translate({ -1, -1 }); // Lua values should start from (1, 1)
          //
          QPen   pen;
          QBrush brush = QBrush(Qt::SolidPattern);
@@ -455,6 +578,7 @@ namespace {
          lua_getfield(L, 2, "line_width");    // 4
          lua_getfield(L, 2, "fill_color");    // 5
          lua_getfield(L, 2, "fill_gradient"); // 6
+         lua_getfield(L, 2, "line_join");     // 7
          //
          // Get pen settings:
          //
@@ -462,6 +586,7 @@ namespace {
          _helpers::pull_line_width   (L, 4, pen);
          _helpers::pull_fill_color   (L, 5, brush, true);
          _helpers::pull_fill_gradient(L, 6, brush, rect);
+         _helpers::pull_line_join    (L, 7, pen);
          if (!brush.gradient() && !brush.color().isValid())
             cobb::lua::error(L, "neither options.fill_color nor options.fill_gradient appear to have been specified");
          //
@@ -471,6 +596,7 @@ namespace {
             return 0;
          self.managed_resource->modify_raster_script_side([rect, pen, brush](QImage& image) {
             QPainter painter(&image);
+            painter.setRenderHints(default_painter_hints, true);
             painter.setPen(pen);
             painter.setBrush(brush);
             painter.drawRect(rect);
@@ -663,12 +789,13 @@ namespace {
 
 namespace editor_script::wrappers::resource {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
-      { "draw_line",   &_methods::draw_line },
-      { "draw_raster", &_methods::draw_raster },
-      { "draw_rect",   &_methods::draw_rect },
-      { "fill",        &_methods::fill },
-      { "get_pixel",   &_methods::get_pixel },
-      { "set_pixel",   &_methods::set_pixel },
+      { "draw_ellipse", &_methods::draw_ellipse },
+      { "draw_line",    &_methods::draw_line },
+      { "draw_raster",  &_methods::draw_raster },
+      { "draw_rect",    &_methods::draw_rect },
+      { "fill",         &_methods::fill },
+      { "get_pixel",    &_methods::get_pixel },
+      { "set_pixel",    &_methods::set_pixel },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "height", &_getters::height },

@@ -24,6 +24,7 @@ do
       to   = { x = 108, y = 108 },
       line_color = "#FFF",
       line_width = 8,
+      line_join  = "round",
    })
    
    raster:draw_rect({
@@ -35,17 +36,25 @@ do
          angle   = 45,
          stretch = true,
          stops   = {
-            { 0.000, "hsl(  0deg, 50%, 50%)" },
-            { 0.125, "hsl( 45deg, 50%, 50%)" },
-            { 0.250, "hsl( 90deg, 50%, 50%)" },
-            { 0.375, "hsl(135deg, 50%, 50%)" },
-            { 0.500, "hsl(180deg, 50%, 50%)" },
-            { 0.625, "hsl(225deg, 50%, 50%)" },
-            { 0.750, "hsl(270deg, 50%, 50%)" },
-            { 0.875, "hsl(315deg, 50%, 50%)" },
-            { 1.000, "hsl(360deg, 50%, 50%)" },
+            { 0.000, "hsl(  0deg, 100%, 50%)" },
+            { 0.125, "hsl( 45deg, 100%, 50%)" },
+            { 0.250, "hsl( 90deg, 100%, 50%)" },
+            { 0.375, "hsl(135deg, 100%, 50%)" },
+            { 0.500, "hsl(180deg, 100%, 50%)" },
+            { 0.625, "hsl(225deg, 100%, 50%)" },
+            { 0.750, "hsl(270deg, 100%, 50%)" },
+            { 0.875, "hsl(315deg, 100%, 50%)" },
+            { 1.000, "hsl(360deg, 100%, 50%)" },
          }
       }
+   })
+   
+   raster:draw_ellipse({
+      center = { 64, 64 },
+      angle  = 135,
+      radii  = { 20, 40 },
+      line_width = 2,
+      line_color = "#F00",
    })
    
    raster:draw_line({
