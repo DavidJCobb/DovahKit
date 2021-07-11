@@ -1,0 +1,172 @@
+
+local DO_HFLIP = false
+local DO_VFLIP = false
+local ROTATION = 45
+
+local window = ui.window.new()
+window:set_layout("ltr")
+
+function draw_point(raster, point, color)
+   raster:draw_ellipse({
+      line_color = color,
+      line_width = 3,
+      x = point.x,
+      y = point.y,
+      radius = 1.5
+   })
+end
+
+function hflip(v, about)
+   v.x = 300 - v.x
+end
+function vflip(v, about)
+   v.y = 300 - v.y
+end
+
+function rotate_about(v, about, deg)
+   local w = v - about
+   w = w:rotate(deg)
+   w = w + about
+   --
+   v.x = w.x
+   v.y = w.y
+   if DO_HFLIP then
+      hflip(v)
+   end
+   if DO_VFLIP then
+      vflip(v)
+   end
+end
+
+do -- arcTo test (contained angle)
+   local widget = ui.canvas.new()
+   window:add_child(widget)
+
+   widget.width  = 300
+   widget.height = 300
+   
+   local raster = raster.new({ width = 300, height = 300 })
+   local layer  = widget:append_layer()
+   layer.data = raster
+   
+   raster:fill("#FFF")
+   
+   local center  = vector2.new(150, 150)
+   local point_a = vector2.new(230,  95)
+   local point_b = vector2.new( 90, 205)
+   local point_c = vector2.new( 20,  95)
+   local radius  = 50
+   
+   local diag_center    = vector2.new(102.5, 131.5)
+   local diag_tangent_1 = vector2.new(133.4, 170.8)
+   local diag_tangent_2 = vector2.new( 60.3, 158.4)
+   
+   local ROT_INTEGRITY_CHECK = (point_c - point_a):length()
+   
+   local rotate_deg = ROTATION
+   rotate_about(point_a,        center, rotate_deg)
+   rotate_about(point_b,        center, rotate_deg)
+   rotate_about(point_c,        center, rotate_deg)
+   rotate_about(diag_tangent_1, center, rotate_deg)
+   rotate_about(diag_tangent_2, center, rotate_deg)
+   rotate_about(diag_center,    center, rotate_deg)
+   
+   if ROT_INTEGRITY_CHECK ~= (point_c - point_a):length() then
+      --
+      -- Floating-point inaccuracy creeps in when using our vector2:rotate
+      -- function, and seems unavoidable: we use exclusively doubles in that 
+      -- function, but we still see more inaccuracy the higher our angle gets, 
+      -- with angles above 25 producing a value that is inaccurate by 1. At 
+      -- 45, things get kinda bad.
+      --
+      -- To be clear: what we're testing for here is that the length from the 
+      -- start to the end points remains the same even after the rotation.
+      --
+      -- At angles 50 and above, we start seeing issues wherein our arc or 
+      -- tangent points are actually incorrect, but I can't be sure that that 
+      -- isn't simply the result of compounded floating-point imprecision 
+      -- from the "rotate" call.
+      --
+      --error(string.format("Rotation was incorrect (%s / %s)", ROT_INTEGRITY_CHECK, (point_c - point_a):length()))
+   end
+   
+   do -- diagnostic
+      local path = raster_draw_path.new()
+      path:move_to(point_a.x, point_a.y)
+      path:line_to(point_c.x, point_c.y)
+      raster:draw_path({
+         path       = path,
+         line_width = 1,
+         line_color = "#800000A0"
+      })
+      draw_point(raster, point_b, "#000000") -- b
+      --
+      -- Values seen in Visual Studio debugger:
+      --
+      draw_point(raster, diag_tangent_1, "#8000FF") -- tan1
+      draw_point(raster, diag_tangent_2, "#808000") -- tan2
+      draw_point(raster, diag_center,    "#80C0A0") -- center
+      raster:draw_ellipse({
+         fill_color = "#AAAA0060",
+         radius = 50,
+         center = diag_center,
+      })
+      raster:draw_rect({
+         fill_color = "#AAAA0020",
+         from = diag_center - vector2.new(radius, radius),
+         w = radius * 2,
+         h = radius * 2,
+      })
+   end
+   
+   local path = raster_draw_path.new()
+   path:move_to(point_a.x, point_a.y)
+   path:arc_to (point_b, point_c, radius)
+   path:line_to(point_c.x, point_c.y)
+   
+   raster:draw_path({
+      path       = path,
+      line_width = 1,
+      line_color = "#000000FF"
+   })
+end
+do -- arcTo test (excess angle)
+   local widget = ui.canvas.new()
+   window:add_child(widget)
+
+   widget.width  = 300
+   widget.height = 150
+   
+   local raster = raster.new({ width = 300, height = 150 })
+   local layer  = widget:append_layer()
+   layer.data = raster
+   
+   raster:fill("#FFF")
+   
+   do -- diagnostic
+      local path = raster_draw_path.new()
+      path:move_to(180, 90)
+      path:line_to(110, 130)
+      raster:draw_path({
+         path       = path,
+         line_width = 1,
+         line_color = "#800000A0"
+      })
+   end
+   
+   local path = raster_draw_path.new()
+   path:move_to(180, 90)
+   path:arc_to({ 180, 130 }, { 110, 130 }, 130)
+      -- tan_u:  180, 260
+      -- tan_v:  310, 130
+      -- center: 310, 260
+   path:line_to(110, 130)
+   
+   raster:draw_path({
+      path       = path,
+      line_width = 1,
+      line_color = "#000000FF"
+   })
+end
+
+window:show()

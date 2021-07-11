@@ -160,10 +160,29 @@ namespace {
             v1 = (b - a).normalized();
             v2 = (c - b).normalized();
             //
-            p1.setX(a.x() - v1.y() * radius);
-            p1.setY(a.y() + v1.x() * radius);
-            p2.setX(b.x() - v2.y() * radius);
-            p2.setY(b.y() + v2.x() * radius);
+            QVector2D bisector = (v2 + -v1).normalized(); // negate (v1) so we can use (b) as our origin
+            //
+            QVector2D normal1; // vpu1
+            normal1.setX(-v1.y());
+            normal1.setY( v1.x());
+            QVector2D normal2;
+            normal2.setX(-v2.y());
+            normal2.setY( v2.x());
+            //
+            bool flip = QVector2D::dotProduct(normal1, bisector) < 0.0; // the normal and the bisector point away from each other if this is true
+            if (flip) {
+               normal1 *= -1;
+               normal2 *= -1;
+            }
+            //
+            p1 = a + (normal1 * radius);
+            p2 = b + (normal2 * radius);
+            /*
+            p1.setX(a.x() - v1.y() * radius * sign);
+            p1.setY(a.y() + v1.x() * radius * sign);
+            p2.setX(b.x() - v2.y() * radius * sign);
+            p2.setY(b.y() + v2.x() * radius * sign);
+            */
          }
          qreal cross = v1.x() * v2.y() - v2.x() * v1.y(); // The StackOverflow answer calls this variable "den." Dunno why.
          if (abs(cross) < 0.0000001) {
@@ -220,6 +239,8 @@ namespace {
                auto local = tangent_2 - center;
                sweep = cobb::radians_to_degrees(atan2(local.y(), local.x()));
                sweep -= start;
+               if (sweep < 0.0 && start > 0.0)
+                  sweep += 360.0;
             }
             //
             path->arcTo(rect, -start, -sweep);

@@ -2,6 +2,8 @@
 #include "../util.h"
 #include <cmath>
 
+#include "../../../helpers/rotation.h"
+
 namespace {
    using namespace editor_script;
    using cls = classes::vector2;
@@ -220,8 +222,8 @@ namespace {
          lua_Number x, y, z;
          lua_getfield(L, 1, "x");
          lua_getfield(L, 1, "y");
-         x = lua_tonumber(L, 3);
-         y = lua_tonumber(L, 4);
+         x = lua_tonumber(L, 2);
+         y = lua_tonumber(L, 3);
          //
          lua_Number length = sqrt(x*x + y*y);
          lua_pushnumber(L, length);
@@ -235,8 +237,8 @@ namespace {
          lua_Number x, y, z;
          lua_getfield(L, 1, "x");
          lua_getfield(L, 1, "y");
-         x = lua_tonumber(L, 3);
-         y = lua_tonumber(L, 4);
+         x = lua_tonumber(L, 2);
+         y = lua_tonumber(L, 3);
          //
          lua_Number length = x*x + y*y;
          lua_pushnumber(L, length);
@@ -288,16 +290,17 @@ namespace {
       }
       luastackchange_t rotate(lua_State* L) {
          cls::require_self_type(L);
-         auto degrees = lua_tonumber(L, 2);
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
+         auto angle = cobb::degrees_to_radians(lua_tonumber(L, 2));
          lua_settop(L, 1);
          //
          lua_getfield(L, 1, "x");
          lua_getfield(L, 1, "y");
          lua_Number x = lua_tonumber(L, 2);
-         lua_Number y = lua_tonumber(L, 2);
+         lua_Number y = lua_tonumber(L, 3);
          //
-         lua_Number cd = cos(degrees);
-         lua_Number sd = sin(degrees);
+         lua_Number cd = cos(angle);
+         lua_Number sd = sin(angle);
          x = cd * x - sd * y;
          y = sd * x + cd * y;
          _make_vector(L, x, y);
