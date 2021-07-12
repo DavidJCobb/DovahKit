@@ -110,7 +110,7 @@ namespace dovah::loaded_forms {
       }
       uib.add_outbound_reference(havok_material);
       uib.add_outbound_reference(texture_set);
-      for (auto id : grasses)
+      for (const auto id : grasses)
          uib.add_outbound_reference(id);
    }
    bool LandTexture::_clone_impl(Form* out) const noexcept {
@@ -165,10 +165,14 @@ namespace dovah::loaded_forms {
       this->havok.material.set(*this, nullptr);
       clear_form_reference_list(this->grasses, *this);
       this->remaster_flags = 0;
+      //
+      this->script_data.clear(*this);
    }
    void LandTexture::_sever_outbound_references_impl(form_stub& other) noexcept {
       remove_form_from_reference_list(this->grasses, other, *this);
       this->texture_set.clear_if(*this, other);
       this->havok.material.clear_if(*this, other);
+      //
+      this->script_data.sever_outbound_references_to(other, *this);
    }
 }

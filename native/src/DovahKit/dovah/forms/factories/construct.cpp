@@ -15,6 +15,7 @@
 #include "../Package.h"
 #include "../Quest.h"
 #include "../Shout.h"
+#include "../TextureSet.h"
 #include "../Topic.h"
 #include "../TopicInfo.h"
 #include "../Voicetype.h"
@@ -54,6 +55,7 @@ namespace {
    };
 
    _entry _builders[] = {
+      { form_type::texture_set,            _handlers::make<loaded_forms::TextureSet>() },
       { form_type::faction,                _handlers::make<loaded_forms::Faction>() },
       { form_type::land_texture,           _handlers::make<loaded_forms::LandTexture>() },
       { form_type::activator,              _handlers::make<loaded_forms::Activator>() },

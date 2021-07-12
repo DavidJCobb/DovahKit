@@ -138,6 +138,7 @@
     <ClCompile Include="dovah\forms\components\bounds.cpp" />
     <ClCompile Include="dovah\forms\components\conditions.cpp" />
     <ClCompile Include="dovah\forms\components\container.cpp" />
+    <ClCompile Include="dovah\forms\components\decal_data.cpp" />
     <ClCompile Include="dovah\forms\components\destruction.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\action.cpp" />
@@ -203,6 +204,7 @@
     <ClCompile Include="dovah\forms\Quest.cpp" />
     <ClCompile Include="dovah\forms\Shout.cpp" />
     <ClCompile Include="dovah\forms\structs\color_dword.cpp" />
+    <ClCompile Include="dovah\forms\TextureSet.cpp" />
     <ClCompile Include="dovah\forms\Topic.cpp" />
     <ClCompile Include="dovah\forms\TopicInfo.cpp" />
     <ClCompile Include="dovah\forms\Voicetype.cpp" />
@@ -474,6 +476,7 @@
     <ClInclude Include="dovah\forms\Color.h" />
     <ClInclude Include="dovah\forms\components\attack_data.h" />
     <ClInclude Include="dovah\forms\components\conditions.h" />
+    <ClInclude Include="dovah\forms\components\decal_data.h" />
     <ClInclude Include="dovah\forms\components\extra_data.h" />
     <ClInclude Include="dovah\forms\components\extra_data\action.h" />
     <ClInclude Include="dovah\forms\components\extra_data\activate_parent_data.h" />
@@ -562,6 +565,7 @@
     <ClInclude Include="dovah\forms\Note.h" />
     <ClInclude Include="dovah\forms\Package.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
+    <ClInclude Include="dovah\forms\TextureSet.h" />
     <ClInclude Include="dovah\forms\Topic.h" />
     <ClInclude Include="dovah\forms\WordOfPower.h" />
     <ClInclude Include="dovah\forms\Worldspace.h" />

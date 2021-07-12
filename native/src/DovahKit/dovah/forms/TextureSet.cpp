@@ -1,0 +1,175 @@
+#include "TextureSet.h"
+#include "_common_cpp.h"
+#include "../notice_code_list.h"
+
+namespace dovah::loaded_forms {
+   void TextureSet::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+      Form::load(record, intfc);
+      //
+      if (!intfc.is_winning_record)
+         return;
+      //
+      form_reference_t form_id;
+      while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
+         switch (subrecord.signature()) {
+            case 'VMAD':
+               this->script_data.load(subrecord, intfc);
+               break;
+            case 'OBND':
+               this->bounds.load(subrecord, intfc);
+               break;
+            case 'TX00':
+               subrecord.to_string(this->textures.diffuse);
+               break;
+            case 'TX01':
+               subrecord.to_string(this->textures.normal);
+               break;
+            case 'TX02':
+               subrecord.to_string(this->textures.env_mask);
+               break;
+            case 'TX03':
+               subrecord.to_string(this->textures.detail);
+               break;
+            case 'TX04':
+               subrecord.to_string(this->textures.height);
+               break;
+            case 'TX05':
+               subrecord.to_string(this->textures.environment);
+               break;
+            case 'TX06':
+               subrecord.to_string(this->textures.multilayer);
+               break;
+            case 'TX07':
+               subrecord.to_string(this->textures.specular);
+               break;
+            case 'DNAM':
+               subrecord.read(this->texture_flags);
+               break;
+            case 'DODT':
+               this->decal_data.load(subrecord, intfc);
+               break;
+            default:
+               intfc.log_load_warning(
+                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
+               );
+               break;
+         }
+      }
+   }
+   /*static*/ void TextureSet::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (!uib.is_final_file())
+         //
+         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         //
+         return;
+      //
+      while (auto& subrecord = record.next_subrecord()) {
+         if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+            continue;
+         switch (subrecord.signature()) {
+            case 'VMAD':
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               break;
+            case 'OBND':
+               break;
+            case 'TX00':
+               break;
+            case 'TX01':
+               break;
+            case 'TX02':
+               break;
+            case 'TX03':
+               break;
+            case 'TX04':
+               break;
+            case 'TX05':
+               break;
+            case 'TX06':
+               break;
+            case 'TX07':
+               break;
+            case 'DNAM':
+               break;
+            case 'DODT':
+               break;
+            default:
+               break;
+         }
+      }
+   }
+   bool TextureSet::_clone_impl(Form* out) const noexcept {
+      if (out->formType != form_type)
+         return false;
+      auto* copy = (TextureSet*)out;
+      //
+      copy->script_data.clone_from(this->script_data, *copy);
+      copy->textures.diffuse     = this->textures.diffuse;
+      copy->textures.normal      = this->textures.normal;
+      copy->textures.env_mask    = this->textures.env_mask;
+      copy->textures.detail      = this->textures.detail;
+      copy->textures.height      = this->textures.height;
+      copy->textures.environment = this->textures.environment;
+      copy->textures.multilayer  = this->textures.multilayer;
+      copy->textures.specular    = this->textures.specular;
+      copy->texture_flags    = this->texture_flags;
+      //
+      copy->decal_data = this->decal_data;
+      copy->bounds = this->bounds;
+      //
+      return true;
+   }
+   bool TextureSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      this->script_data.save(record, intfc);
+      if (!this->bounds.is_zero()) {
+         auto& OBND = record.open_next_subrecord('OBND');
+         this->bounds.save(OBND, intfc);
+         OBND.close();
+      }
+      if (!this->textures.diffuse.empty())
+         record.write_string_subrecord('TX00', this->textures.diffuse);
+      if (!this->textures.normal.empty())
+         record.write_string_subrecord('TX01', this->textures.normal);
+      if (!this->textures.env_mask.empty())
+         record.write_string_subrecord('TX02', this->textures.env_mask);
+      if (!this->textures.detail.empty())
+         record.write_string_subrecord('TX03', this->textures.detail);
+      if (!this->textures.height.empty())
+         record.write_string_subrecord('TX04', this->textures.height);
+      if (!this->textures.environment.empty())
+         record.write_string_subrecord('TX05', this->textures.environment);
+      if (!this->textures.multilayer.empty())
+         record.write_string_subrecord('TX06', this->textures.multilayer);
+      if (!this->textures.specular.empty())
+         record.write_string_subrecord('TX07', this->textures.specular);
+      //
+      auto& DNAM = record.open_next_subrecord('DNAM');
+      DNAM.write(this->texture_flags);
+      DNAM.close();
+      //
+      auto& DODT = record.open_next_subrecord('DODT');
+      this->decal_data.save(DODT, intfc);
+      DODT.close();
+      //
+      return true;
+   }
+   void TextureSet::_clear_impl() noexcept {
+      this->textures.diffuse.clear();
+      this->textures.normal.clear();   // or gloss
+      this->textures.env_mask.clear(); // or subsurface tint
+      this->textures.detail.clear();   // or glow map
+      this->textures.height.clear();
+      this->textures.environment.clear();
+      this->textures.multilayer.clear();
+      this->textures.specular.clear(); // or backlight mask
+      this->texture_flags = 0;
+      //
+      this->decal_data = components::decal_data();
+      this->bounds     = components::object_bounds();
+      this->script_data.clear(*this);
+   }
+   void TextureSet::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this);
+   }
+}

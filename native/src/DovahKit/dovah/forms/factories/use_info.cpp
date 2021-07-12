@@ -17,6 +17,7 @@
 #include "../ObjectReference.h"
 #include "../Quest.h"
 #include "../Shout.h"
+#include "../TextureSet.h"
 #include "../Topic.h"
 #include "../TopicInfo.h"
 #include "../Voicetype.h"
@@ -33,6 +34,7 @@ namespace {
       _Builder(form_type_t f, outbound_uses_builder_t b) : form_type(f), builder(b) {}
    };
    _Builder _builders[] = {
+      { form_type::texture_set,            dovah::loaded_forms::TextureSet::generate_use_info },
       { form_type::faction,                dovah::loaded_forms::Faction::generate_use_info },
       { form_type::magic_effect,           dovah::loaded_forms::MagicEffect::generate_use_info },
       { form_type::land_texture,           dovah::loaded_forms::LandTexture::generate_use_info },
