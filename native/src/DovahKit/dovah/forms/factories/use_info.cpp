@@ -10,6 +10,7 @@
 #include "../Faction.h"
 #include "../FormList.h"
 #include "../Landscape.h"
+#include "../LandTexture.h"
 #include "../Location.h"
 #include "../MagicEffect.h"
 #include "../Note.h"
@@ -34,6 +35,7 @@ namespace {
    _Builder _builders[] = {
       { form_type::faction,                dovah::loaded_forms::Faction::generate_use_info },
       { form_type::magic_effect,           dovah::loaded_forms::MagicEffect::generate_use_info },
+      { form_type::land_texture,           dovah::loaded_forms::LandTexture::generate_use_info },
       { form_type::activator,              dovah::loaded_forms::Activator::generate_use_info },
       { form_type::container,              dovah::loaded_forms::Container::generate_use_info },
       { form_type::actor_base,             dovah::loaded_forms::ActorBase::generate_use_info },

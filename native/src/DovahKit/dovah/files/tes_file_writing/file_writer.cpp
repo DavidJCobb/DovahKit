@@ -308,22 +308,42 @@ namespace dovah::tes_file_writing {
    }
 
    void file_writer::_write_child_forms_for_cell(form_stub* stub) {
+      assert(stub);
       assert(stub->formType == dovah::form_type::cell);
+      //
+      form_stub* worldspace      = stub->get_parent_form();
+      form_stub* persistent_cell = nullptr;
+      if (worldspace->formType == dovah::form_type::worldspace) {
+         persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(worldspace);
+      } else {
+         worldspace = nullptr;
+      }
       //
       std::vector<form_stub*> persistent;
       std::vector<form_stub*> temporary;
-      if (form_stub_helpers::is_worldspace_persistent_cell(*stub)) {
-         auto* world = stub->get_parent_form();
-         assert(world);
-         assert(world->formType == form_type::worldspace);
-         form_stub_helpers::for_each_persistent_ref_in_world(*world, [&persistent](form_stub* child) {
+      if (stub == persistent_cell) {
+         assert(worldspace);
+         form_stub_helpers::for_each_persistent_ref_in_world(*worldspace, [&persistent](form_stub* child) {
             if (!child->needs_save())
                return false;
             persistent.push_back(child);
             return false;
          });
       } else {
-         bool gather_persistent = !stub->is_exterior_cell();
+         //
+         // Exterior cells generally don't store their own persistent REFRs; rather, 
+         // those are sorted under the worldspace's persistent cell. Interior cells, 
+         // however, do store their own persistent REFRs.
+         // 
+         // Moreover, if we're resaving a malformed file (or the frontend has made 
+         // some sort of mistake) such that a worldspace contains persistent refs 
+         // but no persistent cell, we should ensure that we don't lose those refs, 
+         // even if that means putting them in the wrong GRUP. We may not have the 
+         // option to simply create a persistent cell if e.g. the file has no free 
+         // form IDs remaining or the frontend isn't ready for a form to be created 
+         // during the save process.
+         //
+         bool gather_persistent = !persistent_cell || !stub->is_exterior_cell();
          form_stub_helpers::for_each_child_form(stub, [stub, gather_persistent, &persistent, &temporary](form_stub* child) {
             if (!child->needs_save())
                return false;

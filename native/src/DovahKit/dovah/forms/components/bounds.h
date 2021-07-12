@@ -23,5 +23,9 @@ namespace dovah::loaded_forms::components {
       static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
       void save(tes_subrecord_writer&, load_order_interfaces::form_save& intfc); // open the subrecord before calling
       void clear() noexcept;
+
+      inline bool is_zero() const noexcept {
+         return ((int)min.x + min.y + min.z + max.x + max.y + max.z) == 0;
+      }
    };
 }

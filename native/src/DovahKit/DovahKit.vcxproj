@@ -195,6 +195,7 @@
     <ClCompile Include="dovah\forms\form.cpp" />
     <ClCompile Include="dovah\forms\FormList.cpp" />
     <ClCompile Include="dovah\forms\Landscape.cpp" />
+    <ClCompile Include="dovah\forms\LandTexture.cpp" />
     <ClCompile Include="dovah\forms\Location.cpp" />
     <ClCompile Include="dovah\forms\MagicEffect.cpp" />
     <ClCompile Include="dovah\forms\Note.cpp" />
@@ -344,6 +345,7 @@
     <ClCompile Include="helpers\lua\qt_variant.cpp" />
     <ClCompile Include="helpers\lua\setfuncs.cpp" />
     <ClCompile Include="helpers\lua\tostringex.cpp" />
+    <ClCompile Include="helpers\lua\warning.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
     <ClCompile Include="helpers\qt\combobox.cpp" />
@@ -556,6 +558,7 @@
     <ClInclude Include="dovah\forms\Actor.h" />
     <ClInclude Include="dovah\forms\impl\component_templates.h" />
     <ClInclude Include="dovah\forms\Landscape.h" />
+    <ClInclude Include="dovah\forms\LandTexture.h" />
     <ClInclude Include="dovah\forms\Note.h" />
     <ClInclude Include="dovah\forms\Package.h" />
     <ClInclude Include="dovah\forms\structs\color_dword.h" />
@@ -734,6 +737,7 @@
     <ClInclude Include="helpers\lua\setfuncs.h" />
     <ClInclude Include="helpers\lua\set_top_on_exit.h" />
     <ClInclude Include="helpers\lua\tostringex.h" />
+    <ClInclude Include="helpers\lua\warning.h" />
     <ClInclude Include="helpers\math.h" />
     <ClInclude Include="helpers\matrix.h" />
     <ClInclude Include="helpers\qt\basic_bindings.h" />

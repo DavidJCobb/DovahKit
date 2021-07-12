@@ -8,6 +8,7 @@
 #include "../Faction.h"
 #include "../FormList.h"
 #include "../Landscape.h"
+#include "../LandTexture.h"
 #include "../Location.h"
 #include "../Note.h"
 #include "../ObjectReference.h"
@@ -54,6 +55,7 @@ namespace {
 
    _entry _builders[] = {
       { form_type::faction,                _handlers::make<loaded_forms::Faction>() },
+      { form_type::land_texture,           _handlers::make<loaded_forms::LandTexture>() },
       { form_type::activator,              _handlers::make<loaded_forms::Activator>() },
       { form_type::note,                   _handlers::make<loaded_forms::Note>() },
       { form_type::cell,                   _handlers::make<loaded_forms::Cell>() },

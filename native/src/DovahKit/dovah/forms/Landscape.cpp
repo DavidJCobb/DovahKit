@@ -275,7 +275,7 @@ namespace dovah::loaded_forms {
             case 'VTXT':
                break;
             case 'VTEX':
-               while (subrecord.is_in_bounds(0)) {
+               while (subrecord.is_in_bounds(4)) {
                   subrecord.unchecked_read(id);
                   general_textures.push_back(id);
                }
