@@ -3,7 +3,9 @@
 #include <cmath>
 
 #include "../../../helpers/rotation.h"
+#include "../../../helpers/lua/error.h"
 #include "../../../helpers/lua/set_top_on_exit.h"
+#include "../../../helpers/lua/warning.h"
 #include "euler.h"
 #include "matrix3x3.h"
 
@@ -14,7 +16,7 @@ namespace {
    void _require_similar_argument(lua_State* L, int stack_pos) {
       auto rawtype = lua_type(L, stack_pos);
       if (rawtype != LUA_TTABLE && rawtype != LUA_TUSERDATA)
-         luaL_error(L, "bad argument #%i (expected quaternion-like table or userdata)", stack_pos);
+         cobb::lua::error(L, "bad argument #%i (expected quaternion-like table or userdata)", stack_pos);
       if (cls::check_arg_type(L, stack_pos))
          return;
       //
@@ -24,22 +26,22 @@ namespace {
       //
       lua_getfield(L, stack_pos, "w");
       if (!lua_isnumber(L, -1)) {
-         lua_warning(L, warning_text, 0);
+         cobb::lua::warning(L, warning_text);
          return;
       }
       lua_getfield(L, stack_pos, "x");
       if (!lua_isnumber(L, -1)) {
-         lua_warning(L, warning_text, 0);
+         cobb::lua::warning(L, warning_text);
          return;
       }
       lua_getfield(L, stack_pos, "y");
       if (!lua_isnumber(L, -1)) {
-         lua_warning(L, warning_text, 0);
+         cobb::lua::warning(L, warning_text);
          return;
       }
       lua_getfield(L, stack_pos, "z");
       if (!lua_isnumber(L, -1)) {
-         lua_warning(L, warning_text, 0);
+         cobb::lua::warning(L, warning_text);
       }
    }
 

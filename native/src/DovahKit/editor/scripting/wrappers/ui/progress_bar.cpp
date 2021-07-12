@@ -9,6 +9,8 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../ui/util/alignment.h"
 
+#include "../../../helpers/lua/warning.h"
+
 namespace {
    using namespace editor_script;
    using cls = wrappers::ui::progress_bar;
@@ -153,12 +155,10 @@ namespace {
             bool v_recognized;
             align = editor_script::util::ui::alignment_from_string(lua_tostring(L, 2), h, v, h_recognized, v_recognized);
             if (!h_recognized) {
-               lua_warning(L, h.c_str(), 1);
-               lua_warning(L, " is not a recognized horizontal alignment", 0);
+               cobb::lua::warning(L, "%s is not a recognized horizontal alignment", h.c_str());
             }
             if (!v_recognized) {
-               lua_warning(L, v.c_str(), 1);
-               lua_warning(L, " is not a recognized vertical alignment", 0);
+               cobb::lua::warning(L, "%s is not a recognized vertical alignment", v.c_str());
             }
          }
          auto* widget  = (wrapped_type*)self.widget;

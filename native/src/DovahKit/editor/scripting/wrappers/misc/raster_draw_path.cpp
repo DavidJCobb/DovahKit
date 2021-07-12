@@ -110,7 +110,12 @@ namespace {
             flat = area_sq == 0.0;
          }
          if (flat) {
-            path->lineTo(by); // HTML5 standard says to use point 1 (by), not point 2 (to), which is... odd.
+            //
+            // Per HTML5, edge-cases default to drawing a straight line from (from) to (by), not to (to). 
+            // It's a strange and ugly fallback, but testing shows that browsers honor the spec, so we will 
+            // as well.
+            //
+            path->lineTo(by);
             return 0;
          }
          //
@@ -189,7 +194,7 @@ namespace {
             //
             // Parallel lines or other weird edge-case.
             //
-            path->lineTo(by); // HTML5 standard says to use point 1 (by), not point 2 (to), which is... odd.
+            path->lineTo(by);
             return 0;
          }
          //
@@ -251,21 +256,51 @@ namespace {
          return 0;
       }
       luastackchange_t line_to(lua_State* L) {
-         auto* path = cls::pull_self(L);
-         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number (x-coordinate) expected");
-         luaL_argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
-         qreal x = lua_tonumber(L, 2);
-         qreal y = lua_tonumber(L, 3);
-         path->lineTo(x, y);
+         auto*   path = cls::pull_self(L);
+         QPointF target;
+         auto    result = cobb::lua::pull_qpoint_float(L, 2, target);
+         switch (result) {
+            case 0:
+               break;
+            case -1:
+               //
+               // Not a table.
+               //
+               luaL_argcheck(L, lua_isnumber(L, 2), 2, "table (point) or number (x-coordinate) expected");
+               luaL_argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
+               target.setX(lua_tonumber(L, 2));
+               target.setY(lua_tonumber(L, 3));
+               break;
+            case -2:
+               cobb::lua::argerror(L, 2, "argument was a table but has no x-coordinate (arg.x or arg[1])");
+            case -3:
+               cobb::lua::argerror(L, 2, "argument was a table but has no y-coordinate (arg.y or arg[2])");
+         }
+         path->lineTo(target);
          return 0;
       }
       luastackchange_t move_to(lua_State* L) {
-         auto* path = cls::pull_self(L);
-         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number (x-coordinate) expected");
-         luaL_argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
-         qreal x = lua_tonumber(L, 2);
-         qreal y = lua_tonumber(L, 3);
-         path->moveTo(x, y);
+         auto*   path = cls::pull_self(L);
+         QPointF target;
+         auto    result = cobb::lua::pull_qpoint_float(L, 2, target);
+         switch (result) {
+            case 0:
+               break;
+            case -1:
+               //
+               // Not a table.
+               //
+               luaL_argcheck(L, lua_isnumber(L, 2), 2, "table (point) or number (x-coordinate) expected");
+               luaL_argcheck(L, lua_isnumber(L, 3), 3, "number (y-coordinate) expected");
+               target.setX(lua_tonumber(L, 2));
+               target.setY(lua_tonumber(L, 3));
+               break;
+            case -2:
+               cobb::lua::argerror(L, 2, "argument was a table but has no x-coordinate (arg.x or arg[1])");
+            case -3:
+               cobb::lua::argerror(L, 2, "argument was a table but has no y-coordinate (arg.y or arg[2])");
+         }
+         path->moveTo(target);
          return 0;
       }
    }

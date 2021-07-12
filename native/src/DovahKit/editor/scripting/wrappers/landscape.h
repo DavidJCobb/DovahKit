@@ -3,6 +3,11 @@
 
 #include "../../../dovah/forms/Landscape.h"
 
+namespace editor_script::wrapper_part_types {
+   inline constexpr cobb::eight_cc landscape_quad        = "LandQuad";
+   inline constexpr cobb::eight_cc landscape_alpha_layer = "LandLayr"; // wrapper[LandQuad:3][LandLayr:5]
+}
+
 namespace editor_script::wrappers {
    struct landscape : public form {
       static constexpr const char* superclass_key = metatable_key;

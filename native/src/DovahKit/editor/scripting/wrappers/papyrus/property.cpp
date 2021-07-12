@@ -11,6 +11,8 @@
 #include "../../../../dovah/forms/Form.h"
 #include "script.h"
 
+#include "../../../../helpers/lua/error.h"
+#include "../../../../helpers/lua/warning.h"
 #include "../../../../helpers/strings.h"
 
 #include "../form.h"
@@ -116,7 +118,7 @@ namespace {
       wrapper& get_collection_wrapper(lua_State* L) {
          auto* self = (wrapper*)editor_script::cast_to_class(L, 1, wrapper_t::array_collection_key);
          if (self == nullptr) {
-            luaL_error(L, "function called with bad self (expected %s)", wrapper_t::array_collection_key);
+            cobb::lua::error(L, "function called with bad self (expected %s)", wrapper_t::array_collection_key);
          }
          return *self;
       }
@@ -205,7 +207,7 @@ namespace {
             luaL_argcheck(L, lua_isinteger(L, 2), 2, "provided index is not an integer");
          }
          if (!property_scalar_value_typecheck(L, pos_value, prop->type))
-            luaL_error(L, "desired value is of the wrong type for this property");
+            cobb::lua::error(L, "desired value is of the wrong type for this property");
          //
          if (!prop)
             return 0;
@@ -215,15 +217,12 @@ namespace {
          if (has_index) {
             i = lua_tointeger(L, 2);
             if (i < 1)
-               return luaL_error(L, "indices below 1, such as %d, are not allowed", i);
+               cobb::lua::error(L, "indices below 1, such as %d, are not allowed", i);
             --i;
          }
          if (i >= size) {
             if (i > size) {
-               lua_warning(L, "index ", 1);
-               const char* tostr = lua_tolstring(L, 2, nullptr);
-               lua_warning(L, tostr, 1);
-               lua_warning(L, " is out of bounds; nil elements will be created between the end of the list and the new element", 0);
+               cobb::lua::warning(L, "index %s is out of bounds; nil elements will be created between the end of the list and the new element", lua_tolstring(L, 2, nullptr));
             }
             list.resize(i + 1);
          } else {
@@ -265,9 +264,9 @@ namespace {
          int isnum;
          int i = lua_tointegerx(L, index_key, &isnum);
          if (!isnum)
-            luaL_error(L, "cannot use string keys or non-integer keys");
+            cobb::lua::error(L, "cannot use string keys or non-integer keys");
          if (i < 1)
-            return luaL_error(L, "indices below 1, such as %d, are not allowed", i);
+            cobb::lua::error(L, "indices below 1, such as %d, are not allowed", i);
          --i;
          //
          auto& self = get_collection_wrapper(L);
@@ -276,17 +275,14 @@ namespace {
             return 0;
          //
          if (!property_scalar_value_typecheck(L, index_value, prop->type))
-            luaL_error(L, "desired value is of the wrong type for this property");
+            cobb::lua::error(L, "desired value is of the wrong type for this property");
          //
          self.before_edit();
          auto& list = prop->values;
          auto  size = list.size();
          if (i >= size) {
             if (i > size) {
-               lua_warning(L, "index ", 1);
-               const char* tostr = lua_tolstring(L, index_key, nullptr);
-               lua_warning(L, tostr, 1);
-               lua_warning(L, " is out of bounds; nil elements will be created between the end of the list and the new element", 0);
+               cobb::lua::warning(L, "index %s is out of bounds; nil elements will be created between the end of the list and the new element", lua_tolstring(L, index_key, nullptr));
             }
             list.resize(i + 1);
          }

@@ -21,6 +21,9 @@ namespace editor_script {
          define_wrapper_metatable<formlist>(L);
             formlist::build_collection_metatables(L);
          define_wrapper_metatable<landscape>(L);
+         define_wrapper_metatable<land_texture>(L);
+            land_texture::build_collection_metatables(L);
+            define_wrapper_metatable<land_texture_havok>(L);
          define_wrapper_metatable<quest>(L);
             quest::build_collection_metatables(L);
             define_wrapper_metatable<quest_alias>(L);

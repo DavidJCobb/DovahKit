@@ -17,6 +17,7 @@
 #include "../../../../helpers/lua/qt_point.h"
 #include "../../../../helpers/lua/set_top_on_exit.h"
 #include "../../../../helpers/lua/tostringex.h"
+#include "../../../../helpers/lua/warning.h"
 #include "../../../../helpers/rotation.h"
 
 #include "../misc/raster_draw_path.h"
@@ -136,6 +137,13 @@ namespace {
                qStableSort(stops.begin(), stops.end(), [](const QGradientStop& a, const QGradientStop& b) {
                   return a.first < b.first;
                });
+            }
+            int size = stops.size();
+            for (int i = 1; i < size; ++i) {
+               if (stops[i].first == stops[i - 1].first) {
+                  cobb::lua::warning(L, "some of the color stops defined in options.fill_gradient.stops have identical positions, and may be discarded");
+                  break;
+               }
             }
          }
          //
@@ -530,9 +538,25 @@ namespace {
             cobb::lua::error(L, "options.path was not a raster_draw_path instance");
          lua_pop(L, 1);
          //
+         QPointF offset = { 0, 0 };
+         lua_getfield(L, 2, "offset");
+         if (cobb::lua::istablelike(L, 3)) {
+            auto code = cobb::lua::pull_qpoint_float(L, 3, offset);
+            switch (code) {
+               case 0:
+                  break;
+               case -2:
+                  cobb::lua::argerror(L, 2, "options.offset was specified but there was no x-coordinate (options.offset.x or options.offset[1])");
+               case -3:
+                  cobb::lua::argerror(L, 2, "options.offset was specified but there was no y-coordinate (options.offset.y or options.offset[2])");
+            }
+         }
+         lua_pop(L, 1);
+         offset -= { 1.0, 1.0 }; // Lua coords to normal
+         //
          QPen   pen;
          QBrush brush      = QBrush(Qt::SolidPattern);
-         auto   final_path = path->translated({ -1.0, -1.0 }); // Lua coords to normal. This is a copy operation, so if the path isn't "finished" yet, we'll get a bad copy.
+         auto   final_path = path->translated(offset);
          auto   bounds     = final_path.boundingRect();
          //
          assert(lua_gettop(L) == 2);

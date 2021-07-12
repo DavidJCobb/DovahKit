@@ -19,6 +19,16 @@ namespace dovah::loaded_forms {
          static constexpr int vertices_per_side  = 33;
          static constexpr int total_vertex_count = vertices_per_side * vertices_per_side;
 
+         struct quad_indices {
+            quad_indices() = delete;
+            enum {
+               bottom_left,
+               bottom_right,
+               top_left,
+               top_right
+            };
+         };
+
          struct land_flag {
             land_flag() = delete;
             enum : uint32_t {

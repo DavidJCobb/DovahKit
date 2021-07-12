@@ -13,7 +13,6 @@ namespace {
    using _loaded_form_t = dovah::loaded_forms::TopicInfo;
 }
 
-#pragma region shout_word
 namespace {
    namespace _getters {
       luastackchange_t edits(lua_State* L) {
@@ -193,4 +192,3 @@ namespace editor_script::wrappers {
       return &list[i];
    }
 }
-#pragma endregion
