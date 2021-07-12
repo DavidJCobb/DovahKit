@@ -301,9 +301,10 @@ namespace {
          //
          lua_Number cd = cos(angle);
          lua_Number sd = sin(angle);
-         x = cd * x - sd * y;
-         y = sd * x + cd * y;
-         _make_vector(L, x, y);
+         _make_vector(L,
+            cd * x - sd * y,
+            sd * x + cd * y
+         );
          return 1;
       }
       luastackchange_t sub(lua_State* L) { // modifies (self)

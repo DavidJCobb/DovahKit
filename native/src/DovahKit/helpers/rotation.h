@@ -25,11 +25,52 @@ namespace cobb {
 
    extern constexpr double pi = 3.14159265358979323846;
 
-   inline double degrees_to_radians(double degrees) {
+   inline constexpr double degrees_to_radians(double degrees) noexcept {
       return degrees * pi / 180.0;
    }
-   inline double radians_to_degrees(double radians) {
+   inline constexpr double radians_to_degrees(double radians) noexcept {
       return radians * 180.0 / pi;
+   }
+
+   inline constexpr double degrees_to_radians_exact(double degrees) noexcept {
+      //
+      // To convert a number from degrees to radians, multiply it by (pi / 180). Of course, 
+      // that's how you'd do it in mathematics, and the naive approach to doing it in code. 
+      // However, you run into floating-point imprecision issues there.
+      // 
+      // The correct approach is to precompute two values. I prefer programming notation 
+      // over mathematical notation, so let's imagine that there exists some type `number` 
+      // which represents an "infinite-precision" number -- i.e. a number untainted by the 
+      // gritty details of floating-point computing.
+      // 
+      //    number pi         = 3.14159...;
+      //    number conversion = pi / (number)180;
+      // 
+      //    double conv_float = (double) conversion;
+      //    double conv_error = conversion - conv_float; // how imprecise is (conv_float)?
+      // 
+      //    double result = (x * conv_float) + (x * conv_error);
+      // 
+      // You can read about the above approach in Brisebarre and Muller's 2008 essay 
+      // "Correctly rounded multiplication by arbitrary precision constants."
+      //
+      // If the calculator I managed to find is greater than double-precision, then pi 
+      // divided by 180 is 0.017453292519943295769236907684886127134428718885417 out to 
+      // fifty decimal places.
+      //
+      constexpr double conv_float = 0.017453292519943295474371680597900000000000000000000;
+      constexpr double conv_error = 0.000000000000000000294865227086986127134428718885417;
+      static_assert(conv_float == (double)0.017453292519943295769236907684886127134428718885417);
+      return (degrees * conv_float) + (degrees * conv_error);
+   }
+   inline constexpr double radians_to_degrees_exact(double radians) noexcept {
+      //
+      // 180 / pi to 50 decimal places should be 57.295779513082320876798154814105170332405472466564.
+      //
+      constexpr double conv_float = 57.2957795130823228646477218717;
+      constexpr double conv_error = -0.000000000000001987849567057594829667594527533436;
+      static_assert(conv_float == (double)57.295779513082320876798154814105170332405472466564);
+      return (radians * conv_float) + (radians * conv_error);
    }
 
    //

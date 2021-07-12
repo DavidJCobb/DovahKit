@@ -171,18 +171,18 @@ namespace {
             //
             bool flip = QVector2D::dotProduct(normal1, bisector) < 0.0; // the normal and the bisector point away from each other if this is true
             if (flip) {
+               //
+               // In theory you can compute a circle on either side of our lines. We want the circle that 
+               // lies on the "inner" side of our lines, so we need to test whether the normal vectors 
+               // above point toward the inside (i.e. in the same direction as our bisector) and if not, 
+               // we need to flip them.
+               //
                normal1 *= -1;
                normal2 *= -1;
             }
             //
             p1 = a + (normal1 * radius);
             p2 = b + (normal2 * radius);
-            /*
-            p1.setX(a.x() - v1.y() * radius * sign);
-            p1.setY(a.y() + v1.x() * radius * sign);
-            p2.setX(b.x() - v2.y() * radius * sign);
-            p2.setY(b.y() + v2.x() * radius * sign);
-            */
          }
          qreal cross = v1.x() * v2.y() - v2.x() * v1.y(); // The StackOverflow answer calls this variable "den." Dunno why.
          if (abs(cross) < 0.0000001) {

@@ -1,7 +1,7 @@
 
 local DO_HFLIP = false
 local DO_VFLIP = false
-local ROTATION = 45
+local ROTATION = 25
 
 local window = ui.window.new()
 window:set_layout("ltr")
@@ -61,34 +61,12 @@ do -- arcTo test (contained angle)
    local diag_tangent_1 = vector2.new(133.4, 170.8)
    local diag_tangent_2 = vector2.new( 60.3, 158.4)
    
-   local ROT_INTEGRITY_CHECK = (point_c - point_a):length()
-   
-   local rotate_deg = ROTATION
-   rotate_about(point_a,        center, rotate_deg)
-   rotate_about(point_b,        center, rotate_deg)
-   rotate_about(point_c,        center, rotate_deg)
-   rotate_about(diag_tangent_1, center, rotate_deg)
-   rotate_about(diag_tangent_2, center, rotate_deg)
-   rotate_about(diag_center,    center, rotate_deg)
-   
-   if ROT_INTEGRITY_CHECK ~= (point_c - point_a):length() then
-      --
-      -- Floating-point inaccuracy creeps in when using our vector2:rotate
-      -- function, and seems unavoidable: we use exclusively doubles in that 
-      -- function, but we still see more inaccuracy the higher our angle gets, 
-      -- with angles above 25 producing a value that is inaccurate by 1. At 
-      -- 45, things get kinda bad.
-      --
-      -- To be clear: what we're testing for here is that the length from the 
-      -- start to the end points remains the same even after the rotation.
-      --
-      -- At angles 50 and above, we start seeing issues wherein our arc or 
-      -- tangent points are actually incorrect, but I can't be sure that that 
-      -- isn't simply the result of compounded floating-point imprecision 
-      -- from the "rotate" call.
-      --
-      --error(string.format("Rotation was incorrect (%s / %s)", ROT_INTEGRITY_CHECK, (point_c - point_a):length()))
-   end
+   rotate_about(point_a,        center, ROTATION)
+   rotate_about(point_b,        center, ROTATION)
+   rotate_about(point_c,        center, ROTATION)
+   rotate_about(diag_tangent_1, center, ROTATION)
+   rotate_about(diag_tangent_2, center, ROTATION)
+   rotate_about(diag_center,    center, ROTATION)
    
    do -- diagnostic
       local path = raster_draw_path.new()
@@ -135,18 +113,28 @@ do -- arcTo test (excess angle)
    window:add_child(widget)
 
    widget.width  = 300
-   widget.height = 150
+   widget.height = 300
    
-   local raster = raster.new({ width = 300, height = 150 })
+   local raster = raster.new({ width = 300, height = 300 })
    local layer  = widget:append_layer()
    layer.data = raster
    
    raster:fill("#FFF")
    
+   local center  = vector2.new(150, 150)
+   local point_a = vector2.new(180, 165)
+   local point_b = vector2.new(180, 205)
+   local point_c = vector2.new(110, 205)
+   local radius  = 130
+   
+   rotate_about(point_a, center, ROTATION)
+   rotate_about(point_b, center, ROTATION)
+   rotate_about(point_c, center, ROTATION)
+   
    do -- diagnostic
       local path = raster_draw_path.new()
-      path:move_to(180, 90)
-      path:line_to(110, 130)
+      path:move_to(point_a.x, point_a.y)
+      path:line_to(point_c.x, point_c.y)
       raster:draw_path({
          path       = path,
          line_width = 1,
@@ -155,12 +143,9 @@ do -- arcTo test (excess angle)
    end
    
    local path = raster_draw_path.new()
-   path:move_to(180, 90)
-   path:arc_to({ 180, 130 }, { 110, 130 }, 130)
-      -- tan_u:  180, 260
-      -- tan_v:  310, 130
-      -- center: 310, 260
-   path:line_to(110, 130)
+   path:move_to(point_a.x, point_a.y)
+   path:arc_to (point_b, point_c, radius)
+   path:line_to(point_c.x, point_c.y)
    
    raster:draw_path({
       path       = path,
