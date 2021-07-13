@@ -3,6 +3,79 @@
 #include "../notice_code_list.h"
 
 namespace dovah::loaded_forms {
+   /*static*/ void Landscape::quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y) {
+      x = index % vertices_per_quad_side;
+      y = index / vertices_per_quad_side;
+      quad_coords_to_cell_coords(quad, x, y);
+   }
+   /*static*/ void Landscape::quad_coords_to_cell_coords(uint8_t quad, uint8_t& x, uint8_t& y) {
+      switch (quad) {
+         case Landscape::quad_indices::bottom_left:
+            break;
+         case Landscape::quad_indices::top_left:
+            y += vertices_per_quad_side - 1;
+            break;
+         case Landscape::quad_indices::bottom_right:
+            x += vertices_per_quad_side - 1;
+            break;
+         case Landscape::quad_indices::top_right:
+            x += vertices_per_quad_side - 1;
+            y += vertices_per_quad_side - 1;
+            break;
+      }
+   }
+   /*static*/ bool Landscape::quad_contains_cell_coords(uint8_t quad, uint8_t x, uint8_t y) {
+      switch (quad) {
+         case quad_indices::bottom_left:
+            if (x >= 17)
+               return false;
+            if (y >= 17)
+               return false;
+            return true;
+         case quad_indices::top_left:
+            if (x >= 17)
+               return false;
+            if (y < 17 || y >= 33)
+               return false;
+            return true;
+         case quad_indices::bottom_right:
+            if (x < 17 || x >= 33)
+               return false;
+            if (y >= 17)
+               return false;
+            return true;
+         case quad_indices::top_right:
+            if (x < 17 || x >= 33)
+               return false;
+            if (y < 17 || y >= 33)
+               return false;
+            return true;
+      }
+      return false;
+   }
+   /*static*/ void Landscape::cell_coords_to_quad_coords(uint8_t quad, int8_t& x, int8_t& y) {
+      if (!quad_contains_cell_coords(quad, x, y)) {
+         x = -1;
+         y = -1;
+         return;
+      }
+      switch (quad) {
+         case quad_indices::bottom_left:
+            return;
+         case quad_indices::top_left:
+            y -= 17;
+            return;
+         case quad_indices::bottom_right:
+            x -= 17;
+            return;
+         case quad_indices::top_right:
+            x -= 17;
+            y -= 17;
+            return;
+      }
+   }
+
+
    void Landscape::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
@@ -12,7 +85,8 @@ namespace dovah::loaded_forms {
       this->land_flags = 0;
       //
       form_reference_t form_id;
-      bool alpha_layer_pending_data = false;
+      int8_t  last_alpha_quad  = -1;
+      int32_t last_alpha_layer = -1;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -141,12 +215,14 @@ namespace dovah::loaded_forms {
                break;
             case 'ATXT':
                {
+                  uint8_t quad;
+                  //
                   alpha_layer layer;
                   subrecord.read(layer.texture);
-                  subrecord.read(layer.quad);
+                  subrecord.read(quad);
                   subrecord.skip_bytes(1);
                   subrecord.read(layer.layer);
-                  if (layer.quad > 3) {
+                  if (quad > 3) {
                      detailed_notice warning;
                      warning.type    = detailed_notice::notice_type::warning;
                      warning.context = detailed_notice::notice_context::on_demand_form_load;
@@ -155,7 +231,7 @@ namespace dovah::loaded_forms {
                      warning.set_cause_subrecord(subrecord.signature());
                      if (layer.texture)
                         warning.add_relevant_form(*layer.texture.get_form_stub());
-                     warning.extra_integers[0] = layer.quad;
+                     warning.extra_integers[0] = quad;
                      intfc.log_load_warning(warning);
                      //
                      // Discard anything that would go into a bad quad. Excess layers are sensible to keep 
@@ -163,6 +239,8 @@ namespace dovah::loaded_forms {
                      // landscape, and the user may want to edit them in a sensible way; however, excess 
                      // quads can only be garbage data.
                      //
+                     last_alpha_quad  = -1;
+                     last_alpha_layer = -1;
                      break;
                   }
                   if (layer.layer > 5) {
@@ -174,39 +252,69 @@ namespace dovah::loaded_forms {
                      warning.set_cause_subrecord(subrecord.signature());
                      if (layer.texture)
                         warning.add_relevant_form(*layer.texture.get_form_stub());
-                     warning.extra_integers[0] = layer.quad;
+                     warning.extra_integers[0] = quad;
                      warning.extra_integers[1] = layer.layer;
                      intfc.log_load_warning(warning);
                   }
                   //
-                  this->alpha_layers.push_back(layer);
-                  alpha_layer_pending_data = (layer.layer >= 0);
+                  bool existing = false;
+                  for (auto& prior : this->alpha_layers_by_quad[quad]) {
+                     if (prior.layer == layer.layer) {
+                        prior.texture = layer.texture;
+                        existing = true;
+                        break;
+                     }
+                  }
+                  if (!existing) {
+                     this->alpha_layers_by_quad[quad].push_back(layer);
+                  }
+                  last_alpha_quad  = quad;
+                  last_alpha_layer = layer.layer;
                }
                break;
             case 'VTXT':
                if (subrecord.size() & 7) { // the game skips VTXT subrecords with an "uneven" length
                   break;
                }
-               if (!alpha_layer_pending_data) { // the game loads only the first VTXT it sees for an ATXT
-                  //
-                  // For the curious: the game keeps two int32_ts on the stack, one for the last ATXT quad and 
-                  // one for the last ATXT layer. VTXT skips its  content if either is -1, and sets them to -1 
-                  // after being processed either way. Bethesda uses fixed-size arrays rather than vectors, so 
-                  // they can't just use vector::empty.
-                  //
+               if (last_alpha_quad < 0 || last_alpha_layer < 0) { // the game loads only the first VTXT it sees for an ATXT
                   break;
                }
-               assert(!this->alpha_layers.empty());
                if (subrecord.is_in_bounds(8)) {
-                  auto& layer = this->alpha_layers.back();
+                  auto* ptr   = this->get_alpha_layer(last_alpha_quad, last_alpha_layer);
+                  assert(ptr);
+                  auto& layer = *ptr;
                   if (layer.layer < 0)
                      break;
-                  auto& entry = layer.alpha.emplace_back();
-                  subrecord.unchecked_read(entry.index);
-                  subrecord.skip_bytes(2);
-                  subrecord.unchecked_read(entry.value);
+                  while (subrecord.is_in_bounds(8)) {
+                     uint16_t vertex;
+                     float    opacity;
+                     subrecord.unchecked_read(vertex);
+                     subrecord.skip_bytes(2);
+                     subrecord.unchecked_read(opacity);
+                     //
+                     if (vertex >= layer.opacities.list.size())
+                        continue;
+                     //
+                     if (opacity < 0.0F)
+                        opacity = 0.0F;
+                     else if (opacity > 1.0F)
+                        opacity /= 100.0F;
+                     //
+                     // The game discards vertex blend data if it fails to meet the following constraints:
+                     // 
+                     //  - Vertex index out of bounds
+                     //  - Quad   index out of bounds
+                     //  - Layer  index out of bounds
+                     // 
+                     // Of these three, we already validated the quad when reading an alpha layer, and we want 
+                     // to load out-of-bounds layers since they may be relevant to editing. We'll validate 
+                     // vertex indices here.
+                     //
+                     layer.opacities.list[vertex] = opacity;
+                  }
                   //
-                  alpha_layer_pending_data = false;
+                  last_alpha_quad  = -1;
+                  last_alpha_layer = -1;
                }
                break;
             case 'VTEX':
@@ -302,16 +410,19 @@ namespace dovah::loaded_forms {
       for (size_t i = 0; i < this->default_quad_textures.size(); ++i)
          copy->default_quad_textures[i].set(*copy, this->default_quad_textures[i]);
       //
-      size_t size = this->alpha_layers.size();
-      assert(copy->alpha_layers.empty());
-      copy->alpha_layers.resize(size);
-      for (size_t i = 0; i < size; ++i) {
-         auto& src = this->alpha_layers[i];
-         auto& dst = copy->alpha_layers[i];
-         dst.texture.set(*copy, src.texture);
-         dst.quad  = src.quad;
-         dst.layer = src.layer;
-         dst.alpha = src.alpha;
+      for (size_t i = 0; i < this->alpha_layers_by_quad.size(); ++i) {
+         auto& src_list = this->alpha_layers_by_quad[i];
+         auto& dst_list = copy->alpha_layers_by_quad[i];
+         assert(dst_list.empty());
+         size_t size = src_list.size();
+         dst_list.resize(size);
+         for (size_t j = 0; j < size; ++j) {
+            auto& src = src_list[j];
+            auto& dst = dst_list[j];
+            dst.texture.set(*copy, src.texture);
+            dst.layer     = src.layer;
+            dst.opacities = src.opacities;
+         }
       }
       //
       copy->mpcd = this->mpcd;
@@ -421,33 +532,33 @@ namespace dovah::loaded_forms {
             BTXT.close();
          }
       }
-      for (auto& layer : this->alpha_layers) {
-         if (layer.quad > 3) {
-            detailed_notice error;
-            error.code = notice_code::invalid_landscape_quad_index;
-            error.set_cause_form(this->stub);
-            error.set_cause_subrecord('ATXT');
-            if (layer.texture)
-               error.add_relevant_form(*layer.texture.get_form_stub());
-            error.extra_integers[0] = layer.quad;
-            intfc.set_save_error(error);
+      for (uint8_t quad = 0; quad < this->alpha_layers_by_quad.size(); ++quad) {
+         auto& list = this->alpha_layers_by_quad[quad];
+         for (auto& layer : list) {
+            std::vector<uint16_t> indices;
+            for (uint16_t i = 0; i < layer.opacities.list.size(); ++i) {
+               const auto f = layer.opacities.list[i];
+               if (f > 0.0F)
+                  indices.push_back(i);
+            }
+            if (indices.empty())
+               continue;
             //
-            return false;
+            auto& ATXT = record.open_next_subrecord('ATXT');
+            ATXT.write(layer.texture);
+            ATXT.write(uint8_t(quad));
+            ATXT.skip_bytes(1);
+            ATXT.write(layer.layer);
+            ATXT.close();
+            //
+            auto& VTXT = record.open_next_subrecord('VTXT');
+            for (const auto i : indices) {
+               VTXT.write(uint16_t(i));
+               VTXT.skip_bytes(2);
+               VTXT.write(layer.opacities.list[i]);
+            }
+            VTXT.close();
          }
-         auto& ATXT = record.open_next_subrecord('ATXT');
-         ATXT.write(layer.texture);
-         ATXT.write(layer.quad);
-         ATXT.skip_bytes(1);
-         ATXT.write(layer.layer);
-         ATXT.close();
-         //
-         auto& VTXT = record.open_next_subrecord('VTXT');
-         for (auto& entry : layer.alpha) {
-            VTXT.write(entry.index);
-            VTXT.skip_bytes(2);
-            VTXT.write(entry.value);
-         }
-         VTXT.close();
       }
       if (!this->textures.empty()) {
          auto& VTEX = record.open_next_subrecord('VTEX');
@@ -475,10 +586,11 @@ namespace dovah::loaded_forms {
       for (auto& ref : this->default_quad_textures)
          ref.set(*this, nullptr);
       //
-      for (auto& layer : this->alpha_layers) {
-         layer.texture.set(*this, nullptr);
+      for (auto& list : this->alpha_layers_by_quad) {
+         for(auto& layer : list)
+            layer.texture.set(*this, nullptr);
+         list.clear();
       }
-      this->alpha_layers.clear();
       //
       this->land_flags = land_flag::all_common_flags;
       for (auto& e : this->heightmap.heights.list)
@@ -493,7 +605,8 @@ namespace dovah::loaded_forms {
       remove_form_from_reference_list(this->textures, other, *this);
       for (auto& ref : this->default_quad_textures)
          ref.clear_if(*this, other);
-      for (auto& layer : this->alpha_layers)
-         layer.texture.clear_if(*this, other);
+      for(auto& list : this->alpha_layers_by_quad)
+         for (auto& layer : list)
+            layer.texture.clear_if(*this, other);
    }
 }

@@ -32,6 +32,8 @@ namespace cobb {
       return radians * 180.0 / pi;
    }
 
+   // Higher-precision degree/radian conversion function. Shouldn't be necessary in the 
+   // vast majority of cases; included mainly for reference.
    inline constexpr double degrees_to_radians_exact(double degrees) noexcept {
       //
       // To convert a number from degrees to radians, multiply it by (pi / 180). Of course, 
@@ -54,18 +56,23 @@ namespace cobb {
       // You can read about the above approach in Brisebarre and Muller's 2008 essay 
       // "Correctly rounded multiplication by arbitrary precision constants."
       //
-      // If the calculator I managed to find is greater than double-precision, then pi 
-      // divided by 180 is 0.017453292519943295769236907684886127134428718885417 out to 
-      // fifty decimal places.
+      // pi / 180 == 0.017453292519943295769236907684886127134428718885417...
+      // 
+      // Shoutouts to MikeMcl/decimal.js on GitHub, which was tremendously useful when I 
+      // needed to calculate that and other values to an arbitrary precision (I went with 
+      // fifty significant digits).
       //
       constexpr double conv_float = 0.017453292519943295474371680597900000000000000000000;
       constexpr double conv_error = 0.000000000000000000294865227086986127134428718885417;
       static_assert(conv_float == (double)0.017453292519943295769236907684886127134428718885417);
       return (degrees * conv_float) + (degrees * conv_error);
    }
+
+   // Higher-precision degree/radian conversion function. Shouldn't be necessary in the 
+   // vast majority of cases; included mainly for reference.
    inline constexpr double radians_to_degrees_exact(double radians) noexcept {
       //
-      // 180 / pi to 50 decimal places should be 57.295779513082320876798154814105170332405472466564.
+      // 180 / pi == 57.295779513082320876798154814105170332405472466564...
       //
       constexpr double conv_float = 57.2957795130823228646477218717;
       constexpr double conv_error = -0.000000000000001987849567057594829667594527533436;

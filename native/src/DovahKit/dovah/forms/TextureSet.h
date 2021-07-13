@@ -19,7 +19,7 @@ namespace dovah::loaded_forms {
          struct texture_set_flag {
             enum type : uint16_t {
                no_specular_map         = 0x0001,
-               facegen_textures        = 0x0002,
+               is_skin_textures        = 0x0002, // called "Facegen Textures" in the CK, but also used e.g. for elk bodies
                has_model_space_normals = 0x0004,
             };
          };
@@ -27,19 +27,23 @@ namespace dovah::loaded_forms {
 
          struct {
             std::string diffuse;
-            std::string normal;   // or gloss
-            std::string env_mask; // or subsurface tint
-            std::string detail;   // or glow map
+            std::string normal;           // skin texture sets use this as both normal and gloss
+            std::string environment_mask; // skin texture sets use this as subsurface tint
+            std::string glow_map;         // skin texture sets use this as detail map
             std::string height;
-            std::string environment;
+            std::string cubemap;
             std::string multilayer;
-            std::string specular; // or backlight mask
+            std::string backlight;
          } textures;
          texture_set_flags_t texture_flags = 0;
          //
          components::decal_data decal_data;
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
+
+         inline bool is_skin_texture_set() const noexcept {
+            return (this->texture_flags & texture_set_flag::is_skin_textures) != 0;
+         }
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

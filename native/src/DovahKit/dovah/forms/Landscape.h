@@ -10,6 +10,26 @@
 #include "../../helpers/vector3.h"
 
 namespace dovah::loaded_forms {
+   //
+   // Class for heightmapped terrain in a cell. Each landscape consists of a 33x33 grid of 
+   // vertices, with data starting from the southwesternmost vertex and advancing row-by-row 
+   // toward the northeasternmost vertex. The western column and southern row are meant to 
+   // overlap with the vertices of the adjacent cell; if they do not, there will be tears in 
+   // the landscape.
+   // 
+   // At run-time, landscapes are divided into four "quads" of 17x17 vertices. Each quad 
+   // overlaps inward with adjacent quads for the same reason that the entire cell's worth 
+   // of vertices overlaps with adajcent vertices; this means that:
+   // 
+   //  - The cell's center vertex exists in all four quads simultaneously.
+   // 
+   //  - Imagine two lines bisecting the cell along the X and Y axes. Any vertex on those 
+   //    lines, except the one where they intersect, exists on two quads.
+   // 
+   // Within the file format, texture paint data is stored per quad, which means that when 
+   // a texture is painted onto a vertex that belongs to multiple quads, that texture will 
+   // in turn be written into multiple quads.
+   //
    class Landscape : public Form {
       #include "impl/form_subclass_components.txt"
       public:
@@ -18,6 +38,9 @@ namespace dovah::loaded_forms {
 
          static constexpr int vertices_per_side  = 33;
          static constexpr int total_vertex_count = vertices_per_side * vertices_per_side;
+
+         static constexpr int vertices_per_quad_side  = 17;
+         static constexpr int total_quad_vertex_count = vertices_per_quad_side * vertices_per_quad_side;
 
          struct quad_indices {
             quad_indices() = delete;
@@ -50,12 +73,22 @@ namespace dovah::loaded_forms {
          // northeasternmost vertex, so positive Y is north and negative Y is south. 
          // The western column and southern row must overlap with those of the adjoining 
          // cells, or there will be tears in the landscape.
-         template<typename T> struct grid {
+         template<typename T, int vertices_per_side = vertices_per_side> struct grid {
             std::array<T, vertices_per_side * vertices_per_side> list = {};
 
             T& at(int x, int y) noexcept { return list[y * vertices_per_side + x]; }
             const T& at(int x, int y) const noexcept { return list[y * vertices_per_side + x]; }
          };
+
+         // Given a vertex index within a quad, retrieve a cell-relative position.
+         static void quad_offset_to_cell_coords(uint8_t quad, uint8_t index, uint8_t& x, uint8_t& y);
+
+         // Given a quad-relative position for a vertex, retrieve a cell-relative position.
+         static void quad_coords_to_cell_coords(uint8_t quad, uint8_t& x, uint8_t& y);
+
+         static bool quad_contains_cell_coords(uint8_t quad, uint8_t x, uint8_t y);
+
+         static void cell_coords_to_quad_coords(uint8_t quad, int8_t& x, int8_t& y); // negative == out-of-bounds
 
          struct vertex_color {
             uint8_t r = 255;
@@ -63,15 +96,10 @@ namespace dovah::loaded_forms {
             uint8_t b = 255;
          };
 
-         struct alpha_entry {
-            uint16_t index = 0; // vertex index
-            float    value = 0; // opacity
-         };
          struct alpha_layer {
             form_reference_t texture; // ATXT
-            uint8_t quad  = 0;        // 
             int16_t layer = 0;        // 
-            std::vector<alpha_entry> alpha; // VTXT
+            grid<float, vertices_per_quad_side> opacities;
          };
 
          uint32_t land_flags = land_flag::all_common_flags; // DATA
@@ -82,8 +110,17 @@ namespace dovah::loaded_forms {
          } heightmap;
          std::vector<form_reference_t> textures; // VTEX
          std::array<form_reference_t, 4> default_quad_textures; // BTXT: Base TeXTure // index == quad
-         std::vector<alpha_layer> alpha_layers;
+         std::array<std::vector<alpha_layer>, 4> alpha_layers_by_quad; // ATXT+VTXT
          std::vector<uint8_t> mpcd; // MPCD // hkMoppCode, the pre-generated collision data for the terrain. we suspect it's optional, with the game doing collision at run-time if it's absent
+
+         alpha_layer* get_alpha_layer(uint8_t quad, int16_t index) {
+            if (quad >= 4)
+               return nullptr;
+            for (auto& layer : this->alpha_layers_by_quad[quad])
+               if (layer.layer == index)
+                  return &layer;
+            return nullptr;
+         }
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

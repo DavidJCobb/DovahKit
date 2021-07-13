@@ -18,10 +18,14 @@ namespace editor_script {
                return wrappers::formlist::metatable_key;
             case dovah::form_type::land:
                return wrappers::landscape::metatable_key;
+            case dovah::form_type::land_texture:
+               return wrappers::land_texture::metatable_key;
             case dovah::form_type::quest:
                return wrappers::quest::metatable_key;
             case dovah::form_type::shout:
                return wrappers::shout::metatable_key;
+            case dovah::form_type::texture_set:
+               return wrappers::texture_set::metatable_key;
             case dovah::form_type::topic:
                return wrappers::topic::metatable_key;
             case dovah::form_type::topic_info:

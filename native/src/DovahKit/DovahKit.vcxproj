@@ -266,6 +266,7 @@
     <ClCompile Include="editor\scripting\systems\permissions.cpp" />
     <ClCompile Include="editor\scripting\systems\ui_listeners.cpp" />
     <ClCompile Include="editor\scripting\systems\userdata.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\texture_set.cpp" />
     <ClCompile Include="editor\scripting\ui\event.cpp" />
     <ClCompile Include="editor\scripting\ui\util\alignment.cpp" />
     <ClCompile Include="editor\scripting\ui\util\color.cpp" />
@@ -280,6 +281,11 @@
     <ClCompile Include="editor\scripting\wrappers\form.cpp" />
     <ClCompile Include="editor\scripting\wrappers\formlist.cpp" />
     <ClCompile Include="editor\scripting\wrappers\landscape.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\landscape\quad.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\landscape\quad_layer.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\landscape\quad_list.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\land_texture.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\land_texture\havok.cpp" />
     <ClCompile Include="editor\scripting\wrappers\misc\raster_draw_path.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\property.cpp" />
     <ClCompile Include="editor\scripting\wrappers\papyrus\root.cpp" />
@@ -293,6 +299,7 @@
     <ClCompile Include="editor\scripting\wrappers\resource\unknown.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout.cpp" />
     <ClCompile Include="editor\scripting\wrappers\shout\word.cpp" />
+    <ClCompile Include="editor\scripting\wrappers\texture_set\path_list.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic_info.cpp" />
     <ClCompile Include="editor\scripting\wrappers\topic_info\response.cpp" />
@@ -665,6 +672,11 @@
     <ClInclude Include="editor\scripting\wrappers\form.h" />
     <ClInclude Include="editor\scripting\wrappers\formlist.h" />
     <ClInclude Include="editor\scripting\wrappers\landscape.h" />
+    <ClInclude Include="editor\scripting\wrappers\landscape\quad.h" />
+    <ClInclude Include="editor\scripting\wrappers\landscape\quad_layer.h" />
+    <ClInclude Include="editor\scripting\wrappers\landscape\quad_list.h" />
+    <ClInclude Include="editor\scripting\wrappers\land_texture.h" />
+    <ClInclude Include="editor\scripting\wrappers\land_texture\havok.h" />
     <ClInclude Include="editor\scripting\wrappers\misc\raster_draw_path.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\property.h" />
     <ClInclude Include="editor\scripting\wrappers\papyrus\root.h" />
@@ -679,6 +691,8 @@
     <ClInclude Include="editor\scripting\wrappers\resource\unknown.h" />
     <ClInclude Include="editor\scripting\wrappers\shout.h" />
     <ClInclude Include="editor\scripting\wrappers\shout\word.h" />
+    <ClInclude Include="editor\scripting\wrappers\texture_set.h" />
+    <ClInclude Include="editor\scripting\wrappers\texture_set\path_list.h" />
     <ClInclude Include="editor\scripting\wrappers\topic.h" />
     <ClInclude Include="editor\scripting\wrappers\topic_info.h" />
     <ClInclude Include="editor\scripting\wrappers\topic_info\response.h" />

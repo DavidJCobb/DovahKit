@@ -21,6 +21,9 @@ namespace editor_script {
          define_wrapper_metatable<formlist>(L);
             formlist::build_collection_metatables(L);
          define_wrapper_metatable<landscape>(L);
+            define_wrapper_metatable<landscape_quad_list>(L);
+               define_wrapper_metatable<landscape_quad>(L);
+                  define_wrapper_metatable<landscape_quad_alpha_layer>(L);
          define_wrapper_metatable<land_texture>(L);
             land_texture::build_collection_metatables(L);
             define_wrapper_metatable<land_texture_havok>(L);
@@ -32,6 +35,8 @@ namespace editor_script {
          define_wrapper_metatable<shout>(L);
             shout::build_collection_metatables(L);
             define_wrapper_metatable<shout_word>(L);
+         define_wrapper_metatable<texture_set>(L);
+            define_wrapper_metatable<texture_set_path_list>(L);
          define_wrapper_metatable<topic>(L);
          define_wrapper_metatable<topic_info>(L);
             topic_info::build_collection_metatables(L);

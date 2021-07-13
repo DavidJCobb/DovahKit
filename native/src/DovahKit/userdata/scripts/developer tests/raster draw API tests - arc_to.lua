@@ -10,8 +10,7 @@ function draw_point(raster, point, color)
    raster:draw_ellipse({
       line_color = color,
       line_width = 3,
-      x = point.x,
-      y = point.y,
+      center = point,
       radius = 1.5
    })
 end
@@ -98,9 +97,9 @@ do -- arcTo test (contained angle)
    end
    
    local path = raster_draw_path.new()
-   path:move_to(point_a.x, point_a.y)
+   path:move_to(point_a)
    path:arc_to (point_b, point_c, radius)
-   path:line_to(point_c.x, point_c.y)
+   path:line_to(point_c)
    
    raster:draw_path({
       path       = path,
@@ -143,9 +142,9 @@ do -- arcTo test (excess angle)
    end
    
    local path = raster_draw_path.new()
-   path:move_to(point_a.x, point_a.y)
+   path:move_to(point_a)
    path:arc_to (point_b, point_c, radius)
-   path:line_to(point_c.x, point_c.y)
+   path:line_to(point_c)
    
    raster:draw_path({
       path       = path,

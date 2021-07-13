@@ -742,6 +742,30 @@ namespace {
          util::ui::push_color(L, image.pixel(x, y));
          return 1;
       }
+      luastackchange_t resize(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         //
+         QSize size;
+         int isnum;
+         size.setWidth(lua_tointegerx(L, 2, &isnum));
+         luaL_argcheck(L, isnum,             2, "integer (width) expected");
+         luaL_argcheck(L, size.width() > 0,  2, "the width cannot be negative or zero");
+         size.setHeight(lua_tointegerx(L, 3, &isnum));
+         luaL_argcheck(L, isnum,             3, "integer (height) expected");
+         luaL_argcheck(L, size.height() > 0, 3, "the height cannot be negative or zero");
+         //
+         if (!self.managed_resource)
+            return 0;
+         //
+         self.managed_resource->modify_raster_script_side([size](QImage& image) {
+            auto prior = image.size();
+            if (prior == size)
+               return;
+            image = image.scaled(size);
+         });
+         //
+         return 0;
+      }
       luastackchange_t scale(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          //
@@ -944,6 +968,7 @@ namespace editor_script::wrappers::resource {
       { "fill",         &_methods::fill },
       { "flip",         &_methods::flip },      // `raster:flip("horizontal")` or `raster:flip("h")` or `raster:flip("vertical")` or `raster:flip("v")` or `raster:flip("both")`
       { "get_pixel",    &_methods::get_pixel },
+      { "resize",       &_methods::resize },
       { "scale",        &_methods::scale },     // `raster:scale(2.0)` or `raster:scale(2.0, 0.5)` given either one size multiplier, or two (width and height respectively)
       { "set_pixel",    &_methods::set_pixel },
    };

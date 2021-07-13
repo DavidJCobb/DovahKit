@@ -27,22 +27,22 @@ namespace dovah::loaded_forms {
                subrecord.to_string(this->textures.normal);
                break;
             case 'TX02':
-               subrecord.to_string(this->textures.env_mask);
+               subrecord.to_string(this->textures.environment_mask);
                break;
             case 'TX03':
-               subrecord.to_string(this->textures.detail);
+               subrecord.to_string(this->textures.glow_map);
                break;
             case 'TX04':
                subrecord.to_string(this->textures.height);
                break;
             case 'TX05':
-               subrecord.to_string(this->textures.environment);
+               subrecord.to_string(this->textures.cubemap);
                break;
             case 'TX06':
                subrecord.to_string(this->textures.multilayer);
                break;
             case 'TX07':
-               subrecord.to_string(this->textures.specular);
+               subrecord.to_string(this->textures.backlight);
                break;
             case 'DNAM':
                subrecord.read(this->texture_flags);
@@ -107,12 +107,12 @@ namespace dovah::loaded_forms {
       copy->script_data.clone_from(this->script_data, *copy);
       copy->textures.diffuse     = this->textures.diffuse;
       copy->textures.normal      = this->textures.normal;
-      copy->textures.env_mask    = this->textures.env_mask;
-      copy->textures.detail      = this->textures.detail;
+      copy->textures.environment_mask = this->textures.environment_mask;
+      copy->textures.glow_map    = this->textures.glow_map;
       copy->textures.height      = this->textures.height;
-      copy->textures.environment = this->textures.environment;
+      copy->textures.cubemap     = this->textures.cubemap;
       copy->textures.multilayer  = this->textures.multilayer;
-      copy->textures.specular    = this->textures.specular;
+      copy->textures.backlight   = this->textures.backlight;
       copy->texture_flags    = this->texture_flags;
       //
       copy->decal_data = this->decal_data;
@@ -131,18 +131,18 @@ namespace dovah::loaded_forms {
          record.write_string_subrecord('TX00', this->textures.diffuse);
       if (!this->textures.normal.empty())
          record.write_string_subrecord('TX01', this->textures.normal);
-      if (!this->textures.env_mask.empty())
-         record.write_string_subrecord('TX02', this->textures.env_mask);
-      if (!this->textures.detail.empty())
-         record.write_string_subrecord('TX03', this->textures.detail);
+      if (!this->textures.environment_mask.empty())
+         record.write_string_subrecord('TX02', this->textures.environment_mask);
+      if (!this->textures.glow_map.empty())
+         record.write_string_subrecord('TX03', this->textures.glow_map);
       if (!this->textures.height.empty())
          record.write_string_subrecord('TX04', this->textures.height);
-      if (!this->textures.environment.empty())
-         record.write_string_subrecord('TX05', this->textures.environment);
+      if (!this->textures.cubemap.empty())
+         record.write_string_subrecord('TX05', this->textures.cubemap);
       if (!this->textures.multilayer.empty())
          record.write_string_subrecord('TX06', this->textures.multilayer);
-      if (!this->textures.specular.empty())
-         record.write_string_subrecord('TX07', this->textures.specular);
+      if (!this->textures.backlight.empty())
+         record.write_string_subrecord('TX07', this->textures.backlight);
       //
       auto& DNAM = record.open_next_subrecord('DNAM');
       DNAM.write(this->texture_flags);
@@ -157,12 +157,12 @@ namespace dovah::loaded_forms {
    void TextureSet::_clear_impl() noexcept {
       this->textures.diffuse.clear();
       this->textures.normal.clear();   // or gloss
-      this->textures.env_mask.clear(); // or subsurface tint
-      this->textures.detail.clear();   // or glow map
+      this->textures.environment_mask.clear(); // or subsurface tint
+      this->textures.glow_map.clear();   // or glow map
       this->textures.height.clear();
-      this->textures.environment.clear();
+      this->textures.cubemap.clear();
       this->textures.multilayer.clear();
-      this->textures.specular.clear(); // or backlight mask
+      this->textures.backlight.clear(); // or backlight mask
       this->texture_flags = 0;
       //
       this->decal_data = components::decal_data();

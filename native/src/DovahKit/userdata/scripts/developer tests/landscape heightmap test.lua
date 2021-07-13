@@ -130,39 +130,106 @@ progress.minimum = 0
 progress.maximum = 0
 progress.value   = 0
 
+local rasters = {
+   render = {
+      height = false,
+      paint  = false,
+      color  = false,
+      water  = false,
+   },
+   working = {
+      height = false,
+      paint  = false,
+      color  = false,
+      water  = false,
+   },
+}
+
 local IMAGE_W = 32 * extents.width
 local IMAGE_H = 32 * extents.height
 canvas.width  = IMAGE_W
 canvas.height = IMAGE_H
 dovah.log_message("Canvas size: %dx%dpx", IMAGE_W, IMAGE_H)
-local base_raster
-local base_water_raster
 do
-   base_raster = raster.new({
-      width  = IMAGE_W,
-      height = IMAGE_H,
-      background_color = "#000000",
-   })
-   local base_layer = canvas:append_layer()
-   base_layer.data = base_raster
+   local ORDER = { "height", "paint", "color", "water" } -- ensure layers are created in the right order
+   for let i = 1, #ORDER do
+      local k = ORDER[i]
+      --
+      rasters.render[k] = raster.new({
+         width  = 32,
+         height = 32,
+         background_color = TRANSPARENT,
+      })
+      --
+      rasters.render[k] = raster.new({
+         width  = IMAGE_W,
+         height = IMAGE_H,
+         background_color = TRANSPARENT,
+      })
+      local layer = canvas:append_layer()
+      layer.data = rasters.render[k]
+      if k == "color" then
+         layer.blend_mode = "multiply"
+      end
+   end
+   
+   local k, v
    --
-   base_water_raster = raster.new({
-      width  = IMAGE_W,
-      height = IMAGE_H,
-      background_color = TRANSPARENT,
-   })
-   local water_layer = canvas:append_layer()
-   water_layer.data = base_water_raster
+   k, v = next(rasters.render, nil)
+   while k do
+      if not v then
+         rasters.render[k] = raster.new({
+            width  = IMAGE_W,
+            height = IMAGE_H,
+            background_color = TRANSPARENT,
+         })
+         local layer = canvas:append_layer()
+         layer.data = rasters.render[k]
+         --
+         rasters.render[k] = raster.new({
+            width  = 32,
+            height = 32,
+            background_color = TRANSPARENT,
+         })
+      end
+      --
+      k, v = next(rasters.render, nil)
+   end
 end
-
 
 progress.format  = "Drawing cells..."
 progress.minimum = 0
 progress.maximum = count
 progress.value   = 0
 
-local working_raster = raster.new({ width = 32, height = 32 })
-local working_water  = raster.new({ width = 32, height = 32 })
+local TextureManager = {
+   map = {},
+}
+function TextureManager:get_color(land_texture)
+   local ts = land_texture.texture_set
+   if not ts then
+      return TRANSPARENT
+   end
+   local path = ts.diffuse
+   if not path or path == "" then
+      return TRANSPARENT
+   end
+   if self.map[path] then
+      return self.map[path]
+   end
+   --
+   local dds <close> = dovah.lookup_game_asset("textures/" .. path)
+   if dovah.type(dds) ~= "dds_resource" then
+      self.map[path] = TRANSPARENT
+      return TRANSPARENT
+   end
+   local raster <close> = dds:copy_to_raster()
+   raster:resize(1, 1)
+   --
+   local color = raster:get_pixel(1, 1)
+   self.map[path] = color
+   return color
+end
 
 function _alpha_from_height(land, water)
    local diff = water - land
@@ -173,6 +240,13 @@ function _alpha_from_height(land, water)
       return math.ceil(alpha * 255)
    end
    return 0
+end
+function _for_each_quad(land, functor)
+   local quads = land.quad
+   functor(quad.bottom_left)
+   functor(quad.bottom_right)
+   functor(quad.top_left)
+   functor(quad.top_right)
 end
 
 for i = 1, count do
@@ -201,10 +275,11 @@ for i = 1, count do
    --
    local land = cell.landscape
    if land and land.enable_vertex_heights then
-      working_water:fill(TRANSPARENT)
+      rasters.working.water:fill(TRANSPARENT)
       --
       for u = 2, 33 do -- leftmost col overlaps with western cell, so skip it
          for v = 1, 32 do -- bottom row overlaps with southern cell, so skip it
+            local vcolor = land:get_color_at(u, v)
             local height = land:get_height_at(u, v)
             local shade  = (height - extents.z.min) / extents.z.span
             shade = math.floor(shade * 255) -- TODO: round
@@ -212,19 +287,81 @@ for i = 1, count do
             local a, b = do_grid_flip(u, v)
             a = a - 1 -- account for skipped col
             b = b - 1 -- account for skipped row
-            working_raster:set_pixel(a, b, { r = shade, g = shade, b = shade })
+            rasters.working.height:set_pixel(a, b, { r = shade, g = shade, b = shade })
+            rasters.working.color:set_pixel(a, b, vcolor)
             --
             if cell.has_water then -- water
                local alpha = _alpha_from_height(height, water_height)
                if alpha > 0 then
-                  working_water:set_pixel(a, b, { r = 80, g = 160, b = 255, a = alpha })
+                  rasters.working.water:set_pixel(a, b, { r = 80, g = 160, b = 255, a = alpha })
                end
             end
          end
       end
       --
-      base_raster:draw_raster(working_raster, x + 1, y + 1)
-      base_raster:draw_raster(working_water,  x + 1, y + 1)
+      rasters.working.texture:fill(TRANSPARENT)
+      local quads = land.quads
+      function _draw_quad(which, quad_list)
+         local vx
+         local vy
+         local quad = quad_list[which]
+         if     which == "top_left"     then
+            vx = { min =  2, max = 17 }
+            vy = { min = 18, max = 32 }
+         elseif which == "top_right"    then
+            vx = { min = 18, max = 33 }
+            vy = { min = 18, max = 32 }
+         elseif which == "bottom_left"  then
+            vx = { min =  2, max = 17 }
+            vy = { min =  1, max = 17 }
+         elseif which == "bottom_right" then
+            vx = { min = 18, max = 33 }
+            vy = { min =  1, max = 17 }
+         end
+         --
+         local d = quad.default_texture
+         if d then
+            local color = TextureManager:get_color(d)
+            local a, b = do_grid_flip(vx.min, vy.min)
+            local c, d = do_grid_flip(vx.max, vy.max)
+            a = a - 1
+            b = b - 1
+            c = c - 1
+            d = d - 1
+            rasters.working.texture:draw_rect({
+               from = { a, b }
+               to   = { c, d },
+               fill_color = color,
+            })
+         end
+         quad:for_each_alpha_layer(function(layer)
+            local lt = layer.texture
+            if not lt then
+               return
+            end
+            local color = TextureManager:get_color(lt)
+            for u = vx.min, vx.max do
+               for v = vy.min, vy.max do
+                  local opacity = layer:get_opacity_at_cell_position(u, v)
+                  if opacity > 0 then
+                     local a, b = do_grid_flip(u, v)
+                     a = a - 1 -- account for skipped col
+                     b = b - 1 -- account for skipped row
+                     rasters.working.texture:set_pixel(a, b, color)
+                  end
+               end
+            end
+         end)
+      end
+      _draw_quad("top_left",     quads)
+      _draw_quad("top_right",    quads)
+      _draw_quad("bottom_left",  quads)
+      _draw_quad("bottom_right", quads)
+      --
+      rasters.render.height:draw_raster (rasters.working.height,  x + 1, y + 1)
+      rasters.render.color:draw_raster  (rasters.working.color,   x + 1, y + 1)
+      rasters.render.water:draw_raster  (rasters.working.water,   x + 1, y + 1)
+      rasters.render.texture:draw_raster(rasters.working.texture, x + 1, y + 1)
    else
       --
       -- The Creation Kit won't always encode a valid heightmap for a cell if the 
@@ -239,15 +376,15 @@ for i = 1, count do
       local shade  = (height - extents.z.min) / extents.z.span
       shade = math.floor(shade * 255) -- TODO: round
       --
-      working_raster:fill({ r = shade, g = shade, b = shade })
+      rasters.working.height:fill({ r = shade, g = shade, b = shade })
       --
-      base_raster:draw_raster(working_raster, x + 1, y + 1)
+      rasters.render.height:draw_raster(rasters.working.height, x + 1, y + 1)
       --
       if cell.has_water and height < water_height then -- water
          local alpha = _alpha_from_height(height, water_height)
          if alpha > 0 then
-            working_water:fill({ r = 80, g = 160, b = 255, a = alpha })
-            base_raster:draw_raster(working_water, x + 1, y + 1)
+            rasters.working.water:fill({ r = 80, g = 160, b = 255, a = alpha })
+            rasters.render.water:draw_raster(rasters.working.water,  x + 1, y + 1)
          end
       end
    end
