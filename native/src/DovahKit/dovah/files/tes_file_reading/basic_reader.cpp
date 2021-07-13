@@ -190,7 +190,7 @@ namespace dovah::tes_file_reading {
          return false;
       auto& r = this->_record;
       if (this->_subrecord.header.signature) {
-         this->_record.skip(this->_subrecord.end - this->_record.stream_pos());
+         this->_record.skip(this->_subrecord.end_pos() - this->_record.offset);
          this->_subrecord.header.signature = 0;
       }
       if (!this->_record.is_in_bounds())
@@ -220,9 +220,8 @@ namespace dovah::tes_file_reading {
          this->_record.read(this->_subrecord.header.signature);
          this->_record.skip(2);
       }
+      this->_subrecord.body_start = this->_record.offset;
       this->_subrecord.header.signature = _byteswap_ulong(this->_subrecord.header.signature);
-      this->_subrecord.pos = this->_record.body_pos + this->_record.offset;
-      this->_subrecord.end = this->_subrecord.pos + size;
       if (this->is_eof() || !this->_record.is_in_bounds())
          return false;
       return true;

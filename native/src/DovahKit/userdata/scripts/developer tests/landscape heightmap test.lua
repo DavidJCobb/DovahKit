@@ -16,23 +16,62 @@ local world_info = {
 }
 
 local window   = ui.window.new()
+local panel    = ui.widget.new()
 local scroll   = ui.scrollbox.new()
 local canvas   = ui.canvas.new()
 local progress = ui.progress_bar.new()
 progress.alignment = "center center"
 window.title = string.format("Heightmap for %s", world.name)
+
+local panel_controls = {}
+
 do
    window:set_layout("grid")
-   window:add_child(scroll)
+   window:add_child(scroll, 1, 1)
+   window:add_child(panel,  1, 2)
    local sb = scroll.body
    sb:set_layout("grid")
    sb:add_child(canvas)
-   window:add_child(progress, 2, 1)
+   window:add_child(progress, 2, 1, 1, 2)
+   
+   panel:set_layout("down")
+   do
+      local check = ui.checkbox.new("Show heightmap")
+      check.checked = true
+      check.enabled = false
+      panel:add_child(check)
+      --
+      panel_controls.show_heightmap = check
+   end
+   do
+      local check = ui.checkbox.new("Show landscape paint")
+      check.checked = true
+      check.enabled = false
+      panel:add_child(check)
+      --
+      panel_controls.show_paint = check
+   end
+   do
+      local check = ui.checkbox.new("Show vertex colors")
+      check.checked = true
+      check.enabled = false
+      panel:add_child(check)
+      --
+      panel_controls.show_vert_colors = check
+   end
+   do
+      local check = ui.checkbox.new("Show water")
+      check.checked = true
+      check.enabled = false
+      panel:add_child(check)
+      --
+      panel_controls.show_water = check
+   end
    
    do
       local tip = ui.text.new("TIP: It's normal for rivers and other water formations to be missing chunks. In order to allow for waterfalls at oblique angles relative to the compass, Bethesda will use placed water objects instead of cell and worldspace water.")
       tip.word_wrap = true
-      window:add_child(tip, 3, 1)
+      window:add_child(tip, 3, 1, 1, 2)
    end
    
    window:show()
@@ -143,6 +182,8 @@ local rasters = {
       color  = false,
       water  = false,
    },
+   layers = {
+   },
 }
 
 local IMAGE_W = 32 * extents.width
@@ -152,10 +193,10 @@ canvas.height = IMAGE_H
 dovah.log_message("Canvas size: %dx%dpx", IMAGE_W, IMAGE_H)
 do
    local ORDER = { "height", "paint", "color", "water" } -- ensure layers are created in the right order
-   for let i = 1, #ORDER do
+   for i = 1, #ORDER do
       local k = ORDER[i]
       --
-      rasters.render[k] = raster.new({
+      rasters.working[k] = raster.new({
          width  = 32,
          height = 32,
          background_color = TRANSPARENT,
@@ -168,9 +209,13 @@ do
       })
       local layer = canvas:append_layer()
       layer.data = rasters.render[k]
-      if k == "color" then
+      if k == "color" or k == "paint" then
          layer.blend_mode = "multiply"
+         if k == "paint" then
+            layer.opacity = 0.5
+         end
       end
+      rasters.layers[k] = layer
    end
    
    local k, v
@@ -185,15 +230,16 @@ do
          })
          local layer = canvas:append_layer()
          layer.data = rasters.render[k]
+         rasters.layers[k] = layer
          --
-         rasters.render[k] = raster.new({
+         rasters.working[k] = raster.new({
             width  = 32,
             height = 32,
             background_color = TRANSPARENT,
          })
       end
       --
-      k, v = next(rasters.render, nil)
+      k, v = next(rasters.render, k)
    end
 end
 
@@ -210,7 +256,7 @@ function TextureManager:get_color(land_texture)
    if not ts then
       return TRANSPARENT
    end
-   local path = ts.diffuse
+   local path = ts.textures.diffuse
    if not path or path == "" then
       return TRANSPARENT
    end
@@ -249,7 +295,69 @@ function _for_each_quad(land, functor)
    functor(quad.top_right)
 end
 
+local LayerToggles = {
+   --
+   -- Enabling this system will allow the user to enable and disable layers while the heightmap 
+   -- is drawing; however, it will also slow down drawing (significantly, in the debug build) 
+   -- because we have to synchronize with the main thread (i.e. hit a lock) once per checkbox 
+   -- that we test.
+   --
+   enabled = false,
+   --
+   checkboxes = {
+      height = panel_controls.show_heightmap,
+      paint  = panel_controls.show_paint,
+      color  = panel_controls.show_vert_colors,
+      water  = panel_controls.show_water
+   },
+   states = {},
+}
+if LayerToggles.enabled then
+   local k, v = next(LayerToggles.checkboxes)
+   while k do
+      LayerToggles.states[k] = v.checked
+      v.enabled = true
+      k, v = next(LayerToggles.checkboxes, k)
+   end
+end
+function LayerToggles:refresh()
+   if not self.enabled then
+      return
+   end
+   local k, v = next(self.checkboxes)
+   while k do
+      rasters.layers[k].visible = v.checked
+      k, v = next(self.checkboxes, k)
+   end
+end
+function LayerToggles:switch_to_listeners()
+   if not self.enabled then
+      local k, v = next(self.checkboxes)
+      while k do
+         v.enabled = true
+         k, v = next(self.checkboxes, k)
+      end
+   end
+   --
+   panel_controls.show_heightmap:on("OnToggled", "", function(checked)
+      rasters.layers.height.visible = checked
+   end)
+   --
+   panel_controls.show_paint:on("OnToggled", "", function(checked)
+      rasters.layers.paint.visible = checked
+   end)
+   --
+   panel_controls.show_vert_colors:on("OnToggled", "", function(checked)
+      rasters.layers.color.visible = checked
+   end)
+   --
+   panel_controls.show_water:on("OnToggled", "", function(checked)
+      rasters.layers.water.visible = checked
+   end)
+end
+
 for i = 1, count do
+   LayerToggles:refresh()
    local cell = cells[i]
    --
    local water_height = nil
@@ -299,69 +407,77 @@ for i = 1, count do
          end
       end
       --
-      rasters.working.texture:fill(TRANSPARENT)
+      rasters.working.paint:fill(TRANSPARENT)
       local quads = land.quads
-      function _draw_quad(which, quad_list)
-         local vx
-         local vy
-         local quad = quad_list[which]
-         if     which == "top_left"     then
-            vx = { min =  2, max = 17 }
-            vy = { min = 18, max = 32 }
-         elseif which == "top_right"    then
-            vx = { min = 18, max = 33 }
-            vy = { min = 18, max = 32 }
-         elseif which == "bottom_left"  then
-            vx = { min =  2, max = 17 }
-            vy = { min =  1, max = 17 }
-         elseif which == "bottom_right" then
-            vx = { min = 18, max = 33 }
-            vy = { min =  1, max = 17 }
-         end
-         --
-         local d = quad.default_texture
-         if d then
-            local color = TextureManager:get_color(d)
-            local a, b = do_grid_flip(vx.min, vy.min)
-            local c, d = do_grid_flip(vx.max, vy.max)
-            a = a - 1
-            b = b - 1
-            c = c - 1
-            d = d - 1
-            rasters.working.texture:draw_rect({
-               from = { a, b }
-               to   = { c, d },
-               fill_color = color,
-            })
-         end
-         quad:for_each_alpha_layer(function(layer)
-            local lt = layer.texture
-            if not lt then
-               return
+      local _draw_quad = false
+      do
+         local QUAD_BOUNDS = {
+            top_left = {
+               vx = { min =  2, max = 17 },
+               vy = { min = 18, max = 32 },
+            },
+            top_right = {
+               vx = { min = 18, max = 33 },
+               vy = { min = 18, max = 32 },
+            },
+            bottom_left = {
+               vx = { min =  2, max = 17 },
+               vy = { min =  1, max = 17 },
+            },
+            bottom_right = {
+               vx = { min = 18, max = 33 },
+               vy = { min =  1, max = 17 },
+            },
+         }
+         _draw_quad = function(which, quad_list)
+            local vx   = QUAD_BOUNDS[which].vx
+            local vy   = QUAD_BOUNDS[which].vy
+            local quad = quad_list[which]
+            --
+            local d = quad.default_texture
+            if d then
+               local color = TextureManager:get_color(d)
+               local a, b = do_grid_flip(vx.min, vy.min)
+               local c, d = do_grid_flip(vx.max, vy.max)
+               a = a - 1
+               --b = b - 1
+               --c = c - 1
+               d = d - 1
+               rasters.working.paint:draw_rect({
+                  from = { a, d },
+                  to   = { c, b },
+                  fill_color = color,
+               })
             end
-            local color = TextureManager:get_color(lt)
-            for u = vx.min, vx.max do
-               for v = vy.min, vy.max do
-                  local opacity = layer:get_opacity_at_cell_position(u, v)
-                  if opacity > 0 then
-                     local a, b = do_grid_flip(u, v)
-                     a = a - 1 -- account for skipped col
-                     b = b - 1 -- account for skipped row
-                     rasters.working.texture:set_pixel(a, b, color)
+            quad:for_each_alpha_layer(function(layer)
+               local lt = layer.texture
+               if not lt then
+                  return
+               end
+               local color = TextureManager:get_color(lt)
+               for u = vx.min, vx.max do
+                  for v = vy.min, vy.max do
+                     local opacity = layer:get_opacity_at_cell_position(u, v)
+                     if opacity > 0 then
+                        local a, b = do_grid_flip(u, v)
+                        a = a - 1 -- account for skipped col
+                        b = b - 1 -- account for skipped row
+                        rasters.working.paint:set_pixel(a, b, color)
+                     end
                   end
                end
-            end
-         end)
+            end)
+         end
       end
       _draw_quad("top_left",     quads)
       _draw_quad("top_right",    quads)
       _draw_quad("bottom_left",  quads)
       _draw_quad("bottom_right", quads)
       --
-      rasters.render.height:draw_raster (rasters.working.height,  x + 1, y + 1)
-      rasters.render.color:draw_raster  (rasters.working.color,   x + 1, y + 1)
-      rasters.render.water:draw_raster  (rasters.working.water,   x + 1, y + 1)
-      rasters.render.texture:draw_raster(rasters.working.texture, x + 1, y + 1)
+      rasters.render.height:draw_raster(rasters.working.height, x + 1, y + 1)
+      rasters.render.color:draw_raster (rasters.working.color,  x + 1, y + 1)
+      rasters.render.water:draw_raster (rasters.working.water,  x + 1, y + 1)
+      rasters.render.paint:draw_raster (rasters.working.paint,  x + 1, y + 1)
    else
       --
       -- The Creation Kit won't always encode a valid heightmap for a cell if the 
@@ -390,3 +506,5 @@ for i = 1, count do
    end
    progress.value = i
 end
+
+LayerToggles:switch_to_listeners()

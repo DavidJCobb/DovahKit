@@ -888,7 +888,7 @@ namespace dovah::loaded_forms::components::papyrus {
       // If a script contains multiple instances of the same property, the last-loaded one 
       // overrides the others in full.
       //
-      auto pos_before_props = subrecord.current_pos();
+      auto pos_before_props = subrecord.offset();
       std::unordered_map<std::string, uint32_t> prop_counts;
       for (uint16_t i = 0; i < prop_count; ++i) {
          std::string key;
@@ -897,7 +897,7 @@ namespace dovah::loaded_forms::components::papyrus {
          ++prop_counts[key];
       }
       subrecord.seek(pos_before_props); // can't just reset to the start of the subrecord; that breaks for scripts on aliases
-      assert(subrecord.current_pos() == pos_before_props);
+      assert(subrecord.offset() == pos_before_props);
       //
       for (uint16_t i = 0; i < prop_count; ++i) {
          std::string key;
@@ -940,7 +940,7 @@ namespace dovah::loaded_forms::components::papyrus {
       // If a form contains multiple instances of the same script, the last-loaded one overrides 
       // the others in full; the previously loaded script data is cleared.
       //
-      auto pos_before_scripts = subrecord.current_pos();
+      auto pos_before_scripts = subrecord.offset();
       std::unordered_map<std::string, uint32_t> script_counts;
       for (uint16_t i = 0; i < count; ++i) {
          std::string key;
@@ -949,7 +949,7 @@ namespace dovah::loaded_forms::components::papyrus {
          ++script_counts[key];
       }
       subrecord.seek(pos_before_scripts); // can't just reset to the start of the subrecord; that breaks for scripts on aliases
-      assert(subrecord.current_pos() == pos_before_scripts);
+      assert(subrecord.offset() == pos_before_scripts);
       //
       for (uint16_t i = 0; i < count; ++i) {
          std::string key;

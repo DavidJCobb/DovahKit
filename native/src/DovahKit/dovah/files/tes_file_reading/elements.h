@@ -74,7 +74,7 @@ namespace dovah {
             uint32_t      end;
             //
             cobb::generic_buffer data; // record body (uncompressed)
-            uint32_t offset = 0; // offset for reading, within the record body
+            uint32_t offset = 0; // offset for reading, within the uncompressed record body
             //
             record(basic_reader& file) : owner(file) {}
             //
@@ -129,7 +129,7 @@ namespace dovah {
                this->header.signature = 0;
             }
             void go_to_offset(uint32_t offset) {
-               this->offset = offset - this->body_pos;
+               this->offset = offset;
             }
             //
             form_stub* lookup_form_by_id(bare_form_id_t) const noexcept;
@@ -143,8 +143,7 @@ namespace dovah {
             //
             basic_reader& owner;
             header_t header;
-            uint32_t pos; // position in the file
-            uint32_t end; // position in the file
+            uint32_t body_start; // start of the subrecord body within the containing record
             //
             void _fix_up_form_id(uint32_t& id) const noexcept;
             bool _read_form_id(form_id_t& field) const noexcept;
@@ -162,8 +161,8 @@ namespace dovah {
                this->header.signature = 0;
             }
             
-            inline uint32_t offset() const noexcept { return this->pos; }
-            inline uint32_t end_pos() const noexcept { return this->end; }
+            inline uint32_t offset() const noexcept { return this->get_containing_record().offset - this->body_start; }
+            inline uint32_t end_pos() const noexcept { return this->body_start + this->header.size; }
             inline uint32_t signature() const noexcept { return this->header.signature; }
             inline uint32_t size() const noexcept { return this->header.size; }
             
@@ -171,13 +170,13 @@ namespace dovah {
             inline bool exists() const noexcept { return this->header.signature != 0; }
             
             inline bool is_at_end() const {
-               return this->get_containing_record().stream_pos() == this->end;
+               return this->get_containing_record().offset == this->end_pos();
             }
             inline bool is_in_bounds() const {
-               return this->get_containing_record().stream_pos() < this->end;
+               return this->get_containing_record().offset < this->end_pos();
             }
             inline bool is_in_bounds(uint32_t size) const {
-               return this->get_containing_record().stream_pos() + size <= this->end;
+               return this->get_containing_record().offset + size <= this->end_pos();
             }
             
             inline uint32_t containing_record_signature() const { return this->get_containing_record().signature(); }
@@ -257,12 +256,11 @@ namespace dovah {
             }
             
             void back_to_start() {
-               this->get_containing_record().go_to_offset(this->pos);
+               this->get_containing_record().go_to_offset(this->body_start);
             }
             void seek(size_t s) {
-               this->get_containing_record().go_to_offset(this->pos + s);
+               this->get_containing_record().go_to_offset(this->body_start + s);
             }
-            uint32_t current_pos() const noexcept;
             
             form_stub* lookup_form_by_id(bare_form_id_t) const noexcept;
             //

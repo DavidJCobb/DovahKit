@@ -38,26 +38,10 @@ namespace {
    }
 }
 
-namespace {
-   static thread_local bool _debug_logging = false;
-   void _debug_test(QRect r) {
-      static thread_local QRect last_draw;
-      _debug_logging = false;
-      if (last_draw != r) {
-         last_draw = r;
-         _debug_logging = true;
-      }
-   }
-}
-
 #pragma region Paint/render functions for all core classes
 void CanvasWidget::paintEvent(QPaintEvent* event) {
    auto er = event->rect();
    er = er.intersected(QRect(QPoint(0, 0), this->_size));
-   _debug_test(er);
-   if (_debug_logging) {
-      qDebug("Canvas repaint of rect (%d, %d) size %dx%dpx", er.x(), er.y(), er.width(), er.height());
-   }
    //
    QPainter painter(this);
    //
@@ -75,15 +59,8 @@ void CanvasWidget::paintEvent(QPaintEvent* event) {
          auto* layer = (CanvasWidgetLayer*)child;
          after = layer->render(er, pos);
       }
-      if (_debug_logging) {
-         if (after.isNull())
-            qDebug(" - Skipping layer...");
-      }
       if (after.isNull())
          continue;
-      if (_debug_logging) {
-         qDebug(" - Layer at (%d, %d) produced image of size %dx%dpx, offset (%d, %d)", pos.x(), pos.y(), after.width(), after.height(), after.offset().x(), after.offset().y());
-      }
       prior = _drawAtop(after, prior, after.offset(), child->compositionMode(), child->opacity());
    }
    painter.drawImage(er.topLeft(), prior);
@@ -97,13 +74,6 @@ QImage CanvasWidgetLayer::render(QRect viewport, QPoint canvas_relative_position
       return QImage();
    QRect effective = data->rect().translated(canvas_relative_position); // This layer's rect, as positioned within the canvas.
    QRect overlap   = viewport.intersected(effective);
-   if (_debug_logging) {
-      qDebug(" - Layer rendering...");
-      qDebug("    - Canvas-relative position: (%d, %d)", canvas_relative_position.x(), canvas_relative_position.y());
-      qDebug("    - Viewoprt:  (%d, %d) size %dx%dpx", viewport.x(), viewport.y(), viewport.width(), viewport.height());
-      qDebug("    - Effective: (%d, %d) size %dx%dpx", effective.x(), effective.y(), effective.width(), effective.height());
-      qDebug("    - Overlap:   (%d, %d) size %dx%dpx", overlap.x(), overlap.y(), overlap.width(), overlap.height());
-   }
    if (overlap.isEmpty())
       return QImage();
    //
@@ -134,15 +104,8 @@ QImage CanvasWidgetLayerGroup::render(QRect viewport, QPoint canvas_relative_pos
          auto* layer = (CanvasWidgetLayer*)child;
          after = layer->render(viewport, pos);
       }
-      if (_debug_logging) {
-         if (after.isNull())
-            qDebug(" - Skipping nested layer...");
-      }
       if (after.isNull())
          continue;
-      if (_debug_logging) {
-         qDebug(" - Nested Layer at (%d, %d) produced image of size %dx%dpx", child->position().x(), child->position().y(), after.width(), after.height());
-      }
       if (out.isNull()) { // only create a whole QImage if we have at least one layer we actually plan on drawing
          out = QImage(viewport.size(), INTERMEDIATE_IMAGE_FORMAT);
          out.fill(Qt::GlobalColor::transparent);
