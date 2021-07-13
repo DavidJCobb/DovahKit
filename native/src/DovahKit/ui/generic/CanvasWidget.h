@@ -115,7 +115,7 @@ class CanvasWidgetLayer : public CanvasWidgetEntity {
       // called on a nested layer, it will not apply the ancestor-layers' position offsets.
       QRegion region() const noexcept;
 
-      QImage render();
+      QImage render(QRect canvas, QPoint effective_position);
 };
 
 class CanvasWidgetLayerGroup : public CanvasWidgetEntity {
@@ -136,14 +136,7 @@ class CanvasWidgetLayerGroup : public CanvasWidgetEntity {
       void moveLayerBefore(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
       void moveLayerAfter(CanvasWidgetEntity* subject, CanvasWidgetEntity* target);
 
-      // For a top-level layer, (offset) should be the layer's position. For recursive calls to 
-      // render nested layers, (offset) should be the layer's effective position (that is, its own 
-      // position plus the positions of every ancestor layer).
-      //
-      // Of course, if you want to just render a single layer in isolation, you could just pass a 
-      // zero offset, with layer->region().boundingRect().size() for the canvas bounds, though that 
-      // would shear off any descendant layers that have negative offsets relative to this layer.
-      QImage render(QSize canvas_bounds, QPoint offset);
+      QImage render(QRect canvas, QPoint effective_position);
 };
 
 class CanvasWidgetLayerData : public QObject {
@@ -152,7 +145,7 @@ class CanvasWidgetLayerData : public QObject {
    protected:
       QList<CanvasWidgetLayer*> _users;
 
-      virtual void paint(QPainter&, const QPoint& pos) noexcept = 0;
+      virtual void paint(QPainter&, const QPoint pos, const QSize crop_to) noexcept = 0;
 
    public:
       CanvasWidgetLayerData(QObject* parent = nullptr) : QObject(parent) {};
@@ -172,13 +165,9 @@ class CanvasWidgetLayerData : public QObject {
 class CanvasWidgetLayerDataImage : public CanvasWidgetLayerData {
    Q_OBJECT;
    protected:
-      struct {
-         QImage  image;
-         QPixmap pixmap;
-         qint64  cache_key = 0;
-      } content;
+      QImage content;
 
-      virtual void paint(QPainter&, const QPoint& pos) noexcept override;
+      virtual void paint(QPainter&, const QPoint pos, const QSize crop_to) noexcept override;
 
    public:
       using CanvasWidgetLayerData::CanvasWidgetLayerData; // inherit constructor

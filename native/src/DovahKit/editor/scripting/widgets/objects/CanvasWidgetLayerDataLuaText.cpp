@@ -76,7 +76,7 @@ void CanvasWidgetLayerDataLuaText::paint_and_report(QPainter& painter, const QPo
       painter.setClipRect(prior);
    }
 }
-void CanvasWidgetLayerDataLuaText::paint(QPainter& painter, const QPoint& pos) noexcept {
+void CanvasWidgetLayerDataLuaText::paint(QPainter& painter, const QPoint pos, const QSize crop_to) noexcept {
    QRectF dummy;
    this->paint_and_report(painter, pos, dummy);
 }

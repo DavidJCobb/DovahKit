@@ -5,7 +5,7 @@ namespace {
    using LMRH = editor_script::LuaManagedResourceHandle;
 }
 
-void CanvasWidgetLayerDataLuaManagedResource::paint(QPainter& painter, const QPoint& pos) noexcept {
+void CanvasWidgetLayerDataLuaManagedResource::paint(QPainter& painter, const QPoint pos, const QSize crop_to) noexcept {
    auto* resource = this->_handle.bare();
    if (!resource)
       return;
@@ -18,7 +18,10 @@ void CanvasWidgetLayerDataLuaManagedResource::paint(QPainter& painter, const QPo
          return;
    }
    auto pixmap = resource->get_raster_widget_side();
-   painter.drawPixmap(pos, pixmap);
+   if (crop_to.isValid())
+      painter.drawPixmap(pos.x(), pos.y(), pixmap.width(), pixmap.height(), pixmap, 0, 0, crop_to.width(), crop_to.height());
+   else
+      painter.drawPixmap(pos, pixmap);
 }
 QRect CanvasWidgetLayerDataLuaManagedResource::rect() const noexcept {
    auto* resource = this->_handle.bare();

@@ -8,7 +8,7 @@ class CanvasWidgetLayerDataLuaManagedResource : public CanvasWidgetLayerData {
    protected:
       LMRH _handle;
 
-      virtual void paint(QPainter&, const QPoint& pos) noexcept;
+      virtual void paint(QPainter&, const QPoint pos, const QSize crop_to) noexcept;
 
    public:
       virtual QRect rect() const noexcept;
