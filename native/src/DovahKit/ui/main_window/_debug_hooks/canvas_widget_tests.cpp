@@ -117,6 +117,7 @@ namespace {
       {
          auto* scroll = new QScrollArea;
          scroll->setWidget(canvas);
+         scroll->setFixedHeight(159);
          layout->addWidget(scroll);
       }
       //
@@ -125,7 +126,7 @@ namespace {
       layout->addWidget(grid);
       //
       canvas->setImageSize(300, 300);
-      dialog->setFixedHeight(200);
+      //dialog->setFixedHeight(200);
       //
       {
          auto* logo  = canvas->createLayer();
@@ -257,6 +258,39 @@ namespace {
          auto* button = new QPushButton("Move Grad to 50% X");
          QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
             auto* layer = canvas->findChild<CanvasWidgetLayer*>("grad");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(canvas->imageWidth() / 2);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Shape to -50% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("logo");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(canvas->imageWidth() / -2);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Shape to 0% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("logo");
+            assert(layer);
+            auto pos = layer->position();
+            pos.setX(0);
+            layer->setPosition(pos);
+         });
+         grid->layout()->addWidget(button);
+      }
+      {
+         auto* button = new QPushButton("Move Shape to 50% X");
+         QObject::connect(button, &QPushButton::clicked, [canvas](bool checked) {
+            auto* layer = canvas->findChild<CanvasWidgetLayer*>("logo");
             assert(layer);
             auto pos = layer->position();
             pos.setX(canvas->imageWidth() / 2);

@@ -36,32 +36,33 @@ namespace {
       //
       return dst;
    }
+}
 
+namespace {
+   static thread_local bool _debug_logging = false;
+   void _debug_test(QRect r) {
+      static thread_local QRect last_draw;
+      _debug_logging = false;
+      if (last_draw != r) {
+         last_draw = r;
+         _debug_logging = true;
+      }
+   }
 }
 
 #pragma region Paint/render functions for all core classes
 void CanvasWidget::paintEvent(QPaintEvent* event) {
-   bool debug_logging = false;
-   //
    auto er = event->rect();
    er = er.intersected(QRect(QPoint(0, 0), this->_size));
-   {
-      static QRect last = QRect();
-      if (last != er) {
-         last = er;
-         debug_logging = true;
-      }
+   _debug_test(er);
+   if (_debug_logging) {
+      qDebug("Canvas repaint of rect (%d, %d) size %dx%dpx", er.x(), er.y(), er.width(), er.height());
    }
-   if (debug_logging)
-      qDebug("CANVAS painting: (%i, %i) size %ix%ipx", er.x(), er.y(), er.width(), er.height());
    //
    QPainter painter(this);
-   //painter.setClipRect(er);
    //
    auto prior = QImage(er.size(), INTERMEDIATE_IMAGE_FORMAT);
    prior.fill(Qt::GlobalColor::transparent);
-   if (debug_logging)
-      qDebug("CANVAS painting: prior is %ix%ipx", prior.width(), prior.height());
    for (auto* child : this->layers()) {
       if (!child->visible())
          continue;
@@ -74,36 +75,34 @@ void CanvasWidget::paintEvent(QPaintEvent* event) {
          auto* layer = (CanvasWidgetLayer*)child;
          after = layer->render(er, pos);
       }
-      if (after.isNull()) {
-         if (debug_logging)
-            qDebug("CANVAS painting: skipping layer...");
-         continue;
+      if (_debug_logging) {
+         if (after.isNull())
+            qDebug(" - Skipping layer...");
       }
-      if (debug_logging)
-         qDebug("CANVAS painting: after is %ix%ipx", after.width(), after.height());
-      prior = _drawAtop(after, prior, { 0, 0 }, child->compositionMode(), child->opacity());
+      if (after.isNull())
+         continue;
+      if (_debug_logging) {
+         qDebug(" - Layer at (%d, %d) produced image of size %dx%dpx, offset (%d, %d)", pos.x(), pos.y(), after.width(), after.height(), after.offset().x(), after.offset().y());
+      }
+      prior = _drawAtop(after, prior, after.offset(), child->compositionMode(), child->opacity());
    }
    painter.drawImage(er.topLeft(), prior);
-   //
-   //painter.setClipRect(QRect(), Qt::NoClip);
 }
 
-QImage CanvasWidgetLayer::render(QRect canvas, QPoint effective_position) {
-   if (canvas.isEmpty())
+QImage CanvasWidgetLayer::render(QRect viewport, QPoint canvas_relative_position) {
+   if (viewport.isEmpty())
       return QImage();
    auto* data = this->data();
    if (!data)
       return QImage();
-   QRect effective = data->rect().translated(effective_position); // This layer's rect, as positioned within the canvas.
-   QRect overlap   = canvas.intersected(effective);
-   {
-      static QRect last = QRect();
-      if (last != overlap) {
-         last = overlap;
-         qDebug(" - Layer: overlap is (%i, %i) size %ix%ipx", overlap.x(), overlap.y(), overlap.width(), overlap.height());
-         qDebug("   Effective was (%i, %i) size %ix%ipx", effective.x(), effective.y(), effective.width(), effective.height());
-         qDebug("   Canvas was (%i, %i) size %ix%ipx", canvas.x(), canvas.y(), canvas.width(), canvas.height());
-      }
+   QRect effective = data->rect().translated(canvas_relative_position); // This layer's rect, as positioned within the canvas.
+   QRect overlap   = viewport.intersected(effective);
+   if (_debug_logging) {
+      qDebug(" - Layer rendering...");
+      qDebug("    - Canvas-relative position: (%d, %d)", canvas_relative_position.x(), canvas_relative_position.y());
+      qDebug("    - Viewoprt:  (%d, %d) size %dx%dpx", viewport.x(), viewport.y(), viewport.width(), viewport.height());
+      qDebug("    - Effective: (%d, %d) size %dx%dpx", effective.x(), effective.y(), effective.width(), effective.height());
+      qDebug("    - Overlap:   (%d, %d) size %dx%dpx", overlap.x(), overlap.y(), overlap.width(), overlap.height());
    }
    if (overlap.isEmpty())
       return QImage();
@@ -112,13 +111,14 @@ QImage CanvasWidgetLayer::render(QRect canvas, QPoint effective_position) {
    out.fill(Qt::GlobalColor::transparent);
    {
       QPainter painter = QPainter(&out);
-      data->paint(painter, effective_position - canvas.topLeft(), overlap.size());
+      data->paint(painter, overlap.topLeft() - canvas_relative_position, overlap.size());
    }
+   out.setOffset(overlap.topLeft() - viewport.topLeft());
    return out;
 }
 
-QImage CanvasWidgetLayerGroup::render(QRect canvas, QPoint effective_position) {
-   if (canvas.isEmpty())
+QImage CanvasWidgetLayerGroup::render(QRect viewport, QPoint canvas_relative_position) {
+   if (viewport.isEmpty())
       return QImage();
    QImage out;
    //
@@ -126,100 +126,31 @@ QImage CanvasWidgetLayerGroup::render(QRect canvas, QPoint effective_position) {
       if (!child->visible())
          continue;
       QImage after;
-      QPoint pos = child->position() + effective_position;
+      QPoint pos = child->position() + canvas_relative_position;
       if (child->isLayerGroup()) {
          auto* group = (CanvasWidgetLayerGroup*)child;
-         after = group->render(canvas, pos);
+         after = group->render(viewport, pos);
       } else {
          auto* layer = (CanvasWidgetLayer*)child;
-         after = layer->render(canvas, pos);
+         after = layer->render(viewport, pos);
+      }
+      if (_debug_logging) {
+         if (after.isNull())
+            qDebug(" - Skipping nested layer...");
       }
       if (after.isNull())
          continue;
+      if (_debug_logging) {
+         qDebug(" - Nested Layer at (%d, %d) produced image of size %dx%dpx", child->position().x(), child->position().y(), after.width(), after.height());
+      }
       if (out.isNull()) { // only create a whole QImage if we have at least one layer we actually plan on drawing
-         out = QImage(canvas.size(), INTERMEDIATE_IMAGE_FORMAT);
+         out = QImage(viewport.size(), INTERMEDIATE_IMAGE_FORMAT);
          out.fill(Qt::GlobalColor::transparent);
       }
-      out = _drawAtop(after, out, pos, child->compositionMode(), child->opacity());
+      out = _drawAtop(after, out, after.offset(), child->compositionMode(), child->opacity());
    }
    return out;
 }
-
-/*//
-void CanvasWidget::paintEvent(QPaintEvent* event) {
-   auto er = event->rect();
-   er = er.intersected(QRect(QPoint(0, 0), this->_size));
-   //
-   QPainter painter(this);
-   painter.setClipRect(er);
-   {
-      auto prior = QImage(this->_size, INTERMEDIATE_IMAGE_FORMAT);
-      prior.fill(Qt::GlobalColor::transparent);
-      for (auto* child : this->layers()) {
-         if (!child->visible())
-            continue;
-         if (child->isLayerGroup()) {
-            auto* group = (CanvasWidgetLayerGroup*)child;
-            //
-            QImage after = group->render(this->_size, group->position());
-            prior = _drawAtop(after, prior, { 0, 0 }, group->compositionMode(), group->opacity());
-         } else {
-            auto* layer = (CanvasWidgetLayer*)child;
-            //
-            QImage after = layer->render();
-            prior = _drawAtop(after, prior, layer->position(), layer->compositionMode(), layer->opacity());
-         }
-      }
-      painter.drawImage(prior.rect(), prior);
-   }
-   painter.setClipRect(QRect(), Qt::NoClip);
-}
-//*/
-
-/*//
-QImage CanvasWidgetLayerGroup::render(QSize bounds, QPoint offset) {
-   int w = bounds.width();
-   int h = bounds.height();
-   if (w <= 0 || h <= 0)
-      return QImage();
-   QImage out = QImage(w, h, INTERMEDIATE_IMAGE_FORMAT);
-   out.fill(Qt::GlobalColor::transparent);
-   //
-   for (auto* child : this->childLayers()) {
-      if (!child->visible())
-         continue;
-      if (child->isLayerGroup()) {
-         auto* group = (CanvasWidgetLayerGroup*)child;
-         //
-         QPoint c_offset = group->position() + offset;
-         QImage source   = group->render(bounds, c_offset);
-         out = _drawAtop(source, out, { 0, 0 }, child->compositionMode(), group->opacity());
-      } else {
-         auto* layer = (CanvasWidgetLayer*)child;
-         //
-         QImage source = layer->render();
-         out = _drawAtop(source, out, layer->position(), layer->compositionMode(), layer->opacity());
-      }
-   }
-   return out;
-}
-//*/
-
-/*//
-QImage CanvasWidgetLayer::render() {
-   auto* data = this->data();
-   if (!data)
-      return QImage();
-   auto  size = data->rect().size();
-   auto  out = QImage(size, INTERMEDIATE_IMAGE_FORMAT);
-   {
-      QPainter painter = QPainter(&out);
-      out.fill(Qt::GlobalColor::transparent);
-      data->paint(painter, QPoint(0, 0));
-   }
-   return out;
-}
-//*/
 #pragma endregion
 
 #pragma region CanvasWidget
@@ -496,7 +427,7 @@ void CanvasWidgetLayerData::update() {
 #pragma region CanvasWidgetLayerDataImage
 void CanvasWidgetLayerDataImage::paint(QPainter& painter, const QPoint pos, const QSize crop_to) noexcept {
    if (crop_to.isValid())
-      painter.drawImage(0, 0, this->content, -pos.x(), -pos.y(), crop_to.width(), crop_to.height());
+      painter.drawImage(0, 0, this->content, pos.x(), pos.y(), crop_to.width(), crop_to.height());
    else
       painter.drawImage(pos, this->content);
 }

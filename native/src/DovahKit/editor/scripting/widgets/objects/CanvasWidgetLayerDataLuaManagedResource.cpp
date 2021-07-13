@@ -19,7 +19,7 @@ void CanvasWidgetLayerDataLuaManagedResource::paint(QPainter& painter, const QPo
    }
    auto pixmap = resource->get_raster_widget_side();
    if (crop_to.isValid())
-      painter.drawPixmap(pos.x(), pos.y(), pixmap.width(), pixmap.height(), pixmap, 0, 0, crop_to.width(), crop_to.height());
+      painter.drawPixmap(0, 0, pixmap.width(), pixmap.height(), pixmap, pos.x(), pos.y(), crop_to.width(), crop_to.height());
    else
       painter.drawPixmap(pos, pixmap);
 }
