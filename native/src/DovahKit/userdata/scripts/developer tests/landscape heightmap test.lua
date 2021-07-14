@@ -170,6 +170,12 @@ progress.maximum = 0
 progress.value   = 0
 
 local rasters = {
+   order = {
+      "height",
+      "paint",
+      "color",
+      "water",
+   },
    render = {
       height = false,
       paint  = false,
@@ -184,6 +190,10 @@ local rasters = {
    },
    layers = {
    },
+   layer_configs = {
+      paint = { opacity = 0.8, blend_mode = "overlay" },
+      color = { blend_mode = "multiply" },
+   },
 }
 
 local IMAGE_W = 32 * extents.width
@@ -192,9 +202,8 @@ canvas.width  = IMAGE_W
 canvas.height = IMAGE_H
 dovah.log_message("Canvas size: %dx%dpx", IMAGE_W, IMAGE_H)
 do
-   local ORDER = { "height", "paint", "color", "water" } -- ensure layers are created in the right order
-   for i = 1, #ORDER do
-      local k = ORDER[i]
+   for i = 1, #rasters.order do
+      local k = rasters.order[i]
       --
       rasters.working[k] = raster.new({
          width  = 32,
@@ -209,13 +218,16 @@ do
       })
       local layer = canvas:append_layer()
       layer.data = rasters.render[k]
-      if k == "color" or k == "paint" then
-         layer.blend_mode = "multiply"
-         if k == "paint" then
-            layer.opacity = 0.5
+      rasters.layers[k] = layer
+      --
+      local cfg = rasters.layer_configs[k]
+      if cfg then
+         local l, w = next(cfg)
+         while l do
+            layer[l] = w
+            l, w = next(cfg, l)
          end
       end
-      rasters.layers[k] = layer
    end
    
    local k, v
@@ -273,7 +285,10 @@ function TextureManager:get_color(land_texture)
    raster:resize(1, 1)
    --
    local color = raster:get_pixel(1, 1)
+   color.a  = 255
+   color[4] = 255 -- alpha in land textures means something else (parallax?)
    self.map[path] = color
+   dovah.log_message("Color for %s: (%s, %s, %s, %s)", path, color.r, color.g, color.b, color.a)
    return color
 end
 
@@ -339,20 +354,45 @@ function LayerToggles:switch_to_listeners()
       end
    end
    --
+   function _update_layer_settings(name_to_alter, state)
+      local names  = rasters.order
+      local lowest = nil
+      for i = 1, #names do
+         local name  = names[i]
+         local layer = rasters.layers[name]
+         local vis
+         if name == name_to_alter then
+            layer.visible = state
+            vis = state
+         else
+            vis = layer.visible
+         end
+         if vis and not lowest then
+            lowest = layer
+            layer.blend_mode = "normal"
+            layer.opacity    = 1
+         else
+            local prefs = rasters.layer_configs[name] or {}
+            layer.blend_mode = prefs.blend_mode or "normal"
+            layer.opacity    = prefs.opacity    or 1
+         end
+      end
+   end
+   --
    panel_controls.show_heightmap:on("OnToggled", "", function(checked)
-      rasters.layers.height.visible = checked
+      _update_layer_settings("height", checked)
    end)
    --
    panel_controls.show_paint:on("OnToggled", "", function(checked)
-      rasters.layers.paint.visible = checked
+      _update_layer_settings("paint", checked)
    end)
    --
    panel_controls.show_vert_colors:on("OnToggled", "", function(checked)
-      rasters.layers.color.visible = checked
+      _update_layer_settings("color", checked)
    end)
    --
    panel_controls.show_water:on("OnToggled", "", function(checked)
-      rasters.layers.water.visible = checked
+      _update_layer_settings("water", checked)
    end)
 end
 

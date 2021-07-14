@@ -26,18 +26,18 @@ namespace dovah::loaded_forms {
          using texture_set_flags_t = std::underlying_type_t<texture_set_flag::type>;
 
          struct {
-            std::string diffuse;
-            std::string normal;           // skin texture sets use this as both normal and gloss
-            std::string environment_mask; // skin texture sets use this as subsurface tint
-            std::string glow_map;         // skin texture sets use this as detail map
-            std::string height;
-            std::string cubemap;
-            std::string multilayer;
-            std::string backlight;
+            std::string diffuse;          // TX00
+            std::string normal;           // TX01 // skin texture sets use this as both normal and gloss
+            std::string environment_mask; // TX02 // skin texture sets use this as subsurface tint
+            std::string glow_map;         // TX03 // skin texture sets use this as detail map
+            std::string height;           // TX04
+            std::string cubemap;          // TX05
+            std::string multilayer;       // TX06
+            std::string backlight;        // TX07
          } textures;
-         texture_set_flags_t texture_flags = 0;
+         texture_set_flags_t texture_flags = 0; // DNAM
          //
-         components::decal_data decal_data;
+         components::decal_data decal_data; // DODT
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
 

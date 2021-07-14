@@ -730,15 +730,18 @@ namespace {
          int x = lua_tointegerx(L, 2, &isnum);
          luaL_argcheck(L, isnum,  2, "x-coordinate (integer) expected");
          luaL_argcheck(L, x != 0, 2, "x-coordinate cannot be zero");
-         luaL_argcheck(L, x >= 0, 2, "x-coordinate cannot be negative");
+         luaL_argcheck(L, x >  0, 2, "x-coordinate cannot be negative");
          int y = lua_tointegerx(L, 3, &isnum);
          luaL_argcheck(L, isnum,  3, "y-coordinate (integer) expected");
          luaL_argcheck(L, y != 0, 3, "y-coordinate cannot be zero");
-         luaL_argcheck(L, y >= 0, 3, "y-coordinate cannot be negative");
+         luaL_argcheck(L, y >  0, 3, "y-coordinate cannot be negative");
          --x;
          --y;
          //
          auto image = self.managed_resource->get_raster_script_side();
+         assert(image.format() == QImage::Format::Format_ARGB32);
+         luaL_argcheck(L, x < image.width(),  2, "x-coordinate exceeded the raster's width");
+         luaL_argcheck(L, y < image.height(), 3, "y-coordinate exceeded the raster's height");
          util::ui::push_color(L, image.pixel(x, y));
          return 1;
       }
@@ -761,7 +764,7 @@ namespace {
             auto prior = image.size();
             if (prior == size)
                return;
-            image = image.scaled(size);
+            image = image.scaled(size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
          });
          //
          return 0;
@@ -796,7 +799,7 @@ namespace {
                prior.setWidth(1);
             if (prior.height() < 1)
                prior.setHeight(1);
-            image = image.scaled(prior);
+            image = image.scaled(prior, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
          });
          //
          return 0;
@@ -810,11 +813,11 @@ namespace {
          int x = lua_tointegerx(L, 2, &isnum);
          luaL_argcheck(L, isnum,  2, "x-coordinate (integer) expected");
          luaL_argcheck(L, x != 0, 2, "x-coordinate cannot be zero");
-         luaL_argcheck(L, x >= 0, 2, "x-coordinate cannot be negative");
+         luaL_argcheck(L, x >  0, 2, "x-coordinate cannot be negative");
          int y = lua_tointegerx(L, 3, &isnum);
          luaL_argcheck(L, isnum,  3, "y-coordinate (integer) expected");
          luaL_argcheck(L, y != 0, 3, "y-coordinate cannot be zero");
-         luaL_argcheck(L, y >= 0, 3, "y-coordinate cannot be negative");
+         luaL_argcheck(L, y >  0, 3, "y-coordinate cannot be negative");
          --x;
          --y;
          QColor color = util::ui::pull_color(L, 4);

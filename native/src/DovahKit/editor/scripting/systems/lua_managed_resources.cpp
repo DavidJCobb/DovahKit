@@ -1,4 +1,5 @@
 #include "lua_managed_resources.h"
+#include <bit>
 #include <cassert>
 #include "../../../helpers/qt/repaint.h"
 
@@ -14,11 +15,26 @@ namespace {
    // This should be a DXGI format suitable for reading by script. In practice, this needs to be 
    // whatever DXGI format matches whatever QImage format our script code expects. There isn't 
    // really any other constraint on what this can be.
-   static constexpr DXGI_FORMAT desired_dds_pixel_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+   static constexpr DXGI_FORMAT    desired_dds_pixel_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+   static constexpr QImage::Format desired_dds_pixel_qt_fmt = QImage::Format_RGBA8888; // the Qt equivalent of desired_dds_pixel_format
+
+   // The QImage format that other script APIs expect.
+   static constexpr QImage::Format desired_qt_pixel_format = QImage::Format_ARGB32;
 }
 
 namespace editor_script {
    #pragma region LuaManagedResource
+   LuaManagedResource::~LuaManagedResource() {
+      if (auto*& p = this->content.dds.data) {
+         delete p;
+         p = nullptr;
+      }
+      if (auto*& p = this->content.dds.info) {
+         delete p;
+         p = nullptr;
+      }
+   }
+
    /*static*/ LuaManagedResource* LuaManagedResource::make_dds(const void* buffer, size_t size) {
       assert(buffer && size);
       //
@@ -157,7 +173,8 @@ namespace editor_script {
          return QImage();
       if (layer->rowPitch > std::numeric_limits<int>::max())
          return QImage();
-      auto qt_image = QImage((const uchar*)layer->pixels, layer->width, layer->height, layer->rowPitch, QImage::Format_ARGB32);
+      QImage qt_image = QImage((const uchar*)layer->pixels, layer->width, layer->height, layer->rowPitch, desired_dds_pixel_qt_fmt);
+      qt_image.convertTo(desired_qt_pixel_format);
       assert(!qt_image.isNull());
       qt_image.detach();
       assert(qt_image.isDetached());

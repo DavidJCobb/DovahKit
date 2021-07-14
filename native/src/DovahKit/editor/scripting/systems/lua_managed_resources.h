@@ -46,6 +46,8 @@ namespace editor_script {
          } content;
          //
       public:
+         ~LuaManagedResource();
+
          std::atomic<bool> is_lua_referenced = false;
 
          static LuaManagedResource* make_dds(const void* buffer, size_t size);
