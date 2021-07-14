@@ -22,6 +22,7 @@ namespace {
          if (!form)
             return 0;
          auto q = self.last_part().index;
+         assert(!self.is_collection);
          assert(q >= 0 && q <= 3);
          //
          auto& list = form->alpha_layers_by_quad[q];
@@ -30,7 +31,11 @@ namespace {
             wrapper ll = self;
             ll.append_part(wrapper_part_types::landscape_alpha_layer, layer.layer);
             int argc = DovahKitScriptVMUserdataInterface::get().push(L, ll, wrappers::landscape_quad_alpha_layer::metatable_key);
-            lua_call(L, argc, 0);
+            if (argc) {
+               lua_call(L, argc, 0);
+            } else {
+               lua_pop(L, 1); // cancel call; pop function
+            }
          }
          return 0;
       }

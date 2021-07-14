@@ -107,6 +107,7 @@
     <ClCompile Include="dovah\data\conditions.cpp" />
     <ClCompile Include="dovah\data\default_objects.cpp" />
     <ClCompile Include="dovah\data\game_settings.cpp" />
+    <ClCompile Include="dovah\data\ini_settings.cpp" />
     <ClCompile Include="dovah\data\story_manager.cpp" />
     <ClCompile Include="dovah\detailed_notice.cpp" />
     <ClCompile Include="dovah\files\bsa\bsa_archive.cpp" />
@@ -452,6 +453,7 @@
     <ClInclude Include="dovah\data\conditions.h" />
     <ClInclude Include="dovah\data\default_objects.h" />
     <ClInclude Include="dovah\data\game_settings.h" />
+    <ClInclude Include="dovah\data\ini_settings.h" />
     <ClInclude Include="dovah\detailed_notice.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archive.h" />
     <ClInclude Include="dovah\files\bsa\bsa_archived_file.h" />

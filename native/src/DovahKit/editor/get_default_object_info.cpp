@@ -150,7 +150,7 @@ namespace {
       _info('DFTS', QObject::tr("Footstep Set", dis_n)),
       _info('DGFL', QObject::tr("DialogueFollower Quest", dis_n)),
       _info('DIEN', QObject::tr("Keyword - Disallow Enchanting", dis_n)),
-      _info('DLMT', QObject::tr("Landscape Material", dis_n)),
+      _info('DLMT', QObject::tr("Default Landscape Material Type", dis_n), QObject::tr("The physics material type used for any unpainted heightmapped terrain. Should be a dirt material, as unpainted terrain defaults to the \"Dirt02.dds\" and \"Dirt02_N.dds\" texture files.", dis_d)),
       _info('DLZM', QObject::tr("Dragon Land Zone Marker", dis_n)),
       _info('DMFL', QObject::tr("Default MovementType: Fly", dis_n)),
       _info('DMRN', QObject::tr("Default MovementType: Run", dis_n)),

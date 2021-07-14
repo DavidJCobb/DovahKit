@@ -28,6 +28,8 @@
 
 #include "../../../../helpers/lua/dump.h"
 
+#include "../../../../dovah/data/ini_settings.h"
+
 namespace {
    using namespace editor_script;
 
@@ -308,6 +310,34 @@ namespace {
          out.managed_resource = resource;
          return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::resource::unknown::metatable_key);
       }
+      luastackchange_t lookup_game_ini_setting(lua_State* L) {
+         luaL_argcheck(L, lua_isstring(L, 1), 1, "string (INI section name) expected");
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "string (INI setting name) expected");
+         const char* section = lua_tostring(L, 1);
+         const char* setting = lua_tostring(L, 2);
+         auto* ini_setting = dovah::game_ini::files::skyrim.lookup(section, setting);
+         if (!ini_setting)
+            return 0;
+         #if !_DEBUG
+            #pragma message("TODO: Lua: dovah.lookup_game_ini_setting: The editor core should load the game's INIs.")
+         #endif
+         switch (ini_setting->type) {
+            using t = dovah::game_ini::setting_type;
+            case t::boolean:
+               lua_pushboolean(L, ini_setting->current_value.b);
+               return 1;
+            case t::float32:
+               lua_pushnumber(L, ini_setting->current_value.f);
+               return 1;
+            case t::integer:
+               lua_pushinteger(L, ini_setting->current_value.i);
+               return 1;
+            case t::string:
+               lua_pushstring(L, ini_setting->current_value.s.c_str());
+               return 1;
+         }
+         return 0;
+      }
       luastackchange_t object_is(lua_State* L) {
          lua_settop(L, 2);
          constexpr int index_obj = 1;
@@ -362,18 +392,19 @@ namespace {
    }
 
    const std::initializer_list<luaL_Reg> _functions = {
-      luaL_Reg{ "benchmark_start",        &_definitions::benchmark_start },
-      luaL_Reg{ "benchmark_stop",         &_definitions::benchmark_stop },
-      luaL_Reg{ "count_forms_of_type",    &_definitions::count_forms_of_type },
-      luaL_Reg{ "create_form",            &_definitions::create_form },
-      luaL_Reg{ "dump",                   &_definitions::dump },
-      luaL_Reg{ "for_each_form_of_type",  &_definitions::for_each_form_of_type },
-      luaL_Reg{ "get_form_by_id",         &_definitions::get_form_by_id },
-      luaL_Reg{ "log_message",            &_definitions::log_message },
-      luaL_Reg{ "lookup_game_asset",      &_definitions::lookup_game_asset },
-      luaL_Reg{ "object_is",              &_definitions::object_is },
-      luaL_Reg{ "test_call_and_response", &_definitions::test_call_and_response },
-      luaL_Reg{ "type",                   &_definitions::type },
+      luaL_Reg{ "benchmark_start",         &_definitions::benchmark_start },
+      luaL_Reg{ "benchmark_stop",          &_definitions::benchmark_stop },
+      luaL_Reg{ "count_forms_of_type",     &_definitions::count_forms_of_type },
+      luaL_Reg{ "create_form",             &_definitions::create_form },
+      luaL_Reg{ "dump",                    &_definitions::dump },
+      luaL_Reg{ "for_each_form_of_type",   &_definitions::for_each_form_of_type },
+      luaL_Reg{ "get_form_by_id",          &_definitions::get_form_by_id },
+      luaL_Reg{ "log_message",             &_definitions::log_message },
+      luaL_Reg{ "lookup_game_asset",       &_definitions::lookup_game_asset },
+      luaL_Reg{ "lookup_game_ini_setting", &_definitions::lookup_game_ini_setting},
+      luaL_Reg{ "object_is",               &_definitions::object_is },
+      luaL_Reg{ "test_call_and_response",  &_definitions::test_call_and_response },
+      luaL_Reg{ "type",                    &_definitions::type },
    };
 }
 namespace editor_script::namespace_setup {

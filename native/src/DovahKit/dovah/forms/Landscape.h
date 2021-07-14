@@ -45,10 +45,10 @@ namespace dovah::loaded_forms {
          struct quad_indices {
             quad_indices() = delete;
             enum {
-               bottom_left,
-               bottom_right,
-               top_left,
-               top_right
+               bottom_left  = 0,
+               bottom_right = 1,
+               top_left     = 2,
+               top_right    = 3,
             };
          };
 

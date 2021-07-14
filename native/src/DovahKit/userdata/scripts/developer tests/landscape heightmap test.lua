@@ -3,6 +3,12 @@ local TRANSPARENT     = "#00000000"
 local WATER_DEPTH     = 4096
 local WATER_MIN_ALPHA = 0.5
 
+local DEFAULT_LAND = { -- executable-level defaults: a LandTexture created at run-time with no form ID
+   diffuse  = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandDiffuseTexture"),
+   normal   = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandNormalTexture"),
+   material = nil, -- TODO: set this to Default Object "DLMT"
+}
+
 local world = dovah.get_form_by_id(0x3C)
 if not world then
    error("No worldspace to work with!")
@@ -191,7 +197,7 @@ local rasters = {
    layers = {
    },
    layer_configs = {
-      paint = { opacity = 0.8, blend_mode = "overlay" },
+      paint = { opacity = 0.65, blend_mode = "multiply" },
       color = { blend_mode = "multiply" },
    },
 }
@@ -263,33 +269,75 @@ progress.value   = 0
 local TextureManager = {
    map = {},
 }
-function TextureManager:get_color(land_texture)
-   local ts = land_texture.texture_set
-   if not ts then
-      return TRANSPARENT
+do
+   function _try_get_smallest_mip(dds)
+      local image = dds.images[1]
+      if not image then
+         return
+      end
+      local mips = image.mipmaps
+      local last = #mips
+      local data = mips[last]
+      if data then
+         return data:copy_to_raster()
+      end
    end
-   local path = ts.textures.diffuse
-   if not path or path == "" then
-      return TRANSPARENT
+   function _resize_dds(dds)
+      local ras = _try_get_smallest_mip(dds)
+      if not ras then
+         ras = dds:copy_to_raster()
+      end
+      ras:resize(1, 1)
+      return ras
    end
-   if self.map[path] then
-      return self.map[path]
+   
+   function TextureManager:get_color(land_texture)
+      local ts = land_texture.texture_set
+      if not ts then
+         return TRANSPARENT
+      end
+      local path = ts.textures.diffuse
+      if not path or path == "" then
+         return TRANSPARENT
+      end
+      if self.map[path] then
+         return self.map[path]
+      end
+      --
+      local dds <close> = dovah.lookup_game_asset("textures/" .. path)
+      if dovah.type(dds) ~= "dds_resource" then
+         self.map[path] = TRANSPARENT
+         return TRANSPARENT
+      end
+      local raster <close> = _resize_dds(dds)
+      --
+      local color = raster:get_pixel(1, 1)
+      color.a  = 255
+      color[4] = 255 -- alpha in land textures means something else (parallax?)
+      self.map[path] = color
+      --dovah.log_message("Color for %s: (%s, %s, %s, %s)", path, color.r, color.g, color.b, color.a)
+      return color
    end
-   --
-   local dds <close> = dovah.lookup_game_asset("textures/" .. path)
-   if dovah.type(dds) ~= "dds_resource" then
-      self.map[path] = TRANSPARENT
-      return TRANSPARENT
+   function TextureManager:get_default_color()
+      if self.default_color then
+         return self.default_color
+      end
+      local path = DEFAULT_LAND.diffuse
+      --
+      local dds <close> = dovah.lookup_game_asset("textures/" .. path)
+      if dovah.type(dds) ~= "dds_resource" then
+         self.default_color = TRANSPARENT
+         return TRANSPARENT
+      end
+      local raster <close> = dds:copy_to_raster()
+      raster:resize(1, 1)
+      --
+      local color = raster:get_pixel(1, 1)
+      color.a  = 255
+      color[4] = 255 -- alpha in land textures means something else (parallax?)
+      self.default_color = color
+      return color
    end
-   local raster <close> = dds:copy_to_raster()
-   raster:resize(1, 1)
-   --
-   local color = raster:get_pixel(1, 1)
-   color.a  = 255
-   color[4] = 255 -- alpha in land textures means something else (parallax?)
-   self.map[path] = color
-   dovah.log_message("Color for %s: (%s, %s, %s, %s)", path, color.r, color.g, color.b, color.a)
-   return color
 end
 
 function _alpha_from_height(land, water)
@@ -474,9 +522,16 @@ for i = 1, count do
             local vy   = QUAD_BOUNDS[which].vy
             local quad = quad_list[which]
             --
-            local d = quad.default_texture
-            if d then
-               local color = TextureManager:get_color(d)
+            do
+               local ltex  = quad.default_texture
+               local color = nil
+               if ltex then
+                  color = TextureManager:get_color(ltex)
+               else
+                  color = TextureManager:get_default_color()
+               end
+               color.a  = 255 -- force alpha
+               color[4] = 255 -- force alpha
                local a, b = do_grid_flip(vx.min, vy.min)
                local c, d = do_grid_flip(vx.max, vy.max)
                a = a - 1
@@ -490,11 +545,14 @@ for i = 1, count do
                })
             end
             quad:for_each_alpha_layer(function(layer)
-               local lt = layer.texture
-               if not lt then
-                  return
+               local ltex  = layer.texture
+               local color = nil
+               if ltex then
+                  color = TextureManager:get_color(ltex)
+               else
+                  -- YES, blend layers can be null and therefore use the default texture too
+                  color = TextureManager:get_default_color()
                end
-               local color = TextureManager:get_color(lt)
                for u = vx.min, vx.max do
                   for v = vy.min, vy.max do
                      local opacity = layer:get_opacity_at_cell_position(u, v)
@@ -502,7 +560,9 @@ for i = 1, count do
                         local a, b = do_grid_flip(u, v)
                         a = a - 1 -- account for skipped col
                         b = b - 1 -- account for skipped row
-                        rasters.working.paint:set_pixel(a, b, color)
+                        color.a  = math.max(0, math.min(255, math.ceil(opacity * 255))) -- force alpha
+                        color[4] = color.a -- force alpha
+                        rasters.working.paint:blend_pixel(a, b, color) -- set_pixel overwrites; blend_pixel blends
                      end
                   end
                end

@@ -304,6 +304,29 @@ namespace {
          lua_pop(L, 2);
          return true;
       }
+
+      QRgb blend_pixel(QColor src, QRgb dst_rgba) {
+         constexpr size_t index_a = std::endian::native == std::endian::little ? 3 : 0;
+         constexpr size_t index_r = std::endian::native == std::endian::little ? 2 : 1;
+         constexpr size_t index_g = std::endian::native == std::endian::little ? 1 : 2;
+         constexpr size_t index_b = std::endian::native == std::endian::little ? 0 : 3;
+         //
+         auto* dst = (uint8_t*)&dst_rgba;
+         //
+         qreal src_alpha = (qreal)src.alpha() / 255;
+         qreal dst_alpha = (qreal)dst[index_a] / 255;
+         qreal inv_src_alpha   = 1.0 - src_alpha;
+         qreal final_dst_alpha = dst_alpha * inv_src_alpha;
+         //
+         QRgb  out;
+         auto* out_ptr = (uint8_t*)&out;
+         out_ptr[index_a] = src.alpha() + (dst[index_a] * inv_src_alpha);
+         out_ptr[index_r] = src.red()   * src_alpha + dst[index_r] * final_dst_alpha;
+         out_ptr[index_g] = src.green() * src_alpha + dst[index_g] * final_dst_alpha;
+         out_ptr[index_b] = src.blue()  * src_alpha + dst[index_b] * final_dst_alpha;
+         //
+         return out;
+      }
    }
 
    enum class trait {
@@ -395,6 +418,46 @@ namespace {
    }
 
    namespace _methods {
+      luastackchange_t blend_pixel(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.managed_resource)
+            return 0;
+         //
+         int isnum;
+         int x = lua_tointegerx(L, 2, &isnum);
+         luaL_argcheck(L, isnum,  2, "x-coordinate (integer) expected");
+         luaL_argcheck(L, x != 0, 2, "x-coordinate cannot be zero");
+         luaL_argcheck(L, x >  0, 2, "x-coordinate cannot be negative");
+         int y = lua_tointegerx(L, 3, &isnum);
+         luaL_argcheck(L, isnum,  3, "y-coordinate (integer) expected");
+         luaL_argcheck(L, y != 0, 3, "y-coordinate cannot be zero");
+         luaL_argcheck(L, y >  0, 3, "y-coordinate cannot be negative");
+         --x;
+         --y;
+         QColor color = util::ui::pull_color(L, 4);
+         //
+         int w = -1;
+         int h = -1;
+         self.managed_resource->modify_raster_script_side([x, y, color, &w, &h](QImage& image) {
+            assert(image.format() == QImage::Format::Format_ARGB32);
+            w = image.width();
+            h = image.height();
+            if (x >= w || y >= h)
+               return;
+            auto* bytes = (QRgb*)image.scanLine(y);
+            if (color.alpha() <= 0)
+               return;
+            if (color.alpha() >= 255) {
+               bytes[x] = color.rgba();
+               return;
+            }
+            bytes[x] = _helpers::blend_pixel(color, bytes[x]);
+         });
+         luaL_argcheck(L, x < w, 2, "x-coordinate exceeded the raster's width");
+         luaL_argcheck(L, y < h, 3, "y-coordinate exceeded the raster's height");
+         //
+         return 0;
+      }
       luastackchange_t draw_ellipse(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, cobb::lua::istablelike(L, 2), 2, "table (options) expected");
@@ -963,6 +1026,7 @@ namespace {
 
 namespace editor_script::wrappers::resource {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "blend_pixel",  &_methods::blend_pixel },
       { "draw_ellipse", &_methods::draw_ellipse },
       { "draw_line",    &_methods::draw_line },
       { "draw_path",    &_methods::draw_path },
