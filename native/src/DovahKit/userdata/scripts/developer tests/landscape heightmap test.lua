@@ -290,6 +290,9 @@ do
       ras:resize(1, 1)
       return ras
    end
+   function _adjust_color(color)
+      return
+   end
    
    function TextureManager:get_color(land_texture)
       local ts = land_texture.texture_set
@@ -312,6 +315,7 @@ do
       local raster <close> = _resize_dds(dds)
       --
       local color = raster:get_pixel(1, 1)
+      _adjust_color(color)
       color.a  = 255
       color[4] = 255 -- alpha in land textures means something else (parallax?)
       self.map[path] = color
@@ -333,6 +337,7 @@ do
       raster:resize(1, 1)
       --
       local color = raster:get_pixel(1, 1)
+      _adjust_color(color)
       color.a  = 255
       color[4] = 255 -- alpha in land textures means something else (parallax?)
       self.default_color = color
@@ -474,23 +479,25 @@ for i = 1, count do
    if land and land.enable_vertex_heights then
       rasters.working.water:fill(TRANSPARENT)
       --
-      for u = 2, 33 do -- leftmost col overlaps with western cell, so skip it
-         for v = 1, 32 do -- bottom row overlaps with southern cell, so skip it
-            local vcolor = land:get_color_at(u, v)
-            local height = land:get_height_at(u, v)
-            local shade  = (height - extents.z.min) / extents.z.span
-            shade = math.floor(shade * 255) -- TODO: round
-            --
-            local a, b = do_grid_flip(u, v)
-            a = a - 1 -- account for skipped col
-            b = b - 1 -- account for skipped row
-            rasters.working.height:set_pixel(a, b, { r = shade, g = shade, b = shade })
-            rasters.working.color:set_pixel(a, b, vcolor)
-            --
-            if cell.has_water then -- water
-               local alpha = _alpha_from_height(height, water_height)
-               if alpha > 0 then
-                  rasters.working.water:set_pixel(a, b, { r = 80, g = 160, b = 255, a = alpha })
+      do
+         for u = 2, 33 do -- leftmost col overlaps with western cell, so skip it
+            for v = 1, 32 do -- bottom row overlaps with southern cell, so skip it
+               local vcolor = land:get_color_at(u, v)
+               local height = land:get_height_at(u, v)
+               local shade  = (height - extents.z.min) / extents.z.span
+               shade = math.floor(shade * 255) -- TODO: round
+               --
+               local a, b = do_grid_flip(u, v)
+               a = a - 1 -- account for skipped col
+               b = b - 1 -- account for skipped row
+               rasters.working.height:set_pixel(a, b, { r = shade, g = shade, b = shade })
+               rasters.working.color:set_pixel(a, b, vcolor)
+               --
+               if cell.has_water then -- water
+                  local alpha = _alpha_from_height(height, water_height)
+                  if alpha > 0 then
+                     rasters.working.water:set_pixel(a, b, { r = 80, g = 160, b = 255, a = alpha })
+                  end
                end
             end
          end

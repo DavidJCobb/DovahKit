@@ -2,6 +2,7 @@
 #include <functional>
 #include <mutex>
 #include <QElapsedTimer>
+#include <QImage>
 #include <QStyledItemDelegate>
 #include "../../../helpers/singleton.h"
 #include "editor_script_inner_core.h"
@@ -23,6 +24,9 @@ namespace editor_script {
       dds,
       raster,
    };
+
+   // The QImage format that other script APIs expect.
+   extern constexpr QImage::Format desired_qt_pixel_format = QImage::Format_ARGB32_Premultiplied;
 
    class LuaManagedResource : public QObject {
       Q_OBJECT;

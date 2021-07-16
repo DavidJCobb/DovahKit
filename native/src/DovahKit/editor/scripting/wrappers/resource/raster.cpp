@@ -32,6 +32,17 @@ namespace {
    static constexpr auto default_painter_hints = QPainter::Antialiasing | QPainter::TextAntialiasing;
 
    namespace _helpers {
+      inline QRgb adapt_to_format(QRgb in) noexcept {
+         if constexpr (desired_qt_pixel_format == QImage::Format::Format_ARGB32_Premultiplied)
+            return qPremultiply(in);
+         return in;
+      }
+      inline QRgb adapt_from_format(QRgb in) noexcept {
+         if constexpr (desired_qt_pixel_format == QImage::Format::Format_ARGB32_Premultiplied)
+            return qUnpremultiply(in);
+         return in;
+      }
+
       void pull_fill_color(lua_State* L, int index, QBrush& brush, bool optional = false) {
          index = lua_absindex(L, index);
          if (optional && lua_isnoneornil(L, index)) {
@@ -439,7 +450,7 @@ namespace {
          int w = -1;
          int h = -1;
          self.managed_resource->modify_raster_script_side([x, y, color, &w, &h](QImage& image) {
-            assert(image.format() == QImage::Format::Format_ARGB32);
+            assert(image.format() == desired_qt_pixel_format);
             w = image.width();
             h = image.height();
             if (x >= w || y >= h)
@@ -451,7 +462,9 @@ namespace {
                bytes[x] = color.rgba();
                return;
             }
+            bytes[x] = _helpers::adapt_from_format(bytes[x]);
             bytes[x] = _helpers::blend_pixel(color, bytes[x]);
+            bytes[x] = _helpers::adapt_to_format(bytes[x]);
          });
          luaL_argcheck(L, x < w, 2, "x-coordinate exceeded the raster's width");
          luaL_argcheck(L, y < h, 3, "y-coordinate exceeded the raster's height");
@@ -802,10 +815,11 @@ namespace {
          --y;
          //
          auto image = self.managed_resource->get_raster_script_side();
-         assert(image.format() == QImage::Format::Format_ARGB32);
+         assert(image.format() == desired_qt_pixel_format);
          luaL_argcheck(L, x < image.width(),  2, "x-coordinate exceeded the raster's width");
          luaL_argcheck(L, y < image.height(), 3, "y-coordinate exceeded the raster's height");
-         util::ui::push_color(L, image.pixel(x, y));
+         auto pixel = _helpers::adapt_from_format(image.pixel(x, y));
+         util::ui::push_color(L, pixel);
          return 1;
       }
       luastackchange_t resize(lua_State* L) {
@@ -828,6 +842,8 @@ namespace {
             if (prior == size)
                return;
             image = image.scaled(size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            if (image.format() != desired_qt_pixel_format) // QImage::scaled can change the format, and that isn't documented
+               image.convertTo(desired_qt_pixel_format);
          });
          //
          return 0;
@@ -863,6 +879,8 @@ namespace {
             if (prior.height() < 1)
                prior.setHeight(1);
             image = image.scaled(prior, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            if (image.format() != desired_qt_pixel_format) // QImage::scaled can change the format, and that isn't documented
+               image.convertTo(desired_qt_pixel_format);
          });
          //
          return 0;
@@ -888,13 +906,13 @@ namespace {
          int w = -1;
          int h = -1;
          self.managed_resource->modify_raster_script_side([x, y, color, &w, &h](QImage& image) {
-            assert(image.format() == QImage::Format::Format_ARGB32);
+            assert(image.format() == desired_qt_pixel_format);
             w = image.width();
             h = image.height();
             if (x >= w || y >= h)
                return;
             auto* bytes = (QRgb*)image.scanLine(y);
-            bytes[x] = color.rgba();
+            bytes[x] = _helpers::adapt_to_format(color.rgba());
          });
          luaL_argcheck(L, x < w, 2, "x-coordinate exceeded the raster's width");
          luaL_argcheck(L, y < h, 3, "y-coordinate exceeded the raster's height");
@@ -1001,7 +1019,7 @@ namespace {
          {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [width, height, background, &resource]() {
-               auto base = QImage(width, height, QImage::Format::Format_ARGB32);
+               auto base = QImage(width, height, desired_qt_pixel_format);
                if (base.isNull()) // can occur if the image is too large?
                   return;
                base.fill(background);

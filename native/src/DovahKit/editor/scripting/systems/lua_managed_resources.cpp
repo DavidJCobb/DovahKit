@@ -17,9 +17,6 @@ namespace {
    // really any other constraint on what this can be.
    static constexpr DXGI_FORMAT    desired_dds_pixel_format = DXGI_FORMAT_R8G8B8A8_UNORM;
    static constexpr QImage::Format desired_dds_pixel_qt_fmt = QImage::Format_RGBA8888; // the Qt equivalent of desired_dds_pixel_format
-
-   // The QImage format that other script APIs expect.
-   static constexpr QImage::Format desired_qt_pixel_format = QImage::Format_ARGB32;
 }
 
 namespace editor_script {

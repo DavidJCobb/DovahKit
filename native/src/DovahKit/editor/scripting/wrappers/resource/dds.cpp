@@ -82,7 +82,9 @@ namespace {
             const auto* base = self.managed_resource;
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [base, &resource]() {
-               resource = DovahKitScriptVMResourceInterface::get().create_resource(base->get_dds_layer(0, 0, 0));
+               QImage layer = base->get_dds_layer(0, 0, 0);
+               assert(!layer.isNull());
+               resource = DovahKitScriptVMResourceInterface::get().create_resource(layer);
             };
             DovahKitScriptVMUITaskConduit::get().send_message(*task);
             delete task;
