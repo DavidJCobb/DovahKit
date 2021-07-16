@@ -1,5 +1,6 @@
 #include "benchmark.h"
 #include "../util.h"
+#include "../../../helpers/lua/error.h"
 
 namespace {
    LARGE_INTEGER _get_frequency() {
@@ -41,10 +42,8 @@ namespace {
 
    classes::benchmark& _get_this(lua_State* L) {
       auto* self = (classes::benchmark*) editor_script::cast_to_exact_class(L, 1, classes::benchmark::metatable_key);
-      if (self == nullptr) {
-         luaL_error(L, "function called with bad self (expected %s)", classes::benchmark::metatable_key);
-      }
-      __assume(self != nullptr);
+      if (self == nullptr)
+         cobb::lua::error(L, "function called with bad self (expected %s)", classes::benchmark::metatable_key);
       return *self;
    }
 
@@ -53,14 +52,14 @@ namespace {
          auto& self = _get_this(L);
          if (!self.done)
             return 0;
-         lua_pushnumber(L, self.microseconds());
+         lua_pushinteger(L, self.microseconds());
          return 1;
       }
       luastackchange_t milliseconds(lua_State* L) {
          auto& self = _get_this(L);
          if (!self.done)
             return 0;
-         lua_pushnumber(L, self.milliseconds());
+         lua_pushinteger(L, self.milliseconds());
          return 1;
       }
    }

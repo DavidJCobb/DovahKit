@@ -20,6 +20,26 @@ namespace {
 
    // The QImage format that other script APIs expect.
    static constexpr QImage::Format desired_qt_pixel_format = QImage::Format_ARGB32;
+
+   // When a script wants to modify the content of an LMR, we need to lock the resource manager's 
+   // "desynchronized" list, so that we can add the resource to that list. However, if the resource 
+   // is already desynchronized, then we also need to be sure that the manager doesn't try to 
+   // resynchronize the resource while we're in the middle of writing to it.
+   //
+   // One approach is to keep the "desynchronized" list locked for the entire duration of the 
+   // modification, such that the manager will be unable to resynchronize any resource until 
+   // the modification is complete. An alternate approach is to lock the list long enough to 
+   // remove the resource from it (so it doesn't resynchronize) and then unlock the list, make 
+   // the modification, and then re-lock the list to add the resource (so that it can then 
+   // resynchronize).
+   //
+   // Which one of these will be more efficient? Well, that depends on what's likely to take longer: 
+   // making the modification, or finding the resource in the "desynchronized" list and removing it.
+   // 
+   // Testing with our heightmap script, we're actually three seconds slower when we use dual-locking 
+   // rather than just locking once and staying locked through the whole modification operation.
+   //
+   static constexpr bool lock_during_script_side_modification = true;
 }
 
 namespace editor_script {
@@ -408,11 +428,23 @@ void DovahKitScriptVMResourceInterface::modify_raster_script_side(resource_t& r,
       return;
    auto& base = this->resources.desynched;
    auto& list = base.list;
-   std::unique_lock guard(base.lock);
-   //
-   (task)(r.content.raster.script);
-   if (!list.contains(&r))
-      list.push_back(&r);
+   if constexpr (lock_during_script_side_modification) {
+      std::unique_lock guard(base.lock);
+      //
+      (task)(r.content.raster.script);
+      if (!list.contains(&r))
+         list.push_back(&r);
+   } else {
+      {
+         std::unique_lock guard(base.lock);
+         list.removeOne(&r);
+      }
+      (task)(r.content.raster.script);
+      {
+         std::unique_lock guard(base.lock);
+         list.push_back(&r);
+      }
+   }
 }
 
 void DovahKitScriptVMResourceInterface::on_resource_ui_referenced_changed(resource_t& resource, bool became_referenced) {
