@@ -44,7 +44,7 @@ namespace editor_script {
                QPixmap client;
             } raster;
          } content;
-         //
+         
       public:
          ~LuaManagedResource();
 

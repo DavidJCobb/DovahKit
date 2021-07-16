@@ -246,9 +246,36 @@ void DovahKitScriptVMUserdataInterface::prune_wrapper_list_for(editor_script::wr
    lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_storage_registry_key);
    lua_pushlightuserdata(L, light);
    lua_rawget(L, -2);
-   bool destroy = !lua_istable(L, -1);
-   if (!destroy)
-      destroy = cobb::lua::isempty(L, -1);
+   if (!lua_istable(L, -1)) {
+      lua_pop(L, 2);
+      //
+      // Here's an interesting edge-case that can happen: what if two wrappers for the 
+      // same pertinent pointer become unused at around the same time, and there are no 
+      // other wrappers for that pertinent pointer? Well, both of those wrappers would 
+      // run their __gc metamethods one after the other, and both of those metamethods 
+      // would eventually lead to this function here.
+      // 
+      // The first time we get here, we'd find an empty wrapper list for that pertinent 
+      // pointer, and so we'd run the "Lua-unreferenced" behavior for the pertinent 
+      // pointer. Commonly, this will involve queuing the deletion of the pointed-to 
+      // object. We'd also delete the empty list from Lua. That's the first dead wrapper 
+      // done.
+      // 
+      // The second dead wrapper, however, would still run its own __gc function, which 
+      // would still lead here... and this time, it'd find that there's no wrapper list 
+      // at all. If, at this point, we run the "Lua-unreferenced" behavior, then we'll 
+      // have run it twice, which can lead to double-frees on wrapped objects. Instead, 
+      // if we see that there's no list, then we need to trust that the pointed-to 
+      // object was already dealt with by some other wrapper that was deleted at around 
+      // the same time as us, and we need to simply exit.
+      // 
+      // (But how is the list empty? Remember: __gc is used for final deletion, but the 
+      // wrappers will have disappeared from the list, a weakmap, earlier, if they 
+      // became unused by the script at around the same time.)
+      //
+      return;
+   }
+   bool destroy = cobb::lua::isempty(L, -1);
    lua_pop(L, 1);
    //
    if (destroy) {
@@ -281,7 +308,10 @@ void DovahKitScriptVMUserdataInterface::prune_wrapper_list_for(editor_script::wr
       lua_pushlightuserdata(L, light);
       lua_pushnil(L);
       lua_rawset(L, -3);
-      //
+   }
+   lua_pop(L, 1); // remove wrapper storage table from the stack
+   //
+   if (destroy) {
       switch (instance.type) {
          using wt = editor_script::wrapper_type;
          case wt::lua_managed_resource:
