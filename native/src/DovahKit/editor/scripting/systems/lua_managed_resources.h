@@ -26,7 +26,7 @@ namespace editor_script {
    };
 
    // The QImage format that other script APIs expect.
-   extern constexpr QImage::Format desired_qt_pixel_format = QImage::Format_ARGB32_Premultiplied;
+   extern constexpr QImage::Format desired_qt_pixel_format = QImage::Format_ARGB32;
 
    class LuaManagedResource : public QObject {
       Q_OBJECT;

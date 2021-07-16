@@ -338,6 +338,19 @@ namespace {
          //
          return out;
       }
+      namespace {
+         inline constexpr uint16_t _divide_by_255(uint16_t x) noexcept {
+            return ((x + 1) * 257) >> 16;
+         }
+      }
+      QRgb blend_pixel_premul(QRgb color_a, QRgb color_b) { // fast; very slightly inaccurate
+         unsigned int alpha = qAlpha(color_a);
+         //
+         uint32_t a  = alpha + _divide_by_255(qAlpha(color_b) * alpha);
+         uint32_t rb = (color_a & 0xFF00FF) + ((alpha * (color_b & 0xFF00FF)) >> 8);
+         uint32_t g  = (color_a & 0x00FF00) + ((alpha * (color_b & 0x00FF00)) >> 8);
+         return (rb & 0xFF00FF) | (g & 0x00FF00) | (a << 0x18);
+      }
    }
 
    enum class trait {
@@ -456,6 +469,11 @@ namespace {
             if (x >= w || y >= h)
                return;
             auto* bytes = (QRgb*)image.scanLine(y);
+            if constexpr (desired_qt_pixel_format == QImage::Format::Format_ARGB32_Premultiplied) {
+               QRgb over = qPremultiply(color.rgba());
+               bytes[x] = _helpers::blend_pixel_premul(over, bytes[x]);
+               return;
+            }
             if (color.alpha() <= 0)
                return;
             if (color.alpha() >= 255) {
