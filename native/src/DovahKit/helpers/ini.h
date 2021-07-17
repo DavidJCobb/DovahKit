@@ -131,6 +131,10 @@ namespace cobb {
             file(const wchar_t* filepath);
             file(const wchar_t* filepath, const wchar_t* backup, const wchar_t* working);
             //
+            struct {
+               bool create_if_missing = true;
+            } options;
+            //
             void insert_setting(setting* setting);
             void load(); // if the file doesn't exist, calls (save) to generate a new file and then returns (does not redundantly load the new file)
             void save(); // preserves the existing file's whitespace, comments, setting order, etc.; writes all setting values including those not changed from the defaults

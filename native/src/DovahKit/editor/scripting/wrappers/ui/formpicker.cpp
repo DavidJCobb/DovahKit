@@ -195,10 +195,9 @@ namespace {
          lua_settop(L, 2);
          //
          QVector<dovah::form_type_t> value;
-         if (lua_isnumber(L, 2)) {
-            bool valid;
-            auto ft = get_form_type_from_stack(L, 2, valid);
-            luaL_argcheck(L, valid, 2, "form type expected");
+         bool valid;
+         auto ft = get_form_type_from_stack(L, 2, valid);
+         if (valid) {
             value.push_back(ft);
          } else if (lua_istable(L, 2)) {
             lua_len(L, 2);
@@ -207,7 +206,6 @@ namespace {
             lua_pop(L, 1);
             for (int i = 1; i <= length; ++i) {
                lua_geti(L, 2, i);
-               bool valid;
                auto ft = get_form_type_from_stack(L, 3, valid);
                if (valid)
                   value.push_back(ft);

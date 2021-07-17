@@ -42,6 +42,22 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
+      luastackchange_t delete_(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* layer = self.canvas_layer;
+         if (!layer)
+            return 0;
+         DovahKitScriptVMUserdataInterface::get().remove(self);
+         {
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [layer]() {
+               layer->deleteLater();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         return 0;
+      }
    }
    namespace _getters {
       luastackchange_t blend_mode(lua_State* L) {
@@ -356,6 +372,7 @@ namespace {
 
 namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "delete", &_methods::delete_ },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "blend_mode", &_getters::blend_mode },

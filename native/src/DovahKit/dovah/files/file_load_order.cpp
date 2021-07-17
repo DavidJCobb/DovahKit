@@ -177,6 +177,9 @@ namespace dovah {
       // update that form. However, if we want to generate *inbound* Use Info *from* a 
       // given form, we must update each form it refers to. As such, we can't multi-thread 
       // the generation of inbound Use Info unless we put a lock on each individual form.
+      // 
+      // Note that parent form relationships, tracked during load, exist as outbound use 
+      // info.
       //
       auto& builders = this->use_info_build_threads;
       {
@@ -473,6 +476,7 @@ namespace dovah {
          return form_id_status::null_is_not_allowed;
       }
       //
+      auto* new_parent = stub->get_parent_form();
       if (form_stub* target = this->forms.forms[formID]) { // is this an override?
          form_type_t type_a = target->formType;
          form_type_t type_b = stub->formType;
@@ -521,7 +525,6 @@ namespace dovah {
          // Delete the new stub, and overwrite the pointer (in this function and in our caller(s)) with 
          // the existing stub.
          //
-         auto* new_parent = stub->get_parent_form();
          if (stub->formType == form_type::topic_info) {
             //
             // If the stub is a topic info and it's being re-parented by an override, then we need to 
@@ -559,9 +562,19 @@ namespace dovah {
                }
             }
          }
-         target->set_parent_form(new_parent);
+         if (stub->formType == form_type::cell) {
+            if (stub->test_record_flags(tes_file_record_header::flag::persistent)) {
+               auto* old_parent = target->get_parent_form();
+               if (old_parent && old_parent != new_parent) { // Re-parenting cells isn't supported and isn't a sane operation, but no harm in covering it here
+                  auto* addenda = old_parent->addenda;
+                  if (addenda && addenda->persistent_cell == target)
+                     addenda->persistent_cell = nullptr;
+               }
+            }
+         }
          assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
          target->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);
+         target->_set_parent_form_one_way(new_parent);
          delete stub;
          stub = target;
       } else {
@@ -630,6 +643,21 @@ namespace dovah {
       // Quick note: This function is guaranteed never to delete the input stub if an error occurs. In one 
       // of the branches above, we may have deleted the input stub and switched it out for the existing stub 
       // which it overrides, so from this point forward we can't delete the stub.
+      // 
+      // Anywho... Manage the persistent cell:
+      //
+      if (stub->formType == form_type::cell) {
+         if (stub->test_record_flags(tes_file_record_header::flag::persistent)) {
+            //
+            // Ensure that worldspaces are aware of their persistent cells.
+            //
+            if (new_parent && new_parent->formType == form_type::worldspace) {
+               auto& addenda = new_parent->get_or_create_addenda();
+               if (!addenda.persistent_cell) // Only the first persistent-flagged cell loaded by a worldspace will be THE persistent cell.
+                  addenda.persistent_cell = stub;
+            }
+         }
+      }
       //
       // Place the stub inside of the active file form maps, if appropriate.
       //

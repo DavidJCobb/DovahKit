@@ -103,6 +103,7 @@ namespace dovah {
          flag() = delete;
          enum {
             deleted    = 0x00000020,
+            persistent = 0x00000400, // only used for some forms, including REFR and CELL
             partial    = 0x00004000,
             compressed = 0x00040000,
          };

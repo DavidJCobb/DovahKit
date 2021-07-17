@@ -494,8 +494,6 @@ namespace dovah {
       this->_add_file(*active, 0, mask);
    }
    bool form_stub::test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept {
-      if (file_index < 0)
-         return false;
       auto* info = this->get_source_file_info(file_index);
       if (!info)
          return false;

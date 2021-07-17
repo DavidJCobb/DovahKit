@@ -107,6 +107,8 @@ namespace cobb {
          std::ifstream file;
          file.open(this->filePath);
          if (!file) {
+            if (!this->options.create_if_missing)
+               return;
             printf("Unable to load our INI file for reading. Calling cobb::ini::file::save to generate a default one.\n");
             this->save(); // generate a new INI file.
             return;
