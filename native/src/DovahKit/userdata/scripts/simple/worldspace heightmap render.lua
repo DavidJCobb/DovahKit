@@ -595,7 +595,10 @@ do
       local world_first_file = nil
       do
          local list = world:get_source_file_list()
-         world_first_file = list[1]
+         local file = list[1]
+         if file then
+            world_first_file = file.filename
+         end
       end
       
       local cells   = world:get_all_cells()
@@ -782,8 +785,11 @@ do
                local files = cell:get_source_file_list()
                for j = 1, #files do
                   local file = files[j]
-                  if file ~= world_first_file then
-                     all_maps:accept(file, x, y)
+                  if file then
+                     local name = file.filename
+                     if name ~= world_first_file then
+                        all_maps:accept(name, x, y)
+                     end
                   end
                end
             end
@@ -902,9 +908,14 @@ do
             end
             progress.value = i
          end
+         dovah.benchmark_stop(benchmark)
+         dovah.log_message("Time taken for draw: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+         
+         benchmark = dovah.benchmark_start()
          do -- Cell outlines
             local files = all_maps:get_filename_list()
             local count = #files
+            _update_progress("Drawing outlines...", 0, count, 0)
             --
             local HUE_PER_FILE = math.ceil(360 / count)
             --
@@ -921,10 +932,11 @@ do
                   local island = islands[j]
                   island:draw(group, color)
                end
+               progress.value = i
             end
          end
          dovah.benchmark_stop(benchmark)
-         dovah.log_message("Time taken: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+         dovah.log_message("Time taken for islands: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
       end
    end
 end

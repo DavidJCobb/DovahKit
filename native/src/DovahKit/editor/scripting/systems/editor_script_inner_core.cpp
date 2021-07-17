@@ -1162,10 +1162,9 @@ void DovahKitScriptVMCore::runScript(const QString& code, const QString& name) {
          emit DovahKitScriptVMCore::get().messageLogged(message);
          break;
    }
-   this->_teardown_lua_vm();
    this->main_thread_tick_timer.stop();
    this->running = false;
-   emit scriptEnded(true);
+   emit scriptEnded(true); // a signal/slot connection will tear down the VM, so don't do it here
 }
 
 void DovahKitScriptVMCore::setPaused(bool b) {
