@@ -19,9 +19,13 @@ local DEFAULT_LAND = { -- executable-level defaults: a LandTexture created at ru
 -- (first = lowest). If we want to configure additional properties, we 
 -- must update the code that creates layers and the code that toggles a 
 -- layer's visibility.
+--
+-- The lowest layer will be forced to "normal" blend mode, fully opaque.
 local LAYER_SPEC = {
    {
       name       = "height",
+      blend_mode = "multiply",
+      opacity    = 0.65,
       check_text = "Show heightmap",
    },
    {
@@ -447,6 +451,7 @@ do
          canvas.height = IMAGE_H
          dovah.log_message("Canvas size: %dx%dpx", IMAGE_W, IMAGE_H)
          do
+            local lowest = nil
             for i = 1, #LAYER_SPEC do
                local spec = LAYER_SPEC[i]
                local name = spec.name
@@ -465,11 +470,15 @@ do
                local layer = canvas:append_layer()
                layer.data = rasters.render[name]
                HeightmapWindow.state.layers[name] = layer
-               if spec.blend_mode then
-                  layer.blend_mode = spec.blend_mode
-               end
-               if spec.opacity then
-                  layer.opacity = spec.opacity
+               if lowest then
+                  if spec.blend_mode then
+                     layer.blend_mode = spec.blend_mode
+                  end
+                  if spec.opacity then
+                     layer.opacity = spec.opacity
+                  end
+               else
+                  lowest = layer
                end
             end
          end
@@ -624,7 +633,7 @@ do
                -- as having a heightmap, which is what we test here.
                --
                local height = world_info.heights.land
-               local shade  = (height - extents.z.min) / extents.z.span
+               local shade  = math.max(0, math.min(1, (height - extents.z.min) / extents.z.span))
                shade = math.floor(shade * 255) -- TODO: round
                --
                rw.height:fill({ r = shade, g = shade, b = shade })
