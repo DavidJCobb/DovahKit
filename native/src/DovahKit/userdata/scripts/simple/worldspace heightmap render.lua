@@ -48,7 +48,7 @@ local LAYER_SPEC = {
 ---
 
 local FileOutlineWidget = {}
-setmetatable(FileOutlineWidget, { __index = FileOutlineWidget })
+FileOutlineWidget.__index = FileOutlineWidget
 do -- FileOutlineWidget contents
    function FileOutlineWidget:new(options)
       options = options or {}
@@ -226,6 +226,8 @@ do -- HeightmapWindow contents
    end
 end
 
+---
+
 local TextureManager = {
    map = {},
 }
@@ -305,6 +307,235 @@ do -- TextureManager contents
    end
 end
 
+---
+
+local CellOutlineIsland = {}
+CellOutlineIsland.__index = CellOutlineIsland
+do
+   function CellOutlineIsland:new()
+      local instance = setmetatable({}, self)
+      instance.cells  = {}
+      instance.bounds = { x = { false, false }, y = { false, false } }
+      return instance
+   end
+   function CellOutlineIsland:accept_cell(x, y)
+      local col = self.cells[x]
+      if not col then
+         col = {}
+         self.cells[x] = col
+      end
+      col[y] = true
+      do
+         local span = self.bounds.x
+         if not span[1] or x < span[1] then
+            span[1] = x
+         end
+         if not span[2] or x > span[2] then
+            span[2] = x
+         end
+      end
+      do
+         local span = self.bounds.y
+         if not span[1] or y < span[1] then
+            span[1] = y
+         end
+         if not span[2] or y > span[2] then
+            span[2] = y
+         end
+      end
+   end
+   function CellOutlineIsland:draw(layer_group, color)
+      local x_min = self.bounds.x[1] - 1
+      local x_max = self.bounds.x[2] + 1
+      local y_min = self.bounds.y[1] - 1
+      local y_max = self.bounds.y[2] + 1
+      --
+      local width  = (x_max - x_min) * 32
+      local height = (y_max - y_min) * 32
+      local img = raster.new({
+         width  = width,
+         height = height,
+      })
+      local layer = layer_group:append_layer()
+      layer.x = x_min * 32
+      layer.y = y_min * 32
+      layer.visible = false
+      layer.data    = img
+      --
+      for x = x_min, x_max do
+         local col = self.cells[x]
+         if col then
+            col_p = self.cells[x - 1]
+            col_n = self.cells[x + 1]
+            --
+            local x_prior = x * 32 - 1
+            local x_after = (x + 1) * 32
+            --
+            for y = y_min, y_max do
+               local cell = self.cells[x][y]
+               if cell then
+                  local y_prior = y * 32 - 1
+                  local y_after = (y + 1) * 32
+                  --
+                  if col_p then
+                     if y > 1 and not col_p[y - 1] then -- upper-left
+                        img:set_pixel(x_prior, y_prior, color)
+                     end
+                     if y < y_max and not col_p[y + 1] then -- lower-left
+                        img:set_pixel(x_prior, y_after, color)
+                     end
+                  end
+                  if col_n then
+                     if y > 1 and not col_p[y - 1] then -- upper-right
+                        img:set_pixel(x_after, y_prior, color)
+                     end
+                     if y < y_max and not col_p[y + 1] then -- lower-right
+                        img:set_pixel(x_after, y_after, color)
+                     end
+                  end
+                  if y > 1 and not col[y - 1] then -- above
+                     img:draw_rect({
+                        fill_color = color,
+                        w = 32,
+                        h =  1,
+                        x = x * 32,
+                        y = y_prior,
+                     })
+                  end
+                  if y < y_max and not col[y + 1] then -- below
+                     img:draw_rect({
+                        fill_color = color,
+                        w = 32,
+                        h =  1,
+                        x = x * 32,
+                        y = y_after,
+                     })
+                  end
+               end
+            end
+         end
+      end
+      --
+      layer.visible = true
+   end
+end
+
+local CellOutlineMap = {}
+CellOutlineMap.__index = CellOutlineMap
+do
+   function CellOutlineMap:new()
+      local instance = setmetatable({}, self)
+      instance.islands = {}
+      instance.cells   = {}
+      instance.bounds  = { x = { false, false }, y = { false, false } }
+      return instance
+   end
+   function CellOutlineMap:accept_cell(x, y)
+      local col = self.cells[x]
+      if not col then
+         col = {}
+         self.cells[x] = col
+      end
+      col[y] = true
+      do
+         local span = self.bounds.x
+         if not span[1] or x < span[1] then
+            span[1] = x
+         end
+         if not span[2] or x > span[2] then
+            span[2] = x
+         end
+      end
+      do
+         local span = self.bounds.y
+         if not span[1] or y < span[1] then
+            span[1] = y
+         end
+         if not span[2] or y > span[2] then
+            span[2] = y
+         end
+      end
+   end
+   function CellOutlineMap:generate_islands()
+      if not self.bounds.x[1] or not self.bounds.y[1] then
+         return
+      end
+      local count = 0
+      for x = self.bounds.x[1], self.bounds.x[2] do
+         self.cells[x - 2] = nil -- early free
+         --
+         local col = self.cells[x]
+         if col then
+            local x_prev = self.cells[x - 1] or {}
+            local x_next = self.cells[x + 1] or {}
+            for y = self.bounds.y[1], self.bounds.y[2] do
+               local cell = col[y]
+               if cell then
+                  local neighbors = {
+                     x_prev[y],
+                     x_next[y],
+                     col[y - 1],
+                     col[y + 1],
+                  }
+                  local num
+                  for i = 1, 4 do
+                     num = tonumber(neighbors[i])
+                     if num then
+                        break
+                     end
+                  end
+                  local island
+                  if num then
+                     col[y] = num
+                     island = self.islands[num]
+                  else
+                     count = count + 1
+                     col[y] = count
+                     --
+                     island = CellOutlineIsland:new()
+                     self.islands[count] = island
+                  end
+                  island:accept_cell(x, y)
+               end
+            end
+         end
+      end
+      self.cells = nil
+   end
+end
+
+local CellOutlineMapAllFiles = {}
+CellOutlineMapAllFiles.__index = CellOutlineMapAllFiles
+do
+   function CellOutlineMapAllFiles:new()
+      local instance = setmetatable({}, self)
+      instance.maps = {}
+      return instance
+   end
+   function CellOutlineMapAllFiles:accept(filename, x, y)
+      local map = self.maps[filename]
+      if not map then
+         map = CellOutlineMap:new()
+         self.maps[filename] = map
+      end
+      map:accept_cell(x, y)
+   end
+   function CellOutlineMapAllFiles:get_filename_list()
+      local list = {}
+      local i    = 1
+      local t    = self.maps
+      local k, v = next(t)
+      while k do
+         list[i] = k
+         i = i + 1
+         k, v = next(t, k)
+      end
+      return list
+   end
+end
+
+---
+
 local render_worldspace_height = nil
 do
    local canvas   = HeightmapWindow.controls.canvas
@@ -359,6 +590,12 @@ do
                water = world.default_water_height,
             },
          }
+      end
+      
+      local world_first_file = nil
+      do
+         local list = world:get_source_file_list()
+         world_first_file = list[1]
       end
       
       local cells   = world:get_all_cells()
@@ -455,6 +692,7 @@ do
             for i = 1, #LAYER_SPEC do
                local spec = LAYER_SPEC[i]
                local name = spec.name
+               local show = HeightmapWindow.state.layer_visibility[name]
                --
                rasters.working[name] = raster.new({
                   width  = 32,
@@ -477,8 +715,11 @@ do
                   if spec.opacity then
                      layer.opacity = spec.opacity
                   end
-               else
+               elseif show then
                   lowest = layer
+               end
+               if not show then
+                  layer.visible = false
                end
             end
          end
@@ -510,6 +751,8 @@ do
             functor("top_right",    quads.top_right)
          end
          
+         local all_maps = CellOutlineMapAllFiles:new()
+         
          local benchmark = dovah.benchmark_start()
          for i = 1, count do
             local cell = cells[i]
@@ -533,6 +776,16 @@ do
                y  = -gc.y - extents.y.min -- invert Y so that north is up
                x = x * 32
                y = y * 32
+            end
+            --
+            do -- File list
+               local files = cell:get_source_file_list()
+               for j = 1, #files do
+                  local file = files[j]
+                  if file ~= world_first_file then
+                     all_maps:accept(file, x, y)
+                  end
+               end
             end
             --
             local land = cell.landscape
@@ -648,6 +901,27 @@ do
                end
             end
             progress.value = i
+         end
+         do -- Cell outlines
+            local files = all_maps:get_filename_list()
+            local count = #files
+            --
+            local HUE_PER_FILE = math.ceil(360 / count)
+            --
+            local root_group = canvas:append_layer_group()
+            for i = 1, count do
+               local name = files[i]
+               local map  = all_maps.maps[name]
+               map:generate_islands()
+               --
+               local islands = map.islands
+               local color   = string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i)
+               local group   = root_group:append_layer_group()
+               for j = 1, #islands do
+                  local island = islands[j]
+                  island:draw(group, color)
+               end
+            end
          end
          dovah.benchmark_stop(benchmark)
          dovah.log_message("Time taken: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())

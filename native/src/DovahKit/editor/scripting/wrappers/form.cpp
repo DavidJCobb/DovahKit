@@ -162,7 +162,7 @@ namespace {
          auto  size = stub->source_file_count();
          lua_createtable(L, size, 0);
          auto  tbli = lua_gettop(L);
-         int   j    = 0;
+         int   j    = 1;
          for (decltype(size) i = 0; i < size; ++i) {
             const auto* file = stub->get_file_at_index(i);
             if (_stub_source_file_to_table(L, file)) {
