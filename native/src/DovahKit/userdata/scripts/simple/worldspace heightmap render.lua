@@ -360,29 +360,33 @@ do
          end
       end
    end
-   function CellOutlineIsland:draw(layer_group, color)
+   function CellOutlineIsland:draw(color, line_layer_group, fill_layer_group)
       local x_min = self.bounds.x[1] - 1
       local x_max = self.bounds.x[2] + 1
       local y_min = self.bounds.y[1] - 1
       local y_max = self.bounds.y[2] + 1
       --
-      local width  = (x_max - x_min + 1) * 32
-      local height = (y_max - y_min + 1) * 32
       local img = raster.new({
-         width  = width,
-         height = height,
+         width  = (x_max - x_min + 1) * 32,
+         height = (y_max - y_min + 1) * 32,
       })
-      local layer = layer_group:append_layer()
-      layer.x = x_min * 32
-      layer.y = y_min * 32
-      layer.visible = false
-      layer.data    = img
-      --
-      local fill_color = ""
-      if CELL_OUTLINE_FILL_OPACITY > 0 then
-         fill_color = color
-         fill_color = fill_color:gsub("hsl", "hsla")
-         fill_color = fill_color:gsub("%)", "") .. ", " .. CELL_OUTLINE_FILL_OPACITY .. ")"
+      local img_fill = raster.new({
+         width  = (x_max - x_min + 1) * 32,
+         height = (y_max - y_min + 1) * 32,
+      })
+      local layer_line = line_layer_group:append_layer()
+      local layer_fill = fill_layer_group:append_layer()
+      do
+         layer_line.x = x_min * 32
+         layer_line.y = y_min * 32
+         layer_line.visible = false
+         layer_line.data    = img
+         --
+         layer_fill.x = x_min * 32
+         layer_fill.y = y_min * 32
+         layer_fill.visible = false
+         layer_fill.opacity = math.max(0, math.min(1, CELL_OUTLINE_FILL_OPACITY / 255))
+         layer_fill.data    = img_fill
       end
       --
       for x = x_min, x_max do
@@ -392,25 +396,25 @@ do
             col_n = self.cells[x + 1]
             --
             local x_prior = (x - x_min) * 32 - 1 -- pixel coordinates
-            local x_after = (x - x_min + 1) * 32 -- pixel coordinates
+            local x_cell  = x_prior +  1 -- pixel coordinates
+            local x_after = x_cell  + 32 -- pixel coordinates
             --
             for y = y_min, y_max do
                local cell = self.cells[x][y]
                if cell then
-                  if CELL_OUTLINE_FILL_OPACITY > 0 then
-                     img:draw_rect({
-                        x = (x - x_min) * 32,
-                        y = (y - y_min) * 32,
-                        w = 32,
-                        h = 32,
-                        fill_color = fill_color
-                     })
-                  end
-                  --
                   local y_prior = (y - y_min) * 32 - 1 -- pixel coordinates
-                  local y_after = (y - y_min + 1) * 32 -- pixel coordinates
+                  local y_cell  = y_prior +  1 -- pixel coordinates
+                  local y_after = y_cell  + 32 -- pixel coordinates
                   --
-                  if y > 1 then
+                  img_fill:draw_rect({
+                     x = x_cell,
+                     y = y_cell,
+                     w = 32,
+                     h = 32,
+                     fill_color = color
+                  })
+                  --
+                  if y > 1 then -- upper corners
                      if not col_p or not col_p[y - 1] then
                         img:set_pixel(x_prior, y_prior, color) -- upper-left
                      end
@@ -418,7 +422,7 @@ do
                         img:set_pixel(x_after, y_prior, color) -- upper-right
                      end
                   end
-                  if y < y_max then
+                  if y < y_max then -- lower corners
                      if not col_p or not col_p[y + 1] then
                         img:set_pixel(x_prior, y_after, color) -- lower-left
                      end
@@ -432,7 +436,7 @@ do
                         w =  1,
                         h = 32,
                         x = x_prior,
-                        y = (y - y_min) * 32,
+                        y = y_cell,
                      })
                   end
                   if not col_n or not col_n[y] then -- right
@@ -441,7 +445,7 @@ do
                         w =  1,
                         h = 32,
                         x = x_after,
-                        y = (y - y_min) * 32,
+                        y = y_cell,
                      })
                   end
                   if y > 1 and not col[y - 1] then -- above
@@ -449,7 +453,7 @@ do
                         fill_color = color,
                         w = 32,
                         h =  1,
-                        x = (x - x_min) * 32,
+                        x = x_cell,
                         y = y_prior,
                      })
                   end
@@ -458,7 +462,7 @@ do
                         fill_color = color,
                         w = 32,
                         h =  1,
-                        x = (x - x_min) * 32,
+                        x = x_cell,
                         y = y_after,
                      })
                   end
@@ -467,7 +471,8 @@ do
          end
       end
       --
-      layer.visible = true
+      layer_line.visible = true
+      layer_fill.visible = true
    end
    function CellOutlineIsland:merge(other)
       if not other or other == self then
@@ -1047,6 +1052,8 @@ do
             local HUE_PER_FILE = math.ceil(360 / count)
             --
             local root_group = false
+            local line_group = false
+            local fill_group = false
             for i = 1, count do
                local name = files[i]
                local map  = all_maps.maps[name]
@@ -1057,6 +1064,10 @@ do
                   if not root_group then
                      root_group = canvas:append_layer_group()
                      root_group.name = "Cells by file"
+                     fill_group = root_group:append_layer_group()
+                     fill_group.name = "Fill"
+                     line_group = root_group:append_layer_group()
+                     line_group.name = "Outlines"
                   end
                   --
                   -- TODO: In the future, we may want to create a file list in 
@@ -1069,11 +1080,13 @@ do
                   -- color dynamically somehow.)
                   --
                   local color = string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i)
-                  local group = root_group:append_layer_group()
-                  group.name = "Cells altered by " .. name
+                  local group_line = line_group:append_layer_group()
+                  local group_fill = fill_group:append_layer_group()
+                  group_line.name = "Cells altered by " .. name .. " (outlines)"
+                  group_fill.name = "Cells altered by " .. name .. " (fill)"
                   for j = 1, #islands do
                      local island = islands[j]
-                     island:draw(group, color)
+                     island:draw(color, group_line, group_fill)
                   end
                end
                progress.value = i
