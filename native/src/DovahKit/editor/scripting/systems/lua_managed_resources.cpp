@@ -17,6 +17,12 @@ namespace {
    // really any other constraint on what this can be.
    static constexpr DXGI_FORMAT    desired_dds_pixel_format = DXGI_FORMAT_R8G8B8A8_UNORM;
    static constexpr QImage::Format desired_dds_pixel_qt_fmt = QImage::Format_RGBA8888; // the Qt equivalent of desired_dds_pixel_format
+
+   static constexpr bool debug_log_resource_management = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
 }
 
 namespace editor_script {
@@ -272,7 +278,9 @@ void DovahKitScriptVMResourceInterface::clear() {
       for (auto* resource : list) {
          assert(resource);
          assert(QThread::currentThread() == resource->thread());
-         delete resource;
+         if constexpr (debug_log_resource_management)
+            qDebug("Teardown is deleting extant Lua-managed resource: %p", resource);
+         resource->deleteLater();
       }
       list.clear();
    }
@@ -284,6 +292,8 @@ void DovahKitScriptVMResourceInterface::clear() {
       for (auto* resource : list) {
          assert(resource);
          assert(QThread::currentThread() == resource->thread());
+         if constexpr (debug_log_resource_management)
+            qDebug("Teardown is deleting marked-for-delete Lua-managed resource: %p", resource);
          resource->deleteLater();
       }
       list.clear();
@@ -324,10 +334,9 @@ void DovahKitScriptVMResourceInterface::main_thread_handler() {
       std::unique_lock guard(base.lock);
       //
       for (auto* resource : list) {
-         #if _DEBUG
-            assert(resource);
+         assert(resource);
+         if constexpr (debug_log_resource_management)
             qDebug("Deleting Lua-managed resource: %p", resource);
-         #endif
          resource->deleteLater();
       }
       list.clear();
@@ -338,10 +347,10 @@ DovahKitScriptVMResourceInterface::resource_t* DovahKitScriptVMResourceInterface
    DovahKitScriptVMCore::require_client_thread();
    //
    resource_t* resource = new resource_t;
+   assert(resource);
    resource->type = editor_script::lua_managed_resource_type::raster;
-   #if _DEBUG
+   if constexpr (debug_log_resource_management)
       qDebug("Creating Lua-managed resource: %p", resource);
-   #endif
    {
       auto& base = this->resources.extant;
       auto& list = base.list;
@@ -379,9 +388,8 @@ DovahKitScriptVMResourceInterface::resource_t* DovahKitScriptVMResourceInterface
       assert(false && "Cannot create a raster resource from a buffer alone; we don't know the image size.");
    }
    assert(resource);
-   #if _DEBUG
+   if constexpr (debug_log_resource_management)
       qDebug("Creating Lua-managed resource: %p", resource);
-   #endif
    {
       auto& base = this->resources.extant;
       auto& list = base.list;
@@ -421,22 +429,18 @@ void DovahKitScriptVMResourceInterface::on_resource_ui_referenced_changed(resour
    }
 }
 void DovahKitScriptVMResourceInterface::on_resource_unreferenced(resource_t& resource) {
-   #if _DEBUG
+   if constexpr (debug_log_resource_management)
       qDebug("Lua-managed resource has become unreferenced either within Lua or Qt: %p", &resource);
-   #endif
    if (resource.is_lua_referenced)
       return;
    if (resource.refcount)
       return;
-   #if _DEBUG
+   if constexpr (debug_log_resource_management)
       qDebug("Marking Lua-managed resource for delete: %p", &resource);
-   #endif
    {
-      std::unique_lock guard(this->resources.desynched.lock);
+      std::unique_lock guard_a(this->resources.desynched.lock);
+      std::unique_lock guard_b(this->resources.extant.lock);
       this->resources.desynched.list.removeAll(&resource);
-   }
-   {
-      std::unique_lock guard(this->resources.extant.lock);
       this->resources.extant.list.removeAll(&resource);
    }
    {

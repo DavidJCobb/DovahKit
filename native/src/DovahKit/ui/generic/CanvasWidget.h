@@ -27,6 +27,7 @@ class CanvasWidget : public QWidget {
       virtual QSize sizeHint() const override;
 
    public:
+      void drawTo(QPainter&, QRect);
 
       // Add a layer to this canvas. The canvas becomes the parent object of the layer and 
       // so takes ownership of it.

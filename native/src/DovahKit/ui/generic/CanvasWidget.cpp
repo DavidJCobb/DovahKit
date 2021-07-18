@@ -44,7 +44,9 @@ void CanvasWidget::paintEvent(QPaintEvent* event) {
    er = er.intersected(QRect(QPoint(0, 0), this->_size));
    //
    QPainter painter(this);
-   //
+   this->drawTo(painter, er);
+}
+void CanvasWidget::drawTo(QPainter& painter, QRect er) {
    auto prior = QImage(er.size(), INTERMEDIATE_IMAGE_FORMAT);
    prior.fill(Qt::GlobalColor::transparent);
    for (auto* child : this->layers()) {

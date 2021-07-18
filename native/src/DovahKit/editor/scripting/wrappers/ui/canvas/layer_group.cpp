@@ -212,6 +212,23 @@ namespace {
          out.is_collection = true;
          return DovahKitScriptVMUserdataInterface::get().push(L, out, cls::layer_collection_key);
       }
+      luastackchange_t name(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.canvas_layer)
+            return 0;
+         QString result;
+         {
+            auto* layer   = self.canvas_layer;
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            task->handler = [layer, &result]() {
+               result = layer->objectName();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         lua_pushstring(L, result.toUtf8());
+         return 1;
+      }
       luastackchange_t opacity(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.canvas_layer)
@@ -310,10 +327,26 @@ namespace {
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
          return 0;
       }
+      luastackchange_t name(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         auto* value = lua_tostring(L, 2);
+         if (!self.canvas_layer)
+            return 0;
+         auto* layer   = self.canvas_layer;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [layer, value]() {
+            layer->setObjectName(value);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t opacity(lua_State* L) {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
-         auto& vm    = DovahKitScriptVMCore::get();
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "number expected");
          lua_Number value = lua_tonumber(L, 2);
+         luaL_argcheck(L, value >= 0.0, 2, "opacity cannot be negative");
+         luaL_argcheck(L, value <= 1.0, 2, "opacity cannot exceed 1.0");
          if (!self.canvas_layer)
             return 0;
          auto* layer   = self.canvas_layer;
@@ -394,6 +427,7 @@ namespace editor_script::wrappers::ui {
       { "blend_mode", &_getters::blend_mode },
       { "canvas",     &_getters::canvas },
       { "layers",     &_getters::layers },
+      { "name",       &_getters::name },
       { "opacity",    &_getters::opacity },
       { "x",          &_getters::x },
       { "y",          &_getters::y },
@@ -401,6 +435,7 @@ namespace editor_script::wrappers::ui {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "blend_mode", &_setters::blend_mode },
+      { "name",       &_setters::name },
       { "opacity",    &_getters::opacity },
       { "x",          &_setters::x },
       { "y",          &_setters::y },

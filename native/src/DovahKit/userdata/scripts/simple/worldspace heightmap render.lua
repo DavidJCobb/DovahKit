@@ -350,8 +350,8 @@ do
       local y_min = self.bounds.y[1] - 1
       local y_max = self.bounds.y[2] + 1
       --
-      local width  = (x_max - x_min) * 32
-      local height = (y_max - y_min) * 32
+      local width  = (x_max - x_min + 1) * 32
+      local height = (y_max - y_min + 1) * 32
       local img = raster.new({
          width  = width,
          height = height,
@@ -368,37 +368,55 @@ do
             col_p = self.cells[x - 1]
             col_n = self.cells[x + 1]
             --
-            local x_prior = x * 32 - 1
-            local x_after = (x + 1) * 32
+            local x_prior = (x - x_min) * 32 - 1 -- pixel coordinates
+            local x_after = (x - x_min + 1) * 32 -- pixel coordinates
             --
             for y = y_min, y_max do
                local cell = self.cells[x][y]
                if cell then
-                  local y_prior = y * 32 - 1
-                  local y_after = (y + 1) * 32
+                  local y_prior = (y - y_min) * 32 - 1 -- pixel coordinates
+                  local y_after = (y - y_min + 1) * 32 -- pixel coordinates
                   --
-                  if col_p then
-                     if y > 1 and not col_p[y - 1] then -- upper-left
-                        img:set_pixel(x_prior, y_prior, color)
+                  if y > 1 then
+                     if not col_p or not col_p[y - 1] then
+                        img:set_pixel(x_prior, y_prior, color) -- upper-left
                      end
-                     if y < y_max and not col_p[y + 1] then -- lower-left
-                        img:set_pixel(x_prior, y_after, color)
+                     if not col_n or not col_n[y - 1] then
+                        img:set_pixel(x_after, y_prior, color) -- upper-right
                      end
                   end
-                  if col_n then
-                     if y > 1 and not col_p[y - 1] then -- upper-right
-                        img:set_pixel(x_after, y_prior, color)
+                  if y < y_max then
+                     if not col_p or not col_p[y + 1] then
+                        img:set_pixel(x_prior, y_after, color) -- lower-left
                      end
-                     if y < y_max and not col_p[y + 1] then -- lower-right
-                        img:set_pixel(x_after, y_after, color)
+                     if not col_n or not col_n[y + 1] then
+                        img:set_pixel(x_after, y_after, color) -- lower-right
                      end
+                  end
+                  if not col_p or not col_p[y] then -- left
+                     img:draw_rect({
+                        fill_color = color,
+                        w =  1,
+                        h = 32,
+                        x = x_prior,
+                        y = (y - y_min) * 32,
+                     })
+                  end
+                  if not col_n or not col_n[y] then -- right
+                     img:draw_rect({
+                        fill_color = color,
+                        w =  1,
+                        h = 32,
+                        x = x_after,
+                        y = (y - y_min) * 32,
+                     })
                   end
                   if y > 1 and not col[y - 1] then -- above
                      img:draw_rect({
                         fill_color = color,
                         w = 32,
                         h =  1,
-                        x = x * 32,
+                        x = (x - x_min) * 32,
                         y = y_prior,
                      })
                   end
@@ -407,7 +425,7 @@ do
                         fill_color = color,
                         w = 32,
                         h =  1,
-                        x = x * 32,
+                        x = (x - x_min) * 32,
                         y = y_after,
                      })
                   end
@@ -417,6 +435,40 @@ do
       end
       --
       layer.visible = true
+   end
+   function CellOutlineIsland:merge(other)
+      if not other or other == self then
+         return
+      end
+      local ab = self.bounds
+      local bb = other.bounds
+      do
+         local ab = ab.x
+         local bb = bb.x
+         ab[1] = math.min(ab[1], bb[1])
+         ab[2] = math.max(ab[2], bb[2])
+      end
+      do
+         local ab = ab.y
+         local bb = bb.y
+         ab[1] = math.min(ab[1], bb[1])
+         ab[2] = math.max(ab[2], bb[2])
+      end
+      for x = bb.x[1], bb.x[2] do
+         local col_a = self.cells[x]
+         local col_b = other.cells[x]
+         if col_b then
+            if not col_a then
+               col_a = {}
+               self.cells[x] = col_a
+            end
+            for y = bb.y[1], bb.y[2] do
+               if col_b[y] then
+                  col_a[y] = true
+               end
+            end
+         end
+      end
    end
 end
 
@@ -461,33 +513,34 @@ do
          return
       end
       local count = 0
+      local dummy = {}
       for x = self.bounds.x[1], self.bounds.x[2] do
          self.cells[x - 2] = nil -- early free
          --
          local col = self.cells[x]
          if col then
-            local x_prev = self.cells[x - 1] or {}
-            local x_next = self.cells[x + 1] or {}
+            local x_prev = self.cells[x - 1] or dummy
             for y = self.bounds.y[1], self.bounds.y[2] do
                local cell = col[y]
                if cell then
-                  local neighbors = {
-                     x_prev[y],
-                     x_next[y],
-                     col[y - 1],
-                     col[y + 1],
-                  }
-                  local num
-                  for i = 1, 4 do
-                     num = tonumber(neighbors[i])
-                     if num then
-                        break
+                  local a = tonumber(x_prev[y])
+                  local b = tonumber(col[y - 1])
+                  local island = nil
+                  do
+                     local ia = self.islands[a or dummy]
+                     local ib = self.islands[b or dummy]
+                     island = ia or ib
+                     while tonumber(island) do
+                        a = island -- for below
+                        island = self.islands[island]
+                     end
+                     if ia and ib and ia ~= ib and not tonumber(ia) and not tonumber(ib) then
+                        ia:merge(ib)
+                        self.islands[b] = a
                      end
                   end
-                  local island
-                  if num then
-                     col[y] = num
-                     island = self.islands[num]
+                  if island then
+                     col[y] = a or b
                   else
                      count = count + 1
                      col[y] = count
@@ -501,6 +554,17 @@ do
          end
       end
       self.cells = nil
+      --
+      local pruned = {}
+      local j = 1
+      for i = 1, count do
+         local island = self.islands[i]
+         if island and not tonumber(island) then
+            pruned[j] = island
+            j = j + 1
+         end
+      end
+      self.islands = pruned
    end
 end
 
@@ -710,6 +774,7 @@ do
                })
                local layer = canvas:append_layer()
                layer.data = rasters.render[name]
+               layer.name = name
                HeightmapWindow.state.layers[name] = layer
                if lowest then
                   if spec.blend_mode then
@@ -788,7 +853,7 @@ do
                   if file then
                      local name = file.filename
                      if name ~= world_first_file then
-                        all_maps:accept(name, x, y)
+                        all_maps:accept(name, x / 32, y / 32)
                      end
                   end
                end
@@ -919,18 +984,25 @@ do
             --
             local HUE_PER_FILE = math.ceil(360 / count)
             --
-            local root_group = canvas:append_layer_group()
+            local root_group = false
             for i = 1, count do
                local name = files[i]
                local map  = all_maps.maps[name]
                map:generate_islands()
                --
                local islands = map.islands
-               local color   = string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i)
-               local group   = root_group:append_layer_group()
-               for j = 1, #islands do
-                  local island = islands[j]
-                  island:draw(group, color)
+               if #islands > 0 then
+                  if not root_group then
+                     root_group = canvas:append_layer_group()
+                     root_group.name = "Cells by file"
+                  end
+                  local color = string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i)
+                  local group = root_group:append_layer_group()
+                  group.name = "Cells altered by " .. name
+                  for j = 1, #islands do
+                     local island = islands[j]
+                     island:draw(group, color)
+                  end
                end
                progress.value = i
             end

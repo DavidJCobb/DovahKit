@@ -267,6 +267,7 @@
     <ClCompile Include="editor\scripting\systems\permissions.cpp" />
     <ClCompile Include="editor\scripting\systems\ui_listeners.cpp" />
     <ClCompile Include="editor\scripting\systems\userdata.cpp" />
+    <ClCompile Include="editor\scripting\ui\impl\canvas_context_menu.cpp" />
     <ClCompile Include="editor\scripting\wrappers\texture_set.cpp" />
     <ClCompile Include="editor\scripting\ui\event.cpp" />
     <ClCompile Include="editor\scripting\ui\util\alignment.cpp" />
@@ -660,6 +661,7 @@
     <ClInclude Include="editor\scripting\systems\ui_listeners.h" />
     <ClInclude Include="editor\scripting\systems\userdata.h" />
     <ClInclude Include="editor\scripting\ui\event.h" />
+    <ClInclude Include="editor\scripting\ui\impl\canvas_context_menu.h" />
     <ClInclude Include="editor\scripting\ui\util\alignment.h" />
     <QtMoc Include="editor\scripting\ui\util\lua_item_model.h" />
     <ClInclude Include="editor\scripting\ui\util\color.h" />
@@ -910,6 +912,9 @@
   <ItemGroup>
     <ProjectReference Include="..\DirectXTex\DirectXTex_Desktop_2019.vcxproj">
       <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\miniz\miniz.vcxproj">
+      <Project>{28161b06-6b94-4a77-84c1-29125df58551}</Project>
     </ProjectReference>
     <ProjectReference Include="..\zlib\zlib.vcxproj">
       <Project>{8415aba1-0327-40b4-b9ef-8c813969224a}</Project>

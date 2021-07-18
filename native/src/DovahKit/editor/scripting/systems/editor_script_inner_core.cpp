@@ -31,6 +31,7 @@
 #include <QSortFilterProxyModel>
 #include "../../../ui/generic/CanvasWidget.h"
 #include "../widgets/objects/LuaScriptableCanvasWidgetLayerData.h"
+#include "../ui/impl/canvas_context_menu.h"
 
 #include "../wrappers/form.h" // for the object_is_form function and for internal variant_from_lua
 #include "../wrappers/ui/widget.h" // for internal variant_from_lua
@@ -789,6 +790,8 @@ void DovahKitScriptVMCore::set_up_new_scripted_widget(QWidget* widget) {
       QObject::connect(label, &QLabel::linkActivated, [label](const QString& url) {
          emit DovahKitScriptVM::get().userClickedLink(url, label->window());
       });
+   } else if (auto* canvas = qobject_cast<CanvasWidget*>(widget)) {
+      editor_script::impl::set_up_canvas_context_menu(canvas);
    }
    ++this->widgets.extant_widget_count;
    if (!widget->parentWidget())

@@ -18,6 +18,6 @@ This program uses C++20 via the `/std:c++latest` compiler option. The included p
 
 My code is licensed under [Creative Commons CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) unless otherwise stated (some files are licensed under CC0 i.e. public domain as indicated by code comments, etc.).
 
-DirectXTex and Lua are MIT-licensed. LZ4's license is in the `LICENSE` file in the LZ4 folder. zlib has a custom license in `zlib.h`.
+[DirectXTex](https://github.com/microsoft/DirectXTex), Lua, and [miniz](https://github.com/richgel999/miniz) are MIT-licensed. LZ4's license is in the `LICENSE` file in the LZ4 folder. zlib has a custom license in `zlib.h`.
 
 Qt and its components are licensed under LGPL v3. Per the terms of LGPL, I am required to make [the source code for Qt 5.15.2](https://download.qt.io/archive/qt/5.15/5.15.2/single/) available to you in case you're unable to acquire it on your own. Presently I have a copy saved to my machine.

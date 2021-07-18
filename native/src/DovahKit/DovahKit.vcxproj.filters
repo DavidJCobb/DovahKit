@@ -1041,6 +1041,9 @@
     <ClCompile Include="dovah\data\ini_settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\scripting\ui\impl\canvas_context_menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2103,6 +2106,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\ini_settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\scripting\ui\impl\canvas_context_menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
