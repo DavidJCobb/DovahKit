@@ -309,6 +309,20 @@ end
 
 ---
 
+--
+-- We want to be able to render outlines around all cells that have 
+-- been added or modified by a given file in the load order. The 
+-- naive approach would be to use a single layer for each file, but 
+-- that's wasteful: if a file were to edit two cells on opposite 
+-- corners of a worldspace, then we'd have a tremendous region of 
+-- transparent pixels between them.
+--
+-- Instead, we'll take advantage of layer groups. Each file will 
+-- get its own layer group, and within that layer group, we'll have 
+-- one layer for each region, each "island," of contiguous cells. 
+-- But that means we have to identify and track the islands...
+--
+
 local CellOutlineIsland = {}
 CellOutlineIsland.__index = CellOutlineIsland
 do
@@ -509,13 +523,13 @@ do
       end
    end
    function CellOutlineMap:generate_islands()
-      if not self.bounds.x[1] or not self.bounds.y[1] then
+      if not self.bounds.x[1] or not self.bounds.y[1] then -- skip island generation if this map is empty
          return
       end
       local count = 0
       local dummy = {}
       for x = self.bounds.x[1], self.bounds.x[2] do
-         self.cells[x - 2] = nil -- early free
+         self.cells[x - 2] = nil -- free past columns as soon as possible, so they can be GC'd sooner
          --
          local col = self.cells[x]
          if col then
@@ -523,15 +537,33 @@ do
             for y = self.bounds.y[1], self.bounds.y[2] do
                local cell = col[y]
                if cell then
+                  --
+                  -- We want to find out what island the cell belongs to (or create an island), 
+                  -- and store that island's index in place of the cell's boolean "true" value.
+                  --
                   local a = tonumber(x_prev[y])
                   local b = tonumber(col[y - 1])
                   local island = nil
                   do
+                     --
+                     -- Consider the case where the current cell happens to be adjacent to two 
+                     -- different islands, one above and one to the left. Not only do we need 
+                     -- to merge these islands; we need to remember that we've merged them, 
+                     -- because a future cell may be adjacent to either of the merged islands.
+                     --
+                     -- Merging the data for the two islands is simple enough; remembering the 
+                     -- merge is more challenging. What we'll do is, when we're merging two 
+                     -- islands self.islands[a] and self.islands[b], we'll set self.islands[a] 
+                     -- to b -- that is, to the index of the island it was merged with.
+                     --
+                     -- This, of course, means that self.islands[n] can be an island object or 
+                     -- the numeric index of some other island object in the same list.
+                     --
                      local ia = self.islands[a or dummy]
                      local ib = self.islands[b or dummy]
                      island = ia or ib
-                     while tonumber(island) do
-                        a = island -- for below
+                     while tonumber(island) do -- a loop is needed because a "chain" of merged islands can come to exist
+                        a = island -- for below, when we overwrite the "true" value with an island index: we want to use the "most recent" index of this island
                         island = self.islands[island]
                      end
                      if ia and ib and ia ~= ib and not tonumber(ia) and not tonumber(ib) then
@@ -539,6 +571,11 @@ do
                         self.islands[b] = a
                      end
                   end
+                  --
+                  -- If this cell is adjacent to an already-existing island, we now know which 
+                  -- island that is; alternatively, we know that the cell is not adjacent to an 
+                  -- already-existing island, which means we must create one.
+                  --
                   if island then
                      col[y] = a or b
                   else
@@ -554,6 +591,10 @@ do
          end
       end
       self.cells = nil
+      --
+      -- There's one last item of business. If islands were merged above, then 
+      -- self.islands is a mixed array of island objects and integers. We want 
+      -- to retain only the objects.
       --
       local pruned = {}
       local j = 1
@@ -656,7 +697,7 @@ do
          }
       end
       
-      local world_first_file = nil
+      local world_first_file = nil -- we shouldn't outline cells defined in the same file as the worldspace, because that'll be nearly all of them
       do
          local list = world:get_source_file_list()
          local file = list[1]
@@ -853,7 +894,7 @@ do
                   if file then
                      local name = file.filename
                      if name ~= world_first_file then
-                        all_maps:accept(name, x / 32, y / 32)
+                        all_maps:accept(name, x / 32, y / 32) -- this function wants (north = up) grid coordinates, not pixel coordinates
                      end
                   end
                end
@@ -996,6 +1037,16 @@ do
                      root_group = canvas:append_layer_group()
                      root_group.name = "Cells by file"
                   end
+                  --
+                  -- TODO: In the future, we may want to create a file list in 
+                  -- advance based on the list of files that touch the selected 
+                  -- world; and we may want to let the user set each file's color 
+                  -- in advance. (Additionally, should we somehow encounter a file 
+                  -- that isn't present in the world's file list -- something which 
+                  -- should be impossible, but no harm in planning for it -- then 
+                  -- we will here want to add that file to the list, and select a 
+                  -- color dynamically somehow.)
+                  --
                   local color = string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i)
                   local group = root_group:append_layer_group()
                   group.name = "Cells altered by " .. name
