@@ -3,6 +3,8 @@ local TRANSPARENT     = "#00000000"
 local WATER_DEPTH     = 4096
 local WATER_MIN_ALPHA = 0.5
 
+local CELL_OUTLINE_FILL_OPACITY = 30 -- [0, 255]
+
 local DEFAULT_LAND = { -- executable-level defaults: a LandTexture created at run-time with no form ID
    diffuse  = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandDiffuseTexture"),
    normal   = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandNormalTexture"),
@@ -376,6 +378,13 @@ do
       layer.visible = false
       layer.data    = img
       --
+      local fill_color = ""
+      if CELL_OUTLINE_FILL_OPACITY > 0 then
+         fill_color = color
+         fill_color = fill_color:gsub("hsl", "hsla")
+         fill_color = fill_color:gsub("%)", "") .. ", " .. CELL_OUTLINE_FILL_OPACITY .. ")"
+      end
+      --
       for x = x_min, x_max do
          local col = self.cells[x]
          if col then
@@ -388,6 +397,16 @@ do
             for y = y_min, y_max do
                local cell = self.cells[x][y]
                if cell then
+                  if CELL_OUTLINE_FILL_OPACITY > 0 then
+                     img:draw_rect({
+                        x = (x - x_min) * 32,
+                        y = (y - y_min) * 32,
+                        w = 32,
+                        h = 32,
+                        fill_color = fill_color
+                     })
+                  end
+                  --
                   local y_prior = (y - y_min) * 32 - 1 -- pixel coordinates
                   local y_after = (y - y_min + 1) * 32 -- pixel coordinates
                   --
@@ -870,11 +889,7 @@ do
             do
                local a = cell.water_height -- nil if we're defaulting to the world water height
                local b = world_info.heights.water
-               if a then
-                  water_height = a
-               else
-                  water_height = b or -9999999
-               end
+               water_height = a or b or -9999999
             end
             --
             local x = nil
@@ -1003,6 +1018,12 @@ do
                --
                rw.height:fill({ r = shade, g = shade, b = shade })
                rr.height:draw_raster(rw.height, x + 1, y + 1)
+               --
+               local color = TextureManager:get_default_color()
+               color.a  = 255 -- force alpha
+               color[4] = 255 -- force alpha
+               rw.paint:fill(color)
+               rr.paint:draw_raster(rw.paint, x + 1, y + 1)
                --
                if cell.has_water and height < water_height then -- water
                   local alpha = _alpha_from_height(height, water_height)

@@ -11,7 +11,7 @@ namespace editor_script {
       for (auto* event : local)
          delete event;
    }
-   void ui_event_queue::process() {
+   size_t ui_event_queue::process() {
       //
       // We copy all pending events out of the cross-thread queue and into a local list, so that we 
       // can keep the cross-thread queue locked as briefly as possible. This was a pertinent concern 
@@ -34,6 +34,7 @@ namespace editor_script {
          intfc.fire_event(event->target, event->event_name.c_str(), event->listener_name.c_str(), event->params);
          delete event;
       }
+      return local.size();
    }
    void ui_event_queue::push_back(ui_event* e) {
       auto guard = std::lock_guard(this->lock);

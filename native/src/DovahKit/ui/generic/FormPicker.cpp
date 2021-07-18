@@ -73,7 +73,7 @@ FormPicker::FormPicker(QWidget* parent) : QWidget(parent) {
       auto* combobox = this->subwidgets.form;
       combobox->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
       auto* view = qobject_cast<QListView*>(combobox->view());
-      if (view) { // just in case the library internals change later
+      if (view) { // condition, just in case the library internals change later
          view->setUniformItemSizes(true);
          view->setLayoutMode(QListView::Batched);
          view->setBatchSize(50);

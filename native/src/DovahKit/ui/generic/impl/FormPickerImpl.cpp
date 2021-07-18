@@ -317,7 +317,7 @@ namespace FormPickerImpl {
    }
 
    void FormPickerIterativeModel::_resetFillDiagnostics() {
-      if (do_fill_diagnostics) {
+      if constexpr (do_fill_diagnostics) {
          this->fill_diagnostics.ticks_to_grab = 0;
          this->fill_diagnostics.ticks_to_sort = 0;
       }
@@ -407,8 +407,8 @@ namespace FormPickerImpl {
          this->ongoing_fill.sorting   = false;
          this->ongoing_fill.progress  = 0;
          if (auto size = this->stubs.size()) {
-            this->beginInsertRows(parent, 0, size - 1);
-            this->endInsertRows();
+            this->beginResetModel();
+            this->endResetModel();
          }
          emit beforeFilled();
          emit filled();

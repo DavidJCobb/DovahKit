@@ -21,9 +21,9 @@ namespace editor_script {
          std::vector<ui_event*> list;
          mutable std::recursive_mutex lock;
       public:
-         void clear();              // script thread should call this when doing cleanup
-         void process();            // script thread should call this to process pending events
-         void push_back(ui_event*); // main thread should call this to send events to lua
+         void   clear();              // script thread should call this when doing cleanup
+         size_t process();            // script thread should call this to process pending events; returns number of events processed
+         void   push_back(ui_event*); // main thread should call this to send events to lua
 
          void forget_about(QObject&);
 

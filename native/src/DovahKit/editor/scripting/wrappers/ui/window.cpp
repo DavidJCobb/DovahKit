@@ -29,15 +29,20 @@ namespace {
          return 0;
       }
       luastackchange_t show(lua_State* L) {
+         static constexpr bool use_blocking_task = false;
+         //
          auto& self = get_wrapper_for_thiscall<cls>(L);
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
          auto* widget  = (QDialog*) self.widget;
-         auto* task    = new tasks::s2m::lambda(true); // blocking task, just so that the VM doesn't teardown before this gets a chance to run
-         task->handler = [widget]() { widget->open(); };
+         auto* task    = new tasks::s2m::lambda(use_blocking_task);
+         task->handler = [widget]() {
+            widget->open();
+         };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         delete task;
+         if (use_blocking_task)
+            delete task;
          return 0;
       }
    }

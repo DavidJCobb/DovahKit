@@ -136,6 +136,13 @@ namespace {
 }
 
 #pragma region DovahKitScriptVM::_task_queue
+void DovahKitScriptVMCore::_task_queue::push_back(task* t) {
+   this->is_empty = false;
+   auto  guard = std::lock_guard(this->lock);
+   auto& list  = this->list;
+   list.push_back(t);
+   ++this->count_since_last_spin;
+}
 void DovahKitScriptVMCore::_task_queue::process(int cap) {
    auto  guard = std::lock_guard(this->lock);
    auto& list  = this->list;
@@ -150,15 +157,38 @@ void DovahKitScriptVMCore::_task_queue::process(int cap) {
          break;
    }
    list.erase(list.begin(), list.begin() + count);
+   this->is_empty = list.empty();
 }
-void DovahKitScriptVMCore::_task_queue::wait_until_empty() {
-   auto& list = this->list;
-   while (!list.empty()) {
+bool DovahKitScriptVMCore::_task_queue::wait_until_empty() const {
+   auto& list   = this->list;
+   bool  waited = false;
+   while (!this->empty()) {
+      waited = true;
    }
-   auto& vm = DovahKitScriptVMCore::get();
-   if (!vm.is_aborted()) {
-      vm.task_queues.m2s.urgent.process();
-   }
+   return waited;
+}
+int DovahKitScriptVMCore::_task_queue::spin() {
+   //
+   // This function is a variant on (wait_until_empty) that allows the caller to know 
+   // how many tasks have been queued since the last time this function was called. We 
+   // need this for the script thread loop, so that we can avoid killing the script on 
+   // any tick where at least one task was queued (and possibly already executed) since 
+   // the last time the loop spun.
+   // 
+   // If we used only (wait_until_empty), then we'd get this sequence of events:
+   // 
+   //  - Script thread: Main script: queue a "show window" UI write task.
+   //  - Script thread: Main script: finish execution
+   //  - Script thread: Spin loop:   wait until the queue is empty, and note whether it had tasks
+   //  - Client thread: Main loop:   execute tasks from the queue and then empty it
+   //  - Script thread: Spin loop:   test whether any windows are visible
+   //  - Script thread: Spin loop:   no visible windows; abort
+   //  - Client thread: Queued task: make the window visible
+   //
+   int out = this->count_since_last_spin;
+   this->wait_until_empty();
+   this->count_since_last_spin -= out;
+   return out;
 }
 void DovahKitScriptVMCore::_task_queue::clear() {
    auto  guard = std::lock_guard(this->lock);
@@ -399,9 +429,7 @@ DovahKitScriptVMCore::DovahKitScriptVMCore() {
       auto* message = new editor_script::tasks::m2s::form_deleted;
       message->stub = stub;
       //
-      auto  guard   = std::lock_guard(this->task_queues.m2s.urgent.lock);
-      auto& list    = this->task_queues.m2s.urgent.list;
-      list.push_back(message);
+      this->task_queues.m2s.urgent.push_back(message);
    });
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &DovahKitScriptVMCore::abort);
 }
@@ -591,7 +619,7 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
    this->in_teardown = false;
 }
 
-void DovahKitScriptVMCore::_run_queued_functions(bool ui_locked) {
+int DovahKitScriptVMCore::_run_queued_functions(bool ui_locked) {
    auto start      = lua_gettop(this->lua_vm);
    auto index_list = start + 1;
    auto index_nk   = start + 2;
@@ -601,6 +629,7 @@ void DovahKitScriptVMCore::_run_queued_functions(bool ui_locked) {
    //
    auto* key = ui_locked ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
    auto* L   = this->lua_vm;
+   int   count_executed = 0;
    if (lua_getfield(L, LUA_REGISTRYINDEX, key) == LUA_TTABLE) {
       int count = lua_rawlen(L, -1);
       if (count) {
@@ -618,19 +647,22 @@ void DovahKitScriptVMCore::_run_queued_functions(bool ui_locked) {
             editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the function
          }
       }
+      count_executed += count;
    }
    lua_settop(this->lua_vm, start);
    //
    this->ui_lock_override = DovahKitScriptVMCore::ui_lock_override_state::unchanged;
+   return count_executed;
 }
 void DovahKitScriptVMCore::_script_thread_loop() {
    editor_script::util::safe_call(this->lua_vm, 0, 0);
    //
+   bool had_any_tasks;
    do {
-      this->task_queues.s2m.wait_until_empty(); // these can be non-blocking + fire-and-forget
-      this->ui_queues.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
+      had_any_tasks  = this->task_queues.s2m.spin() > 0; // these can be non-blocking + fire-and-forget
+      had_any_tasks |= this->ui_queues.write.spin() > 0; // these can be non-blocking + fire-and-forget
       this->task_queues.m2s.urgent.process();
-      this->_run_queued_functions(false);
+      had_any_tasks |= (this->_run_queued_functions(false) > 0);
       {
          auto& pd = this->widgets.pending_deletion.widgets;
          for (auto* widget : pd) {
@@ -646,9 +678,9 @@ void DovahKitScriptVMCore::_script_thread_loop() {
          }
          pd.clear();
       }
-      this->ui_queues.events.process();
-      this->_run_queued_functions(true);
-   } while (this->_should_keep_running());
+      had_any_tasks |= (this->ui_queues.events.process()  > 0);
+      had_any_tasks |= (this->_run_queued_functions(true) > 0);
+   } while (had_any_tasks || this->_should_keep_running());
    //
    this->main_thread_tick_timer.stop();
    this->running = false;
@@ -1145,7 +1177,7 @@ void DovahKitScriptVMCore::runScript(const QString& code, const QString& name) {
    this->paused  = false;
    this->main_thread_tick_timer.start();
    emit facade.scriptStarted();
-   this->_teardown_lua_vm();
+   //this->_teardown_lua_vm();
    this->_setup_lua_vm();
    //
    auto buffer = code.toUtf8();

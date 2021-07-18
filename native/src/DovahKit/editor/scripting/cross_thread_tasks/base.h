@@ -19,7 +19,7 @@ namespace editor_script {
       public:
          virtual ~cross_thread_task() {} // needs to be explicitly defined as virtual so that subclass destructors work
 
-         bool seen = false; // has this message been received and acknowledged by its recipient?
+         volatile bool seen = false; // has this message been received and acknowledged by its recipient?
          cobb::eight_cc collapse_key;
          
       protected:

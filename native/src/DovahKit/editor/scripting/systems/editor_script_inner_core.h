@@ -72,23 +72,35 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       DovahKitScriptVMCore();
       ~DovahKitScriptVMCore();
 
-      struct _task_queue {
-         using task = editor_script::cross_thread_task;
-         //
-         std::vector<task*> list;
-         std::recursive_mutex lock;
+      class _task_queue {
+         public:
+            using task = editor_script::cross_thread_task;
 
-         //
-         // The receiving thread should use this function to execute tasks.
-         //
-         void process(int cap = std::numeric_limits<int>::max());
+         protected:
+            std::vector<task*>   list;
+            std::recursive_mutex lock;
+            std::atomic<bool>    is_empty = false;
+            std::atomic<int>     count_since_last_spin = 0;
 
-         //
-         // Suitable only for use by the sending thread.
-         //
-         void wait_until_empty();
+         public:
+            void push_back(task*);
 
-         void clear();
+            //
+            // The receiving thread should use this function to execute tasks.
+            //
+            void process(int cap = std::numeric_limits<int>::max());
+
+            //
+            // Suitable only for use by the sending thread. Returns true if the function 
+            // indeed had tasks to wait on.
+            //
+            bool wait_until_empty() const;
+
+            int spin();
+
+            inline bool empty() volatile const noexcept { return this->is_empty; }
+
+            void clear();
       };
 
       // This class is capable of traversing an entire set of bridged widget hierarchies -- that 
@@ -163,7 +175,7 @@ class DovahKitScriptVMCore : public QObject, cobb::singleton {
       void _setup_lua_vm();
       void _teardown_lua_vm(); // can only safely run on the main thread, since it tears down Qt objects now too
 
-      void _run_queued_functions(bool ui_locked);
+      int _run_queued_functions(bool ui_locked); // returns the number of functions executed
       void _script_thread_loop();
 
       //

@@ -285,6 +285,7 @@ namespace {
             error = "color (string, table, or nil) expected";
             break;
       }
+      lua_settop(L, top);
    }
 }
 
