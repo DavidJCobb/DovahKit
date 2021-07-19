@@ -27,8 +27,8 @@ class DovahKitFormDataCache : public QObject {
          _lockable_hash<QString> static_models;
       } _data;
 
-      static void _parseQuest(const dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
-      static void _parseStatic(const dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
+      static void _parseQuest(dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
+      static void _parseStatic(dovah::form_stub&, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc);
 
    protected slots:
       void buildAllData();

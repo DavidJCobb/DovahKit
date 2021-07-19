@@ -17,6 +17,8 @@ namespace dovah::loaded_forms {
          static constexpr form_type_t form_type = form_type::cell;
          Cell(const constructor_params& c) : Form(form_type, c) {};
 
+         static constexpr int side_length = 4096; // Cells are squares. How long, in world units, is one edge?
+
          static constexpr float inherit_water_height = (float) uint32_t(0x80000000);
          static constexpr float absent_water_height  = (float) FLT_MAX;
          //

@@ -1044,6 +1044,9 @@
     <ClCompile Include="editor\scripting\ui\impl\canvas_context_menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2111,6 +2114,9 @@
     <ClInclude Include="editor\scripting\ui\impl\canvas_context_menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -2453,6 +2459,7 @@
     <Text Include="editor\scripting\_docs\ui - model observers.txt" />
     <Text Include="editor\scripting\_docs\lua-managed resources.txt" />
     <Text Include="dovah\_docs\form versions 43 and 44.txt" />
+    <Text Include="dovah\_docs\persistent cells.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dovah\forms\impl\form_subclass_components.txt">

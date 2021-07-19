@@ -276,7 +276,7 @@ namespace dovah::tes_file_reading {
                bool is_dialogue = false;
                bool is_gmst     = false;
                switch (_byteswap_ulong(group.header.label)) {
-                  case 'CELL': // contents handled by the Interior Cell Block readers.
+                  case 'CELL': // interior cells are handled by the Interior Cell Block readers.
                   case 'WRLD': // forms handled here; children handled by the worldspace sub-block readers.
                      //
                      // Don't skip the group; we want to read at least some of the content inside of it. 
@@ -316,13 +316,13 @@ namespace dovah::tes_file_reading {
                last_ext_block_y = 0;
                //
                // We should only hit records when we choose not to skip a group's contents. 
-               // We use this to load worldspaces and their persistent/temporary cells in 
-               // advance, so that we can multithread their contents a little more flexibly. 
-               // We can assign a worldspace's descendant GRUPs to different workers without 
-               // those workers having to care whether the worldspace is loaded; compare to 
-               // topics and infos, which share a worker such that the worker has to load 
-               // topics first (which is viable in that case because every topic has only 
-               // one child GRUP, so multi-threading within a single topic isn't useful).
+               // We use this to load worldspaces and their persistent cells in advance, so 
+               // that we can multithread their contents a little more flexibly. We can give 
+               // a worldspace's descendant GRUPs to different workers without those workers 
+               // having to care whether the worldspace is loaded; compare to topics and 
+               // infos, which share a worker such that the worker has to load topics first 
+               // (which is viable in that case because every topic has only one child GRUP, 
+               // so multi-threading within a single topic isn't useful).
                //
                auto& record = this->get_current_record();
                form_type_t formType = form_type_info::signature_to_form_type(record.signature());

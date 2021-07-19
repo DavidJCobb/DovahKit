@@ -1,0 +1,66 @@
+
+Worldspaces in  Skyrim will commonly have  a "persistent cell."  The persistent 
+cell is not a "real" cell; it does not  represent any physical space within the 
+worldspace. Rather, it is used to hold all persistent ObjectReferences that are 
+placed in any  of the worldspace's exterior  cells. The persistent  cell, then, 
+can be thought of as something that overlaps the entire worldspace and its more 
+ordinary cells.
+
+Persistent cells introduce some complications.
+
+ - A file can  place new  persistent references  inside of one  of its masters' 
+   exterior cells.  Conceptually, the file is modifying the cell,  but the file 
+   does not actually override the cell  record, and so is not one of the cell's 
+   source files.
+
+ - A persistent  reference's parent record is the persistent cell,  and not the 
+   reference's "true" parent form. If we actually represent the forms in memory 
+   this way, then persistent references  become cumbersome to work with: when a 
+   frontend wishes to load a new exterior  cell, it must loop over every single 
+   persistent reference in the containing world in order to identify persistent 
+   references existing in the cell to be loaded.
+
+Accordingly, after the file_load_order has created all form stubs and built use 
+info, we reparent every reference existing  inside of a worldspace's persistent 
+cell. But... how do we do that?
+
+Well, first of all, we have to wait until  use info has been built and made bi-
+directional. As forms are loaded,  one-way "uses" are created pointing from the 
+form to its parent;  it is not until  these are made  bidirectional that we can 
+find all of the cells in a worldspace, or  all of the references in a cell. The 
+naive approach,  then, would be to use  (form_stub::set_parent_form)  on all of 
+the references within  a persistent cell after bidirectional  use info has been 
+built.
+
+The naive approach adds seven entire seconds to the load time for Skyrim.esm.
+
+On Release.
+
+So clearly that's  not acceptable. So let's take a closer  look at what setting 
+the parent form actually entails. There  are four basic operations that need to 
+be performed.
+
+   1. Sever any outbound connection from the child to the prior parent form.
+
+   2. Sever any inbound connection from the child to the prior parent form.
+
+   3. Create an outbound connection from the child to the new parent form.
+
+   4. Create an inbound connection from the child to the new parent form.
+
+As with building use info, step 3 can  be multi-threaded. Moreover, we can also 
+multi-thread step 2. That leaves us with steps 1 and 4. Step 1 can be made more 
+efficient by  doing it in bulk. Nothing is supposed to refer to  a worldspace's 
+persistent cell, although  in practice the cell could be  referred to if a file 
+is tampered with somehow; this means that  the overwhelming majority of inbound 
+references to a persistent cell will be those we are about to sever. Instead of 
+severing them one by one, we can simply copy the few (or no) inbound references 
+that aren't part of parent/child relationships, and then use std::swap to throw 
+away the rest in one clean act.
+
+Unfortunately, step 4 cannot be made multi-threaded. Given a group of REFRs, we 
+cannot be sure that some of these REFRs don't refer to the same target cell. If 
+we try to  multi-thread the creation of inbound use info for these  cells, then 
+we risk a thread collision and data corruption (or, if we're lucky, a crash).
+
+Skyrim.esm has 15,196 persistent references in Tamriel alone.

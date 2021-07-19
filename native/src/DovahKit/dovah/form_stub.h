@@ -2,6 +2,7 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <string>
 #include <type_traits>
@@ -23,6 +24,7 @@ namespace dovah {
       class file_or_file_part_loader;
       class file_loader;
       class threaded_load_order_use_info_builder;
+      class load_order_persistent_ref_reparenter;
       class record;
    }
    namespace tes_file_writing {
@@ -82,7 +84,7 @@ namespace dovah {
             // flag for both subrecords could in that situation cause use info mismanagement should 
             // either subrecord be altered after load.
             //
-            object_reference = 0x04, // one of the forms is the other's base form; check form types to know which is which
+            object_reference = 0x04, // REFR/NAME: the user-form is a reference and the used-form is its base form
             dialogue_branch  = 0x08, // DIAL/BNAM
             dialogue_quest   = 0x10, // DIAL/QNAM and DLBR/QNAM
          };
@@ -108,6 +110,7 @@ namespace dovah {
       friend file_load_order;
       friend tes_file_reading::file_or_file_part_loader;
       friend tes_file_reading::threaded_load_order_use_info_builder;
+      friend tes_file_reading::load_order_persistent_ref_reparenter;
       friend tes_file_writing::file_writer;
       friend form_stub_use_info_builder;
       //
@@ -163,11 +166,17 @@ namespace dovah {
          void build_outbound_refs(tes_file_reading::basic_reader&) noexcept;
          void send_inbound_refs() noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
          void receive_inbound_ref(form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags = 0) noexcept;
-         //
+         
          file_load_order& _get_load_order() const noexcept;
-         loaded_form_ptr<loaded_forms::Form> _load(bool force = false);
+
+         // An internal-only version of (form_stub::load) which can be used by (file_load_order) during the file load process.
+         loaded_form_ptr<loaded_forms::Form> _load(bool even_if_during_file_load = false);
+
+         // An internal-only version of (form_stub::do_custom_parse) which can be used by (file_load_order) during the file load process.
+         void _do_custom_parse(tes_file_reading::basic_reader*, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> functor) noexcept;
+
          void _unload_form();
-         //
+         
          void _add_file(owner_file_t&, uint32_t offset, uint32_t record_flags = 0);
          void _set_source_file_offset(owner_file_t&, uint32_t offset);
          void _modify_source_file_record_flags(owner_file_t&, uint32_t mask, bool clear_or_set);
@@ -212,7 +221,7 @@ namespace dovah {
          // pass your own reader object. If you do pass a reader, it must be blank, so that it can be "adopted" 
          // by the form's source files and then eventually severed from them.
          //
-         void do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&), tes_file_reading::basic_reader* = nullptr) const noexcept;
+         void do_custom_parse(tes_file_reading::basic_reader* reader, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> loader) noexcept;
          
          #pragma region Source file member functions
          const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;

@@ -16,7 +16,7 @@ namespace dovah {
 namespace DovahKitEditorInternals {
    class form_data_cache_builder : dovah::tes_file_reading::basic_reader {
       public:
-         using handler_t = void(*)(const dovah::form_stub&, dovah::tes_file_reading::record&, dovah::load_order_interfaces::form_load&);
+         using handler_t = void(*)(dovah::form_stub&, dovah::tes_file_reading::record&, dovah::load_order_interfaces::form_load&);
       protected:
          struct _handler_set {
             handler_t handler = nullptr;

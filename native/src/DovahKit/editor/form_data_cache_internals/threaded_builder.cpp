@@ -12,7 +12,7 @@ namespace DovahKitEditorInternals {
       for (auto& item : list) {
          auto* handler = item.handler;
          for (auto* stub : item.stubs) {
-            stub->do_custom_parse(handler, this);
+            stub->do_custom_parse(this, handler);
             ++this->progress.current;
          }
       }

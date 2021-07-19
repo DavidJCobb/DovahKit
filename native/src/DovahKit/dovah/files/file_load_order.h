@@ -158,6 +158,7 @@ namespace dovah {
          void _make_hardcoded_forms();
          void _accept_hardcoded_form(form_stub*) noexcept;
          void _build_none_stubs();
+         void _reparent_persistent_references();
          void _build_use_info();
 
          void _log_load_warning(const detailed_notice&);

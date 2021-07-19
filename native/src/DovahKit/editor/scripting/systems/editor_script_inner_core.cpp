@@ -137,10 +137,10 @@ namespace {
 
 #pragma region DovahKitScriptVM::_task_queue
 void DovahKitScriptVMCore::_task_queue::push_back(task* t) {
-   this->is_empty = false;
    auto  guard = std::lock_guard(this->lock);
    auto& list  = this->list;
    list.push_back(t);
+   this->is_empty = false;
    ++this->count_since_last_spin;
 }
 void DovahKitScriptVMCore::_task_queue::process(int cap) {
@@ -198,6 +198,7 @@ void DovahKitScriptVMCore::_task_queue::clear() {
       if (!task->is_blocking() && task->is_fire_and_forget())
          delete task;
    list.clear();
+   this->is_empty = true;
 }
 #pragma endregion
 
@@ -687,7 +688,7 @@ void DovahKitScriptVMCore::_script_thread_loop() {
    emit this->scriptEnded(false); // a main-thread handler will catch this and tear down the VM
 }
 
-bool DovahKitScriptVMCore::_should_keep_running() const noexcept {
+__declspec(noinline) bool DovahKitScriptVMCore::_should_keep_running() const noexcept {
    if (this->aborted)
       return false;
    //
@@ -698,7 +699,8 @@ bool DovahKitScriptVMCore::_should_keep_running() const noexcept {
    // The basic thing we're checking for is, "We're not running script code *right now*, 
    // but can we *end up* running them as a result of any extant event listeners?"
    //
-   for (auto* window : this->widgets.windows) {
+   auto& list = this->widgets.windows;
+   for (auto* window : list) {
       if (!window)
          continue;
       if (window->isVisible())

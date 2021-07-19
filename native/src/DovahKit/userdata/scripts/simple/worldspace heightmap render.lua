@@ -5,6 +5,7 @@ local WATER_MIN_ALPHA = 0.5
 
 local CELL_OUTLINE_FILL_OPACITY = 30 -- [0, 255]
 
+local CELL_SIDE_SIZE = 4096
 local DEFAULT_LAND = { -- executable-level defaults: a LandTexture created at run-time with no form ID
    diffuse  = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandDiffuseTexture"),
    normal   = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandNormalTexture"),
@@ -52,23 +53,22 @@ local LAYER_SPEC = {
 local FileOutlineWidget = {}
 FileOutlineWidget.__index = FileOutlineWidget
 do -- FileOutlineWidget contents
-   function FileOutlineWidget:new(options)
-      options = options or {}
+   function FileOutlineWidget:new(file_map)
       local instance = setmetatable({}, self)
       --
-      instance.widget = ui.groupbox.new(options.name)
-      instance.color  = options.color or "#FF0000"
+      instance.widget = ui.groupbox.new(file_map.name)
+      instance.color  = file_map.color or "#FF0000"
       instance._controls = {
          root  = instance.widget,
          color = nil,
       }
       instance.widget:on("OnToggled", "", function(checked)
-         instance:onToggled(checked)
+         instance:on_toggled(checked)
       end)
       --
       return instance
    end
-   function FileOutlineWidget:onToggled(checked)
+   function FileOutlineWidget:on_toggled(checked)
       -- TODO
    end
 end
@@ -87,7 +87,10 @@ local HeightmapWindow = {
          world = false,
          layer_visibility = {}, -- list of checkboxes
          execute = false,
+         --
+         outline_toggle_holder = false,
       },
+      outline_toggles = {},
    },
    state = {
       layers = {},
@@ -170,7 +173,17 @@ do -- HeightmapWindow contents
             oc.execute = button
          end
          --
-         config:add_spacer("v")
+         config:add_child(ui.line.new("h"))
+         --
+         do
+            local widget = ui.scrollbox.new()
+            widget.body:set_layout("down")
+            HeightmapWindow.controls.options.outline_toggle_holder = widget.body
+            --
+            config:add_child(widget)
+         end
+         --
+         --config:add_spacer("v")
       end
    end
    function HeightmapWindow:clear_canvas()
@@ -189,6 +202,25 @@ do -- HeightmapWindow contents
          layers[i]:delete()
       end
       self.state.layers = {}
+   end
+   function HeightmapWindow:clear_cell_outline_toggles()
+      local list   = self.controls.outline_toggles
+      local parent = self.controls.options.outline_toggle_holder
+      for i = 1, #list do
+         parent:remove_child(list[i])
+         list[i] = nil
+      end
+   end
+   function HeightmapWindow:import_cell_outline_data(all_files_map)
+      local list   = self.controls.outline_toggles
+      local parent = self.controls.options.outline_toggle_holder
+      local maps   = all_files_map.maps
+      for i = 1, #maps do
+         local map = maps[i]
+         local cls = FileOutlineWidget:new(map)
+         list[i] = cls
+         parent:add_child(cls.widget)
+      end
    end
    function HeightmapWindow:set_is_locked(state)
       self.controls.config.enabled = not state
@@ -328,10 +360,22 @@ end
 local CellOutlineIsland = {}
 CellOutlineIsland.__index = CellOutlineIsland
 do
-   function CellOutlineIsland:new()
+   function CellOutlineIsland:new(owner)
+      if not owner then
+         error("CellOutlineIsland instances must be owned by a CellOutlineMap")
+      end
       local instance = setmetatable({}, self)
       instance.cells  = {}
+      instance.owner  = owner
       instance.bounds = { x = { false, false }, y = { false, false } }
+      instance.layers = {
+         fill = false,
+         line = false,
+      }
+      instance.images = {
+         fill = false,
+         line = false,
+      }
       return instance
    end
    function CellOutlineIsland:accept_cell(x, y)
@@ -360,34 +404,47 @@ do
          end
       end
    end
-   function CellOutlineIsland:draw(color, line_layer_group, fill_layer_group)
+   function CellOutlineIsland:create_canvas_data()
       local x_min = self.bounds.x[1] - 1
       local x_max = self.bounds.x[2] + 1
       local y_min = self.bounds.y[1] - 1
       local y_max = self.bounds.y[2] + 1
       --
-      local img = raster.new({
+      self.images.line = raster.new({
          width  = (x_max - x_min + 1) * 32,
          height = (y_max - y_min + 1) * 32,
       })
-      local img_fill = raster.new({
+      self.images.fill = raster.new({
          width  = (x_max - x_min + 1) * 32,
          height = (y_max - y_min + 1) * 32,
       })
-      local layer_line = line_layer_group:append_layer()
-      local layer_fill = fill_layer_group:append_layer()
+      local layer_line = self.owner.layer_groups.line:append_layer()
+      local layer_fill = self.owner.layer_groups.fill:append_layer()
+      self.layers.line = layer_line
+      self.layers.fill = layer_fill
       do
          layer_line.x = x_min * 32
          layer_line.y = y_min * 32
-         layer_line.visible = false
-         layer_line.data    = img
+         layer_line.data = self.images.line
          --
          layer_fill.x = x_min * 32
          layer_fill.y = y_min * 32
-         layer_fill.visible = false
-         layer_fill.opacity = math.max(0, math.min(1, CELL_OUTLINE_FILL_OPACITY / 255))
-         layer_fill.data    = img_fill
+         layer_fill.data = self.images.fill
       end
+   end
+   function CellOutlineIsland:draw()
+      local x_min = self.bounds.x[1] - 1
+      local x_max = self.bounds.x[2] + 1
+      local y_min = self.bounds.y[1] - 1
+      local y_max = self.bounds.y[2] + 1
+      --
+      local img_line = self.images.line
+      local img_fill = self.images.fill
+      if not (img_line and img_fill) then
+         error("CellOutlineIsland:draw must be called only after CellOutlineIsland:crete_canvas_data")
+      end
+      local color = self.owner.color
+      self:set_visible(false)
       --
       for x = x_min, x_max do
          local col = self.cells[x]
@@ -416,22 +473,22 @@ do
                   --
                   if y > 1 then -- upper corners
                      if not col_p or not col_p[y - 1] then
-                        img:set_pixel(x_prior, y_prior, color) -- upper-left
+                        img_line:set_pixel(x_prior, y_prior, color) -- upper-left
                      end
                      if not col_n or not col_n[y - 1] then
-                        img:set_pixel(x_after, y_prior, color) -- upper-right
+                        img_line:set_pixel(x_after, y_prior, color) -- upper-right
                      end
                   end
                   if y < y_max then -- lower corners
                      if not col_p or not col_p[y + 1] then
-                        img:set_pixel(x_prior, y_after, color) -- lower-left
+                        img_line:set_pixel(x_prior, y_after, color) -- lower-left
                      end
                      if not col_n or not col_n[y + 1] then
-                        img:set_pixel(x_after, y_after, color) -- lower-right
+                        img_line:set_pixel(x_after, y_after, color) -- lower-right
                      end
                   end
                   if not col_p or not col_p[y] then -- left
-                     img:draw_rect({
+                     img_line:draw_rect({
                         fill_color = color,
                         w =  1,
                         h = 32,
@@ -440,7 +497,7 @@ do
                      })
                   end
                   if not col_n or not col_n[y] then -- right
-                     img:draw_rect({
+                     img_line:draw_rect({
                         fill_color = color,
                         w =  1,
                         h = 32,
@@ -449,7 +506,7 @@ do
                      })
                   end
                   if y > 1 and not col[y - 1] then -- above
-                     img:draw_rect({
+                     img_line:draw_rect({
                         fill_color = color,
                         w = 32,
                         h =  1,
@@ -458,7 +515,7 @@ do
                      })
                   end
                   if y < y_max and not col[y + 1] then -- below
-                     img:draw_rect({
+                     img_line:draw_rect({
                         fill_color = color,
                         w = 32,
                         h =  1,
@@ -471,8 +528,16 @@ do
          end
       end
       --
-      layer_line.visible = true
-      layer_fill.visible = true
+      self:set_visible(true)
+   end
+   function CellOutlineIsland:has_canvas_data()
+      if not (self.layers.fill and self.layers.line) then
+         return false
+      end
+      if not (self.images.fill and self.images.line) then
+         return false
+      end
+      return true
    end
    function CellOutlineIsland:merge(other)
       if not other or other == self then
@@ -508,16 +573,29 @@ do
          end
       end
    end
+   function CellOutlineIsland:set_visible(state)
+      self.layers.line.visible = state
+      self.layers.fill.visible = state
+   end
 end
 
 local CellOutlineMap = {}
 CellOutlineMap.__index = CellOutlineMap
 do
-   function CellOutlineMap:new()
+   function CellOutlineMap:new(filename)
+      if not filename then
+         error("CellOutlineMap:new must be passed a filename")
+      end
       local instance = setmetatable({}, self)
-      instance.islands = {}
-      instance.cells   = {}
-      instance.bounds  = { x = { false, false }, y = { false, false } }
+      instance.filename = filename
+      instance.color    = "#888"
+      instance.cells    = {} -- cleared after islands are generated
+      instance.bounds   = { x = { false, false }, y = { false, false } }
+      instance.islands  = {}
+      instance.layer_groups = {
+         line = false,
+         fill = false,
+      }
       return instance
    end
    function CellOutlineMap:accept_cell(x, y)
@@ -546,8 +624,21 @@ do
          end
       end
    end
+   function CellOutlineMap:create_canvas_data(root_line_group, root_fill_group)
+      local lg = self.layer_groups
+      if lg.line or lg.fill then
+         error("This CellOutlineMap already has canvas data.")
+      end
+      local group_line = root_line_group:append_layer_group()
+      local group_fill = root_fill_group:append_layer_group()
+      group_line.name = "Cells altered by " .. self.filename .. " (outlines)"
+      group_fill.name = "Cells altered by " .. self.filename .. " (fill)"
+      lg.line = group_line
+      lg.fill = group_fill
+   end
    function CellOutlineMap:generate_islands()
       if not self.bounds.x[1] or not self.bounds.y[1] then -- skip island generation if this map is empty
+         self.cells = nil
          return
       end
       local count = 0
@@ -606,7 +697,7 @@ do
                      count = count + 1
                      col[y] = count
                      --
-                     island = CellOutlineIsland:new()
+                     island = CellOutlineIsland:new(self)
                      self.islands[count] = island
                   end
                   island:accept_cell(x, y)
@@ -631,6 +722,21 @@ do
       end
       self.islands = pruned
    end
+   function CellOutlineMap:has_any_islands()
+      if self.cells then
+         return nil -- islands not yet generated
+      end
+      return #self.islands > 0
+   end
+   function CellOutlineMap:set_color(c)
+      self.color = c
+      for i = 1, #self.islands do
+         local island = self.islands[i]
+         if island:has_canvas_data() then
+            island:draw()
+         end
+      end
+   end
 end
 
 local CellOutlineMapAllFiles = {}
@@ -642,11 +748,7 @@ do
       return instance
    end
    function CellOutlineMapAllFiles:accept(filename, x, y)
-      local map = self.maps[filename]
-      if not map then
-         map = CellOutlineMap:new()
-         self.maps[filename] = map
-      end
+      local map = self:get_or_create_file(filename)
       map:accept_cell(x, y)
    end
    function CellOutlineMapAllFiles:get_filename_list()
@@ -660,6 +762,20 @@ do
          k, v = next(t, k)
       end
       return list
+   end
+   function CellOutlineMapAllFiles:get_or_create_file(filename)
+      local map = self.maps[filename]
+      if not map then
+         map = CellOutlineMap:new(filename)
+         self.maps[filename] = map
+      end
+      return map
+   end
+   function CellOutlineMapAllFiles:get_map(filename)
+      return self.maps[filename]
+   end
+   function CellOutlineMapAllFiles:has_file(filename)
+      return self.maps[filename] and true
    end
 end
 
@@ -722,12 +838,20 @@ do
       end
       
       local world_first_file = nil -- we shouldn't outline cells defined in the same file as the worldspace, because that'll be nearly all of them
+      local world_filenames  = {}
       do
          local list = world:get_source_file_list()
          local file = list[1]
          if file then
             world_first_file = file.filename
          end
+         for i = 2, #list do
+            world_filenames[i - 1] = list[i].filename
+         end
+      end
+      local all_maps = CellOutlineMapAllFiles:new()
+      for i = 1, #world_filenames do
+         all_maps:get_or_create_file(world_filenames[i])
       end
       
       local cells   = world:get_all_cells()
@@ -805,7 +929,6 @@ do
             extents.z.span = 1
          end
       end
-      dovah.dump(extents)
       
       _update_progress("Preparing canvas...", 0, 0, 0)
       do
@@ -884,8 +1007,6 @@ do
             functor("top_right",    quads.top_right)
          end
          
-         local all_maps = CellOutlineMapAllFiles:new()
-         
          local benchmark = dovah.benchmark_start()
          for i = 1, count do
             local cell = cells[i]
@@ -914,6 +1035,46 @@ do
                   if file then
                      local name = file.filename
                      if name ~= world_first_file then
+                        all_maps:accept(name, x / 32, y / 32) -- this function wants (north = up) grid coordinates, not pixel coordinates
+                     end
+                  end
+               end
+            end
+            do
+               --
+               -- It's possible for a file to modify a cell without actually ending up 
+               -- in the cell's source file list. If the cell is an exterior cell, and 
+               -- the file places a persistent reference inside of the cell, then that 
+               -- persistent reference won't actually be stored as part of the cell. 
+               -- Instead, the reference goes inside of what's called a "persistent 
+               -- cell," which belongs to the worldspace as a whole.
+               --
+               -- If every normal cell is a box that encloses a small chunk of space 
+               -- within the worldspace, then you can think of the "persistent cell" 
+               -- as a large box that overlaps with the entire worldspace.
+               --
+               -- Of course, when DovahKit's backend loads a file, it "reparents" all 
+               -- children of the persistent cell -- that is, it "moves" them so that 
+               -- they belong to a "real" cell, based on their positions. This is the 
+               -- same thing that the game does while loading.
+               --
+               -- As such, the only way to TRULY know what files modify a cell -- not 
+               -- a cell form, but the physical region that we think of as a "cell" -- 
+               -- is to check the cell's source file list, and then loop over all of 
+               -- its persistent references.
+               --
+               local all_files = {}
+               for i = 1, #world_filenames do
+                  all_files[world_filenames[i]] = false
+               end
+               local refs  = {} -- TODO: cell:get_all_persistent_refs()
+               local count = #refs
+               for i = 1, count do
+                  local files = refs[i]:get_source_file_list()
+                  for j = 1, #files do
+                     local name = files[j].filename
+                     if name ~= world_first_file then
+                        all_files[name] = true
                         all_maps:accept(name, x / 32, y / 32) -- this function wants (north = up) grid coordinates, not pixel coordinates
                      end
                   end
@@ -1057,36 +1218,26 @@ do
             for i = 1, count do
                local name = files[i]
                local map  = all_maps.maps[name]
+               map:set_color(string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i))
                map:generate_islands()
                --
                local islands = map.islands
                if #islands > 0 then
-                  if not root_group then
+                  if not root_group then -- lazy-create these layer groups
                      root_group = canvas:append_layer_group()
                      root_group.name = "Cells by file"
                      fill_group = root_group:append_layer_group()
                      fill_group.name = "Fill"
                      line_group = root_group:append_layer_group()
                      line_group.name = "Outlines"
+                     --
+                     fill_group.opacity = math.max(0, math.min(1, CELL_OUTLINE_FILL_OPACITY / 255))
                   end
-                  --
-                  -- TODO: In the future, we may want to create a file list in 
-                  -- advance based on the list of files that touch the selected 
-                  -- world; and we may want to let the user set each file's color 
-                  -- in advance. (Additionally, should we somehow encounter a file 
-                  -- that isn't present in the world's file list -- something which 
-                  -- should be impossible, but no harm in planning for it -- then 
-                  -- we will here want to add that file to the list, and select a 
-                  -- color dynamically somehow.)
-                  --
-                  local color = string.format("hsl(%sdeg, 100%%, 50%%)", HUE_PER_FILE * i)
-                  local group_line = line_group:append_layer_group()
-                  local group_fill = fill_group:append_layer_group()
-                  group_line.name = "Cells altered by " .. name .. " (outlines)"
-                  group_fill.name = "Cells altered by " .. name .. " (fill)"
+                  map:create_canvas_data(line_group, fill_group)
                   for j = 1, #islands do
                      local island = islands[j]
-                     island:draw(color, group_line, group_fill)
+                     island:create_canvas_data()
+                     island:draw()
                   end
                end
                progress.value = i
@@ -1094,6 +1245,8 @@ do
          end
          dovah.benchmark_stop(benchmark)
          dovah.log_message("Time taken for islands: %s milliseconds (%s microseconds)", benchmark:milliseconds(), benchmark:microseconds())
+         HeightmapWindow:import_cell_outline_data(all_maps)
+         _update_progress("Done!", 0, count, count)
       end
    end
 end
@@ -1101,6 +1254,7 @@ end
 HeightmapWindow.controls.options.execute:on("OnActivated", "render", function()
    HeightmapWindow:set_is_locked(true)
    HeightmapWindow:clear_canvas()
+   HeightmapWindow:clear_cell_outline_toggles()
    render_worldspace_height()
    HeightmapWindow:set_is_locked(false)
 end)

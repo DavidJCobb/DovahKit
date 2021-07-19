@@ -84,7 +84,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
    }
 }
 
-/*static*/ void DovahKitFormDataCache::_parseQuest(const dovah::form_stub& stub, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc) {
+/*static*/ void DovahKitFormDataCache::_parseQuest(dovah::form_stub& stub, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc) {
    if (!intfc.is_winning_record)
       return;
    while (auto& subrecord = record.next_subrecord()) {
@@ -100,7 +100,7 @@ void DovahKitFormDataCache::handleFormDelete(dovah::form_stub* stub, bool will_b
       break;
    }
 }
-/*static*/ void DovahKitFormDataCache::_parseStatic(const dovah::form_stub& stub, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc) {
+/*static*/ void DovahKitFormDataCache::_parseStatic(dovah::form_stub& stub, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc) {
    if (!intfc.is_winning_record)
       return;
    while (auto& subrecord = record.next_subrecord()) {

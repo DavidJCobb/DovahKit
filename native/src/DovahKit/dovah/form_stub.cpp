@@ -151,28 +151,11 @@ namespace dovah {
       //
       return loaded_form_ptr<loaded_forms::Form>(this);
    }
-
-   loaded_form_ptr<loaded_forms::Form> form_stub::load() {
-      return this->_load();
-   }
-   loaded_form_ptr<loaded_forms::Form> form_stub::get_content_if_loaded() {
-      return loaded_form_ptr<loaded_forms::Form>(this);
-   }
-   bool form_stub::fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size, int16_t source_file_index) const noexcept {
-      auto* data = this->get_source_file_info(source_file_index);
-      if (!data)
-         return false;
-      return data->pointer->fetch_record_header(data->offset, out, out_record_decompressed_size);
-   }
-   void form_stub::do_custom_parse(void(*loader)(const form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&), tes_file_reading::basic_reader* reader) const noexcept {
-      if (!loader)
-         return; // no loader supplied
+   void form_stub::_do_custom_parse(tes_file_reading::basic_reader* reader, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> loader) noexcept {
       if (!this->has_source_files())
          return; // no files to load from
       //
       auto& lo = this->_get_load_order();
-      if (lo.is_form_loading_blocked(this)) // don't allow a load if the file's load order is in the middle of a save operation or some other unsafe circumstance
-         return;
       //
       file_data* arr;
       uint16_t   size;
@@ -219,6 +202,24 @@ namespace dovah {
          reader->file_size = 0;
          reader->loader    = nullptr;
       }
+   }
+
+   loaded_form_ptr<loaded_forms::Form> form_stub::load() {
+      return this->_load();
+   }
+   loaded_form_ptr<loaded_forms::Form> form_stub::get_content_if_loaded() {
+      return loaded_form_ptr<loaded_forms::Form>(this);
+   }
+   bool form_stub::fetch_record_header(tes_file_record_header& out, uint32_t& out_record_decompressed_size, int16_t source_file_index) const noexcept {
+      auto* data = this->get_source_file_info(source_file_index);
+      if (!data)
+         return false;
+      return data->pointer->fetch_record_header(data->offset, out, out_record_decompressed_size);
+   }
+   void form_stub::do_custom_parse(tes_file_reading::basic_reader* reader, std::function<void(form_stub&, tes_file_reading::record&, load_order_interfaces::form_load&)> loader) noexcept {
+      if (this->_get_load_order().is_form_loading_blocked(this)) // don't allow a load if the file's load order is in the middle of a save operation or some other unsafe circumstance
+         return;
+      this->_do_custom_parse(reader, loader);
    }
 
    #pragma region form_stub file list
@@ -564,9 +565,9 @@ namespace dovah {
    void form_stub::receive_inbound_ref(form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags) noexcept {
       auto& list  = this->inbound;
       auto& entry = list[inbound->formID];
-      entry.other = inbound;
+      entry.other     = inbound;
       entry.refcount += refcount;
-      entry.flags = flags;
+      entry.flags    |= flags;
    }
 
    void form_stub::_add_one_way_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {

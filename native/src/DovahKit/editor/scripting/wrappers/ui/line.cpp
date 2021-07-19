@@ -9,9 +9,11 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 
 namespace {
-   static constexpr std::array<std::pair<QFrame::Shape, const char*>, 2> _shapes = {{
+   static constexpr std::array<std::pair<QFrame::Shape, const char*>, 4> _shapes = {{
       { QFrame::Shape::HLine, "horizontal" },
       { QFrame::Shape::VLine, "vertical" },
+      { QFrame::Shape::HLine, "h" },
+      { QFrame::Shape::VLine, "v" },
    }};
 }
 

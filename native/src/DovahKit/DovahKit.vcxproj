@@ -125,6 +125,7 @@
     <ClCompile Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\localized_string_file.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\results.cpp" />
+    <ClCompile Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\threads.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\config.cpp" />
@@ -474,6 +475,7 @@
     <ClInclude Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.h" />
     <ClInclude Include="dovah\files\tes_file_reading\localized_string_file.h" />
     <ClInclude Include="dovah\files\tes_file_reading\results.h" />
+    <ClInclude Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.h" />
     <ClInclude Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.h" />
     <ClInclude Include="dovah\files\tes_file_reading\threads.h" />
     <ClInclude Include="dovah\files\tes_file_writing\config.h" />
@@ -941,6 +943,7 @@
     <Text Include="dovah\_docs\game settings.txt" />
     <Text Include="dovah\_docs\how the game loads forms.txt" />
     <Text Include="dovah\_docs\list of SSE CK warnings (non-exhaustive).txt" />
+    <Text Include="dovah\_docs\persistent cells.txt" />
     <Text Include="dovah\_docs\plugin types.txt" />
     <Text Include="dovah\_docs\reading files.txt" />
     <Text Include="dovah\_docs\singleton forms.txt" />

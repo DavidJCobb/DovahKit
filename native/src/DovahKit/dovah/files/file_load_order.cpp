@@ -9,6 +9,7 @@
 #include "tes_file_reading/file_header.h"
 #include "tes_file_reading/results.h"
 #include "tes_file_reading/threaded_load_order_use_info_builder.h"
+#include "tes_file_reading/load_order_persistent_ref_reparenter.h"
 #include "tes_file_writing/file_writer.h"
 #include "tes_file_writing/results.h"
 #include "../forms/factories/construct.h"
@@ -166,6 +167,15 @@ namespace dovah {
             pair.second.other = this->get_form(form_type::none, pair.first);
          }
       }
+   }
+   void file_load_order::_reparent_persistent_references() {
+      //
+      // All of a worldspace's persistent references are encoded as children of the persistent 
+      // cell. However, this is cumbersome for frontends to work with, and what's more, it's not 
+      // necessary within the backend: when saving, we already handle the case of persistent refs 
+      // existing in non-persistent cells.
+      //
+      tes_file_reading::load_order_persistent_ref_reparenter::get().execute(*this);
    }
    void file_load_order::_build_use_info() {
       //
@@ -395,6 +405,7 @@ namespace dovah {
       this->save_load_state.loading_index = 0;
       //
       this->_build_use_info();
+      this->_reparent_persistent_references();
       this->save_load_state.flags |= save_load_flag::use_info_build_is_complete;
       //
       if (!this->is_light_plugin_support_enabled()) {
