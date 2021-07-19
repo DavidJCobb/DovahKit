@@ -26,18 +26,20 @@ namespace dovah::tes_file_reading::threads {
          uint32_t    lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
          form_type_t lastFormType   = 0;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
-            if (ot == object_type::group) {
+            {
                //
                // Stop if we've reached the end of the group we're meant to parse.
                //
                auto& first = this->_groups[0];
-               if (first.exists() && first.pos == desired.pos) {
-                  lastGroupLabel = _byteswap_ulong(first.header.label);
-               } else {
+               if (!first || first.pos != desired.pos) {
                   //char sig_buffer[5];
                   //dovah::logging::print_line("[dovah::tes_file_reading::threads::basic] Thread %08X finished parse of group %s.", std::this_thread::get_id(), FMT_SIGNATURE(lastGroupLabel, sig_buffer));
                   break;
                }
+            }
+            if (ot == object_type::group) {
+               lastGroupLabel = _byteswap_ulong(this->_groups[0].header.label);
+               //
                if (this->_groups[1].exists()) {
                   detailed_notice error;
                   error.code = notice_code::unexpected_nested_group_in_simple_top_group;
@@ -122,7 +124,7 @@ namespace dovah::tes_file_reading::threads {
          uint32_t    lastSignature  = 0; // shortcut to reduce the number of form type lookups we need
          form_type_t lastFormType   = 0;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
-            if (ot == object_type::group) {
+            {
                //
                // Stop if we've reached the end of the group we're meant to parse.
                //
@@ -209,7 +211,7 @@ namespace dovah::tes_file_reading::threads {
          uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
          form_type_t lastFormType  = 0;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
-            if (ot == object_type::group) {
+            {
                //
                // Stop if we've reached the end of the group we're meant to parse.
                //
@@ -278,7 +280,7 @@ namespace dovah::tes_file_reading::threads {
          uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
          form_type_t lastFormType = 0;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
-            if (ot == object_type::group) {
+            {
                //
                // Stop if we've reached the end of the group we're meant to parse.
                //
@@ -355,7 +357,7 @@ namespace dovah::tes_file_reading::threads {
          uint32_t   lastSignature = 0; // shortcut to reduce the number of form type lookups we need
          form_type_t lastFormType = 0;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
-            if (ot == object_type::group) {
+            {
                //
                // Stop if we've reached the end of the group we're meant to parse.
                //
@@ -419,7 +421,7 @@ namespace dovah::tes_file_reading::threads {
          assert(this->next_record_or_group() == object_type::group); // TODO: error instead
          object_type ot;
          while (ot = this->next_record_or_group(), ot != object_type::none) {
-            if (ot == object_type::group) {
+            {
                //
                // Stop if we've reached the end of the group we're meant to parse.
                //

@@ -244,10 +244,8 @@ namespace dovah {
       }
       assert(this->files.entries);
       auto resized = new file_data[size_t(this->files.count) + 1]; /// cast silences warning C26451 and is otherwise pointless
-      uint16_t i = 0;
-      for (; i < this->files.count; ++i)
-         resized[i] = this->files.entries[i];
-      auto& last = resized[i];
+      memcpy(resized, this->files.entries, sizeof(file_data) * this->files.count);
+      auto& last = resized[this->files.count];
       last.pointer = &f;
       last.offset  = offset;
       last.flags   = record_flags;
