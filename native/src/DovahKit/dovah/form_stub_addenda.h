@@ -24,7 +24,8 @@ namespace dovah {
          int32_t y = 0;
       } grid_coords; // WRLD/CELL/XCLC
       std::vector<form_stub*> ordered_children; // DIAL/INFO
-      form_stub* persistent_cell = nullptr; // WRLD persistent cell
+      form_stub* persistent_cell     = nullptr; // WRLD persistent cell
+      form_stub* canonical_landscape = nullptr; // last loaded LAND for a CELL
 
       void clone_from(const form_stub_addenda&); // shallow copy, and should only copy data that we'd want to copy when, say, duplicating a form
       void sever_references_to(form_stub&);

@@ -70,6 +70,9 @@ namespace dovah::form_stub_helpers {
    extern form_stub* get_cell_landscape(const form_stub* cell) {
       if (cell->formType != dovah::form_type::cell)
          return nullptr;
+      if (auto* addenda = cell->addenda)
+         if (auto* land = addenda->canonical_landscape)
+            return land;
       for (auto& pair : cell->inbound) {
          auto& entry = pair.second;
          if (entry.flags & use_info_entry::flag::i_am_parent_of) {

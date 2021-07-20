@@ -211,6 +211,54 @@ void DovahKitScriptVMUserdataInterface::remove_model_observer(ObservableStandard
    lua_settop(L, start);
 }
 
+void DovahKitScriptVMUserdataInterface::remove_canvas_layers(const QList<CanvasWidgetEntity*> entities) {
+   DovahKitScriptVMCore::require_script_thread();
+   auto* L     = this->vm.lua_vm;
+   auto  start = lua_gettop(L);
+   //
+   auto si_store_all = start + 1;
+   auto si_store_ptr = start + 2;
+   auto si_nk        = start + 3;
+   auto si_nv        = start + 4;
+   //
+   lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_storage_registry_key);
+   for (auto* entity : entities) {
+      lua_pushlightuserdata(L, entity);
+      lua_rawget(L, -2);
+      if (!lua_istable(L, -1)) {
+         lua_pop(L, 1);
+         continue;
+      }
+      //
+      // Zombify all wrappers for this form and its parts.
+      //
+      lua_pushnil(L); // nk
+      while (lua_next(L, si_store_ptr) != 0) {
+         editor_script::wrapper* other = nullptr;
+         if (lua_type(L, si_nv) == LUA_TUSERDATA) {
+            if (auto* target = (editor_script::wrapper*)lua_touserdata(L, si_nv)) {
+               assert(target->canvas_layer == entity);
+               target->lua_key = LUA_NOREF;
+               lua_pushcfunction(L, &editor_script::zombify_userdata);
+               lua_pushvalue(L, si_nv);
+               lua_call(L, 1, 0);
+            }
+         }
+         //
+         lua_settop(L, si_nk);
+      }
+      //
+      // Erase the table for this form.
+      //
+      lua_settop(L, si_store_all);
+      lua_pushlightuserdata(L, entity);
+      lua_pushnil(L);
+      lua_rawset(L, -3);
+   }
+   //
+   lua_settop(L, start);
+}
+
 bool DovahKitScriptVMUserdataInterface::wrapper_exists_for(void* pertinent_pointer) {
    DovahKitScriptVMCore::require_script_thread();
    auto* L      = this->vm.lua_vm;
@@ -331,7 +379,8 @@ void DovahKitScriptVMUserdataInterface::prune_wrapper_list_for(editor_script::wr
             this->vm.model_observer_no_longer_referenced(instance.model_observer);
             break;
          case wt::ui_canvas_layer:
-            // TODO?
+            // These objects are managed by the CanvasWidget to which they belong. Don't 
+            // mess with them here.
             break;
          case wt::ui_canvas_layer_data:
             this->vm.canvas_layer_data_unreferenced(instance.canvas_layer_data);

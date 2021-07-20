@@ -5,6 +5,9 @@ local WATER_MIN_ALPHA = 0.5
 
 local CELL_OUTLINE_FILL_OPACITY = 30 -- [0, 255]
 
+-- Comprehensive but slow; haven't yet found cases where it's actually needed
+local TEST_FOR_PERSISTENT_REFS = false
+
 local CELL_SIDE_SIZE = 4096
 local DEFAULT_LAND = { -- executable-level defaults: a LandTexture created at run-time with no form ID
    diffuse  = "Landscape\\" .. dovah.lookup_game_ini_setting("Landscape", "sDefaultLandDiffuseTexture"),
@@ -56,20 +59,32 @@ do -- FileOutlineWidget contents
    function FileOutlineWidget:new(file_map)
       local instance = setmetatable({}, self)
       --
-      instance.widget = ui.groupbox.new(file_map.name)
-      instance.color  = file_map.color or "#FF0000"
+      instance.widget    = ui.widget.new()
+      instance.file_map  = file_map
       instance._controls = {
          root  = instance.widget,
+         check = nil,
          color = nil,
       }
-      instance.widget:on("OnToggled", "", function(checked)
-         instance:on_toggled(checked)
-      end)
+      do
+         local r = instance.widget
+         r.layout_margins = 0
+         r:set_layout("grid")
+         local c = ui.checkbox.new(file_map.filename)
+         c.checked = true
+         c:on("OnToggled", "", function(checked)
+            instance:on_toggled(checked)
+         end)
+         instance._controls.check = c
+         r:add_child(c, 1, 1)
+         --
+         -- TODO: color picker
+      end
       --
       return instance
    end
    function FileOutlineWidget:on_toggled(checked)
-      -- TODO
+      self.file_map:set_visible(checked)
    end
 end
 
@@ -176,14 +191,18 @@ do -- HeightmapWindow contents
          config:add_child(ui.line.new("h"))
          --
          do
-            local widget = ui.scrollbox.new()
-            widget.body:set_layout("down")
-            HeightmapWindow.controls.options.outline_toggle_holder = widget.body
+            local widget = ui.text.new("Cell outlines:")
+            config:add_child(widget)
+         end
+         do
+            local widget = ui.widget.new()
+            widget:set_layout("down")
+            HeightmapWindow.controls.options.outline_toggle_holder = widget
             --
             config:add_child(widget)
          end
          --
-         --config:add_spacer("v")
+         config:add_spacer("v")
       end
    end
    function HeightmapWindow:clear_canvas()
@@ -207,20 +226,20 @@ do -- HeightmapWindow contents
       local list   = self.controls.outline_toggles
       local parent = self.controls.options.outline_toggle_holder
       for i = 1, #list do
-         parent:remove_child(list[i])
+         parent:remove_child(list[i].widget)
          list[i] = nil
       end
    end
    function HeightmapWindow:import_cell_outline_data(all_files_map)
       local list   = self.controls.outline_toggles
       local parent = self.controls.options.outline_toggle_holder
-      local maps   = all_files_map.maps
-      for i = 1, #maps do
-         local map = maps[i]
-         local cls = FileOutlineWidget:new(map)
-         list[i] = cls
-         parent:add_child(cls.widget)
-      end
+      all_files_map:for_each_map(function(map)
+         if map:has_any_islands() then
+            local cls = FileOutlineWidget:new(map)
+            list[#list + 1] = cls
+            parent:add_child(cls.widget)
+         end
+      end)
    end
    function HeightmapWindow:set_is_locked(state)
       self.controls.config.enabled = not state
@@ -737,6 +756,10 @@ do
          end
       end
    end
+   function CellOutlineMap:set_visible(state)
+      self.layer_groups.line.visible = state
+      self.layer_groups.fill.visible = state
+   end
 end
 
 local CellOutlineMapAllFiles = {}
@@ -750,6 +773,14 @@ do
    function CellOutlineMapAllFiles:accept(filename, x, y)
       local map = self:get_or_create_file(filename)
       map:accept_cell(x, y)
+   end
+   function CellOutlineMapAllFiles:for_each_map(functor)
+      local t    = self.maps
+      local k, v = next(t)
+      while k do
+         functor(v)
+         k, v = next(t, k)
+      end
    end
    function CellOutlineMapAllFiles:get_filename_list()
       local list = {}
@@ -1040,7 +1071,11 @@ do
                   end
                end
             end
-            do
+            if TEST_FOR_PERSISTENT_REFS then
+               --
+               -- This code exists to handle a theoretical edge-case. It's not known 
+               -- whether the Creation Kit would ever produce this edge-case, and the 
+               -- code hasn't been useful when testing Dawnguard.esm.
                --
                -- It's possible for a file to modify a cell without actually ending up 
                -- in the cell's source file list. If the cell is an exterior cell, and 
@@ -1063,18 +1098,13 @@ do
                -- is to check the cell's source file list, and then loop over all of 
                -- its persistent references.
                --
-               local all_files = {}
-               for i = 1, #world_filenames do
-                  all_files[world_filenames[i]] = false
-               end
-               local refs  = {} -- TODO: cell:get_all_persistent_refs()
+               local refs  = cell:get_all_persistent_refs()
                local count = #refs
                for i = 1, count do
                   local files = refs[i]:get_source_file_list()
                   for j = 1, #files do
                      local name = files[j].filename
                      if name ~= world_first_file then
-                        all_files[name] = true
                         all_maps:accept(name, x / 32, y / 32) -- this function wants (north = up) grid coordinates, not pixel coordinates
                      end
                   end

@@ -49,7 +49,7 @@ namespace {
             return 0;
          DovahKitScriptVMUserdataInterface::get().remove(self);
          {
-            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* task    = new tasks::s2m::lambda(true);
             task->handler = [layer]() {
                layer->deleteLater();
             };

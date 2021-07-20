@@ -346,6 +346,17 @@ QList<CanvasWidgetEntity*> CanvasWidgetLayerGroup::childLayers() const noexcept 
          list.push_back(layer);
    return list;
 }
+QList<CanvasWidgetEntity*> CanvasWidgetLayerGroup::descendantLayers() const noexcept {
+   QList<CanvasWidgetEntity*> list;
+   for (auto* child : this->children()) {
+      if (auto* entity = qobject_cast<CanvasWidgetEntity*>(child)) {
+         list.push_back(entity);
+         if (entity->isLayerGroup())
+            list.append(((CanvasWidgetLayerGroup*)entity)->descendantLayers());
+      }
+   }
+   return list;
+}
 CanvasWidgetLayer* CanvasWidgetLayerGroup::createLayer(CanvasWidgetLayerData* data) {
    auto* layer = new CanvasWidgetLayer(this);
    layer->setData(data);

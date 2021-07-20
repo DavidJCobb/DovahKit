@@ -37,7 +37,7 @@ namespace {
          cls::push_new_instance(L, { x, y, z });
          return 1;
       }
-      luastackchange_t to_matrix(lua_State* L) { // compute the cross product vector of two 3D vectors
+      luastackchange_t to_matrix(lua_State* L) { // create a new table with the "matrix3x3" class
          cls::require_self_type(L);
          lua_settop(L, 1);
          //
@@ -50,7 +50,7 @@ namespace {
          classes::matrix3x3::push_new_instance(L, converted);
          return 1;
       }
-      luastackchange_t to_quaternion(lua_State* L) { // compute the cross product vector of two 3D vectors
+      luastackchange_t to_quaternion(lua_State* L) { // create a new table with the "quaternion" class
          cls::require_self_type(L);
          lua_settop(L, 1);
          //

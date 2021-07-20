@@ -655,9 +655,10 @@ namespace dovah {
       // of the branches above, we may have deleted the input stub and switched it out for the existing stub 
       // which it overrides, so from this point forward we can't delete the stub.
       // 
-      // Anywho... Manage the persistent cell:
-      //
       if (stub->formType == form_type::cell) {
+         //
+         // Manage the persistent cell for this cell's parent world:
+         //
          if (stub->test_record_flags(tes_file_record_header::flag::persistent)) {
             //
             // Ensure that worldspaces are aware of their persistent cells.
@@ -667,6 +668,13 @@ namespace dovah {
                if (!addenda.persistent_cell) // Only the first persistent-flagged cell loaded by a worldspace will be THE persistent cell.
                   addenda.persistent_cell = stub;
             }
+         }
+      } else if (stub->formType == form_type::land) {
+         //
+         // Manage the canonical landscape for this landscape's parent cell:
+         //
+         if (new_parent && new_parent->formType == form_type::cell) {
+            new_parent->get_or_create_addenda().canonical_landscape = stub;
          }
       }
       //

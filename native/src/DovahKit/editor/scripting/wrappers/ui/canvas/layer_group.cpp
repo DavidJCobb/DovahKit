@@ -159,6 +159,34 @@ namespace {
          iw.canvas_layer = layer;
          return DovahKitScriptVMUserdataInterface::get().push(L, iw, wrappers::ui::canvas_layer_group::metatable_key);
       }
+      luastackchange_t delete_(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         auto* layer = self.canvas_layer;
+         if (!layer)
+            return 0;
+         //
+         assert(layer->isLayerGroup());
+         QList<CanvasWidgetEntity*> entities;
+         {
+            auto* task    = new tasks::s2m::ui_read_lambda();
+            auto* group   = (CanvasWidgetLayerGroup*)layer;
+            task->handler = [group, &entities]() {
+               entities = group->descendantLayers();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         DovahKitScriptVMUserdataInterface::get().remove_canvas_layers(entities);
+         {
+            auto* task    = new tasks::s2m::lambda(true);
+            task->handler = [layer]() {
+               layer->deleteLater();
+            };
+            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            delete task;
+         }
+         return 0;
+      }
    }
    namespace _getters {
       luastackchange_t blend_mode(lua_State* L) {
@@ -422,6 +450,7 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_methods = {
       { "append_layer",       &_methods::append_layer },
       { "append_layer_group", &_methods::append_layer_group },
+      { "delete",             &_methods::delete_ },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "blend_mode", &_getters::blend_mode },
@@ -436,7 +465,7 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "blend_mode", &_setters::blend_mode },
       { "name",       &_setters::name },
-      { "opacity",    &_getters::opacity },
+      { "opacity",    &_setters::opacity },
       { "x",          &_setters::x },
       { "y",          &_setters::y },
       { "visible",    &_setters::visible },

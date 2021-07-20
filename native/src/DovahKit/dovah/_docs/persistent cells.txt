@@ -61,6 +61,9 @@ away the rest in one clean act.
 Unfortunately, step 4 cannot be made multi-threaded. Given a group of REFRs, we 
 cannot be sure that some of these REFRs don't refer to the same target cell. If 
 we try to  multi-thread the creation of inbound use info for these  cells, then 
-we risk a thread collision and data corruption (or, if we're lucky, a crash).
+we risk a thread collision and data corruption (or, if we're lucky, a crash). 
 
-Skyrim.esm has 15,196 persistent references in Tamriel alone.
+Skyrim.esm has 15,196  persistent references  in Tamriel  alone. This is not an 
+especially large  number of forms to work with, given that  the game has around 
+200,000 references in total; the problem is that reparenting all the references 
+forces us to jump back and forth all over the place in memory, and that's slow.

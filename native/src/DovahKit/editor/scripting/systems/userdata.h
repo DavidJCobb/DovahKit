@@ -3,6 +3,8 @@
 #include "../wrapper.h"
 #include "editor_script_inner_core.h"
 
+class CanvasWidgetEntity;
+
 class DovahKitScriptVMUserdataInterface : cobb::singleton {
    //
    // This is an interface to DovahKitScriptVM, provided for the benefit of our userdata internals.
@@ -29,6 +31,11 @@ class DovahKitScriptVMUserdataInterface : cobb::singleton {
       void remove_form(dovah::form_stub&);
 
       void remove_model_observer(ObservableStandardItemModelObserver&);
+
+      //
+      // Use this in Lua APIs that are meant to explicitly delete a layer group.
+      //
+      void remove_canvas_layers(const QList<CanvasWidgetEntity*>);
 
       bool wrapper_exists_for(void*);
 

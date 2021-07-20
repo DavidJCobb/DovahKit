@@ -128,6 +128,7 @@ class CanvasWidgetLayerGroup : public CanvasWidgetEntity {
       CanvasWidgetLayer* createLayer(CanvasWidgetLayerData* data = nullptr);
       CanvasWidgetLayerGroup* createLayerGroup();
       QList<CanvasWidgetEntity*> childLayers() const noexcept;
+      QList<CanvasWidgetEntity*> descendantLayers() const noexcept;
 
       // Returns the region occupied by this layer and all of its descendants, recursing as needed. 
       // Note that this function doesn't take the layer's ancestor-layers (if any) into account; if 

@@ -19,7 +19,6 @@
 //  - CELL/TVDT: Exterior: Terrain visibility data (occlusion data)
 //  - CELL/X...: Extra data (shared with REFR)
 //  - CELL/XCLC: Land flags
-//  - Access to contained ObjectReferences (but for exterior cells, persistent refs would be in the persistent cell; we'd need special handling for a "friendly" API)
 //
 #ifndef _DEBUG
    #pragma message("WARNING: Are you compiling in Release? The Lua API for cells is incomplete!")
@@ -31,6 +30,46 @@ namespace {
    using form_t = dovah::loaded_forms::Cell;
 
    namespace _methods {
+      luastackchange_t get_all_persistent_refs(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* stub = self.stub;
+         if (!stub)
+            return 0;
+         lua_settop(L, 2);
+         lua_createtable(L, 0, 0);
+         int i = 1;
+         for (auto& pair : stub->inbound) {
+            auto& entry = pair.second;
+            auto* form  = entry.other;
+            if (!form || !dovah::form_type_info::form_type_is_reference(form->formType))
+               continue;
+            if (!form->test_record_flags(dovah::tes_file_record_header::flag::persistent))
+               continue;
+            int argcount = wrap_and_push_form(L, form);
+            while (argcount--)
+               lua_rawseti(L, 2, i++);
+         }
+         return 1;
+      }
+      luastackchange_t get_all_refs(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* stub = self.stub;
+         if (!stub)
+            return 0;
+         lua_settop(L, 2);
+         lua_createtable(L, stub->inbound.size() / 2, 0);
+         int i = 1;
+         for (auto& pair : stub->inbound) {
+            auto& entry = pair.second;
+            auto* form  = entry.other;
+            if (!form || !dovah::form_type_info::form_type_is_reference(form->formType))
+               continue;
+            int argcount = wrap_and_push_form(L, form);
+            while (argcount--)
+               lua_rawseti(L, 2, i++);
+         }
+         return 1;
+      }
    }
    namespace _getters {
       template<decltype(form_t::cell_flags) flag> luastackchange_t cell_flag(lua_State* L) {
@@ -189,6 +228,8 @@ namespace {
 
 namespace editor_script::wrappers {
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_methods = {
+      { "get_all_persistent_refs", &_methods::get_all_persistent_refs },
+      { "get_all_refs",            &_methods::get_all_refs },
    };
    /*static*/ std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "allow_fast_travel",   &_getters::cell_flag_invert<form_t::cell_flag::cant_travel_from_here> },
