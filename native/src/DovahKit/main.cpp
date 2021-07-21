@@ -511,60 +511,7 @@
 //
 //        - PHASE 3: UI ACCESS
 //          
-//           - Scripts will need an API to queue the form-edit dialog for a form. See, we 
-//             need to block the editor while a script is running, so if for example a 
-//             script searches for forms matching some criteria, then the user won't simply 
-//             be able to double-click forms in that listing to jump to viewing and editing 
-//             those forms. The best we can do, for now, is allowing scripts to queue a 
-//             dialog to open for a given form (with a hardcoded confirmation prompt for 
-//             the user, like "Open this form for editing after the script finishes?" so 
-//             they know what's going on).
-//
-//              - If we want to go the extra mile, then we could allow the editor and its 
-//                scripts to work asynch from each other IF all main-thread form lookups 
-//                hit a lock while a script is running, with scripts acquiring that lock 
-//                at the start of execution, temporarily releasing it during the Lua debug 
-//                hook, and releasing it for good at the end of execution. That would force 
-//                a lot of changes to the frontend core.
-//                
-//                This is NOT necessary and probably not a good use of development time, 
-//                so once script implementation is done we should move this to the bottom 
-//                of the to-do list where we put the other speculative tasks.
-//
-//                 - That is:
-//
-//                    - Script thread acquires form lock when script execution starts.
-//                    - Script thread releases form lock temporarily at start of debug 
-//                      hook.
-//                    - Script thread reacquires form lock at end of debug hook. If main 
-//                      thread already has lock, script thread waits for main thread to 
-//                      release.
-//                    - Script thread releases form lock for good when script execution 
-//                      ends.
-//                    - Main thread acquires form lock when looking up forms, etc., 
-//                      waiting on the script thread if that already has the lock.
-//          
-//           - UI widget ideas:
-//
-//              - A "canvas" widget that allows scripts to draw arbitrary raster data. 
-//                A good use case for this would be a script that generates a render of 
-//                a worldspace's heightmap. Bonus points if the widget can optionally be 
-//                set to let the user save its contents as an image.
-//
-//                 - There are three "levels" of drawing API we can offer:
-//
-//                    - Simple pixel- and shape-drawing instructions
-//
-//                    - Layers, like in GIMP
-//
-//                    - Shapes and objects, like in PowerPoint (these can be built on top 
-//                      of a layer implementation)
-//
-//                   A friend has strongly encouraged implementing layers at a minimum, 
-//                   and frankly, I can see more than a few benefits -- for example, 
-//                   being able to generate not only a heightmap for a worldspace, but 
-//                   also being able to color in cells that are altered (or that have 
-//                   objects added) by specific mods, where each mod gets its own layer.
+//           - Done!
 //
 //     = When writing script documentation for functions that return class instances, it 
 //       must be specified whether they return tables or userdata (e.g. "vector3 table" 
@@ -608,20 +555,6 @@
 //       in the user being shown a confirmation message in the script selection window, 
 //       i.e. the user is shown a list of permissions that the script is requesting and 
 //       must explicitly grant those permissions before the script can run.
-//
-//     - It'd be nice if scripts had access to a UI widget that would allow them to 
-//       draw arbitrary rasters, like JS canvas (but maybe with a friendlier API).
-//
-//        - Sending each individual draw request across threads would be slow. It may 
-//          be faster to maintain two copies of any given raster -- one within the 
-//          widget, used for rendering, and one on the Lua thread which gets copied 
-//          to the widget asynchronously. Each copy of the image could maintain a 
-//          "last updated" time in ms, allowing us to know when a copy is needed. To 
-//          avoid threading mishaps, the image data on the Lua thread would need a 
-//          lock, to be used on writes and copies.
-//
-//        - Access to this widget should require permission, just because scripts 
-//          could use it to draw rude things.
 //
 //  - Extra data: room ref data: this is another multi-subrecord structure where the 
 //    game will blindly "eat" subrecords without even checking their signature. We 
@@ -693,11 +626,16 @@
 //       done, we need to sever the donor/recipient relationship including 
 //       within use info (again, ignoring cross-file and within-master donor 
 //       stuff for now).
+// 
+//        - Not to mention: what if two forms donate to each other, forming a 
+//          cyclical reference? What happens if a donor is overridden and the 
+//          override doesn't donate?
 //
 //  - Loading Papyrus data
 //
 //     - It seems like Papyrus data is coalesced? Maybe? Some elements, such as 
-//       properties, can be flagged as "removed" using a "status" field.
+//       properties, can be flagged as "removed" using a "status" field. Maybe 
+//       this is just for Bethesda's janky source control stuff.
 //
 //  - RefPickerWindow
 //
@@ -804,38 +742,6 @@
 //          controls should mimic Halo's Forge (classic controls, not Halo 5).
 //
 //  - World editing
-//
-//     - Requires backend R&D for correctness.
-//
-//        - Currently, form stubs retain information about the GRUP they loaded from, 
-//          and we use this information both to identify a worldspace's persistent cell 
-//          at run-time, and to decide which of a cell's two child GRUPs (temporary or 
-//          persistent) to write any given REFR into during the save process. Both of 
-//          these uses are incorrect. Most of the other bullet points here are going 
-//          to be related to replacing this approach with an actually correct approach. 
-//          We can implement world viewing before fixing this, though we'll mishandle 
-//          any files with unusual/incorrect data re: persistence flags.
-//
-//           - If we get rid of the group type, then that frees up one byte. We have 
-//             three bytes to spare already, so that leaves us with enough room to let 
-//             a WRLD form stub explicitly specify its persistent CELL's form ID.
-//
-//              - We can kill two birds with one stone, here. Replace the group type 
-//                with a pointer to a "form_stub_addenda" struct. This struct can be 
-//                used to link a worldspace with its persistent cell, and a topic with 
-//                its sequential list of topic infos.
-//
-//           - If we make changes in this regard, then we need to update the form stub 
-//             documentation.
-//
-//        - A worldspace's persistent cell is the first loaded child cell that has the 
-//          "persistent" flag.
-//
-//        - Under what circumstances does the Creation Kit write a persistent REFR into 
-//          a worldspace's persistent cell rather than the REFR's "proper" parent cell?
-//
-//           - We'll need code to create persistent cells for worldspaces that don't 
-//             have them, no?
 //
 //     - ObjectReference friendly delete question: why are actors that are "deleted" 
 //       in this manner flagged as persistent?
@@ -976,6 +882,10 @@
 //          overrides of base-game content if they're careful to grab the STRINGS files 
 //          for all languages. Whether that's easy to do, and whether Bethesda would 
 //          allow users to circulate that content among themselves otherwise, is unclear.
+// 
+//           - There are uploads of all STRINGS files on NexusMods. Western versions of 
+//             the game also ship with most/all Western languages, though not East Asian 
+//             languages.
 //
 //        - The downside to this approach is that Skyrim does not use internationalized 
 //          fonts. Each localization only ships the glyphs that its language needs. This 
@@ -991,14 +901,12 @@
 //
 //       Implementating this would require a few considerations:
 //
-//        - Form stubs would need to be able to store *which* file they've been told to 
-//          load from. An int16_t (with -1 meaning "use latest file") should do the trick.
+//        - We'd need to load the revision as a working copy, which means that our frontend 
+//          can't do this if an edit dialog for the form is already open.
+// 
+//           - Another complication: not all edit dialogs use working copies!
 //
 //        - Reverting a form stub should flag it as edited.
-//
-//        - If we "revert" a form stub, then we need to clear all of its outbound use 
-//          info, and then use loaded_forms::Form::generateUseInfo on the selected file 
-//          to rebuild use info as it existed for that revision.
 //
 //           - We'd also need to re-load the form's editor ID, along with any other data 
 //             that gets stored on the stub during the initial stub-build process.
