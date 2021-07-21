@@ -14,6 +14,8 @@
 #include <QGroupBox>
 
 #include "../../cross_thread_tasks/s2m/lambda.h"
+#include "../../../../helpers/qt/layout.h"
+#include "../../../../helpers/lua/error.h"
 #include "../../../../helpers/lua/qt_variant.h"
 
 #include "helpers/widget_properties.h"
@@ -58,20 +60,19 @@ namespace {
          int   argcount = lua_gettop(L);
          auto& self     = get_wrapper_for_thiscall<cls>(L);
          auto* arg      = wrapper_from_stack<cls>(L, 2);
-         luaL_argcheck(L, arg != nullptr, 2, "child (widget) expected");
-         __assume(arg != nullptr);
+         cobb::lua::argcheck(L, arg != nullptr, 2, "child (widget) expected");
          if (!self.widget)
             return 0;
          if (arg->widget == self.widget)
-            luaL_error(L, "a widget cannot be its own child");
+            cobb::lua::error(L, "a widget cannot be its own child");
          if (!_can_have_layout(*self.widget))
-            luaL_error(L, "this widget cannot have a layout and so cannot have children either");
+            cobb::lua::error(L, "this widget cannot have a layout and so cannot have children either");
          if (!arg->widget)
             return 0;
          {
             auto data = arg->widget->property("Lua widget forced parent");
             if (data.isValid())
-               luaL_argerror(L, 2, "the desired child widget cannot have its parent changed");
+               cobb::lua::argerror(L, 2, "the desired child widget cannot have its parent changed");
          }
          //
          int row     = 0; // or (index) for boxes
@@ -140,7 +141,7 @@ namespace {
          if (!self.widget)
             return 0;
          if (!_can_have_layout(*self.widget))
-            luaL_error(L, "this widget cannot have a layout and so cannot have children either");
+            cobb::lua::error(L, "this widget cannot have a layout and so cannot have children either");
          //
          _spacer_axis axis = _spacer_axis::both;
          luaL_argcheck(L, lua_isstring(L, 2), 2, "spacer axis (string) expected");
@@ -157,7 +158,7 @@ namespace {
             } else if (_stricmp(v, "both") == 0) {
                axis = _spacer_axis::both;
             } else {
-               luaL_argerror(L, 2, "unrecognized spacer axis (allowed: \"h\", \"horizontal\", \"v\", \"vertical\", \"both\")");
+               cobb::lua::argerror(L, 2, "unrecognized spacer axis (allowed: \"h\", \"horizontal\", \"v\", \"vertical\", \"both\")");
             }
          }
          //
@@ -232,9 +233,9 @@ namespace {
          //
          if (layout_mt == &QGridLayout::staticMetaObject) {
             if (row < 0)
-               return luaL_argerror(L, 2, "(grid layout) you must specify a row number");
+               cobb::lua::argerror(L, 2, "(grid layout) you must specify a row number");
             if (col < 0)
-               return luaL_argerror(L, 2, "(grid layout) you must specify a column number");
+               cobb::lua::argerror(L, 2, "(grid layout) you must specify a column number");
          }
          //
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -269,8 +270,7 @@ namespace {
                lua_pushinteger(L, grid->columnStretch(index));
                return 1;
             }
-            luaL_error(L, "axis name \"%s\" is unrecognized", axis);
-            __assume(0); // unreachable
+            cobb::lua::error(L, "axis name \"%s\" is unrecognized", axis);
          }
          if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
             luaL_argcheck(L, lua_isinteger(L, 2), 2, "layout index (integer) expected");
@@ -294,20 +294,19 @@ namespace {
       luastackchange_t remove_child(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* arg  = wrapper_from_stack<cls>(L, 2);
-         luaL_argcheck(L, arg != nullptr, 2, "child (widget) expected");
-         __assume(arg != nullptr);
+         cobb::lua::argcheck(L, arg != nullptr, 2, "child (widget) expected");
          if (!self.widget)
             return 0;
          if (arg->widget == self.widget)
-            luaL_error(L, "cannot remove a widget from itself; a widget cannot be its own child");
+            cobb::lua::error(L, "cannot remove a widget from itself; a widget cannot be its own child");
          if (!_can_have_layout(*self.widget))
-            luaL_error(L, "this widget cannot have a layout and so cannot have children either");
+            cobb::lua::error(L, "this widget cannot have a layout and so cannot have children either");
          if (!arg->widget)
             return 0;
          {
             auto data = arg->widget->property("Lua widget forced parent");
             if (data.isValid())
-               luaL_argerror(L, 2, "the specified child widget cannot have its parent changed");
+               cobb::lua::argerror(L, 2, "the specified child widget cannot have its parent changed");
          }
          //
          auto* widget = self.widget;
@@ -326,7 +325,7 @@ namespace {
          delete task;
          //
          if (is_not_a_child)
-            luaL_error(L, "the argument widget isn't a child of this widget");
+            cobb::lua::error(L, "the argument widget isn't a child of this widget");
          //
          return 0;
       }
@@ -349,7 +348,7 @@ namespace {
          if (!self.widget)
             return 0;
          if (!_can_have_layout(*self.widget))
-            luaL_error(L, "this widget cannot have a layout");
+            cobb::lua::error(L, "this widget cannot have a layout");
          //
          _layout_type* known_type = nullptr;
          auto*         type_name  = lua_tostring(L, 2);
@@ -360,8 +359,7 @@ namespace {
             }
          }
          if (!known_type) {
-            luaL_error(L, "layout type \"%s\" is unrecognized", type_name);
-            __assume(0); // unreachable
+            cobb::lua::error(L, "layout type \"%s\" is unrecognized", type_name);
          }
          auto* widget = self.widget;
          auto* task   = new tasks::s2m::lambda(false);
@@ -370,7 +368,6 @@ namespace {
             if (known_type->is_grid) {
                if (qobject_cast<QGridLayout*>(old))
                   return;
-               widget->setLayout(nullptr);
                widget->setLayout(new QGridLayout(widget));
                return;
             } else if (known_type->is_box) {
@@ -378,12 +375,11 @@ namespace {
                if (auto* box = qobject_cast<QBoxLayout*>(old)) {
                   box->setDirection(dir);
                } else {
-                  widget->setLayout(nullptr);
                   widget->setLayout(new QBoxLayout(dir, widget));
                }
                return;
             } else {
-               widget->setLayout(nullptr); // "none"
+               cobb::qt::remove_layout(widget); // "none"
             }
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
@@ -469,7 +465,7 @@ namespace {
          if (error.text) {
             if (error.arg)
                luaL_argcheck(L, false, error.arg, error.text);
-            luaL_error(L, error.text, error.bad);
+            cobb::lua::error(L, error.text, error.bad);
          }
          return 0;
       }

@@ -17,4 +17,12 @@ namespace cobb::lua {
    [[noreturn]] inline void argerror(lua_State* L, int arg, const char* message) {
       luaL_argerror(L, arg, message);
    }
+
+   // Identical to luaL_argcheck except that it's not a macro, and it relies on our [[noreturn]] 
+   // argerror. This means that if you e.g. use this to error on a null pointer, IntelliSense 
+   // should then know not to warn you about subsequent pointer access.
+   inline void argcheck(lua_State* L, bool cond, int arg, const char* message) {
+      if (!cond)
+         argerror(L, arg, message);
+   }
 }

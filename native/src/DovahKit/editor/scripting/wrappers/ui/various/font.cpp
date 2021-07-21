@@ -12,6 +12,7 @@
 
 #include "../../../cross_thread_tasks/s2m/lambda.h"
 
+#include "../../../../../helpers/lua/error.h"
 #include "../../../../../helpers/lua/qt_variant.h"
 #include "../../../../../helpers/qt/font.h"
 #include "../../../../../helpers/function_traits.h"
@@ -56,6 +57,13 @@
 //  - void QFont::resolve(uint);
 //    Wholly overwrite the internal bitmask of "resolved" properties.
 //
+
+namespace {
+   // Maximum font size; attempts to set a size higher than this will produce a Lua error. I couldn't 
+   // find much guidance on ideal size limits out on the web, though supposedly Microsoft Office uses 
+   // a maximum of 1638pt (0x666).
+   static constexpr int max_font_size = 1000;
+}
 
 namespace {
    QFont _get_font(const editor_script::wrapper& w) {
@@ -330,6 +338,7 @@ namespace {
    }
 }
 
+// Helpers for defining fields:
 namespace {
    template<typename T> int simple_push(lua_State* L, const QVariant& v) {
       if constexpr (std::is_same_v<T, bool>) {
@@ -700,6 +709,52 @@ namespace {
          }
       }
       namespace size {
+         enum class _error {
+            none,
+            empty,
+            invalid_format,
+            number_is_negative,
+            number_is_too_high,
+         };
+         enum class _unit {
+            invalid,
+            pixels,
+            points,
+         };
+
+         struct _size {
+            _error error = _error::none;
+            _unit  unit  = _unit::invalid;
+            int    size  = 0;
+         };
+
+         _size _parse_font_size(QString string) {
+            auto  size = string.size();
+            _size out;
+            if (string.isEmpty())
+               return { _error::empty };
+            if (size <= 2)
+               return { _error::invalid_format };
+            if (string.endsWith("px"))
+               out.unit = _unit::pixels;
+            else if (string.endsWith("pt"))
+               out.unit = _unit::points;
+            else
+               return { _error::invalid_format };
+            //
+            string.chop(2);
+            bool ok;
+            out.size = string.toInt(&ok);
+            if (!ok)
+               return { _error::invalid_format };
+            if (out.size < 0) {
+               out.error = _error::number_is_negative;
+            } else if (out.size > max_font_size) {
+               out.error = _error::number_is_too_high;
+            }
+            return out;
+         }
+
          QVariant get(const QFont& font) {
             auto value = QString("%1%2");
             auto size  = font.pixelSize();
@@ -713,23 +768,14 @@ namespace {
          }
          void set(QFont& font, const QVariant& value) {
             auto string = value.value<QString>();
-            auto size   = string.size();
-            //
-            assert(!string.isEmpty());
-            assert(size > 2);
-            assert(string[size - 2] == 'p');
-            //
-            QChar type = string[size - 1]; // cannot use "auto" because that gets us a QCharRef
-            string.chop(2);
-            bool ok;
-            auto num = string.toInt(&ok); // toInt ignores whitespace, so that ensures that "12 pt" and so on still works
-            assert(ok);
-            assert(num >= 0);
-            //
-            if (type == 't') { // point
-               font.setPointSize(num);
-            } else if (type == 'x') { // pixel
-               font.setPixelSize(num);
+            auto size   = _parse_font_size(string);
+            switch (size.unit) {
+               case _unit::pixels:
+                  font.setPixelSize(size.size);
+                  break;
+               case _unit::points:
+                  font.setPointSize(size.size);
+                  break;
             }
          }
          int push(lua_State* L, const QVariant& value) {
@@ -740,13 +786,20 @@ namespace {
             if (!lua_isstring(L, stack_pos))
                luaL_error(L, "string or nil expected");
             auto string = QString::fromUtf8(lua_tostring(L, stack_pos)).trimmed(); // we remove leading and trailing whitespace here; whitespace between the number and unit is removed in (set)
-            auto size   = string.size();
-            if (size < 2)
-               luaL_error(L, "invalid font size: the string must consist of a number followed by a unit (either 'px' or 'pt'), with no space");
-            if (!string.endsWith("pt")) {
-               if (!string.endsWith("px")) {
-                  luaL_error(L, "invalid font size: you must specify a unit (either 'px' or 'pt') after the number, with no space");
-               }
+            auto size   = _parse_font_size(string);
+            switch (size.error) {
+               case _error::none:
+                  break;
+               case _error::empty:
+                  [[fallthrough]];
+               case _error::invalid_format:
+                  cobb::lua::error(L, "invalid font size: the string must consist of a number followed by a unit (either 'px' or 'pt'), with no space");
+               case _error::number_is_negative:
+                  cobb::lua::error(L, "invalid font size: the number cannot be negative");
+               case _error::number_is_too_high:
+                  cobb::lua::error(L, "invalid font size: numbers greater than %d are not allowed", max_font_size);
+               default:
+                  cobb::lua::error(L, "invalid font size");
             }
             return string;
          }

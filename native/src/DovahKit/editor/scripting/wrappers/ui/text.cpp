@@ -9,6 +9,8 @@
 #include "../../cross_thread_tasks/s2m/lambda.h"
 #include "../../ui/util/alignment.h"
 
+#include "various/font.h"
+
 #include "helpers/widget_properties.h"
 
 #include "../../../helpers/lua/warning.h"
@@ -69,6 +71,14 @@ namespace {
          }
          lua_pushboolean(L, result);
          return 1;
+      }
+      luastackchange_t font(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrapper_part_types::ui_font_role);
+         return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::ui::font::metatable_key);
       }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -139,6 +149,19 @@ namespace {
          editor_script::helpers::set_widget_property((wrapped_type*)self.widget, &QLabel::setTextInteractionFlags, flags);
          return 0;
       }
+      luastackchange_t font(lua_State* L) {
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
+         if (!self.widget)
+            return 0;
+         QFont font    = wrappers::ui::font::pull(L, 2);
+         auto* widget  = self.widget;
+         auto* task    = new tasks::s2m::lambda(false);
+         task->handler = [widget, font]() {
+            widget->setFont(font);
+         };
+         DovahKitScriptVMUITaskConduit::get().send_message(*task);
+         return 0;
+      }
       luastackchange_t text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
@@ -205,12 +228,14 @@ namespace editor_script::wrappers::ui {
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "alignment",       &_getters::alignment },
       { "allow_selection", &_getters::allow_selection },
+      { "font",            &_getters::font },
       { "text",            &_getters::text },
       { "word_wrap",       &_getters::word_wrap },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "alignment",       &_setters::alignment },
       { "allow_selection", &_setters::allow_selection },
+      { "font",            &_setters::font },
       { "text",            &_setters::text },
       { "word_wrap",       &_setters::word_wrap },
    };
