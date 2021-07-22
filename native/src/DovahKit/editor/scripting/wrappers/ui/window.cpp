@@ -41,7 +41,7 @@ namespace {
             widget->open();
          };
          DovahKitScriptVMUITaskConduit::get().send_message(*task);
-         if (use_blocking_task)
+         if constexpr (use_blocking_task)
             delete task;
          return 0;
       }

@@ -15,5 +15,8 @@ class EditorScriptWindow : public QDialog {
       //
       void _onScriptStartStop(bool script_running);
 
+      bool _checkAllowClose();
+
       virtual void closeEvent(QCloseEvent* event) override;
+      virtual void reject() override; // override needed to handle Esc key
 };

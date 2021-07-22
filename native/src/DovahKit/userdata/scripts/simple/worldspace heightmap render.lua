@@ -192,6 +192,7 @@ do -- HeightmapWindow contents
          --
          do
             local widget = ui.text.new("Cell outlines:")
+            widget.font.bold = true
             config:add_child(widget)
          end
          do

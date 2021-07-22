@@ -39,6 +39,8 @@ EditorScriptWindow::EditorScriptWindow(QWidget* parent) : QDialog(parent) {
       // TODO: let the user save the text of a script to a file
    });
    QObject::connect(this->ui.buttonRun, &QPushButton::clicked, this, [this]() {
+      if (!this->isVisible())
+         return;
       auto& vm = DovahKitScriptVM::get();
       vm.runScript(this->ui.script->toPlainText(), "userscript");
    });
@@ -84,20 +86,28 @@ void EditorScriptWindow::_onScriptStartStop(bool script_running) {
    this->ui.script->setDisabled(script_running);
 }
 
-void EditorScriptWindow::closeEvent(QCloseEvent* event) {
-   event->ignore();
-   //
+bool EditorScriptWindow::_checkAllowClose() {
    auto& vm = DovahKitScriptVM::get();
-   if (!vm.is_running()) {
-      event->accept();
-      return;
-   }
+   if (!vm.is_running())
+      return true;
    //
+   bool result = false;
    vm.setPaused(true);
    auto confirm = QMessageBox::question(this, "Abort the script?", "A script is currently running. Do you want to force it to stop?", QMessageBox::Yes | QMessageBox::No);
    if (confirm == QMessageBox::Yes) {
       DovahKitScriptVM::get().abort();
-      event->accept();
+      result = true;
    }
    vm.setPaused(false);
+   return result;
+}
+void EditorScriptWindow::closeEvent(QCloseEvent* event) {
+   if (this->_checkAllowClose())
+      event->accept();
+   else
+      event->ignore();
+}
+void EditorScriptWindow::reject() {
+   if (this->_checkAllowClose())
+      QDialog::reject();
 }

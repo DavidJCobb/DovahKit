@@ -41,7 +41,7 @@ class DovahKitScriptUIListenerInterface : cobb::singleton {
          auto& vm    = this->vm;
          auto& entry = vm.widgets.connections[(QObject*)&target][event_name][listener_name];
          QObject::disconnect(entry);
-         entry = QObject::connect(&target, signal, &vm, _event_forwarding_lambda<Args...>(target, event_name, listener_name));
+         entry = QObject::connect(&target, signal, &vm, _event_forwarding_lambda<Args...>(target, event_name, listener_name), Qt::DirectConnection);
       }
 
       // Helper function for wiring a Qt signal into Lua, if you've set up the QObject connection yourself. 

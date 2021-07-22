@@ -77,7 +77,7 @@ namespace {
          if (!self.widget)
             return 0;
          wrapper out = self;
-         out.append_part(wrapper_part_types::ui_font_role);
+         out.append_part(wrapper_part_types::ui_font_data);
          return DovahKitScriptVMUserdataInterface::get().push(L, out, wrappers::ui::font::metatable_key);
       }
       luastackchange_t text(lua_State* L) {

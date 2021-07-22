@@ -363,6 +363,7 @@
     <ClCompile Include="helpers\qt\combobox.cpp" />
     <ClCompile Include="helpers\qt\font.cpp" />
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
+    <ClCompile Include="helpers\qt\layout.cpp" />
     <ClCompile Include="helpers\qt\ownership.cpp" />
     <ClCompile Include="helpers\qt\repaint.cpp" />
     <ClCompile Include="helpers\qt\set_model_of.cpp" />
@@ -768,6 +769,7 @@
     <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\qt\font.h" />
     <ClInclude Include="helpers\qt\get_model_of.h" />
+    <ClInclude Include="helpers\qt\layout.h" />
     <ClInclude Include="helpers\qt\ownership.h" />
     <ClInclude Include="helpers\qt\repaint.h" />
     <ClInclude Include="helpers\qt\set_model_of.h" />
@@ -932,6 +934,7 @@
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="dovah\form stub addenda.txt" />
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
     <Text Include="dovah\_docs\engine code transliterations\how the game loads forms - main loader function.txt" />

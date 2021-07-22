@@ -43,6 +43,38 @@ namespace {
    static constexpr int max_script_windows = 10;
 
    static constexpr bool test_model_observer_no_refcount = true;
+   
+   #pragma region Debug logging options
+   static constexpr bool debug_script_start_stop = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
+
+   static constexpr bool debug_model_observer_lifetimes = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
+
+   static constexpr bool debug_qobject_lifetimes = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
+   #pragma endregion
+
+   const char* _debug_get_object_classname(const QObject* o) {
+      if (!o)
+         return "nullptr";
+      auto* mo = o->metaObject();
+      if (!mo)
+         return "unknown type";
+      auto* name = mo->className();
+      if (!name)
+         return "unknown type";
+      return name;
+   }
 }
 
 namespace {
@@ -408,6 +440,9 @@ DovahKitScriptVMCore::DovahKitScriptVMCore() {
    //
    QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &DovahKitScriptVMCore::mainThreadLoop);
    QObject::connect(this, &DovahKitScriptVMCore::scriptEnded, this, [this]() {
+      if constexpr (debug_script_start_stop) {
+         qDebug("DovahKitScriptVMCore received its own scriptEnded signal...");
+      }
       this->_teardown_lua_vm();
       //
       // Delete script-to-main tasks in the case of a script being terminated early, and delete 
@@ -568,6 +603,9 @@ namespace {
          if constexpr (std::is_same_v<QDialog, T>) {
             object->done(-2);
          }
+         if constexpr (debug_qobject_lifetimes) {
+            qDebug("Deleting QObject as part of teardown: %p (%s)", object, _debug_get_object_classname(object));
+         }
          object->deleteLater();
       }
       list.clear();
@@ -576,6 +614,9 @@ namespace {
 void DovahKitScriptVMCore::_teardown_lua_vm() {
    auto guard = std::lock_guard(this->running);
    this->in_teardown = true;
+   if constexpr (debug_script_start_stop) {
+      qDebug("Tearing down the script VM...");
+   }
    
    if (auto* L = this->lua_vm) {
       this->lua_vm = nullptr;
@@ -597,20 +638,32 @@ void DovahKitScriptVMCore::_teardown_lua_vm() {
    this->widgets.extant_widget_count = 0;
    this->widgets.connections.clear();
    
-   for (auto* o : this->ui_model_observers.extant)
+   for (auto* o : this->ui_model_observers.extant) {
+      if constexpr (debug_model_observer_lifetimes)
+         qDebug("Deleting extant model observer as part of teardown: %p", o);
       delete o;
+   }
    this->ui_model_observers.extant.clear();
    //
-   for (auto* o : this->ui_model_observers.pending_deletion)
+   for (auto* o : this->ui_model_observers.pending_deletion) {
+      if constexpr (debug_model_observer_lifetimes)
+         qDebug("Deleting pending-deletion model observer as part of teardown: %p", o);
       delete o;
+   }
    this->ui_model_observers.pending_deletion.clear();
    //
-   for (auto* o : this->ui_canvas_layer_data.extant)
+   for (auto* o : this->ui_canvas_layer_data.extant) {
+      if constexpr (debug_qobject_lifetimes)
+         qDebug("Deleting extant canvas layer data as part of teardown: %p", o);
       delete o;
+   }
    this->ui_canvas_layer_data.extant.clear();
    //
-   for (auto* o : this->ui_canvas_layer_data.pending_deletion)
+   for (auto* o : this->ui_canvas_layer_data.pending_deletion) {
+      if constexpr (debug_qobject_lifetimes)
+         qDebug("Deleting pending-deletion canvas layer data as part of teardown: %p", o);
       delete o;
+   }
    this->ui_canvas_layer_data.pending_deletion.clear();
    //
    this->pending_ui_event_count = 0;
@@ -668,6 +721,9 @@ void DovahKitScriptVMCore::_script_thread_loop() {
          auto& pd = this->widgets.pending_deletion.widgets;
          for (auto* widget : pd) {
             this->ui_queues.events.forget_about(*widget); // gotta do this before events are processed. since we sever a widget's signals when we mark it for deletion, we don't have to worry about it generating more events later
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Deleting pending-deletion widget: %p (%s)", widget, _debug_get_object_classname(widget));
+            }
             widget->deleteLater();
          }
          pd.clear();
@@ -675,6 +731,9 @@ void DovahKitScriptVMCore::_script_thread_loop() {
       {
          auto& pd = this->widgets.pending_deletion.button_groups;
          for (auto* group : pd) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Deleting pending-deletion button group: %p", group);
+            }
             group->deleteLater();
          }
          pd.clear();
@@ -683,6 +742,9 @@ void DovahKitScriptVMCore::_script_thread_loop() {
       had_any_tasks |= (this->_run_queued_functions(true) > 0);
    } while (had_any_tasks || this->_should_keep_running());
    //
+   if constexpr (debug_script_start_stop) {
+      qDebug("Script execution finished on the worker thread.");
+   }
    this->main_thread_tick_timer.stop();
    this->running = false;
    emit this->scriptEnded(false); // a main-thread handler will catch this and tear down the VM
@@ -741,8 +803,14 @@ void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _hierarchy_
       auto& orphans = this->widgets.orphans.widgets;
       auto& pending = this->widgets.pending_deletion.widgets;
       for (auto* root : finder.found_root_widgets()) {
+         if constexpr (debug_qobject_lifetimes) {
+            qDebug("Marking widget (and descendants by implication) for delete: %p (%s)", root, _debug_get_object_classname(root));
+         }
          int i = orphans.indexOf(root);
          if (i < 0) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Warning: canceling mark-for-delete for widget (and descendants by implication), as it is not orphaned: %p (%s)", root, _debug_get_object_classname(root));
+            }
             assert(pending.indexOf(root) >= 0 && "Widget is neither orphaned nor pending deletion; why do we think this widget is abandoned?!");
             continue;
          }
@@ -767,8 +835,14 @@ void DovahKitScriptVMCore::mark_abandoned_hierarchy_for_delete(const _hierarchy_
       auto& orphans = this->widgets.orphans.button_groups;
       auto& pending = this->widgets.pending_deletion.button_groups;
       for (auto* group : finder.found_button_groups()) {
+         if constexpr (debug_qobject_lifetimes) {
+            qDebug("Marking button group for delete: %p", group);
+         }
          int i = orphans.indexOf(group);
          if (i < 0) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Warning: canceling mark-for-delete for button group, as it is not orphaned: %p", group);
+            }
             assert(pending.indexOf(group) >= 0 && "Button group is neither orphaned nor pending deletion; why do we think this button group is abandoned?!");
             continue;
          }
@@ -786,6 +860,9 @@ void DovahKitScriptVMCore::unmark_rescued_hierarchy_for_delete(const _hierarchy_
       for (auto* root : finder.found_root_widgets()) {
          int i = pd.indexOf(root);
          if (i >= 0) {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Rescuing widget from delete: %p (%s)", root, _debug_get_object_classname(root));
+            }
             pd.remove(i);
             ow.push_back(root);
          }
@@ -796,6 +873,9 @@ void DovahKitScriptVMCore::unmark_rescued_hierarchy_for_delete(const _hierarchy_
       auto& pd = this->widgets.pending_deletion.button_groups;
       auto& og = this->widgets.orphans.button_groups;
       for (auto* group : finder.found_button_groups()) {
+         if constexpr (debug_qobject_lifetimes) {
+            qDebug("Rescuing button group from delete: %p", group);
+         }
          int i = pd.indexOf(group);
          if (i >= 0) {
             pd.remove(i);
@@ -897,6 +977,9 @@ void DovahKitScriptVMCore::widget_no_longer_referenced(QWidget* widget) {
       return;
    if (this->teardown_in_progress()) // teardown in progress; we will delete everything as part of that process, and it may not be safe to check whether things are Lua-referenced during that process
       return;
+   if constexpr (debug_qobject_lifetimes) {
+      qDebug("Widget is no longer Lua-referenced: %p (%s)", widget, _debug_get_object_classname(widget));
+   }
    //
    // In general, we want to delete widgets that have been abandoned by the script, and 
    // we're notified when any single widget is no longer referred to by a script variable. 
@@ -966,6 +1049,9 @@ void DovahKitScriptVMCore::button_group_no_longer_referenced(QButtonGroup* group
       return;
    if (this->teardown_in_progress()) // teardown in progress; we will delete everything as part of that process, and it may not be safe to check whether things are Lua-referenced during that process
       return;
+   if constexpr (debug_qobject_lifetimes) {
+      qDebug("Button group is no longer Lua-referenced: %p", group);
+   }
    _hierarchy_finder finder;
    finder.import_non_abandoned_models(*this);
    finder.gather_from(group);
@@ -1077,8 +1163,14 @@ void DovahKitScriptVMCore::set_up_new_canvas_layer_data(CanvasWidgetLayerData* d
 }
 void DovahKitScriptVMCore::canvas_layer_data_unreferenced(LuaScriptableCanvasWidgetLayerData* data) {
    data->is_lua_referenced = false;
+   if constexpr (debug_qobject_lifetimes) {
+      qDebug("Canvas layer data is no longer Lua-referenced: %p", data);
+   }
    if (data->users().size())
       return;
+   if constexpr (debug_qobject_lifetimes) {
+      qDebug("Marking canvas layer data for delete (was Qt-unreferenced; became Lua-unreferenced): %p", data);
+   }
    auto& ex = this->ui_canvas_layer_data.extant;
    auto& pd = this->ui_canvas_layer_data.pending_deletion;
    ex.removeOne(data);
@@ -1092,6 +1184,9 @@ void DovahKitScriptVMCore::canvas_layer_data_detached(CanvasWidgetLayerData* dat
    if (auto* scriptable = qobject_cast<LuaScriptableCanvasWidgetLayerData*>(data)) {
       if (scriptable->is_lua_referenced)
          return;
+   }
+   if constexpr (debug_qobject_lifetimes) {
+      qDebug("Marking canvas layer data for delete (was Lua-unreferenced; became Qt-unreferenced): %p", data);
    }
    auto& ex = this->ui_canvas_layer_data.extant;
    auto& pd = this->ui_canvas_layer_data.pending_deletion;
@@ -1169,14 +1264,21 @@ void DovahKitScriptVMCore::abort() {
 }
 void DovahKitScriptVMCore::runScript(const QString& code, const QString& name) {
    auto guard = std::lock_guard(this->running);
-   if (this->running)
+   if (this->running) {
+      if constexpr (debug_script_start_stop) {
+         qDebug("Failed to start script: another script is already running.");
+      }
       return;
+   }
    if (this->thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
       this->thread.join();
    auto& facade = DovahKitScriptVM::get();
    this->aborted = false;
    this->running = true;
    this->paused  = false;
+   if constexpr (debug_script_start_stop) {
+      qDebug("Starting a new script...");
+   }
    this->main_thread_tick_timer.start();
    emit facade.scriptStarted();
    //this->_teardown_lua_vm();
@@ -1185,8 +1287,14 @@ void DovahKitScriptVMCore::runScript(const QString& code, const QString& name) {
    auto buffer = code.toUtf8();
    auto result = luaL_loadbufferx(this->lua_vm, buffer.data(), buffer.size(), name.toUtf8().data(), "t"); // equivalent to (lua_load) with a built-in lua_Reader
    if (result == LUA_OK) {
+      if constexpr (debug_script_start_stop) {
+         qDebug("Script code ran successfully. Switching script execution to a worker thread...");
+      }
       this->thread = std::thread(&DovahKitScriptVMCore::_script_thread_loop, this);
       return;
+   }
+   if constexpr (debug_script_start_stop) {
+      qDebug("Script code failed to parse. Terminating script execution, still on the client thread.");
    }
    //
    // If something went wrong:
@@ -1206,6 +1314,9 @@ void DovahKitScriptVMCore::runScript(const QString& code, const QString& name) {
 
 void DovahKitScriptVMCore::setPaused(bool b) {
    this->paused = b;
+   if constexpr (debug_script_start_stop) {
+      qDebug("Setting script pause state to: %d", b);
+   }
 }
 void DovahKitScriptVMCore::setUIParentWidget(QWidget* widget) {
    auto guard = std::lock_guard(this->running);
@@ -1226,16 +1337,22 @@ void DovahKitScriptVMCore::mainThreadLoop() {
       std::unique_lock guard(this->ui_model_observers.pd_mutex);
       //
       auto& list = this->ui_model_observers.pending_deletion;
-      for (auto* o : list)
+      for (auto* o : list) {
+         if constexpr (debug_model_observer_lifetimes)
+            qDebug("Deleting pending-deletion model observer: %p", o);
          delete o;
+      }
       list.clear();
    }
    {
       std::unique_lock guard(this->ui_canvas_layer_data.pd_mutex);
       //
       auto& list = this->ui_canvas_layer_data.pending_deletion;
-      for (auto* o : list)
+      for (auto* o : list) {
+         if constexpr (debug_qobject_lifetimes)
+            qDebug("Deleting pending-deletion canvas layer data: %p", o);
          delete o;
+      }
       list.clear();
    }
    this->task_queues.s2m.process();

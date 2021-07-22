@@ -1,0 +1,71 @@
+
+There are several properties on forms that need to be available from the form's 
+stub, but that don't appear on all or even most forms. These properties must be 
+easily accessible  either as part of form stub management, or  for fast access, 
+and can include things like an exterior  cell's grid coordinates. Adding fields 
+to the  form stub class  would be wasteful, since most  forms don't  have these 
+properties, yet forcing the frontend (and sometimes the backend!) to load these 
+forms in full in order to access the properties would also be unacceptable. For 
+this reason, every form stub has a pointer  to a single "addenda" struct, which 
+can be used to hold data specific to particular form types.
+
+As of this writing, the (form_stub_addenda) struct has the following fields:
+
+
+   grid_coords
+
+      These are the grid coordinates occupied  by an exterior cell, loaded from 
+      the cell's XCLC  subrecord. These need  to be available  from the stub to 
+      allow for quickly retrieving the cell with given coordinates from a world-
+      space.
+
+
+   ordered_children
+
+      When the addenda belongs to a Topic  (DIAL), this is a list of the form's 
+      TopicInfos (INFO).  This list is needed because the order  in which infos 
+      are managed depends  heavily on the order in which they  are loaded; that 
+      information cannot easily or efficiently  be reconstructed post-load, and 
+      so must be maintained on the addenda during the load process.
+
+
+   persistent_cell
+
+      "Cell" forms in a worldspace typically  represent grid cells, which is to 
+      say, square volumes of space within the world. The exception to this rule 
+      is "persistent cells," which (in the context of the file format) hold all 
+      of the persistent references in a  worldspace, regardless of coordinates. 
+      A persistent cell  can be thought of as spanning the  worldspace's entire 
+      area and overlapping with its "true" cells.
+
+      A worldspace's persistent cell is the first loaded cell in the worldspace 
+      which has the "persistent" record flag.
+
+
+   canonical_landscape
+      
+      Exterior cells typically (but not always)  have a "landscape" child form, 
+      which defines the  heightmapped terrain for the cell.  Commonly, when one 
+      file  edits the landscape  in another file's  cell, it will  override the 
+      landscape form.  There is one known  exception. Dawnguard.esm  adds a new 
+      island to Skyrim, and places Castle  Volkihar on that island. The central 
+      cell for  this island has  its landscape altered  in a very  unusual way: 
+      Dawnguard.esm does not override the  existing landscape form, but instead 
+      supplies an entirely new one, and  an injected one at that (ID 00222222).
+
+      This indicates that the game engine doesn't break if a cell has more than 
+      one landscape form, but instead simply uses the last landscape loaded for 
+      the cell. This landscape form is retained on our form stub addenda as the 
+      "canonical landscape."
+
+
+=== Notes =====================================================================
+
+A common use case  for form stub addenda,  seen above, is cases  in which given 
+two forms we need to know which was  loaded earlier and which was loaded later. 
+It is technically  possible to determine this by comparing  the files that each 
+form was  loaded from,  and by comparing their offsets  within those  files, if 
+they came from the same file. However, this  would take a significant amount of 
+effort, and would have to be repeated  every time we need to tell the two forms 
+apart. It is much more efficient to handle  cases like this by adding fields to 
+the form stub addenda and managing them during load.
