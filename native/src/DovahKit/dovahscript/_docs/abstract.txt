@@ -1,0 +1,54 @@
+
+In order to run user  scripts without them  being able to  threaten the rest of 
+the program (i.e. in order to prevent  script mistakes from freezing DovahKit), 
+we run Lua code  on a separate  thread. This means that we can offer the user a 
+button to forcibly terminate a running script, but it also complicates the task 
+of actually  implementing a script VM,  as most tasks now involve  cross-thread 
+communication.
+
+To understand the basics of the threading  model we use, we must first define a 
+few terms.
+
+The "client thread" is, essentially, the main thread: it is the thread that has 
+asked the script  engine to run a Lua script; it is the thread  that is able to 
+manage Qt UI and other features.
+
+The "worker thread" is the secondary thread that the script engine has created; 
+Lua scripts run on this thread.
+
+The "script thread"  is whichever of the two above threads is  in charge of the 
+Lua state at  any given moment. This will typically be the worker thread; after 
+all, the worker thread exists in the first place so that we can run userscripts 
+without risk to the client thread. There are, however, some internal operations 
+within  the script engine,  initiated by the worker  thread, which may  benefit 
+from having the  client thread take control  of the Lua state  while the worker 
+thread waits for the client thread to finish.
+
+
+===== HOW WE IMPLEMENT SCRIPT TERMINATION =====================================
+
+Lua offers a number of  "debug hooks" that can be used to  run native code. One 
+of these hooks is the "count hook," which  runs after every few script opcodes. 
+Per documentation,  the more frequently we run this,  the more of a performance 
+cost it will have.
+
+Our chosen debug hook checks a single boolean value, which indicates whether we 
+want to terminate the script. If this value is (true), then the debug hook will 
+throw a Lua script error. If this error  is not caught by the script itself, it 
+will cause the  script to terminate cleanly:  all allocated  memory is properly 
+cleared,  and because the  debug hook only runs  between Lua instructions,  the 
+script shouldn't be in the middle of a  native-code API that may have resources 
+locked.
+
+The easiest way to  prevent the error from being caught by  the script would be 
+to simply  withhold access  to Lua's (pcall) and  (xpcall) functions.  However, 
+denying script authors all access to error handling is a *bit* extreme, so what 
+we do instead is offer a handwritten  version of (pcall), designed to refuse to 
+catch errors if the script has been asked to terminate early.
+
+And thus, with  this trick and  with the script  on its own thread,  it becomes 
+impossible for code like this (or something a little more accidental) to freeze 
+the editor and cost the user their work:
+
+   while true do
+   end

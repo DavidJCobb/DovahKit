@@ -1,0 +1,110 @@
+
+The Lua scripting  language includes a type called "userdata,"  which is mainly 
+intended for embedders as a means to  provide Lua scripts with access to native 
+objects. Userdata  are raw blocks of memory that can only be  created by native 
+code, and that  can be given metatables; the size of the memory block  can vary 
+on a per-userdata basis,  and the memory  block is only  directly accessible to 
+native code.
+
+Commonly, then,  when programs embed Lua, the memory block for  a userdata will 
+be used to store  either a native object in its entirety, or  a pointer to some 
+native  object. The  metatable, meanwhile, will serve to provide  some  form of 
+"class" functionality  to the userdata object, so that it  can have methods and 
+possibly even data members.
+
+All of this  leads to a question: when  DovahKit wishes to make  native objects 
+available to Lua, how does it set up its userdata?
+
+There are going  to be exceptions, but  most of the time,  DovahKit relies on a 
+small data structure called a "wrapper."  Wrappers consist of two components: a 
+"pertinent  pointer," and a list of "parts." The pertinent pointer  is the top-
+level native object  that Lua is meant to access, while the  "part" list can be 
+used as a set of directions to follow, such that from the pertinent pointer one 
+can access any individual part of the object. Each part consists of an eight-CC 
+(like a four-CC, but eight bytes) and an index.
+
+Additionally, a wrapper can also be flagged as a "collection" wrapper. This can 
+be used to allow Lua to refer to collections of elements, with it in turn being 
+possible to then access elements within the collections.
+
+The list of parts on a wrapper is, from  the wrapper's perspective, opaque: the 
+wrapper is not responsible for performing  API-related operations on the native 
+object it wraps,  and indeed has no comprehension of that  object. Rather, each 
+individual Lua API is  responsible for  following the  trail that the wrapper's 
+part list lays out.  If a wrapper refers  to, say, one of  the three words of a 
+"Shout" form,  then the Lua "class"  for shout words is responsible  for taking 
+the wrapper's pertinent pointer and finding its way into the given word.
+
+
+=== HOW ARE WRAPPERS STORED? ==================================================
+
+Hidden in the Lua C registry is a table  whose keys are pertinent pointers, and 
+whose values  are weak-tables  which serve as  discontiguous  lists -- that is, 
+sequential lists that are allowed to have gaps appear in the middle as elements 
+are removed. (Incidentally, this means that  these lists must be iterated using 
+lua_next.)
+
+   REGISTRY[pertinent_pointer] = { wrapper, wrapper, nil, wrapper, ... }
+
+This storage system serves two important functions: it allows us to reuse every 
+userdata wrapper; and it aids in managing  the lifetimes of native objects that 
+are "owned" by the script engine, such as UI widgets.
+
+The first of these functions is the easiest to understand. If a script calls an 
+API that is meant to return some native object, it should return the same value 
+every time; the following comparison should produce (true):
+
+   dovah.get_form_by_id(0x3C) == dovah.get_form_by_id(0x3C)
+
+Userdata are  unique, like  tables: Lua does not  compare the  content of their 
+buffers, which means that two identical userdata do not compare equal. We could 
+resolve this manually by defining an  __eq metamethod on every userdata, but it 
+would be far  simpler and easier to just  reuse the userdata.  Accordingly, the 
+way a Lua API returns a value to Lua is by:
+
+   1. Create a wrapper representing the data it wishes to push to Lua.
+
+   2. Pass this wrapper  into the userdata service, asking  for it to be pushed 
+      onto the Lua stack.
+
+      2a. The userdata  service  will check to see if an  identical  wrapper is 
+          present  in the  storage. If so, it will push that  wrapper  instead.
+
+      2b. If no existing wrapper matches  the desired one, then the desired one 
+          is copied into a new userdata, which is retained in storage, and also 
+          pushed onto the Lua stack.
+
+Notably, this means that the C-side destructor for the wrapper struct shouldn't 
+do anything on its own. As part of the  above process, the wrapper that any API 
+function constructs won't be stored in Lua;  it should be created on the stack, 
+will be copied  if necessary, and will  be destroyed on the stack  when the API 
+function exits.
+
+So that's how the storage system allows us to create sensible userdata equality 
+comparisons in script. How does it help us manage object lifetimes?
+
+Recall that  REGISTRY[pertinent_pointer]  is a weak-table: it does  not prevent 
+the garbage-collection  of its contents. This means that  when a userdata is no 
+longer in use by the userscript, it will disappear from that table, and then it 
+will be garbage-collected.  This means that when the  wrapper's __gc metamethod 
+executes,  it can check to see if the  wrapper's pertinent pointer still  has a 
+list, and if that list is empty.
+
+If the list exists, but is empty, then that means that all of the wrappers that 
+previously existed  in the list have ceased to be used by the  userscript; this 
+means that the  underlying native  object is no longer  Lua-referenced. If this 
+native  object's lifetime is meant to be  managed by the script engine,  and if 
+the object is also unreferenced within other script engine systems, then it can 
+be deleted. Importantly, we also take this opportunity to delete the empty list 
+and make sure that we don't leave a dangling pointer (in the form of the key in 
+our storage) inside of Lua.
+
+But what if the list doesn't exist at all? This can happen if multiple wrappers 
+are garbage-collected  at around the same  time, such that the  list is emptied 
+and then multiple wrappers each run their __gc functions one after another. The 
+first wrapper to run will see that the  list is empty, handle lifetime behavior 
+for its  native object,  and then delete the list.  The next wrapper(s)  to run 
+will then see that there is no list, not even an empty one. These wrappers must 
+take this as a  cue that their underlying  native objects have  already had any 
+relevant  lifetime-management behaviors  handled, and must simply exit  without 
+doing anything further.
