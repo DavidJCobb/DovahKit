@@ -121,48 +121,38 @@ to be referenced  in any other way. These three events require  us to perform a
  - When a native object  ceases to be native-referenced (i.e.  when a UI widget 
    is "orphaned"), we will detect this on the client thread.
 
-Lifetime checks must be performed with the cooperation of both threads. As such 
-our chosen design is to have the worker  thread block while lifetime checks are 
-performed  on the client  thread. This means that each  thread must  notify the 
-other whenever  it needs to perform a lifetime check, and the other  must react 
-appropriately.
+Lifetime checks must be performed with  the cooperation of both threads, but do 
+not need  to be performed *instantly.* It is enough to maintain a  shared queue 
+of pending  lifetime checks (i.e. objects  to run the checks on),  and have the 
+client thread run those tasks when possible.
 
-As such,  we need two queues:  a worker-to-client  lifetime check queue,  and a 
-client-to-worker lifetime check queue. Each  queue must be managed a little bit 
-differently.
+As such, we need the following:
 
 
-   The worker-to-client queue
+   The task queue
 
-      When the worker thread wishes to request a lifetime check, it must create 
-      a task, add  that task to the queue,  and then block until  the task gets 
-      marked as "seen."
-
-      The  client thread must check this queue and process its contents  during 
-      the client thread idle loop.
+      A queue of objects to perform lifetime checks on.
 
 
-   The client-to-worker queue
+   The communication status
 
-      This queue  must have an atomic  "communication status" enum  value, with 
-      the following states:
+      An atomic enum with the following states:
 
        - Nothing to report
-       - Client is waiting
+       - Worker asked to wait
        - Worker is waiting
 
-      The worker thread's  Lua debug hook must check the enum  value. When that 
-      value has been changed to "Client is waiting," the worker thread must set 
-      the value  to "Worker is waiting," and  then block until it  detects that 
-      the value has been changed back to "Nothing to report."
-      
-      When the  client  thread wishes to  perform a lifetime  check of  its own 
-      volition rather than at the behest of the worker thread, it must create a 
-      task and place that task in the queue. It must then set the communciation 
-      status to "Client is waiting" and then  continue onward, running its idle 
-      loop.
 
-      The client thread's idle loop must check whether the communication status 
-      is "Worker is waiting." If so, the client thread must immediately process 
-      all tasks in the queue, and then change  the communication status back to 
-      "Nothing to report."
+Both the client and worker threads shall add lifetime checks to the queue, with 
+a thread lock  to avoid collisions. The  client thread will  periodically check 
+the queue and then, if it has tasks, change the communication status to "worker 
+asked to wait." The worker thread, meanwhile, will have its Lua debug hook test 
+the  communication status;  if the status is "worker  asked to wait," then  the 
+worker thread  will change the status to "worker is waiting,"  and then it will 
+block until the status is changed back to "nothing to report."
+
+During its idle loop, the client thread  will check to see if the communication 
+status is "worker  is waiting." If so, it will process the  lifetime check task 
+queue (taking  ownership of the Lua state and becoming the script  thread while 
+it does), and then change the status back to "nothing to report" once the queue 
+is empty.
