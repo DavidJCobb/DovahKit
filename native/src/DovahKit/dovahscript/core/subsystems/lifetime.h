@@ -57,6 +57,18 @@ namespace dovahscript::core::subsystems {
 
          #pragma region Script thread functions
             QVector<model_observer_t*> get_extant_model_observers() const noexcept;
+
+            void on_lua_unreferenced(CanvasWidgetLayerData*);
+            void on_lua_unreferenced(model_observer_t*);
+            void on_lua_unreferenced(QObject*);
+         #pragma endregion
+
+         #pragma region Client thread functions
+            void on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from); // e.g. if a QButtonGroup loses a button, the group would be the basis and the button, the severed-from object
+            void on_hierarchy_item_orphaned(QObject*);
+            void on_hierarchy_item_adopted(QObject*);
+
+            void on_canvas_widget_layer_data_detached(CanvasWidgetLayerData*);
          #pragma endregion
 
          // When the script thread queues a cross-thread task that in some way uses or refers to a 

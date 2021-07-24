@@ -1,0 +1,168 @@
+
+DovahKit allows scripts to create and manage  a variety of native objects, such 
+as user interface  widgets, layer data in a "canvas" widget,  and items in a Qt 
+model. However, we don't want scripts to  have to manually manage memory or the 
+lifetimes of native objects; we should  do it automatically. When, then, should 
+we delete a native object?
+
+Let's invert the question: when *shouldn't* we delete a native object?
+
+The most obvious case is when a native object  is directly referred to by a Lua 
+variable. If a variable (or table member, etc.) refers to a native object, then 
+the object is clearly still in use somehow, and so should be retained.
+
+Similarly, if one native object is in any  way reachable from some other native 
+object that  the script currently  has a variable  pointed at, then  the former 
+object should not be deleted.
+
+There is one additional case we need to consider: many cross-thread script APIs 
+are non-blocking:  a script can ask for  some change to be  made to the UI, and 
+then continue executing without waiting for  the change to complete. The script 
+will only  have to wait on these pending  changes if one of them is a  blocking 
+task for some reason, or if the script attempts to read data from the UI. These 
+changes could  potentially impact whether  one native object is  reachable from 
+other native objects. This means that native  objects cannot be deleted if they 
+are the targets of any pending cross-thread tasks; and moreover, when the tasks 
+are completed,  the native objects that they targeted must be  re-tested to see 
+if they now need deletion.
+
+Finally,  user interface  widgets should not be deleted  if they belong  to any 
+currently visible window, nor should th e window itself, even if the window and 
+its contents are no longer reachable within Lua.
+
+We can capture the above cases with a few terms.
+
+
+   Lua-referenced
+
+      Some variable or value within Lua refers to the native object by way of a 
+      Lua userdata. Refer to <userdata wrappers.txt>  to see how we detect when 
+      a native object is no longer Lua-referenced.
+
+
+   Task-referenced
+
+      A pending cross-thread task, sent by  the script thread and to the client 
+      thread, refers to the native object in some way.
+
+
+   Native-referenced
+
+      The native object is reachable from  another native object that is itself 
+      referenced and so should not be deleted.
+
+      
+If a native object is referenced in any of the above three ways, then it should 
+not be deleted. If a native object becomes unreferenced in any one way, then we 
+need to check whether it is also unreferenced in the other two ways, and if so, 
+we then need to delete it.
+
+
+=== Widget hierarchies ========================================================
+
+Qt organizes UI widgets (and all other QObjects)  into hierarchies, with parent 
+objects owning and  managing the lifetimes of child objects.  Commonly, a child 
+widget will display as part of its parent widget, and be affected by the enable 
+state of that widget as well, and so the user  interface as a whole can be said 
+to be hierarchical. These hierarchies influence how we manage the lifetimes for 
+UI widgets: they must be considered when evaluating whether a hierarchy item is 
+native-referenced.
+
+Hierarchies can  in some cases be "bridged" by certain objects.  For example, a 
+QButtonGroup can keep  track of  QAbstractButtons  that may  belong to separate 
+hierarchies.  When two or more hierarchies are bridged, they should  be treated 
+as a single unit: if any widget in any of the bridged hierarchies is referenced 
+within Lua or a cross-thread task, then all of the hierarchies count as native-
+referenced.
+
+As such, the full rules for when a hierarchy root can be deleted are:
+
+   1. Neither this  root nor the roots of  any bridged hierarchies  are visible 
+      QDialogs.
+
+   2. No object  in any of the bridged  hierarchies is Lua-referenced  or task-
+      referenced.
+
+   3. No object in any of the bridged hierarchies  is native-referenced outside 
+      of the hierarchy  system. Examples of other native  references would be a 
+      Lua-referenced model  item belonging to a model owned by  a given widget, 
+      such that the model item keeps the widget, its hierarchy, and any bridged 
+      hierarchies alive.
+
+This leads to an interesting question: how do we actually check these criteria?
+
+We can only  safely traverse widget  hierarchies, and we can only  safely check 
+for most  kinds of native references, from  the client thread. However,  we can 
+only safely check whether  something is Lua-referenced  from the script thread. 
+How, then, do we perform lifetime checks? Simple: the client thread must become 
+the script thread.
+
+Recall from  <abstract.txt> that the  script engine relies on two  threads, the 
+client thread and  the worker thread; recall  also that the  "script thread" is 
+whichever  of the two is currently in  charge of the Lua state.  Typically, the 
+worker thread  will be the  script thread; after all,  the point of  this whole 
+system is to run Lua on a worker thread so that a script error or infinite loop 
+can't bring down the entire program. However,  if the worker thread initiates a 
+lifetime check, it can do so with the  cooperation of the client thread: it can 
+send a message  to the client thread and  block until it receives  a reply, and 
+that will leave the client thread free to take control of the Lua state.
+
+We have to check whether an object is referenced in any way whenenver it ceases 
+to be referenced  in any other way. These three events require  us to perform a 
+"lifetime check" on the affected object(s):
+
+ - When a native object ceases to be Lua-referenced, we will detect this on the 
+   script thread, which will typically be the worker thread.
+
+ - When a native  object ceases to be  task-referenced, we will  detect this on 
+   the client thread, possibly while the script thread is busy running Lua code 
+   or a C++ API function provided to Lua.
+
+ - When a native object  ceases to be native-referenced (i.e.  when a UI widget 
+   is "orphaned"), we will detect this on the client thread.
+
+Lifetime checks must be performed with the cooperation of both threads. As such 
+our chosen design is to have the worker  thread block while lifetime checks are 
+performed  on the client  thread. This means that each  thread must  notify the 
+other whenever  it needs to perform a lifetime check, and the other  must react 
+appropriately.
+
+As such,  we need two queues:  a worker-to-client  lifetime check queue,  and a 
+client-to-worker lifetime check queue. Each  queue must be managed a little bit 
+differently.
+
+
+   The worker-to-client queue
+
+      When the worker thread wishes to request a lifetime check, it must create 
+      a task, add  that task to the queue,  and then block until  the task gets 
+      marked as "seen."
+
+      The  client thread must check this queue and process its contents  during 
+      the client thread idle loop.
+
+
+   The client-to-worker queue
+
+      This queue  must have an atomic  "communication status" enum  value, with 
+      the following states:
+
+       - Nothing to report
+       - Client is waiting
+       - Worker is waiting
+
+      The worker thread's  Lua debug hook must check the enum  value. When that 
+      value has been changed to "Client is waiting," the worker thread must set 
+      the value  to "Worker is waiting," and  then block until it  detects that 
+      the value has been changed back to "Nothing to report."
+      
+      When the  client  thread wishes to  perform a lifetime  check of  its own 
+      volition rather than at the behest of the worker thread, it must create a 
+      task and place that task in the queue. It must then set the communciation 
+      status to "Client is waiting" and then  continue onward, running its idle 
+      loop.
+
+      The client thread's idle loop must check whether the communication status 
+      is "Worker is waiting." If so, the client thread must immediately process 
+      all tasks in the queue, and then change  the communication status back to 
+      "Nothing to report."
