@@ -9,7 +9,7 @@ namespace dovahscript::classes {
    // (class_internal_name), then this returns the userdata pointer; otherwise, it 
    // returns nullptr. This only works for userdata, not for tables.
    //
-   extern void* cast_to_class(lua_State* luaVM, int stack_pos, const char* class_metatable_key);
+   extern void* cast_to_class(lua_State* L, int stack_pos, const char* class_metatable_key);
 
    //
    // Same as (cast_to_class), except that it does not allow subclasses of the 
@@ -17,7 +17,7 @@ namespace dovahscript::classes {
    // for classes that you don't intend to ever subclass. This only works for 
    // userdata, not for tables.
    //
-   extern void* cast_to_exact_class(lua_State* luaVM, int stack_pos, const char* class_metatable_key);
+   extern void* cast_to_exact_class(lua_State* L, int stack_pos, const char* class_metatable_key);
 
    //
    // Similar to (cast_to_class), but returns a bool, and can be used on both 
@@ -34,7 +34,7 @@ namespace dovahscript::classes {
    // class in (superclass_internal_name).
    //
    extern void define_class(
-      lua_State* luaVM,
+      lua_State* L,
       const char* class_metatable_key,
       const std::initializer_list<const char*>& superclass_metatable_keys,
       const std::initializer_list<luaL_Reg>& methods = {},
@@ -49,7 +49,7 @@ namespace dovahscript::classes {
    // class in (superclass_internal_name).
    //
    extern void define_class(
-      lua_State* luaVM,
+      lua_State* L,
       const char* class_metatable_key,
       const char* superclass_metatable_key = nullptr,
       const std::initializer_list<luaL_Reg>& methods = {},
@@ -59,7 +59,7 @@ namespace dovahscript::classes {
    );
 
    extern void extend_class(
-      lua_State* luaVM,
+      lua_State* L,
       const char* class_metatable_key,
       const std::vector<luaL_Reg>& methods,
       const std::vector<luaL_Reg>& getters,
@@ -78,5 +78,5 @@ namespace dovahscript::classes {
    //
    // Check registry key (class_internal_name) for a class metatable.
    //
-   extern bool is_class_defined(lua_State* luaVM, const char* class_metatable_key);
+   extern bool is_class_defined(lua_State* L, const char* class_metatable_key);
 }
