@@ -5,22 +5,22 @@ namespace dovahscript::core {
    client_thread_script_borrow_handle::client_thread_script_borrow_handle() {
    }
    client_thread_script_borrow_handle::~client_thread_script_borrow_handle() {
-      this->clear();
+      this->release();
    }
 
    client_thread_script_borrow_handle& client_thread_script_borrow_handle::operator=(const client_thread_script_borrow_handle& other) noexcept {
-      if (!other.valid) {
-         this->clear();
+      if (!other.active) {
+         this->release();
          return;
       }
-      if (this->valid == other.valid)
+      if (this->active == other.active)
          return;
-      this->set_valid();
+      this->request();
    }
    client_thread_script_borrow_handle& client_thread_script_borrow_handle::operator=(client_thread_script_borrow_handle&& other) noexcept {
-      this->clear();
-      this->valid = other.valid;
-      other.valid = false;
+      this->release();
+      this->active = other.active;
+      other.active = false;
    }
    client_thread_script_borrow_handle::client_thread_script_borrow_handle(const client_thread_script_borrow_handle& other) {
       *this = other;
@@ -30,24 +30,24 @@ namespace dovahscript::core {
    }
 
    bool client_thread_script_borrow_handle::is_ready() const noexcept {
-      if (!this->valid)
+      if (!this->active)
          return false;
       auto& coordinator_s = subsystems::coordinator::get();
       return coordinator_s.worker_thread_state == subsystems::coordinator::thread_wait_state::waiting;
    }
-   void client_thread_script_borrow_handle::clear() {
-      if (!this->valid)
-         return;
-      this->valid = false;
-      auto& coordinator_s = subsystems::coordinator::get();
-      --coordinator_s.outstanding_client_thread_script_borrow_requests;
-   }
 
-   void client_thread_script_borrow_handle::set_valid() {
-      if (this->valid)
+   void client_thread_script_borrow_handle::request() {
+      if (this->active)
          return;
-      this->valid = true;
+      this->active = true;
       auto& coordinator_s = subsystems::coordinator::get();
       ++coordinator_s.outstanding_client_thread_script_borrow_requests;
+   }
+   void client_thread_script_borrow_handle::release() {
+      if (!this->active)
+         return;
+      this->active = false;
+      auto& coordinator_s = subsystems::coordinator::get();
+      --coordinator_s.outstanding_client_thread_script_borrow_requests;
    }
 }

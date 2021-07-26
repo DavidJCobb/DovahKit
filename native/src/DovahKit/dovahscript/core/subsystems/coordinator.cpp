@@ -64,8 +64,13 @@ namespace dovahscript::core::subsystems {
       while (s.is_paused())
          if (s.is_aborted())
             break;
-      while (s.outstanding_client_thread_script_borrow_requests > 0) {
-         s.worker_thread_state = coordinator::thread_wait_state::waiting;
+      {
+         auto& counter = s.outstanding_client_thread_script_borrow_requests;
+         if (counter) {
+            s.worker_thread_state = coordinator::thread_wait_state::waiting;
+            while (counter) {}
+            s.worker_thread_state = coordinator::thread_wait_state::running;
+         }
       }
       if (s.is_aborted()) {
          static_assert(false, "TODO: Use a unique, pre-created userdata object to signal the error, instead of a string.");
@@ -114,14 +119,4 @@ namespace dovahscript::core::subsystems {
 
    void coordinator::_setup_lua_vm();
    void coordinator::_teardown_lua_vm(); // can only safely run on the client thread, since it tears down Qt objects now too
-
-   client_thread_script_borrow_handle coordinator::borrow_script_thread_status() {
-      require_client_thread();
-      //
-      client_thread_script_borrow_handle result;
-      if (this->is_running() && !this->is_aborted()) {
-         result.set_valid();
-      }
-      return result;
-   }
 }

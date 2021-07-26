@@ -40,7 +40,7 @@ namespace dovahscript::core::subsystems {
          cobb::lockable_bool running = false;
          bool in_teardown = false;
 
-         std::atomic<thread_wait_state> worker_thread_state;
+         std::atomic<thread_wait_state> worker_thread_state = thread_wait_state::running;
          std::atomic<int> outstanding_client_thread_script_borrow_requests = 0;
 
          struct {
@@ -92,17 +92,6 @@ namespace dovahscript::core::subsystems {
          inline bool is_running() const noexcept { return this->running; }
          inline bool is_paused()  const noexcept { return this->paused; }
          bool teardown_in_progress() const noexcept;
-
-         // The client thread can call this function in order to ask the worker thread to pause and wait, 
-         // so that the client thread can perform some task using the Lua state. The client thread should 
-         // check the "is valid" and "is ready" values on the returned handle, and should execute whatever 
-         // code it wanted to execute once the handle tests as "ready."
-         //
-         // Internally, we have a counter indicating how many extant handles there are -- how many reasons 
-         // the client thread wants to run code on the script thread. The handle destructors manage this 
-         // counter, and when it drops to zero, the worker thread will resume being the script thread and 
-         // will be allowed to proceed.
-         client_thread_script_borrow_handle borrow_script_thread_status();
          
       protected slots:
          void _main_thread_loop();
