@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <mutex>
 #include "../../../helpers/singleton.h"
+#include "coordinator/client_thread_script_borrow_handle.h"
 
 class  CanvasWidgetLayerData;
 struct ObservableStandardItemModelObserver;
@@ -24,23 +25,21 @@ namespace dovahscript::core::subsystems {
          template<typename T> struct _non_hierarchy_object_lists {
             std::mutex pd_mutex; // the (extant) list should not be touched from the non-script thread
             QVector<T*> extant;
-            QVector<T*> pending_deletion;
+            QVector<T*> pending_deletion; // TODO: Do we need a "pending deletion" list for these?
          };
 
       protected:
-         _non_hierarchy_object_lists<CanvasWidgetLayerData> canvas_layer_data;
-         _non_hierarchy_object_lists<model_observer_t>      model_observers;
          struct {
             QVector<QDialog*> windows;
             struct {
                QVector<QWidget*>      widgets;
                QVector<QButtonGroup*> button_groups;
             } orphans;
-            struct {
-               QVector<QWidget*>      widgets;
-               QVector<QButtonGroup*> button_groups;
-            } pending_deletion;
          } hierarchy_objects;
+         struct {
+            QVector<CanvasWidgetLayerData*> canvas_layer_data;
+            _non_hierarchy_object_lists<model_observer_t> model_observers;
+         } non_hierarchy_objects;
 
          // Maps of object pointers to refcounts.
          struct {
@@ -52,8 +51,20 @@ namespace dovahscript::core::subsystems {
 
          int extant_widget_count = 0; // includes windows
 
+         struct {
+            std::mutex lock;
+            struct {
+               std::vector<model_observer_t*> model_observers;
+               std::vector<QObject*> objects;
+            } queues;
+            client_thread_script_borrow_handle opportunity_handle;
+         } pending_lifetime_checks;
+
       public:
          std::vector<QDialog*> get_script_windows();
+
+         // This should delete any pending-deletion model observers.
+         void main_thread_handler();
 
          #pragma region Script thread functions
             QVector<model_observer_t*> get_extant_model_observers() const noexcept;

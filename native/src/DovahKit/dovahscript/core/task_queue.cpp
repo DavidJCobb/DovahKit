@@ -34,4 +34,8 @@ namespace dovahscript::core {
       list.clear();
       this->is_empty = true;
    }
+
+   void task_queue::wait_until_empty() const noexcept {
+      while (!this->empty()) {}
+   }
 }

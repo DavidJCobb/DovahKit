@@ -1,0 +1,127 @@
+#include "coordinator.h"
+#include "events.h"
+#include "lifetime.h"
+#include "resources.h"
+
+#include "coordinator/client_thread_script_borrow_handle.h"
+#include "../verify_threading.h"
+
+namespace {
+   static constexpr bool debug_script_start_stop = false
+      #ifdef _DEBUG
+         || _DEBUG
+      #endif
+   ;
+}
+
+namespace dovahscript::core::subsystems {
+   void coordinator::_main_thread_loop() {
+      auto& lifetime_s = lifetime::get();
+      //
+      resources::get().main_thread_handler();
+      if (this->repaint_requested_while_ui_locked) {
+         auto pending = events::get().pending_event_count();
+         if (!pending) {
+            this->repaint_requested_while_ui_locked = false;
+            for (auto* w : lifetime_s.get_script_windows())
+               w->update();
+         }
+      }
+      lifetime_s.main_thread_handler();
+      this->task_queues.s2m.process();
+      this->task_queues.ui.read.process();
+      this->task_queues.ui.write.process();
+   }
+
+   void coordinator::_script_thread_loop() {
+      static_assert(false, "Run all outstanding script files here.");
+      if constexpr (debug_script_start_stop) {
+         qDebug("Finished executing all requested script files. Switching to script thread idle loop.");
+      }
+      //
+      bool had_any_tasks;
+      do {
+         this->task_queues.s2m.wait_until_empty();      // these can be non-blocking + fire-and-forget
+         this->task_queues.ui.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
+         this->task_queues.m2s.urgent.process();
+         had_any_tasks |= (this->_run_queued_functions(false) > 0);
+         had_any_tasks |= (events::get().process_pending_events() > 0);
+         had_any_tasks |= (this->_run_queued_functions(true) > 0);
+      } while (had_any_tasks || this->_should_keep_running());
+      //
+      if constexpr (debug_script_start_stop) {
+         qDebug("Script execution finished on the worker thread.");
+      }
+      this->main_thread_tick_timer.stop();
+      this->running = false;
+      emit this->scriptEnded(false); // a main-thread handler will catch this and tear down the VM
+   }
+
+   bool coordinator::_should_keep_running() const noexcept;
+
+   /*static*/ void coordinator::_lua_debug_hook(lua_State* L, lua_Debug* ar) {
+      auto& s = coordinator::get();
+      while (s.is_paused())
+         if (s.is_aborted())
+            break;
+      while (s.outstanding_client_thread_script_borrow_requests > 0) {
+         s.worker_thread_state = coordinator::thread_wait_state::waiting;
+      }
+      if (s.is_aborted()) {
+         static_assert(false, "TODO: Use a unique, pre-created userdata object to signal the error, instead of a string.");
+         luaL_error(L, "Script terminated at the user's request.");
+      }
+   }
+
+   int coordinator::_run_queued_functions(bool ui_locked) {
+      require_worker_thread();
+      require_script_thread();
+      //
+      auto start      = lua_gettop(this->lua_vm);
+      auto index_list = start + 1;
+      auto index_nk   = start + 2;
+      auto index_nv   = start + 3;
+      //
+      this->ui_lock_override = ui_locked ? ui_lock_override_state::locked : ui_lock_override_state::unlocked;
+      //
+      auto* key = ui_locked ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
+      auto* L   = this->lua_vm;
+      int   count_executed = 0;
+      if (lua_getfield(L, LUA_REGISTRYINDEX, key) == LUA_TTABLE) {
+         int count = lua_rawlen(L, -1);
+         if (count) {
+            //
+            // Clear the list out of the registry (replace it with a blank table), leaving the original list 
+            // on the stack for us to use here.
+            //
+            lua_createtable(L, 0, 0);
+            lua_setfield(L, LUA_REGISTRYINDEX, key);
+            //
+            // Execute each individual function in the list.
+            //
+            for (int i = 0; i < count; ++i) {
+               lua_geti(L, -1, i + 1); // get the function
+               editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the function
+            }
+         }
+         count_executed += count;
+      }
+      lua_settop(this->lua_vm, start);
+      //
+      this->ui_lock_override = ui_lock_override_state::unchanged;
+      return count_executed;
+   }
+
+   void coordinator::_setup_lua_vm();
+   void coordinator::_teardown_lua_vm(); // can only safely run on the client thread, since it tears down Qt objects now too
+
+   client_thread_script_borrow_handle coordinator::borrow_script_thread_status() {
+      require_client_thread();
+      //
+      client_thread_script_borrow_handle result;
+      if (this->is_running() && !this->is_aborted()) {
+         result.set_valid();
+      }
+      return result;
+   }
+}
