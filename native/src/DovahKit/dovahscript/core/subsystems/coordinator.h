@@ -82,7 +82,7 @@ namespace dovahscript::core::subsystems {
          static void _lua_debug_hook(lua_State* L, lua_Debug* ar);
 
       public:
-         lua_State*      lua_vm = nullptr;
+         lua_State*      lua_state = nullptr;
          std::thread     worker_thread;
          std::thread::id client_thread_id;
          thread_type     script_thread = thread_type::client;

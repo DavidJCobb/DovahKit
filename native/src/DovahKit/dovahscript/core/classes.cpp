@@ -42,6 +42,8 @@ namespace {
             return true;
          else if (strcmp(nk, "__name") == 0)
             return true;
+         else if (strcmp(nk, "__custom_class_internals") == 0)
+            return true;
       }
       return false;
    }

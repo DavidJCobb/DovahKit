@@ -82,7 +82,7 @@ namespace dovahscript::core::subsystems {
       require_worker_thread();
       require_script_thread();
       //
-      auto start      = lua_gettop(this->lua_vm);
+      auto start      = lua_gettop(this->lua_state);
       auto index_list = start + 1;
       auto index_nk   = start + 2;
       auto index_nv   = start + 3;
@@ -90,7 +90,7 @@ namespace dovahscript::core::subsystems {
       this->ui_lock_override = ui_locked ? ui_lock_override_state::locked : ui_lock_override_state::unlocked;
       //
       auto* key = ui_locked ? ui_locked_queue_registry_key : ui_unlocked_queue_registry_key;
-      auto* L   = this->lua_vm;
+      auto* L   = this->lua_state;
       int   count_executed = 0;
       if (lua_getfield(L, LUA_REGISTRYINDEX, key) == LUA_TTABLE) {
          int count = lua_rawlen(L, -1);
@@ -106,17 +106,17 @@ namespace dovahscript::core::subsystems {
             //
             for (int i = 0; i < count; ++i) {
                lua_geti(L, -1, i + 1); // get the function
-               editor_script::util::safe_call(this->lua_vm, 0, 0); // this will pop the function
+               editor_script::util::safe_call(this->lua_state, 0, 0); // this will pop the function
             }
          }
          count_executed += count;
       }
-      lua_settop(this->lua_vm, start);
+      lua_settop(this->lua_state, start);
       //
       this->ui_lock_override = ui_lock_override_state::unchanged;
       return count_executed;
    }
 
-   void coordinator::_setup_lua_vm();
-   void coordinator::_teardown_lua_vm(); // can only safely run on the client thread, since it tears down Qt objects now too
+   void coordinator::_setup_lua_state();
+   void coordinator::_teardown_lua_state(); // can only safely run on the client thread, since it tears down Qt objects now too
 }
