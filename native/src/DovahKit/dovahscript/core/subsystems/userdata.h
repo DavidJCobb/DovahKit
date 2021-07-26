@@ -1,5 +1,6 @@
 #pragma once
 #include "../../../helpers/singleton.h"
+#include "../../../lua.h"
 
 class ObservableStandardItemModelObserver;
 namespace dovah {
@@ -18,6 +19,9 @@ namespace dovahscript::core::subsystems {
          }
 
       public:
+         // Call when setting up a new Lua state.
+         void initialize(lua_State*);
+
          void destroy(wrapper&);
          void destroy_all(dovah::form_stub&);
          void destroy_all(ObservableStandardItemModelObserver&);

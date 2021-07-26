@@ -2,9 +2,16 @@
 #include "events.h"
 #include "lifetime.h"
 #include "resources.h"
+#include "userdata.h"
 
 #include "coordinator/client_thread_script_borrow_handle.h"
 #include "../verify_threading.h"
+
+#include "../../lua_libraries/all_standard.h"
+#include "../../lua_libraries/dovah.h"
+#include "../../lua_libraries/form_types.h"
+#include "../../lua_libraries/unscoped.h"
+#include "../../lua_classes/_import_all.h"
 
 namespace {
    static constexpr bool debug_script_start_stop = false
@@ -34,6 +41,8 @@ namespace dovahscript::core::subsystems {
    }
 
    void coordinator::_script_thread_loop() {
+      assert(this->worker_thread_state == coordinator::thread_wait_state::running); // After running one session and when running a new one, this should be reset before the worker thread is created.
+      //
       static_assert(false, "Run all outstanding script files here.");
       if constexpr (debug_script_start_stop) {
          qDebug("Finished executing all requested script files. Switching to script thread idle loop.");
@@ -54,6 +63,7 @@ namespace dovahscript::core::subsystems {
       }
       this->main_thread_tick_timer.stop();
       this->running = false;
+      this->worker_thread_state = coordinator::thread_wait_state::waiting;
       emit this->scriptEnded(false); // a main-thread handler will catch this and tear down the VM
    }
 
@@ -117,6 +127,53 @@ namespace dovahscript::core::subsystems {
       return count_executed;
    }
 
-   void coordinator::_setup_lua_state();
-   void coordinator::_teardown_lua_state(); // can only safely run on the client thread, since it tears down Qt objects now too
+   void coordinator::_setup_lua_state() {
+      assert(this->lua_state == nullptr);
+      assert(!this->in_teardown);
+      //
+      this->lua_state = luaL_newstate();
+      auto* L = this->lua_state;
+      lua_sethook (L, &_lua_debug_hook, LUA_MASKCOUNT, 8);
+      lua_setwarnf(L, &_lua_warning_function, nullptr);
+      //
+      lua_libraries::import_all_standard(L);
+      lua_libraries::import_dovah(L);
+      lua_libraries::import_form_types(L);
+      lua_libraries::import_unscoped(L);
+      lua_classes::import_all(L);
+      //
+      #pragma region Queued functions
+         lua_newtable(L);
+         lua_setfield(L, LUA_REGISTRYINDEX, ui_locked_queue_registry_key);
+         lua_newtable(L);
+         lua_setfield(L, LUA_REGISTRYINDEX, ui_unlocked_queue_registry_key);
+      #pragma endregion
+      static_assert(false, "TODO: Initialize other subsystems for this Lua state? (They should also take this as a chance to assert whatever they should assert on setup.)");
+      userdata::get().initialize(L);
+      //
+      static_assert(false, "TODO: Build all metatables for form classes.");
+      static_assert(false, "TODO: Build all metatables and singletons for UI classes.");
+      this->ui_lock_override = ui_lock_override_state::unchanged;
+   }
+   void coordinator::_teardown_lua_state() {// can only safely run on the client thread, since it tears down Qt objects now too
+      require_client_thread();
+      assert(this->worker_thread_state == coordinator::thread_wait_state::waiting);
+      this->script_thread = thread_type::client;
+      //
+      auto guard = std::lock_guard(this->running);
+      this->in_teardown = true;
+      if constexpr (debug_script_start_stop) {
+         qDebug("Tearing down the script VM...");
+      }
+      if (auto* L = this->lua_state) {
+         lua_close(L);
+         this->lua_state = nullptr;
+      }
+      //
+      events::get().on_script_teardown();
+      lifetime::get().on_script_teardown();
+      resources::get().on_script_teardown();
+      //
+      this->in_teardown = false;
+   }
 }

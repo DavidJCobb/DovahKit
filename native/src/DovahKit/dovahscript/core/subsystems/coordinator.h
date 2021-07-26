@@ -66,8 +66,8 @@ namespace dovahscript::core::subsystems {
          //
          bool repaint_requested_while_ui_locked = false;
          
-         void _setup_lua_vm();
-         void _teardown_lua_vm(); // can only safely run on the client thread, since it tears down Qt objects now too
+         void _setup_lua_state();
+         void _teardown_lua_state(); // can only safely run on the client thread, since it tears down Qt objects now too
 
          int _run_queued_functions(bool ui_locked); // returns the number of functions executed
          void _script_thread_loop();
@@ -92,6 +92,10 @@ namespace dovahscript::core::subsystems {
          inline bool is_running() const noexcept { return this->running; }
          inline bool is_paused()  const noexcept { return this->paused; }
          bool teardown_in_progress() const noexcept;
+
+         void send_script_task(task_queue::task_t*);
+         void send_ui_read_task(task_queue::task_t*);
+         void send_ui_write_task(task_queue::task_t*);
          
       protected slots:
          void _main_thread_loop();

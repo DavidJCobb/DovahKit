@@ -14,7 +14,8 @@ namespace dovahscript::core {
    // A queue suitable for receiving and executing cross-thread tasks.
    //
    class task_queue {
-      using task_t = dovahscript::tasks::_base;
+      public:
+         using task_t = dovahscript::tasks::_base;
       protected:
          std::vector<task_t*> list;
          std::recursive_mutex lock;

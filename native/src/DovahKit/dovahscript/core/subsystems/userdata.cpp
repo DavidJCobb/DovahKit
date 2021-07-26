@@ -11,7 +11,7 @@
 
 #include "../../../dovah/forms/Form.h" // needed for working with any loaded_form_ptr
 #include "../../../editor/form_stub_meta_type.h" // needed for QVariants of form stub pointers
-#include "../widgets/objects/LuaScriptableCanvasWidgetLayerData.h"
+#include "../../qt/LuaScriptableCanvasWidgetLayerData.h"
 
 //
 // Given a dovah::form_stub& named stub:
@@ -23,7 +23,8 @@
 //
 
 namespace {
-   static constexpr const char* wrapper_storage_registry_key = "dovahscript.internal.wrapper_storage";
+   static constexpr const char* wrapper_storage_registry_key  = "dovahscript.internal.wrapper_storage";
+   static constexpr const char* wrapper_weakmap_metatable_key = "dovahscript.internal.wrapper_storage_metatable";
 
    inline lua_State* _get_lua() {
       return dovahscript::core::subsystems::coordinator::get().lua_state;
@@ -31,6 +32,16 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
+   void userdata::initialize(lua_State* L) {
+      lua_createtable(L, 0, 0);
+      lua_setfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
+      //
+      lua_createtable(L, 0, 1);
+      lua_pushstring(L, "v");
+      lua_setfield  (L, -2, "__mode");
+      lua_setfield(L, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key);
+   }
+
    void userdata::destroy(wrapper& instance) {
       require_script_thread();
       //
@@ -107,7 +118,10 @@ namespace dovahscript::core::subsystems {
          //
          lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
          //
-         cobb::lua::discontiguous_list::remove(L, si_storage, key); // remove the target from storage.
+         if (key > 0) { // remove the target from storage.
+            lua_pushnil(L);
+            lua_rawseti(L, si_storage, key);
+         }
       }
       //
       lua_pushnil(L);
@@ -156,7 +170,7 @@ namespace dovahscript::core::subsystems {
                target->stub    = nullptr; // need to sever this now, because we won't be able to if, say, the form is deleted after we forget about this wrapper
                target->form    = nullptr;
                //
-               lua_pushcfunction(L, &editor_script::zombify_userdata);
+               lua_pushcfunction(L, &dovahscript::zombify_userdata);
                lua_pushvalue    (L, si_nv);
                lua_call(L, 1, 0);
             }
@@ -292,13 +306,14 @@ namespace dovahscript::core::subsystems {
    }
 
    void userdata::on_wrapper_destroyed(wrapper& instance) {
+      require_script_thread();
+      //
       auto& coordinator_s = coordinator::get();
       //
       if (coordinator_s.teardown_in_progress()) {
          //
-         // The Lua state is not externally accessible during teardown, but we also don't 
-         // need to do any sort of intelligent object lifetime management during teardown 
-         // because we're just gonna delete everything anyway.
+         // We don't need to do any sort of intelligent object lifetime management during 
+         // teardown, because we're just gonna delete everything anyway.
          //
          return;
       }
@@ -431,7 +446,7 @@ namespace dovahscript::core::subsystems {
             lua_settop(L, table);
             //
             lua_createtable (L, 0, 0); // push 1 // storage_sub = {}
-            lua_getfield    (L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::wrapper_weakmap_metatable_key);
+            lua_getfield    (L, LUA_REGISTRYINDEX, wrapper_weakmap_metatable_key);
             lua_setmetatable(L, -2);
             lua_pushlightuserdata(L, light);     // push 1
             lua_pushvalue        (L, table + 1); // push 1
@@ -477,7 +492,11 @@ namespace dovahscript::core::subsystems {
       lua_setmetatable(L, si_created); // pop 1
       //
       lua_pushvalue(L, si_created); // push 1 // push another reference to the wrapper onto the stack, as the next function will remove whichever reference it uses
-      ptr->lua_key = cobb::lua::discontiguous_list::insert(L, si_storage);
+      {
+         int i = lua_rawlen(L, si_storage) + 1;
+         lua_rawseti(L, si_storage, i);
+         ptr->lua_key = i;
+      }
       ptr->_on_pushed();
       //
       lua_remove(L, -2);
@@ -543,7 +562,10 @@ namespace dovahscript::core::subsystems {
          //
          lua_call(L, 1, 0); // ...and then, after we've adjusted the native wrapper, make the call.
          //
-         cobb::lua::discontiguous_list::remove(L, si_storage, key); // remove the target from storage.
+         if (key > 0) { // remove the target from storage.
+            lua_pushnil(L);
+            lua_rawseti(L, si_storage, key);
+         }
       }
       //
       lua_settop(L, start);

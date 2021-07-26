@@ -101,6 +101,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\core\classes.cpp" />
+    <ClCompile Include="dovahscript\core\class_zombification.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\coordinator.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\permissions.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\userdata.cpp" />
+    <ClCompile Include="dovahscript\core\task_queue.cpp" />
+    <ClCompile Include="dovahscript\core\verify_threading.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\vector3.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\_import_all.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\all_standard.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
+    <ClCompile Include="dovahscript\tasks\_base.cpp" />
+    <ClCompile Include="dovahscript\wrappers\base.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
     <ClCompile Include="dovah\data\actor_values.cpp" />
@@ -450,6 +466,25 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
+    <ClInclude Include="dovahscript\core\classes.h" />
+    <ClInclude Include="dovahscript\core\class_zombification.h" />
+    <ClInclude Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.h" />
+    <ClInclude Include="dovahscript\core\subsystems\events.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.h" />
+    <ClInclude Include="dovahscript\core\subsystems\permissions.h" />
+    <ClInclude Include="dovahscript\core\subsystems\userdata.h" />
+    <ClInclude Include="dovahscript\core\task_queue.h" />
+    <ClInclude Include="dovahscript\core\verify_threading.h" />
+    <ClInclude Include="dovahscript\lua_classes\vector3.h" />
+    <ClInclude Include="dovahscript\lua_classes\_import_all.h" />
+    <ClInclude Include="dovahscript\lua_libraries\all_standard.h" />
+    <ClInclude Include="dovahscript\lua_libraries\unscoped.h" />
+    <ClInclude Include="dovahscript\qt\LuaScriptableCanvasWidgetLayerData.h" />
+    <ClInclude Include="dovahscript\tasks\_base.h" />
+    <ClInclude Include="dovahscript\wrapper.h" />
+    <ClInclude Include="dovahscript\wrappers\base.h" />
     <ClInclude Include="dovah\bs_hash.h" />
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
@@ -759,6 +794,7 @@
     <ClInclude Include="helpers\lua\dump.h" />
     <ClInclude Include="helpers\lua\qt_point.h" />
     <ClInclude Include="helpers\lua\qt_variant.h" />
+    <ClInclude Include="helpers\lua\raw.h" />
     <ClInclude Include="helpers\lua\setfuncs.h" />
     <ClInclude Include="helpers\lua\set_top_on_exit.h" />
     <ClInclude Include="helpers\lua\tostringex.h" />
@@ -934,6 +970,9 @@
     <ResourceCompile Include="DovahKit.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="dovahscript\_docs\abstract.txt" />
+    <Text Include="dovahscript\_docs\lifetime management.txt" />
+    <Text Include="dovahscript\_docs\userdata wrappers.txt" />
     <Text Include="dovah\form stub addenda.txt" />
     <Text Include="dovah\_docs\basics.txt" />
     <Text Include="dovah\_docs\conditions.txt" />
