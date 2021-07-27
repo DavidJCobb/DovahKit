@@ -105,6 +105,7 @@
     <ClCompile Include="dovahscript\core\class_zombification.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\events.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\permissions.cpp" />

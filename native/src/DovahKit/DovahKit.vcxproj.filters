@@ -1110,6 +1110,9 @@
     <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\core\subsystems\events.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">

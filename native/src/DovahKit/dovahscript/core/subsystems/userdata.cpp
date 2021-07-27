@@ -239,55 +239,6 @@ namespace dovahscript::core::subsystems {
       lua_settop(L, start);
    }
 
-   void userdata::remove_canvas_layers(const QList<CanvasWidgetEntity*> entities) {
-      require_script_thread();
-      //
-      auto* L     = _get_lua();
-      auto  start = lua_gettop(L);
-      //
-      auto si_store_all = start + 1;
-      auto si_store_ptr = start + 2;
-      auto si_nk        = start + 3;
-      auto si_nv        = start + 4;
-      //
-      lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key);
-      for (auto* entity : entities) {
-         lua_pushlightuserdata(L, entity);
-         lua_rawget(L, -2);
-         if (!lua_istable(L, -1)) {
-            lua_pop(L, 1);
-            continue;
-         }
-         //
-         // Zombify all wrappers for this form and its parts.
-         //
-         lua_pushnil(L); // nk
-         while (lua_next(L, si_store_ptr) != 0) {
-            wrapper* other = nullptr;
-            if (lua_type(L, si_nv) == LUA_TUSERDATA) {
-               if (auto* target = (wrapper*)lua_touserdata(L, si_nv)) {
-                  assert(target->canvas_entity == entity);
-                  target->lua_key = LUA_NOREF;
-                  lua_pushcfunction(L, &dovahscript::zombify_userdata);
-                  lua_pushvalue(L, si_nv);
-                  lua_call(L, 1, 0);
-               }
-            }
-            //
-            lua_settop(L, si_nk);
-         }
-         //
-         // Erase the table for this form.
-         //
-         lua_settop(L, si_store_all);
-         lua_pushlightuserdata(L, entity);
-         lua_pushnil(L);
-         lua_rawset(L, -3);
-      }
-      //
-      lua_settop(L, start);
-   }
-
    bool userdata::wrapper_exists_for(void* pertinent_pointer) {
       require_script_thread();
       //

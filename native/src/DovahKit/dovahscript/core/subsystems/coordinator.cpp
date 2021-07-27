@@ -24,7 +24,7 @@ namespace dovahscript::core::subsystems {
       //
       resources::get().main_thread_handler();
       if (this->repaint_requested_while_ui_locked) {
-         auto pending = events::get().pending_event_count();
+         auto pending = events::get().get_pending_event_count();
          if (!pending) {
             this->repaint_requested_while_ui_locked = false;
             for (auto* w : lifetime_s.get_script_windows())

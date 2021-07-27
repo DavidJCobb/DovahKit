@@ -28,15 +28,19 @@ namespace dovahscript::core::subsystems {
       protected:
          // connections[q_object][event_name][listener] = connection;
          std::unordered_map<QObject*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections;
+         int pending_event_count = 0;
 
       public:
-         unsigned int pending_event_count() const noexcept;
+         unsigned int get_pending_event_count() const noexcept;
+
+         void on_script_teardown();
 
          // Call from the script thread's idle loop. Returns the number of events processed.
          size_t process_pending_events();
 
          // Completely disconnects an object from the event system, and then discards all pending events for 
-         // the object. This should be called by the lifetime subsystem just before deleting an object.
+         // the object and its descendants. This should be called by the lifetime subsystem just before 
+         // deleting an object.
          static_assert(false, "TODO: The lifetime subsystem should call this when deleting an object.");
          void abandon_object(QObject&);
 

@@ -5,6 +5,7 @@
 #include "../../../helpers/singleton.h"
 #include "coordinator/client_thread_script_borrow_handle.h"
 
+class  CanvasWidgetEntity;
 class  CanvasWidgetLayerData;
 struct ObservableStandardItemModelObserver;
 
@@ -19,26 +20,17 @@ namespace dovahscript::core::subsystems {
          using model_observer_t = ObservableStandardItemModelObserver;
 
       protected:
-         // Holder for classes that don't directly belong to a widget hierarchy. This doesn't mean 
-         // that they can't influence the lifetime of a hierarchy object; only that they cannot be 
-         // directly traversed to from a hierarchy, nor traversed from to a hierarchy.
-         template<typename T> struct _non_hierarchy_object_lists {
-            std::mutex pd_mutex; // the (extant) list should not be touched from the non-script thread
-            QVector<T*> extant;
-            QVector<T*> pending_deletion; // TODO: Do we need a "pending deletion" list for these?
-         };
-
-      protected:
          struct {
             QVector<QDialog*> windows;
             struct {
-               QVector<QWidget*>      widgets;
-               QVector<QButtonGroup*> button_groups;
+               QVector<QWidget*>            widgets;
+               QVector<QButtonGroup*>       button_groups;
+               QVector<CanvasWidgetEntity*> canvas_widget_entities;
             } orphans;
          } hierarchy_objects;
          struct {
             QVector<CanvasWidgetLayerData*> canvas_layer_data;
-            _non_hierarchy_object_lists<model_observer_t> model_observers;
+            QVector<model_observer_t>       model_observers;
          } non_hierarchy_objects;
 
          // Maps of object pointers to refcounts.
@@ -66,6 +58,8 @@ namespace dovahscript::core::subsystems {
          // This should delete any pending-deletion model observers.
          void main_thread_handler();
 
+         void on_script_teardown();
+
          #pragma region Script thread functions
             QVector<model_observer_t*> get_extant_model_observers() const noexcept;
 
@@ -78,6 +72,8 @@ namespace dovahscript::core::subsystems {
             void on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from); // e.g. if a QButtonGroup loses a button, the group would be the basis and the button, the severed-from object
             void on_hierarchy_item_orphaned(QObject*);
             void on_hierarchy_item_adopted(QObject*);
+
+            void on_window_hidden(QDialog*);
 
             void on_canvas_widget_layer_data_detached(CanvasWidgetLayerData*);
          #pragma endregion
