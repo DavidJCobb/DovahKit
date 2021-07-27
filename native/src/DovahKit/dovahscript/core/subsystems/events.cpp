@@ -1,12 +1,14 @@
 #include "events.h"
+#include "coordinator.h"
 #include "../../../lua.h"
+#include "../../../helpers/lua/isempty.h"
+#include "../../../helpers/lua/qt_variant.h"
+#include "../../../helpers/lua/set_top_on_exit.h"
 #include "../../../helpers/qt/combobox.h"
 #include "../../../helpers/qt/get_model_of.h"
 #include "../verify_threading.h"
 #include "../../push_native_object.h"
 
-#include <QAbstractButton>
-#include <QAbstractItemModel>
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
@@ -20,13 +22,20 @@
 #include <QTabWidget>
 #include "../../../ui/generic/FormPicker.h"
 
+#include "events/registration/button.h"
+#include "events/registration/checkbox.h"
+#include "events/registration/dropdown.h"
+#include "events/registration/formpicker.h"
+#include "events/registration/groupbox.h"
+#include "events/registration/radio_button.h"
+#include "events/registration/radio_group.h"
+#include "events/registration/spinbox.h"
+#include "events/registration/tabbox.h"
+#include "events/registration/table_view.h"
+#include "events/registration/textbox.h"
+
 namespace {
-   inline static void _sanity_check_event_target(QObject& object) {
-      #if _DEBUG
-      assert(&object != &DovahKitScriptVMCore::get() && "Something has gone terribly wrong. Why are we using script VM internals as Lua-facing event targets?");
-      assert(&object != &DovahKitScriptVM::get()     && "Something has gone terribly wrong. Why are we using script VM internals as Lua-facing event targets?");
-      #endif
-   }
+   static constexpr const char* listener_registry_key = "dovahscript.internals.event_listeners";
 }
 
 namespace {
@@ -38,64 +47,37 @@ namespace {
    };
    std::array _events_by_target_type = {
       _event_list_for_target_type(&FormPicker::staticMetaObject,
-         {
-            "OnChanged",
-         }
+         dovahscript::impl::event_registration::formpicker::event_names
       ),
       _event_list_for_target_type(&QButtonGroup::staticMetaObject,
-         {
-            "OnSelectionChanged",
-         }
+         dovahscript::impl::event_registration::radio_group::event_names
       ),
       _event_list_for_target_type(&QCheckBox::staticMetaObject,
-         {
-            "OnChanged", // Argument is the checkbox state as a string ("checked", "indeterminate", "unchecked").
-            "OnToggled", // The same as OnChanged, but the argument is a boolean indicating whether the checkbox is checked.
-         }
+         dovahscript::impl::event_registration::checkbox::event_names
       ),
       _event_list_for_target_type(&QComboBox::staticMetaObject,
-         {
-            "OnChanged", // The dropdown's selected logical index was changed through some cause other than the script directly setting it or the selected text.
-         }
+         dovahscript::impl::event_registration::dropdown::event_names
       ),
       _event_list_for_target_type(&QDoubleSpinBox::staticMetaObject,
-         {
-            "OnChanged", // The spinbox's value has been altered by the user. Fires instantly for increment/decrement buttons; for typing, works like the textbox OnChanged event.
-         }
+         dovahscript::impl::event_registration::spinbox::event_names
       ),
       _event_list_for_target_type(&QGroupBox::staticMetaObject,
-         {
-            "OnToggled",
-         }
+         dovahscript::impl::event_registration::groupbox::event_names
       ),
       _event_list_for_target_type(&QLineEdit::staticMetaObject,
-         {
-            "OnChanged",       // The textbox's value was previously altered, and the user hit Enter or moved focus away from the textbox.
-            "OnInputRejected", // The textbox rejected input because it didn't validate or the max length would've been exceeded.
-            "OnKeyPressed",    // The textbox's value was altered by a keypress.
-         }
+         dovahscript::impl::event_registration::textbox::event_names
       ),
       _event_list_for_target_type(&QPushButton::staticMetaObject,
-         {
-            "OnActivated",         // The button was clicked (or interacted with analogously via another input device).
-            "OnCheckStateChanged", // The button is checkable and its check state changed.
-         }
+         dovahscript::impl::event_registration::button::event_names
       ),
       _event_list_for_target_type(&QRadioButton::staticMetaObject,
-         {
-            "OnChanged", // Argument is the button state as a string ("checked", "unchecked").
-            "OnToggled", // The same as OnChanged, but the argument is a boolean indicating whether the button is checked.
-         }
+         dovahscript::impl::event_registration::radio_button::event_names
       ),
       _event_list_for_target_type(&QTableView::staticMetaObject,
-         {
-            "OnSelectionChanged",
-         }
+         dovahscript::impl::event_registration::table_view::event_names
       ),
       _event_list_for_target_type(&QTabWidget::staticMetaObject,
-         {
-            "OnSelectionChanged",
-         }
+         dovahscript::impl::event_registration::tabbox::event_names
       ),
    };
 
@@ -116,9 +98,7 @@ namespace {
    // Custom lambda struct, used as the slot handler for the Qt signal/slot connections we create 
    // when routing Qt events into Lua.
    template<typename... Args> struct _event_forwarding_lambda {
-      _event_forwarding_lambda(QWidget& w, const char* n, const char* l) : widget(w), event_name(n), listener_name(l) {
-         _sanity_check_event_target(w);
-      }
+      _event_forwarding_lambda(QWidget& w, const char* n, const char* l) : widget(w), event_name(n), listener_name(l) {}
 
       QWidget& widget;
       const std::string event_name;
@@ -134,250 +114,54 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
-   void events::_connect_event(QMetaObject::Connection connection, QObject& target, const char* event_name, const char* listener_name) {
+   void events::_connect_event(passkey_to<impl::event_registration::base>, QMetaObject::Connection connection, QObject& target, const char* event_name, const char* listener_name) {
       require_script_thread();
-      _sanity_check_event_target(target);
       //
-      auto& vm    = DovahKitScriptVMCore::get();
-      auto& entry = vm.widgets.connections[&target][event_name][listener_name];
+      auto& entry = this->connections[&target][event_name][listener_name];
       QObject::disconnect(entry); // replace the existing listener, if any
       entry = connection;
    }
    void events::_register_event(QObject& widget, const char* event_name, const char* listener_name) {
       require_script_thread();
-      _sanity_check_event_target(widget);
       //
-      // Runs on the script thread.
-      //
-      auto& vm = DovahKitScriptVMCore::get();
-      if (auto* casted = qobject_cast<FormPicker*>(&widget)) {
-         if (_stricmp(event_name, "OnChanged") == 0) {
-            this->_connect_event(*casted, &FormPicker::formChanged, event_name, listener_name);
+      static constexpr std::array registrars = {
+         &impl::event_registration::button::register_event,
+         &impl::event_registration::checkbox::register_event,
+         &impl::event_registration::dropdown::register_event,
+         &impl::event_registration::formpicker::register_event,
+         &impl::event_registration::groupbox::register_event,
+         &impl::event_registration::radio_button::register_event,
+         &impl::event_registration::radio_group::register_event,
+         &impl::event_registration::spinbox::register_event,
+         &impl::event_registration::tabbox::register_event,
+         &impl::event_registration::table_view::register_event,
+         &impl::event_registration::textbox::register_event,
+      };
+      for (auto* registrar : registrars) {
+         using result_t = impl::event_registration::result;
+         //
+         auto result = (registrar)(widget, event_name, listener_name);
+         assert(result != result_t::failure);
+         if (result != result_t::no_match)
             return;
-         }
-      } else if (auto* casted = qobject_cast<QButtonGroup*>(&widget)) {
-         if (_stricmp(event_name, "OnSelectionChanged") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, QOverload<QAbstractButton*,bool>::of(&QButtonGroup::buttonToggled), &vm,
-                  [casted, ln](QAbstractButton* button, bool checked) {
-                     if (!checked)
-                        return;
-                     events::get().receive_event_from_main_thread(*casted, "OnSelectionChanged", ln.c_str(), { QVariant::fromValue<QObject*>(button) });
-                  }
-               ),
-               widget, event_name, listener_name
-            );
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QCheckBox*>(&widget)) {
-         if (_stricmp(event_name, "OnChanged") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, &QCheckBox::stateChanged, &vm,
-                  [casted, ln](int state) {
-                     QString s;
-                     switch (state) {
-                        case Qt::CheckState::Checked:
-                           s = "checked";
-                           break;
-                        case Qt::CheckState::PartiallyChecked:
-                           s = "indeterminate";
-                           break;
-                        case Qt::CheckState::Unchecked:
-                           s = "unchecked";
-                           break;
-                     }
-                     events::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { s });
-                  }
-               ),
-               widget, event_name, listener_name
-            );
-            return;
-         }
-         if (_stricmp(event_name, "OnToggled") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, &QCheckBox::stateChanged, &vm,
-                  [casted, ln](int state) {
-                     events::get().receive_event_from_main_thread(*casted, "OnToggled", ln.c_str(), { state == Qt::CheckState::Checked });
-                  }
-               ),
-               widget, event_name, listener_name
-            );
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QComboBox*>(&widget)) {
-         if (_stricmp(event_name, "OnChanged") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, QOverload<int>::of(&QComboBox::currentIndexChanged), &vm,
-                  [casted, ln](int index) {
-                     auto* proxy   = casted->model();
-                     int   logical = cobb::qt::map_combobox_index_from_proxy(casted, index); // map proxy combobox index to logical combobox index
-                     ++logical; // Lua is one-indexed, not zero-indexed
-                     events::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { logical });
-                  }
-               ),
-               widget, event_name, listener_name
-            );
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QDoubleSpinBox*>(&widget)) {
-         if (_stricmp(event_name, "OnChanged") == 0) {
-            this->_connect_event(*casted, QOverload<double>::of(&QDoubleSpinBox::valueChanged), event_name, listener_name);
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QGroupBox*>(&widget)) {
-         if (_stricmp(event_name, "OnToggled") == 0) {
-            this->_connect_event(*casted, &QGroupBox::toggled, event_name, listener_name);
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QLineEdit*>(&widget)) {
-         if (_stricmp(event_name, "OnChanged") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, &QLineEdit::editingFinished, &vm,
-                  [casted, ln]() {
-                     events::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { casted->text() });
-                  }
-               ),
-               widget, event_name, listener_name
-            );
-            return;
-         }
-         if (_stricmp(event_name, "OnInputRejected") == 0) {
-            this->_connect_event(*casted, &QLineEdit::inputRejected, event_name, listener_name);
-            return;
-         }
-         if (_stricmp(event_name, "OnKeyPressed") == 0) {
-            this->_connect_event(*casted, &QLineEdit::textEdited, event_name, listener_name);
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QPushButton*>(&widget)) {
-         if (_stricmp(event_name, "OnActivated") == 0) {
-            this->_connect_event(*casted, &QPushButton::clicked, event_name, listener_name);
-            return;
-         }
-         if (_stricmp(event_name, "OnCheckStateChanged") == 0) {
-            this->_connect_event(*casted, &QPushButton::toggled, event_name, listener_name);
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QRadioButton*>(&widget)) {
-         if (_stricmp(event_name, "OnChanged") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, &QRadioButton::toggled, &vm,
-                  [casted, ln](bool checked) {
-                     QString s = checked ? "checked" : "unchecked";
-                     events::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { s });
-                  }
-               ),
-               widget, event_name, listener_name
-               );
-            return;
-         }
-         if (_stricmp(event_name, "OnToggled") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, &QRadioButton::toggled, &vm,
-                  [casted, ln](bool checked) {
-                     events::get().receive_event_from_main_thread(*casted, "OnToggled", ln.c_str(), { checked });
-                  }
-               ),
-               widget, event_name, listener_name
-               );
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QTableView*>(&widget)) {
-         if (_stricmp(event_name, "OnSelectionChanged") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted->selectionModel(), &QItemSelectionModel::selectionChanged, &vm,
-                  [casted, ln]() {
-                     //
-                     // We can't easily tell from the signal alone whether the selection is supposed to be a row, 
-                     // a column, or a cell, so we'll just check the widget itself to find out.
-                     //
-                     std::vector<QVariant> selections;
-                     {
-                        auto* sm    = casted->selectionModel();
-                        auto* proxy = (QSortFilterProxyModel*) casted->model();
-                        auto* model = (ObservableStandardItemModel*) proxy->sourceModel();
-                        switch (casted->selectionBehavior()) {
-                           case QAbstractItemView::SelectionBehavior::SelectRows:
-                              for (auto& qmi : sm->selectedRows()) {
-                                 auto remapped = proxy->mapToSource(qmi);
-                                 //
-                                 LuaModelObserverEventArgument arg;
-                                 arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::rowOrientation, remapped.row());
-                                 arg.metatable_key = dovahscript::wrappers::ui::table_view_row::metatable_key;
-                                 assert(arg.observer);
-                                 selections.push_back(QVariant::fromValue(arg));
-                              }
-                              break;
-                           case QAbstractItemView::SelectionBehavior::SelectColumns:
-                              for (auto& qmi : sm->selectedColumns()) {
-                                 auto remapped = proxy->mapToSource(qmi);
-                                 //
-                                 LuaModelObserverEventArgument arg;
-                                 arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::colOrientation, remapped.column());
-                                 arg.metatable_key = dovahscript::wrappers::ui::table_view_col::metatable_key;
-                                 assert(arg.observer);
-                                 selections.push_back(QVariant::fromValue(arg));
-                              }
-                              break;
-                           case QAbstractItemView::SelectionBehavior::SelectItems:
-                              for (auto& qmi : sm->selectedIndexes()) {
-                                 auto remapped = proxy->mapToSource(qmi);
-                                 //
-                                 LuaModelObserverEventArgument arg;
-                                 arg.observer      = model->getOrCreateRegisteredObserver(remapped);
-                                 arg.metatable_key = dovahscript::wrappers::ui::table_view_cell::metatable_key;
-                                 assert(arg.observer);
-                                 selections.push_back(QVariant::fromValue(arg));
-                              }
-                              break;
-                        }
-                     }
-                     events::get().receive_event_from_main_thread(*casted, "OnSelectionChanged", ln.c_str(), selections);
-                  }
-               ),
-               widget, event_name, listener_name
-            );
-            return;
-         }
-      } else if (auto* casted = qobject_cast<QTabWidget*>(&widget)) {
-         if (_stricmp(event_name, "OnSelectionChanged") == 0) {
-            std::string ln = listener_name;
-            this->_connect_event(
-               QObject::connect(casted, &QTabWidget::currentChanged, &vm,
-                  [casted, ln](int index) {
-                     QWidget* widget = casted->widget(index);
-                     events::get().receive_event_from_main_thread(*casted, "OnSelectionChanged", ln.c_str(), { QVariant::fromValue<QObject*>(widget) });
-                  }
-               ),
-               widget, event_name, listener_name
-            );
-            return;
-         }
       }
+      //
+      assert(false && "Unknown event target!");
    }
 
    void events::add_listener(QObject& widget, const char* event_name, const char* listener_name, int listener_index) {
       require_script_thread();
-      _sanity_check_event_target(widget);
       if (!event_name_is_valid(widget, event_name))
          return;
       //
-      auto* L     = this->vm.lua_vm;
+      auto* L     = coordinator::get().lua_state;
       auto  start = lua_gettop(L);
       //
       auto  si_storage = start + 1;
       auto  si_events  = start + 2;
       auto  si_funcs   = start + 3;
       //
-      lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::ui_listener_registry_key);
+      lua_getfield(L, LUA_REGISTRYINDEX, listener_registry_key);
       assert(lua_type(L, -1) == LUA_TTABLE);
       // STACK: - [ ..., storage_root ] +
       lua_pushlightuserdata(L, &widget);
@@ -411,15 +195,14 @@ namespace dovahscript::core::subsystems {
    }
    void events::remove_listener(QObject& widget, const char* event_name, const char* listener_name) {
       require_script_thread();
-      _sanity_check_event_target(widget);
       //
-      auto* L     = this->vm.lua_vm;
+      auto* L     = coordinator::get().lua_state;
       auto  start = lua_gettop(L);
       //
       auto  si_storage = start + 1;
       auto  si_events  = start + 2;
       //
-      lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::ui_listener_registry_key); // push 1
+      lua_getfield(L, LUA_REGISTRYINDEX, listener_registry_key); // push 1
       lua_pushlightuserdata(L, &widget);
       lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[&widget] ] +
       assert(lua_istable(L, -1));
@@ -443,7 +226,7 @@ namespace dovahscript::core::subsystems {
          //
          // Disconnect the signal:
          //
-         auto& events = vm.widgets.connections[&widget][event_name];
+         auto& events = this->connections[&widget][event_name];
          #pragma warning(suppress: 6387) // listener_name should never be nullptr, so don't bother me about it
          auto  it     = events.find(listener_name);
          if (it != events.end()) {
@@ -456,12 +239,11 @@ namespace dovahscript::core::subsystems {
    }
    void events::remove_all_listeners(QObject& widget) {
       require_script_thread();
-      _sanity_check_event_target(widget);
       //
-      auto* L     = this->vm.lua_vm;
+      auto* L     = coordinator::get().lua_state;
       auto  start = lua_gettop(L);
       //
-      lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::ui_listener_registry_key);
+      lua_getfield(L, LUA_REGISTRYINDEX, listener_registry_key);
       lua_pushlightuserdata(L, &widget);
       lua_pushnil(L);
       lua_rawset(L, start + 1);
@@ -472,10 +254,9 @@ namespace dovahscript::core::subsystems {
    }
    void events::fire_event(QObject& widget, const char* event_name, const char* listener_name, const std::vector<QVariant>& params) {
       require_script_thread();
-      _sanity_check_event_target(widget);
       constexpr bool double_check_stack = false;
       //
-      auto* L     = this->vm.lua_vm;
+      auto* L     = coordinator::get().lua_state;
       auto  start = lua_gettop(L);
       auto  guard = cobb::lua::set_top_on_exit(L, start);
       //
@@ -486,7 +267,7 @@ namespace dovahscript::core::subsystems {
       auto  si_nk      = start + 5;
       auto  si_nv      = start + 6;
       //
-      lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::ui_listener_registry_key);
+      lua_getfield(L, LUA_REGISTRYINDEX, listener_registry_key);
       // STACK: - [ ..., storage ] +
       if (double_check_stack) {
          assert(lua_gettop(L)   == si_storage);
@@ -494,7 +275,7 @@ namespace dovahscript::core::subsystems {
       }
       lua_pushlightuserdata(L, &widget);
       if (lua_rawget(L, si_storage) != LUA_TTABLE) { // no listeners for this widget
-         --this->vm.pending_ui_event_count;
+         --this->pending_event_count;
          return;
       }
       // STACK: - [ ..., storage, storage[&widget] ] +
@@ -502,7 +283,7 @@ namespace dovahscript::core::subsystems {
          assert(lua_gettop(L) == si_events);
       }
       if (lua_getfield(L, si_events, event_name) != LUA_TTABLE) {
-         --this->vm.pending_ui_event_count;
+         --this->pending_event_count;
          return;
       }
       //

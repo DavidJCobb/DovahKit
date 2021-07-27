@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <QObject>
+#include "../../../helpers/passkey.h"
 #include "../../../helpers/singleton.h"
 
 class ObservableStandardItemModelObserver;
@@ -11,6 +12,10 @@ namespace dovahscript::impl {
       ObservableStandardItemModelObserver* observer = nullptr;
       const char* metatable_key = nullptr;
    };
+
+   namespace event_registration {
+      class base;
+   }
 }
 
 namespace dovahscript::core::subsystems {
@@ -19,6 +24,9 @@ namespace dovahscript::core::subsystems {
          events() {
             qRegisterMetaType<dovahscript::impl::model_observer_event_argument>();
          }
+
+         template<typename B> using passkey_to = cobb::passkey<events, B>;
+
       public:
          static events& get() {
             static events instance;
@@ -53,21 +61,34 @@ namespace dovahscript::core::subsystems {
 
          void receive_event_from_main_thread(QObject& target, const char* event_name, const char* listener_name, const std::vector<QVariant>& params);
 
-      protected:
+      public:
          // Helper function for forwarding the arguments of a Qt signal into Lua verbatim. There are a limited 
          // number of cases where the templates don't resolve properly for unknown reasons, and this can result 
          // in arguments not being forwarded, so if you see that happening you'll just have to specify the 
          // template arguments manually.
-         template<class target_t, class signal_context_t, typename... Args> void _connect_event(target_t& target, void(signal_context_t::* signal)(Args...), const char* event_name, const char* listener_name) {
+         template<class target_t, class signal_context_t, typename... Args> void _connect_event(
+            passkey_to<impl::event_registration::base>,
+            target_t& target,
+            void(signal_context_t::* signal)(Args...),
+            const char* event_name,
+            const char* listener_name
+         ) {
             auto& entry = this->connections[(QObject*)&target][event_name][listener_name];
             QObject::disconnect(entry);
-            entry = QObject::connect(&target, signal, &vm, _event_forwarding_lambda<Args...>(target, event_name, listener_name), Qt::DirectConnection);
+            entry = QObject::connect(&target, signal, &coordinator::get(), _event_forwarding_lambda<Args...>(target, event_name, listener_name), Qt::DirectConnection);
          }
 
          // Helper function for wiring a Qt signal into Lua, if you've set up the QObject connection yourself. 
          // Doing it yourself allows you to specify custom arguments for Lua.
-         void _connect_event(QMetaObject::Connection connection, QObject& target, const char* event_name, const char* listener_name);
+         void _connect_event(
+            passkey_to<impl::event_registration::base>,
+            QMetaObject::Connection connection,
+            QObject& target,
+            const char* event_name,
+            const char* listener_name
+         );
 
+      protected:
          // Basically a glorified switch-case pyramid, to call (_connect_event) with the right Qt signal.
          void _register_event(QObject& target, const char* event_name, const char* listener_name);
    };
