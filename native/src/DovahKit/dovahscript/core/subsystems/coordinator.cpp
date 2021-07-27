@@ -7,10 +7,7 @@
 #include "coordinator/client_thread_script_borrow_handle.h"
 #include "../verify_threading.h"
 
-#include "../../lua_libraries/all_standard.h"
-#include "../../lua_libraries/dovah.h"
-#include "../../lua_libraries/form_types.h"
-#include "../../lua_libraries/unscoped.h"
+#include "../../lua_libraries/_import_all.h"
 #include "../../lua_classes/_import_all.h"
 
 namespace {
@@ -136,10 +133,7 @@ namespace dovahscript::core::subsystems {
       lua_sethook (L, &_lua_debug_hook, LUA_MASKCOUNT, 8);
       lua_setwarnf(L, &_lua_warning_function, nullptr);
       //
-      lua_libraries::import_all_standard(L);
-      lua_libraries::import_dovah(L);
-      lua_libraries::import_form_types(L);
-      lua_libraries::import_unscoped(L);
+      lua_libraries::import_all(L);
       lua_classes::import_all(L);
       //
       #pragma region Queued functions

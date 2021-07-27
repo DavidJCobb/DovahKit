@@ -135,36 +135,38 @@ namespace {
 }
 
 namespace dovahscript::lua_libraries {
-   extern void import_all_standard(lua_State* L) {
-      luaL_requiref(L, "_G", luaopen_base, 1); // loads the library to the top of the Lua stack
-      {  // shim collectgarbage
-         auto ti = lua_gettop(L);
-         lua_pushstring   (L, "collectgarbage");
-         lua_pushcfunction(L, &_shims::collectgarbage);
-         lua_rawset       (L, ti);
+   namespace all_standard {
+      extern void import(lua_State* L) {
+         luaL_requiref(L, "_G", luaopen_base, 1); // loads the library to the top of the Lua stack
+         {  // shim collectgarbage
+            auto ti = lua_gettop(L);
+            lua_pushstring(L, "collectgarbage");
+            lua_pushcfunction(L, &_shims::collectgarbage);
+            lua_rawset(L, ti);
+         }
+         {  // shim pcall
+            auto ti = lua_gettop(L);
+            lua_pushstring(L, "pcall");
+            lua_pushcfunction(L, &_shims::pcall);
+            lua_rawset(L, ti);
+         }
+         {  // shim print
+            auto ti = lua_gettop(L);
+            lua_pushstring(L, "print");
+            lua_pushcfunction(L, &_shims::print);
+            lua_rawset(L, ti);
+         }
+         _prune_standard_library(L, "basic"); // also pops the library from the Lua stack
+         luaL_requiref(L, "debug", luaopen_debug, 1);
+         _prune_standard_library(L, "debug");
+         luaL_requiref(L, "math", luaopen_math, 1);
+         _prune_standard_library(L, "math");
+         luaL_requiref(L, "string", luaopen_string, 1);
+         _prune_standard_library(L, "string");
+         luaL_requiref(L, "table", luaopen_table, 1);
+         _prune_standard_library(L, "table");
+         luaL_requiref(L, "utf8", luaopen_utf8, 1);
+         _prune_standard_library(L, "utf8");
       }
-      {  // shim pcall
-         auto ti = lua_gettop(L);
-         lua_pushstring   (L, "pcall");
-         lua_pushcfunction(L, &_shims::pcall);
-         lua_rawset       (L, ti);
-      }
-      {  // shim print
-         auto ti = lua_gettop(L);
-         lua_pushstring   (L, "print");
-         lua_pushcfunction(L, &_shims::print);
-         lua_rawset       (L, ti);
-      }
-      _prune_standard_library(L, "basic"); // also pops the library from the Lua stack
-      luaL_requiref(L, "debug",  luaopen_debug, 1);
-      _prune_standard_library(L, "debug");
-      luaL_requiref(L, "math",   luaopen_math, 1);
-      _prune_standard_library(L, "math");
-      luaL_requiref(L, "string", luaopen_string, 1);
-      _prune_standard_library(L, "string");
-      luaL_requiref(L, "table",  luaopen_table, 1);
-      _prune_standard_library(L, "table");
-      luaL_requiref(L, "utf8",   luaopen_utf8, 1);
-      _prune_standard_library(L, "utf8");
    }
 }

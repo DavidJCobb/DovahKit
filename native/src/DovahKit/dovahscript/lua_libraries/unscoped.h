@@ -2,5 +2,7 @@
 #include "../../../lua.h"
 
 namespace dovahscript::lua_libraries {
-   extern void import_unscoped(lua_State* L);
+   namespace unscoped {
+      extern void import(lua_State* L);
+   }
 }

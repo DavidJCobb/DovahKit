@@ -114,7 +114,11 @@
     <ClCompile Include="dovahscript\lua_classes\vector3.cpp" />
     <ClCompile Include="dovahscript\lua_classes\_import_all.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\all_standard.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\dovah.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\form_types.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
+    <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
+    <ClCompile Include="dovahscript\pull_native_object.cpp" />
     <ClCompile Include="dovahscript\tasks\_base.cpp" />
     <ClCompile Include="dovahscript\wrappers\base.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
@@ -480,7 +484,12 @@
     <ClInclude Include="dovahscript\lua_classes\vector3.h" />
     <ClInclude Include="dovahscript\lua_classes\_import_all.h" />
     <ClInclude Include="dovahscript\lua_libraries\all_standard.h" />
+    <ClInclude Include="dovahscript\lua_libraries\dovah.h" />
+    <ClInclude Include="dovahscript\lua_libraries\form_types.h" />
     <ClInclude Include="dovahscript\lua_libraries\unscoped.h" />
+    <ClInclude Include="dovahscript\lua_libraries\_import_all.h" />
+    <ClInclude Include="dovahscript\pull_native_object.h" />
+    <ClInclude Include="dovahscript\push_native_object.h" />
     <ClInclude Include="dovahscript\qt\LuaScriptableCanvasWidgetLayerData.h" />
     <ClInclude Include="dovahscript\tasks\_base.h" />
     <ClInclude Include="dovahscript\wrapper.h" />

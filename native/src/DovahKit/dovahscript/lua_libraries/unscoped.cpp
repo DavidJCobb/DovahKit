@@ -23,18 +23,20 @@ namespace {
 }
 
 namespace dovahscript::lua_libraries {
-   extern void import_unscoped(lua_State* L) {
-      {  // object_is_form
-         auto ti = lua_gettop(L);
-         lua_pushstring   (L, "object_is_form");
-         lua_pushcfunction(L, &_functions::object_is_form);
-         lua_rawset       (L, ti);
-      }
-      {  // object_is_zombie
-         auto ti = lua_gettop(L);
-         lua_pushstring   (L, "object_is_zombie");
-         lua_pushcfunction(L, &_functions::object_is_zombie);
-         lua_rawset       (L, ti);
+   namespace unscoped {
+      extern void import(lua_State* L) {
+         {  // object_is_form
+            auto ti = lua_gettop(L);
+            lua_pushstring(L, "object_is_form");
+            lua_pushcfunction(L, &_functions::object_is_form);
+            lua_rawset(L, ti);
+         }
+         {  // object_is_zombie
+            auto ti = lua_gettop(L);
+            lua_pushstring(L, "object_is_zombie");
+            lua_pushcfunction(L, &_functions::object_is_zombie);
+            lua_rawset(L, ti);
+         }
       }
    }
 }
