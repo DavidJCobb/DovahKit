@@ -23,5 +23,5 @@ namespace dovahscript {
    constexpr const char* zombie_sentinel_key          = "__zombie_sentinel"; // registry key for a sentinel userdata used to mark zombie classes
 
    extern int  zombify_userdata(lua_State*); // call via lua_call, not directly
-   extern bool userdata_is_zombie(lua_State* L, int stack_pos);
+   [[nodiscard]] extern bool userdata_is_zombie(lua_State* L, int stack_pos);
 }

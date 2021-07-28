@@ -484,7 +484,7 @@ namespace dovahscript::classes {
    // (class_internal_name), then this returns the userdata pointer; otherwise, it 
    // returns nullptr. This only works for userdata, not for tables.
    //
-   extern void* cast_to_class(lua_State* L, int stack_pos, const char* class_metatable_key) {
+   [[nodiscard]] extern void* cast_to_class(lua_State* L, int stack_pos, const char* class_metatable_key) {
       /*
          function cast_to_class(t, class_metatable_key)
             if type(t) ~= "userdata" then
@@ -545,7 +545,7 @@ namespace dovahscript::classes {
    // for classes that you don't intend to ever subclass. This only works for 
    // userdata, not for tables.
    //
-   extern void* cast_to_exact_class(lua_State* L, int stack_pos, const char* class_metatable_key) {
+   [[nodiscard]] extern void* cast_to_exact_class(lua_State* L, int stack_pos, const char* class_metatable_key) {
       //
       // LUA:
       //    if not userdata then
@@ -582,7 +582,7 @@ namespace dovahscript::classes {
    // normal tables using the class metatables, and this function can then be 
    // used by native code to validate these tables.
    //
-   extern bool check_for_class(lua_State* L, int stack_pos, const char* class_metatable_key) {
+   [[nodiscard]] extern bool check_for_class(lua_State* L, int stack_pos, const char* class_metatable_key) {
       /*
          function cast_to_class(t, class_metatable_key)
             local desired = REGISTRY[class_metatable_key]
@@ -900,7 +900,7 @@ namespace dovahscript::classes {
    // getter list; and the class's setter list. If either of the latter two lists is 
    // missing (which can happen if the class had no [gs]etters), they will be created. 
    // Returns the number of values pushed to the Lua stack (0 in case of failure).
-   extern int get_class_tables(
+   [[nodiscard]] extern int get_class_tables(
       lua_State* L,
       const char* class_metatable_key
    ) {
@@ -919,7 +919,7 @@ namespace dovahscript::classes {
    //
    // Check registry key (class_internal_name) for a class metatable.
    //
-   extern bool is_class_defined(lua_State* L, const char* class_metatable_key) {
+   [[nodiscard]] extern bool is_class_defined(lua_State* L, const char* class_metatable_key) {
       bool result = luaL_getmetatable(L, class_metatable_key) == LUA_TTABLE;
       lua_pop(L, 1);
       return result;

@@ -30,7 +30,7 @@ namespace dovahscript::core {
 
          void clear();
 
-         inline bool empty() volatile const noexcept { return this->is_empty; }
+         [[nodiscard]] inline bool empty() volatile const noexcept { return this->is_empty; }
 
          void wait_until_empty() const noexcept;
    };

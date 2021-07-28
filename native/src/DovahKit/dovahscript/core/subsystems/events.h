@@ -44,7 +44,7 @@ namespace dovahscript::core::subsystems {
          // connections[q_object][event_name][listener] = connection;
          std::unordered_map<QObject*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections;
          impl::script_event_queue pending_events;
-         int pending_event_count = 0;
+         unsigned int pending_event_count = 0;
 
       public:
          unsigned int get_pending_event_count() const noexcept;

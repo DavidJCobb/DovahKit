@@ -17,6 +17,6 @@ namespace dovahscript::impl {
 
          void forget_about(QObject&);
 
-         size_t size() const noexcept;
+         [[nodiscard]] size_t size() const noexcept;
    };
 }

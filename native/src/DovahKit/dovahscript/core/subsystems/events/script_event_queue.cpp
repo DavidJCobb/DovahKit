@@ -57,7 +57,7 @@ namespace dovahscript::impl {
       );
    }
 
-   size_t script_event_queue::size() const noexcept {
+   [[nodiscard]] size_t script_event_queue::size() const noexcept {
       auto guard = std::lock_guard(this->lock);
       return this->list.size();
    }

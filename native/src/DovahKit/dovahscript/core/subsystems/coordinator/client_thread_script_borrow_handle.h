@@ -32,8 +32,8 @@ namespace dovahscript::core {
          client_thread_script_borrow_handle(const client_thread_script_borrow_handle&);
          client_thread_script_borrow_handle(client_thread_script_borrow_handle&&);
 
-         bool is_ready() const noexcept;
-         inline bool is_active() const noexcept { return this->active; }
+         [[nodiscard]] bool is_ready() const noexcept;
+         [[nodiscard]] inline bool is_active() const noexcept { return this->active; }
 
          void request();
          void release();

@@ -4,6 +4,7 @@
 #include "../../../helpers/qt/layout.h"
 #include "../../push_native_object.h"
 #include "../../task_reference.h"
+#include "../../widget_overrides.h"
 #include "../../wrapper.h"
 #include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/events.h"
@@ -71,11 +72,8 @@ namespace {
             cobb::lua::error(L, "this widget cannot have a layout and so cannot have children either");
          if (!arg->widget)
             return 0;
-         {
-            auto data = arg->widget->property("Lua widget forced parent");
-            if (data.isValid())
-               cobb::lua::argerror(L, 2, "the desired child widget cannot have its parent changed");
-         }
+         if (get_widget_forced_parent(arg->widget))
+            cobb::lua::argerror(L, 2, "the desired child widget cannot have its parent changed");
          //
          int row     = 0; // or (index) for boxes
          int col     = 0;
@@ -759,12 +757,12 @@ namespace {
                lua_pop(L, 4);
                //
                if (unchanged_count == 4)
-                  luaL_error(L, "the supplied table didn't specify any margins");
+                  cobb::lua::error(L, "the supplied table didn't specify any margins");
             }
          } else {
             int isnum;
             top = lua_tointegerx(L, 2, &isnum);
-            luaL_argcheck(L, isnum, 2, "integer or table expected");
+            cobb::lua::argcheck(L, isnum, 2, "integer or table expected");
             if (top < 0)
                top = 0;
             left = right = bottom = top;
@@ -774,7 +772,7 @@ namespace {
          if (!self.widget)
             return 0;
          if (!_can_have_layout(*self.widget))
-            luaL_error(L, "this widget cannot have a layout");
+            cobb::lua::error(L, "this widget cannot have a layout");
          task_reference widget = self.widget;
          auto* task = new tasks::s2m::ui_write_lambda(false);
          task->handler = [widget, top, right, bottom, left, unchanged_count, unchanged]() mutable {
@@ -819,10 +817,10 @@ namespace {
          int isnum;
          int value = lua_tointegerx(L, 2, &isnum);
          if (!isnum) {
-            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            cobb::lua::argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
             value = 0;
          } else {
-            luaL_argcheck(L, value > 0, 2, "the size cannot be negative or zero");
+            cobb::lua::argcheck(L, value > 0, 2, "the size cannot be negative or zero");
             if (value > QWIDGETSIZE_MAX)
                value = QWIDGETSIZE_MAX;
          }
@@ -836,10 +834,10 @@ namespace {
          int isnum;
          int value = lua_tointegerx(L, 2, &isnum);
          if (!isnum) {
-            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            cobb::lua::argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
             value = QWIDGETSIZE_MAX;
          } else {
-            luaL_argcheck(L, value > 0, 2, "the size cannot be negative or zero");
+            cobb::lua::argcheck(L, value > 0, 2, "the size cannot be negative or zero");
             if (value > QWIDGETSIZE_MAX)
                value = QWIDGETSIZE_MAX;
          }
@@ -853,10 +851,10 @@ namespace {
          int isnum;
          int value = lua_tointegerx(L, 2, &isnum);
          if (!isnum) {
-            luaL_argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
+            cobb::lua::argcheck(L, lua_isnoneornil(L, 2), 2, "integer or nil expected");
             value = 0;
          } else {
-            luaL_argcheck(L, value > 0, 2, "the size cannot be negative or zero");
+            cobb::lua::argcheck(L, value > 0, 2, "the size cannot be negative or zero");
             if (value > QWIDGETSIZE_MAX)
                value = QWIDGETSIZE_MAX;
          }
@@ -867,7 +865,7 @@ namespace {
       }
       int name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
          if (!self.widget)
             return 0;
          auto value = QString::fromUtf8(lua_tostring(L, 2));
@@ -876,7 +874,7 @@ namespace {
       }
       int tooltip(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "tooltip text (string) expected");
+         cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "tooltip text (string) expected");
          if (!self.widget)
             return 0;
          auto value = QString::fromUtf8(lua_tostring(L, 2));
@@ -885,7 +883,7 @@ namespace {
       }
       int whats_this(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
+         cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "text (string) expected");
          if (!self.widget)
             return 0;
          auto value = QString::fromUtf8(lua_tostring(L, 2));

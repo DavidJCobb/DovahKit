@@ -204,7 +204,7 @@ namespace dovahscript {
       return 0;
    }
 
-   extern bool userdata_is_zombie(lua_State* L, int stack_pos) {
+   [[nodiscard]] extern bool userdata_is_zombie(lua_State* L, int stack_pos) {
       //
       // We mark zombie classes by setting an "__iszombie" field on them to point to a unique 
       // userdata that isn't accessed by anything else.  This means that even if a class or a 

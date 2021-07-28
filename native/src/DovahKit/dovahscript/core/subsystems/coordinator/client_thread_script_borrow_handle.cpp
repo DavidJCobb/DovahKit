@@ -29,7 +29,7 @@ namespace dovahscript::core {
       *this = other;
    }
 
-   bool client_thread_script_borrow_handle::is_ready() const noexcept {
+   [[nodiscard]] bool client_thread_script_borrow_handle::is_ready() const noexcept {
       if (!this->active)
          return false;
       auto& coordinator_s = subsystems::coordinator::get();
