@@ -2,12 +2,20 @@
 #include <QButtonGroup>
 #include <QDialog>
 #include <mutex>
+#include "../../../helpers/passkey.h"
 #include "../../../helpers/singleton.h"
 #include "coordinator/client_thread_script_borrow_handle.h"
 
 class  CanvasWidgetEntity;
 class  CanvasWidgetLayerData;
 struct ObservableStandardItemModelObserver;
+
+namespace dovahscript::impl {
+   class hierarchy_finder;
+}
+namespace dovahscript::core::subsystems {
+   class userdata;
+}
 
 namespace dovahscript::core::subsystems {
    class lifetime : cobb::singleton {
@@ -18,6 +26,8 @@ namespace dovahscript::core::subsystems {
          }
 
          using model_observer_t = ObservableStandardItemModelObserver;
+
+         template<typename B> using passkey_to = cobb::passkey<lifetime, B>;
 
       protected:
          struct {
@@ -63,9 +73,14 @@ namespace dovahscript::core::subsystems {
          #pragma region Script thread functions
             QVector<model_observer_t*> get_extant_model_observers() const noexcept;
 
-            void on_lua_unreferenced(CanvasWidgetLayerData*);
-            void on_lua_unreferenced(model_observer_t*);
-            void on_lua_unreferenced(QObject*);
+            void on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData*);
+            void on_lua_unreferenced(passkey_to<userdata>, model_observer_t*);
+            void on_lua_unreferenced(passkey_to<userdata>, QObject*);
+
+            // The hierarchy finder should call these if it confirms that a native object is unreferenced 
+            // and unreachable.
+            void destroy_native_object(passkey_to<impl::hierarchy_finder>, QObject&);
+            void destroy_native_object(passkey_to<impl::hierarchy_finder>, model_observer_t&);
          #pragma endregion
 
          #pragma region Client thread functions

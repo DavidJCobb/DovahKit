@@ -1,0 +1,64 @@
+
+There are certain rules and guidelines  that need to be followed when writing a 
+new Lua API. There are some APIs that can be written using the Lua C API alone, 
+such as APIs intended to provide an optimized math library to scripts. However, 
+most API functions will need to perform some sort of cross-thread task.
+
+The easiest and most versatile task  type to work with is the "lambda" task. As 
+the name suggests, lambda tasks can  have any std::function stored on them, and 
+so this one  task type covers pretty much every task that doesn't  need special 
+behavior within the script engine. However, there are a few pitfalls here.
+
+First, API authors must be careful to  use the right "lambda" type. All UI read 
+operations must use the "UI read lambda" type rather than the standard "lambda" 
+type.
+
+Second, API  authors must be careful about lambda captures. If a  task needs to 
+make use of a native  object whose lifetime is controlled  by Lua, then the API 
+must assist the script engine in tracking  when these objects are in use by the 
+task being sent. In practice, this is most easily achieved by having the lambda 
+capture "task_reference" instances, which are akin to smart pointers.
+
+In other words, instead of doing this:
+
+   // Given "self" as a wrapper&:
+   //
+   auto* widget = self.widget;
+   auto* task   = new tasks::s2m::lambda(false);
+   task->handler = [widget]() {
+      auto* old = widget->layout();
+      //
+      // ... do stuff ...
+      //
+   };
+   core::subsystems::coordinator::get().send_ui_write_task(*task);
+
+Do this instead:
+
+   // Given "self" as a wrapper&:
+   //
+   task_reference widget = self.widget;
+   auto* task = new tasks::s2m::lambda(false);
+   task->handler = [widget]() {
+      auto* old = widget->layout();
+      //
+      // ... do stuff ...
+      //
+   };
+   core::subsystems::coordinator::get().send_ui_write_task(*task);
+
+Here, we see that the widget needed  by the task is wrapped in a task_reference 
+struct, which again has behavior akin to a smart pointer. The struct is created 
+on the stack and then captured by value: it is copied into the lambda. When the 
+task is  queued and the Lua API exits,  the TR on the stack will be  destroyed; 
+when the task is later executed and disposed of, the lambda-captured TR will be 
+destroyed.
+
+These "task reference" objects, or TRs, are templated structs that are built to 
+help the lifetime  subsystem keep track  of which objects are  task-referenced, 
+while managing task-based refcounts.
+
+Failing to use a task reference may result in a native object being deleted out 
+from under an API,  if the API's task is non-blocking  and if the native object 
+goes  out of scope within  Lua and is garbage-collected  shortly after the  Lua 
+function call.

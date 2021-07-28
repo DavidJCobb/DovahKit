@@ -8,6 +8,10 @@
 namespace dovahscript::core::subsystems {
    class coordinator;
 }
+namespace dovahscript::tasks {
+   class _ui_read_base;
+   class _ui_write_base;
+}
 
 namespace dovahscript::core {
    enum class thread_type {
@@ -93,9 +97,9 @@ namespace dovahscript::core::subsystems {
          inline bool is_paused()  const noexcept { return this->paused; }
          bool teardown_in_progress() const noexcept;
 
-         void send_script_task(task_queue::task_t*);
-         void send_ui_read_task(task_queue::task_t*);
-         void send_ui_write_task(task_queue::task_t*);
+         void send_script_task(task_queue::task_t&);
+         void send_ui_read_task(tasks::_ui_read_base&);
+         void send_ui_write_task(tasks::_ui_write_base&);
          
       protected slots:
          void _main_thread_loop();

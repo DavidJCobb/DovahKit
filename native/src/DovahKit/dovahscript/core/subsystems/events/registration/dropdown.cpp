@@ -14,7 +14,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, QOverload<int>::of(&QComboBox::currentIndexChanged), &core::subsystems::coordinator::get(),
+            QObject::connect(casted, QOverload<int>::of(&QComboBox::currentIndexChanged), &impl::get_event_connection_recipient(),
                [casted, ln](int index) {
                   auto* proxy   = casted->model();
                   int   logical = cobb::qt::map_combobox_index_from_proxy(casted, index); // map proxy combobox index to logical combobox index

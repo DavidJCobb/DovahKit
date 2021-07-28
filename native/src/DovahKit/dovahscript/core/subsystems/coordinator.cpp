@@ -6,6 +6,7 @@
 
 #include "coordinator/client_thread_script_borrow_handle.h"
 #include "../verify_threading.h"
+#include "../../safe_call.h"
 
 #include "../../lua_libraries/_import_all.h"
 #include "../../lua_classes/_import_all.h"
@@ -113,7 +114,7 @@ namespace dovahscript::core::subsystems {
             //
             for (int i = 0; i < count; ++i) {
                lua_geti(L, -1, i + 1); // get the function
-               editor_script::util::safe_call(this->lua_state, 0, 0); // this will pop the function
+               safe_call(this->lua_state, 0, 0); // this will pop the function
             }
          }
          count_executed += count;

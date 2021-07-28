@@ -13,7 +13,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, &QTabWidget::currentChanged, &core::subsystems::coordinator::get(),
+            QObject::connect(casted, &QTabWidget::currentChanged, &impl::get_event_connection_recipient(),
                [casted, ln](int index) {
                   QWidget* widget = casted->widget(index);
                   core::subsystems::events::get().receive_event_from_main_thread(*casted, "OnSelectionChanged", ln.c_str(), { QVariant::fromValue<QObject*>(widget) });

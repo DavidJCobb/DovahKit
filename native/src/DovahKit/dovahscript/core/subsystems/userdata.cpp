@@ -355,20 +355,20 @@ namespace dovahscript::core::subsystems {
                }
                break;
             case wt::widget:
-               lifetime_s.on_lua_unreferenced(instance.widget);
+               lifetime_s.on_lua_unreferenced(cobb::passkey<lifetime,userdata>(), instance.widget);
                break;
             case wt::button_group:
-               lifetime_s.on_lua_unreferenced(instance.button_group);
+               lifetime_s.on_lua_unreferenced(cobb::passkey<lifetime,userdata>(), instance.button_group);
                break;
             case wt::model_observer:
-               lifetime_s.on_lua_unreferenced(instance.model_observer);
+               lifetime_s.on_lua_unreferenced(cobb::passkey<lifetime,userdata>(), instance.model_observer);
                break;
             case wt::canvas_entity:
                // These objects are managed by the CanvasWidget to which they belong. Don't 
                // mess with them here.
                break;
             case wt::canvas_layer_data:
-               lifetime_s.on_lua_unreferenced(instance.canvas_layer_data);
+               lifetime_s.on_lua_unreferenced(cobb::passkey<lifetime,userdata>(), instance.canvas_layer_data);
                break;
          }
       }

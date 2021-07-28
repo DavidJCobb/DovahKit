@@ -14,7 +14,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, QOverload<QAbstractButton*,bool>::of(&QButtonGroup::buttonToggled), &core::subsystems::coordinator::get(),
+            QObject::connect(casted, QOverload<QAbstractButton*,bool>::of(&QButtonGroup::buttonToggled), &impl::get_event_connection_recipient(),
                [casted, ln](QAbstractButton* button, bool checked) {
                   if (!checked)
                      return;

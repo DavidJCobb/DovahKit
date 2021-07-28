@@ -1146,6 +1146,18 @@
     <ClCompile Include="dovahscript\core\subsystems\events\registration\tabbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\safe_call.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\core\subsystems\events\script_event_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\task_reference.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\ui\widget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2328,6 +2340,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\core\subsystems\events\registration\tabbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\safe_call.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\core\subsystems\events\script_event_queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\core\subsystems\events\script_event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\task_reference.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\ui\widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\tasks\_ui_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\tasks\s2m\lambda.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\tasks\s2m\ui_read_lambda.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\tasks\s2m\ui_write_lambda.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\widget_properties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

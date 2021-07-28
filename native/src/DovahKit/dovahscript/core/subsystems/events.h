@@ -4,10 +4,17 @@
 #include <QObject>
 #include "../../../helpers/passkey.h"
 #include "../../../helpers/singleton.h"
+#include "events/script_event_queue.h"
 
 class ObservableStandardItemModelObserver;
 
 namespace dovahscript::impl {
+   //
+   // Having all event-related signal/slot connections use the same recipient means that we can 
+   // quickly and easily disconnect all event-related connections from a QObject all at once.
+   //
+   extern QObject& get_event_connection_recipient();
+
    struct model_observer_event_argument {
       ObservableStandardItemModelObserver* observer = nullptr;
       const char* metatable_key = nullptr;
@@ -36,6 +43,7 @@ namespace dovahscript::core::subsystems {
       protected:
          // connections[q_object][event_name][listener] = connection;
          std::unordered_map<QObject*, std::unordered_map<std::string, std::unordered_map<std::string, QMetaObject::Connection>>> connections;
+         impl::script_event_queue pending_events;
          int pending_event_count = 0;
 
       public:
@@ -75,7 +83,7 @@ namespace dovahscript::core::subsystems {
          ) {
             auto& entry = this->connections[(QObject*)&target][event_name][listener_name];
             QObject::disconnect(entry);
-            entry = QObject::connect(&target, signal, &coordinator::get(), _event_forwarding_lambda<Args...>(target, event_name, listener_name), Qt::DirectConnection);
+            entry = QObject::connect(&target, signal, &impl::get_event_connection_recipient(), _event_forwarding_lambda<Args...>(target, event_name, listener_name), Qt::DirectConnection);
          }
 
          // Helper function for wiring a Qt signal into Lua, if you've set up the QObject connection yourself. 

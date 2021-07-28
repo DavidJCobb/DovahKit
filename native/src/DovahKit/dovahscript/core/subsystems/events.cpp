@@ -1,5 +1,6 @@
 #include "events.h"
 #include "coordinator.h"
+#include "userdata.h"
 #include "../../../lua.h"
 #include "../../../helpers/lua/isempty.h"
 #include "../../../helpers/lua/qt_variant.h"
@@ -8,6 +9,10 @@
 #include "../../../helpers/qt/get_model_of.h"
 #include "../verify_threading.h"
 #include "../../push_native_object.h"
+#include "../../safe_call.h"
+#include "../../wrapper.h"
+
+#include "events/script_event.h"
 
 #include <QButtonGroup>
 #include <QCheckBox>
@@ -36,6 +41,12 @@
 
 namespace {
    static constexpr const char* listener_registry_key = "dovahscript.internals.event_listeners";
+}
+
+namespace dovahscript::impl {
+   extern QObject& get_event_connection_recipient() {
+      return core::subsystems::coordinator::get();
+   }
 }
 
 namespace {
@@ -114,6 +125,29 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
+   size_t events::process_pending_events() {
+      require_script_thread();
+      return this->pending_events.process();
+   }
+
+   void events::abandon_object(QObject& target) {
+      require_client_thread();
+      //
+      auto descendants = target.findChildren<QObject*>();
+      bool had_any_connections;
+      //
+      had_any_connections = QObject::disconnect(&target, nullptr, &impl::get_event_connection_recipient(), nullptr);
+      if (had_any_connections)
+         this->pending_events.forget_about(target);
+      //
+      for (auto* d : descendants) {
+         had_any_connections = QObject::disconnect(d, nullptr, &impl::get_event_connection_recipient(), nullptr);
+         if (had_any_connections)
+            this->pending_events.forget_about(d);
+      }
+   }
+
+
    void events::_connect_event(passkey_to<impl::event_registration::base>, QMetaObject::Connection connection, QObject& target, const char* event_name, const char* listener_name) {
       require_script_thread();
       //
@@ -269,7 +303,7 @@ namespace dovahscript::core::subsystems {
       //
       lua_getfield(L, LUA_REGISTRYINDEX, listener_registry_key);
       // STACK: - [ ..., storage ] +
-      if (double_check_stack) {
+      if constexpr (double_check_stack) {
          assert(lua_gettop(L)   == si_storage);
          assert(lua_type(L, -1) == LUA_TTABLE);
       }
@@ -279,7 +313,7 @@ namespace dovahscript::core::subsystems {
          return;
       }
       // STACK: - [ ..., storage, storage[&widget] ] +
-      if (double_check_stack) {
+      if constexpr (double_check_stack) {
          assert(lua_gettop(L) == si_events);
       }
       if (lua_getfield(L, si_events, event_name) != LUA_TTABLE) {
@@ -294,12 +328,12 @@ namespace dovahscript::core::subsystems {
       // name, and stuff them into an array.
       //
       lua_createtable(L, 0, 0);
-      if (double_check_stack) {
+      if constexpr (double_check_stack) {
          assert(lua_gettop(L) == si_temp);
       }
       int count = 0;
       //
-      auto& userdata_intfc = DovahKitScriptVMUserdataInterface::get();
+      auto& userdata_intfc = userdata::get();
       // STACK: - [ ..., storage, storage[&widget], storage[&widget][event_name] ] +
       lua_pushnil(L); // nk
       while (lua_next(L, si_funcs) != 0) {
@@ -324,7 +358,7 @@ namespace dovahscript::core::subsystems {
                assert(arg.observer);
                assert(arg.metatable_key && arg.metatable_key[0]);
                wrapper out;
-               out.type = wrapper_type::ui_model_item;
+               out.type = wrapper_type::model_observer;
                out.model_observer = arg.observer;
                argcount += userdata_intfc.push(L, out, arg.metatable_key);
                continue;
@@ -349,7 +383,7 @@ namespace dovahscript::core::subsystems {
             }
             argcount += cobb::lua::push_qt_variant(L, p);
          }
-         editor_script::util::safe_call(L, argcount, 0); // pops the called function
+         safe_call(L, argcount, 0); // pops the called function
       }
       --this->pending_event_count;
    }
@@ -359,7 +393,7 @@ namespace dovahscript::core::subsystems {
       //
       // Called by the main thread; sends a message to the script thread.
       //
-      auto* task  = new dovahscript::ui_event(widget, event_name, listener_name, params);
-      DovahKitScriptVMCore::get().ui_queues.events.push_back(task);
+      auto* task  = new impl::script_event(widget, event_name, listener_name, params);
+      this->pending_events.push_back(task);
    }
 }

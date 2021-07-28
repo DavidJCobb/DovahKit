@@ -13,7 +13,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, &QLineEdit::editingFinished, &core::subsystems::coordinator::get(),
+            QObject::connect(casted, &QLineEdit::editingFinished, &impl::get_event_connection_recipient(),
                [casted, ln]() {
                   core::subsystems::events::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { casted->text() });
                }

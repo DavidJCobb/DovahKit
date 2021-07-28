@@ -14,7 +14,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted->selectionModel(), &QItemSelectionModel::selectionChanged, &core::subsystems::coordinator::get(),
+            QObject::connect(casted->selectionModel(), &QItemSelectionModel::selectionChanged, &impl::get_event_connection_recipient(),
                [casted, ln]() {
                   //
                   // We can't easily tell from the signal alone whether the selection is supposed to be a row, 

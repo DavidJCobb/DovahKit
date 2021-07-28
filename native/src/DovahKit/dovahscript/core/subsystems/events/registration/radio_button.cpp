@@ -13,7 +13,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, &QRadioButton::toggled, &core::subsystems::coordinator::get(),
+            QObject::connect(casted, &QRadioButton::toggled, &impl::get_event_connection_recipient(),
                [casted, ln](bool checked) {
                   QString s = checked ? "checked" : "unchecked";
                   core::subsystems::events::get().receive_event_from_main_thread(*casted, "OnChanged", ln.c_str(), { s });
@@ -27,7 +27,7 @@ namespace dovahscript::impl::event_registration {
          std::string ln = listener_name;
          core::subsystems::events::get()._connect_event(
             get_passkey(),
-            QObject::connect(casted, &QRadioButton::toggled, &core::subsystems::coordinator::get(),
+            QObject::connect(casted, &QRadioButton::toggled, &impl::get_event_connection_recipient(),
                [casted, ln](bool checked) {
                   core::subsystems::events::get().receive_event_from_main_thread(*casted, "OnToggled", ln.c_str(), { checked });
                }

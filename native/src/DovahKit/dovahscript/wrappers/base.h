@@ -9,15 +9,18 @@ namespace dovahscript {
       //
       // Struct for defining metatable names and methods at compile-time.
       //
+      protected:
+         using string_list_t = const std::initializer_list<const char*>;
+         using method_list_t = const std::initializer_list<luaL_Reg>;
       private:
          wrapper_metatable() = delete;
       public:
-         static constexpr const std::initializer_list<const char*> superclass_list = {}; // direct subclasses must set this to { metatable_key } before defining their own, so as to inherit common GC metamethods
-         static constexpr const char* metatable_key = "dovah.classes.!base"; // subclasses must override this
-         static constexpr const char* class_name    = nullptr;               // subclasses should override this
-         static const std::initializer_list<luaL_Reg> metatable_methods; // subclasses must override this even if they offer no methods
-         static const std::initializer_list<luaL_Reg> metatable_getters; // subclasses must override this even if they offer no getters
-         static const std::initializer_list<luaL_Reg> metatable_setters; // subclasses must override this even if they offer no setters
+         static constexpr string_list_t superclass_list = {}; // direct subclasses must set this to { metatable_key } before defining their own, so as to inherit common GC metamethods
+         static constexpr const char*   metatable_key   = "dovah.classes.!base"; // subclasses must override this
+         static constexpr const char*   class_name      = nullptr;               // subclasses should override this
+         static method_list_t metatable_methods; // subclasses must override this even if they offer no methods
+         static method_list_t metatable_getters; // subclasses must override this even if they offer no getters
+         static method_list_t metatable_setters; // subclasses must override this even if they offer no setters
 
          static constexpr bool has_extra_class_setup = false;
          static void extra_class_setup(lua_State* L) noexcept {
