@@ -1062,9 +1062,6 @@
     <ClCompile Include="dovahscript\core\verify_threading.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovahscript\wrappers\base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1162,6 +1159,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2255,9 +2255,6 @@
     <ClInclude Include="dovahscript\core\verify_threading.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovahscript\wrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2385,6 +2382,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

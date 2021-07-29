@@ -95,53 +95,6 @@ namespace dovahscript::core::subsystems {
       static_assert(false, "TODO: Do we need anything else here?");
    }
 
-   namespace {
-      template<typename T> void _remove_from_orphans(QVector<T*>& list, T* target) {
-         auto  i = list.indexOf((QWidget*)&target);
-         if (i >= 0) {
-            list.remove(i);
-         } else {
-            if constexpr (debug_qobject_lifetimes) {
-               qDebug("Warning: QObject under destruction is not orphaned: %p (%s)", &target, _debug_get_object_classname(target));
-            }
-         }
-      }
-   }
-   void lifetime::destroy_native_object(passkey_to<impl::hierarchy_finder>, QObject& target) {
-      if constexpr (debug_qobject_lifetimes) {
-         qDebug("Destroying native object: %p (%s)", &target, _debug_get_object_classname(&target));
-      }
-      if (target.isWidgetType()) {
-         _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
-         //
-         if (auto* window = qobject_cast<QDialog*>(&target)) {
-            auto& list = this->hierarchy_objects.windows;
-            auto  i    = list.indexOf(window);
-            if (i >= 0) {
-               list.remove(i);
-            } else {
-               if constexpr (debug_qobject_lifetimes) {
-                  qDebug("Warning: QDialog under destruction is not in the list of windows: %p (%s)", &target, _debug_get_object_classname(&target));
-               }
-            }
-         }
-      } else if (auto* c = qobject_cast<QButtonGroup*>(&target)) {
-         bool removed = this->hierarchy_objects.button_groups.removeOne(c);
-         if constexpr (debug_qobject_lifetimes) {
-            if (!removed)
-               qDebug("Warning: QButtonGroup under destruction is not in the list of button groups: %p (%s)", &target, _debug_get_object_classname(&target));
-         }
-      } else if (auto* c = qobject_cast<CanvasWidgetEntity*>(&target)) {
-         _remove_from_orphans(this->hierarchy_objects.orphans.canvas_widget_entities, c);
-      } else {
-         assert(false && "unhandled object non-widget type");
-      }
-      //
-      // Disconnect events:
-      //
-      events::get().abandon_object(target);
-   }
-
    void lifetime::on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from) {
       require_client_thread();
       //
@@ -200,5 +153,53 @@ namespace dovahscript::core::subsystems {
       require_client_thread();
       //
       this->pending_lifetime_checks.queue_check(*data);
+   }
+   
+
+   namespace {
+      template<typename T> void _remove_from_orphans(QVector<T*>& list, T* target) {
+         auto  i = list.indexOf((QWidget*)&target);
+         if (i >= 0) {
+            list.remove(i);
+         } else {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Warning: QObject under destruction is not orphaned: %p (%s)", &target, _debug_get_object_classname(target));
+            }
+         }
+      }
+   }
+   void lifetime::destroy_hierarchy_object(passkey_to<impl::hierarchy_crawler>, QObject& target) {
+      if constexpr (debug_qobject_lifetimes) {
+         qDebug("Destroying native object: %p (%s)", &target, _debug_get_object_classname(&target));
+      }
+      if (target.isWidgetType()) {
+         _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
+         //
+         if (auto* window = qobject_cast<QDialog*>(&target)) {
+            auto& list = this->hierarchy_objects.windows;
+            auto  i    = list.indexOf(window);
+            if (i >= 0) {
+               list.remove(i);
+            } else {
+               if constexpr (debug_qobject_lifetimes) {
+                  qDebug("Warning: QDialog under destruction is not in the list of windows: %p (%s)", &target, _debug_get_object_classname(&target));
+               }
+            }
+         }
+      } else if (auto* c = qobject_cast<QButtonGroup*>(&target)) {
+         bool removed = this->hierarchy_objects.button_groups.removeOne(c);
+         if constexpr (debug_qobject_lifetimes) {
+            if (!removed)
+               qDebug("Warning: QButtonGroup under destruction is not in the list of button groups: %p (%s)", &target, _debug_get_object_classname(&target));
+         }
+      } else if (auto* c = qobject_cast<CanvasWidgetEntity*>(&target)) {
+         _remove_from_orphans(this->hierarchy_objects.orphans.canvas_widget_entities, c);
+      } else {
+         assert(false && "unhandled object non-widget type");
+      }
+      //
+      // Disconnect events:
+      //
+      events::get().abandon_object(target);
    }
 }

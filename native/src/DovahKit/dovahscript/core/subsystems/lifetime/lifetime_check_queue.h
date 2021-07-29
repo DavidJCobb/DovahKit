@@ -18,8 +18,9 @@ namespace dovahscript::impl {
       protected:
          std::mutex lock;
          struct {
+            QVector<QObject*>          hierarchy_objects;
             QVector<model_observer_t*> model_observers;
-            QVector<QObject*> objects;
+            QVector<QObject*>          non_hierarchy_objects;
          } queues;
          core::client_thread_script_borrow_handle opportunity_handle;
 

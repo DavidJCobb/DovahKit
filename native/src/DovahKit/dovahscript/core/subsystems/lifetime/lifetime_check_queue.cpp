@@ -1,76 +1,22 @@
 #include "lifetime_check_queue.h"
+#include <QVariant>
+#include "../../../helpers/unordered_map.h"
+#include "../../../helpers/qt/traversal.h"
 #include "../lifetime.h"
+#include "../userdata.h"
+#include "hierarchy_crawler.h"
 
 namespace {
-   struct hierarchy_flag {
-      enum type : uint8_t {
-         referenced_in_lua  = 0x01,
-         referenced_in_task = 0x02,
-         //
-         referenced_across_bridge = 0x40,
-         marked_for_delete        = 0x80,
-         //
-         referenced_anywhere = referenced_in_lua | referenced_in_task | referenced_across_bridge,
-      };
-   };
-   using hierarchy_flags_t = std::underlying_type_t<hierarchy_flag::type>;
-
-   struct found_hierarchy {
-      QObject* root = nullptr;
-      QVector<found_hierarchy*> bridged_to;
-      hierarchy_flags_t flags = 0;
-   };
-
-   class hierarchy_abandonment_checker {
-      protected:
-         bool referenced = false;
-         QVector<found_hierarchy*> seen;
-
-         void _recurse(found_hierarchy& target) {
-            if (this->seen.contains(&target))
-               return;
-            this->seen.push_back(&target);
-            if (target.flags & hierarchy_flag::referenced_anywhere) {
-               this->referenced = true;
-               return;
-            }
-            for (auto* h : target.bridged_to)
-               this->_recurse(*h);
-         }
-
-      public:
-         bool start_from(found_hierarchy& basis) {
-            this->_recurse(basis);
-            if (this->referenced)
-               for (auto* h : this->seen)
-                  h->flags |= hierarchy_flag::referenced_across_bridge;
-            return this->referenced;
-         }
-   };
-   
-   class bridge_crossing_hierarchy_deleter {
-      protected:
-         void _recurse(found_hierarchy& target) {
-            if (target.flags & (hierarchy_flag::marked_for_delete | hierarchy_flag::referenced_anywhere))
-               return;
-            target.root->deleteLater();
-            target.flags |= hierarchy_flag::marked_for_delete;
-            for (auto* h : target.bridged_to)
-               this->_recurse(*h);
-         }
-
-      public:
-         void start_from(found_hierarchy& basis) {
-            this->_recurse(basis);
-         }
-   };
+   using lifetime_passkey = cobb::passkey<dovahscript::core::subsystems::lifetime, dovahscript::impl::lifetime_check_queue>;
 }
 
 namespace dovahscript::impl {
    bool lifetime_check_queue::_empty() const noexcept {
+      if (this->queues.hierarchy_objects.empty())
+         return true;
       if (this->queues.model_observers.empty())
          return true;
-      if (this->queues.objects.empty())
+      if (this->queues.non_hierarchy_objects.empty())
          return true;
       return false;
    }
@@ -82,8 +28,11 @@ namespace dovahscript::impl {
    }
    void lifetime_check_queue::queue_check(QObject& target) {
       auto  guard = std::lock_guard(this->lock);
-      auto& list  = this->queues.objects;
-      list.push_back(&target);
+      if (target.isWidgetType() || qobject_cast<CanvasWidgetEntity*>(&target)) {
+         this->queues.hierarchy_objects.push_back(&target);
+         return;
+      }
+      this->queues.non_hierarchy_objects.push_back(&target);
    }
 
    void lifetime_check_queue::main_thread_handler(subsystem_passkey) {
@@ -95,46 +44,36 @@ namespace dovahscript::impl {
       if (!this->opportunity_handle.is_ready())
          return;
       //
+      auto& lifetime_s = core::subsystems::lifetime::get();
+      auto& userdata_s = core::subsystems::userdata::get();
+      //
       static_assert(false, "TODO: Perform lifetime checks on the queued objects.");
-
-         //
-         // To begin:
-         //  - Create lists of all non-hierarchy objects confirmed 
-         //    to be unreferenced
-         //  - Create a QVector<_hierarchy*> seen_hierarchies.
-         // 
-         // For each hierarchy object:
-         //  - Check if task-referenced
-         //  - Check if Lua-referenced
-         //  - Get hierarchy root
-         //     - If status is known, early-out
-         //  - Heap-allocate a new (_hierarchy) instance and store it in 
-         //    the seen_hierarchies list.
-         //     - Walk the root to see if anything in the hierarchy is 
-         //       Lua- or task-referenced, and to get a list of all of 
-         //       the hierarchy bridges.
-         //     - For each hierarchy bridge, get the bridged-to root, 
-         //       get-or-create a (_hierarchy) for it, and bridge that 
-         //       with the (_hierarchy) we started from.
-         // 
-         // For each non-hierarchy object:
-         //  - Check if task-referenced
-         //  - Check if Lua-referenced
-         //  - If unreferenced, add the object to the list of non-hierarchy 
-         //    objects to be deleted.
-         // 
-         // Once we're done:
-         //  - For each (_hierarchy), use an (_abandonment_checker) to 
-         //    see if it's abandoned. If so, mark the hierarchy root and 
-         //    all bridged-to roots for deletion.
-         //  - For each non-hierarchy object pending deletion, delete it.
-         //
+      {  // Hierarchy objects.
+         hierarchy_crawler crawler;
+         static_assert(false, "What about model observers?");
+         for (auto* object : this->queues.hierarchy_objects) {
+            assert(object);
+            crawler.crawl_from(*object);
+         }
+         crawler.finalize();
+         crawler.delete_abandoned();
+         lifetime_s.extant_widget_count -= crawler.total_widgets_deleted;
+         static_assert(false, "Use the crawler's total widgets deleted count.");
+      }
+      for (auto* obj : this->queues.non_hierarchy_objects) {
+         static_assert(false, "check if the object is task- or Lua-referenced; `continue` if so");
+         if (!obj->property("deleted").isValid()) { // ensure we only delete an object once even if it was marked for multiple checks
+            obj->setProperty("deleted", true);
+            lifetime_s.destroy_non_hierarchy_object(lifetime_passkey(), *obj);
+         }
+      }
    }
    void lifetime_check_queue::on_script_teardown(subsystem_passkey) {
       auto guard = std::lock_guard(this->lock);
       //
+      this->queues.hierarchy_objects.clear();
       this->queues.model_observers.clear();
-      this->queues.objects.clear();
+      this->queues.non_hierarchy_objects.clear();
       //
       this->opportunity_handle.release();
    }

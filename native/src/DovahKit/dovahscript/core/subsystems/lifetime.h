@@ -13,7 +13,7 @@ class  CanvasWidgetLayerData;
 struct ObservableStandardItemModelObserver;
 
 namespace dovahscript::impl {
-   class hierarchy_finder;
+   class hierarchy_crawler;
 }
 namespace dovahscript::core::subsystems {
    class userdata;
@@ -79,11 +79,6 @@ namespace dovahscript::core::subsystems {
             void on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData*);
             void on_lua_unreferenced(passkey_to<userdata>, model_observer_t*);
             void on_lua_unreferenced(passkey_to<userdata>, QObject*);
-
-            // The hierarchy finder should call these if it confirms that a native object is unreferenced 
-            // and unreachable.
-            void destroy_native_object(passkey_to<impl::hierarchy_finder>, QObject&);
-            void destroy_native_object(passkey_to<impl::hierarchy_finder>, model_observer_t&);
          #pragma endregion
 
          #pragma region Client thread functions
@@ -93,6 +88,13 @@ namespace dovahscript::core::subsystems {
             void on_window_hidden(QDialog*);
 
             void on_canvas_widget_layer_data_detached(CanvasWidgetLayerData*);
+
+            // The hierarchy finder should call these if it confirms that a native object is unreferenced 
+            // and unreachable.
+            void destroy_hierarchy_object(passkey_to<impl::hierarchy_crawler>, QObject&);
+            void destroy_hierarchy_object(passkey_to<impl::hierarchy_crawler>, model_observer_t&);
+
+            void destroy_non_hierarchy_object(passkey_to<impl::lifetime_check_queue>, QObject&);
          #pragma endregion
 
          // When the script thread queues a cross-thread task that in some way uses or refers to a 

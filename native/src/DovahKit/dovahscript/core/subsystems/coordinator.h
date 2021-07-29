@@ -92,6 +92,9 @@ namespace dovahscript::core::subsystems {
          thread_type     script_thread = thread_type::client;
          QTimer          main_thread_tick_timer;
 
+         QWidget* get_ui_parent() const noexcept;
+         void set_ui_parent(QWidget*) noexcept;
+
          inline bool is_aborted() const noexcept { return this->aborted; }
          inline bool is_running() const noexcept { return this->running; }
          inline bool is_paused()  const noexcept { return this->paused; }

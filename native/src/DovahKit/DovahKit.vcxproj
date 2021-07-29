@@ -119,7 +119,7 @@
     <ClCompile Include="dovahscript\core\subsystems\events\registration\textbox.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events\script_event_queue.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime.cpp" />
-    <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\permissions.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\userdata.cpp" />
@@ -509,7 +509,7 @@
     <ClInclude Include="dovahscript\core\subsystems\events\registration\textbox.h" />
     <ClInclude Include="dovahscript\core\subsystems\events\script_event.h" />
     <ClInclude Include="dovahscript\core\subsystems\lifetime.h" />
-    <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.h" />
     <ClInclude Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.h" />
     <ClInclude Include="dovahscript\core\subsystems\permissions.h" />
     <ClInclude Include="dovahscript\core\subsystems\userdata.h" />
