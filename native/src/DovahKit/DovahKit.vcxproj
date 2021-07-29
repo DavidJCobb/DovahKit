@@ -120,6 +120,7 @@
     <ClCompile Include="dovahscript\core\subsystems\events\script_event_queue.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\permissions.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\userdata.cpp" />
     <ClCompile Include="dovahscript\core\task_queue.cpp" />
@@ -135,6 +136,7 @@
     <ClCompile Include="dovahscript\safe_call.cpp" />
     <ClCompile Include="dovahscript\tasks\_base.cpp" />
     <ClCompile Include="dovahscript\task_reference.cpp" />
+    <ClCompile Include="dovahscript\widget_overrides.cpp" />
     <ClCompile Include="dovahscript\wrappers\base.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
@@ -508,6 +510,7 @@
     <ClInclude Include="dovahscript\core\subsystems\events\script_event.h" />
     <ClInclude Include="dovahscript\core\subsystems\lifetime.h" />
     <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_finder.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.h" />
     <ClInclude Include="dovahscript\core\subsystems\permissions.h" />
     <ClInclude Include="dovahscript\core\subsystems\userdata.h" />
     <ClInclude Include="dovahscript\core\task_queue.h" />
@@ -529,6 +532,7 @@
     <ClInclude Include="dovahscript\tasks\_base.h" />
     <ClInclude Include="dovahscript\tasks\_ui_base.h" />
     <ClInclude Include="dovahscript\task_reference.h" />
+    <ClInclude Include="dovahscript\widget_overrides.h" />
     <ClInclude Include="dovahscript\wrapper.h" />
     <ClInclude Include="dovahscript\wrappers\base.h" />
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />

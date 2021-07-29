@@ -1,6 +1,7 @@
 #include "lifetime.h"
 #include "events.h"
 #include "../../../ui/generic/CanvasWidget.h"
+#include "../verify_threading.h"
 
 namespace {
    #pragma region Logging options
@@ -32,33 +33,14 @@ namespace {
 
 namespace dovahscript::core::subsystems {
    void lifetime::main_thread_handler() {
-      {
-         auto& plc   = this->pending_lifetime_checks;
-         auto  guard = std::lock_guard(plc.lock);
-         if (plc.opportunity_handle.is_ready()) {
-            static_assert(false, "TODO: Perform lifetime checks on the queued objects.");
-         } else {
-            bool empty = plc.queues.objects.empty() && plc.queues.model_observers.empty();
-            if (!empty) {
-               plc.opportunity_handle.request();
-            }
-         }
-      }
-
+      this->pending_lifetime_checks.main_thread_handler(impl::lifetime_check_queue::subsystem_passkey());
       static_assert(false, "TODO: Do we need anything else here?");
    }
 
    void lifetime::on_script_teardown() {
       auto& events_s = events::get();
       //
-      {
-         auto& plc   = this->pending_lifetime_checks;
-         auto  guard = std::lock_guard(plc.lock);
-         plc.queues.objects.clear();
-         plc.queues.model_observers.clear();
-         //
-         plc.opportunity_handle.release();
-      }
+      this->pending_lifetime_checks.on_script_teardown(impl::lifetime_check_queue::subsystem_passkey());
       {
          auto& tro   = this->task_referenced_objects;
          auto  guard = std::lock_guard(tro.lock);
@@ -74,7 +56,7 @@ namespace dovahscript::core::subsystems {
          list.clear();
       }
       {
-         auto& list = this->hierarchy_objects.orphans.button_groups;
+         auto& list = this->hierarchy_objects.button_groups;
          for (auto* e : list) {
             events_s.abandon_object(*e);
             e->deleteLater();
@@ -126,6 +108,9 @@ namespace dovahscript::core::subsystems {
       }
    }
    void lifetime::destroy_native_object(passkey_to<impl::hierarchy_finder>, QObject& target) {
+      if constexpr (debug_qobject_lifetimes) {
+         qDebug("Destroying native object: %p (%s)", &target, _debug_get_object_classname(&target));
+      }
       if (target.isWidgetType()) {
          _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
          //
@@ -141,7 +126,11 @@ namespace dovahscript::core::subsystems {
             }
          }
       } else if (auto* c = qobject_cast<QButtonGroup*>(&target)) {
-         _remove_from_orphans(this->hierarchy_objects.orphans.button_groups, c);
+         bool removed = this->hierarchy_objects.button_groups.removeOne(c);
+         if constexpr (debug_qobject_lifetimes) {
+            if (!removed)
+               qDebug("Warning: QButtonGroup under destruction is not in the list of button groups: %p (%s)", &target, _debug_get_object_classname(&target));
+         }
       } else if (auto* c = qobject_cast<CanvasWidgetEntity*>(&target)) {
          _remove_from_orphans(this->hierarchy_objects.orphans.canvas_widget_entities, c);
       } else {
@@ -151,5 +140,65 @@ namespace dovahscript::core::subsystems {
       // Disconnect events:
       //
       events::get().abandon_object(target);
+   }
+
+   void lifetime::on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from) {
+      require_client_thread();
+      //
+      this->pending_lifetime_checks.queue_check(*basis);
+      this->pending_lifetime_checks.queue_check(*severed_from);
+   }
+   void lifetime::on_hierarchy_item_parent_changed(QObject* child, QObject* prior_parent) {
+      require_client_thread();
+      //
+      auto* after_parent = child->parent();
+      if (prior_parent) {
+         this->pending_lifetime_checks.queue_check(*prior_parent);
+      }
+      if (after_parent && !prior_parent) {
+         auto  guard = std::unique_lock(this->object_read_write_lock);
+         auto& base  = this->hierarchy_objects.orphans;
+         //
+         if (auto* widget = qobject_cast<QWidget*>(child)) {
+            auto& list = base.widgets;
+            auto  i    = list.indexOf(widget);
+            assert(i >= 0);
+            list.remove(i);
+         } else if (auto* cwe = qobject_cast<CanvasWidgetEntity*>(child)) {
+            auto& list = base.canvas_widget_entities;
+            auto  i    = list.indexOf(cwe);
+            assert(i >= 0);
+            list.remove(i);
+         } else {
+            // Don't bother handling button groups; we deal with those elsewhere
+            assert(false && "lifetime::on_hierarchy_item_parent_changed called with unexpected hierarchy item type");
+         }
+      } else if (!after_parent && prior_parent) {
+         auto  guard = std::unique_lock(this->object_read_write_lock);
+         auto& base  = this->hierarchy_objects.orphans;
+         //
+         if (auto* widget = qobject_cast<QWidget*>(child)) {
+            auto& list = base.widgets;
+            assert(!list.contains(widget));
+            list.push_back(widget);
+         } else if (auto* cwe = qobject_cast<CanvasWidgetEntity*>(child)) {
+            auto& list = base.canvas_widget_entities;
+            assert(!list.contains(cwe));
+            list.push_back(cwe);
+         } else {
+            // Don't bother handling button groups; we deal with those elsewhere
+            assert(false && "lifetime::on_hierarchy_item_parent_changed called with unexpected hierarchy item type");
+         }
+      }
+   }
+   void lifetime::on_window_hidden(QDialog* window) {
+      require_client_thread();
+      //
+      this->pending_lifetime_checks.queue_check(*window);
+   }
+   void lifetime::on_canvas_widget_layer_data_detached(CanvasWidgetLayerData* data) {
+      require_client_thread();
+      //
+      this->pending_lifetime_checks.queue_check(*data);
    }
 }

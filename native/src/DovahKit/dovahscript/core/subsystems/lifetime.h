@@ -2,9 +2,11 @@
 #include <QButtonGroup>
 #include <QDialog>
 #include <mutex>
+#include <shared_mutex>
 #include "../../../helpers/passkey.h"
 #include "../../../helpers/singleton.h"
 #include "coordinator/client_thread_script_borrow_handle.h"
+#include "lifetime/lifetime_check_queue.h"
 
 class  CanvasWidgetEntity;
 class  CanvasWidgetLayerData;
@@ -30,11 +32,19 @@ namespace dovahscript::core::subsystems {
          template<typename B> using passkey_to = cobb::passkey<lifetime, B>;
 
       protected:
+
+         //
+         // These are the objects whose lifetimes are managed directly by this singleton. 
+         // These lists should only be modified from the client thread, but should allow 
+         // reading from any thread. Accordingly, we use a shared_mutex, with the client 
+         // thread taking an exclusive lock and the worker thread taking a shared lock.
+         //
+         std::shared_mutex object_read_write_lock;
          struct {
-            QVector<QDialog*> windows;
+            QVector<QDialog*>      windows;
+            QVector<QButtonGroup*> button_groups;
             struct {
                QVector<QWidget*>            widgets;
-               QVector<QButtonGroup*>       button_groups;
                QVector<CanvasWidgetEntity*> canvas_widget_entities;
             } orphans;
          } hierarchy_objects;
@@ -53,14 +63,7 @@ namespace dovahscript::core::subsystems {
 
          int extant_widget_count = 0; // includes windows
 
-         struct {
-            std::mutex lock;
-            struct {
-               std::vector<model_observer_t*> model_observers;
-               std::vector<QObject*> objects;
-            } queues;
-            client_thread_script_borrow_handle opportunity_handle;
-         } pending_lifetime_checks;
+         impl::lifetime_check_queue pending_lifetime_checks;
 
       public:
          std::vector<QDialog*> get_script_windows();
@@ -85,8 +88,7 @@ namespace dovahscript::core::subsystems {
 
          #pragma region Client thread functions
             void on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from); // e.g. if a QButtonGroup loses a button, the group would be the basis and the button, the severed-from object
-            void on_hierarchy_item_orphaned(QObject*);
-            void on_hierarchy_item_adopted(QObject*);
+            void on_hierarchy_item_parent_changed(QObject* subject, QObject* prior_parent); // call from the client thread after the subject's parent has been changed
 
             void on_window_hidden(QDialog*);
 

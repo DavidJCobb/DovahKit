@@ -108,7 +108,8 @@ namespace {
          task_reference child  = arg->widget;
          auto* task = new tasks::s2m::ui_write_lambda(false);
          task->handler = [widget, child, row, col, rowspan, colspan]() {
-            auto* layout = widget->layout();
+            auto* prior_parent = child->parent();
+            auto* layout       = widget->layout();
             if (!layout) {
                child->setParent(widget);
             } else if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
@@ -124,7 +125,7 @@ namespace {
                   box->addWidget(child);
                }
             }
-            core::subsystems::lifetime::get().on_hierarchy_item_adopted(child);
+            core::subsystems::lifetime::get().on_hierarchy_item_parent_changed(child, prior_parent);
          };
          core::subsystems::coordinator::get().send_ui_write_task(*task);
          return 0;
@@ -351,12 +352,13 @@ namespace {
             //
             auto* task = new tasks::s2m::ui_write_lambda(true); // blocking
             task->handler = [widget, child, &is_not_a_child]() {
-               if (child->parentWidget() != widget) {
+               auto* prior_parent = child->parentWidget();
+               if (prior_parent != widget) {
                   is_not_a_child = true;
                   return;
                }
                child->setParent(nullptr);
-               core::subsystems::lifetime::get().on_hierarchy_item_orphaned(child);
+               core::subsystems::lifetime::get().on_hierarchy_item_parent_changed(child, prior_parent);
             };
             core::subsystems::coordinator::get().send_ui_write_task(*task);
             delete task;
