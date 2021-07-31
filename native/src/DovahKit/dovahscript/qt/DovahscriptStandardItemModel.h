@@ -12,4 +12,7 @@ class DovahscriptStandardItemModel : public ObservableStandardItemModel {
       QList<QWidget*> associatedWidgets();
       void associateWithWidget(QWidget*);
       void dissociateFromWidget(QWidget*);
+
+   signals:
+      void dissociatedFromAll();
 };

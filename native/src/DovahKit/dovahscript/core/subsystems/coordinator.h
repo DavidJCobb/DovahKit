@@ -5,6 +5,7 @@
 #include "../../../helpers/singleton.h"
 #include "../task_queue.h"
 
+class DovahscriptStandardItemModel;
 namespace dovahscript::core::subsystems {
    class coordinator;
 }
@@ -31,6 +32,8 @@ namespace dovahscript::core::subsystems {
             static coordinator instance;
             return instance;
          }
+
+         using qt_model_type = DovahscriptStandardItemModel;
 
       protected:
          enum class thread_wait_state {
@@ -103,6 +106,10 @@ namespace dovahscript::core::subsystems {
          void send_script_task(task_queue::task_t&);
          void send_ui_read_task(tasks::_ui_read_base&);
          void send_ui_write_task(tasks::_ui_write_base&);
+
+         void create_model_for_widget(QWidget&);
+         void apply_model_to_widget(QWidget&, qt_model_type&);
+         void remove_model_from_widget(QWidget&);
          
       protected slots:
          void _main_thread_loop();

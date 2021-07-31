@@ -17,4 +17,6 @@ void DovahscriptStandardItemModel::associateWithWidget(QWidget* widget) {
 }
 void DovahscriptStandardItemModel::dissociateFromWidget(QWidget* widget) {
    this->_associated_widgets.removeOne(widget);
+   if (this->_associated_widgets.isEmpty())
+      emit this->dissociatedFromAll();
 }

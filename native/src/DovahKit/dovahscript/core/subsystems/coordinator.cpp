@@ -1,4 +1,7 @@
 #include "coordinator.h"
+#include <QSortFilterProxyModel>
+#include "../../../helpers/qt/get_model_of.h"
+#include "../../../helpers/qt/set_model_of.h"
 #include "events.h"
 #include "lifetime.h"
 #include "resources.h"
@@ -10,6 +13,11 @@
 
 #include "../../lua_libraries/_import_all.h"
 #include "../../lua_classes/_import_all.h"
+
+#include "../../tasks/_base.h"
+#include "../../tasks/_ui_base.h"
+
+#include "../../qt/DovahscriptStandardItemModel.h"
 
 namespace {
    static constexpr bool debug_script_start_stop = false
@@ -170,5 +178,67 @@ namespace dovahscript::core::subsystems {
       resources::get().on_script_teardown();
       //
       this->in_teardown = false;
+   }
+
+
+   void coordinator::send_script_task(task_queue::task_t& task) {
+      require_script_thread();
+      //
+      this->task_queues.s2m.push_back(&task);
+   }
+   void coordinator::send_ui_read_task(tasks::_ui_read_base& task) {
+      require_script_thread();
+      //
+      this->task_queues.ui.write.wait_until_empty();
+      this->task_queues.ui.read.push_back(&task);
+      while (!task.seen)
+         if (this->is_aborted())
+            break;
+      if (!this->is_aborted()) {
+         this->task_queues.m2s.urgent.process();
+      }
+   }
+   void coordinator::send_ui_write_task(tasks::_ui_write_base& task) {
+      require_script_thread();
+      //
+      bool blocking = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
+      this->task_queues.ui.read.wait_until_empty();
+      this->task_queues.ui.write.push_back(&task);
+      if (blocking) {
+         while (!task.seen)
+            if (this->is_aborted())
+               break;
+      }
+      if (!this->is_aborted()) {
+         this->task_queues.m2s.urgent.process();
+      }
+   }
+
+   void coordinator::create_model_for_widget(QWidget& widget) {
+      require_client_thread();
+      //
+      auto* model = new qt_model_type;
+      auto* proxy = new QSortFilterProxyModel(widget);
+      proxy->setSourceModel(model);
+      proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
+      cobb::qt::set_model_of(&widget, proxy);
+      model->associateWithWidget(&widget);
+      //
+      static_assert(false, "TODO: The lifetime subsystem needs to track models, if they're not going to be owned by the widgets we're creating them for anymore.");
+   }
+   void coordinator::apply_model_to_widget(QWidget& widget, qt_model_type& model) {
+      require_client_thread();
+      //
+      this->remove_model_from_widget(widget);
+      cobb::qt::set_model_of(&widget, &model);
+      model.associateWithWidget(&widget);
+   }
+   void coordinator::remove_model_from_widget(QWidget& widget) {
+      require_client_thread();
+      //
+      auto* prior = qobject_cast<qt_model_type*>(cobb::qt::get_underlying_model_of(&widget));
+      cobb::qt::set_model_of(&widget, nullptr);
+      if (prior)
+         prior->dissociateFromWidget(&widget);
    }
 }
