@@ -217,28 +217,11 @@ namespace dovahscript::core::subsystems {
    void coordinator::create_model_for_widget(QWidget& widget) {
       require_client_thread();
       //
-      auto* model = new qt_model_type;
-      auto* proxy = new QSortFilterProxyModel(widget);
+      auto* model = new qt_model_type(widget);
+      auto* proxy = new QSortFilterProxyModel(model);
       proxy->setSourceModel(model);
       proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
       cobb::qt::set_model_of(&widget, proxy);
       model->associateWithWidget(&widget);
-      //
-      static_assert(false, "TODO: The lifetime subsystem needs to track models, if they're not going to be owned by the widgets we're creating them for anymore.");
-   }
-   void coordinator::apply_model_to_widget(QWidget& widget, qt_model_type& model) {
-      require_client_thread();
-      //
-      this->remove_model_from_widget(widget);
-      cobb::qt::set_model_of(&widget, &model);
-      model.associateWithWidget(&widget);
-   }
-   void coordinator::remove_model_from_widget(QWidget& widget) {
-      require_client_thread();
-      //
-      auto* prior = qobject_cast<qt_model_type*>(cobb::qt::get_underlying_model_of(&widget));
-      cobb::qt::set_model_of(&widget, nullptr);
-      if (prior)
-         prior->dissociateFromWidget(&widget);
    }
 }

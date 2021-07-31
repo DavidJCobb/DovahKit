@@ -7,6 +7,7 @@ class DovahscriptStandardItemModel;
 class ObservableStandardItemModelObserver;
 namespace dovahscript::core::subsystems {
    class lifetime;
+   class userdata;
 }
 
 namespace dovahscript::impl {
@@ -16,11 +17,12 @@ namespace dovahscript::impl {
             enum type : uint8_t {
                referenced_in_lua  = 0x01,
                referenced_in_task = 0x02,
+               referenced_general = 0x04,
                //
                referenced_across_bridge = 0x40,
                marked_for_delete        = 0x80,
                //
-               referenced_anywhere = referenced_in_lua | referenced_in_task | referenced_across_bridge,
+               referenced_anywhere = referenced_in_lua | referenced_in_task | referenced_general | referenced_across_bridge,
             };
          };
          using hierarchy_flags_t = std::underlying_type_t<hierarchy_flag::type>;
@@ -29,8 +31,8 @@ namespace dovahscript::impl {
             QObject* root = nullptr;
             QVector<QObject*> unowned_bridges; // bridge objects that aren't owned by any hierarchy item, e.g. QButtonGroups
             QVector<found_hierarchy*> bridged_to;
-            hierarchy_flags_t flags = 0;
-            unsigned int widget_count = 0;
+            hierarchy_flags_t flags        = 0;
+            unsigned int      widget_count = 0; // only valid for hierarchies that weren't referenced except possibly across a bridge
          };
 
       protected:
@@ -39,6 +41,7 @@ namespace dovahscript::impl {
          QWidget* stop_at = nullptr;
 
          core::subsystems::lifetime& lifetime_sys;
+         core::subsystems::userdata& userdata_sys;
 
       public:
          QVector<DovahscriptStandardItemModel*> models_known_to_be_referenced;

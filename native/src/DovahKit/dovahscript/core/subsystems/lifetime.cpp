@@ -1,5 +1,6 @@
 #include "lifetime.h"
 #include "events.h"
+#include "userdata.h"
 #include "../../../ui/generic/CanvasWidget.h"
 #include "../verify_threading.h"
 

@@ -2,9 +2,12 @@
 #include <QVariant>
 #include "../../../helpers/unordered_map.h"
 #include "../../../helpers/qt/traversal.h"
+#include "../../../ui/generic/CanvasWidget.h"
 #include "../lifetime.h"
 #include "../userdata.h"
 #include "hierarchy_crawler.h"
+
+#include "../../../qt/DovahscriptStandardItemModel.h"
 
 namespace {
    using lifetime_passkey = cobb::passkey<dovahscript::core::subsystems::lifetime, dovahscript::impl::lifetime_check_queue>;
@@ -50,15 +53,29 @@ namespace dovahscript::impl {
       static_assert(false, "TODO: Perform lifetime checks on the queued objects.");
       {  // Hierarchy objects.
          hierarchy_crawler crawler;
-         lifetime_s.for_each_known_model_observer([this, &crawler](model_observer_t* observer) {
+         //
+         // Before we start crawling, we need to be able to handle model observers. 
+         // Simplest way to do that is to just go over all extant model observers 
+         // here, and track the models that we know to be referenced (i.e. any 
+         // that have observers which aren't pending a lifetime check).
+         //
+         lifetime_s.for_each_known_model_observer([this, &crawler, &userdata_s](model_observer_t* observer) {
             if (this->queues.model_observers.contains(observer))
                return;
             auto& list  = crawler.models_known_to_be_referenced;
-            auto* model = observer->model;
+            auto* model = qobject_cast<DovahscriptStandardItemModel*>(observer->model);
+            if (!model)
+               return;
             if (list.contains(model))
                return;
+            if (userdata_s.wrapper_exists_for(observer))
+               return;
+            static_assert(false, "TODO: return early here if the observer is not task-referenced.");
             list.push_back(model);
          });
+         //
+         // Now let's crawl some hierarchies!
+         //
          for (auto* object : this->queues.hierarchy_objects) {
             assert(object);
             crawler.crawl_from(*object);
@@ -70,15 +87,47 @@ namespace dovahscript::impl {
          crawler.finalize();
          crawler.delete_abandoned();
          lifetime_s.extant_widget_count -= crawler.total_widgets_deleted;
-         static_assert(false, "Use the crawler's total widgets deleted count.");
+         //
+         this->queues.hierarchy_objects.clear();
+         this->queues.model_observers.clear();
       }
+      //
+      // Non-hierarchy objects are much simpler to handle:
+      //
       for (auto* obj : this->queues.non_hierarchy_objects) {
-         static_assert(false, "check if the object is task- or Lua-referenced; `continue` if so");
+         //
+         // First, let's check whether the object is referenced within the script engine, 
+         // whether by a Lua value or by a task:
+         //
+         if (userdata_s.wrapper_exists_for(obj))
+            continue;
+         static_assert(false, "check if the object is task-referenced; `continue` (i.e. skip it) if so");
+         //
+         // Next, let's do type-specific checks to see if the object is in use by some 
+         // object within the UI. If it's in use by the UI, let's avoid deleting it, 
+         // even if it may not be reachable for scripts anymore.
+         // 
+         // (Incidentally, this check probably hinges on us handling hierarchical 
+         // objects first.)
+         //
+         if (auto* cwld = qobject_cast<CanvasWidgetLayerData*>(obj)) {
+            if (!cwld->users().isEmpty())
+               continue;
+         }
+         //
+         // We've confirmed that the object is not referenced within the script engine, 
+         // and that it's not in use anywhere. Let's get rid of it:
+         //
          if (!obj->property("deleted").isValid()) { // ensure we only delete an object once even if it was marked for multiple checks
             obj->setProperty("deleted", true);
             lifetime_s.destroy_non_hierarchy_object(lifetime_passkey(), *obj);
          }
       }
+      this->queues.non_hierarchy_objects.clear();
+      //
+      // And now we're done!
+      //
+      assert(this->_empty()); // Let's make sure we didn't forget to process and clear any lists.
    }
    void lifetime_check_queue::on_script_teardown(subsystem_passkey) {
       auto guard = std::lock_guard(this->lock);

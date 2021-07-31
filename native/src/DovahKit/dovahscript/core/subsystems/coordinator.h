@@ -108,8 +108,6 @@ namespace dovahscript::core::subsystems {
          void send_ui_write_task(tasks::_ui_write_base&);
 
          void create_model_for_widget(QWidget&);
-         void apply_model_to_widget(QWidget&, qt_model_type&);
-         void remove_model_from_widget(QWidget&);
          
       protected slots:
          void _main_thread_loop();
