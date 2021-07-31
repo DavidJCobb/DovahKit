@@ -133,6 +133,7 @@
     <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
     <ClCompile Include="dovahscript\pull_native_object.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
     <ClCompile Include="dovahscript\tasks\_base.cpp" />
     <ClCompile Include="dovahscript\task_reference.cpp" />
@@ -524,6 +525,7 @@
     <ClInclude Include="dovahscript\lua_libraries\_import_all.h" />
     <ClInclude Include="dovahscript\pull_native_object.h" />
     <ClInclude Include="dovahscript\push_native_object.h" />
+    <ClInclude Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
     <ClInclude Include="dovahscript\qt\LuaScriptableCanvasWidgetLayerData.h" />
     <ClInclude Include="dovahscript\safe_call.h" />
     <ClInclude Include="dovahscript\tasks\s2m\lambda.h" />

@@ -41,8 +41,9 @@ namespace dovahscript::core::subsystems {
          //
          std::shared_mutex object_read_write_lock;
          struct {
-            QVector<QDialog*>      windows;
-            QVector<QButtonGroup*> button_groups;
+            QVector<QDialog*>          windows;
+            QVector<QButtonGroup*>     button_groups;
+            QVector<model_observer_t*> model_observers;
             struct {
                QVector<QWidget*>            widgets;
                QVector<CanvasWidgetEntity*> canvas_widget_entities;
@@ -50,7 +51,6 @@ namespace dovahscript::core::subsystems {
          } hierarchy_objects;
          struct {
             QVector<CanvasWidgetLayerData*> canvas_layer_data;
-            QVector<model_observer_t>       model_observers;
          } non_hierarchy_objects;
 
          // Maps of object pointers to refcounts.
@@ -88,6 +88,8 @@ namespace dovahscript::core::subsystems {
             void on_window_hidden(QDialog*);
 
             void on_canvas_widget_layer_data_detached(CanvasWidgetLayerData*);
+
+            void for_each_known_model_observer(std::function<void(model_observer_t*)>);
 
             // The hierarchy finder should call these if it confirms that a native object is unreferenced 
             // and unreachable.

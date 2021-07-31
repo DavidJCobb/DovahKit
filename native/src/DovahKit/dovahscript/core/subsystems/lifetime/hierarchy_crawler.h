@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <QObject>
 
+class DovahscriptStandardItemModel;
+class ObservableStandardItemModelObserver;
 namespace dovahscript::core::subsystems {
    class lifetime;
 }
@@ -39,6 +41,7 @@ namespace dovahscript::impl {
          core::subsystems::lifetime& lifetime_sys;
 
       public:
+         QVector<DovahscriptStandardItemModel*> models_known_to_be_referenced;
          QVector<found_hierarchy*> found;
          QVector<QObject*> severed_bridges;
          int total_widgets_deleted = 0;
@@ -47,6 +50,7 @@ namespace dovahscript::impl {
          ~hierarchy_crawler();
 
          void crawl_from(QObject&);
+         void crawl_from(ObservableStandardItemModelObserver&);
          void finalize();
          void delete_abandoned();
    };

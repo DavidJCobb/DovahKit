@@ -158,6 +158,7 @@ namespace dovahscript::impl {
       }
       //
    }
+   void hierarchy_crawler::crawl_from(ObservableStandardItemModelObserver& observer);
    void hierarchy_crawler::finalize() {
       for (auto* h : this->found) {
          assert(h);

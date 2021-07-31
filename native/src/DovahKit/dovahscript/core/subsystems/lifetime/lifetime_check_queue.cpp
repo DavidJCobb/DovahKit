@@ -50,8 +50,20 @@ namespace dovahscript::impl {
       static_assert(false, "TODO: Perform lifetime checks on the queued objects.");
       {  // Hierarchy objects.
          hierarchy_crawler crawler;
-         static_assert(false, "What about model observers?");
+         lifetime_s.for_each_known_model_observer([this, &crawler](model_observer_t* observer) {
+            if (this->queues.model_observers.contains(observer))
+               return;
+            auto& list  = crawler.models_known_to_be_referenced;
+            auto* model = observer->model;
+            if (list.contains(model))
+               return;
+            list.push_back(model);
+         });
          for (auto* object : this->queues.hierarchy_objects) {
+            assert(object);
+            crawler.crawl_from(*object);
+         }
+         for (auto* object : this->queues.model_observers) {
             assert(object);
             crawler.crawl_from(*object);
          }
