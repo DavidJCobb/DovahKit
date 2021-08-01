@@ -75,7 +75,7 @@ namespace dovahscript::core::subsystems {
          void on_script_teardown();
 
          #pragma region Script thread functions
-            QVector<model_observer_t*> get_extant_model_observers() const noexcept;
+            QVector<model_observer_t*> get_extant_model_observers() const noexcept; // TODO: why do we need this?
 
             void on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData*);
             void on_lua_unreferenced(passkey_to<userdata>, model_observer_t*);

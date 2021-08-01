@@ -154,7 +154,14 @@ namespace dovahscript::core::subsystems {
       //
       this->pending_lifetime_checks.queue_check(*data);
    }
-   
+
+
+   void lifetime::for_each_known_model_observer(std::function<void(model_observer_t*)> functor) {
+      require_client_thread();
+      //
+      for (auto* observer : this->hierarchy_objects.model_observers)
+         (functor)(observer);
+   }
 
    namespace {
       template<typename T> void _remove_from_orphans(QVector<T*>& list, T* target) {
@@ -172,7 +179,7 @@ namespace dovahscript::core::subsystems {
       require_client_thread();
       //
       if constexpr (debug_qobject_lifetimes) {
-         qDebug("Destroying native object: %p (%s)", &target, _debug_get_object_classname(&target));
+         qDebug("Destroying native hierarchy object: %p (%s)", &target, _debug_get_object_classname(&target));
       }
       if (target.isWidgetType()) {
          _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
@@ -206,6 +213,43 @@ namespace dovahscript::core::subsystems {
       //
       target.deleteLater();
    }
+   void lifetime::destroy_hierarchy_object(passkey_to<impl::hierarchy_crawler>, model_observer_t& target) {
+      require_client_thread();
+      //
+      if constexpr (debug_model_observer_lifetimes) {
+         qDebug("Destroying native hierarchy model observer: %p", &target);
+      }
+      auto& list = this->hierarchy_objects.model_observers;
+      auto  i    = list.indexOf(&target);
+      if (i >= 0) {
+         list.remove(i);
+      } else {
+         if constexpr (debug_model_observer_lifetimes) {
+            qDebug("Warning: model observer under destruction is not orphaned: %p", &target);
+         }
+      }
+   }
+   void lifetime::destroy_non_hierarchy_object(passkey_to<impl::lifetime_check_queue>, QObject& target) {
+      require_client_thread();
+      //
+      if constexpr (debug_qobject_lifetimes) {
+         qDebug("Destroying native non-hierarchy object: %p (%s)", &target, _debug_get_object_classname(&target));
+      }
+      if (auto* cwld = qobject_cast<CanvasWidgetLayerData*>(&target)) {
+         auto& list = this->non_hierarchy_objects.canvas_layer_data;
+         auto  i    = list.indexOf(cwld);
+         if (i >= 0) {
+            list.remove(i);
+         } else {
+            if constexpr (debug_qobject_lifetimes) {
+               qDebug("Warning: QObject under destruction is not orphaned: %p (%s)", cwld, _debug_get_object_classname(cwld));
+            }
+         }
+         events::get().abandon_object(target);
+         return;
+      }
+      assert(false && "unhandled type");
+   }
 
    bool lifetime::set_task_reference_lock_state(passkey_to<impl::task_reference_state_multi_checker>, bool state) {
       require_client_thread();
@@ -232,5 +276,43 @@ namespace dovahscript::core::subsystems {
    void lifetime::decrease_extant_widget_count(passkey_to<impl::lifetime_check_queue>, unsigned int by) {
       require_client_thread();
       this->extant_widget_count -= by;
+   }
+
+   void lifetime::add_task_reference(QObject* subject) {
+      if (!subject)
+         return;
+      auto& tro   = this->task_referenced_objects;
+      auto  guard = std::lock_guard(tro.lock);
+      ++tro.objects[subject];
+   }
+   void lifetime::add_task_reference(model_observer_t* subject) {
+      if (!subject)
+         return;
+      auto& tro   = this->task_referenced_objects;
+      auto  guard = std::lock_guard(tro.lock);
+      ++tro.model_observers[subject];
+   }
+
+   void lifetime::remove_task_reference(QObject* subject) {
+      if (!subject)
+         return;
+      auto& tro   = this->task_referenced_objects;
+      auto  guard = std::lock_guard(tro.lock);
+      auto& count = tro.objects[subject];
+      assert(count);
+      if (--count == 0) {
+         this->pending_lifetime_checks.queue_check(*subject);
+      }
+   }
+   void lifetime::remove_task_reference(model_observer_t* subject) {
+      if (!subject)
+         return;
+      auto& tro   = this->task_referenced_objects;
+      auto  guard = std::lock_guard(tro.lock);
+      auto& count = tro.model_observers[subject];
+      assert(count);
+      if (--count == 0) {
+         this->pending_lifetime_checks.queue_check(*subject);
+      }
    }
 }
