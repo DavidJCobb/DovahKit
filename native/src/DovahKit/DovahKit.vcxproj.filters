@@ -1170,6 +1170,15 @@
     <ClCompile Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\core\subsystems\resources\DovahscriptResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\core\subsystems\resources\DovahscriptResourceStyledItemDelegate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\core\subsystems\resources.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2399,6 +2408,12 @@
     <ClInclude Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovahscript\core\subsystems\resources\DovahscriptResourceStyledItemDelegate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\core\subsystems\resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -2704,6 +2719,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="dovahscript\core\subsystems\resources\DovahscriptResource.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

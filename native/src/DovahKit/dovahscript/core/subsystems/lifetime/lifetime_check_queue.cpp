@@ -16,27 +16,33 @@ namespace {
 
 namespace dovahscript::impl {
    bool lifetime_check_queue::_empty() const noexcept {
-      if (this->queues.hierarchy_objects.empty())
-         return true;
-      if (this->queues.model_observers.empty())
-         return true;
-      if (this->queues.non_hierarchy_objects.empty())
-         return true;
-      return false;
+      if (!this->queues.hierarchy_objects.empty())
+         return false;
+      if (!this->queues.model_observers.empty())
+         return false;
+      if (!this->queues.non_hierarchy_objects.empty())
+         return false;
+      return true;
    }
 
    void lifetime_check_queue::queue_check(model_observer_t& target) {
       auto  guard = std::lock_guard(this->lock);
       auto& list  = this->queues.model_observers;
-      list.push_back(&target);
+      if (!list.contains(&target))
+         list.push_back(&target);
    }
    void lifetime_check_queue::queue_check(QObject& target) {
       auto  guard = std::lock_guard(this->lock);
       if (target.isWidgetType() || qobject_cast<CanvasWidgetEntity*>(&target)) {
-         this->queues.hierarchy_objects.push_back(&target);
+         auto& list = this->queues.hierarchy_objects;
+         if (!list.contains(&target))
+            list.push_back(&target);
          return;
+      } else {
+         auto& list = this->queues.non_hierarchy_objects;
+         if (!list.contains(&target))
+            list.push_back(&target);
       }
-      this->queues.non_hierarchy_objects.push_back(&target);
    }
 
    void lifetime_check_queue::main_thread_handler(subsystem_passkey) {
@@ -140,6 +146,7 @@ namespace dovahscript::impl {
       this->queues.hierarchy_objects.clear();
       this->queues.model_observers.clear();
       this->queues.non_hierarchy_objects.clear();
+      assert(this->_empty()); // Let's make sure we didn't forget to process and clear any lists.
       //
       this->opportunity_handle.release();
    }

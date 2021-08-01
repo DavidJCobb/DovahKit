@@ -123,6 +123,9 @@
     <ClCompile Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\permissions.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\resources.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\resources\DovahscriptResource.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\resources\DovahscriptResourceStyledItemDelegate.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\userdata.cpp" />
     <ClCompile Include="dovahscript\core\task_queue.cpp" />
     <ClCompile Include="dovahscript\core\verify_threading.cpp" />
@@ -515,6 +518,9 @@
     <ClInclude Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.h" />
     <ClInclude Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.h" />
     <ClInclude Include="dovahscript\core\subsystems\permissions.h" />
+    <QtMoc Include="dovahscript\core\subsystems\resources\DovahscriptResource.h" />
+    <ClInclude Include="dovahscript\core\subsystems\resources.h" />
+    <ClInclude Include="dovahscript\core\subsystems\resources\DovahscriptResourceStyledItemDelegate.h" />
     <ClInclude Include="dovahscript\core\subsystems\userdata.h" />
     <ClInclude Include="dovahscript\core\task_queue.h" />
     <ClInclude Include="dovahscript\core\verify_threading.h" />

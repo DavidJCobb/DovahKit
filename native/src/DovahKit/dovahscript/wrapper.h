@@ -12,7 +12,7 @@ class ObservableStandardItemModelObserver;
 class QButtonGroup;
 
 namespace dovahscript {
-   class LuaManagedResource;
+   class DovahscriptResource;
 
    enum class wrapper_type {
       undefined,
@@ -122,7 +122,7 @@ namespace dovahscript {
             QButtonGroup*                        button_group;
             CanvasWidgetEntity*                  canvas_entity;
             LuaScriptableCanvasWidgetLayerData*  canvas_layer_data;
-            LuaManagedResource*                  managed_resource;
+            DovahscriptResource*                 managed_resource;
             ObservableStandardItemModelObserver* model_observer;
             dovah::form_stub*                    stub;
             QWidget*                             widget;

@@ -11,15 +11,24 @@
 #include "form_types.h"
 
 #include "../core/classes.h"
+#include "../tasks/s2m/create_form.h"
+#include "../tasks/s2m/lambda.h"
+#include "../tasks/s2m/log_message.h"
 #include "../wrapper.h"
 #include "../wrappers/form/form.h"
 #include "../../../editor/core.h"
+
+#include "../../../dovah/data/ini_settings.h"
 
 // For resources:
 #include <QBuffer>
 #include <QImage>
 #include <QImageReader>
 #include "../../dovah/files/bsa/bsa_archived_file.h"
+
+namespace {
+   static constexpr const char* string_format_registry_key = "dovahscript.internal.dovah.string_format_copy";
+}
 
 namespace {
    using namespace dovahscript;
@@ -105,7 +114,7 @@ namespace {
             }
             lua_settop(L, 2);
          }
-         core::subsystems::coordinator::get().send_script_task(m);
+         core::subsystems::coordinator::get().send_script_task(*m);
          if (m->error) {
             if (!m->error_text)
                m->error_text = "";
@@ -203,7 +212,7 @@ namespace {
             lua_pop(L, 1);
          }
          //
-         lua_getfield(L, LUA_REGISTRYINDEX, DovahKitScriptVMCore::string_format_registry_key);
+         lua_getfield(L, LUA_REGISTRYINDEX, string_format_registry_key);
          if (lua_isfunction(L, argcount + 1)) {
             lua_rotate(L, 1, 1); // move (string.format) ahead of the other stack elements
             lua_call  (L, argcount, 1);
@@ -215,7 +224,7 @@ namespace {
          }
          m->text = QString::fromUtf8(out);
          //
-         DovahKitScriptVMMessenger::get().send_message(m);
+         core::subsystems::coordinator::get().send_script_task(*m);
          return 0;
       }
       int lookup_game_asset(lua_State* L) {
@@ -261,7 +270,7 @@ namespace {
                      task->handler = [&raster, &resource]() {
                         resource = DovahKitScriptVMResourceInterface::get().create_resource(raster);
                      };
-                     DovahKitScriptVMUITaskConduit::get().send_message(*task);
+                     core::subsystems::coordinator::get().send_script_task(*task);
                      delete task;
                      assert(resource);
                   }
@@ -292,7 +301,7 @@ namespace {
             task->handler = [&file, &resource]() {
                resource = DovahKitScriptVMResourceInterface::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()));
             };
-            DovahKitScriptVMUITaskConduit::get().send_message(*task);
+            core::subsystems::coordinator::get().send_script_task(*task);
             delete task;
             assert(resource);
          }
@@ -393,6 +402,11 @@ namespace {
 namespace dovahscript::lua_libraries {
    namespace dovah {
       extern void import(lua_State* L) {
+         lua_getglobal(L, "string");
+         lua_getfield (L, -1, "format");
+         lua_setfield (L, LUA_REGISTRYINDEX, string_format_registry_key);
+         lua_pop      (L, 1);
+         //
          lua_createtable(L, 0, _functions.size());
          cobb::lua::setfuncs(L, _functions);
       }
