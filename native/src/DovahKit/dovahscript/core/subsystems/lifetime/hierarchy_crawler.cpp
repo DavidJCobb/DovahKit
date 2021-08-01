@@ -73,12 +73,13 @@ namespace dovahscript::impl {
    hierarchy_crawler::hierarchy_crawler() : lifetime_sys(core::subsystems::lifetime::get()), userdata_sys(core::subsystems::userdata::get()) {
    }
    hierarchy_crawler::~hierarchy_crawler() {
-      for (auto* h : this->found) {
+      for (auto* h : this->found)
          if (h)
             delete h;
-      }
       this->found.clear();
-      this->severed_bridges.clear();
+      //
+      this->severed_bridges.objects.clear();
+      this->severed_bridges.model_observers.clear();
       //
       this->stop_at = nullptr;
    }
@@ -88,7 +89,9 @@ namespace dovahscript::impl {
       auto* root = _get_root_of(basis, this->stop_at);
       if (!root) {
          if (auto* group = qobject_cast<QButtonGroup*>(&basis)) {
-            this->severed_bridges.push_back(&basis);
+            auto& list = this->severed_bridges.objects;
+            if (!list.contains(&basis))
+               list.push_back(&basis);
             return;
          }
       }
@@ -127,7 +130,10 @@ namespace dovahscript::impl {
       // That's all quite convenient for us; it means we can stop traversing the hierarchy as 
       // soon as we see anything that we know is in use.
       //
-      static_assert(false, "TODO: Check if (basis) is task-referenced; set flags and return if so");
+      if (this->task_ref_checker.is_task_referenced(basis)) {
+         base->flags |= hierarchy_flag::referenced_in_task;
+         return; // break
+      }
       if (this->userdata_sys.wrapper_exists_for(&basis)) {
          base->flags |= hierarchy_flag::referenced_in_lua;
          return;
@@ -143,7 +149,10 @@ namespace dovahscript::impl {
             //
             // Let's start by checking whether the object is referenced:
             //
-            static_assert(false, "TODO: Check if (item) is task-referenced; set flags and return true (break) if so");
+            if (this->task_ref_checker.is_task_referenced(*item)) {
+               flags |= hierarchy_flag::referenced_in_task;
+               return true; // break
+            }
             if (this->userdata_sys.wrapper_exists_for(item)) {
                flags |= hierarchy_flag::referenced_in_lua;
                return true; // break
@@ -179,7 +188,10 @@ namespace dovahscript::impl {
                //
                auto entities = canvas->allDescendantLayers();
                for (auto* entity : entities) {
-                  static_assert(false, "TODO: Check if (entity) is task-referenced; set flags and return true (break) if so");
+                  if (this->task_ref_checker.is_task_referenced(*entity)) {
+                     flags |= hierarchy_flag::referenced_in_task;
+                     return true; // break
+                  }
                   if (this->userdata_sys.wrapper_exists_for(entity)) {
                      flags |= hierarchy_flag::referenced_in_lua;
                      return true; // break
@@ -255,7 +267,9 @@ namespace dovahscript::impl {
             this->crawl_from(*list[0]);
          }
       } else {
-         static_assert(false, "TODO: Store the observer to this->severed_bridges (requires modifying the struct, to have a list of severed observers).");
+         auto& list = this->severed_bridges.model_observers;
+         if (!list.contains(&observer))
+            list.push_back(&observer);
       }
    }
    void hierarchy_crawler::finalize() {
@@ -271,10 +285,17 @@ namespace dovahscript::impl {
             continue;
          h->flags |= hierarchy_flag::marked_for_delete;
          this->total_widgets_deleted += h->widget_count;
-         this->lifetime_sys.destroy_native_object(lifetime_passkey(), *h->root);
+         this->lifetime_sys.destroy_hierarchy_object(lifetime_passkey(), *h->root);
       }
-      for (auto* b : this->severed_bridges)
-         b->deleteLater();
-      this->severed_bridges.clear();
+      //
+      for (auto* b : this->severed_bridges.objects) {
+         this->lifetime_sys.destroy_hierarchy_object(lifetime_passkey(), *b);
+      }
+      this->severed_bridges.objects.clear();
+      //
+      for (auto* b : this->severed_bridges.model_observers) {
+         this->lifetime_sys.destroy_hierarchy_object(lifetime_passkey(), *b);
+      }
+      this->severed_bridges.model_observers.clear();
    }
 }

@@ -14,6 +14,7 @@ struct ObservableStandardItemModelObserver;
 
 namespace dovahscript::impl {
    class hierarchy_crawler;
+   class task_reference_state_multi_checker;
 }
 namespace dovahscript::core::subsystems {
    class userdata;
@@ -97,6 +98,16 @@ namespace dovahscript::core::subsystems {
             void destroy_hierarchy_object(passkey_to<impl::hierarchy_crawler>, model_observer_t&);
 
             void destroy_non_hierarchy_object(passkey_to<impl::lifetime_check_queue>, QObject&);
+
+            // These functions are used during processing of the pending lifetime check queue, to quickly 
+            // check whether a given native object is task-referenced. We allow the queue to grab the lock 
+            // and hold it using an RAII struct, to avoid having to constantly lock and unlock for each 
+            // individual check.
+            bool set_task_reference_lock_state(passkey_to<impl::task_reference_state_multi_checker>, bool);
+            bool lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, QObject&) const noexcept;
+            bool lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, model_observer_t&) const noexcept;
+
+            void decrease_extant_widget_count(passkey_to<impl::lifetime_check_queue>, unsigned int);
          #pragma endregion
 
          // When the script thread queues a cross-thread task that in some way uses or refers to a 

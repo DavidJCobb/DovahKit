@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <type_traits>
 #include <QObject>
+#include "task_reference_state_multi_checker.h"
 
 class DovahscriptStandardItemModel;
 class ObservableStandardItemModelObserver;
@@ -17,7 +18,7 @@ namespace dovahscript::impl {
             enum type : uint8_t {
                referenced_in_lua  = 0x01,
                referenced_in_task = 0x02,
-               referenced_general = 0x04,
+               referenced_general = 0x04, // we're sure the item is referenced, but we're not 100% sure where anymore
                //
                referenced_across_bridge = 0x40,
                marked_for_delete        = 0x80,
@@ -42,11 +43,15 @@ namespace dovahscript::impl {
 
          core::subsystems::lifetime& lifetime_sys;
          core::subsystems::userdata& userdata_sys;
+         task_reference_state_multi_checker task_ref_checker;
 
       public:
          QVector<DovahscriptStandardItemModel*> models_known_to_be_referenced;
          QVector<found_hierarchy*> found;
-         QVector<QObject*> severed_bridges;
+         struct {
+            QVector<QObject*> objects;
+            QVector<ObservableStandardItemModelObserver*> model_observers;
+         } severed_bridges;
          int total_widgets_deleted = 0;
 
          hierarchy_crawler();

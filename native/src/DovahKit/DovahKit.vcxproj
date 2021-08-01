@@ -121,6 +121,7 @@
     <ClCompile Include="dovahscript\core\subsystems\lifetime.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.cpp" />
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\permissions.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\userdata.cpp" />
     <ClCompile Include="dovahscript\core\task_queue.cpp" />
@@ -512,6 +513,7 @@
     <ClInclude Include="dovahscript\core\subsystems\lifetime.h" />
     <ClInclude Include="dovahscript\core\subsystems\lifetime\hierarchy_crawler.h" />
     <ClInclude Include="dovahscript\core\subsystems\lifetime\lifetime_check_queue.h" />
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.h" />
     <ClInclude Include="dovahscript\core\subsystems\permissions.h" />
     <ClInclude Include="dovahscript\core\subsystems\userdata.h" />
     <ClInclude Include="dovahscript\core\task_queue.h" />

@@ -1,7 +1,8 @@
 #include "lifetime.h"
+#include "../../../helpers/unordered_map.h"
+#include "../../../ui/generic/CanvasWidget.h"
 #include "events.h"
 #include "userdata.h"
-#include "../../../ui/generic/CanvasWidget.h"
 #include "../verify_threading.h"
 
 namespace {
@@ -35,7 +36,6 @@ namespace {
 namespace dovahscript::core::subsystems {
    void lifetime::main_thread_handler() {
       this->pending_lifetime_checks.main_thread_handler(impl::lifetime_check_queue::subsystem_passkey());
-      static_assert(false, "TODO: Do we need anything else here?");
    }
 
    void lifetime::on_script_teardown() {
@@ -65,6 +65,12 @@ namespace dovahscript::core::subsystems {
          list.clear();
       }
       {
+         auto& list = this->hierarchy_objects.model_observers;
+         for (auto* e : list)
+            delete e;
+         list.clear();
+      }
+      {
          auto& list = this->hierarchy_objects.orphans.canvas_widget_entities;
          for (auto* e : list) {
             events_s.abandon_object(*e);
@@ -87,13 +93,6 @@ namespace dovahscript::core::subsystems {
             e->deleteLater();
          list.clear();
       }
-      {
-         auto& list = this->non_hierarchy_objects.model_observers;
-         for (auto* e : list)
-            delete e;
-         list.clear();
-      }
-      static_assert(false, "TODO: Do we need anything else here?");
    }
 
    void lifetime::on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from) {
@@ -170,6 +169,8 @@ namespace dovahscript::core::subsystems {
       }
    }
    void lifetime::destroy_hierarchy_object(passkey_to<impl::hierarchy_crawler>, QObject& target) {
+      require_client_thread();
+      //
       if constexpr (debug_qobject_lifetimes) {
          qDebug("Destroying native object: %p (%s)", &target, _debug_get_object_classname(&target));
       }
@@ -202,5 +203,34 @@ namespace dovahscript::core::subsystems {
       // Disconnect events:
       //
       events::get().abandon_object(target);
+      //
+      target.deleteLater();
+   }
+
+   bool lifetime::set_task_reference_lock_state(passkey_to<impl::task_reference_state_multi_checker>, bool state) {
+      require_client_thread();
+      //
+      auto& lock = this->task_referenced_objects.lock;
+      if (state)
+         lock.lock();
+      else
+         lock.unlock();
+   }
+   bool lifetime::lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, QObject& subject) const noexcept {
+      require_client_thread();
+      //
+      auto& tro = this->task_referenced_objects;
+      return cobb::unordered_map_contains(tro.objects, &subject);
+   }
+   bool lifetime::lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, model_observer_t& subject) const noexcept {
+      require_client_thread();
+      //
+      auto& tro = this->task_referenced_objects;
+      return cobb::unordered_map_contains(tro.model_observers, &subject);
+   }
+
+   void lifetime::decrease_extant_widget_count(passkey_to<impl::lifetime_check_queue>, unsigned int by) {
+      require_client_thread();
+      this->extant_widget_count -= by;
    }
 }

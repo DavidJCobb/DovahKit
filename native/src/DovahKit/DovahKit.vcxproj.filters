@@ -1167,6 +1167,9 @@
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2391,6 +2394,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\qt\DovahscriptStandardItemModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\core\subsystems\lifetime\task_reference_state_multi_checker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,6 +6,7 @@
 #include "../lifetime.h"
 #include "../userdata.h"
 #include "hierarchy_crawler.h"
+#include "task_reference_state_multi_checker.h"
 
 #include "../../../qt/DovahscriptStandardItemModel.h"
 
@@ -49,8 +50,8 @@ namespace dovahscript::impl {
       //
       auto& lifetime_s = core::subsystems::lifetime::get();
       auto& userdata_s = core::subsystems::userdata::get();
+      auto  task_ref_access = task_reference_state_multi_checker();
       //
-      static_assert(false, "TODO: Perform lifetime checks on the queued objects.");
       {  // Hierarchy objects.
          hierarchy_crawler crawler;
          //
@@ -59,7 +60,8 @@ namespace dovahscript::impl {
          // here, and track the models that we know to be referenced (i.e. any 
          // that have observers which aren't pending a lifetime check).
          //
-         lifetime_s.for_each_known_model_observer([this, &crawler, &userdata_s](model_observer_t* observer) {
+         lifetime_s.for_each_known_model_observer([this, &crawler, &userdata_s, &task_ref_access](model_observer_t* observer) {
+            assert(observer);
             if (this->queues.model_observers.contains(observer))
                return;
             auto& list  = crawler.models_known_to_be_referenced;
@@ -70,7 +72,8 @@ namespace dovahscript::impl {
                return;
             if (userdata_s.wrapper_exists_for(observer))
                return;
-            static_assert(false, "TODO: return early here if the observer is not task-referenced.");
+            if (task_ref_access.is_task_referenced(*observer))
+               return;
             list.push_back(model);
          });
          //
@@ -86,7 +89,7 @@ namespace dovahscript::impl {
          }
          crawler.finalize();
          crawler.delete_abandoned();
-         lifetime_s.extant_widget_count -= crawler.total_widgets_deleted;
+         lifetime_s.decrease_extant_widget_count(lifetime_passkey(), crawler.total_widgets_deleted);
          //
          this->queues.hierarchy_objects.clear();
          this->queues.model_observers.clear();
@@ -95,13 +98,15 @@ namespace dovahscript::impl {
       // Non-hierarchy objects are much simpler to handle:
       //
       for (auto* obj : this->queues.non_hierarchy_objects) {
+         assert(obj);
          //
          // First, let's check whether the object is referenced within the script engine, 
          // whether by a Lua value or by a task:
          //
+         if (task_ref_access.is_task_referenced(*obj))
+            continue;
          if (userdata_s.wrapper_exists_for(obj))
             continue;
-         static_assert(false, "check if the object is task-referenced; `continue` (i.e. skip it) if so");
          //
          // Next, let's do type-specific checks to see if the object is in use by some 
          // object within the UI. If it's in use by the UI, let's avoid deleting it, 
