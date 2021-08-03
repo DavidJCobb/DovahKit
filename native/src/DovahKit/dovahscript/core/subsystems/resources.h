@@ -33,10 +33,9 @@ namespace dovahscript::core::subsystems {
             qRegisterMetaType<handle_t>(); // ensure the metatype is registered at run-time
          }
 
-         void clear();
-
       public:
          void main_thread_handler(); // VM core should call this from the main thread; nothing else should touch it
+         void on_script_teardown();
 
          // Creates a resource and returns it. This must be called from inside of a script-to-client cross-thread task, and 
          // the script thread MUST receive the resource and push it into Lua via a wrapper.

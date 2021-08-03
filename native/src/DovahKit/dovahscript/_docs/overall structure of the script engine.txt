@@ -1,0 +1,44 @@
+
+DovahKit's script engine, internally called  "Dovahscript," is divided into six 
+different  subsystems. Each subsystem is  responsible for different  aspects of 
+the engine's functioning.
+
+The COORDINATOR  subsystem handles all  high-level coordination,  including the 
+threading model and communication with the "outside world." It stores all cross-
+thread tasks and executes them as appropriate. It also handles interaction with 
+the UI, including parenting script windows  to the appropriate hardcoded window 
+from outside  of the script engine, and performing some setup on  newly-created 
+scripted widgets to allow for common behaviors (e.g. canvas widget context menu 
+behavior, and QLabel hyperlink behavior).
+
+The LIFETIME subsystem  is responsible for keeping track  of all native objects 
+whose lifetimes are dependent on the script  and thus need to be managed by the 
+script engine.  The subsystem doesn't need  to track each object  individually; 
+when  dealing with hierarchies of UI  widgets, only hierarchy roots need  to be 
+tracked, as deleting them will recursively  delete their descendants due to how 
+widgets manage lifetime in Qt.
+
+The USERDATA subsystem  is responsible for managing userdata  wrappers; you can 
+read up on its purpose  in detail in <userdata wrappers.txt>.  As a side effect 
+of this duty,  the userdata subsystem is capable  of detecting whenever  native 
+objects become unreferenced within Lua,  and it notifies the lifetime subsystem 
+accordingly.
+
+The EVENTS subsystem is responsible for managing scripted event listeners on UI 
+widgets and associated objects; for catching  listened-for events within Qt and 
+saving them for later dispatch to the  script; and for actually dispatching the 
+saved events.
+
+The PERMISSIONS subsystem is responsible for managing permission limitations on 
+scripts. The goal is to allow both users and script authors detailed control of 
+what scripts are allowed to do, and to use  a script's requested permissions to 
+extrapolate information about its functioning. For example, if a script doesn't 
+need permission to modify forms or other  game data, then we don't need to warn 
+the user about data loss or damage when they ask to forcibly halt the script.
+
+The RESOURCES subsystem is responsible  for managing larger resources loaded or 
+created by a script, such as game texture files or script-created rasters. This 
+subsystem must not only store and track these resources, but also allow scripts 
+to safely modify them: writeable resources are effectively double-buffered with 
+one buffer on the script thread and another on the client thread, and it's this 
+subsystem which manages that process.

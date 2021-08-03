@@ -37,6 +37,11 @@ namespace dovahscript::core::subsystems {
          }
 
          using qt_model_type = DovahscriptStandardItemModel;
+         enum class ui_lock_override_state {
+            unchanged,
+            locked,
+            unlocked,
+         };
 
          inline static constexpr const char* abort_sentinel_userdata = "dovahscript.internal.abort_error";
 
@@ -44,9 +49,16 @@ namespace dovahscript::core::subsystems {
          enum class thread_wait_state {
             running,
             waiting,
+            finished,
          };
 
+      signals:
+         void _internal_scriptDone();
+
       protected:
+         coordinator();
+         ~coordinator();
+
          std::atomic<bool>   aborted = false; // main thread can set this to kill the script
          std::atomic<bool>   paused  = false; // main thread can set this to pause the script, though it won't take effect instantly. we unpause when running a new script.
          cobb::lockable_bool running = false;
@@ -78,6 +90,12 @@ namespace dovahscript::core::subsystems {
          // This bool is only safely accessible from the client thread.
          //
          bool repaint_requested_while_ui_locked = false;
+
+         //
+         // Whether to override the current UI lock state. Used when we execute functions that Lua has 
+         // asked us to run with a particular lock state.
+         //
+         ui_lock_override_state ui_lock_override = ui_lock_override_state::unchanged;
          
          void _setup_lua_state();
          void _teardown_lua_state(); // can only safely run on the client thread, since it tears down Qt objects now too

@@ -22,7 +22,7 @@ class DovahscriptHost : public QObject, cobb::singleton {
    signals:
       void messageLogged(const QString&);
       void scriptStarted();
-      void scriptEnded(bool error);
+      void scriptEnded();
       void userClickedLink(const QString& url, QWidget* opener);
       
    public slots:

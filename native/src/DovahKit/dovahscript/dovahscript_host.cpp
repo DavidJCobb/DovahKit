@@ -7,15 +7,6 @@ namespace {
 
 DovahscriptHost::DovahscriptHost() {
    auto& coordinator_s = coordinator_t::get();
-   QObject::connect(&coordinator_s, &coordinator_t::scriptStarted, this, [this]() {
-      emit this->scriptStarted();
-   });
-   QObject::connect(&coordinator_s, &coordinator_t::scriptEnded, this, [this](bool b) {
-      emit this->scriptEnded(b);
-   });
-   QObject::connect(&coordinator_s, &coordinator_t::messageLogged, this, [this](const QString& v) {
-      emit this->messageLogged(v);
-   });
 }
 
 bool DovahscriptHost::is_aborted() const noexcept {

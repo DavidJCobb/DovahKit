@@ -15,46 +15,6 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
-   void resources::clear() {
-      require_client_thread();
-      //
-      {
-         auto& base = this->stored_resources.desynched;
-         auto& list = base.list;
-         std::unique_lock guard(base.lock);
-         //
-         list.clear();
-      }
-      {
-         auto& base = this->stored_resources.extant;
-         auto& list = base.list;
-         std::unique_lock guard(base.lock);
-         //
-         for (auto* resource : list) {
-            assert(resource);
-            assert(QThread::currentThread() == resource->thread());
-            if constexpr (debug_log_resource_management)
-               qDebug("Teardown is deleting extant Lua-managed resource: %p", resource);
-            resource->deleteLater();
-         }
-         list.clear();
-      }
-      {
-         auto& base = this->stored_resources.pending_deletion;
-         auto& list = base.list;
-         std::unique_lock guard(base.lock);
-         //
-         for (auto* resource : list) {
-            assert(resource);
-            assert(QThread::currentThread() == resource->thread());
-            if constexpr (debug_log_resource_management)
-               qDebug("Teardown is deleting marked-for-delete Lua-managed resource: %p", resource);
-            resource->deleteLater();
-         }
-         list.clear();
-      }
-   }
-
    void resources::main_thread_handler() {
       require_client_thread();
       //
@@ -89,6 +49,45 @@ namespace dovahscript::core::subsystems {
             assert(resource);
             if constexpr (debug_log_resource_management)
                qDebug("Deleting Lua-managed resource: %p", resource);
+            resource->deleteLater();
+         }
+         list.clear();
+      }
+   }
+   void resources::on_script_teardown() {
+      require_client_thread();
+      //
+      {
+         auto& base = this->stored_resources.desynched;
+         auto& list = base.list;
+         std::unique_lock guard(base.lock);
+         //
+         list.clear();
+      }
+      {
+         auto& base = this->stored_resources.extant;
+         auto& list = base.list;
+         std::unique_lock guard(base.lock);
+         //
+         for (auto* resource : list) {
+            assert(resource);
+            assert(QThread::currentThread() == resource->thread());
+            if constexpr (debug_log_resource_management)
+               qDebug("Teardown is deleting extant Lua-managed resource: %p", resource);
+            resource->deleteLater();
+         }
+         list.clear();
+      }
+      {
+         auto& base = this->stored_resources.pending_deletion;
+         auto& list = base.list;
+         std::unique_lock guard(base.lock);
+         //
+         for (auto* resource : list) {
+            assert(resource);
+            assert(QThread::currentThread() == resource->thread());
+            if constexpr (debug_log_resource_management)
+               qDebug("Teardown is deleting marked-for-delete Lua-managed resource: %p", resource);
             resource->deleteLater();
          }
          list.clear();

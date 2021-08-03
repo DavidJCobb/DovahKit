@@ -9,6 +9,8 @@ class DovahscriptStandardItemModel : public ObservableStandardItemModel {
       void associatedWidgetDestroyed(QWidget*);
 
    public:
+      using ObservableStandardItemModel::ObservableStandardItemModel;
+
       QList<QWidget*> associatedWidgets();
       void associateWithWidget(QWidget*);
       void dissociateFromWidget(QWidget*);

@@ -10,6 +10,7 @@
 #include "resources.h"
 #include "userdata.h"
 #include "../../dovahscript_host.h"
+#include "../../../editor/core.h"
 
 #include "coordinator/client_thread_script_borrow_handle.h"
 #include "../verify_threading.h"
@@ -31,9 +32,46 @@ namespace {
          || _DEBUG
       #endif
    ;
+
+   static constexpr const char* ui_locked_queue_registry_key   = "dovahscript.internal.queued_fucntions.ui_locked";
+   static constexpr const char* ui_unlocked_queue_registry_key = "dovahscript.internal.queued_fucntions.ui_unlocked";
 }
 
 namespace dovahscript::core::subsystems {
+   coordinator::coordinator() {
+      this->main_thread_tick_timer.setSingleShot(false);
+      this->main_thread_tick_timer.setInterval(0);
+      QObject::connect(&this->main_thread_tick_timer, &QTimer::timeout, this, &coordinator::_main_thread_loop);
+      QObject::connect(this, &coordinator::_internal_scriptDone, this, [this]() {
+         if constexpr (debug_script_start_stop) {
+            qDebug("DovahKitScriptVMCore received its own scriptEnded signal...");
+         }
+         this->main_thread_tick_timer.stop();
+         this->_teardown_lua_state();
+         //
+         emit host::get().scriptEnded();
+      });
+      //
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
+         if (!will_be_flagged)
+            return;
+         static_assert(false, "TODO: We need to rethink urgent m2s messages. Previously we were basically only checking the queue between entire scripts, and after sending blocking UI tasks. Not good enough here.");
+         auto* message = new dovahscript::tasks::m2s::form_deleted;
+         message->stub = stub;
+         //
+         this->task_queues.m2s.urgent.push_back(message);
+      });
+      QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &coordinator::abort);
+   }
+   coordinator::~coordinator() {
+      this->abort();
+      if (this->worker_thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
+         this->worker_thread.join();
+      this->_teardown_lua_state();
+      this->running = false;
+   }
+
    void coordinator::_main_thread_loop() {
       auto& lifetime_s = lifetime::get();
       //
@@ -76,7 +114,7 @@ namespace dovahscript::core::subsystems {
                   qDebug("Failed to parse script: %s", script.filename.toUtf8());
                }
                auto message = QString::fromUtf8(lua_tostring(this->lua_state, -1));
-               emit messageLogged(message);
+               emit host::get().messageLogged(message);
                break;
          }
       }
@@ -91,7 +129,6 @@ namespace dovahscript::core::subsystems {
       do {
          this->task_queues.s2m.wait_until_empty();      // these can be non-blocking + fire-and-forget
          this->task_queues.ui.write.wait_until_empty(); // these can be non-blocking + fire-and-forget
-         this->task_queues.m2s.urgent.process();
          had_any_tasks |= (this->_run_queued_functions(false) > 0);
          had_any_tasks |= (events::get().process_pending_events() > 0);
          had_any_tasks |= (this->_run_queued_functions(true) > 0);
@@ -102,8 +139,8 @@ namespace dovahscript::core::subsystems {
       }
       this->main_thread_tick_timer.stop();
       this->running = false;
-      this->worker_thread_state = coordinator::thread_wait_state::waiting;
-      emit this->scriptEnded(false); // a main-thread handler will catch this and tear down the VM
+      this->worker_thread_state = coordinator::thread_wait_state::finished;
+      emit this->_internal_scriptDone(); // a main-thread handler will catch this and tear down the VM
    }
 
    bool coordinator::_should_keep_running() const noexcept;
@@ -122,8 +159,8 @@ namespace dovahscript::core::subsystems {
          }
       }
       if (s.is_aborted()) {
-         static_assert(false, "TODO: Use a unique, pre-created userdata object to signal the error, instead of a string.");
-         luaL_error(L, "Script terminated at the user's request.");
+         lua_getfield(L, LUA_REGISTRYINDEX, coordinator::abort_sentinel_userdata);
+         lua_error(L);
       }
    }
 
@@ -213,6 +250,10 @@ namespace dovahscript::core::subsystems {
          this->lua_state = nullptr;
       }
       //
+      this->task_queues.s2m.clear();
+      this->task_queues.ui.read.clear();
+      this->task_queues.ui.write.clear();
+      //
       events::get().on_script_teardown();
       lifetime::get().on_script_teardown();
       resources::get().on_script_teardown();
@@ -244,9 +285,6 @@ namespace dovahscript::core::subsystems {
       while (!task.seen)
          if (this->is_aborted())
             break;
-      if (!this->is_aborted()) {
-         this->task_queues.m2s.urgent.process();
-      }
    }
    void coordinator::send_ui_write_task(tasks::_ui_write_base& task) {
       require_script_thread();
@@ -258,9 +296,6 @@ namespace dovahscript::core::subsystems {
          while (!task.seen)
             if (this->is_aborted())
                break;
-      }
-      if (!this->is_aborted()) {
-         this->task_queues.m2s.urgent.process();
       }
    }
 
@@ -274,8 +309,7 @@ namespace dovahscript::core::subsystems {
    }
    void coordinator::execute_scripts(script_set&& scripts) {
       std::swap(this->scripts_to_run, scripts);
-      static_assert(false, "TODO: Everything else");
-
+      //
       auto guard = std::lock_guard(this->running);
       if (this->running) {
          if constexpr (debug_script_start_stop) {
@@ -285,7 +319,6 @@ namespace dovahscript::core::subsystems {
       }
       if (this->worker_thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
          this->worker_thread.join();
-      auto& facade = DovahKitScriptVM::get();
       this->aborted = false;
       this->running = true;
       this->paused = false;
@@ -293,7 +326,7 @@ namespace dovahscript::core::subsystems {
          qDebug("Starting a new script...");
       }
       this->main_thread_tick_timer.start();
-      emit facade.scriptStarted();
+      emit host::get().scriptStarted();
       //this->_teardown_lua_vm();
       this->_setup_lua_state();
       //
@@ -309,7 +342,7 @@ namespace dovahscript::core::subsystems {
    void coordinator::create_model_for_widget(QWidget& widget) {
       require_client_thread();
       //
-      auto* model = new qt_model_type(widget);
+      auto* model = new qt_model_type(&widget);
       auto* proxy = new QSortFilterProxyModel(model);
       proxy->setSourceModel(model);
       proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
