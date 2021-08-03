@@ -69,8 +69,6 @@ namespace dovahscript::core::subsystems {
          std::atomic<thread_wait_state> worker_thread_state = thread_wait_state::running;
          std::atomic<int> outstanding_client_thread_script_borrow_requests = 0;
 
-         QVector<dovah::bare_form_id_t> expected_form_deletions;
-
          script_set scripts_to_run;
          struct {
             task_queue s2m;
@@ -115,6 +113,8 @@ namespace dovahscript::core::subsystems {
          bool _should_keep_running() const noexcept;
 
          static void _lua_debug_hook(lua_State* L, lua_Debug* ar);
+
+         static void _lua_warning_function(void* ud, const char* msg, int tocont);
 
       public:
          lua_State*      lua_state = nullptr;

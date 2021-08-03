@@ -57,23 +57,19 @@ namespace dovahscript::core::subsystems {
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
          if (!will_be_flagged)
             return;
-         auto i = this->expected_form_deletions.indexOf(stub->formID);
-         if (i < 0) {
-            static_assert(false, "TODO: Handle unexpected deletion. Note that deleting a Lua-unreferenced parent form would result in ''unexpected'' deletions of its child and descendant forms.");
-            //
-            // Really, the only "sane" handling for deletions would be to:
-            // 
-            //  - Assert that they never occur except in response to a form-delete task 
-            //    (that is, while the task is being processed and we haven't yet returned 
-            //    to the Lua CFunction that sent it).
-            // 
-            //  - Zombify wrappers as necessary on the script thread.
-            // 
-            //     - So either the task needs some sort of "back-to-sender" handler, or we 
-            //       need something "deeper" in the engine than a task, for this.
-            //
-         }
-         this->expected_form_deletions.remove(i);
+         static_assert(false, "TODO:");
+         //
+         // Really, the only "sane" handling for deletions would be to:
+         // 
+         //  - Assert that they never occur except in response to a form-delete task 
+         //    (that is, while the task is being processed and we haven't yet returned 
+         //    to the Lua CFunction that sent it).
+         // 
+         //  - Zombify wrappers as necessary on the script thread.
+         // 
+         //     - So either the task needs some sort of "back-to-sender" handler, or we 
+         //       need something "deeper" in the engine than a task, for this.
+         //
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &coordinator::abort);
    }
@@ -290,6 +286,27 @@ namespace dovahscript::core::subsystems {
       resources::get().on_script_teardown();
       //
       this->in_teardown = false;
+   }
+
+   void coordinator::_lua_warning_function(void* ud, const char* msg, int tocont) {
+      static QString text; // we could use (ud) to hold this, but since the VM is itself a singleton, no point in trying to allow multiple warning handlers to exist simultaneously
+      static bool    fragment = false;
+      //
+      if (!fragment) {
+         text = "[Warning] ";
+      }
+      fragment = tocont;
+      text += msg;
+      if (!tocont) {
+         auto* L = coordinator::get().lua_state;
+         luaL_traceback(L, L, text.toUtf8(), 0);
+         if (lua_isstring(L, -1))
+            text = lua_tostring(L, -1);
+         lua_pop(L, 1);
+         //
+         host::get().messageLogged(text);
+         text.clear();
+      }
    }
 
    QWidget* coordinator::get_ui_parent() const noexcept {
