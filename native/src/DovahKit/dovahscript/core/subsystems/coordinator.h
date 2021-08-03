@@ -123,6 +123,10 @@ namespace dovahscript::core::subsystems {
 
          void create_model_for_widget(QWidget&);
          void force_ui_repaint();
+
+         // Sets up non-lifetime-related behaviors and defaults on some widgets. Should be called for 
+         // every newly-created scripted widget.
+         void set_up_widget(QWidget&);
          
       protected slots:
          void _main_thread_loop();

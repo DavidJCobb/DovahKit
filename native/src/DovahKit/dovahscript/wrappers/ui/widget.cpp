@@ -11,6 +11,7 @@
 #include "../../core/subsystems/lifetime.h"
 #include "../../core/subsystems/permissions.h"
 
+#include "../../tasks/s2m/add_child_ui_widget.h"
 #include "../../tasks/s2m/lambda.h"
 #include "../../tasks/s2m/ui_read_lambda.h"
 #include "../../tasks/s2m/ui_write_lambda.h"
@@ -72,8 +73,6 @@ namespace {
             cobb::lua::error(L, "this widget cannot have a layout and so cannot have children either");
          if (!arg->widget)
             return 0;
-         if (get_widget_forced_parent(arg->widget))
-            cobb::lua::argerror(L, 2, "the desired child widget cannot have its parent changed");
          //
          int row     = 0; // or (index) for boxes
          int col     = 0;
@@ -104,30 +103,29 @@ namespace {
          --row; // Lua one-indexed -> C zero-indexed
          --col; // Lua one-indexed -> C zero-indexed
          //
-         task_reference widget = self.widget;
-         task_reference child  = arg->widget;
-         auto* task = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget, child, row, col, rowspan, colspan]() {
-            auto* prior_parent = child->parent();
-            auto* layout       = widget->layout();
-            if (!layout) {
-               child->setParent(widget);
-            } else if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-               if (row >= 0 && col >= 0) {
-                  grid->addWidget(child, row, col, rowspan, colspan);
-               } else {
-                  grid->addWidget(child);
-               }
-            } else if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
-               if (row >= 0) {
-                  box->insertWidget(row, child);
-               } else {
-                  box->addWidget(child);
-               }
-            }
-            core::subsystems::lifetime::get().on_hierarchy_item_parent_changed(child, prior_parent);
-         };
+         auto* task = new tasks::s2m::add_child_ui_widget();
+         task->parent = self.widget;
+         task->child  = arg->widget;
+         task->layout.row     = row;
+         task->layout.col     = col;
+         task->layout.rowspan = rowspan;
+         task->layout.colspan = colspan;
          core::subsystems::coordinator::get().send_ui_write_task(*task);
+         //
+         auto code = task->error;
+         //
+         assert(task->is_blocking()); // the task must be blocking so that we can throw errors based on its results
+         delete task;
+         //
+         switch (code) {
+            using e = decltype(code);
+            case e::unknown_layout_type:
+               cobb::lua::error(L, "the parent widget had an unknown layout type; the child could not be added");
+            case e::would_be_cyclical:
+               cobb::lua::error(L, "the desired child widget is a parent or ancestor of the desired parent");
+            case e::child_has_a_forced_parent:
+               cobb::lua::argerror(L, 2, "the desired child widget cannot have its parent changed");
+         }
          return 0;
       }
       int add_spacer(lua_State* L) {

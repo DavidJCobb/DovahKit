@@ -9,7 +9,7 @@ namespace dovahscript {
    };
 
    struct script_set {
-      QString addon_name;
+      QString package_folder_name;
       std::vector<pending_script> files;
    };
 }

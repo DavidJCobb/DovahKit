@@ -1,12 +1,15 @@
 #include "coordinator.h"
+#include <QLabel>
 #include <QSortFilterProxyModel>
 #include "../../../helpers/qt/get_model_of.h"
 #include "../../../helpers/qt/set_model_of.h"
 #include "../../../helpers/qt/repaint.h"
+#include "../../../ui/generic/CanvasWidget.h"
 #include "events.h"
 #include "lifetime.h"
 #include "resources.h"
 #include "userdata.h"
+#include "../../dovahscript_host.h"
 
 #include "coordinator/client_thread_script_borrow_handle.h"
 #include "../verify_threading.h"
@@ -19,6 +22,8 @@
 #include "../../tasks/_ui_base.h"
 
 #include "../../qt/DovahscriptStandardItemModel.h"
+
+#include "../../qt/impl/canvas_context_menu.h"
 
 namespace {
    static constexpr bool debug_script_start_stop = false
@@ -317,5 +322,18 @@ namespace dovahscript::core::subsystems {
       auto list = lifetime::get().get_script_windows();
       for (auto* window : list)
          cobb::qt::update_hierarchy(window);
+   }
+
+   void coordinator::set_up_widget(QWidget& widget) {
+      require_client_thread();
+      //
+      widget.installEventFilter(this);
+      if (auto* label = qobject_cast<QLabel*>(&widget)) {
+         QObject::connect(label, &QLabel::linkActivated, [label](const QString& url) {
+            emit host::get().userClickedLink(url, label->window());
+         });
+      } else if (auto* canvas = qobject_cast<CanvasWidget*>(&widget)) {
+         dovahscript::impl::set_up_canvas_context_menu(canvas);
+      }
    }
 }
