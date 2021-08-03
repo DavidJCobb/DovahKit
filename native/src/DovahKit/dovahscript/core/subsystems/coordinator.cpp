@@ -22,6 +22,7 @@
 #include "../../tasks/_base.h"
 #include "../../tasks/_ui_base.h"
 
+#include "../../qt/DovahscriptDialog.h"
 #include "../../qt/DovahscriptStandardItemModel.h"
 
 #include "../../qt/impl/canvas_context_menu.h"
@@ -156,7 +157,21 @@ namespace dovahscript::core::subsystems {
       emit this->_internal_scriptDone(); // a main-thread handler will catch this and tear down the VM
    }
 
-   bool coordinator::_should_keep_running() const noexcept;
+   bool coordinator::_should_keep_running() const noexcept {
+      if (this->aborted)
+         return false;
+      //
+      // If the script has any script-spawned UI windows open and visible, then this function 
+      // should return (true). If we want to be more sophisticated, then we can double-check 
+      // that the windows or any controls in them have any event listeners registered.
+      //
+      // The basic thing we're checking for is, "We're not running script code *right now*, 
+      // but can we *end up* running them as a result of any extant event listeners?"
+      //
+      if (lifetime::get().any_windows_visible_or_task_referenced())
+         return true;
+      return false;
+   }
 
    /*static*/ void coordinator::_lua_debug_hook(lua_State* L, lua_Debug* ar) {
       lifetime::get().worker_thread_handler();

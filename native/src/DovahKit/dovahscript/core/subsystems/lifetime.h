@@ -10,6 +10,7 @@
 
 class  CanvasWidgetEntity;
 class  CanvasWidgetLayerData;
+class  DovahscriptDialog;
 struct ObservableStandardItemModelObserver;
 
 namespace dovahscript::impl {
@@ -42,9 +43,9 @@ namespace dovahscript::core::subsystems {
          //
          mutable std::shared_mutex object_read_write_lock;
          struct {
-            QVector<QDialog*>          windows;
-            QVector<QButtonGroup*>     button_groups;
-            QVector<model_observer_t*> model_observers;
+            QVector<DovahscriptDialog*> windows;
+            QVector<QButtonGroup*>      button_groups;
+            QVector<model_observer_t*>  model_observers;
             struct {
                QVector<QWidget*>            widgets; // DOES NOT include windows
                QVector<CanvasWidgetEntity*> canvas_widget_entities;
@@ -67,7 +68,9 @@ namespace dovahscript::core::subsystems {
          impl::lifetime_check_queue pending_lifetime_checks;
 
       public:
-         QVector<QDialog*> get_script_windows() const noexcept;
+         QVector<DovahscriptDialog*> get_script_windows() const noexcept;
+
+         bool any_windows_visible_or_task_referenced() const noexcept;
 
          // Call when setting up a new Lua state.
          void on_script_setup();

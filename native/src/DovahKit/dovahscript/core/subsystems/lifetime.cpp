@@ -5,6 +5,7 @@
 #include "events.h"
 #include "userdata.h"
 #include "../verify_threading.h"
+#include "../../qt/DovahscriptDialog.h"
 
 namespace {
 
@@ -196,11 +197,31 @@ namespace dovahscript::core::subsystems {
    }
 
 
-   QVector<QDialog*> lifetime::get_script_windows() const noexcept {
+   QVector<DovahscriptDialog*> lifetime::get_script_windows() const noexcept {
       auto guard = std::shared_lock(this->object_read_write_lock);
       return this->hierarchy_objects.windows;
    }
 
+   bool lifetime::any_windows_visible_or_task_referenced() const noexcept {
+      auto  guard = std::shared_lock(this->object_read_write_lock);
+      auto& tro   = this->task_referenced_objects;
+      auto  tro_g = std::lock_guard(tro.lock);
+      for (auto* window : this->hierarchy_objects.windows) {
+         //
+         // Is the window visible?
+         //
+         if (window->lastVisibleState()) // QWidget::isVisible is not atomic or otherwise thread-safe; this should be
+            return true;
+         //
+         // Is the window task-referenced?
+         //
+         auto it = tro.objects.find(window);
+         if (it != tro.objects.end())
+            if (it->second > 0)
+               return true;
+      }
+      return false;
+   }
 
 
    void lifetime::on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData* cwld) {
