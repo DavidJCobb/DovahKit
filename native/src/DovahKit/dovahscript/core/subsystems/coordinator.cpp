@@ -2,6 +2,7 @@
 #include <QSortFilterProxyModel>
 #include "../../../helpers/qt/get_model_of.h"
 #include "../../../helpers/qt/set_model_of.h"
+#include "../../../helpers/qt/repaint.h"
 #include "events.h"
 #include "lifetime.h"
 #include "resources.h"
@@ -49,10 +50,37 @@ namespace dovahscript::core::subsystems {
    void coordinator::_script_thread_loop() {
       assert(this->worker_thread_state == coordinator::thread_wait_state::running); // After running one session and when running a new one, this should be reset before the worker thread is created.
       //
-      static_assert(false, "Run all outstanding script files here.");
-      if constexpr (debug_script_start_stop) {
-         qDebug("Finished executing all requested script files. Switching to script thread idle loop.");
+      // Run all outstanding script files:
+      //
+      for (auto& script : this->scripts_to_run.files) {
+         auto buffer = script.contents.toUtf8();
+         auto result = luaL_loadbufferx(this->lua_state, buffer.data(), buffer.size(), script.filename.toUtf8().data(), "t"); // equivalent to (lua_load) with a built-in lua_Reader
+         script.contents.clear();
+         //
+         switch (result) {
+            case LUA_OK:
+               if constexpr (debug_script_start_stop) {
+                  qDebug("Successfully parsed script: %s", script.filename.toUtf8());
+               }
+               safe_call(this->lua_state, 0, 0);
+               break;
+            case LUA_ERRMEM:
+            case LUA_ERRSYNTAX:
+            default:
+               if constexpr (debug_script_start_stop) {
+                  qDebug("Failed to parse script: %s", script.filename.toUtf8());
+               }
+               auto message = QString::fromUtf8(lua_tostring(this->lua_state, -1));
+               emit messageLogged(message);
+               break;
+         }
       }
+      this->scripts_to_run.files.clear();
+      if constexpr (debug_script_start_stop) {
+         qDebug("Finished handling all requested script files. Switching to script thread idle loop.");
+      }
+      //
+      // All script files are executed. Dip into the idle loop now:
       //
       bool had_any_tasks;
       do {
@@ -142,6 +170,13 @@ namespace dovahscript::core::subsystems {
       lua_sethook (L, &_lua_debug_hook, LUA_MASKCOUNT, 8);
       lua_setwarnf(L, &_lua_warning_function, nullptr);
       //
+      // Create "abort" sentinel error:
+      //
+      lua_newuserdata(L, 1);
+      lua_setfield(L, LUA_REGISTRYINDEX, abort_sentinel_userdata);
+      //
+      // Import libraries and set up subsystems:
+      //
       lua_libraries::import_all(L);
       lua_classes::import_all(L);
       //
@@ -180,6 +215,16 @@ namespace dovahscript::core::subsystems {
       this->in_teardown = false;
    }
 
+   QWidget* coordinator::get_ui_parent() const noexcept {
+      return this->ui_parent;
+   }
+   void coordinator::set_ui_parent(QWidget* p) noexcept {
+      assert(!this->is_running());
+      assert(!this->in_teardown);
+      //
+      this->ui_parent = p;
+   }
+
 
    void coordinator::send_script_task(task_queue::task_t& task) {
       require_script_thread();
@@ -214,6 +259,48 @@ namespace dovahscript::core::subsystems {
       }
    }
 
+
+   void coordinator::abort() {
+      require_client_thread();
+      //
+      auto guard = std::lock_guard(this->running);
+      if (this->running)
+         this->aborted = true;
+   }
+   void coordinator::execute_scripts(script_set&& scripts) {
+      std::swap(this->scripts_to_run, scripts);
+      static_assert(false, "TODO: Everything else");
+
+      auto guard = std::lock_guard(this->running);
+      if (this->running) {
+         if constexpr (debug_script_start_stop) {
+            qDebug("Failed to start script: another script is already running.");
+         }
+         return;
+      }
+      if (this->worker_thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
+         this->worker_thread.join();
+      auto& facade = DovahKitScriptVM::get();
+      this->aborted = false;
+      this->running = true;
+      this->paused = false;
+      if constexpr (debug_script_start_stop) {
+         qDebug("Starting a new script...");
+      }
+      this->main_thread_tick_timer.start();
+      emit facade.scriptStarted();
+      //this->_teardown_lua_vm();
+      this->_setup_lua_state();
+      //
+      this->worker_thread = std::thread(&_script_thread_loop, this);
+   }
+   void coordinator::set_pause_state(bool b) {
+      this->paused = b;
+      if constexpr (debug_script_start_stop) {
+         qDebug("Setting script pause state to: %d", b);
+      }
+   }
+
    void coordinator::create_model_for_widget(QWidget& widget) {
       require_client_thread();
       //
@@ -223,5 +310,12 @@ namespace dovahscript::core::subsystems {
       proxy->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
       cobb::qt::set_model_of(&widget, proxy);
       model->associateWithWidget(&widget);
+   }
+   void coordinator::force_ui_repaint() {
+      require_client_thread();
+      //
+      auto list = lifetime::get().get_script_windows();
+      for (auto* window : list)
+         cobb::qt::update_hierarchy(window);
    }
 }

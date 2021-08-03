@@ -100,9 +100,17 @@ namespace {
             //
             // Stack now contains only an error object.
             //
-            if (dovahscript::core::subsystems::coordinator::get().is_aborted()) {
-               static_assert(false, "TODO: Only reject the ''real'' halt-script error. Actual script errors should be passed through, even if an abort was just called.");
-               cobb::lua::error(L, lua_tostring(L, -1));
+            if (lua_type(L, -1) == LUA_TUSERDATA) {
+               lua_getfield(L, LUA_REGISTRYINDEX, dovahscript::core::subsystems::coordinator::abort_sentinel_userdata);
+               bool eq = lua_rawequal(L, -1, -2);
+               lua_pop(L, 1);
+               if (eq)
+                  //
+                  // This is the userdata sentinel object we use when the user calls an abort. We should not 
+                  // allow the script to catch this error, as it is the means through which we forcibly halt 
+                  // script execution.
+                  //
+                  lua_error(L); // re-throw
             }
             //
             // The error is already on the stack, so let's just push the success bool 

@@ -1,13 +1,25 @@
 #include "safe_call.h"
 #include <QString>
+#include "core/subsystems/coordinator.h"
+#include "dovahscript_host.h"
 
 namespace {
-   int _error_handler(lua_State* luaVM) {
-      auto original = lua_tostring(luaVM, -1);
-      luaL_traceback(luaVM, luaVM, original, 1);
+   int _error_handler(lua_State* L) {
+      auto& host = dovahscript::host::get();
+      if (lua_type(L, -1) == LUA_TUSERDATA) {
+         lua_getfield(L, LUA_REGISTRYINDEX, dovahscript::core::subsystems::coordinator::abort_sentinel_userdata);
+         bool eq = lua_rawequal(L, -1, -2);
+         lua_pop(L, 1);
+         if (eq) {
+            emit host.messageLogged("Script execution halted at the user's request.");
+            return 1;
+         }
+      }
+      auto original = lua_tostring(L, -1);
+      luaL_traceback(L, L, original, 1);
       //
-      auto message = QString::fromUtf8(lua_tostring(luaVM, -1));
-      emit DovahKitScriptVM::get().messageLogged(message);
+      auto message = QString::fromUtf8(lua_tostring(L, -1));
+      emit host.messageLogged(message);
       //
       return 1;
    }

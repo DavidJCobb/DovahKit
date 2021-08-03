@@ -4,14 +4,17 @@
 #include "../../../helpers/lockable_bool.h"
 #include "../../../helpers/singleton.h"
 #include "../task_queue.h"
+#include "../../script_set.h"
 
 class DovahscriptStandardItemModel;
-namespace dovahscript::core::subsystems {
-   class coordinator;
-}
-namespace dovahscript::tasks {
-   class _ui_read_base;
-   class _ui_write_base;
+namespace dovahscript {
+   namespace core::subsystems {
+      class coordinator;
+   }
+   namespace tasks {
+      class _ui_read_base;
+      class _ui_write_base;
+   }
 }
 
 namespace dovahscript::core {
@@ -35,6 +38,8 @@ namespace dovahscript::core::subsystems {
 
          using qt_model_type = DovahscriptStandardItemModel;
 
+         inline static constexpr const char* abort_sentinel_userdata = "dovahscript.internal.abort_error";
+
       protected:
          enum class thread_wait_state {
             running,
@@ -50,6 +55,7 @@ namespace dovahscript::core::subsystems {
          std::atomic<thread_wait_state> worker_thread_state = thread_wait_state::running;
          std::atomic<int> outstanding_client_thread_script_borrow_requests = 0;
 
+         script_set scripts_to_run;
          struct {
             task_queue s2m;
             struct {
@@ -103,11 +109,20 @@ namespace dovahscript::core::subsystems {
          inline bool is_paused()  const noexcept { return this->paused; }
          bool teardown_in_progress() const noexcept;
 
+         // Script thread functions:
+
          void send_script_task(task_queue::task_t&);
          void send_ui_read_task(tasks::_ui_read_base&);
          void send_ui_write_task(tasks::_ui_write_base&);
 
+         // Client thread functions:
+
+         void abort();
+         void execute_scripts(script_set&&); // use std::move
+         void set_pause_state(bool);
+
          void create_model_for_widget(QWidget&);
+         void force_ui_repaint();
          
       protected slots:
          void _main_thread_loop();

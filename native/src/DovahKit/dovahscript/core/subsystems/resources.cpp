@@ -1,6 +1,7 @@
 #include "resources.h"
 #include <QThread>
 #include "../../../helpers/qt/repaint.h"
+#include "coordinator.h"
 #include "../verify_threading.h"
 
 namespace {
@@ -76,11 +77,8 @@ namespace dovahscript::core::subsystems {
                update = true;
          }
          list.clear();
-         if (update) {
-            static_assert(false, "TODO: This should be a member function on the coordinator that we can call, and it, too, should require the client thread.");
-            for (auto* window : vm.widgets.windows)
-               cobb::qt::update_hierarchy(window);
-         }
+         if (update)
+            coordinator::get().force_ui_repaint();
       }
       {
          auto& base = this->stored_resources.pending_deletion;
