@@ -319,14 +319,14 @@ namespace dovahscript::core::subsystems {
    void coordinator::abort() {
       require_client_thread();
       //
-      auto guard = std::lock_guard(this->running);
+      auto guard = std::lock_guard(this->start_stop_lock);
       if (this->running)
          this->aborted = true;
    }
    void coordinator::execute_scripts(script_set&& scripts) {
       std::swap(this->scripts_to_run, scripts);
       //
-      auto guard = std::lock_guard(this->running);
+      auto guard = std::lock_guard(this->start_stop_lock);
       if (this->running) {
          if constexpr (debug_script_start_stop) {
             qDebug("Failed to start script: another script is already running.");
@@ -337,7 +337,7 @@ namespace dovahscript::core::subsystems {
          this->worker_thread.join();
       this->aborted = false;
       this->running = true;
-      this->paused = false;
+      this->paused  = false;
       if constexpr (debug_script_start_stop) {
          qDebug("Starting a new script...");
       }

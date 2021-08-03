@@ -60,10 +60,11 @@ namespace dovahscript::core::subsystems {
          coordinator();
          ~coordinator();
 
-         std::atomic<bool>   aborted = false; // main thread can set this to kill the script
-         std::atomic<bool>   paused  = false; // main thread can set this to pause the script, though it won't take effect instantly. we unpause when running a new script.
-         cobb::lockable_bool running = false;
+         std::atomic<bool> aborted = false; // main thread can set this to kill the script
+         std::atomic<bool> paused  = false; // main thread can set this to pause the script, though it won't take effect instantly. we unpause when running a new script.
+         std::atomic<bool> running = false;
          bool in_teardown = false;
+         std::mutex start_stop_lock; // used for any function that the outside world would use to start or abort a script
 
          std::atomic<thread_wait_state> worker_thread_state = thread_wait_state::running;
          std::atomic<int> outstanding_client_thread_script_borrow_requests = 0;
