@@ -34,6 +34,7 @@ namespace dovahscript::core::subsystems {
          }
 
       public:
+         void on_script_setup();
          void main_thread_handler(); // VM core should call this from the main thread; nothing else should touch it
          void on_script_teardown();
 

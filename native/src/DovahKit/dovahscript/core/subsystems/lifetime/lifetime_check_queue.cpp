@@ -150,4 +150,8 @@ namespace dovahscript::impl {
       //
       this->opportunity_handle.release();
    }
+   bool lifetime_check_queue::empty() const noexcept {
+      auto guard = std::lock_guard(this->lock);
+      return this->_empty() && !this->opportunity_handle.is_active();
+   }
 }

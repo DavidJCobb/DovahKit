@@ -56,11 +56,23 @@ namespace dovahscript::core::subsystems {
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
          if (!will_be_flagged)
             return;
-         static_assert(false, "TODO: We need to rethink urgent m2s messages. Previously we were basically only checking the queue between entire scripts, and after sending blocking UI tasks. Not good enough here.");
-         auto* message = new dovahscript::tasks::m2s::form_deleted;
-         message->stub = stub;
-         //
-         this->task_queues.m2s.urgent.push_back(message);
+         auto i = this->expected_form_deletions.indexOf(stub->formID);
+         if (i < 0) {
+            static_assert(false, "TODO: Handle unexpected deletion. Note that deleting a Lua-unreferenced parent form would result in ''unexpected'' deletions of its child and descendant forms.");
+            //
+            // Really, the only "sane" handling for deletions would be to:
+            // 
+            //  - Assert that they never occur except in response to a form-delete task 
+            //    (that is, while the task is being processed and we haven't yet returned 
+            //    to the Lua CFunction that sent it).
+            // 
+            //  - Zombify wrappers as necessary on the script thread.
+            // 
+            //     - So either the task needs some sort of "back-to-sender" handler, or we 
+            //       need something "deeper" in the engine than a task, for this.
+            //
+         }
+         this->expected_form_deletions.remove(i);
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &coordinator::abort);
    }
@@ -132,6 +144,7 @@ namespace dovahscript::core::subsystems {
          had_any_tasks |= (this->_run_queued_functions(false) > 0);
          had_any_tasks |= (events::get().process_pending_events() > 0);
          had_any_tasks |= (this->_run_queued_functions(true) > 0);
+         lifetime::get().worker_thread_handler();
       } while (had_any_tasks || this->_should_keep_running());
       //
       if constexpr (debug_script_start_stop) {
@@ -146,6 +159,7 @@ namespace dovahscript::core::subsystems {
    bool coordinator::_should_keep_running() const noexcept;
 
    /*static*/ void coordinator::_lua_debug_hook(lua_State* L, lua_Debug* ar) {
+      lifetime::get().worker_thread_handler();
       auto& s = coordinator::get();
       while (s.is_paused())
          if (s.is_aborted())
@@ -228,7 +242,9 @@ namespace dovahscript::core::subsystems {
          lua_newtable(L);
          lua_setfield(L, LUA_REGISTRYINDEX, ui_unlocked_queue_registry_key);
       #pragma endregion
-      static_assert(false, "TODO: Initialize other subsystems for this Lua state? (They should also take this as a chance to assert whatever they should assert on setup.)");
+      events::get().on_script_setup();
+      lifetime::get().on_script_setup();
+      resources::get().on_script_setup();
       userdata::get().initialize(L);
       //
       static_assert(false, "TODO: Build all metatables for form classes.");

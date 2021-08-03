@@ -1,11 +1,32 @@
 #include "lifetime.h"
 #include "../../../helpers/unordered_map.h"
 #include "../../../ui/generic/CanvasWidget.h"
+#include "coordinator.h"
 #include "events.h"
 #include "userdata.h"
 #include "../verify_threading.h"
 
 namespace {
+
+   //
+   // There are two ways we can handle objects becoming task-unreferenced. The first is to 
+   // queue lifetime checks immediately upon their becoming task-unreferenced. The problem 
+   // is that many if not most task-unreferenced objects will remain Lua-referenced for at 
+   // least a little while, so an lifetime check will end up being a waste of effort; in 
+   // fact, it would largely negate many of the advantages of using non-blocking tasks.
+   // 
+   // The other option is to have the script thread scan for objects that are in the task-
+   // referenced object list, but have a refcount of zero -- so, objects that have become 
+   // task-unreferenced, and that haven't been tended to yet. The script thread can then 
+   // check if these objects are Lua-unreferenced, and queue a lifetime check only if they 
+   // are. There's still some overhead here, but we're not doing a full lock-and-synch 
+   // between both threads.
+   // 
+   // Either way, once an object becomes task-unreferenced and that fact has been attended 
+   // to, its (zero) count needs to be removed from the task-referenced list.
+   //
+   static constexpr bool notify_for_task_references = false;
+
    #pragma region Logging options
    static constexpr bool debug_model_observer_lifetimes = false
       #ifdef _DEBUG
@@ -34,8 +55,87 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
+   void lifetime::on_script_setup() {
+      assert(this->hierarchy_objects.windows.empty());
+      assert(this->hierarchy_objects.button_groups.empty());
+      assert(this->hierarchy_objects.model_observers.empty());
+      assert(this->hierarchy_objects.orphans.canvas_widget_entities.empty());
+      assert(this->hierarchy_objects.orphans.widgets.empty());
+      assert(this->non_hierarchy_objects.canvas_layer_data.empty());
+      {
+         auto& tro   = this->task_referenced_objects;
+         auto  guard = std::lock_guard(tro.lock);
+         assert(tro.model_observers.empty());
+         assert(tro.objects.empty());
+      }
+      assert(this->extant_widget_count == 0);
+      assert(this->pending_lifetime_checks.empty());
+   }
+
    void lifetime::main_thread_handler() {
       this->pending_lifetime_checks.main_thread_handler(impl::lifetime_check_queue::subsystem_passkey());
+   }
+
+   void lifetime::worker_thread_handler() {
+      if constexpr (!notify_for_task_references) {
+         if (coordinator::get().script_thread == thread_type::worker) {
+            //
+            // We've been configured so that instead of immediately acting on objects becoming 
+            // task-unreferenced (inevitably on the client thread) by queuing a full lifetime 
+            // check for them, we instead want to have the worker thread passively scan for 
+            // objects that have just become task-unreferenced. This will give us a chance to 
+            // quickly check whether the objects are Lua-referenced, and only queue lifetime 
+            // checks for those that aren't -- allowing us to potentially avoid the overhead 
+            // of fully synchronizing both of our threads for a full lifetime check.
+            //
+            auto& userdata_s = userdata::get();
+            //
+            auto& tro   = this->task_referenced_objects;
+            auto  guard = std::lock_guard(tro.lock);
+            {
+               auto& um = tro.objects;
+               auto  it = um.begin();
+               while (it != um.end()) {
+                  auto& pair = *it;
+                  auto* obj  = pair.first;
+                  if (pair.second == 0) {
+                     if (!userdata_s.wrapper_exists_for(obj))
+                        this->pending_lifetime_checks.queue_check(*obj);
+                     //
+                     // The return value of std::unordered_map::erase can be used to avoid 
+                     // having iterator invalidation break a loop. However, you must be 
+                     // sure not to increment the iterator after grabbing this return value 
+                     // (as you typically would during a for-loop).
+                     //
+                     it = um.erase(it);
+                  } else {
+                     ++it;
+                  }
+               }
+            }
+            {
+               auto& um = tro.model_observers;
+               auto  it = um.begin();
+               while (it != um.end()) {
+                  auto& pair = *it;
+                  auto* obj  = pair.first;
+                  if (pair.second == 0) {
+                     if (!userdata_s.wrapper_exists_for(obj))
+                        this->pending_lifetime_checks.queue_check(*obj);
+                     //
+                     // The return value of std::unordered_map::erase can be used to avoid 
+                     // having iterator invalidation break a loop. However, you must be 
+                     // sure not to increment the iterator after grabbing this return value 
+                     // (as you typically would during a for-loop).
+                     //
+                     it = um.erase(it);
+                  } else {
+                     ++it;
+                  }
+               }
+            }
+         }
+      }
    }
 
    void lifetime::on_script_teardown() {
@@ -171,7 +271,7 @@ namespace dovahscript::core::subsystems {
             list.remove(i);
          } else {
             // Don't bother handling button groups; we deal with those elsewhere
-            assert(false && "lifetime::on_hierarchy_item_parent_changed called with unexpected hierarchy item type");
+            assert(false && "lifetime::on_hierarchy_item_parent_changed called with unexpected hierarchy item type (item adopted)");
          }
       } else if (!after_parent && prior_parent) {
          auto  guard = std::unique_lock(this->object_read_write_lock);
@@ -187,7 +287,7 @@ namespace dovahscript::core::subsystems {
             list.push_back(cwe);
          } else {
             // Don't bother handling button groups; we deal with those elsewhere
-            assert(false && "lifetime::on_hierarchy_item_parent_changed called with unexpected hierarchy item type");
+            assert(false && "lifetime::on_hierarchy_item_parent_changed called with unexpected hierarchy item type (item orphaned)");
          }
       }
    }
@@ -298,7 +398,7 @@ namespace dovahscript::core::subsystems {
                qDebug("Warning: QObject under destruction is not orphaned: %p (%s)", cwld, _debug_get_object_classname(cwld));
             }
          }
-         events::get().abandon_object(target);
+         events::get().abandon_object(target); // CWLDs shouldn't have any events, but let's not risk forgetting this if we ever have reason to add any
          return;
       }
       assert(false && "unhandled type");
@@ -353,8 +453,11 @@ namespace dovahscript::core::subsystems {
       auto  guard = std::lock_guard(tro.lock);
       auto& count = tro.objects[subject];
       assert(count);
-      if (--count == 0) {
-         this->pending_lifetime_checks.queue_check(*subject);
+      if constexpr (notify_for_task_references) {
+         if (--count == 0) {
+            tro.objects.erase(subject);
+            this->pending_lifetime_checks.queue_check(*subject);
+         }
       }
    }
    void lifetime::remove_task_reference(model_observer_t* subject) {
@@ -364,8 +467,12 @@ namespace dovahscript::core::subsystems {
       auto  guard = std::lock_guard(tro.lock);
       auto& count = tro.model_observers[subject];
       assert(count);
-      if (--count == 0) {
-         this->pending_lifetime_checks.queue_check(*subject);
+      --count;
+      if constexpr (notify_for_task_references) {
+         if (count == 0) {
+            tro.model_observers.erase(subject);
+            this->pending_lifetime_checks.queue_check(*subject);
+         }
       }
    }
 }

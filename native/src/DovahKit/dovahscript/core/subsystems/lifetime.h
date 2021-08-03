@@ -69,8 +69,13 @@ namespace dovahscript::core::subsystems {
       public:
          QVector<QDialog*> get_script_windows() const noexcept;
 
+         // Call when setting up a new Lua state.
+         void on_script_setup();
+
          // This should delete any pending-deletion model observers.
          void main_thread_handler();
+
+         void worker_thread_handler();
 
          void on_script_teardown();
 

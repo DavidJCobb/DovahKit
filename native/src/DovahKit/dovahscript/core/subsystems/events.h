@@ -49,6 +49,7 @@ namespace dovahscript::core::subsystems {
       public:
          unsigned int get_pending_event_count() const noexcept;
 
+         void on_script_setup();
          void on_script_teardown();
 
          // Call from the script thread's idle loop. Returns the number of events processed.
@@ -57,7 +58,6 @@ namespace dovahscript::core::subsystems {
          // Completely disconnects an object from the event system, and then discards all pending events for 
          // the object and its descendants. This should be called by the lifetime subsystem just before 
          // deleting an object.
-         static_assert(false, "TODO: The lifetime subsystem should call this when deleting an object.");
          void abandon_object(QObject&);
 
          void add_listener(QObject& target, const char* event_name, const char* listener_name, int listener_index);

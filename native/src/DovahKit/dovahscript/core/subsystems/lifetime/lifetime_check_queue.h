@@ -16,7 +16,7 @@ namespace dovahscript::impl {
          using subsystem_passkey = cobb::passkey<lifetime_check_queue, core::subsystems::lifetime>;
 
       protected:
-         std::mutex lock;
+         mutable std::mutex lock;
          struct {
             QVector<QObject*>          hierarchy_objects;
             QVector<model_observer_t*> model_observers;
@@ -32,5 +32,7 @@ namespace dovahscript::impl {
 
          void main_thread_handler(subsystem_passkey);
          void on_script_teardown(subsystem_passkey);
+
+         bool empty() const noexcept;
    };
 }

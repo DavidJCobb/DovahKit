@@ -3,6 +3,7 @@
 #include "../../../lua.h"
 #include "../../../helpers/lockable_bool.h"
 #include "../../../helpers/singleton.h"
+#include "../../../dovah/core.h"
 #include "../task_queue.h"
 #include "../../script_set.h"
 
@@ -66,6 +67,8 @@ namespace dovahscript::core::subsystems {
 
          std::atomic<thread_wait_state> worker_thread_state = thread_wait_state::running;
          std::atomic<int> outstanding_client_thread_script_borrow_requests = 0;
+
+         QVector<dovah::bare_form_id_t> expected_form_deletions;
 
          script_set scripts_to_run;
          struct {

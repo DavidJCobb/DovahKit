@@ -125,6 +125,15 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
+   void events::on_script_setup() {
+      assert(this->pending_events.empty());
+      assert(this->pending_event_count == 0);
+   }
+   void events::on_script_teardown() {
+      this->pending_events.clear();
+      this->pending_event_count = 0;
+   }
+
    size_t events::process_pending_events() {
       require_script_thread();
       return this->pending_events.process();
@@ -143,7 +152,7 @@ namespace dovahscript::core::subsystems {
       for (auto* d : descendants) {
          had_any_connections = QObject::disconnect(d, nullptr, &impl::get_event_connection_recipient(), nullptr);
          if (had_any_connections)
-            this->pending_events.forget_about(d);
+            this->pending_events.forget_about(*d);
       }
    }
 
@@ -351,10 +360,10 @@ namespace dovahscript::core::subsystems {
          int argcount = 0;
          for (auto& p : params) {
             auto ut = p.userType();
-            if (ut == qMetaTypeId<LuaModelObserverEventArgument>()) {
+            if (ut == qMetaTypeId<impl::model_observer_event_argument>()) {
                using namespace dovahscript;
                //
-               auto arg = p.value<LuaModelObserverEventArgument>();
+               auto arg = p.value<impl::model_observer_event_argument>();
                assert(arg.observer);
                assert(arg.metatable_key && arg.metatable_key[0]);
                wrapper out;

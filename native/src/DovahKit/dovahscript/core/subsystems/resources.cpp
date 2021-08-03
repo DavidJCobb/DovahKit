@@ -15,6 +15,12 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
+   void resources::on_script_setup() {
+      auto guard = std::lock_guard(this->stored_resources.extant.lock);
+      assert(this->stored_resources.extant.list.empty());
+      assert(this->stored_resources.pending_deletion.list.empty());
+      assert(this->stored_resources.desynched.list.empty());
+   }
    void resources::main_thread_handler() {
       require_client_thread();
       //
