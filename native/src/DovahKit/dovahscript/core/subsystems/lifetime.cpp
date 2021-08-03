@@ -95,6 +95,53 @@ namespace dovahscript::core::subsystems {
       }
    }
 
+
+   QVector<QDialog*> lifetime::get_script_windows() const noexcept {
+      auto guard = std::shared_lock(this->object_read_write_lock);
+      return this->hierarchy_objects.windows;
+   }
+
+
+
+   void lifetime::on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData* cwld) {
+      require_script_thread();
+      //
+      this->pending_lifetime_checks.queue_check(*cwld);
+   }
+   void lifetime::on_lua_unreferenced(passkey_to<userdata>, model_observer_t* observer) {
+      require_script_thread();
+      //
+      this->pending_lifetime_checks.queue_check(*observer);
+   }
+   void lifetime::on_lua_unreferenced(passkey_to<userdata>, QObject* object) {
+      require_script_thread();
+      //
+      this->pending_lifetime_checks.queue_check(*object);
+   }
+
+
+   void lifetime::on_hierarchy_item_created(QObject& object) {
+      require_client_thread();
+      //
+      auto guard = std::unique_lock(this->object_read_write_lock);
+      if (object.isWidgetType()) {
+         auto* widget = (QWidget*)&object;
+         ++this->extant_widget_count;
+         if (auto* dialog = qobject_cast<QDialog*>(&object)) {
+            this->hierarchy_objects.windows.push_back(dialog);
+         } else {
+            if (!object.parent())
+               this->hierarchy_objects.orphans.widgets.push_back(widget);
+         }
+      } else {
+         if (auto* bg = qobject_cast<QButtonGroup*>(&object)) {
+            this->hierarchy_objects.button_groups.push_back(bg);
+         } else if (auto* cwld = qobject_cast<CanvasWidgetLayerData*>(&object)) {
+            this->non_hierarchy_objects.canvas_layer_data.push_back(cwld);
+         }
+      }
+   }
+
    void lifetime::on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from) {
       require_client_thread();
       //
@@ -159,6 +206,7 @@ namespace dovahscript::core::subsystems {
    void lifetime::for_each_known_model_observer(std::function<void(model_observer_t*)> functor) {
       require_client_thread();
       //
+      auto guard = std::shared_lock(this->object_read_write_lock);
       for (auto* observer : this->hierarchy_objects.model_observers)
          (functor)(observer);
    }
@@ -181,30 +229,33 @@ namespace dovahscript::core::subsystems {
       if constexpr (debug_qobject_lifetimes) {
          qDebug("Destroying native hierarchy object: %p (%s)", &target, _debug_get_object_classname(&target));
       }
-      if (target.isWidgetType()) {
-         _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
-         //
-         if (auto* window = qobject_cast<QDialog*>(&target)) {
-            auto& list = this->hierarchy_objects.windows;
-            auto  i    = list.indexOf(window);
-            if (i >= 0) {
-               list.remove(i);
-            } else {
-               if constexpr (debug_qobject_lifetimes) {
-                  qDebug("Warning: QDialog under destruction is not in the list of windows: %p (%s)", &target, _debug_get_object_classname(&target));
+      {
+         auto guard = std::unique_lock(this->object_read_write_lock);
+         if (target.isWidgetType()) {
+            _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
+            //
+            if (auto* window = qobject_cast<QDialog*>(&target)) {
+               auto& list = this->hierarchy_objects.windows;
+               auto  i    = list.indexOf(window);
+               if (i >= 0) {
+                  list.remove(i);
+               } else {
+                  if constexpr (debug_qobject_lifetimes) {
+                     qDebug("Warning: QDialog under destruction is not in the list of windows: %p (%s)", &target, _debug_get_object_classname(&target));
+                  }
                }
             }
+         } else if (auto* c = qobject_cast<QButtonGroup*>(&target)) {
+            bool removed = this->hierarchy_objects.button_groups.removeOne(c);
+            if constexpr (debug_qobject_lifetimes) {
+               if (!removed)
+                  qDebug("Warning: QButtonGroup under destruction is not in the list of button groups: %p (%s)", &target, _debug_get_object_classname(&target));
+            }
+         } else if (auto* c = qobject_cast<CanvasWidgetEntity*>(&target)) {
+            _remove_from_orphans(this->hierarchy_objects.orphans.canvas_widget_entities, c);
+         } else {
+            assert(false && "unhandled object non-widget type");
          }
-      } else if (auto* c = qobject_cast<QButtonGroup*>(&target)) {
-         bool removed = this->hierarchy_objects.button_groups.removeOne(c);
-         if constexpr (debug_qobject_lifetimes) {
-            if (!removed)
-               qDebug("Warning: QButtonGroup under destruction is not in the list of button groups: %p (%s)", &target, _debug_get_object_classname(&target));
-         }
-      } else if (auto* c = qobject_cast<CanvasWidgetEntity*>(&target)) {
-         _remove_from_orphans(this->hierarchy_objects.orphans.canvas_widget_entities, c);
-      } else {
-         assert(false && "unhandled object non-widget type");
       }
       //
       // Disconnect events:
@@ -219,8 +270,9 @@ namespace dovahscript::core::subsystems {
       if constexpr (debug_model_observer_lifetimes) {
          qDebug("Destroying native hierarchy model observer: %p", &target);
       }
-      auto& list = this->hierarchy_objects.model_observers;
-      auto  i    = list.indexOf(&target);
+      auto  guard = std::unique_lock(this->object_read_write_lock);
+      auto& list  = this->hierarchy_objects.model_observers;
+      auto  i     = list.indexOf(&target);
       if (i >= 0) {
          list.remove(i);
       } else {
@@ -235,6 +287,7 @@ namespace dovahscript::core::subsystems {
       if constexpr (debug_qobject_lifetimes) {
          qDebug("Destroying native non-hierarchy object: %p (%s)", &target, _debug_get_object_classname(&target));
       }
+      auto guard = std::unique_lock(this->object_read_write_lock);
       if (auto* cwld = qobject_cast<CanvasWidgetLayerData*>(&target)) {
          auto& list = this->non_hierarchy_objects.canvas_layer_data;
          auto  i    = list.indexOf(cwld);

@@ -40,13 +40,13 @@ namespace dovahscript::core::subsystems {
          // reading from any thread. Accordingly, we use a shared_mutex, with the client 
          // thread taking an exclusive lock and the worker thread taking a shared lock.
          //
-         std::shared_mutex object_read_write_lock;
+         mutable std::shared_mutex object_read_write_lock;
          struct {
             QVector<QDialog*>          windows;
             QVector<QButtonGroup*>     button_groups;
             QVector<model_observer_t*> model_observers;
             struct {
-               QVector<QWidget*>            widgets;
+               QVector<QWidget*>            widgets; // DOES NOT include windows
                QVector<CanvasWidgetEntity*> canvas_widget_entities;
             } orphans;
          } hierarchy_objects;
@@ -67,7 +67,7 @@ namespace dovahscript::core::subsystems {
          impl::lifetime_check_queue pending_lifetime_checks;
 
       public:
-         std::vector<QDialog*> get_script_windows();
+         QVector<QDialog*> get_script_windows() const noexcept;
 
          // This should delete any pending-deletion model observers.
          void main_thread_handler();
@@ -75,14 +75,14 @@ namespace dovahscript::core::subsystems {
          void on_script_teardown();
 
          #pragma region Script thread functions
-            QVector<model_observer_t*> get_extant_model_observers() const noexcept; // TODO: why do we need this?
-
             void on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData*);
             void on_lua_unreferenced(passkey_to<userdata>, model_observer_t*);
             void on_lua_unreferenced(passkey_to<userdata>, QObject*);
          #pragma endregion
 
          #pragma region Client thread functions
+            void on_hierarchy_item_created(QObject&);
+
             void on_hierarchy_bridge_severed(QObject* basis, QObject* severed_from); // e.g. if a QButtonGroup loses a button, the group would be the basis and the button, the severed-from object
             void on_hierarchy_item_parent_changed(QObject* subject, QObject* prior_parent); // call from the client thread after the subject's parent has been changed
 

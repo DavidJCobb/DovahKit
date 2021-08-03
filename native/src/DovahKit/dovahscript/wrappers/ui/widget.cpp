@@ -12,6 +12,7 @@
 #include "../../core/subsystems/permissions.h"
 
 #include "../../tasks/s2m/add_child_ui_widget.h"
+#include "../../tasks/s2m/create_ui_widget.h"
 #include "../../tasks/s2m/lambda.h"
 #include "../../tasks/s2m/ui_read_lambda.h"
 #include "../../tasks/s2m/ui_write_lambda.h"
@@ -894,18 +895,20 @@ namespace {
 
    namespace _singleton_functions {
       int new_(lua_State* L) {
+         core::subsystems::permissions::verify_ui_permissions();
          if (lua_gettop(L) > 0)
             cobb::lua::error(L, "the ui.widget.new function should not be called with a colon or passed any arguments");
          //
-         core::subsystems::permissions::verify_ui_permissions();
+         auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
+         /*
+         // If you want to configure the widget, e.g. to provide sensible defaults, you would 
+         // do it in this optional handler.
          //
-         wrapped_type* created = nullptr;
-         auto*         task    = new tasks::s2m::ui_write_lambda(true);
-         task->handler = [&created]() {
-            created = new wrapped_type;
-            DovahKitScriptVMCore::get().set_up_new_scripted_widget(created);
+         task->configure = [](wrapped_type* created) {
          };
+         */
          core::subsystems::coordinator::get().send_ui_write_task(*task);
+         auto* created = task->created;
          delete task;
          //
          return push_native_object(created);
