@@ -24,4 +24,12 @@ namespace cobb::qt {
       } while (parent = parent->parentWidget());
       return nullptr;
    }
+
+   extern bool object_is_or_contains(const QObject* haystack, const QObject* needle) {
+      do {
+         if (needle == haystack)
+            return true;
+      } while (needle = needle->parent());
+      return false;
+   }
 }

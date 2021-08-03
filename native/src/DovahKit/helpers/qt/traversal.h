@@ -7,4 +7,6 @@ namespace cobb::qt {
    extern QWidget* topmost_container_of(QWidget*);
 
    extern QWidget* nearest_widget_of_type(QWidget* base, const QMetaObject& type);
+
+   extern bool object_is_or_contains(const QObject* haystack, const QObject* needle);
 }
