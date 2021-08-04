@@ -136,7 +136,7 @@ namespace {
             lua_pop(L, 1);
          }
          //
-         dovahscript::core::subsystems::coordinator::get().send_script_task(m);
+         dovahscript::core::subsystems::coordinator::get().send_script_task(*m);
          return 0;
       }
    }
