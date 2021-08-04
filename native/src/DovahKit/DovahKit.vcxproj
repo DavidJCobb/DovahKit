@@ -138,16 +138,19 @@
     <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
     <ClCompile Include="dovahscript\pull_native_object.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptDialog.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\add_child_ui_widget.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\create_ui_widget.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\delete_form.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\log_message.cpp" />
     <ClCompile Include="dovahscript\tasks\_base.cpp" />
     <ClCompile Include="dovahscript\task_reference.cpp" />
     <ClCompile Include="dovahscript\widget_overrides.cpp" />
     <ClCompile Include="dovahscript\wrappers\base.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\form.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
@@ -539,6 +542,7 @@
     <ClInclude Include="dovahscript\lua_libraries\_import_all.h" />
     <ClInclude Include="dovahscript\pull_native_object.h" />
     <ClInclude Include="dovahscript\push_native_object.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptDialog.h" />
     <ClInclude Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
     <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
     <ClInclude Include="dovahscript\qt\LuaScriptableCanvasWidgetLayerData.h" />
@@ -546,6 +550,7 @@
     <ClInclude Include="dovahscript\script_set.h" />
     <ClInclude Include="dovahscript\tasks\s2m\add_child_ui_widget.h" />
     <ClInclude Include="dovahscript\tasks\s2m\create_ui_widget.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\delete_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\lambda.h" />
     <ClInclude Include="dovahscript\tasks\s2m\log_message.h" />
     <ClInclude Include="dovahscript\tasks\s2m\ui_read_lambda.h" />
@@ -556,6 +561,7 @@
     <ClInclude Include="dovahscript\widget_overrides.h" />
     <ClInclude Include="dovahscript\wrapper.h" />
     <ClInclude Include="dovahscript\wrappers\base.h" />
+    <ClInclude Include="dovahscript\wrappers\form\form.h" />
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
     <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt" />
     <ClInclude Include="dovah\bs_hash.h" />

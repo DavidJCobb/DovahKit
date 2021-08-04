@@ -1194,6 +1194,15 @@
     <ClCompile Include="dovahscript\tasks\s2m\create_ui_widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\qt\DovahscriptDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\tasks\s2m\delete_form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\form.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2444,6 +2453,12 @@
     <ClInclude Include="dovahscript\tasks\s2m\create_ui_widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovahscript\tasks\s2m\delete_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -2755,6 +2770,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="dovahscript\dovahscript_host.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="dovahscript\qt\DovahscriptDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

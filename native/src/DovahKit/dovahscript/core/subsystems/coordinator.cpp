@@ -57,19 +57,10 @@ namespace dovahscript::core::subsystems {
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
          if (!will_be_flagged)
             return;
-         static_assert(false, "TODO:");
-         //
-         // Really, the only "sane" handling for deletions would be to:
-         // 
-         //  - Assert that they never occur except in response to a form-delete task 
-         //    (that is, while the task is being processed and we haven't yet returned 
-         //    to the Lua CFunction that sent it).
-         // 
-         //  - Zombify wrappers as necessary on the script thread.
-         // 
-         //     - So either the task needs some sort of "back-to-sender" handler, or we 
-         //       need something "deeper" in the engine than a task, for this.
-         //
+         auto& list = this->expected_deletions;
+         auto  it   = std::find(list.begin(), list.end(), stub);
+         assert(it != list.end() && "Form stubs should never be deleted while a script is running, except as the result of a delete_form task!");
+         list.erase(it);
       });
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &coordinator::abort);
    }
@@ -323,27 +314,64 @@ namespace dovahscript::core::subsystems {
    void coordinator::send_script_task(task_queue::task_t& task) {
       require_script_thread();
       //
+      bool blocking  = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
+      bool needs_lua = task.needs_lua_ownership();
+      thread_type prior;
+      if (needs_lua) {
+         assert(blocking);
+         prior = this->script_thread;
+         this->script_thread = thread_type::client;
+         task.run_lua_before(this->lua_state);
+      }
       this->task_queues.s2m.push_back(&task);
+      if (blocking) {
+         while (!task.seen)
+            if (this->is_aborted())
+               break;
+         if (needs_lua)
+            this->script_thread = prior;
+      }
    }
    void coordinator::send_ui_read_task(tasks::_ui_read_base& task) {
       require_script_thread();
       //
       this->task_queues.ui.write.wait_until_empty();
+      //
+      bool needs_lua = task.needs_lua_ownership();
+      thread_type prior;
+      if (needs_lua) {
+         prior = this->script_thread;
+         this->script_thread = thread_type::client;
+         task.run_lua_before(this->lua_state);
+      }
       this->task_queues.ui.read.push_back(&task);
       while (!task.seen)
          if (this->is_aborted())
             break;
+      if (needs_lua)
+         this->script_thread = prior;
    }
    void coordinator::send_ui_write_task(tasks::_ui_write_base& task) {
       require_script_thread();
       //
-      bool blocking = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
       this->task_queues.ui.read.wait_until_empty();
+      //
+      bool blocking  = task.is_blocking(); // grab this before adding it to the list, to avoid race conditions (e.g. the main thread executing and deleting a non-blocking task before we get a chance to check)
+      bool needs_lua = task.needs_lua_ownership();
+      thread_type prior;
+      if (needs_lua) {
+         assert(blocking);
+         prior = this->script_thread;
+         this->script_thread = thread_type::client;
+         task.run_lua_before(this->lua_state);
+      }
       this->task_queues.ui.write.push_back(&task);
       if (blocking) {
          while (!task.seen)
             if (this->is_aborted())
                break;
+         if (needs_lua)
+            this->script_thread = prior;
       }
    }
 
@@ -416,5 +444,18 @@ namespace dovahscript::core::subsystems {
       } else if (auto* canvas = qobject_cast<CanvasWidget*>(&widget)) {
          dovahscript::impl::set_up_canvas_context_menu(canvas);
       }
+   }
+
+   void coordinator::expect_deletion_of(passkey_to<tasks::s2m::delete_form>, const std::vector<dovah::form_stub*>& append) {
+      require_script_thread();
+      //
+      auto& list = this->expected_deletions;
+      list.insert(list.begin(), append.begin(), append.end());
+   }
+   void coordinator::on_deletion_completion_expected(passkey_to<tasks::s2m::delete_form>) {
+      require_script_thread();
+      //
+      auto& list = this->expected_deletions;
+      assert(list.empty() && "A delete_form task didn't delete all of the forms it expected to delete!");
    }
 }

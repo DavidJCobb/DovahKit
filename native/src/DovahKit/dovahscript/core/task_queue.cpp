@@ -4,7 +4,7 @@
 namespace dovahscript::core {
    void task_queue::push_back(task_t* task) {
       auto  guard = std::lock_guard(this->lock);
-      auto& list  = this->list;
+      auto& list = this->list;
       list.push_back(task);
       this->is_empty = false;
    }
