@@ -961,18 +961,11 @@ namespace dovahscript::wrappers::ui {
       { "whats_this",     &_setters::whats_this },
    };
 
-   /*static*/ void cls::setup(lua_State* L) {
-      int pos = lua_gettop(L);
-      //
-      // Create singleton:
-      //
+   /*static*/ void cls::import_singleton(lua_State* L) {
       lua_createtable(L, 0, 2);
       lua_pushcfunction(L, &_singleton_functions::new_);
       lua_setfield     (L, -2, "new");
       lua_pushcfunction(L, &_singleton_functions::is);
       lua_setfield     (L, -2, "is");
-      //
-      assert(lua_gettop(L) == pos + 1);
-      lua_setfield(L, pos, cls::global_name);
    }
 }

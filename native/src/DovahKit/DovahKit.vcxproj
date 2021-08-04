@@ -151,6 +151,7 @@
     <ClCompile Include="dovahscript\widget_overrides.cpp" />
     <ClCompile Include="dovahscript\wrappers\base.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\form.cpp" />
+    <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
@@ -562,7 +563,11 @@
     <ClInclude Include="dovahscript\wrapper.h" />
     <ClInclude Include="dovahscript\wrappers\base.h" />
     <ClInclude Include="dovahscript\wrappers\form\form.h" />
+    <ClInclude Include="dovahscript\wrappers\form\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\_all.h" />
     <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt" />
     <ClInclude Include="dovah\bs_hash.h" />
     <ClInclude Include="dovah\core.h" />

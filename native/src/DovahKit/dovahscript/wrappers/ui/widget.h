@@ -14,6 +14,7 @@ namespace dovahscript::wrappers::ui {
       static constexpr const char* global_name = "widget";
       using wrapped_type = QWidget;
 
-      static void setup(lua_State*); // the "ui" table should be at the top of the stack
+      // Creates a singleton for this class, and leaves it at the top of the stack.
+      static void import_singleton(lua_State*);
    };
 }

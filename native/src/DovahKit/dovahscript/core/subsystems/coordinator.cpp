@@ -18,6 +18,7 @@
 
 #include "../../lua_libraries/_import_all.h"
 #include "../../lua_classes/_import_all.h"
+#include "../../wrappers/set_up_all.h"
 
 #include "../../tasks/_base.h"
 #include "../../tasks/_ui_base.h"
@@ -249,8 +250,8 @@ namespace dovahscript::core::subsystems {
       resources::get().on_script_setup();
       userdata::get().initialize(L);
       //
-      static_assert(false, "TODO: Build all metatables for form classes.");
-      static_assert(false, "TODO: Build all metatables and singletons for UI classes.");
+      set_up_all_native_wrappers(L);
+      //
       this->ui_lock_override = ui_lock_override_state::unchanged;
    }
    void coordinator::_teardown_lua_state() {// can only safely run on the client thread, since it tears down Qt objects now too
