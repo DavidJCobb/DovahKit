@@ -139,6 +139,7 @@
     <ClCompile Include="dovahscript\lua_libraries\unscoped.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
     <ClCompile Include="dovahscript\pull_native_object.cpp" />
+    <ClCompile Include="dovahscript\push_native_object.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptDialog.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
