@@ -6,6 +6,7 @@
 #include "../core/subsystems/coordinator.h"
 #include "../core/subsystems/permissions.h"
 #include "../core/subsystems/resources.h"
+#include "../core/subsystems/resources/DovahscriptResource.h"
 #include "../push_native_object.h"
 
 #include "form_types.h"
@@ -19,6 +20,8 @@
 #include "../../../editor/core.h"
 
 #include "../../../dovah/data/ini_settings.h"
+
+#include "../lua_classes/benchmark.h"
 
 // For resources:
 #include <QBuffer>
@@ -35,17 +38,12 @@ namespace {
    
    namespace _definitions {
       int benchmark_start(lua_State* L) {
-         auto* p = lua_newuserdata(L, sizeof(classes::benchmark)); // push 1
-         luaL_getmetatable(L, classes::benchmark::metatable_key); // push 1
-         lua_setmetatable(L, -2); // pop 1
-         new (p) classes::benchmark;
+         lua_classes::benchmark::push_new_instance(L);
          return 1;
       }
       int benchmark_stop(lua_State* L) {
-         auto* self = (classes::benchmark*) classes::cast_to_exact_class(L, 1, classes::benchmark::metatable_key);
-         if (self == nullptr) {
-            cobb::lua::error(L, "bad argument #1 to dovah.benchmark_stop (expected %s)", classes::benchmark::metatable_key);
-         }
+         auto* self = (lua_classes::benchmark*) classes::cast_to_exact_class(L, 1, lua_classes::benchmark::metatable_key);
+         cobb::lua::argcheck(L, self != nullptr, 1, "expected benchmark object");
          self->finish();
          return 0;
       }
@@ -264,11 +262,11 @@ namespace {
             if (!reader.format().isEmpty()) {
                auto raster = reader.read();
                if (!raster.isNull()) {
-                  LuaManagedResource* resource = nullptr;
+                  DovahscriptResourceHandle resource;
                   {
                      auto* task    = new tasks::s2m::lambda(true);
                      task->handler = [&raster, &resource]() {
-                        resource = DovahKitScriptVMResourceInterface::get().create_resource(raster);
+                        resource = core::subsystems::resources::get().create_resource(raster);
                      };
                      core::subsystems::coordinator::get().send_script_task(*task);
                      delete task;
@@ -279,13 +277,13 @@ namespace {
             }
          }
          if (_stricmp(path.extension().string().data(), ".dds") == 0) {
-            LuaManagedResourceHandle resource;
+            DovahscriptResourceHandle resource;
             {
                auto* task    = new tasks::s2m::lambda(true);
                task->handler = [&file, &resource]() {
-                  resource = DovahKitScriptVMResourceInterface::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()), dovahscript::lua_managed_resource_type::dds);
+                  resource = core::subsystems::resources::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()), resource_type::dds);
                };
-               core::subsystems::coordinator::get().send_message(*task);
+               core::subsystems::coordinator::get().send_script_task(*task);
                delete task;
             }
             if (resource) {
@@ -295,11 +293,11 @@ namespace {
          //
          // The resource could not be identified.
          //
-         LuaManagedResourceHandle resource = nullptr;
+         DovahscriptResourceHandle resource = nullptr;
          {
             auto* task    = new tasks::s2m::lambda(true);
             task->handler = [&file, &resource]() {
-               resource = DovahKitScriptVMResourceInterface::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()));
+               resource = core::subsystems::resources::get().create_resource(QByteArray::fromRawData((const char*)file->data(), file->size()));
             };
             core::subsystems::coordinator::get().send_script_task(*task);
             delete task;

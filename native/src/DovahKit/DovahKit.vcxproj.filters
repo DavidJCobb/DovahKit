@@ -1206,6 +1206,9 @@
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\lua_classes\benchmark.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2472,6 +2475,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\wrappers\resource\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\lua_classes\benchmark.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

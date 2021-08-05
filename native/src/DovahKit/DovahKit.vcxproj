@@ -130,6 +130,7 @@
     <ClCompile Include="dovahscript\core\task_queue.cpp" />
     <ClCompile Include="dovahscript\core\verify_threading.cpp" />
     <ClCompile Include="dovahscript\dovahscript_host.cpp" />
+    <ClCompile Include="dovahscript\lua_classes\benchmark.cpp" />
     <ClCompile Include="dovahscript\lua_classes\vector3.cpp" />
     <ClCompile Include="dovahscript\lua_classes\_import_all.cpp" />
     <ClCompile Include="dovahscript\lua_libraries\all_standard.cpp" />
@@ -534,6 +535,7 @@
     <ClInclude Include="dovahscript\core\task_queue.h" />
     <ClInclude Include="dovahscript\core\verify_threading.h" />
     <QtMoc Include="dovahscript\dovahscript_host.h" />
+    <ClInclude Include="dovahscript\lua_classes\benchmark.h" />
     <ClInclude Include="dovahscript\lua_classes\vector3.h" />
     <ClInclude Include="dovahscript\lua_classes\_import_all.h" />
     <ClInclude Include="dovahscript\lua_libraries\all_standard.h" />
