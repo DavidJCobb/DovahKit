@@ -145,9 +145,12 @@
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
     <ClCompile Include="dovahscript\safe_call.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\add_child_ui_widget.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\create_form.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\create_ui_widget.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\delete_form.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\duplicate_form.cpp" />
     <ClCompile Include="dovahscript\tasks\s2m\log_message.cpp" />
+    <ClCompile Include="dovahscript\tasks\s2m\renumber_form.cpp" />
     <ClCompile Include="dovahscript\tasks\_base.cpp" />
     <ClCompile Include="dovahscript\task_reference.cpp" />
     <ClCompile Include="dovahscript\widget_overrides.cpp" />
@@ -553,10 +556,13 @@
     <ClInclude Include="dovahscript\safe_call.h" />
     <ClInclude Include="dovahscript\script_set.h" />
     <ClInclude Include="dovahscript\tasks\s2m\add_child_ui_widget.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\create_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\create_ui_widget.h" />
     <ClInclude Include="dovahscript\tasks\s2m\delete_form.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\duplicate_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\lambda.h" />
     <ClInclude Include="dovahscript\tasks\s2m\log_message.h" />
+    <ClInclude Include="dovahscript\tasks\s2m\renumber_form.h" />
     <ClInclude Include="dovahscript\tasks\s2m\ui_read_lambda.h" />
     <ClInclude Include="dovahscript\tasks\s2m\ui_write_lambda.h" />
     <ClInclude Include="dovahscript\tasks\_base.h" />

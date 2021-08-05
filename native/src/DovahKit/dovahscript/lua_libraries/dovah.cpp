@@ -129,7 +129,7 @@ namespace {
          //
          auto m = new tasks::s2m::log_message();
          m->text = QString::fromStdString(string);
-         core::subsystems::coordinator::get().send_script_task(m);
+         core::subsystems::coordinator::get().send_script_task(*m);
          return 0;
       }
       int for_each_form_of_type(lua_State* L) {
