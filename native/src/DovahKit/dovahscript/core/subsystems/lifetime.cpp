@@ -248,7 +248,7 @@ namespace dovahscript::core::subsystems {
       if (object.isWidgetType()) {
          auto* widget = (QWidget*)&object;
          ++this->extant_widget_count;
-         if (auto* dialog = qobject_cast<QDialog*>(&object)) {
+         if (auto* dialog = qobject_cast<DovahscriptDialog*>(&object)) {
             this->hierarchy_objects.windows.push_back(dialog);
          } else {
             if (!object.parent())
@@ -355,7 +355,7 @@ namespace dovahscript::core::subsystems {
          if (target.isWidgetType()) {
             _remove_from_orphans(this->hierarchy_objects.orphans.widgets, (QWidget*)&target);
             //
-            if (auto* window = qobject_cast<QDialog*>(&target)) {
+            if (auto* window = qobject_cast<DovahscriptDialog*>(&target)) {
                auto& list = this->hierarchy_objects.windows;
                auto  i    = list.indexOf(window);
                if (i >= 0) {

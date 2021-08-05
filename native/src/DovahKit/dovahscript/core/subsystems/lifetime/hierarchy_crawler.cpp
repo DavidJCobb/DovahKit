@@ -286,6 +286,10 @@ namespace dovahscript::impl {
          h->flags |= hierarchy_flag::marked_for_delete;
          this->total_widgets_deleted += h->widget_count;
          this->lifetime_sys.destroy_hierarchy_object(lifetime_passkey(), *h->root);
+         //
+         for (auto* b : h->unowned_bridges)
+            if (!b->parent())
+               this->lifetime_sys.destroy_hierarchy_object(lifetime_passkey(), *b);
       }
       //
       for (auto* b : this->severed_bridges.objects) {
