@@ -103,6 +103,7 @@
   <ItemGroup>
     <ClCompile Include="dovahscript\core\classes.cpp" />
     <ClCompile Include="dovahscript\core\class_zombification.cpp" />
+    <ClCompile Include="dovahscript\core\collections.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.cpp" />
     <ClCompile Include="dovahscript\core\subsystems\events.cpp" />
@@ -156,6 +157,9 @@
     <ClCompile Include="dovahscript\widget_overrides.cpp" />
     <ClCompile Include="dovahscript\wrappers\base.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\form.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\property.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\root.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\script.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
@@ -511,6 +515,7 @@
     <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
     <ClInclude Include="dovahscript\core\classes.h" />
     <ClInclude Include="dovahscript\core\class_zombification.h" />
+    <ClInclude Include="dovahscript\core\collections.h" />
     <ClInclude Include="dovahscript\core\subsystems\coordinator\client_thread_script_borrow_handle.h" />
     <ClInclude Include="dovahscript\core\subsystems\events.h" />
     <ClInclude Include="dovahscript\core\subsystems\events\script_event_queue.h" />
@@ -572,6 +577,10 @@
     <ClInclude Include="dovahscript\wrapper.h" />
     <ClInclude Include="dovahscript\wrappers\base.h" />
     <ClInclude Include="dovahscript\wrappers\form\form.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\property.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\root.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\script.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\_all.h" />
     <ClInclude Include="dovahscript\wrappers\form\_all.h" />
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
