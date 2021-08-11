@@ -334,7 +334,7 @@ namespace dovahscript::core::subsystems {
 
    namespace {
       template<typename T> void _remove_from_orphans(QVector<T*>& list, T* target) {
-         auto  i = list.indexOf((QWidget*)&target);
+         auto  i = list.indexOf(target);
          if (i >= 0) {
             list.remove(i);
          } else {
@@ -425,7 +425,7 @@ namespace dovahscript::core::subsystems {
       assert(false && "unhandled type");
    }
 
-   bool lifetime::set_task_reference_lock_state(passkey_to<impl::task_reference_state_multi_checker>, bool state) {
+   void lifetime::set_task_reference_lock_state(passkey_to<impl::task_reference_state_multi_checker>, bool state) {
       require_client_thread();
       //
       auto& lock = this->task_referenced_objects.lock;

@@ -57,7 +57,7 @@ namespace dovahscript::core::subsystems {
 
          // Maps of object pointers to refcounts.
          struct {
-            std::mutex lock;
+            mutable std::mutex lock;
 
             std::unordered_map<model_observer_t*, int> model_observers;
             std::unordered_map<QObject*, int> objects;
@@ -68,9 +68,9 @@ namespace dovahscript::core::subsystems {
          impl::lifetime_check_queue pending_lifetime_checks;
 
       public:
-         QVector<DovahscriptDialog*> get_script_windows() const noexcept;
+         [[nodiscard]] QVector<DovahscriptDialog*> get_script_windows() const noexcept;
 
-         bool any_windows_visible_or_task_referenced() const noexcept;
+         [[nodiscard]] bool any_windows_visible_or_task_referenced() const noexcept;
 
          // Call when setting up a new Lua state.
          void on_script_setup();
@@ -111,9 +111,9 @@ namespace dovahscript::core::subsystems {
             // check whether a given native object is task-referenced. We allow the queue to grab the lock 
             // and hold it using an RAII struct, to avoid having to constantly lock and unlock for each 
             // individual check.
-            bool set_task_reference_lock_state(passkey_to<impl::task_reference_state_multi_checker>, bool);
-            bool lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, QObject&) const noexcept;
-            bool lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, model_observer_t&) const noexcept;
+            void set_task_reference_lock_state(passkey_to<impl::task_reference_state_multi_checker>, bool);
+            [[nodiscard]] bool lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, QObject&) const noexcept;
+            [[nodiscard]] bool lockless_test_is_task_referenced(passkey_to<impl::task_reference_state_multi_checker>, model_observer_t&) const noexcept;
 
             void decrease_extant_widget_count(passkey_to<impl::lifetime_check_queue>, unsigned int);
          #pragma endregion

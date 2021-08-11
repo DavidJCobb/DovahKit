@@ -2,6 +2,7 @@
 #include <QImage>
 #include <QObject>
 #include <QPixmap>
+#include <QVariant>
 
 namespace DirectX {
    struct ScratchImage;

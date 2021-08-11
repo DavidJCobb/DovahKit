@@ -11,16 +11,18 @@ namespace dovahscript::core {
    client_thread_script_borrow_handle& client_thread_script_borrow_handle::operator=(const client_thread_script_borrow_handle& other) noexcept {
       if (!other.active) {
          this->release();
-         return;
+         return *this;
       }
       if (this->active == other.active)
-         return;
+         return *this;
       this->request();
+      return *this;
    }
    client_thread_script_borrow_handle& client_thread_script_borrow_handle::operator=(client_thread_script_borrow_handle&& other) noexcept {
       this->release();
       this->active = other.active;
       other.active = false;
+      return *this;
    }
    client_thread_script_borrow_handle::client_thread_script_borrow_handle(const client_thread_script_borrow_handle& other) {
       *this = other;

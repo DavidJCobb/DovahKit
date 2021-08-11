@@ -5,6 +5,7 @@
 #include "../../helpers/eight_cc.h"
 #include "../../dovah/form_stub.h"
 #include "../../lua.h"
+#include "core/classes.h"
 
 class CanvasWidgetEntity;
 class LuaScriptableCanvasWidgetLayerData;
@@ -144,11 +145,11 @@ namespace dovahscript {
    };
 
    template<typename T> wrapper* wrapper_from_stack(lua_State* L, int pos) noexcept {
-      auto* ptr = (wrapper*) editor_script::cast_to_class(L, pos, T::metatable_key);
+      auto* ptr = (wrapper*) dovahscript::classes::cast_to_class(L, pos, T::metatable_key);
       return ptr;
    }
    template<typename T> wrapper& get_wrapper_for_thiscall(lua_State* L, int pos = 1) noexcept {
-      auto* self = (wrapper*) editor_script::cast_to_class(L, pos, T::metatable_key);
+      auto* self = (wrapper*) dovahscript::classes::cast_to_class(L, pos, T::metatable_key);
       if (self == nullptr) {
          luaL_error(L, "function called with bad self (expected %s)", T::metatable_key);
       }

@@ -515,7 +515,7 @@ namespace dovahscript::classes {
       lua_pushstring(L, "__classlist");
       lua_rawget    (L, -2);
       if (!lua_istable(L, -1))
-         return false;
+         return nullptr;
       //
       // Stack:
       //    -1: list
@@ -640,10 +640,10 @@ namespace dovahscript::classes {
       lua_State* L,
       const char* class_metatable_key,
       const std::initializer_list<const char*>& superclass_metatable_keys,
-      const std::initializer_list<luaL_Reg>& methods = {},
-      const std::initializer_list<luaL_Reg>& getters = {},
-      const std::initializer_list<luaL_Reg>& setters = {},
-      const char* class_name = nullptr // __name value for class metatable; defaults to (class_metatable_key) if not specified
+      const std::initializer_list<luaL_Reg>& methods,
+      const std::initializer_list<luaL_Reg>& getters,
+      const std::initializer_list<luaL_Reg>& setters,
+      const char* class_name // __name value for class metatable; defaults to (class_metatable_key) if not specified
    ) {
       /*
          _define_pairs_metatable() -- lazy-create the pairs iterator class
@@ -853,11 +853,11 @@ namespace dovahscript::classes {
    extern void define_class(
       lua_State* L,
       const char* class_metatable_key,
-      const char* superclass_metatable_key = nullptr,
-      const std::initializer_list<luaL_Reg>& methods = {},
-      const std::initializer_list<luaL_Reg>& getters = {},
-      const std::initializer_list<luaL_Reg>& setters = {},
-      const char* class_name = nullptr // __name value for class metatable; defaults to (class_metatable_key) if not specified
+      const char* superclass_metatable_key,
+      const std::initializer_list<luaL_Reg>& methods,
+      const std::initializer_list<luaL_Reg>& getters,
+      const std::initializer_list<luaL_Reg>& setters,
+      const char* class_name // __name value for class metatable; defaults to (class_metatable_key) if not specified
    ) {
       if (superclass_metatable_key)
          define_class(L, class_metatable_key, { superclass_metatable_key }, methods, getters, setters, class_name);

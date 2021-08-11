@@ -14,6 +14,8 @@
 
 #include "events/script_event.h"
 
+#include "../../../editor/form_stub_meta_type.h"
+
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>

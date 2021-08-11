@@ -30,7 +30,7 @@ namespace dovahscript::impl::event_registration {
                            for (auto& qmi : sm->selectedRows()) {
                               auto remapped = proxy->mapToSource(qmi);
                               //
-                              LuaModelObserverEventArgument arg;
+                              model_observer_event_argument arg;
                               arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::rowOrientation, remapped.row());
                               arg.metatable_key = dovahscript::wrappers::ui::table_view_row::metatable_key;
                               assert(arg.observer);
@@ -41,7 +41,7 @@ namespace dovahscript::impl::event_registration {
                            for (auto& qmi : sm->selectedColumns()) {
                               auto remapped = proxy->mapToSource(qmi);
                               //
-                              LuaModelObserverEventArgument arg;
+                              model_observer_event_argument arg;
                               arg.observer      = model->getOrCreateRegisteredObserver(QModelIndex(), ObservableStandardItemModel::colOrientation, remapped.column());
                               arg.metatable_key = dovahscript::wrappers::ui::table_view_col::metatable_key;
                               assert(arg.observer);
@@ -52,7 +52,7 @@ namespace dovahscript::impl::event_registration {
                            for (auto& qmi : sm->selectedIndexes()) {
                               auto remapped = proxy->mapToSource(qmi);
                               //
-                              LuaModelObserverEventArgument arg;
+                              model_observer_event_argument arg;
                               arg.observer      = model->getOrCreateRegisteredObserver(remapped);
                               arg.metatable_key = dovahscript::wrappers::ui::table_view_cell::metatable_key;
                               assert(arg.observer);

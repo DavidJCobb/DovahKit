@@ -9,7 +9,7 @@ namespace cobb::lua {
    }
 
    // Given a value at the top of the stack, write it to table_pos[field].
-   inline int rawsetfield(lua_State* L, int table_pos, const char* field) noexcept {
+   inline void rawsetfield(lua_State* L, int table_pos, const char* field) noexcept {
       table_pos = lua_absindex(L, table_pos);
       lua_pushstring(L, field);
       lua_rotate(L, -2, 1);

@@ -259,7 +259,6 @@ namespace dovahscript::core::subsystems {
       assert(this->worker_thread_state == coordinator::thread_wait_state::waiting);
       this->script_thread = thread_type::client;
       //
-      auto guard = std::lock_guard(this->running);
       this->in_teardown = true;
       if constexpr (debug_script_start_stop) {
          qDebug("Tearing down the script VM...");
@@ -407,7 +406,7 @@ namespace dovahscript::core::subsystems {
       //this->_teardown_lua_vm();
       this->_setup_lua_state();
       //
-      this->worker_thread = std::thread(&_script_thread_loop, this);
+      this->worker_thread = std::thread([this]() { this->_script_thread_loop(); });
    }
    void coordinator::set_pause_state(bool b) {
       this->paused = b;
