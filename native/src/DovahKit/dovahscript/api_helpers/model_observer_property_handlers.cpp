@@ -16,6 +16,7 @@
 #include "../wrappers/resource/raster.h"
 #include "../wrappers/ui/various/font.h"
 
+#include "model_observers.h"
 #include "qt_alignment.h"
 #include "qt_color.h"
 

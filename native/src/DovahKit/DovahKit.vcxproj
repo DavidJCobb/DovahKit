@@ -101,6 +101,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\api_helpers\model_observers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp" />
     <ClCompile Include="dovahscript\api_helpers\qt_color.cpp" />
@@ -532,6 +533,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
+    <ClInclude Include="dovahscript\api_helpers\model_observers.h" />
     <ClInclude Include="dovahscript\api_helpers\model_observer_property_handlers.h" />
     <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h" />
     <ClInclude Include="dovahscript\api_helpers\qt_color.h" />

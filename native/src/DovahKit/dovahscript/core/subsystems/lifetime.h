@@ -83,6 +83,8 @@ namespace dovahscript::core::subsystems {
 
          void on_script_teardown();
 
+         void zombify_all_invalid_model_observers();
+
          #pragma region Script thread functions
             void on_lua_unreferenced(passkey_to<userdata>, DovahscriptCanvasWidgetLayerData*);
             void on_lua_unreferenced(passkey_to<userdata>, model_observer_t*);

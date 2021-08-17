@@ -1,10 +1,12 @@
 #include "lifetime.h"
 #include "../../../helpers/unordered_map.h"
 #include "../../../ui/generic/CanvasWidget.h"
+#include "../../../ui/generic/ObservableStandardItemModel.h"
 #include "coordinator.h"
 #include "events.h"
 #include "userdata.h"
 #include "../verify_threading.h"
+#include "../../qt/DovahscriptCanvasWidgetLayerData.h"
 #include "../../qt/DovahscriptDialog.h"
 
 namespace {
@@ -196,6 +198,18 @@ namespace dovahscript::core::subsystems {
       }
    }
 
+   void lifetime::zombify_all_invalid_model_observers() {
+      require_script_thread();
+      auto& userdata_s = userdata::get();
+      //
+      for (auto* o : this->hierarchy_objects.model_observers) {
+         if (!o)
+            continue;
+         if (o->isValid())
+            continue;
+         userdata_s.destroy_all(*o);
+      }
+   }
 
    QVector<DovahscriptDialog*> lifetime::get_script_windows() const noexcept {
       auto guard = std::shared_lock(this->object_read_write_lock);
