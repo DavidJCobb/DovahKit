@@ -101,7 +101,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\api_helpers\model_observer_property_handlers.cpp" />
     <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\qt_color.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\qt_alignment.cpp" />
     <ClCompile Include="dovahscript\core\classes.cpp" />
     <ClCompile Include="dovahscript\core\class_zombification.cpp" />
     <ClCompile Include="dovahscript\core\collections.cpp" />
@@ -142,6 +145,8 @@
     <ClCompile Include="dovahscript\lua_libraries\_import_all.cpp" />
     <ClCompile Include="dovahscript\pull_native_object.cpp" />
     <ClCompile Include="dovahscript\push_native_object.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.cpp" />
+    <ClCompile Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptDialog.cpp" />
     <ClCompile Include="dovahscript\qt\DovahscriptStandardItemModel.cpp" />
     <ClCompile Include="dovahscript\qt\impl\canvas_context_menu.cpp" />
@@ -171,6 +176,8 @@
     <ClCompile Include="dovahscript\wrappers\form\quest\loc_alias.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\various\font.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\window.cpp" />
     <ClCompile Include="dovahscript\wrap_native_object.cpp" />
@@ -477,6 +484,7 @@
     </ClCompile>
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\impl\FormPickerImpl.cpp" />
+    <ClCompile Include="ui\generic\ObservableStandardItemModel.cpp" />
     <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QHeaderViewDKEx.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
@@ -524,7 +532,10 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
+    <ClInclude Include="dovahscript\api_helpers\model_observer_property_handlers.h" />
     <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h" />
+    <ClInclude Include="dovahscript\api_helpers\qt_color.h" />
+    <ClInclude Include="dovahscript\api_helpers\qt_alignment.h" />
     <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
     <ClInclude Include="dovahscript\constants\ui_count_limits.h" />
     <ClInclude Include="dovahscript\core\classes.h" />
@@ -569,9 +580,11 @@
     <ClInclude Include="dovahscript\pull_native_object.h" />
     <ClInclude Include="dovahscript\push_native_object.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptDialog.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerData.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataResource.h" />
+    <QtMoc Include="dovahscript\qt\DovahscriptCanvasWidgetLayerDataText.h" />
     <ClInclude Include="dovahscript\qt\DovahscriptStandardItemModel.h" />
     <ClInclude Include="dovahscript\qt\impl\canvas_context_menu.h" />
-    <ClInclude Include="dovahscript\qt\LuaScriptableCanvasWidgetLayerData.h" />
     <ClInclude Include="dovahscript\safe_call.h" />
     <ClInclude Include="dovahscript\script_set.h" />
     <ClInclude Include="dovahscript\tasks\s2m\add_child_ui_widget.h" />
@@ -607,6 +620,8 @@
     <ClInclude Include="dovahscript\wrappers\form\_all.h" />
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\various\font.h" />
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
     <ClInclude Include="dovahscript\wrappers\ui\window.h" />
     <ClInclude Include="dovahscript\wrappers\ui\_all.h" />
@@ -828,7 +843,7 @@
     <ClInclude Include="editor\scripting\ui\event.h" />
     <ClInclude Include="editor\scripting\ui\impl\canvas_context_menu.h" />
     <ClInclude Include="editor\scripting\ui\util\alignment.h" />
-    <QtMoc Include="editor\scripting\ui\util\lua_item_model.h" />
+    <ClInclude Include="editor\scripting\ui\util\lua_item_model.h" />
     <ClInclude Include="editor\scripting\ui\util\color.h" />
     <ClInclude Include="editor\scripting\util.h" />
     <QtMoc Include="editor\scripting\widgets\LuaManagedRasterWidget.h" />
@@ -969,6 +984,7 @@
     <QtMoc Include="ui\generic\impl\FormPickerImpl.h" />
     <ClInclude Include="lua.h" />
     <QtMoc Include="ui\generic\CanvasWidget.h" />
+    <QtMoc Include="ui\generic\ObservableStandardItemModel.h" />
     <ClInclude Include="ui\generic\QHeaderViewDKEx.h" />
     <QtMoc Include="ui\generic\QLuaCheckBox.h" />
     <ClInclude Include="ui\generic\QSpinBoxDKEx.h" />

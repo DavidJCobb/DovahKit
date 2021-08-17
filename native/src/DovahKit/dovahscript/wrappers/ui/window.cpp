@@ -7,8 +7,6 @@
 #include "../../widget_overrides.h"
 #include "../../wrapper.h"
 #include "../../core/subsystems/coordinator.h"
-#include "../../core/subsystems/events.h"
-#include "../../core/subsystems/lifetime.h"
 #include "../../core/subsystems/permissions.h"
 
 #include "../../tasks/s2m/create_ui_widget.h"

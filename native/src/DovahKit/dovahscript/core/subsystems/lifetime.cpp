@@ -224,9 +224,10 @@ namespace dovahscript::core::subsystems {
    }
 
 
-   void lifetime::on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData* cwld) {
+   void lifetime::on_lua_unreferenced(passkey_to<userdata>, DovahscriptCanvasWidgetLayerData* cwld) {
       require_script_thread();
       //
+      cwld->is_lua_referenced = false;
       this->pending_lifetime_checks.queue_check(*cwld);
    }
    void lifetime::on_lua_unreferenced(passkey_to<userdata>, model_observer_t* observer) {

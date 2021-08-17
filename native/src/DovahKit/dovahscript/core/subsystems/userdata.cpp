@@ -11,7 +11,7 @@
 
 #include "../../../dovah/forms/Form.h" // needed for working with any loaded_form_ptr
 #include "../../../editor/form_stub_meta_type.h" // needed for QVariants of form stub pointers
-#include "../../qt/LuaScriptableCanvasWidgetLayerData.h"
+#include "../../qt/DovahscriptCanvasWidgetLayerData.h"
 
 //
 // Given a dovah::form_stub& named stub:

@@ -152,6 +152,9 @@ QList<CanvasWidgetEntity*> CanvasWidget::layers() const noexcept {
    }
    return out;
 }
+QList<CanvasWidgetEntity*> CanvasWidget::allDescendantLayers() const noexcept {
+   return this->findChildren<CanvasWidgetEntity*>();
+}
 void CanvasWidget::setImageSize(const QSize& s) noexcept {
    this->_size = s;
    this->setMinimumSize(s);

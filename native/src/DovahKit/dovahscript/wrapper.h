@@ -8,7 +8,7 @@
 #include "core/classes.h"
 
 class CanvasWidgetEntity;
-class LuaScriptableCanvasWidgetLayerData;
+class DovahscriptCanvasWidgetLayerData;
 class ObservableStandardItemModelObserver;
 class QButtonGroup;
 
@@ -122,7 +122,7 @@ namespace dovahscript {
             //
             QButtonGroup*                        button_group;
             CanvasWidgetEntity*                  canvas_entity;
-            LuaScriptableCanvasWidgetLayerData*  canvas_layer_data;
+            DovahscriptCanvasWidgetLayerData*    canvas_layer_data;
             DovahscriptResource*                 managed_resource;
             ObservableStandardItemModelObserver* model_observer;
             dovah::form_stub*                    stub;

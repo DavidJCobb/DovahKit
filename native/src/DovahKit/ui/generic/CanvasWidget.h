@@ -37,6 +37,7 @@ class CanvasWidget : public QWidget {
       CanvasWidgetLayerGroup* createLayerGroup();
 
       QList<CanvasWidgetEntity*> layers() const noexcept;
+      QList<CanvasWidgetEntity*> allDescendantLayers() const noexcept;
 
       inline QSize imageSize() const noexcept { return this->_size; }
       inline int imageWidth() const noexcept { return this->size().width(); }

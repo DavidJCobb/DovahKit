@@ -10,6 +10,7 @@
 
 class  CanvasWidgetEntity;
 class  CanvasWidgetLayerData;
+class  DovahscriptCanvasWidgetLayerData;
 class  DovahscriptDialog;
 struct ObservableStandardItemModelObserver;
 
@@ -83,7 +84,7 @@ namespace dovahscript::core::subsystems {
          void on_script_teardown();
 
          #pragma region Script thread functions
-            void on_lua_unreferenced(passkey_to<userdata>, CanvasWidgetLayerData*);
+            void on_lua_unreferenced(passkey_to<userdata>, DovahscriptCanvasWidgetLayerData*);
             void on_lua_unreferenced(passkey_to<userdata>, model_observer_t*);
             void on_lua_unreferenced(passkey_to<userdata>, QObject*);
          #pragma endregion
