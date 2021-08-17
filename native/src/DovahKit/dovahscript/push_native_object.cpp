@@ -81,7 +81,7 @@ namespace {
 }
 
 namespace dovahscript {
-   int push_native_object(dovah::form_stub* stub) {
+   extern int push_native_object(dovah::form_stub* stub) {
       auto* L = core::subsystems::coordinator::get().lua_state;
       if (!stub) {
          lua_pushnil(L);
@@ -101,7 +101,7 @@ namespace dovahscript {
       return core::subsystems::userdata::get().push(L, out, metatable);
    }
 
-   int push_native_object(DovahscriptResource* resource) {
+   extern int push_native_object(DovahscriptResource* resource) {
       auto* L = core::subsystems::coordinator::get().lua_state;
       if (!resource) {
          lua_pushnil(L);
@@ -122,11 +122,11 @@ namespace dovahscript {
       return core::subsystems::userdata::get().push(L, out, metatable);
    }
 
-   int push_native_object(DovahscriptResourceHandle resource) {
+   extern int push_native_object(DovahscriptResourceHandle resource) {
       return push_native_object(resource.bare());
    }
 
-   int push_native_object(QObject* object) {
+   extern int push_native_object(QObject* object) {
       auto* L = core::subsystems::coordinator::get().lua_state;
       if (!object) {
          lua_pushnil(L);

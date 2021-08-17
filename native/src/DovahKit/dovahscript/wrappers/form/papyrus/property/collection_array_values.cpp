@@ -7,9 +7,11 @@
 #include "../../../../push_native_object.h"
 #include "../../../../wrapper.h"
 
+#include "../../../../../dovah/forms/Quest.h"
 #include "../root.h"
 #include "../script.h"
 #include "../property.h"
+#include "../../quest/alias.h"
 #include "../../../../api_helpers/papyrus_property_values.h"
 
 namespace {

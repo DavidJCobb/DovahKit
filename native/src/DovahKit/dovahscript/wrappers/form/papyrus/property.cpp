@@ -10,6 +10,7 @@
 
 #include "../../../../dovah/form_stub.h"
 #include "../../../../dovah/forms/Form.h"
+#include "../../../../dovah/forms/Quest.h"
 
 #include "script.h"
 #include "property/collection_array_values.h"

@@ -12,14 +12,14 @@ namespace dovahscript {
 
 namespace dovahscript {
    [[nodiscard("When returning a wrapper to Lua from a native API, you must tell the Lua VM how many values you've returned; you should return this function's return value.")]]
-   int push_native_object(dovah::form_stub*);
+   extern int push_native_object(dovah::form_stub*);
 
    [[nodiscard("When returning a wrapper to Lua from a native API, you must tell the Lua VM how many values you've returned; you should return this function's return value.")]]
-   int push_native_object(DovahscriptResource*);
+   extern int push_native_object(DovahscriptResource*);
 
    [[nodiscard("When returning a wrapper to Lua from a native API, you must tell the Lua VM how many values you've returned; you should return this function's return value.")]]
-   int push_native_object(DovahscriptResourceHandle);
+   extern int push_native_object(DovahscriptResourceHandle);
 
    [[nodiscard("When returning a wrapper to Lua from a native API, you must tell the Lua VM how many values you've returned; you should return this function's return value.")]]
-   int push_native_object(QObject*);
+   extern int push_native_object(QObject*);
 }

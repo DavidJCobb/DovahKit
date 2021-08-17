@@ -1,0 +1,28 @@
+#pragma once
+#include "../../../wrapper.h"
+#include "../../../../dovah/forms/components/papyrus.h"
+
+namespace dovah::loaded_forms {
+   class Alias;
+}
+
+namespace dovahscript::wrappers {
+   struct quest_alias : public wrapper_metatable {
+      static constexpr const char* superclass_list = { metatable_key };
+      static constexpr const char* metatable_key   = "dovah.classes.quest_alias";
+      static constexpr const char* class_name      = "quest_alias";
+      static const std::initializer_list<luaL_Reg> metatable_methods;
+      static const std::initializer_list<luaL_Reg> metatable_getters;
+      static const std::initializer_list<luaL_Reg> metatable_setters;
+
+      using wrapped_type = dovah::loaded_forms::Alias;
+      static wrapped_type* unwrap(wrapper& w);
+
+      static int wrap(lua_State* L, dovah::form_stub* quest, uint32_t aliasID);
+      static int wrap(lua_State* L, dovah::form_stub* quest, const wrapped_type* alias);
+      static int wrap(lua_State* L, const wrapper& collection, const wrapped_type* alias);
+   };
+   
+   struct quest_loc_alias;
+   struct quest_ref_alias;
+}

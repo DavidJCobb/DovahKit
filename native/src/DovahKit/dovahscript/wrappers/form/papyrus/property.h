@@ -10,9 +10,9 @@ namespace dovahscript::wrapper_part_types {
 
 namespace dovahscript::wrappers {
    struct papyrus_property : public wrapper_metatable {
-      static constexpr const char* superclass_key = metatable_key;
-      static constexpr const char* metatable_key  = "dovah.classes.papyrus_property";
-      static constexpr const char* class_name     = "papyrus_property";
+      static constexpr const char* superclass_list = { metatable_key };
+      static constexpr const char* metatable_key   = "dovah.classes.papyrus_property";
+      static constexpr const char* class_name      = "papyrus_property";
       static const std::initializer_list<luaL_Reg> metatable_methods;
       static const std::initializer_list<luaL_Reg> metatable_getters;
       static const std::initializer_list<luaL_Reg> metatable_setters;
