@@ -6,6 +6,8 @@
 #include "../../../core/collections.h"
 #include "../../../push_native_object.h"
 
+#include "script/collection_properties.h"
+
 #include "../../../../dovah/form_stub.h"
 #include "../../../../dovah/forms/Form.h"
 
@@ -16,123 +18,6 @@ namespace {
    using namespace dovahscript;
    using wrapper_t = wrappers::papyrus_script;
 }
-
-#pragma region Collection: "properties"
-namespace {
-   using namespace dovahscript;
-
-   namespace _collections::properties {
-      wrapper& get_collection_wrapper(lua_State* L) {
-         auto* self = (wrapper*) classes::cast_to_class(L, 1, wrapper_t::property_collection_key);
-         if (self == nullptr) {
-            cobb::lua::error(L, "function called with bad self (expected %s)", wrapper_t::property_collection_key);
-         }
-         return *self;
-      }
-
-      int lookup_item_by_name(lua_State* L) {
-         //
-         // args: wrapper<papyrus_root>, name
-         //
-         auto& self   = get_collection_wrapper(L);
-         auto* script = wrapper_t::unwrap(self, false);
-         if (!script)
-            cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::property_collection_key);
-         const char* name = lua_tostring(L, 2);
-         if (!name)
-            return 0;
-         auto& list = script->properties;
-         auto  size = list.size();
-         for (size_t i = 0; i < size; ++i) {
-            auto& prop = list[i];
-            if (stricmp(prop.name.c_str(), name) == 0) {
-               wrapper out = self;
-               assert(out.is_collection);
-               out.into_collection(i);
-               return core::subsystems::userdata::get().push(L, out, wrappers::papyrus_property::metatable_key);
-            }
-         }
-         return 0;
-      }
-      int get_all_item_names(lua_State* L) {
-         auto& self   = get_collection_wrapper(L);
-         auto* script = wrapper_t::unwrap(self, false);
-         if (!script)
-            cobb::lua::error(L, "wrapper `%s` has no underlying object (deleted?)", wrapper_t::property_collection_key);
-         auto& list = script->properties;
-         //
-         lua_createtable(L, 0, list.size());
-         auto index_tbl = lua_gettop(L);
-         //
-         for (auto& prop : list) {
-            lua_pushboolean(L, true);
-            lua_setfield(L, index_tbl, prop.name.c_str());
-         }
-         return 1;
-      }
-      int set_item(lua_State* L) {
-         core::subsystems::permissions::verify_form_write_permissions();
-         //
-         constexpr auto index_self  = 1;
-         constexpr auto index_key   = 2;
-         constexpr auto index_value = 3;
-         //
-         auto& self   = get_collection_wrapper(L);
-         auto* script = wrapper_t::unwrap(self, false);
-         if (!script)
-            return 0;
-         if (!lua_isstring(L, index_key))
-            luaL_error(L, "the given key is not auto-convertible to a string and thus cannot be a Papyrus property name");
-         std::string name = lua_tostring(L, index_key);
-         //
-         if (lua_isnoneornil(L, index_value)) {
-            //
-            // Setting a property to nil should remove it.
-            //
-            auto& list = script->properties;
-            for (auto it = list.begin(); it != list.end(); ++it) {
-               auto& prop = *it;
-               if (_stricmp(prop.name.c_str(), name.c_str()) == 0) {
-                  self.before_edit();
-                  prop.clear(*self.form);
-                  {
-                     wrapper pw = self;
-                     assert(pw.is_collection);
-                     pw.into_collection(it - list.begin());
-                     core::subsystems::userdata::get().remove_from_sequential_collection(pw);
-                  }
-                  list.erase(it);
-                  self.after_edit();
-                  break;
-               }
-            }
-         } else {
-            auto* arg = (wrapper*)classes::cast_to_class(L, index_value, wrappers::papyrus_property::metatable_key);
-            if (!arg)
-               cobb::lua::error(L, "you can only overwrite a Papyrus property with nil or with another Papyrus property");
-            auto* source = wrappers::papyrus_property::unwrap(*arg, true);
-            if (source == nullptr)
-               cobb::lua::error(L, "the script property wrapper provided as a value to set has no underlying object (deleted?)");
-            //
-            self.before_edit();
-            if (auto* prior = script->lookup_property(name)) {
-               name = prior->name; // preserve case
-               prior->clear(*self.form);
-               prior->clone_from(*source, *self.form);
-               prior->name = name; // restore name (it may have been changed during the clone operation)
-            } else {
-               auto& added = script->properties.emplace_back();
-               added.clone_from(*source, *self.form);
-               added.name = name; // set name after the cloning operation
-            }
-            self.after_edit();
-         }
-         return 0;
-      }
-   }
-}
-#pragma endregion
-
 
 namespace {
    using namespace dovahscript;
@@ -145,12 +30,11 @@ namespace {
          auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object (deleted?)");
-         __assume(script != nullptr);
-         luaL_argcheck(L, lua_isstring(L, 2), 2, "script name (string) expected");
+            cobb::lua::error(L, "script wrapper has no underlying object (deleted?)");
+         cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "script name (string) expected");
          std::string name = lua_tostring(L, 2);
          if (script->lookup_property(name) != nullptr) {
-            luaL_error(L, "script %s already has a property named \"%s\"", script->name.c_str(), name.c_str());
+            cobb::lua::error(L, "script %s already has a property named \"%s\"", script->name.c_str(), name.c_str());
          }
          self.before_edit();
          auto& s  = script->properties.emplace_back();
@@ -172,7 +56,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object (deleted?)");
+            cobb::lua::error(L, "script wrapper has no underlying object (deleted?)");
          //
          self.before_edit();
          core::subsystems::userdata::get().clear_entire_collection(self);
@@ -187,7 +71,7 @@ namespace {
          auto& self   = get_wrapper_for_thiscall<wrappers::papyrus_script>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object (deleted?)");
+            cobb::lua::error(L, "script wrapper has no underlying object (deleted?)");
          //
          // The way this works is fairly simple. The first non-self argument can be a wrapped 
          // collection item, the name of a collection item, or the index of a collection item. 
@@ -242,8 +126,7 @@ namespace {
          auto& self   = get_wrapper_for_thiscall<wrapper_t>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object (deleted?)");
-         __assume(script != nullptr);
+            cobb::lua::error(L, "script wrapper has no underlying object (deleted?)");
          //
          lua_pushstring(L, script->name.c_str());
          return 1;
@@ -252,13 +135,12 @@ namespace {
          auto& self   = get_wrapper_for_thiscall<wrapper_t>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object (deleted?)");
-         __assume(script != nullptr);
+            cobb::lua::error(L, "script wrapper has no underlying object (deleted?)");
          //
          wrapper out = self;
          out.append_part(wrapper_part_types::papyrus_property);
          out.is_collection = true;
-         return core::subsystems::userdata::get().push(L, out, wrapper_t::property_collection_key);
+         return core::subsystems::userdata::get().push(L, out, wrappers::collections::papyrus_property_list.registry_key);
       }
    }
    namespace _setters {
@@ -268,8 +150,7 @@ namespace {
          auto& self   = get_wrapper_for_thiscall<wrapper_t>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object (deleted?)");
-         __assume(script != nullptr);
+            cobb::lua::error(L, "script wrapper has no underlying object (deleted?)");
          //
          auto* name = lua_tolstring(L, 2, nullptr);
          auto* root = wrappers::papyrus_root::unwrap(self, false);
@@ -289,8 +170,7 @@ namespace {
          auto& self   = get_wrapper_for_thiscall<wrapper_t>(L);
          auto* script = wrappers::papyrus_script::unwrap(self, true);
          if (script == nullptr)
-            luaL_error(L, "script wrapper has no underlying object (deleted?)");
-         __assume(script != nullptr);
+            cobb::lua::error(L, "script wrapper has no underlying object (deleted?)");
          //
          if (lua_isnoneornil(L, 2)) { // if the user is assigning nil, just clear all properties
             self.before_edit();
@@ -305,15 +185,13 @@ namespace {
             return 0;
          }
          //
-         auto* arg    = (wrapper*) classes::cast_to_class(L, 2, wrapper_t::property_collection_key);
-         luaL_argcheck(L, arg != nullptr, 2, "expected another Papyrus property collection or nil");
-         __assume(arg != nullptr);
+         auto* arg    = (wrapper*) classes::cast_to_class(L, 2, wrappers::collections::papyrus_property_list.registry_key);
+         cobb::lua::argcheck(L, arg != nullptr, 2, "expected another Papyrus property collection or nil");
          auto* other  = wrapper_t::unwrap(*arg, false);
          if (other == nullptr)
-            luaL_error(L, "script property collection wrapper has no underlying object (deleted?)");
+            cobb::lua::error(L, "script property collection wrapper has no underlying object (deleted?)");
          if (script == other) // self-assignment
             return 0;
-         __assume(other != nullptr);
          //
          self.before_edit();
          {
@@ -369,15 +247,7 @@ namespace dovahscript::wrappers {
       return &list[i];
    }
 
-   /*static*/ void wrapper_t::build_collection_metatables(lua_State* L) {
-      define_collection_metatable(L, {
-         .registry_key           = wrapper_t::property_collection_key,
-         .garbage_collection     = &wrapper::__gc,
-         //
-         .get_all_item_names     = &_collections::properties::get_all_item_names,
-         .items_are_named        = true,
-         .lookup_item_by_name    = &_collections::properties::lookup_item_by_name,
-         .set_item               = &_collections::properties::set_item,
-      });
+   /*static*/ void wrapper_t::extra_class_setup(lua_State* L) {
+      define_collection_metatable(L, collections::papyrus_property_list);
    }
 }

@@ -101,6 +101,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp" />
     <ClCompile Include="dovahscript\core\classes.cpp" />
     <ClCompile Include="dovahscript\core\class_zombification.cpp" />
     <ClCompile Include="dovahscript\core\collections.cpp" />
@@ -158,8 +159,11 @@
     <ClCompile Include="dovahscript\wrappers\base.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\form.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\papyrus\property.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\papyrus\root.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\papyrus\script.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\papyrus\script\collection_properties.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
@@ -512,6 +516,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
+    <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h" />
     <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
     <ClInclude Include="dovahscript\core\classes.h" />
     <ClInclude Include="dovahscript\core\class_zombification.h" />
@@ -578,8 +583,11 @@
     <ClInclude Include="dovahscript\wrappers\base.h" />
     <ClInclude Include="dovahscript\wrappers\form\form.h" />
     <ClInclude Include="dovahscript\wrappers\form\papyrus\property.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\property\collection_array_values.h" />
     <ClInclude Include="dovahscript\wrappers\form\papyrus\root.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\root\collection_scripts.h" />
     <ClInclude Include="dovahscript\wrappers\form\papyrus\script.h" />
+    <ClInclude Include="dovahscript\wrappers\form\papyrus\script\collection_properties.h" />
     <ClInclude Include="dovahscript\wrappers\form\papyrus\_all.h" />
     <ClInclude Include="dovahscript\wrappers\form\_all.h" />
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
