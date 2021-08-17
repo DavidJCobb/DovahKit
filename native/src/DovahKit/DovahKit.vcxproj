@@ -172,6 +172,7 @@
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\window.cpp" />
     <ClCompile Include="dovahscript\wrap_native_object.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
@@ -525,6 +526,7 @@
     <QtMoc Include="dovahscript\core\subsystems\coordinator.h" />
     <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h" />
     <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
+    <ClInclude Include="dovahscript\constants\ui_count_limits.h" />
     <ClInclude Include="dovahscript\core\classes.h" />
     <ClInclude Include="dovahscript\core\class_zombification.h" />
     <ClInclude Include="dovahscript\core\collections.h" />
@@ -606,6 +608,7 @@
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\window.h" />
     <ClInclude Include="dovahscript\wrappers\ui\_all.h" />
     <ClInclude Include="dovahscript\wrap_native_object.h" />
     <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt" />

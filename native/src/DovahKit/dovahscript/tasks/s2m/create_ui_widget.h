@@ -4,8 +4,13 @@
 #include <QWidget>
 #include "../_ui_base.h"
 
+#include "../../constants/ui_count_limits.h"
+
+class DovahscriptDialog;
+
 namespace dovahscript::tasks::s2m {
    namespace impl::create_ui_widget {
+      extern int  get_window_count();
       extern void set_up_widget(QWidget&);
    }
 
@@ -21,6 +26,11 @@ namespace dovahscript::tasks::s2m {
          virtual bool is_fire_and_forget() const noexcept override { return false; }
       protected:
          virtual void _exec_impl() override {
+            if constexpr (std::is_same_v<DovahscriptDialog, widget_type>) {
+               if (get_window_count() >= max_script_windows) {
+                  return;
+               }
+            }
             created = new widget_type;
             impl::create_ui_widget::set_up_widget(*created);
             if (this->configure)

@@ -4,6 +4,10 @@
 
 namespace dovahscript::tasks::s2m {
    namespace impl::create_ui_widget {
+      extern int get_window_count() {
+         auto list = core::subsystems::lifetime::get().get_script_windows();
+         return list.size();
+      }
       extern void set_up_widget(QWidget& widget) {
          core::subsystems::coordinator::get().set_up_widget(widget);
          core::subsystems::lifetime::get().on_hierarchy_item_created(widget);
