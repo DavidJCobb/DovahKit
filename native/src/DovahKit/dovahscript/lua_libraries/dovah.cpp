@@ -28,6 +28,8 @@
 #include <QImage>
 #include <QImageReader>
 #include "../../dovah/files/bsa/bsa_archived_file.h"
+#include "../wrappers/resource/dds.h"
+#include "../wrappers/resource/unknown.h"
 
 namespace {
    static constexpr const char* string_format_registry_key = "dovahscript.internal.dovah.string_format_copy";
@@ -272,7 +274,7 @@ namespace {
                      delete task;
                      assert(resource);
                   }
-                  return wrappers::resource::raster::wrap_and_push(L, *resource);
+                  return push_native_object(resource);
                }
             }
          }
@@ -286,9 +288,7 @@ namespace {
                core::subsystems::coordinator::get().send_script_task(*task);
                delete task;
             }
-            if (resource) {
-               return wrappers::resource::dds::wrap_and_push(L, *resource);
-            }
+            return push_native_object(resource);
          }
          //
          // The resource could not be identified.

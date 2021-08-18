@@ -11,6 +11,8 @@ namespace dovahscript::wrappers::ui {
       static method_list_t metatable_getters;
       static method_list_t metatable_setters;
 
+      static constexpr const char* global_name = "table_view_row";
+
       static constexpr bool has_extra_class_setup = true;
       static void extra_class_setup(lua_State* L) noexcept;
 

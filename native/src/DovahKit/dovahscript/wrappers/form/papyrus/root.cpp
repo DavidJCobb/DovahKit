@@ -9,6 +9,7 @@
 #include "root/collection_scripts.h"
 
 #include "../../../../dovah/forms/Form.h"
+#include "../../../../dovah/forms/Quest.h"
 #include "../quest/alias.h"
 #include "script.h"
 
@@ -194,7 +195,7 @@ namespace dovahscript::wrappers {
       { "scripts", &_setters::scripts },
    };
 
-   /*static*/ void papyrus_root::extra_class_setup(lua_State* L) {
+   /*static*/ void papyrus_root::extra_class_setup(lua_State* L) noexcept {
       define_collection_metatable(L, collections::papyrus_script_list);
    }
 

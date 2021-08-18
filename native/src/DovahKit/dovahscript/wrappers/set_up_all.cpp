@@ -6,18 +6,26 @@
 #include "ui/_all.h"
 
 namespace {
+   template<typename T> concept _HasSingletonToImport = requires (lua_State* L) {
+      T::import_singleton(L);
+      std::is_same_v<const char*, decltype(T::global_name)>;
+   };
+
    //
    // Sets up a widget class's metatable, and calls its static (setup) member function 
    // to create its singleton.
    //
-   template<typename T> inline void set_up_class_with_singleton(lua_State* L, int pos) {
-      define_wrapper_metatable<T>(L);
+   template<typename T> requires _HasSingletonToImport<T>
+   inline void set_up_class_with_singleton(lua_State* L, int pos) {
+      dovahscript::define_wrapper_metatable<T>(L);
       T::import_singleton(L);
-      lua_setfield(L, pos, cls::global_name);
+      lua_setfield(L, pos, T::global_name);
       assert(lua_gettop(L) == pos);
    }
-   template<typename T> inline void set_up_class_with_global_singleton(lua_State* L) {
-      define_wrapper_metatable<T>(L);
+
+   template<typename T> requires _HasSingletonToImport<T>
+   inline void set_up_class_with_global_singleton(lua_State* L) {
+      dovahscript::define_wrapper_metatable<T>(L);
       T::import_singleton(L);
       lua_setglobal(L, T::global_name);
    }
@@ -43,11 +51,11 @@ namespace dovahscript {
          #pragma endregion
       #pragma endregion
       #pragma region Resources
-         set_up_class_with_global_singleton<resource::dds>(L);
+         define_wrapper_metatable<resource::dds>(L);
             define_wrapper_metatable<resource::dds_cubemap_face_list>(L);
             define_wrapper_metatable<resource::dds_image_subresource>(L);
          set_up_class_with_global_singleton<resource::raster>(L);
-         set_up_class_with_global_singleton<resource::unknown>(L);
+         define_wrapper_metatable<resource::unknown>(L);
       #pragma endregion
       #pragma region UI
       {

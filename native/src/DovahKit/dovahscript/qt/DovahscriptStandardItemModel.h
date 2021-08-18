@@ -7,7 +7,7 @@ class DovahscriptStandardItemModel : public ObservableStandardItemModel {
       QList<QWidget*> _associated_widgets;
 
    protected slots:
-      void associatedWidgetDestroyed(QWidget*);
+      void associatedWidgetDestroyed(QObject*);
 
    public:
       using ObservableStandardItemModel::ObservableStandardItemModel;

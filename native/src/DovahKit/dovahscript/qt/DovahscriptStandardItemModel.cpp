@@ -1,8 +1,9 @@
 #include "DovahscriptStandardItemModel.h"
 #include <QWidget>
 
-void DovahscriptStandardItemModel::associatedWidgetDestroyed(QWidget* widget) {
-   this->dissociateFromWidget(widget);
+void DovahscriptStandardItemModel::associatedWidgetDestroyed(QObject* widget) {
+   assert(widget->isWidgetType());
+   this->dissociateFromWidget((QWidget*)widget);
 }
 
 QList<QWidget*> DovahscriptStandardItemModel::associatedWidgets() {

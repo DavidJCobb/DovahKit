@@ -27,7 +27,7 @@ namespace dovahscript::tasks::s2m {
       protected:
          virtual void _exec_impl() override {
             if constexpr (std::is_same_v<DovahscriptDialog, widget_type>) {
-               if (get_window_count() >= max_script_windows) {
+               if (impl::create_ui_widget::get_window_count() >= max_script_windows) {
                   return;
                }
             }

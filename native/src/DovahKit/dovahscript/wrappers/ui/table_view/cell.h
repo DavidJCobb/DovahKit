@@ -12,6 +12,8 @@ namespace dovahscript::wrappers::ui {
       static method_list_t metatable_getters;
       static method_list_t metatable_setters;
 
+      static constexpr const char* global_name = "table_view_cell";
+
       static const api_helpers::moph::handler_set moph_handlers;
 
       static constexpr bool has_extra_class_setup = true;
