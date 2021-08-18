@@ -21,7 +21,7 @@
 
 #include "../../api_helpers/qt_color.h"
 
-#include "../misc/raster_draw_path.h"
+#include "../unusual/raster_draw_path.h"
 
 #include <QPainter>
 #include <QPainterPath>
@@ -1050,7 +1050,7 @@ namespace {
             if (!resource)
                cobb::lua::error(L, "unable to create %dx%dpx raster", width, height);
          }
-         push_native_object(resource);
+         return push_native_object(resource);
       }
       int is(lua_State* L) {
          auto* wrapper = wrapper_from_stack<cls>(L, 1);

@@ -200,6 +200,7 @@
     <ClCompile Include="dovahscript\wrappers\ui\various\font.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\window.cpp" />
+    <ClCompile Include="dovahscript\wrappers\unusual\raster_draw_path.cpp" />
     <ClCompile Include="dovahscript\wrap_native_object.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
@@ -667,6 +668,7 @@
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
     <ClInclude Include="dovahscript\wrappers\ui\window.h" />
     <ClInclude Include="dovahscript\wrappers\ui\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\unusual\raster_draw_path.h" />
     <ClInclude Include="dovahscript\wrap_native_object.h" />
     <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt" />
     <ClInclude Include="dovah\bs_hash.h" />
@@ -1193,6 +1195,7 @@
     <Text Include="ui\_docs\FormPicker.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\forms\impl\form_subclass_components.txt" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />

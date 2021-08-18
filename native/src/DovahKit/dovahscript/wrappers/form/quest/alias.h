@@ -1,4 +1,5 @@
 #pragma once
+#include "../../base.h"
 #include "../../../wrapper.h"
 #include "../../../../dovah/forms/components/papyrus.h"
 

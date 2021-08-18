@@ -1,4 +1,5 @@
 #pragma once
+#include "../../base.h"
 #include "../../../wrapper.h"
 
 namespace dovahscript::wrappers::resource {

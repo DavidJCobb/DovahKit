@@ -51,7 +51,7 @@ namespace dovahscript::api_helpers {
 
    
    template<class W, class Wx, class T> requires (std::is_base_of_v<Wx, W>)
-   void set_widget_property_and_block_signals(W* widget, void (Wx::* func)(const T&), const T& value) {
+   void set_widget_property_and_block_signals(W* widget_bare, void (Wx::* func)(const T&), const T& value) {
       task_reference widget = widget_bare;
       //
       auto* task = new tasks::s2m::ui_write_lambda(false);

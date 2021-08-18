@@ -288,7 +288,7 @@ namespace {
                      return;
                   }
                   error.text  = "axis name \"";
-                  error.text += axis.toUtf8();
+                  error.text += axis.toUtf8().constData();
                   error.text += "\" is unrecognized";
                   return;
                }

@@ -4,6 +4,7 @@
 #include "form/_all.h"
 #include "resource/_all.h"
 #include "ui/_all.h"
+#include "unusual/_all.h"
 
 namespace {
    template<typename T> concept _HasSingletonToImport = requires (lua_State* L) {
@@ -77,6 +78,9 @@ namespace dovahscript {
          assert(lua_gettop(L) == index);
          lua_pop(L, 1);
       }
+      #pragma endregion
+      #pragma region Unusual
+         set_up_class_with_global_singleton<raster_draw_path>(L);
       #pragma endregion
    }
 }
