@@ -1,5 +1,7 @@
 #pragma once
 #include "table_view.h"
+#include "table_view/collection_columns.h"
+#include "table_view/collection_rows.h"
 #include "table_view/cell.h"
 #include "table_view/col.h"
 #include "table_view/col/collection_cells.h"

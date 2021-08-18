@@ -21,6 +21,7 @@
 
 #include "../../api_helpers/model_observers.h"
 #include "../../api_helpers/model_observer_property_handlers.h"
+#include "../../api_helpers/qt_variant.h"
 #include "../../api_helpers/widget_properties.h"
 #include "../../constants/ui_count_limits.h"
 
@@ -73,9 +74,8 @@ namespace {
       using namespace dovahscript;
       using handler     = dovahscript::api_helpers::moph::model_observer_property_handler;
       using handler_set = dovahscript::api_helpers::moph::handler_set;
-
-      auto& core = DovahKitScriptVMCore::get();
-      int   argcount = lua_gettop(L);
+      //
+      int argcount = lua_gettop(L);
       for (int i = first; i <= argcount; ++i) {
          auto type = lua_type(L, i);
          if (type == LUA_TTABLE) {
@@ -84,7 +84,7 @@ namespace {
             continue;
          }
          handler_set::role_map_t e;
-         e[Qt::DisplayRole] = core.variant_from_lua(i);
+         e[Qt::DisplayRole] = api_helpers::pull_variant(L, i);
          roles.push_back(e);
       }
    }
@@ -428,7 +428,7 @@ namespace {
          wrapper out = self;
          out.parts[0].signature = wrapper_part_types::ui_table_view_cols;
          out.is_collection = true;
-         return core::subsystems::userdata::get().push(L, out, cls::col_collection_key);
+         return core::subsystems::userdata::get().push(L, out, wrappers::ui::collections::table_view_column_list.registry_key);
       }
       int has_corner_button(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -468,7 +468,7 @@ namespace {
          wrapper out = self;
          out.parts[0].signature = wrapper_part_types::ui_table_view_rows;
          out.is_collection = true;
-         return core::subsystems::userdata::get().push(L, out, cls::row_collection_key);
+         return core::subsystems::userdata::get().push(L, out, wrappers::ui::collections::table_view_row_list.registry_key);
       }
       int selection(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -925,20 +925,8 @@ namespace dovahscript::wrappers::ui {
    };
 
    /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
-      define_collection_metatable(L, {
-         .registry_key          = cls::row_collection_key,
-         .garbage_collection    = &wrapper::__gc,
-         //
-         .get_collection_length  = &_collections::rows::get_collection_length,
-         .lookup_item_by_index   = &_collections::rows::lookup_item_by_index,
-      });
-      define_collection_metatable(L, {
-         .registry_key          = cls::col_collection_key,
-         .garbage_collection    = &wrapper::__gc,
-         //
-         .get_collection_length  = &_collections::cols::get_collection_length,
-         .lookup_item_by_index   = &_collections::cols::lookup_item_by_index,
-      });
+      define_collection_metatable(L, collections::table_view_row_list);
+      define_collection_metatable(L, collections::table_view_column_list);
    }
 
    /*static*/ void cls::import_singleton(lua_State* L) {

@@ -106,6 +106,7 @@
     <ClCompile Include="dovahscript\api_helpers\papyrus_property_values.cpp" />
     <ClCompile Include="dovahscript\api_helpers\qt_color.cpp" />
     <ClCompile Include="dovahscript\api_helpers\qt_alignment.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\qt_variant.cpp" />
     <ClCompile Include="dovahscript\core\classes.cpp" />
     <ClCompile Include="dovahscript\core\class_zombification.cpp" />
     <ClCompile Include="dovahscript\core\collections.cpp" />
@@ -180,6 +181,8 @@
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\collection_columns.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\collection_rows.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\col\collection_cells.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\row.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\row\collection_cells.cpp" />
@@ -544,6 +547,7 @@
     <ClInclude Include="dovahscript\api_helpers\papyrus_property_values.h" />
     <ClInclude Include="dovahscript\api_helpers\qt_color.h" />
     <ClInclude Include="dovahscript\api_helpers\qt_alignment.h" />
+    <ClInclude Include="dovahscript\api_helpers\qt_variant.h" />
     <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
     <ClInclude Include="dovahscript\constants\ui_count_limits.h" />
     <ClInclude Include="dovahscript\core\classes.h" />
@@ -631,6 +635,8 @@
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\collection_columns.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\collection_rows.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\col\collection_cells.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\row.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view\row\collection_cells.h" />
