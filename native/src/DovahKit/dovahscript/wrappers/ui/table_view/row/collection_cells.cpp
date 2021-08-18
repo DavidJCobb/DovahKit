@@ -79,7 +79,7 @@ namespace {
    }
 }
 
-namespace dovahscript::wrappers::collections {
+namespace dovahscript::wrappers::ui::collections {
    extern const collection_definition_params table_view_row_cell_list = {
       .registry_key           = collection_metatable_key,
       .garbage_collection     = &wrapper::__gc,

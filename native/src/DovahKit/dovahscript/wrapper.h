@@ -7,10 +7,10 @@
 #include "../../lua.h"
 #include "core/classes.h"
 
-class CanvasWidgetEntity;
-class DovahscriptCanvasWidgetLayerData;
-class ObservableStandardItemModelObserver;
-class QButtonGroup;
+class  CanvasWidgetEntity;
+class  DovahscriptCanvasWidgetLayerData;
+class  QButtonGroup;
+struct ObservableStandardItemModelObserver;
 
 namespace dovahscript {
    class DovahscriptResource;

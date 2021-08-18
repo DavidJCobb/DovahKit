@@ -167,6 +167,7 @@
     <ClCompile Include="dovahscript\tasks\_base.cpp" />
     <ClCompile Include="dovahscript\task_reference.cpp" />
     <ClCompile Include="dovahscript\widget_overrides.cpp" />
+    <ClCompile Include="dovahscript\wrapper.cpp" />
     <ClCompile Include="dovahscript\wrappers\base.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\form.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\papyrus\property.cpp" />
@@ -669,6 +670,7 @@
     <ClInclude Include="dovahscript\wrappers\ui\window.h" />
     <ClInclude Include="dovahscript\wrappers\ui\_all.h" />
     <ClInclude Include="dovahscript\wrappers\unusual\raster_draw_path.h" />
+    <ClInclude Include="dovahscript\wrappers\unusual\_all.h" />
     <ClInclude Include="dovahscript\wrap_native_object.h" />
     <ClInclude Include="dovahscript\_docs\how to write Lua APIs.txt" />
     <ClInclude Include="dovah\bs_hash.h" />

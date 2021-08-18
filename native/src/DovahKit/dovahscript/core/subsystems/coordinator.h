@@ -152,7 +152,7 @@ namespace dovahscript::core::subsystems {
          // Client thread functions:
 
          void abort();
-         void execute_scripts(script_set&&); // use std::move
+         void execute_scripts(const script_set&);
          void set_pause_state(bool);
 
          void create_model_for_widget(QWidget&);

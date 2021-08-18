@@ -5,9 +5,9 @@
 
 namespace cobb::qt {
    extern bool can_have_model(const QWidget* root) {
-      if (auto* casted = qobject_cast<QAbstractItemView*>(root))
+      if (auto* casted = qobject_cast<const QAbstractItemView*>(root))
          return true;
-      if (auto* casted = qobject_cast<QComboBox*>(root))
+      if (auto* casted = qobject_cast<const QComboBox*>(root))
          return true;
       return false;
    }

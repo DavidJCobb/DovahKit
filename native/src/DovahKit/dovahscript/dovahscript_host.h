@@ -28,7 +28,7 @@ class DovahscriptHost : public QObject, cobb::singleton {
    public slots:
       void abort();
       void runScript(const QString& code, const QString& filename = "userscript");
-      void runScripts(dovahscript::script_set&&); // use std::move for the argument
+      void runScripts(const dovahscript::script_set&); // use std::move for the argument
       void setPaused(bool);
       void setUIParentWidget(QWidget*); // only allowed when a script is not running
 };

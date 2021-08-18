@@ -267,12 +267,12 @@ namespace {
                if (!layout)
                   return;
                if (auto* grid = qobject_cast<QGridLayout*>(layout)) {
-                  if (!arg_a.type() == QMetaType::QString) {
+                  if (arg_a.type() != QMetaType::QString) {
                      error.text = "axis name (\"row\" or \"col\" or \"column\") expected";
                      error.arg  = 2;
                      return;
                   }
-                  if (!arg_b.type() == QMetaType::Int) {
+                  if (arg_b.type() != QMetaType::Int) {
                      error.text = "index (integer) expected";
                      error.arg  = 3;
                      return;
@@ -293,7 +293,7 @@ namespace {
                   return;
                }
                if (auto* box = qobject_cast<QBoxLayout*>(layout)) {
-                  if (!arg_a.type() == QMetaType::Int) {
+                  if (arg_a.type() != QMetaType::Int) {
                      error.text = "index (integer) expected";
                      error.arg  = 2;
                      return;

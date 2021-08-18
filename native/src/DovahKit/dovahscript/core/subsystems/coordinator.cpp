@@ -311,6 +311,9 @@ namespace dovahscript::core::subsystems {
       this->ui_parent = p;
    }
 
+   bool coordinator::teardown_in_progress() const noexcept {
+      return this->in_teardown;
+   }
 
    void coordinator::send_script_task(task_queue::task_t& task) {
       require_script_thread();
@@ -384,9 +387,7 @@ namespace dovahscript::core::subsystems {
       if (this->running)
          this->aborted = true;
    }
-   void coordinator::execute_scripts(script_set&& scripts) {
-      std::swap(this->scripts_to_run, scripts);
-      //
+   void coordinator::execute_scripts(const script_set& scripts) {
       auto guard = std::lock_guard(this->start_stop_lock);
       if (this->running) {
          if constexpr (debug_script_start_stop) {
@@ -394,6 +395,7 @@ namespace dovahscript::core::subsystems {
          }
          return;
       }
+      this->scripts_to_run = scripts;
       if (this->worker_thread.joinable()) // even if it's finished running, we need to join it or std::thread::operator= below will break
          this->worker_thread.join();
       this->aborted = false;

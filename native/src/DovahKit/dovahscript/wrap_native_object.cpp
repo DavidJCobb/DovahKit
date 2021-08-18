@@ -9,7 +9,7 @@
 #include "wrapper.h"
 
 namespace dovahscript {
-   [[nodiscard]] extern wrapper push_native_object(dovah::form_stub& stub) {
+   [[nodiscard]] extern wrapper wrap_native_object(dovah::form_stub& stub) {
       wrapper out;
       out.stub = &stub;
       out.type = wrapper_type::form;

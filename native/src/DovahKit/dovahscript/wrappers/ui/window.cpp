@@ -28,9 +28,11 @@ namespace {
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
-         auto* widget  = (QDialog*) self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          auto* task    = new tasks::s2m::ui_write_lambda(false);
-         task->handler = [widget]() { widget->done(-1); };
+         task->handler = [widget]() {
+            widget->done(-1);
+         };
          core::subsystems::coordinator::get().send_ui_write_task(*task);
          return 0;
       }
@@ -41,7 +43,7 @@ namespace {
          lua_settop(L, 1);
          if (!self.widget)
             return 0;
-         auto* widget  = (QDialog*) self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          auto* task    = new tasks::s2m::ui_write_lambda(use_blocking_task);
          task->handler = [widget]() {
             widget->open();
@@ -94,7 +96,7 @@ namespace {
          if (!self.widget)
             return 0;
          auto  value   = lua_toboolean(L, 2);
-         auto* widget  = (wrapped_type*)self.widget;
+         auto  widget  = task_reference((wrapped_type*)self.widget);
          auto* task    = new tasks::s2m::ui_write_lambda(false);
          task->handler = [widget, value]() {
             widget->setWindowFlags(widget->windowFlags().setFlag(Qt::WindowContextHelpButtonHint, value));

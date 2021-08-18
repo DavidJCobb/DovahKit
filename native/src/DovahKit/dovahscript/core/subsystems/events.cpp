@@ -110,6 +110,10 @@ namespace {
 }
 
 namespace dovahscript::core::subsystems {
+   unsigned int events::get_pending_event_count() const noexcept {
+      return this->pending_event_count;
+   }
+
    void events::on_script_setup() {
       assert(this->pending_events.empty());
       assert(this->pending_event_count == 0);

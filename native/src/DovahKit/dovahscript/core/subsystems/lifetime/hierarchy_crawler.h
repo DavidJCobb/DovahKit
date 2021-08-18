@@ -4,8 +4,8 @@
 #include <QObject>
 #include "task_reference_state_multi_checker.h"
 
-class DovahscriptStandardItemModel;
-class ObservableStandardItemModelObserver;
+class  DovahscriptStandardItemModel;
+struct ObservableStandardItemModelObserver;
 namespace dovahscript::core::subsystems {
    class lifetime;
    class userdata;

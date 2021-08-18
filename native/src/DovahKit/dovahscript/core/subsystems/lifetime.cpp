@@ -202,11 +202,17 @@ namespace dovahscript::core::subsystems {
       require_script_thread();
       auto& userdata_s = userdata::get();
       //
+      if constexpr (debug_model_observer_lifetimes) {
+         qDebug("Zombifying all invalid model observers...");
+      }
       for (auto* o : this->hierarchy_objects.model_observers) {
          if (!o)
             continue;
          if (o->isValid())
             continue;
+         if constexpr (debug_model_observer_lifetimes) {
+            qDebug("Zombifying observer %p...", o);
+         }
          userdata_s.destroy_all(*o);
       }
    }

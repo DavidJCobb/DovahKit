@@ -1,7 +1,7 @@
 #pragma once
 
-class ObservableStandardItemModelObserver;
-class QObject;
+class  QObject;
+struct ObservableStandardItemModelObserver;
 namespace dovahscript::core::subsystems {
    class lifetime;
 }

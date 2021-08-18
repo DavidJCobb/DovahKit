@@ -27,8 +27,8 @@ void DovahscriptHost::runScript(const QString& code, const QString& name) {
    });
    coordinator_t::get().execute_scripts(std::move(package));
 }
-void DovahscriptHost::runScripts(dovahscript::script_set&& scripts) {
-   coordinator_t::get().execute_scripts(std::move(scripts));
+void DovahscriptHost::runScripts(const dovahscript::script_set& scripts) {
+   coordinator_t::get().execute_scripts(scripts);
 }
 void DovahscriptHost::setPaused(bool b) {
    coordinator_t::get().set_pause_state(b);

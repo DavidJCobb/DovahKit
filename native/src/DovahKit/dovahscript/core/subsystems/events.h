@@ -6,7 +6,7 @@
 #include "../../../helpers/singleton.h"
 #include "events/script_event_queue.h"
 
-class ObservableStandardItemModelObserver;
+struct ObservableStandardItemModelObserver;
 namespace dovahscript::core::subsystems {
    class events;
 }

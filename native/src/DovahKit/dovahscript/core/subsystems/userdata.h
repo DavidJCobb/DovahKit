@@ -2,7 +2,7 @@
 #include "../../../helpers/singleton.h"
 #include "../../../lua.h"
 
-class ObservableStandardItemModelObserver;
+struct ObservableStandardItemModelObserver;
 namespace dovah {
    class form_stub;
 }

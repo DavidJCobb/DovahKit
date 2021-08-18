@@ -1,6 +1,6 @@
 #pragma once
+#include <QObject>
 
-class  QObject;
 struct ObservableStandardItemModelObserver;
 
 namespace dovahscript {
@@ -16,8 +16,20 @@ namespace dovahscript {
       protected:
          T* ptr = nullptr;
 
-         inline void _inc() const noexcept { impl::task_reference::inc(this->ptr); }
-         inline void _dec() const noexcept { impl::task_reference::dec(this->ptr); }
+         inline void _inc() const noexcept {
+            if constexpr (std::is_base_of_v<QObject, T>) { // false C2665 errors without this; MSVC doesn't understand overloads so we have to do this garbage
+               impl::task_reference::inc((QObject*)this->ptr);
+            } else {
+               impl::task_reference::inc(this->ptr);
+            }
+         }
+         inline void _dec() const noexcept {
+            if constexpr (std::is_base_of_v<QObject, T>) { // false C2665 errors without this; MSVC doesn't understand overloads so we have to do this garbage
+               impl::task_reference::dec((QObject*)this->ptr);
+            } else {
+               impl::task_reference::dec(this->ptr);
+            }
+         }
 
       public:
          task_reference() {}
@@ -29,11 +41,13 @@ namespace dovahscript {
             _dec();
             this->ptr = other.ptr;
             _inc();
+            return *this;
          }
          task_reference& operator=(task_reference&& other) {
             _dec();
             this->ptr = other.ptr;
             other.ptr = nullptr;
+            return *this;
          }
 
          operator bool() { return this->ptr != nullptr; };

@@ -17,7 +17,7 @@ namespace dovahscript::impl::task_reference {
       if (!o)
          return;
       core::subsystems::lifetime::get().remove_task_reference(o);
-      }
+   }
    extern void dec(ObservableStandardItemModelObserver* o) {
       if (!o)
          return;
