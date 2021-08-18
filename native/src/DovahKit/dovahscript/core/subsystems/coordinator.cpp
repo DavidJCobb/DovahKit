@@ -1,6 +1,7 @@
 #include "coordinator.h"
 #include <QLabel>
 #include <QSortFilterProxyModel>
+#include "../../../helpers/qt/can_have_model.h"
 #include "../../../helpers/qt/get_model_of.h"
 #include "../../../helpers/qt/set_model_of.h"
 #include "../../../helpers/qt/repaint.h"
@@ -444,6 +445,8 @@ namespace dovahscript::core::subsystems {
       } else if (auto* canvas = qobject_cast<CanvasWidget*>(&widget)) {
          dovahscript::impl::set_up_canvas_context_menu(canvas);
       }
+      if (cobb::qt::can_have_model(&widget))
+         this->create_model_for_widget(widget);
    }
 
    void coordinator::expect_deletion_of(passkey_to<tasks::s2m::delete_form>, const std::vector<dovah::form_stub*>& append) {

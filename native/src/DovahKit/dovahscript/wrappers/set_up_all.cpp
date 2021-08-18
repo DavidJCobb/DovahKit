@@ -31,8 +31,15 @@ namespace dovahscript {
       #pragma region Form wrappers
          define_wrapper_metatable<form>(L);
          #pragma region Common form components
+            define_wrapper_metatable<papyrus_root>(L);
+               define_wrapper_metatable<papyrus_script>(L);
+                  define_wrapper_metatable<papyrus_property>(L);
          #pragma endregion
          #pragma region Form types
+            define_wrapper_metatable<quest>(L);
+               define_wrapper_metatable<quest_alias>(L);
+                  define_wrapper_metatable<quest_loc_alias>(L);
+                  define_wrapper_metatable<quest_ref_alias>(L);
          #pragma endregion
       #pragma endregion
       #pragma region Resources
@@ -46,7 +53,13 @@ namespace dovahscript {
          auto index = lua_gettop(L);
          //
          set_up_class_with_singleton<ui::widget>(L, index);
+            set_up_class_with_singleton<ui::table_view>(L, index);
+               set_up_class_with_singleton<ui::table_view_cell>(L, index);
+               set_up_class_with_singleton<ui::table_view_col>(L, index);
+               set_up_class_with_singleton<ui::table_view_row>(L, index);
+            set_up_class_with_singleton<ui::window>(L, index);
          #pragma region Various
+         define_wrapper_metatable<ui::font>(L);
          #pragma endregion
          //
          assert(lua_gettop(L) == index);

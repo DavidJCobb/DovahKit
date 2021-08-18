@@ -8,12 +8,12 @@ namespace dovah::loaded_forms {
 
 namespace dovahscript::wrappers {
    struct quest_alias : public wrapper_metatable {
-      static constexpr const char* superclass_list = { metatable_key };
-      static constexpr const char* metatable_key   = "dovah.classes.quest_alias";
-      static constexpr const char* class_name      = "quest_alias";
-      static const std::initializer_list<luaL_Reg> metatable_methods;
-      static const std::initializer_list<luaL_Reg> metatable_getters;
-      static const std::initializer_list<luaL_Reg> metatable_setters;
+      static constexpr string_list_t superclass_list = { metatable_key };
+      static constexpr const char*   metatable_key   = "dovah.classes.quest_alias";
+      static constexpr const char*   class_name      = "quest_alias";
+      static method_list_t metatable_methods;
+      static method_list_t metatable_getters;
+      static method_list_t metatable_setters;
 
       using wrapped_type = dovah::loaded_forms::Alias;
       static wrapped_type* unwrap(wrapper& w);

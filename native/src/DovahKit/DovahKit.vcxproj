@@ -178,6 +178,11 @@
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\col.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\col\collection_cells.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\row.cpp" />
+    <ClCompile Include="dovahscript\wrappers\ui\table_view\row\collection_cells.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\various\font.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\widget.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\window.cpp" />
@@ -441,6 +446,7 @@
     <ClCompile Include="helpers\lua\warning.cpp" />
     <ClCompile Include="helpers\memory.cpp" />
     <ClCompile Include="helpers\qt\basic_bindings.cpp" />
+    <ClCompile Include="helpers\qt\can_have_model.cpp" />
     <ClCompile Include="helpers\qt\combobox.cpp" />
     <ClCompile Include="helpers\qt\font.cpp" />
     <ClCompile Include="helpers\qt\get_model_of.cpp" />
@@ -623,6 +629,11 @@
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\cell.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\col.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\col\collection_cells.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\row.h" />
+    <ClInclude Include="dovahscript\wrappers\ui\table_view\row\collection_cells.h" />
     <ClInclude Include="dovahscript\wrappers\ui\various\font.h" />
     <ClInclude Include="dovahscript\wrappers\ui\widget.h" />
     <ClInclude Include="dovahscript\wrappers\ui\window.h" />
@@ -947,6 +958,7 @@
     <ClInclude Include="helpers\matrix.h" />
     <ClInclude Include="helpers\passkey.h" />
     <ClInclude Include="helpers\qt\basic_bindings.h" />
+    <ClInclude Include="helpers\qt\can_have_model.h" />
     <ClInclude Include="helpers\qt\combobox.h" />
     <ClInclude Include="helpers\qt\font.h" />
     <ClInclude Include="helpers\qt\get_model_of.h" />

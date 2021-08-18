@@ -5,13 +5,13 @@
 #include "../../../helpers/lua/qt_variant.h"
 #include "../../../helpers/qt/layout.h"
 #include "../../../ui/generic/ObservableStandardItemModel.h"
-#include "../../api_helpers/model_observer_property_handlers.h"
 #include "../../push_native_object.h"
 #include "../../task_reference.h"
 #include "../../widget_overrides.h"
 #include "../../wrapper.h"
 #include "../../core/subsystems/coordinator.h"
 #include "../../core/subsystems/permissions.h"
+#include "../../core/subsystems/resources/DovahscriptResourceStyledItemDelegate.h"
 #include "../../core/subsystems/userdata.h"
 
 #include "../../tasks/s2m/create_ui_widget.h"
@@ -19,9 +19,13 @@
 #include "../../tasks/s2m/ui_read_lambda.h"
 #include "../../tasks/s2m/ui_write_lambda.h"
 
+#include "../../api_helpers/model_observers.h"
+#include "../../api_helpers/model_observer_property_handlers.h"
 #include "../../api_helpers/widget_properties.h"
 #include "../../constants/ui_count_limits.h"
 
+#include "table_view/collection_columns.h"
+#include "table_view/collection_rows.h"
 #include "table_view/row.h"
 #include "table_view/col.h"
 #include "table_view/cell.h"
@@ -65,8 +69,10 @@ namespace {
       widget->setProperty("Lua word wrap", false);
    }
 
-   void _extract_cell_arg_list(lua_State* L, int first, QVector<dovahscript::moph::handler_set::role_map_t>& roles) {
+   void _extract_cell_arg_list(lua_State* L, int first, QVector<dovahscript::api_helpers::moph::handler_set::role_map_t>& roles) {
       using namespace dovahscript;
+      using handler     = dovahscript::api_helpers::moph::model_observer_property_handler;
+      using handler_set = dovahscript::api_helpers::moph::handler_set;
 
       auto& core = DovahKitScriptVMCore::get();
       int   argcount = lua_gettop(L);
@@ -77,7 +83,7 @@ namespace {
             roles.push_back(e);
             continue;
          }
-         moph::handler_set::role_map_t e;
+         handler_set::role_map_t e;
          e[Qt::DisplayRole] = core.variant_from_lua(i);
          roles.push_back(e);
       }
@@ -90,7 +96,7 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
-      using role_map_t = moph::handler_set::role_map_t;
+      using role_map_t = api_helpers::moph::handler_set::role_map_t;
 
       int append_column(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -843,13 +849,22 @@ namespace {
             cobb::lua::error(L, "the ui.widget.new function should not be called with a colon or passed any arguments");
          //
          auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
-         /*
+         //
          // If you want to configure the widget, e.g. to provide sensible defaults, you would 
          // do it in this optional handler.
          //
          task->configure = [](wrapped_type* created) {
+            created->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
+            created->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows); // sensible defaults
+            created->setCornerButtonEnabled(false); // sensible defaults
+            created->horizontalHeader()->setStretchLastSection(true);
+            auto* vh = created->verticalHeader();
+            vh->setDefaultSectionSize(0); // get rid of weird padding
+            vh->setHidden(true); // sensible defaults
+            //
+            created->setItemDelegate(new DovahscriptResourceStyledItemDelegate(created));
          };
-         */
+         //
          core::subsystems::coordinator::get().send_ui_write_task(*task);
          auto* created = task->created;
          delete task;
@@ -908,6 +923,23 @@ namespace dovahscript::wrappers::ui {
       { "sortable",             &_setters::sortable },
       { "word_wrap",            &_setters::word_wrap },
    };
+
+   /*static*/ void cls::extra_class_setup(lua_State* L) noexcept {
+      define_collection_metatable(L, {
+         .registry_key          = cls::row_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::rows::get_collection_length,
+         .lookup_item_by_index   = &_collections::rows::lookup_item_by_index,
+      });
+      define_collection_metatable(L, {
+         .registry_key          = cls::col_collection_key,
+         .garbage_collection    = &wrapper::__gc,
+         //
+         .get_collection_length  = &_collections::cols::get_collection_length,
+         .lookup_item_by_index   = &_collections::cols::lookup_item_by_index,
+      });
+   }
 
    /*static*/ void cls::import_singleton(lua_State* L) {
       lua_createtable(L, 0, 2);
