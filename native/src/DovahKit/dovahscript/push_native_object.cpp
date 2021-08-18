@@ -14,12 +14,12 @@
 namespace {
    std::array form_classes = {
       std::pair{ dovah::form_type::none,          dovahscript::wrappers::form::metatable_key },
+      std::pair{ dovah::form_type::quest,         dovahscript::wrappers::quest::metatable_key },
       /*//
       std::pair{ dovah::form_type::cell,          dovahscript::wrappers::cell::metatable_key },
       std::pair{ dovah::form_type::formlist,      dovahscript::wrappers::formlist::metatable_key },
       std::pair{ dovah::form_type::land,          dovahscript::wrappers::landscape::metatable_key },
       std::pair{ dovah::form_type::land_texture,  dovahscript::wrappers::land_texture::metatable_key },
-      std::pair{ dovah::form_type::quest,         dovahscript::wrappers::quest::metatable_key },
       std::pair{ dovah::form_type::shout,         dovahscript::wrappers::shout::metatable_key },
       std::pair{ dovah::form_type::texture_set,   dovahscript::wrappers::texture_set::metatable_key },
       std::pair{ dovah::form_type::topic,         dovahscript::wrappers::topic::metatable_key },
@@ -31,7 +31,8 @@ namespace {
    };
 
    std::array qobject_classes = {
-      std::pair{ &QWidget::staticMetaObject, dovahscript::wrappers::ui::widget::metatable_key },
+      std::pair{ &QWidget::staticMetaObject,           dovahscript::wrappers::ui::widget::metatable_key },
+      std::pair{ &DovahscriptDialog::staticMetaObject, dovahscript::wrappers::ui::window::metatable_key },
       /*//
       std::pair{ &QButtonGroup::staticMetaObject, dovahscript::wrappers::ui::radio_group::metatable_key },
       //
@@ -39,7 +40,6 @@ namespace {
       //
       std::pair{ &QCheckBox::staticMetaObject,      dovahscript::wrappers::ui::checkbox::metatable_key },
       std::pair{ &QComboBox::staticMetaObject,      dovahscript::wrappers::ui::dropdown::metatable_key },
-      std::pair{ &QDialog::staticMetaObject,        dovahscript::wrappers::ui::window::metatable_key },
       std::pair{ &QDoubleSpinBox::staticMetaObject, dovahscript::wrappers::ui::spinbox::metatable_key },
       std::pair{ &QGroupBox::staticMetaObject,      dovahscript::wrappers::ui::groupbox::metatable_key },
       std::pair{ &QLabel::staticMetaObject,         dovahscript::wrappers::ui::text::metatable_key },
@@ -63,11 +63,9 @@ namespace {
 
    std::array resource_classes = {
       std::pair{ dovahscript::resource_type::undefined, (const char*)nullptr },
-      /*//
       std::pair{ dovahscript::resource_type::dds,       dovahscript::wrappers::resource::dds::metatable_key },
       std::pair{ dovahscript::resource_type::raster,    dovahscript::wrappers::resource::raster::metatable_key },
       std::pair{ dovahscript::resource_type::binary,    dovahscript::wrappers::resource::unknown::metatable_key },
-      //*/
    };
 
    const char* get_metatable_for_qobject(const QMetaObject* rtti) {
@@ -164,7 +162,7 @@ namespace dovahscript {
          out.type          = wrapper_type::canvas_entity;
          return core::subsystems::userdata::get().push(L, out, metatable);
       }
-      if (auto* casted = qobject_cast<LuaScriptableCanvasWidgetLayerData*>(object)) {
+      if (auto* casted = qobject_cast<DovahscriptCanvasWidgetLayerData*>(object)) {
          assert(metatable);
          wrapper out;
          out.canvas_layer_data = casted;

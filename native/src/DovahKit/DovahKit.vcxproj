@@ -177,6 +177,13 @@
     <ClCompile Include="dovahscript\wrappers\form\quest\collection_aliases_by_id.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\quest\loc_alias.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\collection_images.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\cubemap_face_list.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\image.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\dds\image\collection_mipmaps.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\raster.cpp" />
+    <ClCompile Include="dovahscript\wrappers\resource\unknown.cpp" />
     <ClCompile Include="dovahscript\wrappers\set_up_all.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view.cpp" />
     <ClCompile Include="dovahscript\wrappers\ui\table_view\cell.cpp" />
@@ -549,6 +556,7 @@
     <ClInclude Include="dovahscript\api_helpers\qt_alignment.h" />
     <ClInclude Include="dovahscript\api_helpers\qt_variant.h" />
     <ClInclude Include="dovahscript\api_helpers\widget_properties.h" />
+    <ClInclude Include="dovahscript\constants\qt_graphics.h" />
     <ClInclude Include="dovahscript\constants\ui_count_limits.h" />
     <ClInclude Include="dovahscript\core\classes.h" />
     <ClInclude Include="dovahscript\core\class_zombification.h" />
@@ -630,6 +638,13 @@
     <ClInclude Include="dovahscript\wrappers\form\quest\loc_alias.h" />
     <ClInclude Include="dovahscript\wrappers\form\quest\ref_alias.h" />
     <ClInclude Include="dovahscript\wrappers\form\_all.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\collection_images.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\cubemap_face_list.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\image.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\dds\image\collection_mipmaps.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\raster.h" />
+    <ClInclude Include="dovahscript\wrappers\resource\unknown.h" />
     <ClInclude Include="dovahscript\wrappers\resource\_all.h" />
     <ClInclude Include="dovahscript\wrappers\set_up_all.h" />
     <ClInclude Include="dovahscript\wrappers\ui\table_view.h" />
